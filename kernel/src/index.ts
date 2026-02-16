@@ -54,6 +54,32 @@ export type {
   ConceptPlacement,
   SyncAssignment,
 } from './deploy.js';
+// Phase 9: Lite query protocol + adapter
+export {
+  LiteQueryAdapter,
+  createStorageLiteProtocol,
+} from './lite-query.js';
+export type {
+  LiteQueryProtocol,
+  LiteFilter as LiteQueryFilter,
+  ConceptStateSnapshot as LiteStateSnapshot,
+} from './lite-query.js';
+// Phase 9: Eventual sync queue + distributed engine
+export { DistributedSyncEngine } from './eventual-queue.js';
+export type {
+  PendingSyncEntry,
+  AvailabilityListener,
+} from './eventual-queue.js';
+// Phase 9: WebSocket transport
+export {
+  createWebSocketAdapter,
+  createWebSocketConceptServer,
+} from './ws-transport.js';
+export type {
+  WsMessage,
+  MockWebSocket,
+  WebSocketFactory,
+} from './ws-transport.js';
 export type {
   ConceptHandler,
   ConceptStorage,
