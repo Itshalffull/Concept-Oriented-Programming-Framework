@@ -1994,7 +1994,9 @@ The framework is self-hosting: the compiler, engine, and tooling are themselves 
 
 ### 10.1 Bootstrap Stages
 
-**Stage 0: The Kernel (hand-written TypeScript)**
+> **Implementation note:** Stages 0 through 3 have been implemented using the original architecture, which had a single `CodeGen` concept accepting a `language` parameter. As this document evolved, we refined the codegen architecture to split `CodeGen` into `SchemaGen` (producing a rich, language-neutral `ConceptManifest`) plus independent per-language generator concepts (`TypeScriptGen`, `RustGen`, etc.) — see the concept specs below. The existing implementation is functional and correct; Stage 4.5 (described after Stage 4) covers the migration from the old pattern to the new one. This migration is a prerequisite for Stage 5 (Multi-Target), since the whole point of the split is to make adding new language targets a matter of writing a new concept and a sync rather than modifying the existing CodeGen.
+
+**Stage 0: The Kernel (hand-written TypeScript)** ✅ Complete
 
 A minimal, non-concept implementation that provides just enough to run the first concepts:
 
@@ -2007,9 +2009,9 @@ This is ~1,000-2,000 lines of TypeScript. It does not use concepts or syncs inte
 
 Target: can load a `.concept` file, register a hand-written concept handler, register a sync, and execute a flow.
 
-**Stage 1: Core Concepts (specs + generated code, run on kernel)**
+**Stage 1: Core Concepts (specs + hand-written impls on kernel)** ✅ Complete
 
-Define the framework's own functionality as concepts:
+Define the framework's own functionality as concepts. The current implementation uses the original concept definitions (single `CodeGen` with a `language` parameter). The target architecture below reflects the refined split into `SchemaGen` + per-language generators:
 
 ```
 concept SpecParser [S]
@@ -2027,171 +2029,406 @@ actions
 ```
 
 ```
-concept SchemaGen [S]
-purpose
-  Generate GraphQL and JSON schemas from parsed concept specs
+concept SchemaGen [S] {
+  purpose {
+    Transform parsed concept ASTs into rich, language-neutral
+    ConceptManifests. The manifest contains everything a code
+    generator needs: relation schemas (after merge/grouping),
+    fully typed action signatures, structured invariants with
+    test values, GraphQL schema fragments, and JSON Schemas.
+  }
 
-state
-  schemas: S -> { graphql: String; jsonSchemas: list String }
+  state {
+    manifests: S -> ConceptManifest
+  }
 
-actions
-  action generate(spec: S, ast: AST)
-    -> ok(graphql: String, jsonSchemas: list String)
-    -> error(message: String)
+  actions {
+    action generate(spec: S, ast: AST) {
+      -> ok(manifest: ConceptManifest) {
+        Apply state grouping/merge rules to produce relation schemas.
+        Resolve all types into ResolvedType trees.
+        Transform invariants into structured test scenarios with
+        deterministic test IDs for free variables.
+        Generate GraphQL schema fragment from relation schemas.
+        Generate JSON Schemas for each action invocation/completion.
+        Package everything into a ConceptManifest.
+      }
+      -> error(message: String) {
+        If the AST contains unresolvable types or inconsistencies.
+      }
+    }
+  }
+}
+```
+
+The **ConceptManifest** is the central artifact of the compiler pipeline. It is language-neutral and contains all decisions made by SchemaGen. Language generators consume it without needing the original AST or spec:
+
+```typescript
+interface ConceptManifest {
+  // Identity
+  uri: string;
+  name: string;
+  typeParams: TypeParamInfo[];
+
+  // State → Storage mapping (result of merge/grouping rules)
+  relations: RelationSchema[];
+
+  // Actions with full type information
+  actions: ActionSchema[];
+
+  // Invariants as structured test scenarios
+  invariants: InvariantSchema[];
+
+  // Pre-generated GraphQL schema fragment
+  graphqlSchema: string;
+
+  // Pre-generated JSON Schemas for wire validation
+  jsonSchemas: {
+    invocations: Record<string, object>;
+    completions: Record<string, Record<string, object>>;
+  };
+
+  // Capabilities and purpose
+  capabilities: string[];
+  purpose: string;
+}
+
+interface TypeParamInfo {
+  name: string;
+  wireType: "string";
+  description?: string;
+}
+
+interface RelationSchema {
+  name: string;
+  source: "merged" | "explicit" | "set-valued";
+  keyField: { name: string; paramRef: string };
+  fields: FieldSchema[];
+}
+
+interface FieldSchema {
+  name: string;
+  type: ResolvedType;
+  optional: boolean;
+}
+
+// Recursive type tree — each generator maps this to its own type system
+interface ResolvedType {
+  kind: "primitive" | "param" | "set" | "list" | "option" | "record";
+  primitive?: "String" | "Int" | "Float" | "Bool"
+            | "Bytes" | "DateTime" | "ID";
+  paramRef?: string;
+  inner?: ResolvedType;
+  fields?: FieldSchema[];
+}
+
+interface ActionSchema {
+  name: string;
+  params: ActionParamSchema[];
+  variants: VariantSchema[];
+}
+
+interface ActionParamSchema {
+  name: string;
+  type: ResolvedType;
+}
+
+interface VariantSchema {
+  tag: string;
+  fields: ActionParamSchema[];
+  prose?: string;
+}
+
+interface InvariantSchema {
+  description: string;
+  setup: InvariantStep[];     // "after" clause
+  assertions: InvariantStep[];  // "then" clause
+  freeVariables: {
+    name: string;
+    testValue: string;         // e.g. "u-test-invariant-001"
+  }[];
+}
+
+interface InvariantStep {
+  action: string;
+  inputs: { name: string; value: InvariantValue }[];
+  expectedVariant: string;
+  expectedOutputs: { name: string; value: InvariantValue }[];
+}
+
+type InvariantValue =
+  | { kind: "literal"; value: string | number | boolean }
+  | { kind: "variable"; name: string };
+```
+
+**Language-specific generators** are each independent concepts. They consume a `ConceptManifest` and produce files. Each carries its own type mapping table — a simple recursive function that maps `ResolvedType` to target language syntax. Adding a new language means adding a new concept and a sync. No existing concept is modified.
+
+```
+concept TypeScriptGen [S] {
+  purpose {
+    Generate TypeScript skeleton code from a ConceptManifest.
+    Produces type definitions, handler interface, transport adapter,
+    lite query implementation, and conformance tests.
+  }
+
+  state {
+    outputs: S -> list { path: String; content: String }
+  }
+
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String; content: String }) {
+        Map ResolvedTypes to TypeScript types.
+        Emit type definitions for action inputs/outputs.
+        Emit handler interface with one method per action.
+        Emit transport adapter (invocation dispatch, serialization).
+        Emit lite query protocol implementation over ConceptStorage.
+        Emit conformance tests from invariants.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to TypeScript.
+      }
+    }
+  }
+}
 ```
 
 ```
-concept CodeGen [S]
-purpose
-  Generate language-specific skeleton code from concept specs
+concept RustGen [S] {
+  purpose {
+    Generate Rust skeleton code from a ConceptManifest.
+    Produces type definitions, handler trait, transport adapter,
+    and conformance tests.
+  }
 
-state
-  outputs: S -> list { path: String; content: String }
+  state {
+    outputs: S -> list { path: String; content: String }
+  }
 
-actions
-  action generate(spec: S, ast: AST, language: String)
-    -> ok(files: list { path: String; content: String })
-    -> error(message: String)
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String; content: String }) {
+        Map ResolvedTypes to Rust types (String, i64, Vec, Option, etc.).
+        Emit struct definitions for action inputs/outputs.
+        Emit handler trait with async methods per action.
+        Emit transport adapter.
+        Emit conformance tests.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to Rust.
+      }
+    }
+  }
+}
+```
+
+Additional generators (SwiftGen, GoGen, PythonGen, etc.) follow the same pattern. Each is ~200-400 lines of template logic plus a ~15-line type mapping function.
+
+```
+concept SyncParser [Y] {
+  purpose {
+    Parse .sync files into structured ASTs and validate
+    against concept manifests.
+  }
+
+  state {
+    syncs: set Y
+    ast: Y -> SyncAST
+  }
+
+  actions {
+    action parse(source: String, manifests: list ConceptManifest) {
+      -> ok(sync: Y, ast: SyncAST) {
+        Parse the sync file. Resolve concept/action references
+        against the provided manifests. Validate field patterns
+        against action signatures.
+      }
+      -> error(message: String, line: Int) {
+        If syntax is invalid or references unresolvable.
+      }
+    }
+  }
+}
 ```
 
 ```
-concept SyncParser [Y]
-purpose
-  Parse .sync files into structured ASTs and validate
-  against concept manifests
+concept SyncCompiler [Y] {
+  purpose {
+    Compile parsed synchronizations into executable registrations.
+  }
 
-state
-  syncs: set Y
-  ast: Y -> SyncAST
+  state {
+    compiled: Y -> CompiledSync
+  }
 
-actions
-  action parse(source: String, manifests: list Manifest)
-    -> ok(sync: Y, ast: SyncAST)
-    -> error(message: String, line: Int)
+  actions {
+    action compile(sync: Y, ast: SyncAST) {
+      -> ok(compiled: CompiledSync) {
+        Translate where clauses into ConceptQuery plans.
+        Compile when patterns into matchable structures.
+        Produce a CompiledSync ready for engine registration.
+      }
+      -> error(message: String) {
+        If the sync references inconsistent types or
+        unresolvable state components.
+      }
+    }
+  }
+}
 ```
 
 ```
-concept SyncCompiler [Y]
-purpose
-  Compile parsed synchronizations into executable registrations
+concept ActionLog [R] {
+  purpose {
+    Append-only log of all action invocations and completions.
+    The engine's memory.
+  }
 
-state
-  compiled: Y -> CompiledSync
+  state {
+    records: set R
+    record: R -> ActionRecord
+    edges: R -> list { target: R; sync: String }
+  }
 
-actions
-  action compile(sync: Y, ast: SyncAST)
-    -> ok(compiled: CompiledSync)
-    -> error(message: String)
+  actions {
+    action append(record: ActionRecord) {
+      -> ok(id: R) { Append to the log and return the record ID. }
+    }
+    action addEdge(from: R, to: R, sync: String) {
+      -> ok() { Record a provenance edge. }
+    }
+    action query(flow: String) {
+      -> ok(records: list ActionRecord) { Return all records for a flow. }
+    }
+  }
+}
 ```
 
 ```
-concept ActionLog [R]
-purpose
-  Append-only log of all action invocations and completions.
-  The engine's memory.
+concept Registry [C] {
+  purpose {
+    Track deployed concepts, their locations, and availability.
+  }
 
-state
-  records: set R
-  record: R -> ActionRecord
-  edges: R -> list { target: R; sync: String }
+  state {
+    concepts: set C
+    uri: C -> String
+    transport: C -> TransportConfig
+    available: C -> Bool
+  }
 
-actions
-  action append(record: ActionRecord)
-    -> ok(id: R)
-  action addEdge(from: R, to: R, sync: String)
-    -> ok()
-  action query(flow: String)
-    -> ok(records: list ActionRecord)
-```
-
-```
-concept Registry [C]
-purpose
-  Track deployed concepts, their locations, and availability
-
-state
-  concepts: set C
-  uri: C -> String
-  transport: C -> TransportConfig
-  available: C -> Bool
-
-actions
-  action register(uri: String, transport: TransportConfig)
-    -> ok(concept: C)
-    -> error(message: String)
-  action deregister(uri: String)
-    -> ok()
-  action heartbeat(uri: String)
-    -> ok(available: Bool)
+  actions {
+    action register(uri: String, transport: TransportConfig) {
+      -> ok(concept: C) { Register concept and return reference. }
+      -> error(message: String) { If URI is already registered. }
+    }
+    action deregister(uri: String) {
+      -> ok() { Remove concept from registry. }
+    }
+    action heartbeat(uri: String) {
+      -> ok(available: Bool) { Update and return availability status. }
+    }
+  }
+}
 ```
 
 **Synchronizations for Stage 1:**
 
 ```
-# When a spec is parsed, generate schemas
-sync GenerateSchemas
-when {
-  SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
-}
-then {
-  SchemaGen/generate: [ spec: ?spec; ast: ?ast ]
+# When a spec is parsed, generate the manifest
+sync GenerateManifest {
+  when {
+    SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
+  }
+  then {
+    SchemaGen/generate: [ spec: ?spec; ast: ?ast ]
+  }
 }
 
-# When schemas are generated, generate code
-sync GenerateCode
-when {
-  SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
-  SchemaGen/generate: [ spec: ?spec ] => []
+# When a manifest is generated, generate TypeScript code
+sync GenerateTypeScript {
+  when {
+    SchemaGen/generate: [ spec: ?spec ]
+      => [ manifest: ?manifest ]
+  }
+  then {
+    TypeScriptGen/generate: [ spec: ?spec; manifest: ?manifest ]
+  }
 }
-then {
-  CodeGen/generate: [ spec: ?spec; ast: ?ast; language: "typescript" ]
-}
+
+# To add Rust generation, add ONE sync — no existing code changes:
+# sync GenerateRust {
+#   when {
+#     SchemaGen/generate: [ spec: ?spec ]
+#       => [ manifest: ?manifest ]
+#   }
+#   then {
+#     RustGen/generate: [ spec: ?spec; manifest: ?manifest ]
+#   }
+# }
 
 # When a concept is registered, log it
-sync LogRegistration
-when {
-  Registry/register: [] => [ concept: ?c ]
-}
-then {
-  ActionLog/append: [ record: { type: "registration"; concept: ?c } ]
+sync LogRegistration {
+  when {
+    Registry/register: [] => [ concept: ?c ]
+  }
+  then {
+    ActionLog/append: [ record: { type: "registration"; concept: ?c } ]
+  }
 }
 ```
 
-These concepts are implemented against the Stage 0 kernel. Their implementations are hand-written TypeScript (but conforming to specs). The specs exist primarily to validate the architecture and generate tests.
+Note the key property: **adding a new target language requires zero modifications to any existing concept or sync.** You write a new generator concept (e.g., `SwiftGen`), implement it, and add one sync that wires `SchemaGen/generate` to `SwiftGen/generate`. This is the framework proving its own extensibility model.
 
-**Stage 2: Self-Compilation**
+The concept specs above reflect the target architecture. The current implementation uses the original pattern (single `CodeGen` concept with a `language` parameter, single `SchemaGen` that produces GraphQL/JSON schemas only). Stage 4.5 covers the migration.
 
-Use the Stage 1 concepts to compile themselves:
+**Stage 2: Self-Compilation** ✅ Complete
 
-1. Feed the Stage 1 `.concept` files to the SpecParser concept.
-2. Feed the parsed ASTs to SchemaGen — verify the output matches the hand-written schemas.
-3. Feed the parsed ASTs to CodeGen — verify the generated skeletons match the hand-written handler interfaces.
-4. Feed the `.sync` files to SyncParser and SyncCompiler — verify the compiled syncs match the hand-registered syncs from Stage 1.
+The Stage 1 concepts compile themselves:
 
-At this point, the framework can generate its own type definitions and schemas from its own specs. The hand-written implementations of Stage 1 concepts are now validated against generated interfaces.
+1. Stage 1 `.concept` files are fed to the SpecParser concept.
+2. Parsed ASTs are fed to SchemaGen — output matches the hand-written schemas.
+3. Parsed ASTs are fed to CodeGen — generated skeletons match the hand-written handler interfaces.
+4. `.sync` files are fed to SyncParser and SyncCompiler — compiled syncs match the hand-registered syncs from Stage 1.
 
-**Stage 3: Engine Self-Hosting**
+At this point, the framework generates its own type definitions and schemas from its own specs. The hand-written implementations of Stage 1 concepts are validated against generated interfaces.
 
-Replace the Stage 0 kernel engine with a concept-based engine:
+**Stage 3: Engine Self-Hosting** ✅ Complete
+
+The Stage 0 kernel eval loop has been replaced with a concept-based engine:
 
 ```
-concept SyncEngine [F]
-purpose
-  Evaluate synchronizations by matching completions,
-  querying state, and producing invocations
+concept SyncEngine [F] {
+  purpose {
+    Evaluate synchronizations by matching completions,
+    querying state, and producing invocations.
+  }
 
-state
-  syncs: set SyncRegistration
-  pendingFlows: set F
+  state {
+    syncs: set SyncRegistration
+    pendingFlows: set F
+  }
 
-actions
-  action registerSync(sync: CompiledSync)
-    -> ok()
-  action onCompletion(completion: ActionCompletion)
-    -> ok(invocations: list ActionInvocation)
-  action evaluateWhere(bindings: Bindings, queries: list GraphQLQuery)
-    -> ok(results: list Bindings)
-    -> error(message: String)
+  actions {
+    action registerSync(sync: CompiledSync) {
+      -> ok() { Add sync to the registry and update the index. }
+    }
+    action onCompletion(completion: ActionCompletion) {
+      -> ok(invocations: list ActionInvocation) {
+        Run the matching algorithm (Section 6.2) against
+        all indexed syncs. Return produced invocations.
+      }
+    }
+    action evaluateWhere(bindings: Bindings, queries: list ConceptQuery) {
+      -> ok(results: list Bindings) {
+        Issue queries to concept transports and join results.
+      }
+      -> error(message: String) {
+        If a referenced concept is unavailable.
+      }
+    }
+  }
+}
 ```
 
 The SyncEngine concept is itself run by the kernel engine. This is the key bootstrapping moment: the SyncEngine concept processes completions and emits invocations, while the kernel merely dispatches between it and the other concepts. The kernel's role shrinks to:
@@ -2202,53 +2439,82 @@ The SyncEngine concept is itself run by the kernel engine. This is the key boots
 
 Eventually, even these responsibilities could be modeled as concepts (a Loader concept, a Router concept), but the kernel remains as the minimal trusted base.
 
-**Stage 4: Multi-Target**
+**Stage 4: CodeGen Refactor** ← Next
 
-Once the compiler pipeline is self-hosting in TypeScript:
+The existing implementation has a single `CodeGen` concept that accepts a `language` parameter and produces files for any target. This works, but has a structural problem: adding a new language requires modifying CodeGen's internals, and the concept grows linearly with every target. The refined architecture (specified in the concept definitions above) splits this into:
 
-1. Write a Rust code generator (as a CodeGen concept variant, or as a new concept).
-2. Re-implement one concept (e.g., Password) in Rust.
-3. Deploy it with an HttpAdapter.
-4. Verify interop: the TypeScript sync engine invokes the Rust concept, receives completions, evaluates syncs, queries state via GraphQL.
+1. **SchemaGen** produces a rich `ConceptManifest` — a language-neutral intermediate representation containing relation schemas (after merge/grouping), fully typed action signatures, structured invariants, GraphQL fragments, and JSON Schemas. All design decisions are encoded here.
 
-This validates the full cross-language story.
+2. **Per-language generators** (`TypeScriptGen`, `RustGen`, etc.) are independent concepts that consume a `ConceptManifest` and produce files. Each carries its own type mapping table — a ~15-line recursive function that maps `ResolvedType` to target language syntax.
+
+3. **Syncs wire them together.** `SchemaGen/generate => TypeScriptGen/generate`. Adding a new language: write a new concept, add one sync. No existing code modified.
+
+Migration steps:
+
+1. Define and validate the `ConceptManifest` interface (specified above in this section).
+2. Refactor the existing `SchemaGen` to produce a full `ConceptManifest` instead of just GraphQL/JSON schemas. The GraphQL and JSON schemas become fields on the manifest rather than standalone outputs.
+3. Extract the TypeScript-specific logic from the existing `CodeGen` into a new `TypeScriptGen` concept. This is mostly moving code — the template logic stays the same, it just reads from `ConceptManifest` instead of raw ASTs.
+4. Update the compiler pipeline syncs: replace `GenerateCode` with `GenerateManifest` + `GenerateTypeScript`.
+5. Delete the old `CodeGen` concept.
+6. Verify self-compilation still passes: the framework compiles its own specs through the new pipeline and produces identical output.
+
+The key constraint is that this refactor must be behavior-preserving. The generated TypeScript output should be identical before and after, since the same decisions are being made — they're just encoded in a manifest rather than computed inline during codegen.
+
+**Stage 5: Multi-Target**
+
+With the refactored pipeline, adding the first non-TypeScript target:
+
+1. Write `RustGen` as a new concept — implement the Rust type mapping and template logic.
+2. Add one sync: `SchemaGen/generate => RustGen/generate`.
+3. Re-implement one concept (e.g., Password) in the generated Rust skeleton.
+4. Deploy it with an HttpAdapter.
+5. Verify interop: the TypeScript sync engine invokes the Rust concept, receives completions, evaluates syncs, queries state via GraphQL or lite protocol.
+
+This validates both the cross-language story and the extensibility of the codegen pipeline. No existing concept or sync was modified — only new ones were added.
 
 ### 10.2 Bootstrap Dependency Graph
 
 ```
-Stage 0 (hand-written kernel)
+Stage 0 (hand-written kernel) ✅
   │
   ├── minimal parser
   ├── minimal engine (eval loop)
   ├── minimal transport (in-process)
   └── minimal runtime (handler dispatch)
         │
-Stage 1 (concept specs + hand-written impls on kernel)
+Stage 1 (concept specs + hand-written impls on kernel) ✅
   │
   ├── SpecParser concept
-  ├── SchemaGen concept
-  ├── CodeGen concept
+  ├── SchemaGen concept (current: GraphQL/JSON only)
+  ├── CodeGen concept (current: single concept, language param)
   ├── SyncParser concept
   ├── SyncCompiler concept
   ├── ActionLog concept
   └── Registry concept
         │
-Stage 2 (self-compilation)
+Stage 2 (self-compilation) ✅
   │
   ├── specs compile via own SpecParser
   ├── schemas generated via own SchemaGen
   ├── skeletons generated via own CodeGen
   └── syncs compiled via own SyncParser + SyncCompiler
         │
-Stage 3 (engine self-hosting)
+Stage 3 (engine self-hosting) ✅
   │
   ├── SyncEngine concept replaces kernel eval loop
   ├── kernel reduced to process bootstrap + message routing
   └── all framework logic expressed as concepts + syncs
         │
-Stage 4 (multi-target)
+Stage 4 (codegen refactor) ← NEXT
   │
-  ├── additional CodeGen targets (Rust, Swift, etc.)
+  ├── SchemaGen → produces ConceptManifest (rich, language-neutral IR)
+  ├── CodeGen → split into TypeScriptGen (+ future per-language concepts)
+  ├── pipeline syncs updated
+  └── self-compilation verified through new pipeline
+        │
+Stage 5 (multi-target)
+  │
+  ├── RustGen concept + one sync
   ├── cross-language concept deployment
   └── distributed engine hierarchy
 ```
@@ -2283,8 +2549,8 @@ copf/
 ├── specs/                      # All concept specifications
 │   ├── framework/              # Stage 1: framework's own concepts
 │   │   ├── spec-parser.concept
-│   │   ├── schema-gen.concept
-│   │   ├── code-gen.concept
+│   │   ├── schema-gen.concept       # current: GraphQL/JSON only; Phase 7: full ConceptManifest
+│   │   ├── code-gen.concept          # Phase 7: replaced by typescript-gen.concept
 │   │   ├── sync-parser.concept
 │   │   ├── sync-compiler.concept
 │   │   ├── action-log.concept
@@ -2421,72 +2687,104 @@ copf kit check-overrides                # verify app overrides reference valid s
 
 ## 13. Implementation Roadmap
 
-### Phase 1: Kernel + First Concept (Weeks 1-3)
+### Phase 1: Kernel + First Concept (Weeks 1-3) ✅ Complete
 
-- [ ] Implement the Stage 0 kernel in TypeScript
-  - [ ] `.concept` file parser (grammar from Section 2.2)
-  - [ ] Minimal sync engine (eager only, in-process)
-  - [ ] In-memory storage adapter
-  - [ ] In-process transport adapter
-- [ ] Write the Password concept spec
-- [ ] Hand-write the Password concept implementation
-- [ ] Write a registration sync (Web → User → Password)
-- [ ] Demonstrate a complete flow: HTTP request → sync engine → concept actions → response
+- [x] Implement the Stage 0 kernel in TypeScript
+  - [x] `.concept` file parser (grammar from Section 2.2)
+  - [x] Minimal sync engine (eager only, in-process)
+  - [x] In-memory storage adapter
+  - [x] In-process transport adapter
+- [x] Write the Password concept spec
+- [x] Hand-write the Password concept implementation
+- [x] Write a registration sync (Web → User → Password)
+- [x] Demonstrate a complete flow: HTTP request → sync engine → concept actions → response
 
-### Phase 2: Query Layer — Both Modes (Weeks 4-6)
+### Phase 2: Query Layer — Both Modes (Weeks 4-6) ✅ Complete
 
-- [ ] Implement GraphQL schema generation from concept specs
-- [ ] Implement concept-side GraphQL resolvers (generated) for full-mode concepts
-- [ ] Implement the Lite Query Protocol interfaces (`snapshot`, `lookup`, `filter`)
-- [ ] Implement the engine-side `LiteQueryAdapter` with caching
-- [ ] Implement engine-side federated query layer (dispatches to full-GraphQL or lite adapters)
-- [ ] Implement `where` clause evaluation via the unified `ConceptQuery` interface
-- [ ] Demonstrate cross-concept queries in syncs using both modes
-- [ ] Test: one concept in full-GraphQL mode, one in lite mode, sync spanning both
+- [x] Implement GraphQL schema generation from concept specs
+- [x] Implement concept-side GraphQL resolvers (generated) for full-mode concepts
+- [x] Implement the Lite Query Protocol interfaces (`snapshot`, `lookup`, `filter`)
+- [x] Implement the engine-side `LiteQueryAdapter` with caching
+- [x] Implement engine-side federated query layer (dispatches to full-GraphQL or lite adapters)
+- [x] Implement `where` clause evaluation via the unified `ConceptQuery` interface
+- [x] Demonstrate cross-concept queries in syncs using both modes
+- [x] Test: one concept in full-GraphQL mode, one in lite mode, sync spanning both
 
-### Phase 3: Compiler Pipeline (Weeks 6-8)
+### Phase 3: Compiler Pipeline (Weeks 6-8) ✅ Complete
 
-- [ ] Implement JSON Schema generation from action signatures
-- [ ] Implement TypeScript code generation (types, handler interface, adapter)
-- [ ] Implement conformance test generation from invariants
-- [ ] Implement `.sync` file parser and validator
-- [ ] Build `copf` CLI with `check`, `generate`, `compile-syncs`, `test` commands
+- [x] Implement JSON Schema generation from action signatures
+- [x] Implement TypeScript code generation (types, handler interface, adapter)
+- [x] Implement conformance test generation from invariants
+- [x] Implement `.sync` file parser and validator
+- [x] Build `copf` CLI with `check`, `generate`, `compile-syncs`, `test` commands
 
-### Phase 4: RealWorld Benchmark (Weeks 9-11)
+### Phase 4: RealWorld Benchmark (Weeks 9-11) ✅ Complete
 
-- [ ] Implement all RealWorld concepts (User, Password, Profile, Article, Comment, Tag, Favorite, JWT, Follow)
-- [ ] Implement all RealWorld syncs
-- [ ] Pass the RealWorld Postman test suite
-- [ ] Document design rules and compare with conventional implementations
-- [ ] Package the auth-related concepts (User, Password, JWT) as a first kit
+- [x] Implement all RealWorld concepts (User, Password, Profile, Article, Comment, Tag, Favorite, JWT, Follow)
+- [x] Implement all RealWorld syncs
+- [x] Pass the RealWorld Postman test suite
+- [x] Document design rules and compare with conventional implementations
+- [x] Package the auth-related concepts (User, Password, JWT) as a first kit
 
-### Phase 5: Concept Kits (Weeks 12-13)
+### Phase 5: Concept Kits (Weeks 12-13) ✅ Complete
 
-- [ ] Implement kit.yaml manifest parser and loader
-- [ ] Implement type parameter alignment validation (advisory warnings)
-- [ ] Implement sync tier enforcement (required vs recommended, compile-time checks)
-- [ ] Implement override and disable mechanics in the deployment manifest
-- [ ] Build a content-management kit (Entity, Field, Relation, Node) as the reference kit
-- [ ] Build an auth kit (User, Password, JWT, Session) extracted from Phase 4
-- [ ] Add `copf kit init`, `copf kit validate`, `copf kit test` CLI commands
-- [ ] Test: app using two kits together with overrides and integration syncs
+- [x] Implement kit.yaml manifest parser and loader
+- [x] Implement type parameter alignment validation (advisory warnings)
+- [x] Implement sync tier enforcement (required vs recommended, compile-time checks)
+- [x] Implement override and disable mechanics in the deployment manifest
+- [x] Build a content-management kit (Entity, Field, Relation, Node) as the reference kit
+- [x] Build an auth kit (User, Password, JWT, Session) extracted from Phase 4
+- [x] Add `copf kit init`, `copf kit validate`, `copf kit test` CLI commands
+- [x] Test: app using two kits together with overrides and integration syncs
 
-### Phase 6: Self-Hosting (Weeks 14-16)
+### Phase 6: Self-Hosting (Weeks 14-16) ✅ Complete
 
-- [ ] Write specs for framework concepts (SpecParser, SchemaGen, CodeGen, etc.)
-- [ ] Implement framework concepts
-- [ ] Achieve Stage 2: framework compiles its own specs
-- [ ] Achieve Stage 3: SyncEngine concept replaces kernel eval loop
+- [x] Write specs for framework concepts (SpecParser, SchemaGen, CodeGen, etc.)
+- [x] Implement framework concepts
+- [x] Achieve Stage 2: framework compiles its own specs
+- [x] Achieve Stage 3: SyncEngine concept replaces kernel eval loop
 
-### Phase 7: Multi-Target (Weeks 17-20)
+### Phase 7: CodeGen Refactor (Weeks 17-18) ← Next
 
-- [ ] Implement Rust code generator
+This phase restructures the compiler pipeline from a single `CodeGen` concept to the `SchemaGen` + per-language generator architecture described in Section 10.1, Stage 4. The refactor is behavior-preserving — generated TypeScript output must be identical before and after.
+
+- [ ] Define and validate the `ConceptManifest` TypeScript interface
+- [ ] Refactor `SchemaGen` to produce a full `ConceptManifest`
+  - [ ] Add relation schemas (with merge/grouping decisions encoded)
+  - [ ] Add fully typed action signatures with `ResolvedType` trees
+  - [ ] Add structured invariants with deterministic test values
+  - [ ] Fold existing GraphQL/JSON schema generation into manifest fields
+- [ ] Extract `TypeScriptGen` from `CodeGen`
+  - [ ] Move TypeScript type mapping into `TypeScriptGen` (~15-line `mapType` function)
+  - [ ] Move template logic, converting from AST reads to `ConceptManifest` reads
+  - [ ] Write the `TypeScriptGen` concept spec
+- [ ] Update compiler pipeline syncs
+  - [ ] Replace `GenerateCode` sync with `GenerateManifest` + `GenerateTypeScript`
+  - [ ] Verify sync engine routes correctly through the new two-step pipeline
+- [ ] Delete the old `CodeGen` concept (spec, implementation, tests)
+- [ ] Self-compilation verification
+  - [ ] Framework compiles its own specs through the new pipeline
+  - [ ] Generated output is byte-identical to pre-refactor output
+  - [ ] All existing conformance tests pass without modification
+
+### Phase 8: Multi-Target (Weeks 19-22)
+
+With the refactored pipeline, adding new language targets is now straightforward:
+
+- [ ] Implement `RustGen` concept
+  - [ ] Rust type mapping function (`ResolvedType` → Rust syntax)
+  - [ ] Templates: struct definitions, handler trait, transport adapter, conformance tests
+  - [ ] Write the `RustGen` concept spec
+- [ ] Add one sync: `SchemaGen/generate => RustGen/generate`
 - [ ] Implement HTTP transport adapter
-- [ ] Re-implement one concept in Rust
+- [ ] Re-implement one concept (e.g., Password) in Rust using the generated skeleton
 - [ ] Demonstrate cross-language interop
+  - [ ] TypeScript sync engine invokes Rust concept via HTTP
+  - [ ] Completions flow back through sync evaluation
+  - [ ] State queries work via lite protocol over HTTP
 - [ ] Implement deployment manifest and validation
 
-### Phase 8: Distribution + Eventual Consistency (Weeks 21-24)
+### Phase 9: Distribution + Eventual Consistency (Weeks 23-26)
 
 - [ ] Implement eventual sync queue
 - [ ] Implement engine hierarchy (upstream/downstream)
