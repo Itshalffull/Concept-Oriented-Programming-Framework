@@ -1,0 +1,35 @@
+# ============================================================
+# Stage 1 — Framework Synchronizations
+#
+# These syncs wire the Stage 1 concepts together into the
+# compiler pipeline described in Section 10.1 of the
+# architecture doc.
+# ============================================================
+
+# When a spec is parsed, generate schemas
+sync GenerateSchemas [eager]
+when {
+  SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
+}
+then {
+  SchemaGen/generate: [ spec: ?spec; ast: ?ast ]
+}
+
+# When schemas are generated, generate code
+sync GenerateCode [eager]
+when {
+  SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
+  SchemaGen/generate: [ spec: ?spec ] => []
+}
+then {
+  CodeGen/generate: [ spec: ?spec; ast: ?ast; language: "typescript" ]
+}
+
+# When a concept is registered, log it
+sync LogRegistration [eager]
+when {
+  Registry/register: [] => [ concept: ?c ]
+}
+then {
+  ActionLog/append: [ record: { type: "registration"; concept: ?c } ]
+}

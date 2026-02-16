@@ -1,0 +1,25 @@
+concept SpecParser [S] {
+
+  purpose {
+    Parse .concept files into structured ASTs.
+  }
+
+  state {
+    specs: set S
+    ast: S -> AST
+  }
+
+  actions {
+    action parse(source: String) {
+      -> ok(spec: S, ast: AST) {
+        Tokenize the source string, then run the recursive descent
+        parser to produce a ConceptAST. Assign a unique spec ID.
+        Store the spec reference and its AST.
+      }
+      -> error(message: String, line: Int) {
+        If the source contains syntax errors, return the first
+        error message and the line number where it occurred.
+      }
+    }
+  }
+}

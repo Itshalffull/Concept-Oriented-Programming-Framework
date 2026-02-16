@@ -1,0 +1,38 @@
+concept Registry [C] {
+
+  purpose {
+    Track deployed concepts, their locations, and availability.
+  }
+
+  state {
+    concepts: set C
+    uri: C -> String
+    transport: C -> TransportConfig
+    available: C -> Bool
+  }
+
+  actions {
+    action register(uri: String, transport: TransportConfig) {
+      -> ok(concept: C) {
+        Register a concept at the given URI with its transport
+        configuration. Assign a unique concept reference.
+      }
+      -> error(message: String) {
+        If the URI is already registered, return an error.
+      }
+    }
+
+    action deregister(uri: String) {
+      -> ok() {
+        Remove the concept registration for the given URI.
+      }
+    }
+
+    action heartbeat(uri: String) {
+      -> ok(available: Bool) {
+        Check whether the concept at the given URI is reachable
+        and return its availability status.
+      }
+    }
+  }
+}
