@@ -1,0 +1,45 @@
+concept Favorite [U] {
+
+  purpose {
+    Track which articles a user has favorited.
+    Each user maintains a set of favorited article references.
+  }
+
+  state {
+    favorites: U -> set String
+  }
+
+  actions {
+    action favorite(user: U, article: String) {
+      -> ok(user: U, article: String) {
+        Add article to user's favorites set.
+        Return user and article references.
+      }
+    }
+
+    action unfavorite(user: U, article: String) {
+      -> ok(user: U, article: String) {
+        Remove article from user's favorites set.
+        Return user and article references.
+      }
+    }
+
+    action isFavorited(user: U, article: String) {
+      -> ok(favorited: Bool) {
+        Return whether the article is in the user's favorites.
+      }
+    }
+
+    action count(article: String) {
+      -> ok(count: Int) {
+        Return the number of users who favorited this article.
+      }
+    }
+  }
+
+  invariant {
+    after favorite(user: u, article: "a1") -> ok(user: u, article: "a1")
+    then isFavorited(user: u, article: "a1") -> ok(favorited: true)
+    and  unfavorite(user: u, article: "a1") -> ok(user: u, article: "a1")
+  }
+}

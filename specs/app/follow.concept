@@ -1,0 +1,39 @@
+concept Follow [U] {
+
+  purpose {
+    Track follow relationships between users.
+    Each user maintains a set of users they follow.
+  }
+
+  state {
+    following: U -> set String
+  }
+
+  actions {
+    action follow(user: U, target: String) {
+      -> ok(user: U, target: String) {
+        Add target to user's following set.
+        Return user and target references.
+      }
+    }
+
+    action unfollow(user: U, target: String) {
+      -> ok(user: U, target: String) {
+        Remove target from user's following set.
+        Return user and target references.
+      }
+    }
+
+    action isFollowing(user: U, target: String) {
+      -> ok(following: Bool) {
+        Return whether the user follows the target.
+      }
+    }
+  }
+
+  invariant {
+    after follow(user: u, target: "u2") -> ok(user: u, target: "u2")
+    then isFollowing(user: u, target: "u2") -> ok(following: true)
+    and  unfollow(user: u, target: "u2") -> ok(user: u, target: "u2")
+  }
+}

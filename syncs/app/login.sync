@@ -1,0 +1,58 @@
+// Login flow: authenticate user with email/password, issue JWT
+
+sync LoginCheckPassword [eager]
+when {
+  Web/request: [ method: "login"; email: ?email; password: ?password ]
+    => [ request: ?request ]
+}
+where {
+  User: { ?user email: ?email }
+}
+then {
+  Password/check: [ user: ?user; password: ?password ]
+}
+
+sync LoginSuccess [eager]
+when {
+  Web/request: [ method: "login" ]
+    => []
+  Password/check: [ user: ?user ]
+    => [ valid: true ]
+}
+then {
+  JWT/generate: [ user: ?user ]
+}
+
+sync LoginResponse [eager]
+when {
+  Web/request: [ method: "login"; email: ?email ]
+    => [ request: ?request ]
+  JWT/generate: [ user: ?user ]
+    => [ token: ?token ]
+}
+where {
+  User: { ?u email: ?email; name: ?username }
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [
+      user: [
+        username: ?username;
+        email: ?email;
+        token: ?token ] ] ]
+}
+
+sync LoginFailure [eager]
+when {
+  Web/request: [ method: "login" ]
+    => [ request: ?request ]
+  Password/check: []
+    => [ valid: false ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    error: "Invalid credentials";
+    code: 401 ]
+}
