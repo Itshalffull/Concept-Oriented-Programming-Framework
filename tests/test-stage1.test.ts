@@ -220,7 +220,8 @@ describe('Stage 1 — CodeGen Concept', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files).toHaveLength(3);
+    // types + handler + adapter + conformance test (Password has invariants)
+    expect(files).toHaveLength(4);
 
     // Types file
     const typesFile = files.find(f => f.path === 'password.types.ts');

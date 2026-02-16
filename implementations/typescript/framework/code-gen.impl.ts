@@ -9,7 +9,7 @@
 //   - Adapter file (adapter.ts)
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptAST, TypeExpr, ActionDecl } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptAST, TypeExpr, ActionDecl, InvariantDecl, ActionPattern, ArgPattern } from '../../../kernel/src/types.js';
 
 // --- TypeScript Type Mapping (Section 3.3) ---
 
@@ -165,6 +165,154 @@ function generateAdapterFile(ast: ConceptAST): string {
   return lines.join('\n');
 }
 
+// --- Conformance Test File (Section 7.4) ---
+
+/**
+ * Generate conformance tests from the invariant section of a concept spec.
+ *
+ * Rules from Section 7.4:
+ * 1. Free variables are assigned deterministic IDs: "u-test-invariant-001", etc.
+ * 2. The `after` clause becomes action calls with variant assertions.
+ * 3. The `then` clause becomes assertion calls checking variant + fields.
+ * 4. Literal values are asserted exactly; variables checked for consistency.
+ * 5. Multiple invariants produce multiple test cases with isolated storage.
+ */
+function generateConformanceTestFile(ast: ConceptAST): string | null {
+  if (!ast.invariants || ast.invariants.length === 0) {
+    return null;
+  }
+
+  const conceptName = ast.name;
+  const lowerName = conceptName.toLowerCase();
+  const handlerVar = `${lowerName}Handler`;
+
+  const lines: string[] = [
+    `// generated: ${lowerName}.conformance.test.ts`,
+    `import { describe, it, expect } from "vitest";`,
+    `import { createInMemoryStorage } from "@copf/runtime";`,
+    `import { ${handlerVar} } from "./${lowerName}.impl";`,
+    '',
+    `describe("${conceptName} conformance", () => {`,
+    '',
+  ];
+
+  for (let i = 0; i < ast.invariants.length; i++) {
+    const inv = ast.invariants[i];
+
+    // Collect all free variables (in order of first appearance)
+    const freeVars: string[] = [];
+    const seenVars = new Set<string>();
+
+    function collectVarsFromPattern(pattern: ActionPattern) {
+      for (const arg of pattern.inputArgs) {
+        if (arg.value.type === 'variable' && !seenVars.has(arg.value.name)) {
+          seenVars.add(arg.value.name);
+          freeVars.push(arg.value.name);
+        }
+      }
+      for (const arg of pattern.outputArgs) {
+        if (arg.value.type === 'variable' && !seenVars.has(arg.value.name)) {
+          seenVars.add(arg.value.name);
+          freeVars.push(arg.value.name);
+        }
+      }
+    }
+
+    for (const p of inv.afterPatterns) collectVarsFromPattern(p);
+    for (const p of inv.thenPatterns) collectVarsFromPattern(p);
+
+    // Build description from invariant structure
+    const afterNames = inv.afterPatterns.map(p => p.actionName).join(', ');
+    const thenNames = inv.thenPatterns.map(p => p.actionName).join(', ');
+    const desc = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly`;
+
+    lines.push(`  it("${desc}", async () => {`);
+    lines.push(`    const storage = createInMemoryStorage();`);
+    lines.push('');
+
+    // Declare free variable bindings (Section 7.4 Rule 1)
+    for (let v = 0; v < freeVars.length; v++) {
+      const padded = String(v + 1).padStart(3, '0');
+      lines.push(`    const ${freeVars[v]} = "u-test-invariant-${padded}";`);
+    }
+    if (freeVars.length > 0) lines.push('');
+
+    // After clause (Section 7.4 Rule 2)
+    let stepNum = 1;
+    lines.push(`    // --- AFTER clause ---`);
+    for (const pattern of inv.afterPatterns) {
+      lines.push(...generatePatternCall(
+        handlerVar, pattern, freeVars, stepNum, 'after',
+      ));
+      stepNum++;
+    }
+    lines.push('');
+
+    // Then clause (Section 7.4 Rule 3)
+    lines.push(`    // --- THEN clause ---`);
+    for (const pattern of inv.thenPatterns) {
+      lines.push(...generatePatternCall(
+        handlerVar, pattern, freeVars, stepNum, 'then',
+      ));
+      stepNum++;
+    }
+
+    lines.push(`  });`);
+    lines.push('');
+  }
+
+  lines.push(`});`);
+  return lines.join('\n');
+}
+
+function generatePatternCall(
+  handlerVar: string,
+  pattern: ActionPattern,
+  freeVars: string[],
+  stepNum: number,
+  clause: 'after' | 'then',
+): string[] {
+  const lines: string[] = [];
+  const varName = `step${stepNum}`;
+
+  // Build the comment showing the original pattern
+  const inputStr = pattern.inputArgs.map(a => {
+    if (a.value.type === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
+    return `${a.name}: ${a.value.name}`;
+  }).join(', ');
+  const outputStr = pattern.outputArgs.map(a => {
+    if (a.value.type === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
+    return `${a.name}: ${a.value.name}`;
+  }).join(', ');
+  lines.push(`    // ${pattern.actionName}(${inputStr}) -> ${pattern.variantName}(${outputStr})`);
+
+  // Build input object
+  const inputFields = pattern.inputArgs.map(a => {
+    if (a.value.type === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
+    return `${a.name}: ${a.value.name}`;
+  }).join(', ');
+
+  lines.push(`    const ${varName} = await ${handlerVar}.${pattern.actionName}(`);
+  lines.push(`      { ${inputFields} },`);
+  lines.push(`      storage,`);
+  lines.push(`    );`);
+
+  // Assert variant
+  lines.push(`    expect(${varName}.variant).toBe("${pattern.variantName}");`);
+
+  // Assert output fields (Section 7.4 Rule 4)
+  for (const arg of pattern.outputArgs) {
+    if (arg.value.type === 'literal') {
+      lines.push(`    expect((${varName} as any).${arg.name}).toBe(${JSON.stringify(arg.value.value)});`);
+    } else {
+      // Variable reference — assert consistency
+      lines.push(`    expect((${varName} as any).${arg.name}).toBe(${arg.value.name});`);
+    }
+  }
+
+  return lines;
+}
+
 // --- Handler ---
 
 export const codeGenHandler: ConceptHandler = {
@@ -188,6 +336,12 @@ export const codeGenHandler: ConceptHandler = {
         { path: `${lowerName}.handler.ts`, content: generateHandlerFile(ast) },
         { path: `${lowerName}.adapter.ts`, content: generateAdapterFile(ast) },
       ];
+
+      // Add conformance tests if the spec has invariants (Section 7.4)
+      const conformanceTest = generateConformanceTestFile(ast);
+      if (conformanceTest) {
+        files.push({ path: `${lowerName}.conformance.test.ts`, content: conformanceTest });
+      }
 
       // Store the output keyed by spec reference
       await storage.put('outputs', spec, { spec, files });
