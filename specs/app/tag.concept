@@ -1,0 +1,40 @@
+concept Tag [T] {
+
+  purpose {
+    Manage tags and their association with articles.
+    Tags are labels that can be applied to multiple articles.
+  }
+
+  state {
+    tags: set T
+    articles: T -> set String
+  }
+
+  actions {
+    action add(tag: T, article: String) {
+      -> ok(tag: T) {
+        Add tag to tags set if not present.
+        Add article to the tag's article set.
+        Return tag reference.
+      }
+    }
+
+    action remove(tag: T, article: String) {
+      -> ok(tag: T) {
+        Remove article from the tag's article set.
+        Return tag reference.
+      }
+    }
+
+    action list() {
+      -> ok(tags: String) {
+        Return all known tags as a JSON-encoded list.
+      }
+    }
+  }
+
+  invariant {
+    after add(tag: t, article: "a1") -> ok(tag: t)
+    then add(tag: t, article: "a2") -> ok(tag: t)
+  }
+}

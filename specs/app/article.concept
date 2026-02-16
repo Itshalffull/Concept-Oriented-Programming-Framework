@@ -1,0 +1,64 @@
+concept Article [A] {
+
+  purpose {
+    Manage articles with title, description, body, and author.
+    Each article is an independent content entity.
+  }
+
+  state {
+    articles: set A
+    slug: A -> String
+    title: A -> String
+    description: A -> String
+    body: A -> String
+    author: A -> String
+    createdAt: A -> DateTime
+    updatedAt: A -> DateTime
+  }
+
+  actions {
+    action create(article: A, title: String, description: String, body: String, author: String) {
+      -> ok(article: A) {
+        Add article to set. Store all fields. Generate slug from title.
+        Set createdAt and updatedAt timestamps. Return article reference.
+      }
+    }
+
+    action update(article: A, title: String, description: String, body: String) {
+      -> ok(article: A) {
+        Update article fields and updatedAt timestamp. Return article reference.
+      }
+      -> notfound(message: String) {
+        If article does not exist.
+      }
+    }
+
+    action delete(article: A) {
+      -> ok(article: A) {
+        Remove article from set. Delete all fields. Return article reference.
+      }
+      -> notfound(message: String) {
+        If article does not exist.
+      }
+    }
+
+    action get(article: A) {
+      -> ok(article: A, slug: String, title: String, description: String, body: String, author: String) {
+        Return all fields for the article.
+      }
+      -> notfound(message: String) {
+        If article does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(article: a, title: "Test Article", description: "A test", body: "Body text", author: "u1") -> ok(article: a)
+    then get(article: a) -> ok(article: a, slug: "test-article", title: "Test Article", description: "A test", body: "Body text", author: "u1")
+  }
+
+  invariant {
+    after create(article: a, title: "To Delete", description: "Desc", body: "Body", author: "u1") -> ok(article: a)
+    then delete(article: a) -> ok(article: a)
+  }
+}

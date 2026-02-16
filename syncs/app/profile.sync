@@ -1,0 +1,40 @@
+// Profile flow: update profile with JWT authentication
+
+sync UpdateProfileAuth [eager]
+when {
+  Web/request: [ method: "update_profile"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformUpdateProfile [eager]
+when {
+  Web/request: [
+    method: "update_profile";
+    bio: ?bio;
+    image: ?image ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Profile/update: [ user: ?user; bio: ?bio; image: ?image ]
+}
+
+sync UpdateProfileResponse [eager]
+when {
+  Web/request: [ method: "update_profile" ]
+    => [ request: ?request ]
+  Profile/update: []
+    => [ user: ?user; bio: ?bio; image: ?image ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [
+      profile: [
+        bio: ?bio;
+        image: ?image ] ] ]
+}

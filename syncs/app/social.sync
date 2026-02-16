@@ -1,0 +1,133 @@
+// Social features: follow/unfollow users, favorite/unfavorite articles
+
+sync FollowAuth [eager]
+when {
+  Web/request: [ method: "follow"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformFollow [eager]
+when {
+  Web/request: [ method: "follow"; target: ?target ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Follow/follow: [ user: ?user; target: ?target ]
+}
+
+sync FollowResponse [eager]
+when {
+  Web/request: [ method: "follow" ]
+    => [ request: ?request ]
+  Follow/follow: []
+    => [ user: ?user ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ following: true ] ]
+}
+
+sync UnfollowAuth [eager]
+when {
+  Web/request: [ method: "unfollow"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformUnfollow [eager]
+when {
+  Web/request: [ method: "unfollow"; target: ?target ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Follow/unfollow: [ user: ?user; target: ?target ]
+}
+
+sync UnfollowResponse [eager]
+when {
+  Web/request: [ method: "unfollow" ]
+    => [ request: ?request ]
+  Follow/unfollow: []
+    => [ user: ?user ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ following: false ] ]
+}
+
+sync FavoriteAuth [eager]
+when {
+  Web/request: [ method: "favorite"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformFavorite [eager]
+when {
+  Web/request: [ method: "favorite"; article: ?article ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Favorite/favorite: [ user: ?user; article: ?article ]
+}
+
+sync FavoriteResponse [eager]
+when {
+  Web/request: [ method: "favorite" ]
+    => [ request: ?request ]
+  Favorite/favorite: []
+    => [ user: ?user ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ favorited: true ] ]
+}
+
+sync UnfavoriteAuth [eager]
+when {
+  Web/request: [ method: "unfavorite"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformUnfavorite [eager]
+when {
+  Web/request: [ method: "unfavorite"; article: ?article ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Favorite/unfavorite: [ user: ?user; article: ?article ]
+}
+
+sync UnfavoriteResponse [eager]
+when {
+  Web/request: [ method: "unfavorite" ]
+    => [ request: ?request ]
+  Favorite/unfavorite: []
+    => [ user: ?user ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ favorited: false ] ]
+}

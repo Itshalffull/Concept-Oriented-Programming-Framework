@@ -1,0 +1,46 @@
+concept Comment [C] {
+
+  purpose {
+    Manage comments on articles. Each comment has a body,
+    target article reference, and author reference.
+  }
+
+  state {
+    comments: set C
+    body: C -> String
+    target: C -> String
+    author: C -> String
+    createdAt: C -> DateTime
+  }
+
+  actions {
+    action create(comment: C, body: String, target: String, author: String) {
+      -> ok(comment: C) {
+        Add comment to set. Store body, target, author, and createdAt.
+        Return comment reference.
+      }
+    }
+
+    action delete(comment: C) {
+      -> ok(comment: C) {
+        Remove comment from set. Delete all fields.
+        Return comment reference.
+      }
+      -> notfound(message: String) {
+        If comment does not exist.
+      }
+    }
+
+    action list(target: String) {
+      -> ok(comments: String) {
+        Return all comments for the given article target
+        as a JSON-encoded list.
+      }
+    }
+  }
+
+  invariant {
+    after create(comment: c, body: "Great post", target: "a1", author: "u1") -> ok(comment: c)
+    then delete(comment: c) -> ok(comment: c)
+  }
+}

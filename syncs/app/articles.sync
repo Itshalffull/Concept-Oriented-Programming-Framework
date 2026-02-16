@@ -1,0 +1,142 @@
+// Article CRUD flow: create, update, delete with JWT authentication
+// Includes cascade delete of comments on article deletion
+
+sync CreateArticleAuth [eager]
+when {
+  Web/request: [ method: "create_article"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformCreateArticle [eager]
+when {
+  Web/request: [
+    method: "create_article";
+    title: ?title;
+    description: ?desc;
+    body: ?body ]
+    => []
+  JWT/verify: []
+    => [ user: ?author ]
+}
+where {
+  bind(uuid() as ?article)
+}
+then {
+  Article/create: [
+    article: ?article;
+    title: ?title;
+    description: ?desc;
+    body: ?body;
+    author: ?author ]
+}
+
+sync CreateArticleResponse [eager]
+when {
+  Web/request: [ method: "create_article" ]
+    => [ request: ?request ]
+  Article/create: []
+    => [ article: ?article ]
+}
+where {
+  Article: { ?a slug: ?slug; title: ?title; author: ?author }
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [
+      article: [
+        slug: ?slug;
+        title: ?title;
+        author: ?author ] ] ]
+}
+
+sync UpdateArticleAuth [eager]
+when {
+  Web/request: [ method: "update_article"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformUpdateArticle [eager]
+when {
+  Web/request: [
+    method: "update_article";
+    article: ?article;
+    title: ?title;
+    description: ?desc;
+    body: ?body ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Article/update: [
+    article: ?article;
+    title: ?title;
+    description: ?desc;
+    body: ?body ]
+}
+
+sync UpdateArticleResponse [eager]
+when {
+  Web/request: [ method: "update_article" ]
+    => [ request: ?request ]
+  Article/update: []
+    => [ article: ?article ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ updated: ?article ] ]
+}
+
+sync DeleteArticleAuth [eager]
+when {
+  Web/request: [ method: "delete_article"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformDeleteArticle [eager]
+when {
+  Web/request: [ method: "delete_article"; article: ?article ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Article/delete: [ article: ?article ]
+}
+
+sync DeleteArticleResponse [eager]
+when {
+  Web/request: [ method: "delete_article" ]
+    => [ request: ?request ]
+  Article/delete: []
+    => [ article: ?article ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ deleted: ?article ] ]
+}
+
+// Cascade: when an article is deleted, delete all its comments
+sync CascadeDeleteComments [eager]
+when {
+  Article/delete: [ article: ?article ]
+    => [ article: ?article ]
+}
+where {
+  Comment: { ?comment target: ?article }
+}
+then {
+  Comment/delete: [ comment: ?comment ]
+}

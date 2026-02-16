@@ -1,0 +1,35 @@
+concept Profile [U] {
+
+  purpose {
+    Store and manage user profile information including
+    biography and avatar image. Separate from User to
+    allow independent evolution and cross-runtime replication.
+  }
+
+  state {
+    bio: U -> String
+    image: U -> String
+  }
+
+  actions {
+    action update(user: U, bio: String, image: String) {
+      -> ok(user: U, bio: String, image: String) {
+        Store bio and image for the user. Return updated fields.
+      }
+    }
+
+    action get(user: U) {
+      -> ok(user: U, bio: String, image: String) {
+        Return the profile for the given user.
+      }
+      -> notfound(message: String) {
+        If no profile exists for the user.
+      }
+    }
+  }
+
+  invariant {
+    after update(user: u, bio: "Hello world", image: "http://img.png") -> ok(user: u, bio: "Hello world", image: "http://img.png")
+    then get(user: u) -> ok(user: u, bio: "Hello world", image: "http://img.png")
+  }
+}

@@ -1,0 +1,77 @@
+// Comment flow: create and delete comments with JWT authentication
+
+sync CreateCommentAuth [eager]
+when {
+  Web/request: [ method: "create_comment"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformCreateComment [eager]
+when {
+  Web/request: [
+    method: "create_comment";
+    body: ?body;
+    article: ?article ]
+    => []
+  JWT/verify: []
+    => [ user: ?author ]
+}
+where {
+  bind(uuid() as ?comment)
+}
+then {
+  Comment/create: [
+    comment: ?comment;
+    body: ?body;
+    target: ?article;
+    author: ?author ]
+}
+
+sync CreateCommentResponse [eager]
+when {
+  Web/request: [ method: "create_comment" ]
+    => [ request: ?request ]
+  Comment/create: []
+    => [ comment: ?comment ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ comment: ?comment ] ]
+}
+
+sync DeleteCommentAuth [eager]
+when {
+  Web/request: [ method: "delete_comment"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync PerformDeleteComment [eager]
+when {
+  Web/request: [ method: "delete_comment"; comment: ?comment ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  Comment/delete: [ comment: ?comment ]
+}
+
+sync DeleteCommentResponse [eager]
+when {
+  Web/request: [ method: "delete_comment" ]
+    => [ request: ?request ]
+  Comment/delete: []
+    => [ comment: ?comment ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ deleted: ?comment ] ]
+}
