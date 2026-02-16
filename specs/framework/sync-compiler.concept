@@ -1,0 +1,24 @@
+concept SyncCompiler [Y] {
+
+  purpose {
+    Compile parsed synchronizations into executable registrations.
+  }
+
+  state {
+    compiled: Y -> CompiledSync
+  }
+
+  actions {
+    action compile(sync: Y, ast: SyncAST) {
+      -> ok(compiled: CompiledSync) {
+        Transform the parsed sync AST into a CompiledSync
+        object that the engine can register and evaluate.
+        Resolve where-clause queries into query plans.
+      }
+      -> error(message: String) {
+        If the sync AST references invalid field names or
+        has inconsistent variable bindings, return an error.
+      }
+    }
+  }
+}

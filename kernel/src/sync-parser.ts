@@ -533,6 +533,9 @@ class SyncFileParser {
         } else if (this.peek().type === 'LBRACKET') {
           // Nested object literal: [ key: value; ... ]
           value = { type: 'literal', value: this.parseNestedObject() };
+        } else if (this.peek().type === 'LBRACE') {
+          // Nested object literal: { key: value; ... }
+          value = { type: 'literal', value: this.parseNestedObjectBraces() };
         } else {
           throw new Error(`Sync parse error at line ${this.peek().line}: expected then field value, got ${this.peek().type}(${this.peek().value})`);
         }
@@ -550,6 +553,43 @@ class SyncFileParser {
 
     this.expect('RBRACE');
     return actions;
+  }
+
+  private parseNestedObjectBraces(): Record<string, unknown> {
+    this.expect('LBRACE');
+    const obj: Record<string, unknown> = {};
+
+    while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+      this.skipSeps();
+      if (this.peek().type === 'RBRACE') break;
+
+      const key = this.expect('IDENT').value;
+      this.expect('COLON');
+
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        const varName = this.expect('IDENT').value;
+        obj[key] = `{{${varName}}}`;
+      } else if (this.peek().type === 'STRING_LIT') {
+        obj[key] = this.advance().value;
+      } else if (this.peek().type === 'INT_LIT') {
+        obj[key] = parseInt(this.advance().value, 10);
+      } else if (this.peek().type === 'BOOL_LIT') {
+        obj[key] = this.advance().value === 'true';
+      } else if (this.peek().type === 'LBRACE') {
+        obj[key] = this.parseNestedObjectBraces();
+      } else if (this.peek().type === 'LBRACKET') {
+        obj[key] = this.parseNestedObject();
+      } else {
+        obj[key] = this.advance().value;
+      }
+
+      this.match('SEMICOLON');
+      this.skipSeps();
+    }
+
+    this.expect('RBRACE');
+    return obj;
   }
 
   private parseNestedObject(): Record<string, unknown> {

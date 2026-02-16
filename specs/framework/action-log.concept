@@ -1,0 +1,34 @@
+concept ActionLog [R] {
+
+  purpose {
+    Append-only log of all action invocations and completions.
+    The engine's memory.
+  }
+
+  state {
+    records: set R
+    record: R -> ActionRecord
+    edges: R -> list { target: R, sync: String }
+  }
+
+  actions {
+    action append(record: ActionRecord) {
+      -> ok(id: R) {
+        Append the record to the log and return its unique ID.
+      }
+    }
+
+    action addEdge(from: R, to: R, sync: String) {
+      -> ok() {
+        Record a provenance edge from one action record to
+        another, tagged with the sync that caused it.
+      }
+    }
+
+    action query(flow: String) {
+      -> ok(records: list ActionRecord) {
+        Return all action records belonging to the given flow.
+      }
+    }
+  }
+}

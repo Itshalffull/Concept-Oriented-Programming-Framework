@@ -243,6 +243,21 @@ class Parser {
     return this.advance();
   }
 
+  /**
+   * Expect an identifier, but also accept keywords so that spec
+   * authors can use words like "concept", "state", "action", etc.
+   * as parameter names and field names.
+   */
+  private expectIdent(): Token {
+    const tok = this.peek();
+    if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+      return this.advance();
+    }
+    throw new Error(
+      `Parse error at line ${tok.line}:${tok.col}: expected identifier, got ${tok.type}(${tok.value})`,
+    );
+  }
+
   private match(type: TokenType, value?: string): Token | null {
     const tok = this.peek();
     if (tok.type === type && (value === undefined || tok.value === value)) {
@@ -260,7 +275,7 @@ class Parser {
   parseConcept(): ConceptAST {
     this.skipSeps();
     this.expect('KEYWORD', 'concept');
-    const name = this.expect('IDENT').value;
+    const name = this.expectIdent().value;
     const typeParams = this.parseTypeParams();
     this.expect('LBRACE');
 
@@ -356,7 +371,7 @@ class Parser {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
 
-      const name = this.expect('IDENT').value;
+      const name = this.expectIdent().value;
 
       // Check if this is a group or a component
       if (this.peek().type === 'LBRACE') {
@@ -365,7 +380,7 @@ class Parser {
         while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
           this.skipSeps();
           if (this.peek().type === 'RBRACE') break;
-          const compName = this.expect('IDENT').value;
+          const compName = this.expectIdent().value;
           this.expect('COLON');
           const typeExpr = this.parseTypeExpr(typeParams);
           entries.push({ name: compName, type: typeExpr, group: name });
@@ -405,7 +420,7 @@ class Parser {
       while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
         this.skipSeps();
         if (this.peek().type === 'RBRACE') break;
-        const fieldName = this.expect('IDENT').value;
+        const fieldName = this.expectIdent().value;
         this.expect('COLON');
         const fieldType = this.parseTypeExpr(typeParams);
         fields.push({ name: fieldName, type: fieldType });
@@ -461,7 +476,7 @@ class Parser {
       if (this.peek().type === 'RBRACE') break;
 
       this.expect('KEYWORD', 'action');
-      const name = this.expect('IDENT').value;
+      const name = this.expectIdent().value;
       this.expect('LPAREN');
       const params = this.parseParamList(typeParams);
       this.expect('RPAREN');
@@ -474,7 +489,7 @@ class Parser {
         if (this.peek().type === 'RBRACE') break;
 
         this.expect('ARROW');
-        const variantName = this.expect('IDENT').value;
+        const variantName = this.expectIdent().value;
         this.expect('LPAREN');
         const variantParams = this.parseParamList(typeParams);
         this.expect('RPAREN');
@@ -524,7 +539,7 @@ class Parser {
   }
 
   private parseParam(typeParams: string[]): ParamDecl {
-    const name = this.expect('IDENT').value;
+    const name = this.expectIdent().value;
     this.expect('COLON');
     const type = this.parseTypeExpr(typeParams);
     return { name, type };
@@ -574,12 +589,12 @@ class Parser {
   }
 
   private parseActionPattern(): ActionPattern {
-    const actionName = this.expect('IDENT').value;
+    const actionName = this.expectIdent().value;
     this.expect('LPAREN');
     const inputArgs = this.parseArgPatterns();
     this.expect('RPAREN');
     this.expect('ARROW');
-    const variantName = this.expect('IDENT').value;
+    const variantName = this.expectIdent().value;
     this.expect('LPAREN');
     const outputArgs = this.parseArgPatterns();
     this.expect('RPAREN');
@@ -598,7 +613,7 @@ class Parser {
   }
 
   private parseArgPattern(): ArgPattern {
-    const name = this.expect('IDENT').value;
+    const name = this.expectIdent().value;
     this.expect('COLON');
 
     const tok = this.peek();
@@ -639,7 +654,7 @@ class Parser {
 
       this.expect('KEYWORD', 'requires');
       // Capability name may contain hyphens, so we need to handle IDENT-IDENT
-      let capName = this.expect('IDENT').value;
+      let capName = this.expectIdent().value;
       while (this.peek().type === 'ARROW') {
         // Actually hyphens tokenize as part of ARROW, let's handle differently
         break;

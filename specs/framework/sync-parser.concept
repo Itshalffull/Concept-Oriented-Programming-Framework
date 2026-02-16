@@ -1,0 +1,26 @@
+concept SyncParser [Y] {
+
+  purpose {
+    Parse .sync files into structured ASTs and validate
+    against concept manifests.
+  }
+
+  state {
+    syncs: set Y
+    ast: Y -> SyncAST
+  }
+
+  actions {
+    action parse(source: String, manifests: list Manifest) {
+      -> ok(sync: Y, ast: SyncAST) {
+        Tokenize and parse the .sync source. Resolve all
+        concept and action references against the provided
+        manifests. Store the sync reference and its AST.
+      }
+      -> error(message: String, line: Int) {
+        If the source has syntax errors or references
+        unknown concepts or actions, return the error.
+      }
+    }
+  }
+}

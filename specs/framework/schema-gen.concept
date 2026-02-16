@@ -1,0 +1,25 @@
+concept SchemaGen [S] {
+
+  purpose {
+    Generate GraphQL and JSON schemas from parsed concept specs.
+  }
+
+  state {
+    schemas: S -> { graphql: String, jsonSchemas: list String }
+  }
+
+  actions {
+    action generate(spec: S, ast: AST) {
+      -> ok(graphql: String, jsonSchemas: list String) {
+        From the concept AST, produce a GraphQL schema fragment
+        for the state section, and one JSON Schema per action
+        (invocation + completion variants). Store the result
+        keyed by spec reference.
+      }
+      -> error(message: String) {
+        If the AST is malformed or contains unsupported type
+        expressions, return an error description.
+      }
+    }
+  }
+}
