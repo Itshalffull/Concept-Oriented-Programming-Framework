@@ -1,0 +1,27 @@
+concept RustGen [S] {
+
+  purpose {
+    Generate Rust skeleton code from a ConceptManifest.
+    Produces type definitions, handler trait, transport adapter,
+    and conformance tests.
+  }
+
+  state {
+    outputs: S -> list { path: String, content: String }
+  }
+
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String, content: String }) {
+        Map ResolvedTypes to Rust types (String, i64, Vec, Option, etc.).
+        Emit struct definitions for action inputs/outputs.
+        Emit handler trait with async methods per action.
+        Emit transport adapter.
+        Emit conformance tests.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to Rust.
+      }
+    }
+  }
+}

@@ -1,12 +1,14 @@
 # ============================================================
-# Stage 4 — Framework Synchronizations
+# Stage 5 — Framework Synchronizations
 #
-# Refactored compiler pipeline: SchemaGen now produces a rich
-# ConceptManifest, and TypeScriptGen (replacing CodeGen) reads
-# from the manifest. Adding a new language target requires only
-# a new generator concept + one sync — no existing code changes.
+# Multi-target compiler pipeline: SchemaGen produces a rich
+# ConceptManifest, and per-language generators (TypeScriptGen,
+# RustGen) each consume the manifest via their own sync.
+# Adding a new language target requires only a new generator
+# concept + one sync — no existing code changes.
 #
 # Pipeline: SpecParser → SchemaGen → TypeScriptGen
+#                                  → RustGen
 # ============================================================
 
 # When a spec is parsed, generate the manifest
@@ -25,6 +27,15 @@ when {
 }
 then {
   TypeScriptGen/generate: [ spec: ?spec; manifest: ?manifest ]
+}
+
+# When a manifest is generated, generate Rust code
+sync GenerateRust [eager]
+when {
+  SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+}
+then {
+  RustGen/generate: [ spec: ?spec; manifest: ?manifest ]
 }
 
 # When a concept is registered, log it

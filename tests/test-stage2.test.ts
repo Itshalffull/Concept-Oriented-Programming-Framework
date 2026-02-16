@@ -448,9 +448,10 @@ describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () =>
 
     expect(result.variant).toBe('ok');
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
-    expect(allSyncs).toHaveLength(3);
+    expect(allSyncs).toHaveLength(4);
     expect(allSyncs.map(s => s.name)).toContain('GenerateManifest');
     expect(allSyncs.map(s => s.name)).toContain('GenerateTypeScript');
+    expect(allSyncs.map(s => s.name)).toContain('GenerateRust');
     expect(allSyncs.map(s => s.name)).toContain('LogRegistration');
   });
 
