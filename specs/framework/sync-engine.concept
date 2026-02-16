@@ -1,0 +1,40 @@
+concept SyncEngine [F] {
+
+  purpose {
+    Evaluate synchronizations by matching completions,
+    querying state, and producing invocations.
+  }
+
+  state {
+    syncs: set SyncRegistration
+    pendingFlows: set F
+  }
+
+  actions {
+    action registerSync(sync: CompiledSync) {
+      -> ok() {
+        Register a compiled synchronization for evaluation.
+        Index it by concept/action pairs in its when clause.
+      }
+    }
+
+    action onCompletion(completion: ActionCompletion) {
+      -> ok(invocations: list ActionInvocation) {
+        Receive a completion, find all syncs that should fire,
+        evaluate their where clauses, and produce invocations.
+        This is the core evaluation loop from Section 6.2.
+      }
+    }
+
+    action evaluateWhere(bindings: Bindings, queries: list QueryPlan) {
+      -> ok(results: list Bindings) {
+        Evaluate a where clause against concept state,
+        producing expanded variable bindings.
+      }
+      -> error(message: String) {
+        If a referenced concept is unavailable or a query
+        fails, return an error description.
+      }
+    }
+  }
+}

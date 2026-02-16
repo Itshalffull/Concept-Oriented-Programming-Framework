@@ -87,7 +87,7 @@ when {
   Web/request: [ method: "register" ]
     => [ request: ?request ]
   User/register: []
-    => [ error: ?error ]
+    => [ message: ?error ]
 }
 then {
   Web/respond: [
