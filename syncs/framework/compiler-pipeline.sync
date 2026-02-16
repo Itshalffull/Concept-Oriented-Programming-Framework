@@ -1,13 +1,16 @@
 # ============================================================
-# Stage 1 — Framework Synchronizations
+# Stage 4 — Framework Synchronizations
 #
-# These syncs wire the Stage 1 concepts together into the
-# compiler pipeline described in Section 10.1 of the
-# architecture doc.
+# Refactored compiler pipeline: SchemaGen now produces a rich
+# ConceptManifest, and TypeScriptGen (replacing CodeGen) reads
+# from the manifest. Adding a new language target requires only
+# a new generator concept + one sync — no existing code changes.
+#
+# Pipeline: SpecParser → SchemaGen → TypeScriptGen
 # ============================================================
 
-# When a spec is parsed, generate schemas
-sync GenerateSchemas [eager]
+# When a spec is parsed, generate the manifest
+sync GenerateManifest [eager]
 when {
   SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
 }
@@ -15,14 +18,13 @@ then {
   SchemaGen/generate: [ spec: ?spec; ast: ?ast ]
 }
 
-# When schemas are generated, generate code
-sync GenerateCode [eager]
+# When a manifest is generated, generate TypeScript code
+sync GenerateTypeScript [eager]
 when {
-  SpecParser/parse: [] => [ spec: ?spec; ast: ?ast ]
-  SchemaGen/generate: [ spec: ?spec ] => []
+  SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
 }
 then {
-  CodeGen/generate: [ spec: ?spec; ast: ?ast; language: "typescript" ]
+  TypeScriptGen/generate: [ spec: ?spec; manifest: ?manifest ]
 }
 
 # When a concept is registered, log it

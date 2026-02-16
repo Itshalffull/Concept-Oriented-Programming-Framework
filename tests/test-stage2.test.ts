@@ -1,6 +1,9 @@
 // ============================================================
 // Stage 2 — Self-Compilation Tests
 //
+// Updated for Stage 4: SchemaGen now produces ConceptManifest,
+// TypeScriptGen replaces CodeGen.
+//
 // From Section 10.1 of the architecture doc:
 //
 // "Use the Stage 1 concepts to compile themselves:
@@ -28,12 +31,12 @@ import {
   parseConceptFile,
   parseSyncFile,
 } from '../kernel/src/index.js';
-import type { ConceptAST, CompiledSync } from '../kernel/src/types.js';
+import type { ConceptAST, CompiledSync, ConceptManifest } from '../kernel/src/types.js';
 
 // Stage 1 concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { codeGenHandler } from '../implementations/typescript/framework/code-gen.impl.js';
+import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
 import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
 import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
 import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
@@ -46,9 +49,20 @@ function readSpec(category: string, name: string): string {
   return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
 }
 
-// All 7 Stage 1 framework concept names
+// Helper: run SchemaGen on an AST and return the manifest
+async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
+  const storage = createInMemoryStorage();
+  const result = await schemaGenHandler.generate(
+    { spec: 'test', ast },
+    storage,
+  );
+  expect(result.variant).toBe('ok');
+  return result.manifest as ConceptManifest;
+}
+
+// All 8 Stage 1 framework concept names (code-gen replaced by typescript-gen)
 const FRAMEWORK_SPECS = [
-  'spec-parser', 'schema-gen', 'code-gen',
+  'spec-parser', 'schema-gen', 'typescript-gen',
   'sync-parser', 'sync-compiler',
   'action-log', 'registry',
 ];
@@ -89,8 +103,8 @@ describe('Stage 2 — Step 1: SpecParser self-compilation', () => {
     expect(parsedASTs['schema-gen'].name).toBe('SchemaGen');
     expect(parsedASTs['schema-gen'].actions[0].name).toBe('generate');
 
-    expect(parsedASTs['code-gen'].name).toBe('CodeGen');
-    expect(parsedASTs['code-gen'].actions[0].name).toBe('generate');
+    expect(parsedASTs['typescript-gen'].name).toBe('TypeScriptGen');
+    expect(parsedASTs['typescript-gen'].actions[0].name).toBe('generate');
 
     expect(parsedASTs['sync-parser'].name).toBe('SyncParser');
     expect(parsedASTs['sync-parser'].actions[0].name).toBe('parse');
@@ -114,21 +128,21 @@ describe('Stage 2 — Step 1: SpecParser self-compilation', () => {
       expect(result.variant).toBe('ok');
     }
 
-    // All 11 specs (7 framework + 4 app) should be stored
+    // All app specs should be stored
     const allSpecs = await storage.find('specs');
     expect(allSpecs).toHaveLength(APP_SPECS.length);
   });
 });
 
 // ============================================================
-// Step 2: SchemaGen output verification
+// Step 2: SchemaGen output verification (now produces ConceptManifest)
 //
 // "Feed the parsed ASTs to SchemaGen — verify the output
 //  matches the hand-written schemas."
 // ============================================================
 
-describe('Stage 2 — Step 2: SchemaGen self-compilation', () => {
-  it('generates schemas for all framework specs', async () => {
+describe('Stage 2 — Step 2: SchemaGen self-compilation (ConceptManifest)', () => {
+  it('generates manifests for all framework specs', async () => {
     const parserStorage = createInMemoryStorage();
     const schemaStorage = createInMemoryStorage();
 
@@ -142,117 +156,105 @@ describe('Stage 2 — Step 2: SchemaGen self-compilation', () => {
         schemaStorage,
       );
       expect(genResult.variant).toBe('ok');
-      expect(genResult.graphql).toBeTruthy();
-      expect((genResult.jsonSchemas as string[]).length).toBeGreaterThan(0);
+      const manifest = genResult.manifest as ConceptManifest;
+      expect(manifest.name).toBeTruthy();
+      expect(manifest.graphqlSchema).toBeTruthy();
+      expect(manifest.actions.length).toBeGreaterThan(0);
     }
   });
 
-  it('SpecParser schema has correct GraphQL structure', async () => {
-    const storage = createInMemoryStorage();
+  it('SpecParser manifest has correct GraphQL structure', async () => {
     const ast = parseConceptFile(readSpec('framework', 'spec-parser'));
-    const result = await schemaGenHandler.generate(
-      { spec: 'sp-1', ast },
-      storage,
-    );
-
-    const graphql = result.graphql as string;
+    const manifest = await generateManifest(ast);
 
     // SpecParser state: specs: set S, ast: S -> AST
-    // 'set S' becomes a separate relation; 'S -> AST' merges into entry
-    expect(graphql).toContain('SpecParserState');
-    expect(graphql).toContain('SpecParserEntry');
-    expect(graphql).toContain('ast:');  // merged field
+    // 'set S' becomes a set-valued relation; 'S -> AST' merges into entry
+    expect(manifest.graphqlSchema).toContain('SpecParserState');
+    expect(manifest.graphqlSchema).toContain('SpecParserEntry');
+    expect(manifest.graphqlSchema).toContain('ast:');  // merged field
   });
 
-  it('SpecParser schema has correct JSON schemas for parse action', async () => {
-    const storage = createInMemoryStorage();
+  it('SpecParser manifest has correct JSON schemas for parse action', async () => {
     const ast = parseConceptFile(readSpec('framework', 'spec-parser'));
-    const result = await schemaGenHandler.generate(
-      { spec: 'sp-1', ast },
-      storage,
-    );
+    const manifest = await generateManifest(ast);
 
-    const jsonSchemas = result.jsonSchemas as string[];
-    // parse action: 1 invocation + 2 variants (ok, error) = 3 schemas
-    expect(jsonSchemas).toHaveLength(3);
+    // parse action: invocation + 2 completion variants (ok, error)
+    expect(manifest.jsonSchemas.invocations['parse']).toBeDefined();
+    expect(manifest.jsonSchemas.completions['parse']['ok']).toBeDefined();
+    expect(manifest.jsonSchemas.completions['parse']['error']).toBeDefined();
 
-    const invocation = JSON.parse(jsonSchemas[0]);
+    const invocation = manifest.jsonSchemas.invocations['parse'] as any;
     expect(invocation.$id).toContain('parse/invocation');
     expect(invocation.properties.input.properties.source).toBeDefined();
 
-    const okCompletion = JSON.parse(jsonSchemas[1]);
+    const okCompletion = manifest.jsonSchemas.completions['parse']['ok'] as any;
     expect(okCompletion.$id).toContain('parse/completion/ok');
     expect(okCompletion.properties.variant.const).toBe('ok');
 
-    const errorCompletion = JSON.parse(jsonSchemas[2]);
+    const errorCompletion = manifest.jsonSchemas.completions['parse']['error'] as any;
     expect(errorCompletion.$id).toContain('parse/completion/error');
     expect(errorCompletion.properties.variant.const).toBe('error');
   });
 
-  it('Registry schema captures all 3 actions', async () => {
-    const storage = createInMemoryStorage();
+  it('Registry manifest captures all 3 actions', async () => {
     const ast = parseConceptFile(readSpec('framework', 'registry'));
-    const result = await schemaGenHandler.generate(
-      { spec: 'reg-1', ast },
-      storage,
-    );
+    const manifest = await generateManifest(ast);
 
-    const jsonSchemas = result.jsonSchemas as string[];
-    // register: 1 invocation + 2 variants = 3
-    // deregister: 1 invocation + 1 variant = 2
-    // heartbeat: 1 invocation + 1 variant = 2
-    // Total: 7
-    expect(jsonSchemas).toHaveLength(7);
+    // 3 actions: register, deregister, heartbeat
+    expect(manifest.actions).toHaveLength(3);
+    expect(manifest.jsonSchemas.invocations['register']).toBeDefined();
+    expect(manifest.jsonSchemas.invocations['deregister']).toBeDefined();
+    expect(manifest.jsonSchemas.invocations['heartbeat']).toBeDefined();
+
+    // register has ok and error variants
+    expect(manifest.jsonSchemas.completions['register']['ok']).toBeDefined();
+    expect(manifest.jsonSchemas.completions['register']['error']).toBeDefined();
 
     // Verify register invocation has uri and transport params
-    const registerInv = JSON.parse(jsonSchemas[0]);
+    const registerInv = manifest.jsonSchemas.invocations['register'] as any;
     expect(registerInv.properties.input.properties.uri).toBeDefined();
     expect(registerInv.properties.input.properties.transport).toBeDefined();
   });
 
-  it('ActionLog schema captures all 3 actions', async () => {
-    const storage = createInMemoryStorage();
+  it('ActionLog manifest captures all 3 actions', async () => {
     const ast = parseConceptFile(readSpec('framework', 'action-log'));
-    const result = await schemaGenHandler.generate(
-      { spec: 'al-1', ast },
-      storage,
-    );
+    const manifest = await generateManifest(ast);
 
-    const jsonSchemas = result.jsonSchemas as string[];
-    // append: 1 invocation + 1 variant = 2
-    // addEdge: 1 invocation + 1 variant = 2
-    // query: 1 invocation + 1 variant = 2
-    // Total: 6
-    expect(jsonSchemas).toHaveLength(6);
+    expect(manifest.actions).toHaveLength(3);
+    expect(manifest.actions.map(a => a.name)).toContain('append');
+    expect(manifest.actions.map(a => a.name)).toContain('addEdge');
+    expect(manifest.actions.map(a => a.name)).toContain('query');
   });
 
-  it('schemas for app specs are consistent with framework specs', async () => {
-    const storage = createInMemoryStorage();
+  it('manifests for app specs are consistent with framework specs', async () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
-    const result = await schemaGenHandler.generate(
-      { spec: 'pwd-1', ast },
-      storage,
-    );
+    const manifest = await generateManifest(ast);
 
-    const graphql = result.graphql as string;
     // Password state: hash: U -> Bytes, salt: U -> Bytes
-    // Both merge into PasswordEntry
-    expect(graphql).toContain('PasswordEntry');
-    expect(graphql).toContain('hash:');
-    expect(graphql).toContain('salt:');
-    expect(graphql).toContain('password_entry');
-    expect(graphql).toContain('password_entries');
+    // Both merge into entries relation
+    expect(manifest.graphqlSchema).toContain('PasswordEntry');
+    expect(manifest.graphqlSchema).toContain('hash:');
+    expect(manifest.graphqlSchema).toContain('salt:');
+    expect(manifest.graphqlSchema).toContain('password_entry');
+    expect(manifest.graphqlSchema).toContain('password_entries');
+
+    // Verify relation schemas
+    expect(manifest.relations).toHaveLength(1);
+    expect(manifest.relations[0].source).toBe('merged');
+    expect(manifest.relations[0].fields).toHaveLength(2);
+    expect(manifest.relations[0].fields.map(f => f.name)).toContain('hash');
+    expect(manifest.relations[0].fields.map(f => f.name)).toContain('salt');
   });
 });
 
 // ============================================================
-// Step 3: CodeGen output verification
+// Step 3: TypeScriptGen output verification
 //
-// "Feed the parsed ASTs to CodeGen — verify the generated
-//  skeletons match the hand-written handler interfaces."
+// TypeScriptGen reads from ConceptManifest and produces identical
+// output to the pre-refactor CodeGen.
 // ============================================================
 
-describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
+describe('Stage 2 — Step 3: TypeScriptGen self-compilation', () => {
   it('generates TypeScript skeletons for all framework specs', async () => {
     const parserStorage = createInMemoryStorage();
     const codeStorage = createInMemoryStorage();
@@ -262,8 +264,9 @@ describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
       const parseResult = await specParserHandler.parse({ source }, parserStorage);
       expect(parseResult.variant).toBe('ok');
 
-      const genResult = await codeGenHandler.generate(
-        { spec: parseResult.spec, ast: parseResult.ast, language: 'typescript' },
+      const manifest = await generateManifest(parseResult.ast as ConceptAST);
+      const genResult = await typescriptGenHandler.generate(
+        { spec: parseResult.spec, manifest },
         codeStorage,
       );
       expect(genResult.variant).toBe('ok');
@@ -274,10 +277,11 @@ describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
   });
 
   it('generated SpecParser handler interface matches hand-written impl', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('framework', 'spec-parser'));
-    const result = await codeGenHandler.generate(
-      { spec: 'sp-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'sp-1', manifest },
       storage,
     );
 
@@ -304,10 +308,11 @@ describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
   });
 
   it('generated SchemaGen handler interface matches hand-written impl', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('framework', 'schema-gen'));
-    const result = await codeGenHandler.generate(
-      { spec: 'sg-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'sg-1', manifest },
       storage,
     );
 
@@ -318,26 +323,28 @@ describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
     expect(handlerFile!.content).toContain('generate(input:');
   });
 
-  it('generated CodeGen handler interface matches hand-written impl', async () => {
+  it('generated TypeScriptGen handler interface matches hand-written impl', async () => {
+    const ast = parseConceptFile(readSpec('framework', 'typescript-gen'));
+    const manifest = await generateManifest(ast);
     const storage = createInMemoryStorage();
-    const ast = parseConceptFile(readSpec('framework', 'code-gen'));
-    const result = await codeGenHandler.generate(
-      { spec: 'cg-1', ast, language: 'typescript' },
+    const result = await typescriptGenHandler.generate(
+      { spec: 'tsg-1', manifest },
       storage,
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'codegen.handler.ts');
+    const handlerFile = files.find(f => f.path === 'typescriptgen.handler.ts');
     expect(handlerFile).toBeDefined();
-    expect(handlerFile!.content).toContain('CodeGenHandler');
+    expect(handlerFile!.content).toContain('TypeScriptGenHandler');
     expect(handlerFile!.content).toContain('generate(input:');
   });
 
   it('generated Registry handler interface has all 3 actions', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('framework', 'registry'));
-    const result = await codeGenHandler.generate(
-      { spec: 'r-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'r-1', manifest },
       storage,
     );
 
@@ -360,10 +367,11 @@ describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
   });
 
   it('generated ActionLog handler interface has all 3 actions', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('framework', 'action-log'));
-    const result = await codeGenHandler.generate(
-      { spec: 'al-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'al-1', manifest },
       storage,
     );
 
@@ -377,10 +385,11 @@ describe('Stage 2 — Step 3: CodeGen self-compilation', () => {
   });
 
   it('generated Password types match the architecture doc Section 7.3 exactly', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'password'));
-    const result = await codeGenHandler.generate(
-      { spec: 'pwd-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'pwd-1', manifest },
       storage,
     );
 
@@ -440,8 +449,8 @@ describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () =>
     expect(result.variant).toBe('ok');
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
     expect(allSyncs).toHaveLength(3);
-    expect(allSyncs.map(s => s.name)).toContain('GenerateSchemas');
-    expect(allSyncs.map(s => s.name)).toContain('GenerateCode');
+    expect(allSyncs.map(s => s.name)).toContain('GenerateManifest');
+    expect(allSyncs.map(s => s.name)).toContain('GenerateTypeScript');
     expect(allSyncs.map(s => s.name)).toContain('LogRegistration');
   });
 
@@ -467,17 +476,17 @@ describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () =>
     }
   });
 
-  it('compiled GenerateSchemas sync matches hand-registered structure', async () => {
+  it('compiled GenerateManifest sync matches expected structure', async () => {
     const storage = createInMemoryStorage();
     const source = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
       'utf-8',
     );
     const syncs = parseSyncFile(source);
-    const genSchemas = syncs.find(s => s.name === 'GenerateSchemas')!;
+    const genManifest = syncs.find(s => s.name === 'GenerateManifest')!;
 
     const result = await syncCompilerHandler.compile(
-      { sync: 'gs', ast: genSchemas },
+      { sync: 'gm', ast: genManifest },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -503,35 +512,34 @@ describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () =>
     expect(thenFields).toContain('ast');
   });
 
-  it('compiled GenerateCode sync matches hand-registered structure', async () => {
+  it('compiled GenerateTypeScript sync matches expected structure', async () => {
     const storage = createInMemoryStorage();
     const source = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
       'utf-8',
     );
     const syncs = parseSyncFile(source);
-    const genCode = syncs.find(s => s.name === 'GenerateCode')!;
+    const genTS = syncs.find(s => s.name === 'GenerateTypeScript')!;
 
     const result = await syncCompilerHandler.compile(
-      { sync: 'gc', ast: genCode },
+      { sync: 'gt', ast: genTS },
       storage,
     );
     expect(result.variant).toBe('ok');
     const compiled = result.compiled as CompiledSync;
 
-    // When: two patterns — SpecParser/parse and SchemaGen/generate
-    expect(compiled.when).toHaveLength(2);
-    expect(compiled.when[0].concept).toBe('urn:copf/SpecParser');
-    expect(compiled.when[1].concept).toBe('urn:copf/SchemaGen');
+    // When: single pattern — SchemaGen/generate with spec input and manifest output
+    expect(compiled.when).toHaveLength(1);
+    expect(compiled.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(compiled.when[0].action).toBe('generate');
 
-    // Then: CodeGen/generate with spec, ast, and language="typescript"
+    // Then: TypeScriptGen/generate with spec and manifest
     expect(compiled.then).toHaveLength(1);
-    expect(compiled.then[0].concept).toBe('urn:copf/CodeGen');
+    expect(compiled.then[0].concept).toBe('urn:copf/TypeScriptGen');
     expect(compiled.then[0].action).toBe('generate');
-    const langField = compiled.then[0].fields.find(f => f.name === 'language');
-    expect(langField).toBeDefined();
-    expect(langField!.value.type).toBe('literal');
-    expect((langField!.value as { type: 'literal'; value: unknown }).value).toBe('typescript');
+    const thenFields = compiled.then[0].fields.map(f => f.name);
+    expect(thenFields).toContain('spec');
+    expect(thenFields).toContain('manifest');
   });
 
   it('compiled LogRegistration sync matches hand-registered structure', async () => {
@@ -590,19 +598,17 @@ describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () =>
 // ============================================================
 // Conformance Test Generation (Section 7.4)
 //
-// "The compiler generates conformance tests from the invariant
-//  section of each concept spec."
-//
-// Verify that CodeGen produces correct conformance test code
-// for app concepts that have invariants.
+// Verify that TypeScriptGen produces correct conformance test
+// code for app concepts that have invariants.
 // ============================================================
 
 describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
   it('generates conformance test for Password concept', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'password'));
-    const result = await codeGenHandler.generate(
-      { spec: 'pwd-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'pwd-1', manifest },
       storage,
     );
 
@@ -639,10 +645,11 @@ describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
   });
 
   it('generates conformance test for Echo concept', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'echo'));
-    const result = await codeGenHandler.generate(
-      { spec: 'echo-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'echo-1', manifest },
       storage,
     );
 
@@ -654,10 +661,11 @@ describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
   });
 
   it('generates conformance test for JWT concept', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'jwt'));
-    const result = await codeGenHandler.generate(
-      { spec: 'jwt-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'jwt-1', manifest },
       storage,
     );
 
@@ -676,10 +684,11 @@ describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
   });
 
   it('generates conformance test for User concept', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'user'));
-    const result = await codeGenHandler.generate(
-      { spec: 'u-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'u-1', manifest },
       storage,
     );
 
@@ -697,11 +706,12 @@ describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
   });
 
   it('does not generate conformance test for specs without invariants', async () => {
-    const storage = createInMemoryStorage();
     // Framework specs have no invariants
     const ast = parseConceptFile(readSpec('framework', 'spec-parser'));
-    const result = await codeGenHandler.generate(
-      { spec: 'sp-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'sp-1', manifest },
       storage,
     );
 
@@ -716,10 +726,8 @@ describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
 //
 // Register all Stage 1 concepts on the kernel, load the
 // compiler pipeline syncs, and run a complete self-compilation
-// flow. This validates that:
-// - Stage 1 concepts are correctly registered
-// - The compiler pipeline syncs fire in the right order
-// - The generated output is structurally sound
+// flow. This validates the new Stage 4 pipeline:
+// SpecParser → SchemaGen (manifest) → TypeScriptGen
 // ============================================================
 
 describe('Stage 2 — Full Pipeline (kernel-driven)', () => {
@@ -729,7 +737,7 @@ describe('Stage 2 — Full Pipeline (kernel-driven)', () => {
     // Register all Stage 1 concepts on the kernel
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/CodeGen', codeGenHandler);
+    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
     kernel.registerConcept('urn:copf/SyncParser', syncParserHandler);
     kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
     kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
@@ -762,7 +770,7 @@ describe('Stage 2 — Full Pipeline (kernel-driven)', () => {
 
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/CodeGen', codeGenHandler);
+    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
     kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
     kernel.registerConcept('urn:copf/Registry', registryHandler);
 

@@ -52,6 +52,18 @@ export type {
   InvariantDecl,
   ActionPattern,
   ArgPattern,
+  // Stage 4: ConceptManifest types
+  ConceptManifest,
+  TypeParamInfo,
+  RelationSchema,
+  FieldSchema,
+  ResolvedType,
+  ActionSchema,
+  ActionParamSchema,
+  VariantSchema,
+  InvariantSchema,
+  InvariantStep,
+  InvariantValue,
 } from './types.js';
 
 // --- Web Bootstrap Concept ---

@@ -43,7 +43,7 @@ import { generateId, timestamp } from '../kernel/src/types.js';
 // Stage 1 concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { codeGenHandler } from '../implementations/typescript/framework/code-gen.impl.js';
+import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
 import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
 import { registryHandler } from '../implementations/typescript/framework/registry.impl.js';
 
@@ -525,7 +525,7 @@ describe('Stage 3 — Self-Hosted Kernel: Compiler Pipeline', () => {
     // Register Stage 1 concepts
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/CodeGen', codeGenHandler);
+    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
     kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
     kernel.registerConcept('urn:copf/Registry', registryHandler);
 
