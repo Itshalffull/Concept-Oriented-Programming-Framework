@@ -48,8 +48,12 @@ interface Token {
 const KEYWORDS = new Set([
   'concept', 'purpose', 'state', 'actions', 'action',
   'invariant', 'capabilities', 'requires', 'after',
-  'then', 'and', 'set', 'list', 'option',
+  'then', 'and',
 ]);
+
+// These are only keywords inside type expressions. Everywhere else
+// they are valid identifiers (action names, field names, etc.).
+const CONTEXTUAL_KEYWORDS = new Set(['set', 'list', 'option']);
 
 const PRIMITIVES = new Set([
   'String', 'Int', 'Float', 'Bool', 'Bytes', 'DateTime', 'ID',
@@ -384,8 +388,10 @@ class Parser {
   private parseTypeExpr(typeParams: string[]): TypeExpr {
     const tok = this.peek();
 
-    // set/list/option prefix
-    if (tok.type === 'KEYWORD' && (tok.value === 'set' || tok.value === 'list' || tok.value === 'option')) {
+    // set/list/option are contextual keywords — they act as type
+    // constructors only inside type expressions. The tokenizer emits
+    // them as IDENT so they don't collide with action/field names.
+    if (tok.type === 'IDENT' && CONTEXTUAL_KEYWORDS.has(tok.value)) {
       const kind = tok.value as 'set' | 'list' | 'option';
       this.advance();
       const inner = this.parseTypeExpr(typeParams);
@@ -455,14 +461,7 @@ class Parser {
       if (this.peek().type === 'RBRACE') break;
 
       this.expect('KEYWORD', 'action');
-      // Action names can be keywords like 'set', 'list', 'option'
-      const nameTok = this.peek();
-      let name: string;
-      if (nameTok.type === 'IDENT' || nameTok.type === 'KEYWORD') {
-        name = this.advance().value;
-      } else {
-        name = this.expect('IDENT').value;
-      }
+      const name = this.expect('IDENT').value;
       this.expect('LPAREN');
       const params = this.parseParamList(typeParams);
       this.expect('RPAREN');
@@ -575,14 +574,7 @@ class Parser {
   }
 
   private parseActionPattern(): ActionPattern {
-    // Action names can be keywords like 'set', 'list', 'option'
-    const actionTok = this.peek();
-    let actionName: string;
-    if (actionTok.type === 'IDENT' || actionTok.type === 'KEYWORD') {
-      actionName = this.advance().value;
-    } else {
-      actionName = this.expect('IDENT').value;
-    }
+    const actionName = this.expect('IDENT').value;
     this.expect('LPAREN');
     const inputArgs = this.parseArgPatterns();
     this.expect('RPAREN');

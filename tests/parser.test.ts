@@ -144,6 +144,59 @@ concept Edge [A, B] {
     expect(ast.typeParams).toEqual(['A', 'B']);
     expect(ast.state[0].type).toEqual({ kind: 'relation', from: { kind: 'param', name: 'A' }, to: { kind: 'param', name: 'B' } });
   });
+
+  it('allows set/list/option as identifiers outside type expressions', () => {
+    const source = `
+concept Collection [T] {
+  state {
+    items: set T
+    list: T -> String
+    option: T -> Bool
+  }
+  actions {
+    action set(item: T, list: list String) {
+      -> ok(item: T) { Set the item. }
+    }
+    action list(option: Bool) {
+      -> ok(items: list T) { List all items. }
+    }
+    action option(set: set T) {
+      -> ok(valid: Bool) { Check option. }
+    }
+  }
+  invariant {
+    after set(item: x, list: "a") -> ok(item: x)
+    then list(option: true) -> ok(items: x)
+  }
+}`;
+    const ast = parseConceptFile(source);
+    expect(ast.name).toBe('Collection');
+
+    // 'list' and 'option' as state field names
+    expect(ast.state[1].name).toBe('list');
+    expect(ast.state[2].name).toBe('option');
+
+    // 'set' as type constructor in state
+    expect(ast.state[0].type).toEqual({ kind: 'set', inner: { kind: 'param', name: 'T' } });
+
+    // 'set', 'list', 'option' as action names
+    expect(ast.actions.map(a => a.name)).toEqual(['set', 'list', 'option']);
+
+    // 'list' as parameter name, 'list String' as type
+    expect(ast.actions[0].params[1].name).toBe('list');
+    expect(ast.actions[0].params[1].type).toEqual({ kind: 'list', inner: { kind: 'primitive', name: 'String' } });
+
+    // 'option' as parameter name
+    expect(ast.actions[1].params[0].name).toBe('option');
+
+    // 'set' as parameter name with 'set T' as type
+    expect(ast.actions[2].params[0].name).toBe('set');
+    expect(ast.actions[2].params[0].type).toEqual({ kind: 'set', inner: { kind: 'param', name: 'T' } });
+
+    // invariant uses 'set' and 'list' as action names
+    expect(ast.invariants[0].afterPatterns[0].actionName).toBe('set');
+    expect(ast.invariants[0].thenPatterns[0].actionName).toBe('list');
+  });
 });
 
 describe('Sync Parser', () => {
