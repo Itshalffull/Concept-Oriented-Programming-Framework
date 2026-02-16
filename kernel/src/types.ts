@@ -257,6 +257,94 @@ export interface SyncThenField {
     | { type: 'variable'; name: string };
 }
 
+// --- ConceptManifest (Stage 4: language-neutral IR) ---
+// Architecture doc Section 10.1, Stage 4.
+// SchemaGen produces a ConceptManifest containing everything
+// a per-language code generator needs.
+
+export interface TypeParamInfo {
+  name: string;
+  wireType: 'string';
+  description?: string;
+}
+
+export interface RelationSchema {
+  name: string;
+  source: 'merged' | 'explicit' | 'set-valued';
+  keyField: { name: string; paramRef: string };
+  fields: FieldSchema[];
+}
+
+export interface FieldSchema {
+  name: string;
+  type: ResolvedType;
+  optional: boolean;
+}
+
+/**
+ * Recursive type tree — each generator maps this to its own type system.
+ * Extends the architecture doc's definition with 'map' for relation types.
+ */
+export type ResolvedType =
+  | { kind: 'primitive'; primitive: string }
+  | { kind: 'param'; paramRef: string }
+  | { kind: 'set'; inner: ResolvedType }
+  | { kind: 'list'; inner: ResolvedType }
+  | { kind: 'option'; inner: ResolvedType }
+  | { kind: 'map'; keyType: ResolvedType; inner: ResolvedType }
+  | { kind: 'record'; fields: FieldSchema[] };
+
+export interface ActionSchema {
+  name: string;
+  params: ActionParamSchema[];
+  variants: VariantSchema[];
+}
+
+export interface ActionParamSchema {
+  name: string;
+  type: ResolvedType;
+}
+
+export interface VariantSchema {
+  tag: string;
+  fields: ActionParamSchema[];
+  prose?: string;
+}
+
+export interface InvariantSchema {
+  description: string;
+  setup: InvariantStep[];
+  assertions: InvariantStep[];
+  freeVariables: { name: string; testValue: string }[];
+}
+
+export interface InvariantStep {
+  action: string;
+  inputs: { name: string; value: InvariantValue }[];
+  expectedVariant: string;
+  expectedOutputs: { name: string; value: InvariantValue }[];
+}
+
+export type InvariantValue =
+  | { kind: 'literal'; value: string | number | boolean }
+  | { kind: 'variable'; name: string };
+
+export interface ConceptManifest {
+  uri: string;
+  name: string;
+  typeParams: TypeParamInfo[];
+  relations: RelationSchema[];
+  actions: ActionSchema[];
+  invariants: InvariantSchema[];
+  graphqlSchema: string;
+  jsonSchemas: {
+    invocations: Record<string, object>;
+    completions: Record<string, Record<string, object>>;
+  };
+  capabilities: string[];
+  purpose: string;
+}
+
 // --- Utility ---
 
 export function generateId(): string {

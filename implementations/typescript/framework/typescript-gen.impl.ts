@@ -1,34 +1,51 @@
 // ============================================================
-// Stage 1 — CodeGen Concept Implementation
+// Stage 4 — TypeScriptGen Concept Implementation
 //
-// Generates language-specific skeleton code from concept ASTs.
-// Currently supports TypeScript. Follows the architecture doc
-// Section 7.3 for the generated code structure:
+// Generates TypeScript skeleton code from a ConceptManifest.
+// Extracted from the Stage 1 CodeGen concept as part of the
+// Stage 4 codegen refactor (Section 10.1).
+//
+// Reads from ConceptManifest (language-neutral IR) rather than
+// raw concept ASTs. Produces identical output to the original
+// CodeGen for TypeScript targets.
+//
+// Generated files per Section 7.3:
 //   - Type definitions file (types.ts)
 //   - Handler interface file (handler.ts)
 //   - Adapter file (adapter.ts)
+//   - Conformance test file (conformance.test.ts) — when invariants exist
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptAST, TypeExpr, ActionDecl, InvariantDecl, ActionPattern, ArgPattern } from '../../../kernel/src/types.js';
+import type {
+  ConceptHandler,
+  ConceptStorage,
+  ConceptManifest,
+  ResolvedType,
+  ActionSchema,
+  VariantSchema,
+  InvariantSchema,
+  InvariantStep,
+  InvariantValue,
+} from '../../../kernel/src/types.js';
 
-// --- TypeScript Type Mapping (Section 3.3) ---
+// --- ResolvedType → TypeScript mapping (Section 3.3) ---
 
-function typeExprToTS(t: TypeExpr): string {
+function resolvedTypeToTS(t: ResolvedType): string {
   switch (t.kind) {
     case 'primitive':
-      return primitiveToTS(t.name);
+      return primitiveToTS(t.primitive);
     case 'param':
       return 'string'; // type parameters are opaque string IDs
     case 'set':
-      return `Set<${typeExprToTS(t.inner)}>`;
+      return `Set<${resolvedTypeToTS(t.inner)}>`;
     case 'list':
-      return `${typeExprToTS(t.inner)}[]`;
+      return `${resolvedTypeToTS(t.inner)}[]`;
     case 'option':
-      return `${typeExprToTS(t.inner)} | null`;
-    case 'relation':
-      return `Map<${typeExprToTS(t.from)}, ${typeExprToTS(t.to)}>`;
+      return `${resolvedTypeToTS(t.inner)} | null`;
+    case 'map':
+      return `Map<${resolvedTypeToTS(t.keyType)}, ${resolvedTypeToTS(t.inner)}>`;
     case 'record': {
-      const fields = t.fields.map(f => `${f.name}: ${typeExprToTS(f.type)}`);
+      const fields = t.fields.map(f => `${f.name}: ${resolvedTypeToTS(f.type)}`);
       return `{ ${fields.join('; ')} }`;
     }
   }
@@ -53,19 +70,19 @@ function capitalize(s: string): string {
 
 // --- Type Definitions File (Section 7.3 — <concept>.types.ts) ---
 
-function generateTypesFile(ast: ConceptAST): string {
-  const conceptName = ast.name;
+function generateTypesFile(manifest: ConceptManifest): string {
+  const conceptName = manifest.name;
   const lines: string[] = [
     `// generated: ${conceptName.toLowerCase()}.types.ts`,
     '',
   ];
 
-  for (const action of ast.actions) {
+  for (const action of manifest.actions) {
     // Input type
     const inputTypeName = `${conceptName}${capitalize(action.name)}Input`;
     lines.push(`export interface ${inputTypeName} {`);
     for (const p of action.params) {
-      lines.push(`  ${p.name}: ${typeExprToTS(p.type)};`);
+      lines.push(`  ${p.name}: ${resolvedTypeToTS(p.type)};`);
     }
     lines.push(`}`);
     lines.push('');
@@ -75,9 +92,9 @@ function generateTypesFile(ast: ConceptAST): string {
     const variantTypes: string[] = [];
 
     for (const v of action.variants) {
-      const fields = v.params.map(p => `${p.name}: ${typeExprToTS(p.type)}`);
+      const fields = v.fields.map(p => `${p.name}: ${resolvedTypeToTS(p.type)}`);
       const fieldStr = fields.length > 0 ? `; ${fields.join('; ')}` : '';
-      variantTypes.push(`{ variant: "${v.name}"${fieldStr} }`);
+      variantTypes.push(`{ variant: "${v.tag}"${fieldStr} }`);
     }
 
     lines.push(`export type ${outputTypeName} =`);
@@ -93,8 +110,8 @@ function generateTypesFile(ast: ConceptAST): string {
 
 // --- Handler Interface File (Section 7.3 — <concept>.handler.ts) ---
 
-function generateHandlerFile(ast: ConceptAST): string {
-  const conceptName = ast.name;
+function generateHandlerFile(manifest: ConceptManifest): string {
+  const conceptName = manifest.name;
   const lowerName = conceptName.toLowerCase();
   const lines: string[] = [
     `// generated: ${lowerName}.handler.ts`,
@@ -104,7 +121,7 @@ function generateHandlerFile(ast: ConceptAST): string {
     `export interface ${conceptName}Handler {`,
   ];
 
-  for (const action of ast.actions) {
+  for (const action of manifest.actions) {
     const inputType = `T.${conceptName}${capitalize(action.name)}Input`;
     const outputType = `T.${conceptName}${capitalize(action.name)}Output`;
     lines.push(`  ${action.name}(input: ${inputType}, storage: ConceptStorage):`);
@@ -117,8 +134,8 @@ function generateHandlerFile(ast: ConceptAST): string {
 
 // --- Adapter File (Section 7.3 — <concept>.adapter.ts) ---
 
-function generateAdapterFile(ast: ConceptAST): string {
-  const conceptName = ast.name;
+function generateAdapterFile(manifest: ConceptManifest): string {
+  const conceptName = manifest.name;
   const lowerName = conceptName.toLowerCase();
   const lines: string[] = [
     `// generated: ${lowerName}.adapter.ts`,
@@ -167,22 +184,12 @@ function generateAdapterFile(ast: ConceptAST): string {
 
 // --- Conformance Test File (Section 7.4) ---
 
-/**
- * Generate conformance tests from the invariant section of a concept spec.
- *
- * Rules from Section 7.4:
- * 1. Free variables are assigned deterministic IDs: "u-test-invariant-001", etc.
- * 2. The `after` clause becomes action calls with variant assertions.
- * 3. The `then` clause becomes assertion calls checking variant + fields.
- * 4. Literal values are asserted exactly; variables checked for consistency.
- * 5. Multiple invariants produce multiple test cases with isolated storage.
- */
-function generateConformanceTestFile(ast: ConceptAST): string | null {
-  if (!ast.invariants || ast.invariants.length === 0) {
+function generateConformanceTestFile(manifest: ConceptManifest): string | null {
+  if (manifest.invariants.length === 0) {
     return null;
   }
 
-  const conceptName = ast.name;
+  const conceptName = manifest.name;
   const lowerName = conceptName.toLowerCase();
   const handlerVar = `${lowerName}Handler`;
 
@@ -196,64 +203,30 @@ function generateConformanceTestFile(ast: ConceptAST): string | null {
     '',
   ];
 
-  for (let i = 0; i < ast.invariants.length; i++) {
-    const inv = ast.invariants[i];
-
-    // Collect all free variables (in order of first appearance)
-    const freeVars: string[] = [];
-    const seenVars = new Set<string>();
-
-    function collectVarsFromPattern(pattern: ActionPattern) {
-      for (const arg of pattern.inputArgs) {
-        if (arg.value.type === 'variable' && !seenVars.has(arg.value.name)) {
-          seenVars.add(arg.value.name);
-          freeVars.push(arg.value.name);
-        }
-      }
-      for (const arg of pattern.outputArgs) {
-        if (arg.value.type === 'variable' && !seenVars.has(arg.value.name)) {
-          seenVars.add(arg.value.name);
-          freeVars.push(arg.value.name);
-        }
-      }
-    }
-
-    for (const p of inv.afterPatterns) collectVarsFromPattern(p);
-    for (const p of inv.thenPatterns) collectVarsFromPattern(p);
-
-    // Build description from invariant structure
-    const afterNames = inv.afterPatterns.map(p => p.actionName).join(', ');
-    const thenNames = inv.thenPatterns.map(p => p.actionName).join(', ');
-    const desc = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly`;
-
-    lines.push(`  it("${desc}", async () => {`);
+  for (const inv of manifest.invariants) {
+    lines.push(`  it("${inv.description}", async () => {`);
     lines.push(`    const storage = createInMemoryStorage();`);
     lines.push('');
 
     // Declare free variable bindings (Section 7.4 Rule 1)
-    for (let v = 0; v < freeVars.length; v++) {
-      const padded = String(v + 1).padStart(3, '0');
-      lines.push(`    const ${freeVars[v]} = "u-test-invariant-${padded}";`);
+    for (const fv of inv.freeVariables) {
+      lines.push(`    const ${fv.name} = "${fv.testValue}";`);
     }
-    if (freeVars.length > 0) lines.push('');
+    if (inv.freeVariables.length > 0) lines.push('');
 
     // After clause (Section 7.4 Rule 2)
     let stepNum = 1;
     lines.push(`    // --- AFTER clause ---`);
-    for (const pattern of inv.afterPatterns) {
-      lines.push(...generatePatternCall(
-        handlerVar, pattern, freeVars, stepNum, 'after',
-      ));
+    for (const step of inv.setup) {
+      lines.push(...generateStepCode(handlerVar, step, stepNum));
       stepNum++;
     }
     lines.push('');
 
     // Then clause (Section 7.4 Rule 3)
     lines.push(`    // --- THEN clause ---`);
-    for (const pattern of inv.thenPatterns) {
-      lines.push(...generatePatternCall(
-        handlerVar, pattern, freeVars, stepNum, 'then',
-      ));
+    for (const step of inv.assertions) {
+      lines.push(...generateStepCode(handlerVar, step, stepNum));
       stepNum++;
     }
 
@@ -265,48 +238,46 @@ function generateConformanceTestFile(ast: ConceptAST): string | null {
   return lines.join('\n');
 }
 
-function generatePatternCall(
+function generateStepCode(
   handlerVar: string,
-  pattern: ActionPattern,
-  freeVars: string[],
+  step: InvariantStep,
   stepNum: number,
-  clause: 'after' | 'then',
 ): string[] {
   const lines: string[] = [];
   const varName = `step${stepNum}`;
 
   // Build the comment showing the original pattern
-  const inputStr = pattern.inputArgs.map(a => {
-    if (a.value.type === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
+  const inputStr = step.inputs.map(a => {
+    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
     return `${a.name}: ${a.value.name}`;
   }).join(', ');
-  const outputStr = pattern.outputArgs.map(a => {
-    if (a.value.type === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
+  const outputStr = step.expectedOutputs.map(a => {
+    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
     return `${a.name}: ${a.value.name}`;
   }).join(', ');
-  lines.push(`    // ${pattern.actionName}(${inputStr}) -> ${pattern.variantName}(${outputStr})`);
+  lines.push(`    // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
   // Build input object
-  const inputFields = pattern.inputArgs.map(a => {
-    if (a.value.type === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
+  const inputFields = step.inputs.map(a => {
+    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
     return `${a.name}: ${a.value.name}`;
   }).join(', ');
 
-  lines.push(`    const ${varName} = await ${handlerVar}.${pattern.actionName}(`);
+  lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
   lines.push(`      { ${inputFields} },`);
   lines.push(`      storage,`);
   lines.push(`    );`);
 
   // Assert variant
-  lines.push(`    expect(${varName}.variant).toBe("${pattern.variantName}");`);
+  lines.push(`    expect(${varName}.variant).toBe("${step.expectedVariant}");`);
 
   // Assert output fields (Section 7.4 Rule 4)
-  for (const arg of pattern.outputArgs) {
-    if (arg.value.type === 'literal') {
-      lines.push(`    expect((${varName} as any).${arg.name}).toBe(${JSON.stringify(arg.value.value)});`);
+  for (const out of step.expectedOutputs) {
+    if (out.value.kind === 'literal') {
+      lines.push(`    expect((${varName} as any).${out.name}).toBe(${JSON.stringify(out.value.value)});`);
     } else {
       // Variable reference — assert consistency
-      lines.push(`    expect((${varName} as any).${arg.name}).toBe(${arg.value.name});`);
+      lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
     }
   }
 
@@ -315,30 +286,25 @@ function generatePatternCall(
 
 // --- Handler ---
 
-export const codeGenHandler: ConceptHandler = {
+export const typescriptGenHandler: ConceptHandler = {
   async generate(input, storage) {
     const spec = input.spec as string;
-    const ast = input.ast as ConceptAST;
-    const language = input.language as string;
+    const manifest = input.manifest as ConceptManifest;
 
-    if (!ast || !ast.name) {
-      return { variant: 'error', message: 'Invalid AST: missing concept name' };
-    }
-
-    if (language !== 'typescript') {
-      return { variant: 'error', message: `Unsupported language: ${language}. Only "typescript" is supported in Stage 1.` };
+    if (!manifest || !manifest.name) {
+      return { variant: 'error', message: 'Invalid manifest: missing concept name' };
     }
 
     try {
-      const lowerName = ast.name.toLowerCase();
+      const lowerName = manifest.name.toLowerCase();
       const files: { path: string; content: string }[] = [
-        { path: `${lowerName}.types.ts`, content: generateTypesFile(ast) },
-        { path: `${lowerName}.handler.ts`, content: generateHandlerFile(ast) },
-        { path: `${lowerName}.adapter.ts`, content: generateAdapterFile(ast) },
+        { path: `${lowerName}.types.ts`, content: generateTypesFile(manifest) },
+        { path: `${lowerName}.handler.ts`, content: generateHandlerFile(manifest) },
+        { path: `${lowerName}.adapter.ts`, content: generateAdapterFile(manifest) },
       ];
 
-      // Add conformance tests if the spec has invariants (Section 7.4)
-      const conformanceTest = generateConformanceTestFile(ast);
+      // Add conformance tests if the manifest has invariants (Section 7.4)
+      const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
         files.push({ path: `${lowerName}.conformance.test.ts`, content: conformanceTest });
       }

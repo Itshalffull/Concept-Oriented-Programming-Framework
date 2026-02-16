@@ -1,24 +1,30 @@
 concept SchemaGen [S] {
 
   purpose {
-    Generate GraphQL and JSON schemas from parsed concept specs.
+    Transform parsed concept ASTs into rich, language-neutral
+    ConceptManifests. The manifest contains everything a code
+    generator needs: relation schemas (after merge/grouping),
+    fully typed action signatures, structured invariants with
+    test values, GraphQL schema fragments, and JSON Schemas.
   }
 
   state {
-    schemas: S -> { graphql: String, jsonSchemas: list String }
+    manifests: S -> ConceptManifest
   }
 
   actions {
     action generate(spec: S, ast: AST) {
-      -> ok(graphql: String, jsonSchemas: list String) {
-        From the concept AST, produce a GraphQL schema fragment
-        for the state section, and one JSON Schema per action
-        (invocation + completion variants). Store the result
-        keyed by spec reference.
+      -> ok(manifest: ConceptManifest) {
+        Apply state grouping/merge rules to produce relation schemas.
+        Resolve all types into ResolvedType trees.
+        Transform invariants into structured test scenarios with
+        deterministic test IDs for free variables.
+        Generate GraphQL schema fragment from relation schemas.
+        Generate JSON Schemas for each action invocation/completion.
+        Package everything into a ConceptManifest.
       }
       -> error(message: String) {
-        If the AST is malformed or contains unsupported type
-        expressions, return an error description.
+        If the AST contains unresolvable types or inconsistencies.
       }
     }
   }

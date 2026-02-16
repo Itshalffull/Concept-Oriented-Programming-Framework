@@ -1,39 +1,229 @@
 // ============================================================
-// Stage 1 — SchemaGen Concept Implementation
+// Stage 1/4 — SchemaGen Concept Implementation
 //
-// Generates GraphQL schema fragments and JSON Schemas from
-// parsed concept ASTs. Follows the architecture doc:
-//   - Section 3.2: JSON Schema generation from action signatures
+// Refactored in Stage 4 to produce a rich, language-neutral
+// ConceptManifest instead of standalone GraphQL/JSON schemas.
+// The manifest contains:
+//   - Relation schemas (with merge/grouping from state section)
+//   - Fully typed action signatures (ResolvedType trees)
+//   - Structured invariants with deterministic test values
+//   - GraphQL schema fragment
+//   - JSON Schemas for wire validation
+//
+// Follows the architecture doc:
+//   - Section 3.2: JSON Schema generation
 //   - Section 3.3: Type mapping table
-//   - Section 4.1: GraphQL schema from state section
+//   - Section 4.1: GraphQL schema from state
+//   - Section 10.1 Stage 4: ConceptManifest as language-neutral IR
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptAST, TypeExpr, ActionDecl } from '../../../kernel/src/types.js';
+import type {
+  ConceptHandler,
+  ConceptStorage,
+  ConceptAST,
+  TypeExpr,
+  ActionDecl,
+  ActionPattern,
+  ConceptManifest,
+  TypeParamInfo,
+  RelationSchema,
+  FieldSchema,
+  ResolvedType,
+  ActionSchema,
+  ActionParamSchema,
+  VariantSchema,
+  InvariantSchema,
+  InvariantStep,
+  InvariantValue,
+} from '../../../kernel/src/types.js';
 
-// --- Type Mapping (Section 3.3) ---
+// --- TypeExpr → ResolvedType conversion ---
 
-function typeExprToJsonSchema(t: TypeExpr): Record<string, unknown> {
+function typeExprToResolvedType(t: TypeExpr): ResolvedType {
   switch (t.kind) {
     case 'primitive':
-      return primitiveToJsonSchema(t.name);
+      return { kind: 'primitive', primitive: t.name };
     case 'param':
-      // Type parameters are opaque string identifiers on the wire
+      return { kind: 'param', paramRef: t.name };
+    case 'set':
+      return { kind: 'set', inner: typeExprToResolvedType(t.inner) };
+    case 'list':
+      return { kind: 'list', inner: typeExprToResolvedType(t.inner) };
+    case 'option':
+      return { kind: 'option', inner: typeExprToResolvedType(t.inner) };
+    case 'relation':
+      return {
+        kind: 'map',
+        keyType: typeExprToResolvedType(t.from),
+        inner: typeExprToResolvedType(t.to),
+      };
+    case 'record':
+      return {
+        kind: 'record',
+        fields: t.fields.map(f => ({
+          name: f.name,
+          type: typeExprToResolvedType(f.type),
+          optional: false,
+        })),
+      };
+  }
+}
+
+// --- State → RelationSchema conversion (merge/grouping rules) ---
+
+function buildRelationSchemas(ast: ConceptAST): RelationSchema[] {
+  const keyParam = ast.typeParams.length > 0 ? ast.typeParams[0] : null;
+  const keyFieldName = keyParam ? keyParam.toLowerCase() : 'id';
+
+  const mergedFields: FieldSchema[] = [];
+  const relations: RelationSchema[] = [];
+
+  for (const entry of ast.state) {
+    if (entry.type.kind === 'relation') {
+      // U -> Bytes: the "to" type becomes a field in the merged relation
+      mergedFields.push({
+        name: entry.name,
+        type: typeExprToResolvedType(entry.type.to),
+        optional: false,
+      });
+    } else if (entry.type.kind === 'set') {
+      // set T becomes a separate set-valued relation
+      relations.push({
+        name: entry.name,
+        source: 'set-valued',
+        keyField: { name: keyFieldName, paramRef: keyParam || 'id' },
+        fields: [{
+          name: 'value',
+          type: typeExprToResolvedType(entry.type.inner),
+          optional: false,
+        }],
+      });
+    } else {
+      mergedFields.push({
+        name: entry.name,
+        type: typeExprToResolvedType(entry.type),
+        optional: false,
+      });
+    }
+  }
+
+  if (mergedFields.length > 0) {
+    relations.unshift({
+      name: 'entries',
+      source: 'merged',
+      keyField: { name: keyFieldName, paramRef: keyParam || 'id' },
+      fields: mergedFields,
+    });
+  }
+
+  return relations;
+}
+
+// --- Actions → ActionSchema conversion ---
+
+function buildActionSchemas(ast: ConceptAST): ActionSchema[] {
+  return ast.actions.map(action => ({
+    name: action.name,
+    params: action.params.map(p => ({
+      name: p.name,
+      type: typeExprToResolvedType(p.type),
+    })),
+    variants: action.variants.map(v => ({
+      tag: v.name,
+      fields: v.params.map(p => ({
+        name: p.name,
+        type: typeExprToResolvedType(p.type),
+      })),
+      prose: v.description,
+    })),
+  }));
+}
+
+// --- Invariants → InvariantSchema conversion ---
+
+function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
+  if (!ast.invariants || ast.invariants.length === 0) return [];
+
+  return ast.invariants.map((inv, i) => {
+    const freeVars: { name: string; testValue: string }[] = [];
+    const seenVars = new Set<string>();
+    let varCount = 0;
+
+    function collectVar(name: string) {
+      if (!seenVars.has(name)) {
+        seenVars.add(name);
+        varCount++;
+        freeVars.push({
+          name,
+          testValue: `u-test-invariant-${String(varCount).padStart(3, '0')}`,
+        });
+      }
+    }
+
+    function convertValue(v: { type: 'literal'; value: string | number | boolean } | { type: 'variable'; name: string }): InvariantValue {
+      if (v.type === 'literal') {
+        return { kind: 'literal', value: v.value };
+      }
+      return { kind: 'variable', name: v.name };
+    }
+
+    function convertPatternToStep(pattern: ActionPattern): InvariantStep {
+      // Collect variables (inputs first, then outputs — preserves ordering)
+      for (const arg of pattern.inputArgs) {
+        if (arg.value.type === 'variable') collectVar(arg.value.name);
+      }
+      for (const arg of pattern.outputArgs) {
+        if (arg.value.type === 'variable') collectVar(arg.value.name);
+      }
+
+      return {
+        action: pattern.actionName,
+        inputs: pattern.inputArgs.map(a => ({
+          name: a.name,
+          value: convertValue(a.value),
+        })),
+        expectedVariant: pattern.variantName,
+        expectedOutputs: pattern.outputArgs.map(a => ({
+          name: a.name,
+          value: convertValue(a.value),
+        })),
+      };
+    }
+
+    const setup = inv.afterPatterns.map(p => convertPatternToStep(p));
+    const assertions = inv.thenPatterns.map(p => convertPatternToStep(p));
+
+    const afterNames = inv.afterPatterns.map(p => p.actionName).join(', ');
+    const thenNames = inv.thenPatterns.map(p => p.actionName).join(', ');
+    const description = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly`;
+
+    return { description, setup, assertions, freeVariables: freeVars };
+  });
+}
+
+// --- JSON Schema Generation (Section 3.2) ---
+
+function resolvedTypeToJsonSchema(t: ResolvedType): Record<string, unknown> {
+  switch (t.kind) {
+    case 'primitive':
+      return primitiveToJsonSchema(t.primitive);
+    case 'param':
       return { type: 'string' };
     case 'set':
-      return { type: 'array', items: typeExprToJsonSchema(t.inner), uniqueItems: true };
+      return { type: 'array', items: resolvedTypeToJsonSchema(t.inner), uniqueItems: true };
     case 'list':
-      return { type: 'array', items: typeExprToJsonSchema(t.inner) };
+      return { type: 'array', items: resolvedTypeToJsonSchema(t.inner) };
     case 'option': {
-      const inner = typeExprToJsonSchema(t.inner);
+      const inner = resolvedTypeToJsonSchema(t.inner);
       return { oneOf: [inner, { type: 'null' }] };
     }
-    case 'relation':
-      return { type: 'object', additionalProperties: typeExprToJsonSchema(t.to) };
+    case 'map':
+      return { type: 'object', additionalProperties: resolvedTypeToJsonSchema(t.inner) };
     case 'record': {
       const properties: Record<string, unknown> = {};
       const required: string[] = [];
       for (const f of t.fields) {
-        properties[f.name] = typeExprToJsonSchema(f.type);
+        properties[f.name] = resolvedTypeToJsonSchema(f.type);
         required.push(f.name);
       }
       return { type: 'object', properties, required };
@@ -54,18 +244,80 @@ function primitiveToJsonSchema(name: string): Record<string, unknown> {
   }
 }
 
-function typeExprToGraphQL(t: TypeExpr): string {
+function buildJsonSchemas(
+  conceptUri: string,
+  actions: ActionSchema[],
+): { invocations: Record<string, object>; completions: Record<string, Record<string, object>> } {
+  const invocations: Record<string, object> = {};
+  const completions: Record<string, Record<string, object>> = {};
+
+  for (const action of actions) {
+    // Invocation schema
+    const inputProperties: Record<string, unknown> = {};
+    const inputRequired: string[] = [];
+    for (const param of action.params) {
+      inputProperties[param.name] = resolvedTypeToJsonSchema(param.type);
+      inputRequired.push(param.name);
+    }
+
+    invocations[action.name] = {
+      $id: `${conceptUri}/${action.name}/invocation`,
+      type: 'object',
+      properties: {
+        concept: { const: conceptUri },
+        action: { const: action.name },
+        input: {
+          type: 'object',
+          properties: inputProperties,
+          required: inputRequired,
+        },
+      },
+    };
+
+    // Completion schemas per variant
+    completions[action.name] = {};
+    for (const variant of action.variants) {
+      const outputProperties: Record<string, unknown> = {};
+      const outputRequired: string[] = [];
+      for (const param of variant.fields) {
+        outputProperties[param.name] = resolvedTypeToJsonSchema(param.type);
+        outputRequired.push(param.name);
+      }
+
+      completions[action.name][variant.tag] = {
+        $id: `${conceptUri}/${action.name}/completion/${variant.tag}`,
+        type: 'object',
+        properties: {
+          concept: { const: conceptUri },
+          action: { const: action.name },
+          variant: { const: variant.tag },
+          output: {
+            type: 'object',
+            properties: outputProperties,
+            required: outputRequired,
+          },
+        },
+      };
+    }
+  }
+
+  return { invocations, completions };
+}
+
+// --- GraphQL Schema Generation (Section 4.1) ---
+
+function resolvedTypeToGraphQL(t: ResolvedType): string {
   switch (t.kind) {
     case 'primitive':
-      return primitiveToGraphQL(t.name);
+      return primitiveToGraphQL(t.primitive);
     case 'param':
       return 'ID';
     case 'set':
     case 'list':
-      return `[${typeExprToGraphQL(t.inner)}!]`;
+      return `[${resolvedTypeToGraphQL(t.inner)}!]`;
     case 'option':
-      return typeExprToGraphQL(t.inner); // nullable by default in GraphQL
-    case 'relation':
+      return resolvedTypeToGraphQL(t.inner); // nullable by default in GraphQL
+    case 'map':
       return 'JSON'; // fallback for map types
     case 'record':
       return 'JSON'; // inline records map to JSON scalar
@@ -85,107 +337,22 @@ function primitiveToGraphQL(name: string): string {
   }
 }
 
-// --- JSON Schema Generation (Section 3.2) ---
-
-function generateActionSchemas(
-  conceptName: string,
-  conceptUri: string,
-  action: ActionDecl,
-): string[] {
-  const schemas: string[] = [];
-
-  // Invocation schema
-  const inputProperties: Record<string, unknown> = {};
-  const inputRequired: string[] = [];
-  for (const param of action.params) {
-    inputProperties[param.name] = typeExprToJsonSchema(param.type);
-    inputRequired.push(param.name);
-  }
-
-  const invocationSchema = {
-    $id: `${conceptUri}/${action.name}/invocation`,
-    type: 'object',
-    properties: {
-      concept: { const: conceptUri },
-      action: { const: action.name },
-      input: {
-        type: 'object',
-        properties: inputProperties,
-        required: inputRequired,
-      },
-    },
-  };
-  schemas.push(JSON.stringify(invocationSchema, null, 2));
-
-  // One completion schema per return variant
-  for (const variant of action.variants) {
-    const outputProperties: Record<string, unknown> = {};
-    const outputRequired: string[] = [];
-    for (const param of variant.params) {
-      outputProperties[param.name] = typeExprToJsonSchema(param.type);
-      outputRequired.push(param.name);
-    }
-
-    const completionSchema = {
-      $id: `${conceptUri}/${action.name}/completion/${variant.name}`,
-      type: 'object',
-      properties: {
-        concept: { const: conceptUri },
-        action: { const: action.name },
-        variant: { const: variant.name },
-        output: {
-          type: 'object',
-          properties: outputProperties,
-          required: outputRequired,
-        },
-      },
-    };
-    schemas.push(JSON.stringify(completionSchema, null, 2));
-  }
-
-  return schemas;
-}
-
-// --- GraphQL Schema Generation (Section 4.1) ---
-
-function generateGraphQLSchema(ast: ConceptAST): string {
+function generateGraphQLSchema(
+  ast: ConceptAST,
+  relations: RelationSchema[],
+): string {
   const name = ast.name;
   const lines: string[] = [];
 
-  // Determine the key type parameter (first type param, lowercased)
   const keyParam = ast.typeParams.length > 0 ? ast.typeParams[0] : null;
   const keyFieldName = keyParam ? keyParam.toLowerCase() : 'id';
 
-  // Group state entries by relation (using the merge rules from Section 2.4)
-  // State components with the same domain type and scalar values merge.
-  // For simplicity in Stage 1, we merge all entries that share a relation
-  // type of "param -> X" into one type.
-  const mergedFields: { name: string; gqlType: string }[] = [];
-  const separateRelations: { name: string; fields: { name: string; gqlType: string }[] }[] = [];
-
-  for (const entry of ast.state) {
-    if (entry.type.kind === 'relation') {
-      // Domain -> Range relation: merge into the main type
-      mergedFields.push({
-        name: entry.name,
-        gqlType: typeExprToGraphQL(entry.type.to) + '!',
-      });
-    } else if (entry.type.kind === 'set') {
-      // set T becomes a separate relation
-      separateRelations.push({
-        name: entry.name,
-        fields: [{ name: 'value', gqlType: typeExprToGraphQL(entry.type.inner) + '!' }],
-      });
-    } else {
-      mergedFields.push({
-        name: entry.name,
-        gqlType: typeExprToGraphQL(entry.type) + '!',
-      });
-    }
-  }
+  // Find merged and set-valued relations
+  const mergedRelation = relations.find(r => r.source === 'merged');
+  const setRelations = relations.filter(r => r.source === 'set-valued');
 
   // State type
-  if (mergedFields.length > 0 || keyParam) {
+  if (mergedRelation || keyParam) {
     lines.push(`type ${name}State {`);
     if (keyParam) {
       lines.push(`  """All ${keyFieldName}s in this concept"""`);
@@ -197,8 +364,10 @@ function generateGraphQLSchema(ast: ConceptAST): string {
     // Entry type with merged fields
     lines.push(`type ${name}Entry {`);
     lines.push(`  ${keyFieldName}: ID!`);
-    for (const f of mergedFields) {
-      lines.push(`  ${f.name}: ${f.gqlType}`);
+    if (mergedRelation) {
+      for (const f of mergedRelation.fields) {
+        lines.push(`  ${f.name}: ${resolvedTypeToGraphQL(f.type)}!`);
+      }
     }
     lines.push(`}`);
     lines.push('');
@@ -211,14 +380,14 @@ function generateGraphQLSchema(ast: ConceptAST): string {
   }
 
   // Separate set-valued relations
-  for (const rel of separateRelations) {
+  for (const rel of setRelations) {
     lines.push('');
     lines.push(`type ${name}${capitalize(rel.name)} {`);
     if (keyParam) {
       lines.push(`  ${keyFieldName}: ID!`);
     }
     for (const f of rel.fields) {
-      lines.push(`  ${f.name}: ${f.gqlType}`);
+      lines.push(`  ${f.name}: ${resolvedTypeToGraphQL(f.type)}!`);
     }
     lines.push(`}`);
   }
@@ -228,6 +397,36 @@ function generateGraphQLSchema(ast: ConceptAST): string {
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// --- Build ConceptManifest ---
+
+function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
+  const conceptUri = `urn:copf/${ast.name}`;
+
+  const typeParams: TypeParamInfo[] = ast.typeParams.map(p => ({
+    name: p,
+    wireType: 'string' as const,
+  }));
+
+  const relations = buildRelationSchemas(ast);
+  const actions = buildActionSchemas(ast);
+  const invariants = buildInvariantSchemas(ast);
+  const graphqlSchema = generateGraphQLSchema(ast, relations);
+  const jsonSchemas = buildJsonSchemas(conceptUri, actions);
+
+  return {
+    uri: conceptUri,
+    name: ast.name,
+    typeParams,
+    relations,
+    actions,
+    invariants,
+    graphqlSchema,
+    jsonSchemas,
+    capabilities: ast.capabilities || [],
+    purpose: ast.purpose || '',
+  };
 }
 
 // --- Handler ---
@@ -242,26 +441,12 @@ export const schemaGenHandler: ConceptHandler = {
     }
 
     try {
-      const conceptUri = `urn:copf/${ast.name}`;
+      const manifest = buildManifest(ast, spec);
 
-      // Generate GraphQL schema
-      const graphql = generateGraphQLSchema(ast);
+      // Store the manifest keyed by spec reference
+      await storage.put('manifests', spec, { spec, manifest });
 
-      // Generate JSON Schemas for all actions
-      const jsonSchemas: string[] = [];
-      for (const action of ast.actions) {
-        const schemas = generateActionSchemas(ast.name, conceptUri, action);
-        jsonSchemas.push(...schemas);
-      }
-
-      // Store the result keyed by spec reference
-      await storage.put('schemas', spec, {
-        spec,
-        graphql,
-        jsonSchemas,
-      });
-
-      return { variant: 'ok', graphql, jsonSchemas };
+      return { variant: 'ok', manifest };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return { variant: 'error', message };

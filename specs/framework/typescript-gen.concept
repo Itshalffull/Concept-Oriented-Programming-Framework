@@ -1,0 +1,28 @@
+concept TypeScriptGen [S] {
+
+  purpose {
+    Generate TypeScript skeleton code from a ConceptManifest.
+    Produces type definitions, handler interface, transport adapter,
+    lite query implementation, and conformance tests.
+  }
+
+  state {
+    outputs: S -> list { path: String, content: String }
+  }
+
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String, content: String }) {
+        Map ResolvedTypes to TypeScript types.
+        Emit type definitions for action inputs/outputs.
+        Emit handler interface with one method per action.
+        Emit transport adapter (invocation dispatch, serialization).
+        Emit lite query protocol implementation over ConceptStorage.
+        Emit conformance tests from invariants.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to TypeScript.
+      }
+    }
+  }
+}

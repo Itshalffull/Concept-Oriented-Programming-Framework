@@ -3,6 +3,9 @@
 //
 // Validates that all 7 Stage 1 concepts work correctly both
 // individually and wired together through the Stage 1 syncs.
+//
+// Updated for Stage 4: CodeGen replaced by TypeScriptGen,
+// SchemaGen now produces ConceptManifest.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -15,12 +18,12 @@ import {
   parseConceptFile,
   parseSyncFile,
 } from '../kernel/src/index.js';
-import type { ConceptHandler, ConceptAST, CompiledSync } from '../kernel/src/types.js';
+import type { ConceptHandler, ConceptAST, CompiledSync, ConceptManifest } from '../kernel/src/types.js';
 
 // Stage 1 concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { codeGenHandler } from '../implementations/typescript/framework/code-gen.impl.js';
+import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
 import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
 import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
 import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
@@ -35,6 +38,17 @@ function readSpec(category: string, name: string): string {
   return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
 }
 
+// Helper: run SchemaGen on an AST and return the manifest
+async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
+  const storage = createInMemoryStorage();
+  const result = await schemaGenHandler.generate(
+    { spec: 'test', ast },
+    storage,
+  );
+  expect(result.variant).toBe('ok');
+  return result.manifest as ConceptManifest;
+}
+
 // ============================================================
 // 1. Stage 1 Concept Spec Parsing
 // ============================================================
@@ -42,7 +56,7 @@ function readSpec(category: string, name: string): string {
 describe('Stage 1 — Concept Specs', () => {
   it('parses all 7 framework concept specs', () => {
     const specNames = [
-      'spec-parser', 'schema-gen', 'code-gen',
+      'spec-parser', 'schema-gen', 'typescript-gen',
       'sync-parser', 'sync-compiler',
       'action-log', 'registry',
     ];
@@ -125,7 +139,7 @@ describe('Stage 1 — SpecParser Concept', () => {
   it('parses all framework specs through the concept handler', async () => {
     const storage = createInMemoryStorage();
     const specNames = [
-      'spec-parser', 'schema-gen', 'code-gen',
+      'spec-parser', 'schema-gen', 'typescript-gen',
       'sync-parser', 'sync-compiler',
       'action-log', 'registry',
     ];
@@ -143,11 +157,11 @@ describe('Stage 1 — SpecParser Concept', () => {
 });
 
 // ============================================================
-// 3. SchemaGen Concept
+// 3. SchemaGen Concept (now produces ConceptManifest)
 // ============================================================
 
 describe('Stage 1 — SchemaGen Concept', () => {
-  it('generates GraphQL schema from Password concept', async () => {
+  it('generates ConceptManifest from Password concept', async () => {
     const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'password'));
     const result = await schemaGenHandler.generate(
@@ -156,14 +170,14 @@ describe('Stage 1 — SchemaGen Concept', () => {
     );
 
     expect(result.variant).toBe('ok');
-    const graphql = result.graphql as string;
-    expect(graphql).toContain('type PasswordState');
-    expect(graphql).toContain('type PasswordEntry');
-    expect(graphql).toContain('hash:');
-    expect(graphql).toContain('salt:');
-    expect(graphql).toContain('extend type Query');
-    expect(graphql).toContain('password_entry');
-    expect(graphql).toContain('password_entries');
+    const manifest = result.manifest as ConceptManifest;
+    expect(manifest.graphqlSchema).toContain('type PasswordState');
+    expect(manifest.graphqlSchema).toContain('type PasswordEntry');
+    expect(manifest.graphqlSchema).toContain('hash:');
+    expect(manifest.graphqlSchema).toContain('salt:');
+    expect(manifest.graphqlSchema).toContain('extend type Query');
+    expect(manifest.graphqlSchema).toContain('password_entry');
+    expect(manifest.graphqlSchema).toContain('password_entries');
   });
 
   it('generates JSON schemas for all actions', async () => {
@@ -175,21 +189,23 @@ describe('Stage 1 — SchemaGen Concept', () => {
     );
 
     expect(result.variant).toBe('ok');
-    const schemas = result.jsonSchemas as string[];
+    const manifest = result.manifest as ConceptManifest;
 
-    // Password has 3 actions: set (invocation + ok + invalid = 3),
-    // check (invocation + ok + notfound = 3), validate (invocation + ok = 2)
-    // Total: 8 schemas
-    expect(schemas.length).toBe(8);
+    // Password has 3 actions: set, check, validate
+    expect(Object.keys(manifest.jsonSchemas.invocations)).toHaveLength(3);
 
-    // Validate one invocation schema
-    const setInvocation = JSON.parse(schemas[0]);
+    // set action: ok + invalid completions
+    expect(manifest.jsonSchemas.completions['set']['ok']).toBeDefined();
+    expect(manifest.jsonSchemas.completions['set']['invalid']).toBeDefined();
+
+    // Validate invocation schema
+    const setInvocation = manifest.jsonSchemas.invocations['set'] as any;
     expect(setInvocation.$id).toContain('set/invocation');
     expect(setInvocation.properties.input.properties.user).toBeDefined();
     expect(setInvocation.properties.input.properties.password).toBeDefined();
 
-    // Validate one completion schema
-    const setOk = JSON.parse(schemas[1]);
+    // Validate completion schema
+    const setOk = manifest.jsonSchemas.completions['set']['ok'] as any;
     expect(setOk.$id).toContain('set/completion/ok');
     expect(setOk.properties.variant.const).toBe('ok');
   });
@@ -199,22 +215,23 @@ describe('Stage 1 — SchemaGen Concept', () => {
     const ast = parseConceptFile(readSpec('app', 'echo'));
     await schemaGenHandler.generate({ spec: 'spec-42', ast }, storage);
 
-    const stored = await storage.get('schemas', 'spec-42');
+    const stored = await storage.get('manifests', 'spec-42');
     expect(stored).not.toBeNull();
-    expect(stored!.graphql).toBeTruthy();
+    expect((stored!.manifest as ConceptManifest).graphqlSchema).toBeTruthy();
   });
 });
 
 // ============================================================
-// 4. CodeGen Concept
+// 4. TypeScriptGen Concept (replaces CodeGen)
 // ============================================================
 
-describe('Stage 1 — CodeGen Concept', () => {
+describe('Stage 1 — TypeScriptGen Concept', () => {
   it('generates TypeScript skeleton for Password concept', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'password'));
-    const result = await codeGenHandler.generate(
-      { spec: 'test-spec-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'test-spec-1', manifest },
       storage,
     );
 
@@ -248,23 +265,12 @@ describe('Stage 1 — CodeGen Concept', () => {
     expect(adapterFile!.content).toContain('createPasswordLiteAdapter');
   });
 
-  it('rejects unsupported languages', async () => {
-    const storage = createInMemoryStorage();
-    const ast = parseConceptFile(readSpec('app', 'echo'));
-    const result = await codeGenHandler.generate(
-      { spec: 'spec-1', ast, language: 'rust' },
-      storage,
-    );
-
-    expect(result.variant).toBe('error');
-    expect(result.message).toContain('Unsupported language');
-  });
-
   it('generates types for type parameter fields', async () => {
-    const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'user'));
-    const result = await codeGenHandler.generate(
-      { spec: 'spec-1', ast, language: 'typescript' },
+    const manifest = await generateManifest(ast);
+    const storage = createInMemoryStorage();
+    const result = await typescriptGenHandler.generate(
+      { spec: 'spec-1', manifest },
       storage,
     );
 
@@ -320,8 +326,8 @@ describe('Stage 1 — SyncParser Concept', () => {
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
     expect(allSyncs).toHaveLength(3);
     const names = allSyncs.map(s => s.name);
-    expect(names).toContain('GenerateSchemas');
-    expect(names).toContain('GenerateCode');
+    expect(names).toContain('GenerateManifest');
+    expect(names).toContain('GenerateTypeScript');
     expect(names).toContain('LogRegistration');
   });
 
@@ -516,18 +522,18 @@ describe('Stage 1 — Registry Concept', () => {
 //
 // Register all Stage 1 concepts on the kernel, load the
 // compiler pipeline syncs, then invoke SpecParser/parse.
-// The GenerateSchemas and GenerateCode syncs should fire
-// automatically, producing schemas and code.
+// The GenerateManifest and GenerateTypeScript syncs should fire
+// automatically, producing manifests and code.
 // ============================================================
 
 describe('Stage 1 — Compiler Pipeline (end-to-end)', () => {
-  it('SpecParser → SchemaGen → CodeGen pipeline fires via syncs', async () => {
+  it('SpecParser → SchemaGen → TypeScriptGen pipeline fires via syncs', async () => {
     const kernel = createKernel();
 
     // Register the Stage 1 concepts
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/CodeGen', codeGenHandler);
+    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
     kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
     kernel.registerConcept('urn:copf/Registry', registryHandler);
 
@@ -594,7 +600,7 @@ describe('Stage 1 — Self-Validation', () => {
     const storage = createInMemoryStorage();
 
     const specNames = [
-      'spec-parser', 'schema-gen', 'code-gen',
+      'spec-parser', 'schema-gen', 'typescript-gen',
       'sync-parser', 'sync-compiler',
       'action-log', 'registry',
     ];
@@ -606,12 +612,12 @@ describe('Stage 1 — Self-Validation', () => {
     }
   });
 
-  it('SchemaGen generates schemas for all Stage 1 specs', async () => {
+  it('SchemaGen generates manifests for all Stage 1 specs', async () => {
     const parserStorage = createInMemoryStorage();
     const schemaStorage = createInMemoryStorage();
 
     const specNames = [
-      'spec-parser', 'schema-gen', 'code-gen',
+      'spec-parser', 'schema-gen', 'typescript-gen',
       'sync-parser', 'sync-compiler',
       'action-log', 'registry',
     ];
@@ -626,17 +632,18 @@ describe('Stage 1 — Self-Validation', () => {
         schemaStorage,
       );
       expect(genResult.variant).toBe('ok');
-      expect(genResult.graphql).toBeTruthy();
-      expect((genResult.jsonSchemas as string[]).length).toBeGreaterThan(0);
+      const manifest = genResult.manifest as ConceptManifest;
+      expect(manifest.graphqlSchema).toBeTruthy();
+      expect(manifest.actions.length).toBeGreaterThan(0);
     }
   });
 
-  it('CodeGen generates TypeScript for all Stage 1 specs', async () => {
+  it('TypeScriptGen generates TypeScript for all Stage 1 specs', async () => {
     const parserStorage = createInMemoryStorage();
     const codeStorage = createInMemoryStorage();
 
     const specNames = [
-      'spec-parser', 'schema-gen', 'code-gen',
+      'spec-parser', 'schema-gen', 'typescript-gen',
       'sync-parser', 'sync-compiler',
       'action-log', 'registry',
     ];
@@ -646,8 +653,9 @@ describe('Stage 1 — Self-Validation', () => {
       const parseResult = await specParserHandler.parse({ source }, parserStorage);
       expect(parseResult.variant).toBe('ok');
 
-      const genResult = await codeGenHandler.generate(
-        { spec: parseResult.spec, ast: parseResult.ast, language: 'typescript' },
+      const manifest = await generateManifest(parseResult.ast as ConceptAST);
+      const genResult = await typescriptGenHandler.generate(
+        { spec: parseResult.spec, manifest },
         codeStorage,
       );
       expect(genResult.variant).toBe('ok');
