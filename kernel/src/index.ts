@@ -27,6 +27,33 @@ export { SyncEngine, ActionLog } from './engine.js';
 export { parseConceptFile } from './parser.js';
 export { parseSyncFile } from './sync-parser.js';
 export { createSelfHostedKernel } from './self-hosted.js';
+// Stage 5: HTTP transport adapters
+export {
+  createHttpLiteAdapter,
+  createHttpGraphQLAdapter,
+  createHttpConceptServer,
+} from './http-transport.js';
+export type {
+  LiteFilter,
+  ConceptStateSnapshot,
+  HttpFetchFn,
+} from './http-transport.js';
+// Stage 5: Deployment manifest
+export {
+  parseDeploymentManifest,
+  validateDeploymentManifest,
+} from './deploy.js';
+export type {
+  DeploymentManifest,
+  RuntimeConfig,
+  ConceptDeployment,
+  ConceptImplementation,
+  SyncDeployment,
+  ValidationResult,
+  DeploymentPlan,
+  ConceptPlacement,
+  SyncAssignment,
+} from './deploy.js';
 export type {
   ConceptHandler,
   ConceptStorage,

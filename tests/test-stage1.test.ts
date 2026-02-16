@@ -324,10 +324,11 @@ describe('Stage 1 — SyncParser Concept', () => {
 
     expect(result.variant).toBe('ok');
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
-    expect(allSyncs).toHaveLength(3);
+    expect(allSyncs).toHaveLength(4);
     const names = allSyncs.map(s => s.name);
     expect(names).toContain('GenerateManifest');
     expect(names).toContain('GenerateTypeScript');
+    expect(names).toContain('GenerateRust');
     expect(names).toContain('LogRegistration');
   });
 
@@ -682,7 +683,7 @@ describe('Stage 1 — Self-Validation', () => {
     expect(result.variant).toBe('ok');
 
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
-    expect(allSyncs).toHaveLength(3);
+    expect(allSyncs).toHaveLength(4);
   });
 
   it('SyncCompiler compiles all framework syncs', async () => {
