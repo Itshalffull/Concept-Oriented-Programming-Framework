@@ -1,0 +1,24 @@
+concept Echo [M] {
+
+  purpose {
+    Accept a message and echo it back, optionally transformed.
+  }
+
+  state {
+    messages: set M
+    text: M -> String
+  }
+
+  actions {
+    action send(id: M, text: String) {
+      -> ok(id: M, echo: String) {
+        Store the message. Return the text as-is.
+      }
+    }
+  }
+
+  invariant {
+    after send(id: m, text: "hello") -> ok(id: m, echo: "hello")
+    then send(id: m, text: "hello") -> ok(id: m, echo: "hello")
+  }
+}

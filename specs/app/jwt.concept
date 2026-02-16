@@ -1,0 +1,32 @@
+concept JWT [U] {
+
+  purpose {
+    Generate and verify JSON Web Tokens for user sessions.
+  }
+
+  state {
+    tokens: U -> String
+  }
+
+  actions {
+    action generate(user: U) {
+      -> ok(token: String) {
+        Create a JWT containing the user reference. Store and return it.
+      }
+    }
+
+    action verify(token: String) {
+      -> ok(user: U) {
+        Decode the token. Return the user reference.
+      }
+      -> error(message: String) {
+        If the token is invalid or expired, return error.
+      }
+    }
+  }
+
+  invariant {
+    after generate(user: x) -> ok(token: t)
+    then verify(token: t) -> ok(user: x)
+  }
+}
