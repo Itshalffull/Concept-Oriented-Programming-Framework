@@ -1,0 +1,24 @@
+sync HandleEcho [eager]
+when {
+  Web/request: [ method: "echo"; text: ?text ]
+    => [ request: ?request ]
+}
+where {
+  bind(uuid() as ?id)
+}
+then {
+  Echo/send: [ id: ?id; text: ?text ]
+}
+
+sync EchoResponse [eager]
+when {
+  Web/request: [ method: "echo" ]
+    => [ request: ?request ]
+  Echo/send: []
+    => [ echo: ?echo ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ echo: ?echo ] ]
+}
