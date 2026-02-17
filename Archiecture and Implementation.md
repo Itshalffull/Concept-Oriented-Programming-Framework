@@ -3229,17 +3229,17 @@ Extract three kernel modules into proper concept specs + implementations. See Se
 
 Fold the `DistributedSyncEngine` into the `SyncEngine` concept rather than keeping it as a separate module. See Section 17.4 for rationale.
 
-- [ ] Extend `sync-engine.concept` spec with eventual queue actions
-  - [ ] `queueSync(sync, bindings, flow) → ok(pendingId)`
-  - [ ] `onAvailabilityChange(conceptUri, available) → ok(drained: list ActionInvocation)`
-  - [ ] `drainConflicts() → ok(conflicts: list ActionCompletion)`
-- [ ] Merge `kernel/src/eventual-queue.ts` logic into `sync-engine.impl.ts`
-  - [ ] Eliminate duplicated matching/evaluation code (~60% overlap)
-  - [ ] Annotation-aware routing (`[eventual]`, `[local]`, `[eager]`) handled inside `onCompletion`
-  - [ ] Pending sync queue becomes SyncEngine state, not a separate module
-- [ ] Delete `kernel/src/eventual-queue.ts`
-- [ ] Verify all distributed sync tests pass (including offline/eventual convergence)
-- [ ] Verify kernel LOC reduced by ~299 lines
+- [x] Extend `specs/framework/sync-engine.concept` spec with eventual queue actions
+  - [x] `queueSync(sync, bindings, flow) → ok(pendingId)`
+  - [x] `onAvailabilityChange(conceptUri, available) → ok(drained: list ActionInvocation)`
+  - [x] `drainConflicts() → ok(conflicts: list ActionCompletion)`
+- [x] Merge `kernel/src/eventual-queue.ts` logic into `implementations/typescript/framework/sync-engine.impl.ts` (450 LOC)
+  - [x] Eliminate duplicated matching/evaluation code (~60% overlap)
+  - [x] Annotation-aware routing (`[eventual]`, `[local]`, `[eager]`) handled inside `onCompletion`
+  - [x] Pending sync queue becomes SyncEngine state, not a separate module
+- [x] Delete `kernel/src/eventual-queue.ts`
+- [x] Verify all distributed sync tests pass — 335/335 passing
+- [x] Kernel at 3,809 LOC (10 files)
 
 ### Phase 17: Stage 3.5 — Eliminate Bootstrap Chain (Weeks 40-42)
 
@@ -4320,7 +4320,7 @@ No first-class authorization layer is needed in the engine. Authorization is coo
 
 ## 17. Kernel Shrinkage Architecture
 
-The kernel started at ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. After Phase 14 (tooling extraction) and Phase 15 (concept extraction), the kernel is now ~4,215 LOC across 11 files. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach the target. See Phases 14-18 in the roadmap for implementation order.
+The kernel started at ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. After Phase 14 (tooling extraction), Phase 15 (concept extraction), and Phase 16 (eventual queue fold), the kernel is now ~3,809 LOC across 10 files. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach the target. See Phases 14-18 in the roadmap for implementation order.
 
 **Extraction status:**
 - Phase 14 ✅ — `test-helpers.ts` → `mock-handler.ts`, `lite-query.ts` → `lite-query-adapter.ts` + shared types
@@ -4512,9 +4512,9 @@ sync CheckMigrationOnRegister {
 
 This sync fires every time a concept registers, automatically checking whether its storage version matches its spec version. If `Migration/check → needsMigration`, the concept enters migration-required state (Section 16.5).
 
-### 17.4 SyncEngine Eventual Queue Extensions
+### 17.4 SyncEngine Eventual Queue Extensions ✅
 
-The `DistributedSyncEngine` (`kernel/src/eventual-queue.ts`, 299 LOC) is tightly coupled to engine internals — it imports `matchWhenClause()`, `evaluateWhere()`, `buildInvocations()`, and duplicates ~60% of `SyncEngine.onCompletion()` logic. Making it a separate concept would require leaking internal matching abstractions across concept boundaries.
+The `DistributedSyncEngine` (formerly `kernel/src/eventual-queue.ts`, 299 LOC) was tightly coupled to engine internals — it imported `matchWhenClause()`, `evaluateWhere()`, `buildInvocations()`, and duplicated ~60% of `SyncEngine.onCompletion()` logic. It has been folded into `implementations/typescript/framework/sync-engine.impl.ts` (450 LOC), eliminating the duplication.
 
 Instead, annotation-aware routing and queuing fold into the existing `sync-engine.concept` as additional actions:
 

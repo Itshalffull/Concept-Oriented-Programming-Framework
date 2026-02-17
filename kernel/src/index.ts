@@ -73,12 +73,12 @@ export type {
   LiteFilter as LiteQueryFilter,
   ConceptStateSnapshot as LiteStateSnapshot,
 } from './types.js';
-// Eventual sync queue + distributed engine
-export { DistributedSyncEngine } from './eventual-queue.js';
+// Distributed sync engine (merged into sync-engine.impl)
+export { DistributedSyncEngine } from '../../implementations/typescript/framework/sync-engine.impl.js';
 export type {
   PendingSyncEntry,
   AvailabilityListener,
-} from './eventual-queue.js';
+} from '../../implementations/typescript/framework/sync-engine.impl.js';
 // WebSocket transport
 export {
   createWebSocketAdapter,
