@@ -4,9 +4,9 @@
 // Generates schemas and code for all (or a single) concept.
 //
 // Pipeline per Section 7.2:
-//   Phase 1: Parse .concept → AST
-//   Phase 3: SchemaGen (AST → ConceptManifest)
-//   Phase 5: CodeGen (Manifest → target-language files)
+//   1. Parse .concept → AST
+//   2. SchemaGen (AST → ConceptManifest)
+//   3. CodeGen (Manifest → target-language files)
 //
 // Generated output goes to the generated/ directory.
 // ============================================================
@@ -48,7 +48,7 @@ export async function generateCommand(
     return;
   }
 
-  // Phase 1: Parse all specs
+  // Parse all specs
   const asts: { file: string; ast: ConceptAST }[] = [];
   for (const file of conceptFiles) {
     const source = readFileSync(file, 'utf-8');
@@ -75,7 +75,7 @@ export async function generateCommand(
   let totalFiles = 0;
 
   for (const { file, ast } of asts) {
-    // Phase 3: SchemaGen — produce ConceptManifest
+    // SchemaGen — produce ConceptManifest
     const schemaStorage = createInMemoryStorage();
     const schemaResult = await schemaGenHandler.generate(
       { spec: file, ast },
@@ -105,7 +105,7 @@ export async function generateCommand(
       manifest.graphqlSchema + '\n',
     );
 
-    // Phase 5: CodeGen — produce target-language files
+    // CodeGen — produce target-language files
     const codeStorage = createInMemoryStorage();
     const generator =
       target === 'typescript' ? typescriptGenHandler : rustGenHandler;

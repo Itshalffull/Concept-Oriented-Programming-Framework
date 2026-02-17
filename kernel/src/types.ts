@@ -45,19 +45,19 @@ export interface ActionRecord {
 
 // --- Storage Interface ---
 
-/** Metadata for a stored entry (Phase 13: Conflict Resolution) */
+/** Metadata for a stored entry. */
 export interface EntryMeta {
   lastWrittenAt: string;
 }
 
-/** Conflict resolution result (Phase 13) */
+/** Conflict resolution result returned by onConflict callback. */
 export type ConflictResolution =
   | { action: 'keep-existing' }
   | { action: 'accept-incoming' }
   | { action: 'merge'; merged: Record<string, unknown> }
   | { action: 'escalate' };
 
-/** Conflict details passed to onConflict callback (Phase 13) */
+/** Conflict details passed to onConflict callback. */
 export interface ConflictInfo {
   relation: string;
   key: string;
@@ -71,9 +71,9 @@ export interface ConceptStorage {
   find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
   del(relation: string, key: string): Promise<void>;
   delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
-  /** Phase 13: Retrieve write timestamp for a stored entry */
+  /** Retrieve write timestamp metadata for a stored entry. */
   getMeta?(relation: string, key: string): Promise<EntryMeta | null>;
-  /** Phase 13: Conflict detection callback for concurrent writes */
+  /** Conflict detection callback for concurrent writes. */
   onConflict?: (info: ConflictInfo) => ConflictResolution;
 }
 
@@ -106,9 +106,9 @@ export interface ConceptRegistry {
   register(uri: string, transport: ConceptTransport): void;
   resolve(uri: string): ConceptTransport | undefined;
   available(uri: string): boolean;
-  /** Phase 11: swap transport for an existing concept (hot reload) */
+  /** Swap transport for an existing concept (hot reload). */
   reloadConcept?(uri: string, transport: ConceptTransport): void;
-  /** Phase 11: remove a concept, returns true if it existed */
+  /** Remove a concept, returns true if it existed. */
   deregisterConcept?(uri: string): boolean;
 }
 

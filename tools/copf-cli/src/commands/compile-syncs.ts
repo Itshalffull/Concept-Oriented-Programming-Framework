@@ -3,7 +3,7 @@
 //
 // Parse and validate all .sync files against concept manifests.
 //
-// Implements Section 7.2 Phase 4 (Sync Compilation):
+// Implements Section 7.2 (Sync Compilation):
 //   - Parse .sync files
 //   - Validate concept/action references
 //   - Check variable binding consistency
@@ -35,7 +35,7 @@ export async function compileSyncsCommand(
   const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
   const syncsDir = typeof flags.syncs === 'string' ? flags.syncs : 'syncs';
 
-  // Phase 1: Load all concept specs for reference validation
+  // Load all concept specs for reference validation
   const conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
   const conceptASTs = new Map<string, ConceptAST>();
 

@@ -1,7 +1,7 @@
 // ============================================================
 // COPF Kernel - In-Memory Storage Implementation
 //
-// Phase 13: Tracks lastWrittenAt timestamps for all entries,
+// Tracks lastWrittenAt timestamps for all entries,
 // supports getMeta() for timestamp retrieval, and onConflict
 // callback for conflict detection during concurrent writes.
 // ============================================================
@@ -24,8 +24,8 @@ interface StoredEntry {
  * Data is lost on process restart.
  *
  * Each relation is stored as a Map<string, StoredEntry>.
- * Phase 13: All writes track lastWrittenAt timestamps and
- * support conflict detection via the onConflict callback.
+ * All writes track lastWrittenAt timestamps and support
+ * conflict detection via the onConflict callback.
  */
 export function createInMemoryStorage(): ConceptStorage {
   const relations = new Map<string, Map<string, StoredEntry>>();

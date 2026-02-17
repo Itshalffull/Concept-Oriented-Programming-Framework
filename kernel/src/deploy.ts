@@ -8,7 +8,7 @@
 //   - Concept deployments (spec, implementations, storage, queryMode)
 //   - Sync assignments (which engine evaluates each sync)
 //
-// Validation rules (Section 7.1, Phase 6):
+// Validation rules (Section 7.1):
 //   1. Each concept referenced by syncs has a deployment entry
 //   2. Each concept's declared capabilities are satisfied by runtime
 //   3. Warn about eager syncs spanning high-latency runtimes
@@ -34,7 +34,7 @@ export interface RuntimeConfig {
   engine: boolean;
   transport: 'in-process' | 'http' | 'websocket' | 'worker';
   upstream?: string;
-  /** Phase 13: Configurable warn threshold for lite query snapshot size */
+  /** Configurable warn threshold for lite query snapshot size. */
   liteQueryWarnThreshold?: number;
 }
 

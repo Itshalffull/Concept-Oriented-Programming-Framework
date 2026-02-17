@@ -1,5 +1,5 @@
 // ============================================================
-// Phase 11 — Observability & Hot Reloading Tests
+// Observability & Hot Reloading Tests
 //
 // Tests for:
 // 1. Telemetry concept — export action records as OTel spans
@@ -30,7 +30,7 @@ import {
 
 // --- Telemetry Concept Tests ---
 
-describe('Phase 11 — Telemetry Concept', () => {
+describe('Telemetry Concept', () => {
   beforeEach(() => {
     clearExportedSpans();
   });
@@ -186,7 +186,7 @@ describe('Phase 11 — Telemetry Concept', () => {
 
 // --- SyncEngine.reloadSyncs() Tests ---
 
-describe('Phase 11 — SyncEngine.reloadSyncs()', () => {
+describe('SyncEngine.reloadSyncs()', () => {
   function makeSync(name: string, concept: string, action: string): CompiledSync {
     return {
       name,
@@ -314,7 +314,7 @@ describe('Phase 11 — SyncEngine.reloadSyncs()', () => {
 
 // --- Registry Hot Reload Tests ---
 
-describe('Phase 11 — Registry Hot Reload', () => {
+describe('Registry Hot Reload', () => {
   it('reloadConcept swaps the transport', async () => {
     const registry = createConceptRegistry();
 
@@ -367,7 +367,7 @@ describe('Phase 11 — Registry Hot Reload', () => {
 
 // --- Degraded Sync Tests ---
 
-describe('Phase 11 — Degraded Syncs', () => {
+describe('Degraded Syncs', () => {
   function makeSync(name: string, whenConcept: string, thenConcept: string): CompiledSync {
     return {
       name,
@@ -493,7 +493,7 @@ describe('Phase 11 — Degraded Syncs', () => {
 
 // --- buildSyncIndex Tests ---
 
-describe('Phase 11 — buildSyncIndex', () => {
+describe('buildSyncIndex', () => {
   it('builds an index from a sync array', () => {
     const syncs: CompiledSync[] = [
       {
@@ -519,7 +519,7 @@ describe('Phase 11 — buildSyncIndex', () => {
 
 // --- Integration: Telemetry with Kernel ---
 
-describe('Phase 11 — Telemetry Integration', () => {
+describe('Telemetry Integration', () => {
   beforeEach(() => {
     clearExportedSpans();
   });

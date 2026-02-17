@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Test Helpers (Phase 10)
+// COPF Kernel - Test Helpers
 //
 // createMockHandler: generates a ConceptHandler from a ConceptAST
 // where every action returns its first (ok) variant by default,

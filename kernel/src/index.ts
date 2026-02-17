@@ -62,7 +62,7 @@ export type {
   ConceptPlacement,
   SyncAssignment,
 } from './deploy.js';
-// Phase 9: Lite query protocol + adapter
+// Lite query protocol + adapter
 export {
   LiteQueryAdapter,
   createStorageLiteProtocol,
@@ -72,13 +72,13 @@ export type {
   LiteFilter as LiteQueryFilter,
   ConceptStateSnapshot as LiteStateSnapshot,
 } from './lite-query.js';
-// Phase 9: Eventual sync queue + distributed engine
+// Eventual sync queue + distributed engine
 export { DistributedSyncEngine } from './eventual-queue.js';
 export type {
   PendingSyncEntry,
   AvailabilityListener,
 } from './eventual-queue.js';
-// Phase 9: WebSocket transport
+// WebSocket transport
 export {
   createWebSocketAdapter,
   createWebSocketConceptServer,
@@ -88,17 +88,17 @@ export type {
   MockWebSocket,
   WebSocketFactory,
 } from './ws-transport.js';
-// Phase 10: Flow Tracing
+// Flow tracing
 export { buildFlowTrace, renderFlowTrace } from './flow-trace.js';
 export type { FlowTrace, TraceNode, TraceSyncNode } from './flow-trace.js';
-// Phase 12: Schema Migration
+// Schema migration
 export {
   checkMigrationNeeded,
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
 } from './migration.js';
-// Phase 10: Test Helpers
+// Test helpers
 export { createMockHandler } from './test-helpers.js';
 export type {
   ConceptHandler,
@@ -125,7 +125,7 @@ export type {
   InvariantDecl,
   ActionPattern,
   ArgPattern,
-  // Stage 4: ConceptManifest types
+  // ConceptManifest types
   ConceptManifest,
   TypeParamInfo,
   RelationSchema,
@@ -137,7 +137,7 @@ export type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
-  // Phase 13: Conflict Resolution types
+  // Conflict Resolution types
   EntryMeta,
   ConflictResolution,
   ConflictInfo,
@@ -203,7 +203,7 @@ export interface Kernel {
   /** Get the action log for a specific flow */
   getFlowLog(flowId: string): ActionRecord[];
 
-  /** Get a structured FlowTrace for a specific flow (Phase 10) */
+  /** Get a structured FlowTrace for a specific flow */
   getFlowTrace(flowId: string): FlowTrace | null;
 
   /** Directly invoke a concept action */

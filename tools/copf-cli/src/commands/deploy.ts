@@ -4,7 +4,7 @@
 // Validates and processes a deployment manifest per Section 6
 // of the architecture doc.
 //
-// Phase 6: Deployment Validation
+// Deployment Validation:
 //   - Parse the manifest
 //   - Validate runtime configs
 //   - Check concept placements against capabilities

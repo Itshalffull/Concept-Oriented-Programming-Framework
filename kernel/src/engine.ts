@@ -501,7 +501,7 @@ export class SyncEngine {
 
     // 3. For each candidate sync
     for (const sync of candidates) {
-      // Phase 11: Skip degraded syncs with warning
+      // Skip degraded syncs with warning
       if (this.degradedSyncs.has(sync.name)) {
         console.warn(`[copf] Skipping degraded sync: ${sync.name}`);
         continue;

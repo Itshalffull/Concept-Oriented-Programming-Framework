@@ -1,7 +1,7 @@
 // ============================================================
 // Stage 6 — Distribution + Eventual Consistency Tests
 //
-// Phase 9 checklist:
+// Covers:
 //   - Eventual sync queue
 //   - Engine hierarchy (upstream/downstream)
 //   - WebSocket transport adapter

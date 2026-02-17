@@ -4,7 +4,7 @@
 // Parse and validate all .concept specs in the project.
 // Reports parse errors, type issues, and warnings.
 //
-// Implements Section 7.2 Phase 1 (Parse) and Phase 2 (Validate).
+// Implements Section 7.2 (Parse and Validate).
 // ============================================================
 
 import { readFileSync } from 'fs';

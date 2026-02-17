@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Flow Trace Builder (Phase 10)
+// COPF Kernel - Flow Trace Builder
 //
 // Walks ActionLog provenance edges from a flow root to build
 // a FlowTrace tree. For each completion, checks the sync index
