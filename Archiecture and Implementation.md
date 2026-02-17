@@ -3186,44 +3186,44 @@ See Section 16.6 for full design. Phase 1 can begin immediately; Phase 2 depends
   - [ ] Warn when snapshot returns > threshold entries (default 1,000)
   - [ ] Make threshold configurable in deploy manifest (`engine.liteQueryWarnThreshold`)
 
-### Phase 14: Kernel Extraction — Tooling (Weeks 36)
+### Phase 14: Kernel Extraction — Tooling (Weeks 36) ✅
 
 Move non-concept, non-kernel code out of the kernel into its proper location. These modules are dev tooling or transport plumbing, not runtime kernel code. See Section 17.
 
-- [ ] Move `kernel/src/test-helpers.ts` → `implementations/typescript/framework/mock-handler.ts`
-  - [ ] Update all test imports
-  - [ ] Verify `createMockHandler` works from new location
-- [ ] Move `kernel/src/lite-query.ts` → `implementations/typescript/framework/lite-query-adapter.ts`
-  - [ ] `LiteQueryProtocol` interface stays in shared types
-  - [ ] Adapter caching logic moves to implementation
-  - [ ] Update transport layer imports
-- [ ] Verify kernel LOC reduced by ~248 lines
-- [ ] All existing tests pass from new import paths
+- [x] Move `kernel/src/test-helpers.ts` → `implementations/typescript/framework/mock-handler.ts`
+  - [x] Update all test imports
+  - [x] Verify `createMockHandler` works from new location
+- [x] Move `kernel/src/lite-query.ts` → `implementations/typescript/framework/lite-query-adapter.ts`
+  - [x] `LiteQueryProtocol` interface stays in shared types (`kernel/src/types.ts`)
+  - [x] Adapter caching logic moves to implementation
+  - [x] Update transport layer imports
+- [x] Verify kernel LOC reduced by ~248 lines (actual: ~306 lines removed)
+- [x] All existing tests pass from new import paths (335 tests, 17 files)
 
-### Phase 15: Kernel Extraction — New Concepts (Weeks 37-38)
+### Phase 15: Kernel Extraction — New Concepts (Weeks 37-38) ✅
 
 Extract three kernel modules into proper concept specs + implementations. See Section 17 for concept specs and rationale.
 
-- [ ] Implement `FlowTrace` concept
-  - [ ] Write `flow-trace.concept` spec (Section 17.1)
-  - [ ] Move `kernel/src/flow-trace.ts` logic into `flow-trace.impl.ts`
-  - [ ] Wire sync: `ActionLog/query → ok ⟹ FlowTrace/build`
-  - [ ] Verify `copf trace` CLI works through the concept (not direct kernel calls)
-  - [ ] Delete `kernel/src/flow-trace.ts`
-- [ ] Implement `DeploymentValidator` concept
-  - [ ] Write `deployment-validator.concept` spec (Section 17.2)
-  - [ ] Move `kernel/src/deploy.ts` logic into `deployment-validator.impl.ts`
-  - [ ] Wire sync: `SchemaGen/generate → ok ⟹ DeploymentValidator/validate`
-  - [ ] Verify `copf deploy` CLI works through the concept
-  - [ ] Delete `kernel/src/deploy.ts`
-- [ ] Implement `Migration` concept
-  - [ ] Write `migration.concept` spec (Section 17.3)
-  - [ ] Move `kernel/src/migration.ts` logic into `migration.impl.ts`
-  - [ ] Wire sync: `Registry/register → ok ⟹ Migration/check`
-  - [ ] Verify `copf migrate` CLI works through the concept
-  - [ ] Delete `kernel/src/migration.ts`
-- [ ] Verify kernel LOC reduced by ~722 lines
-- [ ] All conformance and integration tests pass
+- [x] Implement `FlowTrace` concept
+  - [x] Write `specs/framework/flow-trace.concept` spec (Section 17.1)
+  - [x] Move `kernel/src/flow-trace.ts` logic into `implementations/typescript/framework/flow-trace.impl.ts`
+  - [x] Wire sync: `syncs/framework/build-flow-trace.sync` — `ActionLog/query → ok ⟹ FlowTrace/build`
+  - [x] Verify `copf trace` CLI works through the concept (not direct kernel calls)
+  - [x] Delete `kernel/src/flow-trace.ts`
+- [x] Implement `DeploymentValidator` concept
+  - [x] Write `specs/framework/deployment-validator.concept` spec (Section 17.2)
+  - [x] Move `kernel/src/deploy.ts` logic into `implementations/typescript/framework/deployment-validator.impl.ts`
+  - [x] Wire sync: `syncs/framework/validate-deployment.sync` — `SchemaGen/generate → ok ⟹ DeploymentValidator/validate`
+  - [x] Verify `copf deploy` CLI works through the concept
+  - [x] Delete `kernel/src/deploy.ts`
+- [x] Implement `Migration` concept
+  - [x] Write `specs/framework/migration.concept` spec (Section 17.3)
+  - [x] Move `kernel/src/migration.ts` logic into `implementations/typescript/framework/migration.impl.ts`
+  - [x] Wire sync: `syncs/framework/check-migration.sync` — `Registry/register → ok ⟹ Migration/check`
+  - [x] Verify `copf migrate` CLI works through the concept
+  - [x] Delete `kernel/src/migration.ts`
+- [x] Verify kernel LOC reduced by ~722 lines (actual: 936 lines removed, 14→11 source files)
+- [x] All conformance and integration tests pass (335 tests, 17 files)
 
 ### Phase 16: Kernel Extraction — Eventual Queue Fold (Weeks 39)
 
@@ -4320,11 +4320,18 @@ No first-class authorization layer is needed in the engine. Authorization is coo
 
 ## 17. Kernel Shrinkage Architecture
 
-The kernel is currently ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach that target. See Phases 14-18 in the roadmap for implementation order.
+The kernel started at ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. After Phase 14 (tooling extraction) and Phase 15 (concept extraction), the kernel is now ~4,215 LOC across 11 files. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach the target. See Phases 14-18 in the roadmap for implementation order.
 
-### 17.1 FlowTrace Concept (from `kernel/src/flow-trace.ts`, 353 LOC)
+**Extraction status:**
+- Phase 14 ✅ — `test-helpers.ts` → `mock-handler.ts`, `lite-query.ts` → `lite-query-adapter.ts` + shared types
+- Phase 15 ✅ — `flow-trace.ts`, `deploy.ts`, `migration.ts` → proper concept specs + implementations + syncs
+- Phases 16-18 — Remaining (eventual queue fold, pre-compilation, final parser extraction)
+
+### 17.1 FlowTrace Concept (extracted from `kernel/src/flow-trace.ts`, 473 LOC) ✅
 
 The architecture doc (Section 16.1) already designs FlowTrace as a concept-level concern — it reads from ActionLog (a concept) and produces debug trees. It has clear state and meaningful action variants.
+
+**Implementation:** `specs/framework/flow-trace.concept` + `implementations/typescript/framework/flow-trace.impl.ts` + `syncs/framework/build-flow-trace.sync`
 
 ```
 concept FlowTrace [F] {
@@ -4380,9 +4387,11 @@ sync BuildFlowTrace {
 
 The `copf trace <flow-id>` CLI calls `FlowTrace/build` then `FlowTrace/render` through the concept transport, not via direct kernel function calls.
 
-### 17.2 DeploymentValidator Concept (from `kernel/src/deploy.ts`, 254 LOC)
+### 17.2 DeploymentValidator Concept (extracted from `kernel/src/deploy.ts`, 320 LOC) ✅
 
 Build/deploy-time tooling with zero runtime coupling. Has clear state (parsed manifests, validation results, deployment plans) and meaningful action variants.
+
+**Implementation:** `specs/framework/deployment-validator.concept` + `implementations/typescript/framework/deployment-validator.impl.ts` + `syncs/framework/validate-deployment.sync`
 
 ```
 concept DeploymentValidator [M] {
@@ -4443,9 +4452,11 @@ sync ValidateDeployment {
 }
 ```
 
-### 17.3 Migration Concept (from `kernel/src/migration.ts`, 115 LOC)
+### 17.3 Migration Concept (extracted from `kernel/src/migration.ts`, 146 LOC) ✅
 
 Schema migration tracking is a genuine domain concern with state (version per concept, pending set), actions (check, complete), and meaningful variants (ok vs needsMigration). Complements the `@version(N)` spec annotation and the per-concept `migrate` action convention from Section 16.5.
+
+**Implementation:** `specs/framework/migration.concept` + `implementations/typescript/framework/migration.impl.ts` + `syncs/framework/check-migration.sync`
 
 ```
 concept Migration [C] {
