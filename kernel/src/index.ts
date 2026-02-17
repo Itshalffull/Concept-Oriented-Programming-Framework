@@ -19,14 +19,14 @@ import { createInProcessAdapter, createConceptRegistry } from './transport.js';
 import { SyncEngine, ActionLog } from './engine.js';
 import { parseConceptFile } from './parser.js';
 import { parseSyncFile } from './sync-parser.js';
-import { buildFlowTrace } from './flow-trace.js';
-import type { FlowTrace } from './flow-trace.js';
+import { buildFlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
+import type { FlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
 import {
   checkMigrationNeeded,
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
-} from './migration.js';
+} from '../../implementations/typescript/framework/migration.impl.js';
 
 // Re-export everything for consumers
 export { createInMemoryStorage } from './storage.js';
@@ -46,11 +46,11 @@ export type {
   ConceptStateSnapshot,
   HttpFetchFn,
 } from './http-transport.js';
-// Stage 5: Deployment manifest
+// Deployment manifest (moved to implementations/typescript/framework/)
 export {
   parseDeploymentManifest,
   validateDeploymentManifest,
-} from './deploy.js';
+} from '../../implementations/typescript/framework/deployment-validator.impl.js';
 export type {
   DeploymentManifest,
   RuntimeConfig,
@@ -61,7 +61,7 @@ export type {
   DeploymentPlan,
   ConceptPlacement,
   SyncAssignment,
-} from './deploy.js';
+} from '../../implementations/typescript/framework/deployment-validator.impl.js';
 // Lite query adapter (moved to implementations/typescript/framework/)
 export {
   LiteQueryAdapter,
@@ -89,16 +89,16 @@ export type {
   MockWebSocket,
   WebSocketFactory,
 } from './ws-transport.js';
-// Flow tracing
-export { buildFlowTrace, renderFlowTrace } from './flow-trace.js';
-export type { FlowTrace, TraceNode, TraceSyncNode } from './flow-trace.js';
-// Schema migration
+// Flow tracing (moved to implementations/typescript/framework/)
+export { buildFlowTrace, renderFlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
+export type { FlowTrace, TraceNode, TraceSyncNode } from '../../implementations/typescript/framework/flow-trace.impl.js';
+// Schema migration (moved to implementations/typescript/framework/)
 export {
   checkMigrationNeeded,
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
-} from './migration.js';
+} from '../../implementations/typescript/framework/migration.impl.js';
 // Mock handler (moved to implementations/typescript/framework/)
 export { createMockHandler } from '../../implementations/typescript/framework/mock-handler.js';
 export type {

@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 5 — Deployment Manifest Parser & Validator
+// DeploymentValidator Concept Implementation
 //
 // Parses and validates deployment manifests per Section 8.1.
 // A deployment manifest declares:
@@ -14,6 +14,8 @@
 //   3. Warn about eager syncs spanning high-latency runtimes
 //   4. Produce a deployment plan: which concepts run where, which
 //      engine evaluates which syncs
+//
+// See Architecture doc Section 17.2.
 // ============================================================
 
 // --- Deployment Manifest Types ---

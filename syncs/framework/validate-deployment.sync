@@ -1,0 +1,9 @@
+sync ValidateDeployment {
+  when {
+    SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+  }
+  then {
+    DeploymentValidator/validate: [ manifest: ?deployManifest;
+      concepts: [?manifest]; syncs: [] ]
+  }
+}

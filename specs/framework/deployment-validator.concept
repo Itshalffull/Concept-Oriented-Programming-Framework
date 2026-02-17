@@ -1,0 +1,42 @@
+concept DeploymentValidator [M] {
+
+  purpose {
+    Parse and validate deployment manifests against compiled concepts
+    and syncs. Produce deployment plans with transport assignments,
+    runtime mappings, and sync-to-engine bindings.
+  }
+
+  state {
+    manifests: set M
+    plan: M -> DeploymentPlan
+    issues: M -> list ValidationIssue
+  }
+
+  actions {
+    action parse(raw: String) {
+      -> ok(manifest: M) {
+        Parse YAML deployment manifest into structured form.
+        Validate basic structure (required fields, known runtime types).
+      }
+      -> error(message: String) {
+        If YAML is malformed or required fields are missing.
+      }
+    }
+
+    action validate(manifest: M, concepts: list ConceptManifest, syncs: list CompiledSync) {
+      -> ok(plan: DeploymentPlan) {
+        Cross-reference manifest against compiled concepts and syncs.
+        Check: all referenced concepts have specs, all syncs reference
+        valid concepts, capability requirements met by runtimes,
+        transport configs are valid, engine hierarchy is acyclic.
+        Produce a DeploymentPlan with concrete transport assignments.
+      }
+      -> warning(plan: DeploymentPlan, issues: list String) {
+        Validation passed but with non-fatal issues.
+      }
+      -> error(issues: list String) {
+        Fatal validation failures (missing concepts, broken references).
+      }
+    }
+  }
+}

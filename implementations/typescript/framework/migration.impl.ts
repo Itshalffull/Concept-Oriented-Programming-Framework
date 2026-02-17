@@ -1,8 +1,10 @@
 // ============================================================
-// COPF Kernel - Schema Migration Support
+// Migration Concept Implementation
 //
 // Version-aware concept loading, migration-required
 // state, and version tracking in storage.
+//
+// See Architecture doc Section 17.3.
 // ============================================================
 
 import type {
@@ -11,8 +13,8 @@ import type {
   ConceptStorage,
   ActionInvocation,
   ActionCompletion,
-} from './types.js';
-import { timestamp } from './types.js';
+} from '../../../kernel/src/types.js';
+import { timestamp } from '../../../kernel/src/types.js';
 
 /**
  * Metadata stored in concept storage under the `_meta` relation.

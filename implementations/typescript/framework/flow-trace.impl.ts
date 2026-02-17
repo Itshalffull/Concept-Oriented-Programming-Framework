@@ -1,19 +1,19 @@
 // ============================================================
-// COPF Kernel - Flow Trace Builder
+// FlowTrace Concept Implementation
 //
 // Walks ActionLog provenance edges from a flow root to build
 // a FlowTrace tree. For each completion, checks the sync index
 // for candidate syncs and marks unfired ones. Computes per-action
 // timing from ActionLog timestamps.
 //
-// See Architecture doc Section 16.1.
+// See Architecture doc Section 16.1 / 17.1.
 // ============================================================
 
-import type { ActionRecord, CompiledSync, WhenPattern } from './types.js';
-import type { SyncIndex } from './engine.js';
-import { ActionLog, indexKey } from './engine.js';
+import type { ActionRecord, CompiledSync, WhenPattern } from '../../../kernel/src/types.js';
+import type { SyncIndex } from '../../../kernel/src/engine.js';
+import { ActionLog, indexKey } from '../../../kernel/src/engine.js';
 
-// --- FlowTrace Types (Section 16.1) ---
+// --- FlowTrace Types ---
 
 export interface FlowTrace {
   flowId: string;
@@ -377,7 +377,7 @@ function computeStatus(node: TraceNode): 'ok' | 'failed' | 'partial' {
 /**
  * Render a FlowTrace as a tree-formatted string for terminal output.
  *
- * Output format (Section 16.1):
+ * Output format:
  * ```
  * flow-abc-123  Registration Flow  (142ms total, FAILED)
  * │

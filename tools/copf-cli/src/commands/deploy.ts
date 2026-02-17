@@ -17,7 +17,7 @@ import { parseConceptFile } from '../../../../kernel/src/parser.js';
 import {
   parseDeploymentManifest,
   validateDeploymentManifest,
-} from '../../../../kernel/src/deploy.js';
+} from '../../../../implementations/typescript/framework/deployment-validator.impl.js';
 import type { ConceptAST } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
