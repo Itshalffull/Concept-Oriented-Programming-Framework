@@ -15,8 +15,7 @@ import { findFiles } from '../tools/copf-cli/src/util';
 
 // Import kernel modules used by commands
 import { parseConceptFile } from '@copf/kernel';
-import { parseSyncFile } from '../kernel/src/sync-parser';
-import { createInMemoryStorage } from '../kernel/src/storage';
+import { parseSyncFile, createInMemoryStorage } from '@copf/kernel';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl';
 import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl';
 import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl';

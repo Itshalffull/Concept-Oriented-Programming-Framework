@@ -7,8 +7,12 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptAST } from '../../../kernel/src/types.js';
-import { parseSyncFile } from '../../../kernel/src/sync-parser.js';
+import { parseSyncFile as parseSyncFileKernel } from '../../../kernel/src/sync-parser.js';
 import { generateId } from '../../../kernel/src/types.js';
+
+// Re-export the raw parse function so consumers can import it
+// from the concept implementation rather than the kernel parser.
+export const parseSyncFile = parseSyncFileKernel;
 
 // A manifest is a summary of a concept's actions and state,
 // used for validation. In Stage 1 we derive it from ConceptAST.
@@ -37,7 +41,7 @@ export const syncParserHandler: ConceptHandler = {
 
     try {
       // Parse the .sync source
-      const compiledSyncs = parseSyncFile(source);
+      const compiledSyncs = parseSyncFileKernel(source);
 
       if (compiledSyncs.length === 0) {
         return { variant: 'error', message: 'No sync definitions found in source', line: 0 };

@@ -1,52 +1,101 @@
 // ============================================================
 // COPF Kernel - Entry Point
-// createKernel: the Stage 0 minimal runtime
+//
+// The kernel contains only pre-conceptual code per Section 10.3:
+//   - Message dispatch (self-hosted.ts)
+//   - Transport adapter instantiation (transport.ts)
+//   - Storage primitives (storage.ts)
+//   - Compiled artifact cache (cache.ts)
+//
+// Everything above this layer is spec-driven and self-hosting.
+// The SyncEngine, parsers, and code generators live in the
+// concept implementations directory.
 // ============================================================
 
-import { readFileSync } from 'fs';
-import type {
-  ConceptHandler,
-  CompiledSync,
-  ActionCompletion,
-  ActionInvocation,
-  ActionRecord,
-  ConceptRegistry,
-  ConceptQuery,
-} from './types.js';
-import { generateId, timestamp } from './types.js';
-import { createInMemoryStorage } from './storage.js';
-import { createInProcessAdapter, createConceptRegistry } from './transport.js';
-import { SyncEngine, ActionLog } from './engine.js';
-import { parseConceptFile } from './parser.js';
-import { parseSyncFile } from './sync-parser.js';
-import { buildFlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
-import type { FlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
-import {
-  checkMigrationNeeded,
-  createMigrationGatedTransport,
-  getStoredVersion,
-  setStoredVersion,
-} from '../../implementations/typescript/framework/migration.impl.js';
+// --- Pre-conceptual kernel exports ---
 
-// Re-export everything for consumers
 export { createInMemoryStorage } from './storage.js';
 export { createInProcessAdapter, createConceptRegistry } from './transport.js';
-export { SyncEngine, ActionLog, buildSyncIndex } from './engine.js';
-export { parseConceptFile } from './parser.js';
-export { parseSyncFile } from './sync-parser.js';
 export { createSelfHostedKernel } from './self-hosted.js';
-// Stage 5: HTTP transport adapters
+export type { Kernel, FlowLog } from './self-hosted.js';
+
+// HTTP transport adapters
 export {
   createHttpLiteAdapter,
   createHttpGraphQLAdapter,
   createHttpConceptServer,
 } from './http-transport.js';
 export type {
-  LiteFilter,
-  ConceptStateSnapshot,
+  LiteFilter as HttpLiteFilter,
+  ConceptStateSnapshot as HttpConceptStateSnapshot,
   HttpFetchFn,
 } from './http-transport.js';
-// Deployment manifest (moved to implementations/typescript/framework/)
+
+// WebSocket transport
+export {
+  createWebSocketAdapter,
+  createWebSocketConceptServer,
+} from './ws-transport.js';
+export type {
+  WsMessage,
+  MockWebSocket,
+  WebSocketFactory,
+} from './ws-transport.js';
+
+// Compiled artifact cache
+export {
+  computeFileHash,
+  computeSourceHashes,
+  writeCacheManifest,
+  writeConceptManifest,
+  writeCompiledSyncs,
+  writeRegistrations,
+  readCacheManifest,
+  readConceptManifests,
+  readAllCompiledSyncs,
+  readRegistrations,
+  validateCache,
+  getCacheDir,
+} from './cache.js';
+export type {
+  CacheManifest,
+  RegistrationEntry,
+} from './cache.js';
+
+// --- Concept implementation re-exports ---
+// These are NOT kernel code — they are concept implementations
+// re-exported for convenience so consumers can import from @copf/kernel.
+
+// SyncEngine concept (matching algorithm, action log)
+export {
+  SyncEngine,
+  ActionLog,
+  buildSyncIndex,
+  matchWhenClause,
+  evaluateWhere,
+  buildInvocations,
+  indexKey,
+  createSyncEngineHandler,
+  DistributedSyncEngine,
+} from '../../implementations/typescript/framework/sync-engine.impl.js';
+export type {
+  SyncIndex,
+  PendingSyncEntry,
+  AvailabilityListener,
+} from '../../implementations/typescript/framework/sync-engine.impl.js';
+
+// Parsers (concept implementations)
+export { parseConceptFile } from '../../implementations/typescript/framework/spec-parser.impl.js';
+export { parseSyncFile } from '../../implementations/typescript/framework/sync-parser.impl.js';
+
+// Schema and code generation
+export { schemaGenHandler } from '../../implementations/typescript/framework/schema-gen.impl.js';
+
+// Flow tracing
+export { buildFlowTrace, renderFlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
+export type { FlowTrace, TraceNode, TraceSyncNode } from '../../implementations/typescript/framework/flow-trace.impl.js';
+
+// Deployment validator
 export {
   parseDeploymentManifest,
   validateDeploymentManifest,
@@ -62,45 +111,25 @@ export type {
   ConceptPlacement,
   SyncAssignment,
 } from '../../implementations/typescript/framework/deployment-validator.impl.js';
-// Lite query adapter (moved to implementations/typescript/framework/)
+
+// Lite query adapter
 export {
   LiteQueryAdapter,
   createStorageLiteProtocol,
 } from '../../implementations/typescript/framework/lite-query-adapter.js';
-// Lite query protocol types (in shared types)
-export type {
-  LiteQueryProtocol,
-  LiteFilter as LiteQueryFilter,
-  ConceptStateSnapshot as LiteStateSnapshot,
-} from './types.js';
-// Distributed sync engine (merged into sync-engine.impl)
-export { DistributedSyncEngine } from '../../implementations/typescript/framework/sync-engine.impl.js';
-export type {
-  PendingSyncEntry,
-  AvailabilityListener,
-} from '../../implementations/typescript/framework/sync-engine.impl.js';
-// WebSocket transport
-export {
-  createWebSocketAdapter,
-  createWebSocketConceptServer,
-} from './ws-transport.js';
-export type {
-  WsMessage,
-  MockWebSocket,
-  WebSocketFactory,
-} from './ws-transport.js';
-// Flow tracing (moved to implementations/typescript/framework/)
-export { buildFlowTrace, renderFlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
-export type { FlowTrace, TraceNode, TraceSyncNode } from '../../implementations/typescript/framework/flow-trace.impl.js';
-// Schema migration (moved to implementations/typescript/framework/)
+
+// Migration
 export {
   checkMigrationNeeded,
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
 } from '../../implementations/typescript/framework/migration.impl.js';
-// Mock handler (moved to implementations/typescript/framework/)
+
+// Mock handler
 export { createMockHandler } from '../../implementations/typescript/framework/mock-handler.js';
+
+// --- Shared types ---
 export type {
   ConceptHandler,
   ConceptStorage,
@@ -126,7 +155,6 @@ export type {
   InvariantDecl,
   ActionPattern,
   ArgPattern,
-  // ConceptManifest types
   ConceptManifest,
   TypeParamInfo,
   RelationSchema,
@@ -138,36 +166,46 @@ export type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
-  // Conflict Resolution types
   EntryMeta,
   ConflictResolution,
   ConflictInfo,
-  // Lite Query Protocol types
   LiteQueryProtocol,
   LiteFilter,
   ConceptStateSnapshot,
 } from './types.js';
 
-// --- Web Bootstrap Concept ---
+export { generateId, timestamp } from './types.js';
 
-const WEB_CONCEPT_URI = 'urn:copf/Web';
+// --- Convenience factory ---
+// Creates a kernel with the SyncEngine concept handler pre-wired.
+// Includes backwards-compatible convenience methods (loadSyncs,
+// parseConcept, getFlowTrace, registerVersionedConcept, etc.)
 
-interface WebRequest {
-  method: string;
-  [key: string]: unknown;
-}
+import { readFileSync } from 'fs';
+import { createConceptRegistry } from './transport.js';
+import { createInProcessAdapter } from './transport.js';
+import { createInMemoryStorage } from './storage.js';
+import { createSelfHostedKernel } from './self-hosted.js';
+import type { Kernel } from './self-hosted.js';
+import {
+  createSyncEngineHandler,
+  SyncEngine,
+  ActionLog,
+} from '../../implementations/typescript/framework/sync-engine.impl.js';
+import { parseConceptFile } from '../../implementations/typescript/framework/spec-parser.impl.js';
+import { parseSyncFile } from '../../implementations/typescript/framework/sync-parser.impl.js';
+import { buildFlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
+import type { FlowTrace } from '../../implementations/typescript/framework/flow-trace.impl.js';
+import {
+  checkMigrationNeeded,
+  createMigrationGatedTransport,
+} from '../../implementations/typescript/framework/migration.impl.js';
+import type {
+  ConceptHandler,
+  CompiledSync,
+  ActionRecord,
+} from './types.js';
 
-interface WebResponse {
-  body?: Record<string, unknown>;
-  error?: string;
-  code?: number;
-  flowId: string;
-}
-
-/**
- * The Kernel is the Stage 0 minimal runtime.
- * It boots the sync engine, registers concepts, and processes flows.
- */
 export interface MigrationStatus {
   uri: string;
   currentVersion: number;
@@ -175,111 +213,61 @@ export interface MigrationStatus {
   migrationRequired: boolean;
 }
 
-export interface Kernel {
-  /** Register a concept handler with in-memory storage */
-  registerConcept(uri: string, handler: ConceptHandler): void;
-
-  /**
-   * Register a versioned concept. Checks storage for schema version
-   * and gates the concept if migration is required.
-   * Returns migration status (null if unversioned or version matches).
-   */
+export interface FullKernel extends Kernel {
+  loadSyncs(path: string): Promise<void>;
+  parseConcept(path: string): ReturnType<typeof parseConceptFile>;
+  getFlowTrace(flowId: string): FlowTrace | null;
   registerVersionedConcept(
     uri: string,
     handler: ConceptHandler,
     specVersion?: number,
   ): Promise<MigrationStatus | null>;
-
-  /** Get migration status for all registered concepts */
   getMigrationStatus(): MigrationStatus[];
-
-  /** Register a compiled sync definition */
-  registerSync(sync: CompiledSync): void;
-
-  /** Parse and load syncs from a .sync file */
-  loadSyncs(path: string): Promise<void>;
-
-  /** Parse a .concept file and return the AST */
-  parseConcept(path: string): ReturnType<typeof parseConceptFile>;
-
-  /** Simulate an incoming web request and process the entire flow */
-  handleRequest(request: WebRequest): Promise<WebResponse>;
-
-  /** Get the action log for a specific flow */
-  getFlowLog(flowId: string): ActionRecord[];
-
-  /** Get a structured FlowTrace for a specific flow */
-  getFlowTrace(flowId: string): FlowTrace | null;
-
-  /** Directly invoke a concept action */
-  invokeConcept(
-    uri: string,
-    action: string,
-    input: Record<string, unknown>,
-  ): Promise<{ variant: string; [key: string]: unknown }>;
-
-  /** Query a concept's state */
-  queryConcept(
-    uri: string,
-    relation: string,
-    args?: Record<string, unknown>,
-  ): Promise<Record<string, unknown>[]>;
 }
 
-export function createKernel(): Kernel {
+export function createKernel(): FullKernel {
   const registry = createConceptRegistry();
-  const log = new ActionLog();
-  const engine = new SyncEngine(log, registry);
+  const { handler, engine, log } = createSyncEngineHandler(registry);
+  const base = createSelfHostedKernel(handler, log, registry);
 
-  // Track pending responses for flows
-  const pendingResponses = new Map<string, WebResponse>();
-
-  // Register the Web bootstrap concept
-  const webHandler: ConceptHandler = {
-    async respond(input) {
-      // The respond action stores the response for the flow
-      const requestId = input.request as string;
-      const body = input.body as Record<string, unknown> | undefined;
-      const error = input.error as string | undefined;
-      const code = input.code as number | undefined;
-
-      // Store response indexed by request ID
-      pendingResponses.set(requestId, {
-        body: body || {},
-        error,
-        code,
-        flowId: '',  // will be set later
-      });
-
-      return { variant: 'ok' };
-    },
-  };
-
-  const webStorage = createInMemoryStorage();
-  registry.register(WEB_CONCEPT_URI, createInProcessAdapter(webHandler, webStorage));
-
-  // Track migration status per concept
   const migrationStatuses = new Map<string, MigrationStatus>();
 
   return {
-    registerConcept(uri: string, handler: ConceptHandler): void {
-      const storage = createInMemoryStorage();
-      const transport = createInProcessAdapter(handler, storage);
-      registry.register(uri, transport);
+    ...base,
+
+    async loadSyncs(path: string): Promise<void> {
+      const source = readFileSync(path, 'utf-8');
+      const syncs = parseSyncFile(source);
+      for (const sync of syncs) {
+        base.registerSync(sync);
+      }
+    },
+
+    parseConcept(path: string) {
+      const source = readFileSync(path, 'utf-8');
+      return parseConceptFile(source);
+    },
+
+    getFlowTrace(flowId: string): FlowTrace | null {
+      return buildFlowTrace(
+        flowId,
+        log,
+        engine.getSyncIndex(),
+        engine.getRegisteredSyncs(),
+      );
     },
 
     async registerVersionedConcept(
       uri: string,
-      handler: ConceptHandler,
+      conceptHandler: ConceptHandler,
       specVersion?: number,
     ): Promise<MigrationStatus | null> {
       const storage = createInMemoryStorage();
-      const baseTransport = createInProcessAdapter(handler, storage);
+      const baseTransport = createInProcessAdapter(conceptHandler, storage);
 
       const needed = await checkMigrationNeeded(specVersion, storage);
 
       if (needed) {
-        // Wrap with migration gate
         const gated = createMigrationGatedTransport(
           baseTransport,
           storage,
@@ -298,7 +286,6 @@ export function createKernel(): Kernel {
         return status;
       }
 
-      // No migration needed — register normally
       registry.register(uri, baseTransport);
       if (specVersion !== undefined) {
         migrationStatuses.set(uri, {
@@ -314,151 +301,5 @@ export function createKernel(): Kernel {
     getMigrationStatus(): MigrationStatus[] {
       return [...migrationStatuses.values()];
     },
-
-    registerSync(sync: CompiledSync): void {
-      engine.registerSync(sync);
-    },
-
-    async loadSyncs(path: string): Promise<void> {
-      const source = readFileSync(path, 'utf-8');
-      const syncs = parseSyncFile(source);
-      for (const sync of syncs) {
-        engine.registerSync(sync);
-      }
-    },
-
-    parseConcept(path: string) {
-      const source = readFileSync(path, 'utf-8');
-      return parseConceptFile(source);
-    },
-
-    async handleRequest(request: WebRequest): Promise<WebResponse> {
-      const flowId = generateId();
-      const requestId = generateId();
-
-      // Create the initial Web/request completion (origin action)
-      const requestCompletion: ActionCompletion = {
-        id: generateId(),
-        concept: WEB_CONCEPT_URI,
-        action: 'request',
-        input: request,
-        variant: 'ok',
-        output: { request: requestId, ...request },
-        flow: flowId,
-        timestamp: timestamp(),
-      };
-
-      // Process the flow: feed the completion to the engine, then
-      // recursively process any produced invocations
-      await processFlow(requestCompletion, engine, registry, flowId);
-
-      // Look for the Web/respond completion in the flow
-      const response = pendingResponses.get(requestId);
-      if (response) {
-        pendingResponses.delete(requestId);
-        response.flowId = flowId;
-        return response;
-      }
-
-      // No response produced — return a default
-      return { flowId, body: {} };
-    },
-
-    getFlowLog(flowId: string): ActionRecord[] {
-      return log.getFlowRecords(flowId);
-    },
-
-    getFlowTrace(flowId: string): FlowTrace | null {
-      return buildFlowTrace(
-        flowId,
-        log,
-        engine.getSyncIndex(),
-        engine.getRegisteredSyncs(),
-      );
-    },
-
-    async invokeConcept(
-      uri: string,
-      action: string,
-      input: Record<string, unknown>,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
-      const transport = registry.resolve(uri);
-      if (!transport) {
-        throw new Error(`Concept not found: ${uri}`);
-      }
-
-      const invocation: ActionInvocation = {
-        id: generateId(),
-        concept: uri,
-        action,
-        input,
-        flow: generateId(),
-        timestamp: timestamp(),
-      };
-
-      const completion = await transport.invoke(invocation);
-      return { variant: completion.variant, ...completion.output };
-    },
-
-    async queryConcept(
-      uri: string,
-      relation: string,
-      args?: Record<string, unknown>,
-    ): Promise<Record<string, unknown>[]> {
-      const transport = registry.resolve(uri);
-      if (!transport) {
-        throw new Error(`Concept not found: ${uri}`);
-      }
-
-      return transport.query({ relation, args });
-    },
   };
-}
-
-/**
- * Process a flow to completion by recursively evaluating
- * completions through the sync engine and dispatching invocations.
- */
-async function processFlow(
-  initialCompletion: ActionCompletion,
-  engine: SyncEngine,
-  registry: ConceptRegistry,
-  flowId: string,
-): Promise<void> {
-  // Queue of completions to process
-  const queue: { completion: ActionCompletion; parentId?: string }[] = [
-    { completion: initialCompletion },
-  ];
-
-  // Safety: limit iterations to prevent infinite loops
-  const MAX_ITERATIONS = 1000;
-  let iterations = 0;
-
-  while (queue.length > 0 && iterations < MAX_ITERATIONS) {
-    iterations++;
-
-    const { completion, parentId } = queue.shift()!;
-
-    // Feed the completion to the sync engine
-    const invocations = await engine.onCompletion(completion, parentId);
-
-    // Dispatch each invocation to the appropriate concept
-    for (const invocation of invocations) {
-      const transport = registry.resolve(invocation.concept);
-      if (!transport) {
-        console.warn(`Concept not found: ${invocation.concept}, skipping invocation`);
-        continue;
-      }
-
-      // Execute the invocation
-      const result = await transport.invoke(invocation);
-
-      // Queue the resulting completion for further processing
-      queue.push({ completion: result, parentId: invocation.id });
-    }
-  }
-
-  if (iterations >= MAX_ITERATIONS) {
-    console.warn(`Flow ${flowId} exceeded maximum iterations (${MAX_ITERATIONS})`);
-  }
 }

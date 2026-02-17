@@ -12,8 +12,8 @@
 
 import { readFileSync } from 'fs';
 import { resolve, relative } from 'path';
-import { parseSyncFile } from '../../../../kernel/src/sync-parser.js';
-import { parseConceptFile } from '../../../../kernel/src/parser.js';
+import { parseSyncFile } from '../../../../implementations/typescript/framework/sync-parser.impl.js';
+import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { syncCompilerHandler } from '../../../../implementations/typescript/framework/sync-compiler.impl.js';
 import type { ConceptAST, CompiledSync } from '../../../../kernel/src/types.js';

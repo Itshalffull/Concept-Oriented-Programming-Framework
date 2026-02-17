@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { parseConceptFile } from '@copf/kernel';
-import { parseSyncFile } from '../kernel/src/sync-parser';
+import { parseSyncFile } from '@copf/kernel';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

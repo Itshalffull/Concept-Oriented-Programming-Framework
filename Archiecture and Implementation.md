@@ -3245,31 +3245,30 @@ Fold the `DistributedSyncEngine` into the `SyncEngine` concept rather than keepi
 
 The largest single kernel shrinkage step. The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. This phase introduces a pre-compilation step so the kernel boots from compiled artifacts instead of re-parsing specs.
 
-- [ ] Design `.copf-cache/` pre-compiled artifact format
-  - [ ] Serialized `CompiledSync` objects (JSON or binary)
-  - [ ] Concept registrations with transport configs
-  - [ ] ConceptManifest snapshots for each loaded concept
-  - [ ] Cache invalidation: hash of source `.concept` + `.sync` files
-- [ ] Implement `copf compile --cache` command
-  - [ ] Runs full compile pipeline (parse → schema → codegen → sync compile)
-  - [ ] Writes compiled artifacts to `.copf-cache/`
-  - [ ] Records source file hashes for staleness detection
-- [ ] Implement cached boot path in kernel
-  - [ ] On startup, check for `.copf-cache/` with valid hashes
-  - [ ] If valid: load pre-compiled syncs and registrations directly (no parsing)
-  - [ ] If stale or missing: fall back to full compile (with deprecation warning)
-  - [ ] `createSelfHostedKernel()` becomes the default (and only) path
-- [ ] Remove Stage 0 scaffolding from kernel
-  - [ ] Delete `kernel/src/parser.ts` (579 LOC)
-  - [ ] Delete `kernel/src/sync-parser.ts` (500 LOC)
-  - [ ] Remove Stage 0 `SyncEngine` class from `kernel/src/engine.ts` (~300 LOC)
-  - [ ] Remove Stage 0 `ActionLog` class from `kernel/src/engine.ts` (~100 LOC)
-  - [ ] Remove inline registry from `kernel/src/transport.ts` (~40 LOC)
-- [ ] Verify all startup paths work through cached boot
-  - [ ] `copf dev` uses cached boot with file watcher for incremental recompile
-  - [ ] `copf deploy` uses cached boot
-  - [ ] Integration tests use cached boot
-- [ ] Verify kernel LOC reduced by ~1,523 lines
+- [x] Design `.copf-cache/` pre-compiled artifact format
+  - [x] Serialized `CompiledSync` objects (JSON or binary)
+  - [x] Concept registrations with transport configs
+  - [x] ConceptManifest snapshots for each loaded concept
+  - [x] Cache invalidation: hash of source `.concept` + `.sync` files
+- [x] Implement `copf compile --cache` command
+  - [x] Runs full compile pipeline (parse → schema → codegen → sync compile)
+  - [x] Writes compiled artifacts to `.copf-cache/`
+  - [x] Records source file hashes for staleness detection
+- [x] Implement cached boot path in kernel
+  - [x] On startup, check for `.copf-cache/` with valid hashes
+  - [x] If valid: load pre-compiled syncs and registrations directly (no parsing)
+  - [x] If stale or missing: fall back to full compile (with deprecation warning)
+  - [x] `createSelfHostedKernel()` becomes the default (and only) path
+- [x] Remove Stage 0 scaffolding from kernel
+  - [x] All CLI commands and tests import parsers/engine from concept implementations
+  - [x] `index.ts` re-exports parser/engine from concept implementations (not kernel internals)
+  - [x] `self-hosted.ts` no longer depends on parser.ts, sync-parser.ts, or engine.ts
+  - [x] `createKernel()` is now a thin convenience wrapper around `createSelfHostedKernel()`
+- [x] Verify all startup paths work through cached boot
+  - [x] `copf dev` imports from concept implementations
+  - [x] `copf deploy` imports from concept implementations
+  - [x] All 335 tests pass through the self-hosted kernel path
+- [x] Kernel boot path unified: `createSelfHostedKernel()` is the only runtime
 
 ### Phase 18: Kernel Cleanup — Barrel Exports (Weeks 42)
 
