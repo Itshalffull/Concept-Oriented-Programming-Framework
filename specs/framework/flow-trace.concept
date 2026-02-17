@@ -1,0 +1,36 @@
+concept FlowTrace [F] {
+
+  purpose {
+    Build and render interactive debug traces from action log records.
+    Each flow becomes a navigable tree showing the causal chain of
+    actions, syncs, and completions with timing and failure status.
+  }
+
+  state {
+    traces: set F
+    tree: F -> FlowTree
+    rendered: F -> String
+  }
+
+  actions {
+    action build(flowId: String) {
+      -> ok(trace: F, tree: FlowTree) {
+        Walk the ActionLog's provenance edges from the flow's root.
+        For each completion, check the sync index for candidate syncs
+        and mark unfired ones. Compute per-action timing.
+        Build a FlowTree (TraceNode / TraceSyncNode structure).
+      }
+      -> error(message: String) {
+        If the flowId does not exist in the ActionLog.
+      }
+    }
+
+    action render(trace: F, options: RenderOptions) {
+      -> ok(output: String) {
+        Render the FlowTree as a human-readable annotated tree.
+        Options control: format (text/json), filter (failed-only),
+        verbosity (show/hide completion fields).
+      }
+    }
+  }
+}

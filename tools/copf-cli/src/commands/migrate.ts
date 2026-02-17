@@ -21,7 +21,7 @@ import {
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
-} from '../../../../kernel/src/migration.js';
+} from '../../../../implementations/typescript/framework/migration.impl.js';
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
 import { generateId, timestamp } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';

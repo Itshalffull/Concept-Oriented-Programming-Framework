@@ -43,7 +43,7 @@ import type {
 import type {
   DeploymentManifest,
   ValidationResult,
-} from '../kernel/src/deploy.js';
+} from '../implementations/typescript/framework/deployment-validator.impl.js';
 
 // Stage 1 concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';

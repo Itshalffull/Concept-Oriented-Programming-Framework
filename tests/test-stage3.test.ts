@@ -68,8 +68,8 @@ describe('Stage 3 — SyncEngine Concept Spec', () => {
 
     expect(ast.name).toBe('SyncEngine');
     expect(ast.typeParams).toEqual(['F']);
-    expect(ast.state).toHaveLength(2); // syncs, pendingFlows
-    expect(ast.actions).toHaveLength(3); // registerSync, onCompletion, evaluateWhere
+    expect(ast.state).toHaveLength(4); // syncs, pendingFlows, pendingQueue, conflicts
+    expect(ast.actions).toHaveLength(6); // registerSync, onCompletion, evaluateWhere, queueSync, onAvailabilityChange, drainConflicts
 
     expect(ast.actions[0].name).toBe('registerSync');
     expect(ast.actions[0].variants).toHaveLength(1); // ok

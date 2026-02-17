@@ -3,11 +3,16 @@ concept SyncEngine [F] {
   purpose {
     Evaluate synchronizations by matching completions,
     querying state, and producing invocations.
+    Supports annotation-aware routing: eager syncs evaluate
+    immediately, eventual syncs queue when targets are
+    unavailable, local syncs execute on same runtime only.
   }
 
   state {
     syncs: set SyncRegistration
     pendingFlows: set F
+    pendingQueue: list PendingSyncEntry
+    conflicts: list ActionCompletion
   }
 
   actions {
@@ -22,7 +27,10 @@ concept SyncEngine [F] {
       -> ok(invocations: list ActionInvocation) {
         Receive a completion, find all syncs that should fire,
         evaluate their where clauses, and produce invocations.
-        This is the core evaluation loop from Section 6.2.
+        Annotation-aware routing:
+          [eager]    — evaluate immediately (default)
+          [eventual] — queue if target unavailable, retry later
+          [local]    — execute on same runtime only
       }
     }
 
@@ -34,6 +42,30 @@ concept SyncEngine [F] {
       -> error(message: String) {
         If a referenced concept is unavailable or a query
         fails, return an error description.
+      }
+    }
+
+    action queueSync(sync: CompiledSync, bindings: Bindings, flow: String) {
+      -> ok(pendingId: String) {
+        Queue an [eventual] sync for later execution when the
+        target concept becomes available. Store bindings and
+        flow context.
+      }
+    }
+
+    action onAvailabilityChange(conceptUri: String, available: Bool) {
+      -> ok(drained: list ActionInvocation) {
+        When a concept comes online, re-evaluate all pending
+        syncs that reference it. Return produced invocations
+        for dispatch.
+      }
+    }
+
+    action drainConflicts() {
+      -> ok(conflicts: list ActionCompletion) {
+        Return all conflict completions accumulated during
+        eventual sync replay, for downstream handling via
+        conflict resolution syncs.
       }
     }
   }
