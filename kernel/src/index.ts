@@ -137,6 +137,10 @@ export type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
+  // Phase 13: Conflict Resolution types
+  EntryMeta,
+  ConflictResolution,
+  ConflictInfo,
 } from './types.js';
 
 // --- Web Bootstrap Concept ---

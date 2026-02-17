@@ -41,14 +41,32 @@ export interface LiteQueryProtocol {
 
 // --- LiteQueryAdapter with Caching (Section 4.2) ---
 
+/** Default threshold for lite query snapshot size warnings (Phase 13) */
+const DEFAULT_LITE_QUERY_WARN_THRESHOLD = 1000;
+
 export class LiteQueryAdapter {
   private cache: ConceptStateSnapshot | null = null;
   private cacheValidUntil: number = 0;
+  /** Phase 13: Configurable threshold for large snapshot warnings */
+  private warnThreshold: number;
 
   constructor(
     private lite: LiteQueryProtocol,
     private cacheTtlMs: number = 5000,
-  ) {}
+    options?: { warnThreshold?: number },
+  ) {
+    this.warnThreshold = options?.warnThreshold ?? DEFAULT_LITE_QUERY_WARN_THRESHOLD;
+  }
+
+  /** Phase 13: Set the warn threshold for large snapshots */
+  setWarnThreshold(threshold: number): void {
+    this.warnThreshold = threshold;
+  }
+
+  /** Phase 13: Get the current warn threshold */
+  getWarnThreshold(): number {
+    return this.warnThreshold;
+  }
 
   /**
    * Resolve a query against the lite protocol.
@@ -104,6 +122,18 @@ export class LiteQueryAdapter {
     }
     this.cache = await this.lite.snapshot();
     this.cacheValidUntil = Date.now() + this.cacheTtlMs;
+
+    // Phase 13: Warn when snapshot is large
+    const totalEntries = Object.values(this.cache.relations)
+      .reduce((sum, entries) => sum + entries.length, 0);
+    if (totalEntries > this.warnThreshold) {
+      console.warn(
+        `[copf/lite-query] Snapshot returned ${totalEntries} entries ` +
+        `(threshold: ${this.warnThreshold}). Consider using filter() or ` +
+        `lookup() instead of snapshot() for large datasets.`,
+      );
+    }
+
     return this.cache;
   }
 }

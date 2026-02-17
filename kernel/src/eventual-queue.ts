@@ -13,6 +13,11 @@
 //   a durable queue. On availability change, pending syncs that
 //   reference the newly available concept are re-evaluated.
 //   Idempotency is guaranteed by provenance edge check.
+//
+// Phase 13: Conflict detection during eventual sync queue replay.
+//   When replaying writes, the storage's onConflict callback may
+//   return 'escalate'. The engine produces a → conflict(...)
+//   completion that syncs can react to for conflict resolution.
 // ============================================================
 
 import type {
@@ -21,6 +26,7 @@ import type {
   CompiledSync,
   ConceptRegistry,
   Binding,
+  ConflictInfo,
 } from './types.js';
 import {
   SyncEngine,
@@ -73,6 +79,8 @@ export class DistributedSyncEngine {
   private runtimeId: string;
   private upstreamEngine: DistributedSyncEngine | null = null;
   private completionForwarders: ((completion: ActionCompletion) => Promise<void>)[] = [];
+  /** Phase 13: Pending conflict completions produced by escalation */
+  private pendingConflicts: ActionCompletion[] = [];
 
   constructor(
     log: ActionLog,
@@ -259,6 +267,48 @@ export class DistributedSyncEngine {
   /** Get the action log */
   getLog(): ActionLog {
     return this.log;
+  }
+
+  /**
+   * Phase 13: Produce a conflict completion from an escalated conflict.
+   * Returns a completion that syncs can react to for conflict resolution.
+   */
+  produceConflictCompletion(
+    concept: string,
+    conflict: ConflictInfo,
+    flow: string,
+  ): ActionCompletion {
+    const completion: ActionCompletion = {
+      id: generateId(),
+      concept,
+      action: conflict.relation.replace(/s$/, '') + '/write',
+      input: conflict.incoming.fields,
+      variant: 'conflict',
+      output: {
+        key: conflict.key,
+        existing: conflict.existing.fields,
+        incoming: conflict.incoming.fields,
+        existingWrittenAt: conflict.existing.writtenAt,
+        incomingWrittenAt: conflict.incoming.writtenAt,
+      },
+      flow,
+      timestamp: timestamp(),
+    };
+
+    this.pendingConflicts.push(completion);
+    return completion;
+  }
+
+  /** Phase 13: Get and clear pending conflict completions */
+  drainConflictCompletions(): ActionCompletion[] {
+    const conflicts = [...this.pendingConflicts];
+    this.pendingConflicts = [];
+    return conflicts;
+  }
+
+  /** Phase 13: Get pending conflict completions without clearing */
+  getPendingConflicts(): ActionCompletion[] {
+    return [...this.pendingConflicts];
   }
 
   // --- Private helpers ---

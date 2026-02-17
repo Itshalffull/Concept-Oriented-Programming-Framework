@@ -34,6 +34,8 @@ export interface RuntimeConfig {
   engine: boolean;
   transport: 'in-process' | 'http' | 'websocket' | 'worker';
   upstream?: string;
+  /** Phase 13: Configurable warn threshold for lite query snapshot size */
+  liteQueryWarnThreshold?: number;
 }
 
 export interface ConceptDeployment {
@@ -114,6 +116,7 @@ export function parseDeploymentManifest(raw: Record<string, unknown>): Deploymen
       engine: Boolean(cfg.engine),
       transport: (cfg.transport as string) as RuntimeConfig['transport'] || 'in-process',
       upstream: cfg.upstream as string | undefined,
+      liteQueryWarnThreshold: cfg.liteQueryWarnThreshold as number | undefined,
     };
   }
 
