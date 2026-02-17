@@ -73,6 +73,7 @@ The tokenizer produces the following token types:
 KEYWORD     = "concept" | "purpose" | "state" | "actions" | "action"
             | "invariant" | "capabilities" | "requires" | "after"
             | "then" | "and" | "set" | "list" | "option"
+ANNOTATION  = "@" IDENT "(" INT_LIT ")"    -- e.g. @version(3)
 PRIMITIVE   = "String" | "Int" | "Float" | "Bool" | "Bytes"
             | "DateTime" | "ID"
 IDENT       = [A-Za-z_][A-Za-z0-9_]*
@@ -107,7 +108,9 @@ Tokenizer behavior:
 ```
 ConceptFile     = ConceptDecl
 
-ConceptDecl     = "concept" IDENT TypeParams? "{" Section* "}"
+ConceptDecl     = Annotation* "concept" IDENT TypeParams? "{" Section* "}"
+
+Annotation      = "@" IDENT "(" INT_LIT ")"
 
 TypeParams      = "[" IDENT ("," IDENT)* "]"
 
@@ -212,6 +215,7 @@ The compiler emits the relation mapping as part of the concept manifest. The sto
 ### 2.5 Complete Example
 
 ```
+@version(1)
 concept Password [U] {
 
   purpose {
@@ -279,6 +283,8 @@ concept Password [U] {
 **Capabilities** are not enforced at the spec level — they're metadata for deployment validation. A phone runtime knows it has `persistent-storage` and `crypto` but not `network` (when offline), so it can flag a deployment mismatch.
 
 **Semicolons** are optional everywhere. Both `hash: U -> Bytes\n` and `hash: U -> Bytes;` are valid. This allows single-line compact specs (`state { hash: U -> Bytes; salt: U -> Bytes }`) without requiring semicolons in the more common multi-line format.
+
+**`@version(N)`** is an annotation on the concept declaration. It is an integer that increments when the state schema changes in a way that requires data migration (adding, removing, or renaming relations or fields). Non-breaking changes (new actions, new variants) do not require a version bump. The framework uses this at startup to detect version mismatches and block the concept until migration runs — see Section 16.5 for the full migration design.
 
 ---
 
@@ -533,6 +539,8 @@ class LiteQueryAdapter {
 }
 ```
 
+> **Diagnostic warning:** When the slow path's `snapshot()` returns more than a configurable threshold of entries (default 1,000), the engine emits a warning nudging the developer to implement `lookup`/`filter` or switch to GraphQL mode. See Section 16.7 for details. The threshold is set via `engine.liteQueryWarnThreshold` in the deploy manifest (Section 8.1).
+
 **When to use which mode:**
 
 | Factor | Full GraphQL | Lite Query |
@@ -745,6 +753,35 @@ type SyncIndex = Map<string, Set<CompiledSync>>;
 function indexKey(concept: string, action: string): string {
   return `${concept}:${action}`;
 }
+```
+
+#### Runtime Sync Management
+
+The sync index supports hot reloading and concept lifecycle changes (see Section 16.3 for full design):
+
+```typescript
+interface SyncRuntime {
+  /**
+   * Atomically replace the entire sync index. In-flight flows
+   * continue using the old index; new completions use the new one.
+   */
+  reloadSyncs(syncs: CompiledSync[]): void;
+
+  /**
+   * Mark all syncs referencing the given concept as degraded.
+   * Degraded syncs are skipped during matching with a warning log.
+   * If the concept re-registers, its syncs automatically un-degrade.
+   */
+  degradeSyncsForConcept(conceptUri: string): string[];  // returns degraded sync names
+
+  /**
+   * Un-degrade syncs when a concept becomes available again.
+   */
+  restoreSyncsForConcept(conceptUri: string): void;
+}
+```
+
+Degraded syncs remain in the index but carry a `degraded: true` flag. The matching algorithm (below) checks this flag and skips degraded syncs, emitting a warning per skip.
 ```
 
 #### Matching Algorithm
@@ -1083,6 +1120,7 @@ For `[eventual]` syncs, when a referenced concept is unavailable:
 2. The registry emits availability events when concepts come online.
 3. On availability change, the engine re-evaluates all pending syncs that reference the newly available concept.
 4. Idempotency is guaranteed by the provenance edge check (Section 6.2, step 2b).
+5. When replaying queued writes to concepts that were modified while disconnected, the storage layer's `onConflict` hook (if set) detects concurrent modifications. The default behavior is last-writer-wins using `lastWrittenAt` timestamps. See Section 16.6 for the full conflict resolution design.
 
 ### 6.7 Provenance Graph
 
@@ -1092,7 +1130,7 @@ Every action record is connected to its causal predecessors. The full provenance
 - "Which synchronization caused this invocation?"
 - "What was the full causal chain from the initial request to the final response?"
 
-This graph is itself exposed as a concept (see Section 9, bootstrapping) and queryable via GraphQL.
+This graph is itself exposed as a concept (see Section 10, bootstrapping) and queryable via GraphQL. The `FlowTrace` API (Section 16.1) provides a structured, annotated view of the provenance graph for debugging — including timing, failed branches, and syncs that did not fire. The `copf trace <flow-id>` CLI command renders this as a human-readable tree.
 
 ### 6.8 Concept Storage Interface
 
@@ -1108,6 +1146,9 @@ interface ConceptStorage {
   /**
    * Write a record to a relation. If a record with this key
    * already exists, it is overwritten.
+   * Automatically stores a `_meta.lastWrittenAt` timestamp.
+   * If onConflict is set and an existing entry has a more recent
+   * timestamp, the conflict handler is invoked (see Section 16.6).
    *
    * @param relation - Relation name from the concept manifest
    * @param key - Primary key (typically a type parameter value, e.g. user ID)
@@ -1120,6 +1161,12 @@ interface ConceptStorage {
    * Returns null if no record exists for this key.
    */
   get(relation: string, key: string): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Retrieve write metadata for a specific entry.
+   * Returns null if no record exists for this key.
+   */
+  getMeta(relation: string, key: string): Promise<{ lastWrittenAt: string } | null>;
 
   /**
    * Find all records in a relation matching the given field criteria.
@@ -1145,7 +1192,33 @@ interface ConceptStorage {
    * Returns the number of records deleted.
    */
   delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+
+  /**
+   * Read/write the concept's version metadata. Used by the
+   * framework for schema migration detection (Section 16.5).
+   */
+  getVersion(): Promise<number | null>;
+  setVersion(version: number): Promise<void>;
+
+  /**
+   * Optional conflict handler for distributed deployments.
+   * Called by `put` when the incoming write conflicts with an existing
+   * entry (see Section 16.6 for conflict resolution design).
+   * If not set, the default is last-writer-wins.
+   */
+  onConflict?: (
+    relation: string,
+    key: string,
+    existing: { fields: Record<string, unknown>; writtenAt: string },
+    incoming: { fields: Record<string, unknown>; writtenAt: string },
+  ) => ConflictResolution;
 }
+
+type ConflictResolution =
+  | { action: "keep-existing" }
+  | { action: "accept-incoming" }
+  | { action: "merge"; merged: Record<string, unknown> }
+  | { action: "escalate" };  // surface as a -> conflict(...) completion
 ```
 
 #### Provided Implementations
@@ -1220,6 +1293,7 @@ The compiler produces a `ConceptManifest` that includes the relation schema. Sto
 interface ConceptManifest {
   uri: string;
   name: string;
+  version?: number;          // from @version(N) annotation
   typeParams: string[];
   relations: RelationSchema[];
   actions: ActionSchema[];
@@ -1668,6 +1742,19 @@ syncs:
     engine: ios
     annotations:
       - local
+
+engine:
+  liteQueryWarnThreshold: 1000   # warn on snapshot > N entries (Section 16.7)
+  telemetry:
+    enabled: true                # enable ExportTelemetry sync
+    exporter: stdout             # stdout | otlp | jaeger
+    otlpEndpoint: http://localhost:4317  # if exporter is otlp
+  hotReload:
+    enabled: true                # watch files and reload (dev only)
+    watchPaths:
+      - ./specs/
+      - ./syncs/
+      - ./implementations/
 ```
 
 ### 8.2 Engine Hierarchy
@@ -2068,6 +2155,7 @@ interface ConceptManifest {
   // Identity
   uri: string;
   name: string;
+  version?: number;          // from @version(N) annotation, if present
   typeParams: TypeParamInfo[];
 
   // State → Storage mapping (result of merge/grouping rules)
@@ -2322,11 +2410,58 @@ concept Registry [C] {
       -> ok(concept: C) { Register concept and return reference. }
       -> error(message: String) { If URI is already registered. }
     }
+    action reload(uri: String, transport: TransportConfig) {
+      -> ok(concept: C) {
+        Update transport config for an existing concept.
+        In-flight invocations to the old transport drain naturally.
+        New invocations route to the new transport.
+        See Section 16.3 Scenario B.
+      }
+      -> notfound(message: String) { If URI is not registered. }
+    }
     action deregister(uri: String) {
-      -> ok() { Remove concept from registry. }
+      -> ok(degradedSyncs: list String) {
+        Remove concept from registry. All syncs referencing this
+        concept are marked degraded and skipped during matching
+        with a warning log. Returns list of affected sync names.
+        If the concept re-registers, syncs automatically un-degrade.
+        See Section 16.3 Scenario C.
+      }
     }
     action heartbeat(uri: String) {
       -> ok(available: Bool) { Update and return availability status. }
+    }
+  }
+}
+```
+
+```
+concept Telemetry [S] {
+  purpose {
+    Export action records as structured telemetry.
+    Maps to OpenTelemetry spans: each flow is a trace,
+    each action is a span, provenance edges are span links.
+    See Section 16.2 for the full observability design.
+  }
+
+  state {
+    spans: set S
+    exported: S -> Bool
+  }
+
+  actions {
+    action export(record: ActionRecord, flowTrace: FlowTrace) {
+      -> ok(spanId: String) {
+        Transform the action record into an OTel-compatible span.
+        Push to configured exporter. Non-fatal on failure.
+      }
+      -> error(message: String) {
+        If the exporter is unreachable.
+      }
+    }
+
+    action configure(exporter: ExporterConfig) {
+      -> ok() { Set or update the export target. }
     }
   }
 }
@@ -2374,6 +2509,16 @@ sync LogRegistration {
   }
   then {
     ActionLog/append: [ record: { type: "registration"; concept: ?c } ]
+  }
+}
+
+# Export all action records as telemetry (recommended, overridable)
+sync ExportTelemetry {
+  when {
+    ActionLog/append: [] => [ id: ?id; record: ?record ]
+  }
+  then {
+    Telemetry/export: [ record: ?record ]
   }
 }
 ```
@@ -2490,7 +2635,8 @@ Stage 1 (concept specs + hand-written impls on kernel) ✅
   ├── SyncParser concept
   ├── SyncCompiler concept
   ├── ActionLog concept
-  └── Registry concept
+  ├── Registry concept
+  └── Telemetry concept
         │
 Stage 2 (self-compilation) ✅
   │
@@ -2517,6 +2663,16 @@ Stage 5 (multi-target)
   ├── RustGen concept + one sync
   ├── cross-language concept deployment
   └── distributed engine hierarchy
+        │
+Stage 6 (operational architecture)
+  │
+  ├── FlowTrace API + copf trace CLI
+  ├── createMockHandler test utility
+  ├── Telemetry concept wired via ExportTelemetry sync
+  ├── Hot reloading (reloadSyncs, reloadConcept, degraded marking)
+  ├── Schema migration (@version, startup check, copf migrate)
+  ├── Conflict resolution (LWW timestamps → onConflict hooks)
+  └── Lite query diagnostics (snapshot size warnings)
 ```
 
 ### 10.3 What Stays in the Kernel Forever
@@ -2555,7 +2711,8 @@ copf/
 │   │   ├── sync-compiler.concept
 │   │   ├── action-log.concept
 │   │   ├── registry.concept
-│   │   └── sync-engine.concept
+│   │   ├── sync-engine.concept
+│   │   └── telemetry.concept        # observability (Section 16.2)
 │   └── app/                    # Application concepts
 │       ├── password.concept
 │       ├── user.concept
@@ -2565,7 +2722,8 @@ copf/
 ├── syncs/                      # Synchronization definitions
 │   ├── framework/              # Framework's own syncs
 │   │   ├── compiler-pipeline.sync
-│   │   └── engine-bootstrap.sync
+│   │   ├── engine-bootstrap.sync
+│   │   └── telemetry-export.sync    # recommended, overridable (Section 16.2)
 │   └── app/                    # Application syncs
 │       ├── auth.sync
 │       ├── articles.sync
@@ -2584,6 +2742,9 @@ copf/
 │   │   ├── framework/
 │   │   │   ├── spec-parser.impl.ts
 │   │   │   ├── schema-gen.impl.ts
+│   │   │   ├── telemetry.impl.ts       # OTel exporter adapter
+│   │   │   ├── flow-trace.ts           # FlowTrace builder (Section 16.1)
+│   │   │   ├── mock-handler.ts         # createMockHandler utility (Section 16.4)
 │   │   │   └── ...
 │   │   └── app/
 │   │       ├── password.impl.ts
@@ -2640,7 +2801,9 @@ copf/
         │   │   ├── generate.ts
         │   │   ├── test.ts
         │   │   ├── deploy.ts
-        │   │   └── kit.ts          # kit init, validate, test, list
+        │   │   ├── kit.ts          # kit init, validate, test, list
+        │   │   ├── trace.ts        # copf trace <flow-id> (Section 16.1)
+        │   │   └── migrate.ts      # copf migrate (Section 16.5)
         │   └── index.ts
         └── package.json
 ```
@@ -2670,6 +2833,10 @@ copf test --integration
 copf compile-syncs
 
 # Start the development server (engine + all local concepts)
+# Watches .concept, .sync, and implementation files for changes.
+# On .concept/.sync change: re-compiles via pipeline, calls reloadSyncs.
+# On implementation change: calls reloadConcept with new transport.
+# Shows compiler errors inline on failure; old sync set remains active.
 copf dev
 
 # Deploy according to manifest
@@ -2681,6 +2848,16 @@ copf kit validate ./kits/content-mgmt   # validate kit manifest, type alignment,
 copf kit test ./kits/content-mgmt       # run kit's conformance + integration tests
 copf kit list                           # show kits used by the current app
 copf kit check-overrides                # verify app overrides reference valid sync names
+
+# Flow tracing and debugging
+copf trace <flow-id>                    # render provenance graph with status per node
+copf trace <flow-id> --failed           # show only failed branches
+copf trace <flow-id> --json             # machine-readable trace output
+
+# Schema migration
+copf migrate <concept>                  # run pending migrations for a concept
+copf migrate --check                    # detect version mismatches without running
+copf migrate --all                      # run all pending migrations
 ```
 
 ---
@@ -2793,6 +2970,83 @@ With the refactored pipeline, adding new language targets is now straightforward
 - [ ] Implement HTTP lite adapter (JSON-RPC for snapshot/lookup/filter over the wire)
 - [ ] Demonstrate offline-capable sync with eventual convergence
 - [ ] Validate: phone concept with Core Data storage, lite query mode, cached engine-side, eventual sync to server
+
+### Phase 10: Flow Tracing & Test Helpers (Weeks 27-28)
+
+This phase addresses the highest-impact developer experience gaps. See Section 16.1 and 16.4 for full design.
+
+- [ ] Implement `FlowTrace` builder
+  - [ ] Walk ActionLog provenance edges from flow root
+  - [ ] For each completion, check sync index for candidate syncs and mark unfired ones
+  - [ ] Compute per-action timing from ActionLog timestamps
+  - [ ] Build `FlowTrace` / `TraceNode` / `TraceSyncNode` tree
+- [ ] Implement `copf trace <flow-id>` CLI renderer
+  - [ ] Tree-formatted output with status icons, timing, sync names
+  - [ ] `--failed` flag: filter to only failed/unfired branches
+  - [ ] `--json` flag: output `FlowTrace` as JSON for tooling
+- [ ] Implement `createMockHandler(ast, overrides)` test utility
+  - [ ] Generate default ok responses from concept AST action signatures
+  - [ ] Use deterministic test values matching conformance test generator
+  - [ ] Merge in caller-provided overrides per action
+- [ ] Add `kernel.getFlowTrace(flowId)` programmatic API
+- [ ] Retrofit existing test suites to use `createMockHandler` (validate DX improvement)
+
+### Phase 11: Observability & Hot Reloading (Weeks 29-31)
+
+See Section 16.2 and 16.3 for full design.
+
+- [ ] Implement Telemetry concept
+  - [ ] Write `telemetry.concept` spec
+  - [ ] Implement reference exporter (stdout for dev, OTLP for production)
+  - [ ] Map ActionLog records to OpenTelemetry spans (flow → trace, action → span, provenance → parent)
+- [ ] Wire `ExportTelemetry` sync (`ActionLog/append → Telemetry/export`)
+- [ ] Add Telemetry to default concept kit (recommended sync, overridable/disableable)
+- [ ] Implement hot reloading
+  - [ ] `SyncEngine.reloadSyncs(syncs[])` — atomic index swap, in-flight flows use old set
+  - [ ] `Registry.reloadConcept(uri, transport)` — transport swap with drain
+  - [ ] `Registry.deregisterConcept(uri)` — mark dependent syncs as degraded with warning log
+  - [ ] Un-degrade syncs automatically when concept re-registers
+- [ ] Implement `copf dev` file watcher
+  - [ ] Watch `.concept` and `.sync` files
+  - [ ] Re-compile on change via compiler pipeline
+  - [ ] Call `reloadSyncs` on success, show compiler errors on failure
+  - [ ] Call `reloadConcept` when implementation files change
+
+### Phase 12: Schema Migration (Weeks 32-33)
+
+See Section 16.5 for full design.
+
+- [ ] Add `@version(N)` annotation to spec language grammar (Section 2.2)
+- [ ] Update spec parser to extract version number into AST
+- [ ] Implement startup version check
+  - [ ] On concept load, compare spec `@version` against `_meta.version` in storage
+  - [ ] If mismatch, set concept to migration-required state
+  - [ ] Reject all invocations except `migrate` with `→ needsMigration` error
+- [ ] Implement `copf migrate` CLI
+  - [ ] `copf migrate <concept>` — invoke concept's `migrate` action, update `_meta.version`
+  - [ ] `copf migrate --check` — report version status for all concepts
+  - [ ] `copf migrate --all` — run pending migrations in dependency order
+- [ ] Add `migrate` action convention to documentation and concept kit templates
+- [ ] Test: bump a concept version, verify startup blocks, migrate, verify service resumes
+
+### Phase 13: Conflict Resolution (Weeks 34-35)
+
+See Section 16.6 for full design. Phase 1 can begin immediately; Phase 2 depends on Phase 9 (Distribution).
+
+- [ ] Phase 1: Explicit LWW
+  - [ ] Add `lastWrittenAt` timestamp to all `ConceptStorage.put` calls
+  - [ ] Add `getMeta(relation, key)` to `ConceptStorage` interface
+  - [ ] Update in-memory, SQLite, and Postgres backends to store/retrieve timestamps
+  - [ ] Log warning when a write overwrites an entry with a more recent timestamp
+- [ ] Phase 2: Conflict detection hooks (requires Phase 9)
+  - [ ] Add optional `onConflict` callback to `ConceptStorage`
+  - [ ] Implement conflict detection in eventual sync queue replay
+  - [ ] Support four resolution strategies: keep-existing, accept-incoming, merge, escalate
+  - [ ] `escalate` produces `→ conflict(...)` completion routable by syncs
+  - [ ] Test: simulate concurrent writes from phone + server, verify conflict detection and merge
+- [ ] Add lite query diagnostics (Section 16.7)
+  - [ ] Warn when snapshot returns > threshold entries (default 1,000)
+  - [ ] Make threshold configurable in deploy manifest (`engine.liteQueryWarnThreshold`)
 
 ---
 
@@ -3315,25 +3569,519 @@ describe("Stage 0 — Test B: Registration Flow", () => {
 
 ---
 
-## 15. Open Questions
+## 15. Open Questions (Resolved)
 
-1. **Ordering guarantees.** When multiple syncs fire from the same completion, what is the execution order? Does it matter? The paper's approach is transactional; ours is not. Need to define semantics clearly.
+All nine original open questions have been addressed by implementation review and the design decisions in Section 16. This section is retained for traceability.
 
-2. **Conflict resolution for eventual syncs.** When a phone concept and a server concept both modify the same logical entity while disconnected, how are conflicts resolved? Options: last-writer-wins, concept-specific merge functions, or explicit conflict concepts.
+1. **Ordering guarantees.** ✅ Resolved — Section 16.8. Sync-registration order with breadth-first flow processing. The firing guard makes order irrelevant for correctness.
 
-3. **Sync composition.** Can syncs reference other syncs? The current design says no — syncs only reference concept actions. But patterns may emerge where a "meta-sync" that enables/disables other syncs would be useful.
+2. **Conflict resolution for eventual syncs.** ✅ Resolved — Section 16.6. Phase 1: explicit LWW with `lastWrittenAt` timestamps in `ConceptStorage`. Phase 2 (with Distribution): optional `onConflict` hook with merge/escalate options, surfaced as `→ conflict(...)` completions for sync-level handling.
 
-4. **Hot reloading.** Can syncs be added/removed/modified at runtime without restarting the engine? The provenance edge mechanism (Section 6.6) should support this, but needs careful design.
+3. **Sync composition.** ✅ Resolved — Section 16.9. No meta-syncs. Composition through completion chaining. Validated by RealWorld implementation.
 
-5. **Testing syncs in isolation.** How do you unit-test a sync without standing up all referenced concepts? Probably mock concepts that satisfy the spec's action signatures.
+4. **Hot reloading.** ✅ Resolved — Section 16.3. Four scenarios: (A) `reloadSyncs` with atomic index swap, (B) `reloadConcept` for transport updates with drain, (C) `deregisterConcept` with degraded sync marking, (D) spec changes go through compiler pipeline — `copf dev` watches files and re-compiles.
 
-6. **Schema migration.** When a concept's state schema changes across versions, how is migration handled? Each concept owns its storage, so migration is concept-internal, but the GraphQL schema federation needs to handle version skew gracefully.
+5. **Testing syncs in isolation.** ✅ Resolved — Section 16.4. `createMockHandler(ast, overrides)` utility generates default ok responses from concept ASTs. ~20 lines, eliminates test boilerplate.
 
-7. **Authorization model.** The paper handles auth via syncs (check JWT before performing action). Is this sufficient for all auth patterns, or does the engine need a first-class authorization layer?
+6. **Schema migration.** ✅ Resolved — Section 16.5. `@version(N)` on concept specs. Convention: `migrate` action on versioned concepts. Framework: startup version check, refuse-to-serve until migrated, `copf migrate` CLI.
 
-8. **Lite query mode boundaries.** The lite protocol covers key lookups and simple filters. What happens when a `where` clause requires a join across two relations within the same lite-mode concept? Current design: the engine fetches a full snapshot and joins in-memory. For concepts with large state on constrained devices, this may need a richer filter protocol or a way to signal "this concept's state is too large for lite mode."
+7. **Authorization model.** ✅ Resolved — Section 16.10. Syncs are sufficient. JWT/RBAC/OAuth/API-key patterns all work as concepts + syncs. No engine-level auth layer needed.
 
-9. **Observability.** The action log and provenance graph provide excellent debugging. How do we expose this as standard observability (OpenTelemetry traces, metrics)?
+8. **Lite query mode boundaries.** ✅ Resolved — Section 16.7. Diagnostic warning when snapshot returns >1,000 entries. Configurable threshold. Nudges developer to implement lookup/filter or switch to GraphQL mode.
+
+9. **Observability.** ✅ Resolved — Section 16.2. Telemetry concept + sync (not observer hooks). ActionLog completions trigger `Telemetry/export` via sync. Override/disable in deploy manifest. Maps 1:1 to OpenTelemetry spans.
+
+**Additionally identified and resolved:**
+
+10. **Error propagation DX.** Section 16.1. `copf trace <flow-id>` renders provenance graph as annotated tree with timing, failed branches, and unfired syncs. Programmatic `FlowTrace` interface for tooling.
+
+---
+
+## 16. Operational Architecture
+
+This section addresses runtime concerns beyond the core spec/sync/engine loop: how developers debug flows, observe production systems, hot-reload during development, test syncs, migrate schemas, handle conflicts in distributed deployments, and monitor query performance. Each subsection captures a design decision that was left open in earlier sections of this document.
+
+### 16.1 Error Propagation & Flow Tracing
+
+When a sync chain fails partway through — action A completes ok, triggers Sync B, whose `then` action returns an error variant — the developer needs to understand what happened. The ActionLog already captures the full provenance graph, but raw log entries are not a debugging tool.
+
+**Design: `copf trace`**
+
+The `copf trace <flow-id>` CLI command renders the provenance graph as a tree, annotated with status and timing:
+
+```
+$ copf trace flow-abc-123
+
+flow-abc-123  Registration Flow  (142ms total, FAILED)
+│
+├─ ✅ Web/request → ok                          0ms
+│  ├─ [ValidatePassword] →
+│  │  └─ ✅ Password/validate → ok              12ms
+│  │     ├─ [RegisterUser] →
+│  │     │  └─ ✅ User/register → ok            34ms
+│  │     │     ├─ [SetPassword] →
+│  │     │     │  └─ ✅ Password/set → ok       18ms
+│  │     │     └─ [GenerateToken] →
+│  │     │        └─ ❌ JWT/generate → error    78ms
+│  │     │           message: "signing key not configured"
+│  │     │
+│  │     │  ⚠ [RegistrationResponse] did not fire
+│  │     │    (waiting on: JWT/generate → ok)
+│  │     └─ [RegistrationError] →
+│  │        └─ ✅ Web/respond → ok               0ms
+│  │           body: { code: 500, error: "token generation failed" }
+```
+
+The trace shows:
+
+- Every action invocation and completion in the flow, nested by causal chain
+- Which sync triggered each invocation (in brackets)
+- Timing per action
+- Failed actions with their error variant fields
+- Syncs that **did not fire** because their `when` pattern was unsatisfied, with the specific missing completion shown
+- The total flow duration and aggregate status
+
+**Implementation:** The trace renderer walks the ActionLog's provenance edges starting from the flow's root invocation. For each completion, it checks which syncs *could have* fired (via the sync index) and marks unfired ones with the unsatisfied pattern. This is a read-only operation over existing data structures — no new runtime machinery needed.
+
+**Programmatic access:**
+
+```typescript
+interface FlowTrace {
+  flowId: string;
+  status: "ok" | "failed" | "partial";
+  durationMs: number;
+  root: TraceNode;
+}
+
+interface TraceNode {
+  action: string;          // e.g. "User/register"
+  variant: string;         // e.g. "ok" or "error"
+  durationMs: number;
+  fields: Record<string, unknown>;  // completion fields
+  children: TraceSyncNode[];
+}
+
+interface TraceSyncNode {
+  syncName: string;
+  fired: boolean;
+  missingPattern?: string;  // human-readable: "waiting on JWT/generate → ok"
+  child?: TraceNode;        // the invocation this sync produced
+}
+```
+
+The `FlowTrace` is available via `kernel.getFlowTrace(flowId)` for programmatic use in tests, observability pipelines, and custom tooling.
+
+### 16.2 Observability
+
+Observability is modeled as coordination between concepts — which is exactly what syncs are for. Rather than adding `addObserver(callback)` hooks to the ActionLog (which would couple observability to a specific concept's internals), observability uses the framework's own primitives.
+
+**Design: Telemetry concept + sync**
+
+```
+concept Telemetry [S] {
+  purpose {
+    Export action records as structured telemetry.
+    Maps naturally to OpenTelemetry spans: each flow is a trace,
+    each action is a span, provenance edges are span links.
+  }
+
+  state {
+    spans: set S
+    exported: S -> Bool
+  }
+
+  actions {
+    action export(record: ActionRecord, flowTrace: FlowTrace) {
+      -> ok(spanId: String) {
+        Transform the action record into an OTel-compatible span.
+        Attach flow context as trace ID, provenance as parent span.
+        Push to configured exporter (stdout, OTLP, Jaeger, etc.).
+      }
+      -> error(message: String) {
+        If the exporter is unreachable. Non-fatal — telemetry
+        failures must never break application flows.
+      }
+    }
+
+    action configure(exporter: ExporterConfig) {
+      -> ok() { Set or update the export target. }
+    }
+  }
+}
+```
+
+**Wiring:**
+
+```
+sync ExportTelemetry {
+  when {
+    ActionLog/append: [] => [ id: ?id; record: ?record ]
+  }
+  then {
+    Telemetry/export: [ record: ?record ]
+  }
+}
+```
+
+**DX properties:**
+
+- Developers override or disable the `ExportTelemetry` sync in their deploy manifest — observability is opt-in per environment
+- Swap export targets by swapping the Telemetry implementation (stdout for dev, OTLP for production)
+- Zero new API surface — this is just another concept + sync
+- Telemetry failures are isolated: if `Telemetry/export → error`, the error path fires (or doesn't). Application flows continue unaffected because the sync engine processes syncs independently
+
+**ActionLog → OpenTelemetry mapping:**
+
+| ActionLog | OpenTelemetry |
+|-----------|---------------|
+| flow ID | trace ID |
+| action record ID | span ID |
+| provenance parent edge | parent span ID |
+| concept URI + action name | span name |
+| completion variant | span status (ok → OK, error → ERROR) |
+| completion fields | span attributes |
+| action duration | span start/end time |
+| sync name (on provenance edge) | span link annotation |
+
+The Telemetry concept implementation is a thin adapter over whatever export SDK is configured. The reference implementation uses `@opentelemetry/sdk-trace-base` for Node.js environments.
+
+### 16.3 Hot Reloading
+
+During development, developers need to modify concepts and syncs without restarting the engine. There are three distinct reload scenarios, each with different semantics.
+
+**Scenario A: Sync reload (sync definitions modified)**
+
+The developer changes a `.sync` file. The engine needs to swap the sync index atomically.
+
+```typescript
+interface SyncEngine {
+  // ... existing methods ...
+
+  reloadSyncs(syncs: CompiledSync[]): void;
+  // Atomically replaces the sync index.
+  // In-flight flows (already mid-evaluation) continue using the
+  // old sync set — they have captured references to the syncs
+  // that matched their completions.
+  // New completions arriving after the swap use the new index.
+}
+```
+
+Implementation: the sync index (the `Map<string, SyncRegistration[]>` from Section 6.2) is replaced by a new `Map` built from the new sync set. The old map is not mutated — in-flight references remain valid. This is ~10 lines of code.
+
+**Scenario B: Concept updated (same spec, new implementation)**
+
+The developer redeploys a concept with a new implementation (bug fix, new logic) but the spec hasn't changed. The Registry receives a new `register` call with the same URI but potentially new transport config (different port, different process).
+
+```typescript
+interface Registry {
+  // ... existing methods ...
+
+  reloadConcept(uri: string, transport: TransportConfig): void;
+  // Updates the transport for an existing concept.
+  // In-flight invocations to the old transport drain naturally —
+  // the engine doesn't cancel them.
+  // New invocations route to the new transport.
+}
+```
+
+This is a transport-level concern. The engine doesn't care which process answers, just that completions come back with the right shape. The old transport connection is left to drain (pending responses complete), while new invocations go to the new transport.
+
+**Scenario C: Concept deleted**
+
+A concept is removed from the deployment. Syncs referencing it become unfireable.
+
+```typescript
+interface Registry {
+  // ... existing methods ...
+
+  deregisterConcept(uri: string): { degradedSyncs: string[] };
+  // Removes the concept from the registry.
+  // Returns a list of syncs that are now degraded.
+  // Degraded syncs are skipped during matching with a warning log.
+}
+```
+
+Design choice: syncs referencing a deregistered concept are marked **degraded**, not deleted. This means:
+
+- The sync engine skips degraded syncs during matching and emits a warning log per skip
+- If the concept is re-registered, syncs automatically un-degrade
+- The developer sees the warning and can decide whether to also remove the sync
+- Silent failures in sync chains (the worst debugging experience) are avoided
+
+**Scenario D: Concept spec changed**
+
+If someone changes an action's signature, existing syncs may have stale field patterns. This is NOT a runtime hot-reload scenario — it's a compile-time error. Changing a spec requires re-running `copf compile-syncs`, which will fail if any sync references fields that no longer exist. Hot reload of specs should go through the compiler pipeline, not bypass it.
+
+The `copf dev` command handles this by watching `.concept` and `.sync` files, re-compiling on change, and calling `reloadSyncs` with the new compiled set. If a spec change breaks a sync, the compiler error is shown in the terminal and the old sync set remains active.
+
+### 16.4 Test Helpers
+
+Two patterns exist for testing syncs: inline mock handlers and direct engine testing with synthetic completions. Both work, but involve boilerplate. A `createMockHandler` utility eliminates this.
+
+**Design:**
+
+```typescript
+function createMockHandler(
+  ast: ConceptAST,
+  overrides?: Partial<Record<string, ActionHandler>>
+): ConceptHandler {
+  // Generates a handler from the concept AST where:
+  // - Every action returns its first (ok) variant by default
+  // - Output fields are populated with deterministic test values
+  //   (same logic as conformance test generation — Section 7.4)
+  // - Overrides let you customize specific actions for your test
+  //
+  // Example:
+  //   const mockJwt = createMockHandler(jwtAst, {
+  //     verify: async (input) => ({
+  //       variant: "expired",
+  //       fields: { message: "token expired" }
+  //     })
+  //   });
+}
+```
+
+This is ~20 lines of code. It reads the concept AST's action signatures, generates default ok responses with test values for each action, and merges in any overrides. The test values match the conformance test generator's deterministic IDs, so mock outputs are consistent and predictable.
+
+**Usage in sync tests:**
+
+```typescript
+describe("GenerateToken sync", () => {
+  it("fires when User/register → ok", async () => {
+    const engine = createTestEngine();
+
+    // Mock concepts — only override what matters for this sync
+    engine.register("urn:app/User", createMockHandler(userAst));
+    engine.register("urn:app/JWT", createMockHandler(jwtAst));
+
+    // Load only the sync under test
+    engine.loadSync(generateTokenSync);
+
+    // Inject synthetic completion
+    const result = await engine.processCompletion({
+      concept: "urn:app/User",
+      action: "register",
+      variant: "ok",
+      fields: { user: "u-test-001" },
+    });
+
+    // Assert the sync fired and invoked JWT/generate
+    expect(result.invocations).toHaveLength(1);
+    expect(result.invocations[0].concept).toBe("urn:app/JWT");
+    expect(result.invocations[0].action).toBe("generate");
+  });
+});
+```
+
+### 16.5 Schema Migration
+
+Each concept owns its storage (sovereign storage principle), so migration logic belongs in the concept, not the framework. But the framework provides the scaffolding to make migrations safe and discoverable.
+
+**Design:**
+
+**Spec-level version declaration:**
+
+```
+concept User [U] {
+  @version(3)
+
+  purpose { ... }
+  state { ... }
+  actions { ... }
+}
+```
+
+The `@version(N)` annotation is an integer that increments whenever the state schema changes in a way that requires migration (adding/removing/renaming relations or fields). Non-breaking additions (new actions, new variants) do not require a version bump.
+
+**Migration action convention:**
+
+Every concept that uses `@version` should declare a `migrate` action:
+
+```
+actions {
+  action migrate(fromVersion: Int, toVersion: Int) {
+    -> ok(migratedEntries: Int) {
+      Transform stored data from fromVersion schema to toVersion schema.
+      This is concept-internal logic — the concept knows its own schema history.
+    }
+    -> error(message: String) {
+      If migration fails. The concept's storage should be left unchanged
+      (migration is transactional within the concept's own storage).
+    }
+  }
+}
+```
+
+**Framework behavior:**
+
+1. **Startup version check.** When the engine loads a concept, it compares the spec's `@version(N)` against a `_meta.version` entry in the concept's storage. If the stored version is lower, the concept is in **migration-required** state.
+
+2. **Refuse to serve until migrated.** A concept in migration-required state rejects all action invocations except `migrate` with a `-> needsMigration(currentVersion: Int, requiredVersion: Int)` error. This is fail-safe — no silent data corruption from schema mismatch.
+
+3. **`copf migrate` CLI.** The CLI command calls the concept's `migrate` action and updates `_meta.version` on success:
+
+```
+$ copf migrate User
+User: migrating from version 2 → 3...
+User: migrated 1,247 entries. Version now 3.
+
+$ copf migrate --check
+User: version 3 (current) ✅
+Password: version 1 → needs migration to version 2 ⚠
+JWT: version 1 (current) ✅
+```
+
+4. **`copf migrate --all`** runs migrations for all concepts with version mismatches, in dependency order (concepts referenced in syncs are migrated before concepts that depend on their state).
+
+**What the framework does NOT do:**
+
+- Auto-generate migration logic. The concept author writes the `migrate` implementation because only they know the semantic mapping between schema versions.
+- Track migration history. Each concept stores only its current version. If you need rollback, that's a concept-internal concern (version the migration logic, keep backups).
+- Handle cross-concept migrations. If two concepts need coordinated schema changes, that's a sync — write a migration sync that calls both concepts' `migrate` actions in sequence.
+
+### 16.6 Conflict Resolution for Eventual Syncs
+
+When a phone concept and a server concept both modify the same logical entity while disconnected, the framework needs a conflict resolution strategy. The current implementation uses implicit last-writer-wins (LWW). This section formalizes LWW as the default and defines the path to richer conflict handling.
+
+**Phase 1: Explicit LWW with timestamps**
+
+The `ConceptStorage` interface adds a `lastWrittenAt` timestamp to all relation entries:
+
+```typescript
+interface ConceptStorage {
+  // ... existing methods ...
+
+  put(relation: string, key: string, fields: Record<string, unknown>): Promise<void>;
+  // Now also stores: _meta: { lastWrittenAt: ISO8601 timestamp }
+  // On conflict (two writes to same key), higher timestamp wins.
+
+  getMeta(relation: string, key: string): Promise<{ lastWrittenAt: string } | null>;
+  // Retrieve the write timestamp for a specific entry.
+}
+```
+
+This is already implicit in most storage backends (SQLite has `datetime('now')`, Postgres has `now()`). Making it explicit in the interface means:
+
+- Developers can inspect when an entry was last written
+- The engine can log when a write overwrites a more recent entry (which is a conflict signal)
+- The eventual sync queue can use timestamps for ordering
+
+**Phase 2: Conflict detection hooks (with Distribution phase)**
+
+When the eventual sync queue replays writes from a disconnected concept, it may encounter entries where the incoming write's timestamp is close to (within a configurable epsilon of) the existing entry's timestamp — indicating concurrent modification.
+
+```typescript
+interface ConceptStorage {
+  // ... existing methods ...
+
+  onConflict?: (
+    relation: string,
+    key: string,
+    existing: { fields: Record<string, unknown>; writtenAt: string },
+    incoming: { fields: Record<string, unknown>; writtenAt: string }
+  ) => ConflictResolution;
+}
+
+type ConflictResolution =
+  | { action: "keep-existing" }
+  | { action: "accept-incoming" }
+  | { action: "merge"; merged: Record<string, unknown> }
+  | { action: "escalate" };  // surface as a -> conflict(...) completion
+```
+
+If `onConflict` is not set, the default is LWW (accept-incoming if newer, keep-existing if older). If set, the handler can implement concept-specific merge logic.
+
+The `"escalate"` resolution produces a completion that syncs can react to:
+
+```
+sync HandleArticleConflict {
+  when {
+    Article/write: [] => conflict(
+      key: ?id,
+      existing: ?old,
+      incoming: ?new
+    )
+  }
+  then {
+    Article/merge: [ id: ?id; versions: [?old, ?new] ]
+  }
+}
+```
+
+This keeps conflict resolution in the sync layer where it belongs — the storage layer detects conflicts, the concept (via syncs) decides what to do about them.
+
+### 16.7 Lite Query Diagnostics
+
+The lite query protocol's three-tier fallback (lookup → filter → snapshot) works, but the slow path can silently fetch unbounded data. A snapshot of a concept with 100k entries will transfer all of them to the engine for in-memory filtering.
+
+**Design: diagnostic warning**
+
+When `snapshot` returns more than 1,000 entries for a single query, the engine emits a warning:
+
+```
+⚠ Lite query slow path: snapshot of "Article" returned 12,847 entries.
+  Consider implementing `lookup` or `filter` for this query pattern,
+  or switching to GraphQL mode for this concept.
+  Query: { relation: "article", filter: { status: "published" } }
+```
+
+This is a one-line check in the `LiteQueryAdapter`:
+
+```typescript
+if (entries.length > LITE_QUERY_WARN_THRESHOLD) {
+  logger.warn(`Lite query slow path: snapshot of "${concept}" returned ${entries.length} entries...`);
+}
+```
+
+The threshold defaults to 1,000 and is configurable in the deploy manifest:
+
+```yaml
+engine:
+  liteQueryWarnThreshold: 5000  # or 0 to disable
+```
+
+No runtime behavior changes — this is purely a developer signal. The query still executes; the developer just gets a nudge to optimize.
+
+### 16.8 Ordering Guarantees
+
+When multiple syncs fire from the same completion, the engine uses **sync-registration order** with **breadth-first flow processing** (see engine.ts). The firing guard (provenance edge check, Section 6.2) makes order mostly irrelevant for correctness — if a sync could fire, it will fire exactly once regardless of order.
+
+However, developers should understand the semantics:
+
+- **Within a single completion:** syncs fire in registration order. If Sync A and Sync B both match the same completion, A's `then` invocation is dispatched before B's.
+- **Across a flow:** breadth-first. All syncs triggered by completion C₁ fire before any syncs triggered by completions resulting from C₁'s invocations.
+- **No ordering dependency between sibling syncs.** If Sync A and Sync B both fire from the same completion, neither should depend on the other's side effects. If they do, they should be a single sync or chained via an intermediate action.
+
+The firing guard ensures that even if the implementation order changes (e.g., concurrent execution in a future version), the set of syncs that fire remains the same. Order affects latency, not correctness.
+
+### 16.9 Sync Composition
+
+Syncs do not reference other syncs. All composition happens through **completion chaining**: Sync A's output action produces a completion, which triggers Sync B. This was validated by the RealWorld implementation (Phase 4), where the login flow chains through five syncs without any sync referencing another.
+
+The advantages of flat syncs over meta-syncs:
+
+- Every sync is independently testable (inject a synthetic completion, observe the output)
+- The provenance graph is a flat trace of actions, not a nested tree of sync activations
+- Debugging uses `copf trace`, which shows the causal chain without needing to recurse into sync definitions
+- There is no need for a "sync lifecycle" (enable/disable/pause) — syncs are either registered or not
+
+If a pattern emerges where a group of syncs always activate together, that's a concept kit (Section 9) with required syncs, not a meta-sync.
+
+### 16.10 Authorization Model
+
+Authorization is modeled as syncs. The RealWorld implementation (Phase 4) proves a complete JWT auth pattern:
+
+- `JWT/verify` is called in sync chains before protected actions
+- Pattern-matching on `verify → ok` extracts user IDs into sync variable bindings
+- Pattern-matching on `verify → expired` or `verify → invalid` triggers error response syncs
+
+This is sufficient for all common auth patterns:
+
+- **RBAC:** A `Role` concept tracks user→role mappings. Syncs check `Role/check` before protected actions.
+- **OAuth:** An `OAuth` concept handles token exchange. Syncs chain `OAuth/validate → ok` into application flows.
+- **API keys:** A `Key` concept validates keys. Same sync pattern as JWT.
+
+No first-class authorization layer is needed in the engine. Authorization is coordination between concepts, which is what syncs express. Adding an engine-level auth layer would violate the "syncs are the only coordination mechanism" principle.
 
 ---
 
@@ -3351,3 +4099,8 @@ describe("Stage 0 — Test B: Registration Flow", () => {
 | Distribution | Not addressed | Engine hierarchy with eventual consistency |
 | Self-hosting | No | Full bootstrap from minimal kernel |
 | Code generation | LLM-driven | Deterministic compiler + optional LLM for action bodies |
+| Observability | Not addressed | Telemetry concept + sync, maps to OpenTelemetry |
+| Conflict resolution | Not addressed | LWW default, optional onConflict hooks with escalation |
+| Schema migration | Not addressed | @version annotation, migrate action convention, CLI |
+| Hot reloading | Not addressed | Atomic sync swap, concept transport drain, degraded marking |
+| Debugging | Not addressed | `copf trace` provenance graph renderer, FlowTrace API |
