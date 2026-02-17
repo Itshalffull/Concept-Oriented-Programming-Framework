@@ -13,7 +13,7 @@
 
 import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { resolve, relative, join } from 'path';
-import { parseConceptFile } from '../../../../kernel/src/parser.js';
+import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { schemaGenHandler } from '../../../../implementations/typescript/framework/schema-gen.impl.js';
 import { typescriptGenHandler } from '../../../../implementations/typescript/framework/typescript-gen.impl.js';

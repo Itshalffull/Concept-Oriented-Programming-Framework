@@ -13,7 +13,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { resolve, relative } from 'path';
-import { parseConceptFile } from '../../../../kernel/src/parser.js';
+import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import {
   parseDeploymentManifest,
   validateDeploymentManifest,

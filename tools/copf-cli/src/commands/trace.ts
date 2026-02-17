@@ -12,11 +12,11 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { resolve, relative, join } from 'path';
-import { parseConceptFile } from '../../../../kernel/src/parser.js';
+import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { createInProcessAdapter, createConceptRegistry } from '../../../../kernel/src/transport.js';
-import { SyncEngine, ActionLog } from '../../../../kernel/src/engine.js';
-import { parseSyncFile } from '../../../../kernel/src/sync-parser.js';
+import { SyncEngine, ActionLog } from '../../../../implementations/typescript/framework/sync-engine.impl.js';
+import { parseSyncFile } from '../../../../implementations/typescript/framework/sync-parser.impl.js';
 import { buildFlowTrace, renderFlowTrace } from '../../../../implementations/typescript/framework/flow-trace.impl.js';
 import type { ConceptHandler } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';

@@ -7,8 +7,12 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
-import { parseConceptFile } from '../../../kernel/src/parser.js';
+import { parseConceptFile as parseConceptFileKernel } from '../../../kernel/src/parser.js';
 import { generateId } from '../../../kernel/src/types.js';
+
+// Re-export the raw parse function so consumers can import it
+// from the concept implementation rather than the kernel parser.
+export const parseConceptFile = parseConceptFileKernel;
 
 export const specParserHandler: ConceptHandler = {
   async parse(input, storage) {
@@ -18,7 +22,7 @@ export const specParserHandler: ConceptHandler = {
     }
 
     try {
-      const ast = parseConceptFile(source);
+      const ast = parseConceptFileKernel(source);
       const specId = generateId();
 
       // Store the spec in the "specs" set relation

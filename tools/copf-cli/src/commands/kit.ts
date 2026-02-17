@@ -11,8 +11,8 @@
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
 import { join, resolve, relative, basename } from 'path';
-import { parseConceptFile } from '../../../../kernel/src/parser.js';
-import { parseSyncFile } from '../../../../kernel/src/sync-parser.js';
+import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
+import { parseSyncFile } from '../../../../implementations/typescript/framework/sync-parser.impl.js';
 import { findFiles } from '../util.js';
 
 const KIT_YAML_TEMPLATE = `# Kit Manifest

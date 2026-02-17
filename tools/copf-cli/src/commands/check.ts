@@ -9,7 +9,7 @@
 
 import { readFileSync } from 'fs';
 import { resolve, relative, basename } from 'path';
-import { parseConceptFile } from '../../../../kernel/src/parser.js';
+import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import type { ConceptAST } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 

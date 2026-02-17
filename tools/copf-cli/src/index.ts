@@ -26,6 +26,7 @@ import { kitCommand } from './commands/kit.js';
 import { devCommand } from './commands/dev.js';
 import { traceCommand } from './commands/trace.js';
 import { migrateCommand } from './commands/migrate.js';
+import { compileCacheCommand } from './commands/compile-cache.js';
 
 const VERSION = '0.1.0';
 
@@ -72,6 +73,7 @@ Commands:
   generate --target <lang>       Generate schemas + code for all concepts
     --target typescript|rust       Target language
     --concept <Name>               Generate for a single concept only
+  compile --cache                Build pre-compiled artifacts to .copf-cache/
   compile-syncs                  Compile syncs and validate against manifests
   test [concept]                 Run conformance tests for a concept
     --integration                  Run full integration tests
@@ -119,6 +121,15 @@ export async function main(argv: string[] = process.argv): Promise<void> {
         break;
       case 'generate':
         await generateCommand(parsed.positional, parsed.flags);
+        break;
+      case 'compile':
+        if (parsed.flags.cache) {
+          await compileCacheCommand(parsed.positional, parsed.flags);
+        } else {
+          console.error('Usage: copf compile --cache');
+          console.error('  --cache   Build pre-compiled artifacts to .copf-cache/');
+          process.exit(1);
+        }
         break;
       case 'compile-syncs':
         await compileSyncsCommand(parsed.positional, parsed.flags);
