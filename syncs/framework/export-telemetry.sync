@@ -1,0 +1,8 @@
+sync ExportTelemetry {
+  when {
+    ActionLog/append: [] => [ id: ?id; record: ?record ]
+  }
+  then {
+    Telemetry/export: [ record: ?record ]
+  }
+}
