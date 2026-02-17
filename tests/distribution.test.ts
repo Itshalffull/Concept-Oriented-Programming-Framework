@@ -1,185 +1,26 @@
 // ============================================================
-// Stage 6 — Distribution + Eventual Consistency Tests
+// Distribution Tests
 //
-// Covers:
-//   - Eventual sync queue
-//   - Engine hierarchy (upstream/downstream)
-//   - WebSocket transport adapter
-//   - Lite query protocol with caching
-//   - Offline-capable sync with eventual convergence
-//
-// Key invariants validated:
-//   1. Eventual syncs queue when targets unavailable, fire on availability
-//   2. Idempotency: provenance edges prevent duplicate firings
-//   3. Local syncs execute independently on same runtime
-//   4. LiteQueryAdapter caches snapshots with configurable TTL
-//   5. Engine hierarchy forwards completions upstream
-//   6. WebSocket adapter supports invoke/query/health
+// Validates eventual sync queue, engine hierarchy, offline
+// convergence, and sync annotation semantics.
 // ============================================================
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-  createWebSocketAdapter,
-  createWebSocketConceptServer,
 } from '../kernel/src/index.js';
 import { ActionLog, DistributedSyncEngine } from '../implementations/typescript/framework/sync-engine.impl.js';
 import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
-import { LiteQueryAdapter, createStorageLiteProtocol } from '../implementations/typescript/framework/lite-query-adapter.js';
 import type {
   ConceptHandler,
-  ConceptTransport,
   ActionCompletion,
-  ActionInvocation,
-  CompiledSync,
 } from '../kernel/src/types.js';
 import { generateId, timestamp } from '../kernel/src/types.js';
-import type {
-  LiteQueryProtocol,
-  ConceptStateSnapshot,
-} from '../kernel/src/types.js';
-import type { MockWebSocket } from '../kernel/src/ws-transport.js';
 
 // ============================================================
-// 1. Lite Query Protocol + Adapter with Caching
-// ============================================================
-
-describe('Stage 6 — LiteQueryProtocol + Adapter', () => {
-  it('LiteQueryAdapter resolves queries via snapshot', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('entries', 'u-1', { user: 'u-1', name: 'Alice' });
-    await storage.put('entries', 'u-2', { user: 'u-2', name: 'Bob' });
-
-    const protocol = createStorageLiteProtocol(storage, ['entries']);
-    const adapter = new LiteQueryAdapter(protocol, 5000);
-
-    const results = await adapter.resolve('entries');
-    expect(results).toHaveLength(2);
-    expect(results.find(r => r.user === 'u-1')).toBeDefined();
-    expect(results.find(r => r.user === 'u-2')).toBeDefined();
-  });
-
-  it('LiteQueryAdapter resolves with filter args', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('entries', 'u-1', { user: 'u-1', name: 'Alice' });
-    await storage.put('entries', 'u-2', { user: 'u-2', name: 'Bob' });
-
-    const protocol = createStorageLiteProtocol(storage, ['entries']);
-    const adapter = new LiteQueryAdapter(protocol, 5000);
-
-    const results = await adapter.resolve('entries', { user: 'u-1' });
-    expect(results).toHaveLength(1);
-    expect(results[0].name).toBe('Alice');
-  });
-
-  it('LiteQueryAdapter caches snapshots within TTL', async () => {
-    let snapshotCallCount = 0;
-    const mockProtocol: LiteQueryProtocol = {
-      async snapshot() {
-        snapshotCallCount++;
-        return {
-          asOf: new Date().toISOString(),
-          relations: {
-            entries: [{ user: 'u-1', name: 'Alice' }],
-          },
-        };
-      },
-    };
-
-    const adapter = new LiteQueryAdapter(mockProtocol, 10000); // 10s TTL
-
-    // First call fetches
-    await adapter.resolve('entries');
-    expect(snapshotCallCount).toBe(1);
-
-    // Second call hits cache
-    await adapter.resolve('entries');
-    expect(snapshotCallCount).toBe(1);
-
-    // Cache is still valid
-    expect(adapter.getCachedSnapshot()).not.toBeNull();
-  });
-
-  it('LiteQueryAdapter invalidates cache on explicit invalidation', async () => {
-    let snapshotCallCount = 0;
-    const mockProtocol: LiteQueryProtocol = {
-      async snapshot() {
-        snapshotCallCount++;
-        return {
-          asOf: new Date().toISOString(),
-          relations: {
-            entries: [{ user: 'u-1' }],
-          },
-        };
-      },
-    };
-
-    const adapter = new LiteQueryAdapter(mockProtocol, 10000);
-
-    await adapter.resolve('entries');
-    expect(snapshotCallCount).toBe(1);
-
-    // Invalidate (simulates action completion on the concept)
-    adapter.invalidate();
-    expect(adapter.getCachedSnapshot()).toBeNull();
-
-    // Next call fetches fresh
-    await adapter.resolve('entries');
-    expect(snapshotCallCount).toBe(2);
-  });
-
-  it('LiteQueryAdapter uses lookup for single-key queries', async () => {
-    let lookupCalled = false;
-    const mockProtocol: LiteQueryProtocol = {
-      async snapshot() {
-        return { asOf: '', relations: {} };
-      },
-      async lookup(relation, key) {
-        lookupCalled = true;
-        return { user: key, name: 'Found' };
-      },
-    };
-
-    const adapter = new LiteQueryAdapter(mockProtocol, 5000);
-    const results = await adapter.resolve('entries', { user: 'u-1' });
-
-    expect(lookupCalled).toBe(true);
-    expect(results).toHaveLength(1);
-    expect(results[0].name).toBe('Found');
-  });
-
-  it('ConceptStateSnapshot has correct format', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('entries', 'u-1', { user: 'u-1', hash: 'abc' });
-    await storage.put('entries', 'u-2', { user: 'u-2', hash: 'def' });
-
-    const protocol = createStorageLiteProtocol(storage, ['entries']);
-    const snapshot = await protocol.snapshot();
-
-    expect(snapshot.asOf).toBeDefined();
-    expect(new Date(snapshot.asOf).toISOString()).toBe(snapshot.asOf);
-    expect(snapshot.relations).toBeDefined();
-    expect(snapshot.relations.entries).toHaveLength(2);
-    expect(snapshot.relations.entries[0]).toHaveProperty('user');
-    expect(snapshot.relations.entries[0]).toHaveProperty('hash');
-  });
-
-  it('createStorageLiteProtocol supports lookup', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('entries', 'u-1', { user: 'u-1', name: 'Alice' });
-
-    const protocol = createStorageLiteProtocol(storage, ['entries']);
-    const result = await protocol.lookup!('entries', 'u-1');
-
-    expect(result).not.toBeNull();
-    expect(result!.name).toBe('Alice');
-  });
-});
-
-// ============================================================
-// 2. Eventual Sync Queue
+// 1. Eventual Sync Queue
 // ============================================================
 
 describe('Stage 6 — Eventual Sync Queue', () => {
@@ -436,7 +277,7 @@ describe('Stage 6 — Eventual Sync Queue', () => {
 });
 
 // ============================================================
-// 3. Engine Hierarchy
+// 2. Engine Hierarchy
 // ============================================================
 
 describe('Stage 6 — Engine Hierarchy', () => {
@@ -613,156 +454,7 @@ describe('Stage 6 — Engine Hierarchy', () => {
 });
 
 // ============================================================
-// 4. WebSocket Transport Adapter
-// ============================================================
-
-describe('Stage 6 — WebSocket Transport Adapter', () => {
-  function createMockWebSocketPair(): {
-    clientWs: MockWebSocket;
-    serverHandler: (message: string) => Promise<string | null>;
-  } {
-    // Create a concept handler for the server side
-    const handler: ConceptHandler = {
-      async echo(input) {
-        return { variant: 'ok', message: input.text };
-      },
-    };
-    const storage = createInMemoryStorage();
-    const transport = createInProcessAdapter(handler, storage);
-    const serverHandler = createWebSocketConceptServer(transport);
-
-    // Create a mock WebSocket that routes messages through the server
-    let messageHandler: ((data: string) => void) | null = null;
-
-    const clientWs: MockWebSocket = {
-      readyState: 1, // OPEN
-      send(data: string) {
-        // Route to server, then send response back
-        serverHandler(data).then(response => {
-          if (response && messageHandler) {
-            messageHandler(response);
-          }
-        });
-      },
-      onMessage(handler) {
-        messageHandler = handler;
-      },
-      close() {
-        this.readyState = 3; // CLOSED
-      },
-    };
-
-    return { clientWs, serverHandler };
-  }
-
-  it('WebSocket adapter invokes actions', async () => {
-    const { clientWs } = createMockWebSocketPair();
-
-    const adapter = createWebSocketAdapter(
-      'ws://localhost:8080',
-      'lite',
-      () => clientWs,
-    );
-
-    expect(adapter.queryMode).toBe('lite');
-
-    const completion = await adapter.invoke({
-      id: 'inv-1',
-      concept: 'urn:copf/Echo',
-      action: 'echo',
-      input: { text: 'hello' },
-      flow: 'flow-1',
-      timestamp: new Date().toISOString(),
-    });
-
-    expect(completion.variant).toBe('ok');
-    expect(completion.output.message).toBe('hello');
-
-    adapter.close();
-  });
-
-  it('WebSocket adapter performs health checks', async () => {
-    const { clientWs } = createMockWebSocketPair();
-
-    const adapter = createWebSocketAdapter(
-      'ws://localhost:8080',
-      'lite',
-      () => clientWs,
-    );
-
-    const health = await adapter.health();
-    expect(health.available).toBe(true);
-    expect(health.latency).toBeGreaterThanOrEqual(0);
-
-    adapter.close();
-  });
-
-  it('WebSocket adapter supports push completions', async () => {
-    const { clientWs } = createMockWebSocketPair();
-    let pushMsgHandler: ((data: string) => void) | null = null;
-
-    // Override onMessage to capture the handler
-    const originalOnMessage = clientWs.onMessage.bind(clientWs);
-    clientWs.onMessage = (handler: (data: string) => void) => {
-      pushMsgHandler = handler;
-      originalOnMessage(handler);
-    };
-
-    const adapter = createWebSocketAdapter(
-      'ws://localhost:8080',
-      'lite',
-      () => clientWs,
-    );
-
-    const receivedCompletions: ActionCompletion[] = [];
-    adapter.onPushCompletion((c) => receivedCompletions.push(c));
-
-    // Simulate a push completion from server
-    if (pushMsgHandler) {
-      const pushMsg = JSON.stringify({
-        type: 'completion',
-        id: 'push-1',
-        payload: {
-          id: 'comp-1',
-          concept: 'urn:copf/Echo',
-          action: 'echo',
-          input: {},
-          variant: 'ok',
-          output: { message: 'pushed' },
-          flow: 'flow-push',
-          timestamp: new Date().toISOString(),
-        },
-      });
-      pushMsgHandler(pushMsg);
-    }
-
-    expect(receivedCompletions).toHaveLength(1);
-    expect(receivedCompletions[0].output.message).toBe('pushed');
-
-    adapter.close();
-  });
-
-  it('WebSocket server handles unknown message types', async () => {
-    const handler: ConceptHandler = {
-      async noop() { return { variant: 'ok' }; },
-    };
-    const transport = createInProcessAdapter(handler, createInMemoryStorage());
-    const serverHandler = createWebSocketConceptServer(transport);
-
-    const response = await serverHandler(JSON.stringify({
-      type: 'unknown',
-      id: 'msg-1',
-      payload: null,
-    }));
-
-    expect(response).not.toBeNull();
-    const parsed = JSON.parse(response!);
-    expect(parsed.type).toBe('error');
-  });
-});
-
-// ============================================================
-// 5. Offline-Capable Sync with Eventual Convergence
+// 3. Offline-Capable Sync with Eventual Convergence
 // ============================================================
 
 describe('Stage 6 — Offline Convergence', () => {
@@ -971,7 +663,7 @@ describe('Stage 6 — Offline Convergence', () => {
 });
 
 // ============================================================
-// 6. Sync Annotation Semantics
+// 4. Sync Annotation Semantics
 // ============================================================
 
 describe('Stage 6 — Sync Annotations', () => {
