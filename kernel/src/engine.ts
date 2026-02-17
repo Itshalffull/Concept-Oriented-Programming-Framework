@@ -400,6 +400,7 @@ export class SyncEngine {
   private log: ActionLog;
   private index: SyncIndex;
   private registry: ConceptRegistry;
+  private degradedSyncs = new Set<string>();
 
   constructor(log: ActionLog, registry: ConceptRegistry) {
     this.log = log;
@@ -419,6 +420,71 @@ export class SyncEngine {
     }
   }
 
+  /**
+   * Atomically replace the sync index with a new set of syncs.
+   * In-flight flows continue using the old sync set (they have
+   * captured references). New completions use the new index.
+   * See Architecture doc Section 16.3, Scenario A.
+   */
+  reloadSyncs(syncs: CompiledSync[]): void {
+    this.index = buildSyncIndex(syncs);
+    this.degradedSyncs.clear();
+  }
+
+  /**
+   * Mark syncs that reference the given concept URI as degraded.
+   * Degraded syncs are skipped during matching with a warning log.
+   * Returns the names of newly degraded syncs.
+   */
+  degradeSyncsForConcept(uri: string): string[] {
+    const degraded: string[] = [];
+    for (const syncs of this.index.values()) {
+      for (const sync of syncs) {
+        if (this.degradedSyncs.has(sync.name)) continue;
+        const references =
+          sync.when.some(p => p.concept === uri) ||
+          sync.then.some(t => t.concept === uri);
+        if (references) {
+          this.degradedSyncs.add(sync.name);
+          degraded.push(sync.name);
+        }
+      }
+    }
+    return degraded;
+  }
+
+  /**
+   * Un-degrade syncs that reference the given concept URI.
+   * Called automatically when a concept re-registers.
+   * Returns the names of un-degraded syncs.
+   */
+  undegradeSyncsForConcept(uri: string): string[] {
+    const undegraded: string[] = [];
+    for (const syncs of this.index.values()) {
+      for (const sync of syncs) {
+        if (!this.degradedSyncs.has(sync.name)) continue;
+        const references =
+          sync.when.some(p => p.concept === uri) ||
+          sync.then.some(t => t.concept === uri);
+        if (references) {
+          this.degradedSyncs.delete(sync.name);
+          undegraded.push(sync.name);
+        }
+      }
+    }
+    return undegraded;
+  }
+
+  /** Check if a sync is degraded. */
+  isSyncDegraded(syncName: string): boolean {
+    return this.degradedSyncs.has(syncName);
+  }
+
+  /** Get all degraded sync names. */
+  getDegradedSyncs(): string[] {
+    return [...this.degradedSyncs];
+  }
+
   async onCompletion(
     completion: ActionCompletion,
     parentId?: string,
@@ -435,6 +501,11 @@ export class SyncEngine {
 
     // 3. For each candidate sync
     for (const sync of candidates) {
+      // Phase 11: Skip degraded syncs with warning
+      if (this.degradedSyncs.has(sync.name)) {
+        console.warn(`[copf] Skipping degraded sync: ${sync.name}`);
+        continue;
+      }
       // 4. Gather all completions in this flow
       const flowCompletions = this.log.getCompletionsForFlow(completion.flow);
 

@@ -70,6 +70,7 @@ export function createInProcessAdapter(
 
 /**
  * Create a concept registry that maps URIs to transport adapters.
+ * Supports Phase 11 hot reloading: reloadConcept and deregisterConcept.
  */
 export function createConceptRegistry(): ConceptRegistry {
   const transports = new Map<string, ConceptTransport>();
@@ -85,6 +86,26 @@ export function createConceptRegistry(): ConceptRegistry {
 
     available(uri: string): boolean {
       return transports.has(uri);
+    },
+
+    /**
+     * Update the transport for an existing concept (Phase 11).
+     * In-flight invocations to the old transport drain naturally.
+     * New invocations route to the new transport.
+     * See Architecture doc Section 16.3, Scenario B.
+     */
+    reloadConcept(uri: string, transport: ConceptTransport): void {
+      transports.set(uri, transport);
+    },
+
+    /**
+     * Remove a concept from the registry (Phase 11).
+     * Callers should mark dependent syncs as degraded via
+     * SyncEngine.degradeSyncsForConcept().
+     * See Architecture doc Section 16.3, Scenario C.
+     */
+    deregisterConcept(uri: string): boolean {
+      return transports.delete(uri);
     },
   };
 }

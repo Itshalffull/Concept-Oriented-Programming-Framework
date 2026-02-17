@@ -25,7 +25,7 @@ import type { FlowTrace } from './flow-trace.js';
 // Re-export everything for consumers
 export { createInMemoryStorage } from './storage.js';
 export { createInProcessAdapter, createConceptRegistry } from './transport.js';
-export { SyncEngine, ActionLog } from './engine.js';
+export { SyncEngine, ActionLog, buildSyncIndex } from './engine.js';
 export { parseConceptFile } from './parser.js';
 export { parseSyncFile } from './sync-parser.js';
 export { createSelfHostedKernel } from './self-hosted.js';

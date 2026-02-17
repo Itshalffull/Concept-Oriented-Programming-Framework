@@ -82,6 +82,10 @@ export interface ConceptRegistry {
   register(uri: string, transport: ConceptTransport): void;
   resolve(uri: string): ConceptTransport | undefined;
   available(uri: string): boolean;
+  /** Phase 11: swap transport for an existing concept (hot reload) */
+  reloadConcept?(uri: string, transport: ConceptTransport): void;
+  /** Phase 11: remove a concept, returns true if it existed */
+  deregisterConcept?(uri: string): boolean;
 }
 
 // --- Compiled Sync ---

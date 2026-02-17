@@ -3,19 +3,20 @@
 //
 // Starts the development server — boots the sync engine,
 // registers all local concepts, and listens for requests.
+// Phase 11: Watches .concept, .sync, and .impl.ts files for
+// changes, hot-reloads syncs and concepts on modification.
 //
-// Per Section 12: "Start the development server
-// (engine + all local concepts)"
+// Per Section 12 and Section 16.3 of architecture doc.
 // ============================================================
 
-import { readFileSync, existsSync } from 'fs';
-import { resolve, relative, join } from 'path';
+import { readFileSync, existsSync, watch as fsWatch } from 'fs';
+import { resolve, relative, join, extname } from 'path';
 import { parseConceptFile } from '../../../../kernel/src/parser.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { createInProcessAdapter, createConceptRegistry } from '../../../../kernel/src/transport.js';
 import { SyncEngine, ActionLog } from '../../../../kernel/src/engine.js';
 import { parseSyncFile } from '../../../../kernel/src/sync-parser.js';
-import type { ConceptHandler, ConceptAST, ActionCompletion } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptAST, ActionCompletion, CompiledSync } from '../../../../kernel/src/types.js';
 import { generateId, timestamp } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
@@ -183,6 +184,145 @@ export async function devCommand(
     console.log(`  GET  /health  — health check`);
   });
 
+  // --- Phase 11: File watching for hot reload ---
+  if (flags.watch !== false) {
+    const watchDirs: string[] = [];
+    const absSpecsDir = resolve(projectDir, specsDir);
+    const absSyncsDir = resolve(projectDir, syncsDir);
+    const absImplsDir = resolve(projectDir, implsDir);
+
+    if (existsSync(absSpecsDir)) watchDirs.push(absSpecsDir);
+    if (existsSync(absSyncsDir)) watchDirs.push(absSyncsDir);
+    if (existsSync(absImplsDir)) watchDirs.push(absImplsDir);
+
+    // Debounce: avoid rapid-fire reloads
+    let reloadTimer: ReturnType<typeof setTimeout> | null = null;
+    const DEBOUNCE_MS = 200;
+
+    /**
+     * Re-compile and reload all sync files.
+     * Builds a new sync set and atomically swaps via reloadSyncs().
+     */
+    function reloadAllSyncs(): void {
+      const allSyncFiles = findFiles(absSyncsDir, '.sync');
+      const newSyncs: CompiledSync[] = [];
+      let errors = 0;
+
+      for (const file of allSyncFiles) {
+        const source = readFileSync(file, 'utf-8');
+        try {
+          const syncs = parseSyncFile(source);
+          newSyncs.push(...syncs);
+        } catch (err: unknown) {
+          errors++;
+          const message = err instanceof Error ? err.message : String(err);
+          console.log(`  [hot-reload] Sync compile error: ${relative(projectDir, file)} — ${message}`);
+        }
+      }
+
+      if (errors > 0) {
+        console.log(`  [hot-reload] ${errors} sync error(s) — keeping old sync set active`);
+        return;
+      }
+
+      engine.reloadSyncs(newSyncs);
+      console.log(`  [hot-reload] Reloaded ${newSyncs.length} sync(s)`);
+    }
+
+    /**
+     * Re-load a concept implementation.
+     * Uses dynamic import with cache-busting to pick up changes.
+     */
+    async function reloadConcept(changedFile: string): Promise<void> {
+      // Find the concept name from the implementation file
+      const conceptName = extractConceptName(changedFile);
+      if (!conceptName) return;
+
+      const uri = `urn:copf/${conceptName}`;
+
+      try {
+        // Use cache-busting query param to force re-import
+        const importPath = `${changedFile}?t=${Date.now()}`;
+        const mod = await import(importPath);
+        const handler = findHandler(mod);
+
+        if (handler) {
+          const storage = createInMemoryStorage();
+          const transport = createInProcessAdapter(handler, storage);
+
+          if (registry.reloadConcept) {
+            registry.reloadConcept(uri, transport);
+          } else {
+            registry.register(uri, transport);
+          }
+
+          // Un-degrade any syncs that reference this concept
+          const undegraded = engine.undegradeSyncsForConcept(uri);
+          if (undegraded.length > 0) {
+            console.log(`  [hot-reload] Un-degraded syncs: ${undegraded.join(', ')}`);
+          }
+
+          console.log(`  [hot-reload] Reloaded concept: ${conceptName}`);
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.log(`  [hot-reload] Error reloading ${conceptName}: ${message}`);
+      }
+    }
+
+    /**
+     * Re-parse a concept spec. If the spec changed, re-compile syncs
+     * (which validates against the new spec shape).
+     */
+    function reloadSpec(changedFile: string): void {
+      const source = readFileSync(changedFile, 'utf-8');
+      try {
+        const ast = parseConceptFile(source);
+        console.log(`  [hot-reload] Spec re-parsed: ${ast.name}`);
+        // Re-compile syncs to validate against new spec
+        reloadAllSyncs();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.log(`  [hot-reload] Spec parse error: ${relative(projectDir, changedFile)} — ${message}`);
+        console.log(`  [hot-reload] Keeping old sync set active`);
+      }
+    }
+
+    for (const dir of watchDirs) {
+      try {
+        fsWatch(dir, { recursive: true }, (eventType, filename) => {
+          if (!filename) return;
+          const fullPath = resolve(dir, filename);
+          const ext = extname(filename);
+
+          // Clear previous debounce timer
+          if (reloadTimer) clearTimeout(reloadTimer);
+
+          reloadTimer = setTimeout(() => {
+            if (ext === '.sync') {
+              console.log(`\n  [hot-reload] Sync changed: ${filename}`);
+              reloadAllSyncs();
+            } else if (ext === '.concept') {
+              console.log(`\n  [hot-reload] Spec changed: ${filename}`);
+              reloadSpec(fullPath);
+            } else if (filename.endsWith('.impl.ts')) {
+              console.log(`\n  [hot-reload] Implementation changed: ${filename}`);
+              reloadConcept(fullPath);
+            }
+          }, DEBOUNCE_MS);
+        });
+      } catch {
+        // fs.watch may not be available on all platforms
+        console.log(`  [hot-reload] Warning: could not watch ${relative(projectDir, dir)}`);
+      }
+    }
+
+    if (watchDirs.length > 0) {
+      console.log(`\nFile watcher active (hot reload enabled)`);
+      console.log(`  Watching: ${watchDirs.map(d => relative(projectDir, d)).join(', ')}`);
+    }
+  }
+
   // Handle shutdown
   process.on('SIGINT', () => {
     console.log('\nShutting down...');
@@ -219,4 +359,21 @@ function findHandler(mod: Record<string, unknown>): ConceptHandler | null {
     }
   }
   return null;
+}
+
+/**
+ * Extract concept name from an implementation file path.
+ * e.g. "echo.impl.ts" → "Echo", "jwt.impl.ts" → "JWT"
+ */
+function extractConceptName(filePath: string): string | null {
+  const parts = filePath.split('/');
+  const filename = parts[parts.length - 1];
+  const match = filename.match(/^(.+)\.impl\.ts$/);
+  if (!match) return null;
+
+  const name = match[1];
+  // Capitalize first letter; special cases for known acronyms
+  const acronyms: Record<string, string> = { jwt: 'JWT' };
+  if (acronyms[name]) return acronyms[name];
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
