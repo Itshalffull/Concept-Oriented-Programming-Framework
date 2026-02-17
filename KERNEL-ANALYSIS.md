@@ -130,45 +130,6 @@ concept Migration [C] {
 }
 ```
 
-#### KitManager → `kit-manager.concept` (NEW — from feedback)
-
-**Validated against codebase:** Kit logic currently lives 100% in the CLI
-(`tools/copf-cli/src/commands/kit.ts`) as regex-based YAML parsing with no dedicated
-types. The architecture doc (Section 9) says "kits are a packaging convention, not a
-language construct" — the engine doesn't know about kits at runtime.
-
-However, the CLI's kit operations (load, validate, check-overrides, resolve sync tiers)
-are exactly the kind of structured domain logic that benefits from being a concept:
-it has state (loaded kits, their manifests, applied overrides), actions with meaningful
-variants (validation can warn vs error), and it doesn't need to exist for concepts to
-work (not pre-conceptual).
-
-```
-concept KitManager [K] {
-  purpose {
-    Load, validate, and resolve concept kits. Enforce sync tier rules,
-    validate type parameter alignment, and resolve override policies.
-  }
-  state {
-    kits: set K
-    manifest: K -> KitManifest
-    overrides: K -> list SyncOverride
-  }
-  actions {
-    action load(path: String)
-      -> ok(kit: K, manifest: KitManifest) | error(message: String)
-    action validate(kit: K, concepts: list ConceptManifest)
-      -> ok() | warning(issues: list String)
-    action resolveOverrides(kit: K, appManifest: DeployManifest)
-      -> ok(syncs: list CompiledSync) | error(message: String)
-  }
-}
-```
-
-**This is not kernel code today** — it would be extracted from the CLI, not the kernel.
-But it belongs in `specs/framework/` as a framework concept because it's framework
-machinery, not app logic.
-
 ### 3. PRE-CONCEPTUAL — must stay in kernel (~584 LOC)
 
 Per Section 10.3, these cause infinite regress if conceptualized:
@@ -289,11 +250,9 @@ Residual trusted kernel:           ~584 LOC   (transports, storage, dispatch)
 - Phases 1-3 are independent of each other — can be done in any order
 - Phase 4 requires a pre-compilation build step and is the largest single change
 - Phase 5 is cleanup that follows Phase 4
-- KitManager concept is independent — extracted from CLI, not kernel
 
-**New concept specs needed:** 4 from kernel + 1 from CLI = 5 total
+**New concept specs needed:** 4 total
 - `flow-trace.concept` (from kernel/src/flow-trace.ts)
 - `deployment-validator.concept` (from kernel/src/deploy.ts)
 - `migration.concept` (from kernel/src/migration.ts)
 - SyncEngine extensions (fold eventual-queue.ts into sync-engine.concept)
-- `kit-manager.concept` (from tools/copf-cli/src/commands/kit.ts)
