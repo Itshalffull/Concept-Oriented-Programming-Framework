@@ -34,6 +34,7 @@ type TokenType =
   | 'RBRACKET'
   | 'LPAREN'
   | 'RPAREN'
+  | 'AT'
   | 'SEP'
   | 'PROSE'
   | 'EOF';
@@ -132,6 +133,9 @@ function tokenize(source: string): Token[] {
     if (ch === ']') { advance(); pushToken('RBRACKET', ']', l, c); continue; }
     if (ch === '{') { advance(); pushToken('LBRACE', '{', l, c); continue; }
     if (ch === '}') { advance(); pushToken('RBRACE', '}', l, c); continue; }
+
+    // @ annotation marker
+    if (ch === '@') { advance(); pushToken('AT', '@', l, c); continue; }
 
     // String literal
     if (ch === '"') {
@@ -292,6 +296,12 @@ class Parser {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
 
+      // Handle @annotations (e.g. @version(3))
+      if (this.peek().type === 'AT') {
+        this.parseAnnotation(ast);
+        continue;
+      }
+
       const keyword = this.peek();
       if (keyword.type !== 'KEYWORD') {
         throw new Error(`Parse error at line ${keyword.line}: expected section keyword, got ${keyword.type}(${keyword.value})`);
@@ -320,6 +330,27 @@ class Parser {
 
     this.expect('RBRACE');
     return ast;
+  }
+
+  /**
+   * Parse an @annotation. Currently supports:
+   * - @version(N) — sets the schema version integer
+   */
+  private parseAnnotation(ast: ConceptAST): void {
+    this.expect('AT');
+    const tok = this.peek();
+    if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'version') {
+      this.advance();
+      this.expect('LPAREN');
+      const versionTok = this.expect('INT_LIT');
+      ast.version = parseInt(versionTok.value, 10);
+      this.expect('RPAREN');
+    } else {
+      throw new Error(
+        `Parse error at line ${tok.line}:${tok.col}: unknown annotation @${tok.value}`,
+      );
+    }
+    this.skipSeps();
   }
 
   private parseTypeParams(): string[] {
