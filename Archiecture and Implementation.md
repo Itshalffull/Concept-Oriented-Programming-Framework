@@ -2467,6 +2467,76 @@ concept Telemetry [S] {
 }
 ```
 
+```
+concept FlowTrace [F] {
+  purpose {
+    Build and render interactive debug traces from action log records.
+    See Section 17.1 for the full spec.
+  }
+  state {
+    traces: set F
+    tree: F -> FlowTree
+    rendered: F -> String
+  }
+  actions {
+    action build(flowId: String) {
+      -> ok(trace: F, tree: FlowTree) { Walk provenance edges, build tree. }
+      -> error(message: String) { If flowId not found. }
+    }
+    action render(trace: F, options: RenderOptions) {
+      -> ok(output: String) { Render tree as text or JSON. }
+    }
+  }
+}
+```
+
+```
+concept DeploymentValidator [M] {
+  purpose {
+    Parse and validate deployment manifests against compiled
+    concepts and syncs. See Section 17.2 for the full spec.
+  }
+  state {
+    manifests: set M
+    plan: M -> DeploymentPlan
+    issues: M -> list ValidationIssue
+  }
+  actions {
+    action parse(raw: String) {
+      -> ok(manifest: M) { Parse YAML manifest. }
+      -> error(message: String) { If malformed. }
+    }
+    action validate(manifest: M, concepts: list ConceptManifest, syncs: list CompiledSync) {
+      -> ok(plan: DeploymentPlan) { Valid deployment plan. }
+      -> warning(plan: DeploymentPlan, issues: list String) { Non-fatal issues. }
+      -> error(issues: list String) { Fatal validation failures. }
+    }
+  }
+}
+```
+
+```
+concept Migration [C] {
+  purpose {
+    Track concept schema versions and gate concept startup.
+    See Section 17.3 for the full spec.
+  }
+  state {
+    versions: C -> Int
+    pending: set C
+  }
+  actions {
+    action check(concept: C, specVersion: Int) {
+      -> ok() { Version matches. }
+      -> needsMigration(from: Int, to: Int) { Storage behind spec. }
+    }
+    action complete(concept: C, version: Int) {
+      -> ok() { Record migration complete. }
+    }
+  }
+}
+```
+
 **Synchronizations for Stage 1:**
 
 ```
@@ -2521,6 +2591,30 @@ sync ExportTelemetry {
     Telemetry/export: [ record: ?record ]
   }
 }
+
+# Check migration status when a concept registers
+sync CheckMigrationOnRegister {
+  when {
+    Registry/register: [ uri: ?uri ] => [ concept: ?c ]
+  }
+  where {
+    SchemaGen { manifest(?uri).version as ?specVersion }
+  }
+  then {
+    Migration/check: [ concept: ?c; specVersion: ?specVersion ]
+  }
+}
+
+# Validate deployment after manifest generation
+sync ValidateDeployment {
+  when {
+    SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+  }
+  then {
+    DeploymentValidator/validate: [ manifest: ?deployManifest;
+      concepts: [?manifest]; syncs: [] ]
+  }
+}
 ```
 
 Note the key property: **adding a new target language requires zero modifications to any existing concept or sync.** You write a new generator concept (e.g., `SwiftGen`), implement it, and add one sync that wires `SchemaGen/generate` to `SwiftGen/generate`. This is the framework proving its own extensibility model.
@@ -2572,6 +2666,25 @@ concept SyncEngine [F] {
         If a referenced concept is unavailable.
       }
     }
+
+    // Eventual queue extensions (Section 17.4)
+    action queueSync(sync: CompiledSync, bindings: Bindings, flow: String) {
+      -> ok(pendingId: String) {
+        Queue an [eventual] sync for later execution when the target
+        concept becomes available.
+      }
+    }
+    action onAvailabilityChange(conceptUri: String, available: Bool) {
+      -> ok(drained: list ActionInvocation) {
+        Re-evaluate pending syncs referencing the concept.
+        Return produced invocations for dispatch.
+      }
+    }
+    action drainConflicts() {
+      -> ok(conflicts: list ActionCompletion) {
+        Return conflict completions from eventual sync replay.
+      }
+    }
   }
 }
 ```
@@ -2583,6 +2696,19 @@ The SyncEngine concept is itself run by the kernel engine. This is the key boots
 - Routing messages between the SyncEngine concept and other concepts
 
 Eventually, even these responsibilities could be modeled as concepts (a Loader concept, a Router concept), but the kernel remains as the minimal trusted base.
+
+**Stage 3.5: Eliminate Bootstrap Chain**
+
+> The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. `createKernel()` directly instantiates Stage 0 classes; even `createSelfHostedKernel()` still uses Stage 0 parsers to load files.
+
+This stage introduces a pre-compilation step. Instead of re-parsing specs at every boot, the kernel loads pre-compiled artifacts from a `.copf-cache/` directory. See Section 17.5 for full design.
+
+1. `copf compile --cache` runs the full pipeline through concept implementations and writes compiled artifacts to `.copf-cache/`.
+2. On startup, the kernel loads pre-compiled `CompiledSync` objects and concept registrations directly — no parsing.
+3. `createSelfHostedKernel()` becomes the default (and only) boot path.
+4. All Stage 0 scaffolding (parser.ts, sync-parser.ts, Stage 0 SyncEngine/ActionLog classes) is deleted from the kernel.
+
+This is Phase 17 in the roadmap. After this stage, the kernel drops from ~4,254 LOC to ~584 LOC, matching the Section 10.3 target.
 
 **Stage 4: CodeGen Refactor** ← Next
 
@@ -2636,7 +2762,10 @@ Stage 1 (concept specs + hand-written impls on kernel) ✅
   ├── SyncCompiler concept
   ├── ActionLog concept
   ├── Registry concept
-  └── Telemetry concept
+  ├── Telemetry concept
+  ├── FlowTrace concept
+  ├── DeploymentValidator concept
+  └── Migration concept
         │
 Stage 2 (self-compilation) ✅
   │
@@ -2648,8 +2777,17 @@ Stage 2 (self-compilation) ✅
 Stage 3 (engine self-hosting) ✅
   │
   ├── SyncEngine concept replaces kernel eval loop
+  ├── eventual queue folded into SyncEngine (Section 17.4)
   ├── kernel reduced to process bootstrap + message routing
   └── all framework logic expressed as concepts + syncs
+        │
+Stage 3.5 (eliminate bootstrap chain)
+  │
+  ├── .copf-cache/ pre-compiled artifact format
+  ├── copf compile --cache writes compiled artifacts
+  ├── kernel boots from cache (no parsing at startup)
+  ├── Stage 0 scaffolding deleted (~1,523 LOC)
+  └── kernel reaches ~584 LOC target
         │
 Stage 4 (codegen refactor) ← NEXT
   │
@@ -3047,6 +3185,101 @@ See Section 16.6 for full design. Phase 1 can begin immediately; Phase 2 depends
 - [ ] Add lite query diagnostics (Section 16.7)
   - [ ] Warn when snapshot returns > threshold entries (default 1,000)
   - [ ] Make threshold configurable in deploy manifest (`engine.liteQueryWarnThreshold`)
+
+### Phase 14: Kernel Extraction — Tooling (Weeks 36)
+
+Move non-concept, non-kernel code out of the kernel into its proper location. These modules are dev tooling or transport plumbing, not runtime kernel code. See Section 17.
+
+- [ ] Move `kernel/src/test-helpers.ts` → `implementations/typescript/framework/mock-handler.ts`
+  - [ ] Update all test imports
+  - [ ] Verify `createMockHandler` works from new location
+- [ ] Move `kernel/src/lite-query.ts` → `implementations/typescript/framework/lite-query-adapter.ts`
+  - [ ] `LiteQueryProtocol` interface stays in shared types
+  - [ ] Adapter caching logic moves to implementation
+  - [ ] Update transport layer imports
+- [ ] Verify kernel LOC reduced by ~248 lines
+- [ ] All existing tests pass from new import paths
+
+### Phase 15: Kernel Extraction — New Concepts (Weeks 37-38)
+
+Extract three kernel modules into proper concept specs + implementations. See Section 17 for concept specs and rationale.
+
+- [ ] Implement `FlowTrace` concept
+  - [ ] Write `flow-trace.concept` spec (Section 17.1)
+  - [ ] Move `kernel/src/flow-trace.ts` logic into `flow-trace.impl.ts`
+  - [ ] Wire sync: `ActionLog/query → ok ⟹ FlowTrace/build`
+  - [ ] Verify `copf trace` CLI works through the concept (not direct kernel calls)
+  - [ ] Delete `kernel/src/flow-trace.ts`
+- [ ] Implement `DeploymentValidator` concept
+  - [ ] Write `deployment-validator.concept` spec (Section 17.2)
+  - [ ] Move `kernel/src/deploy.ts` logic into `deployment-validator.impl.ts`
+  - [ ] Wire sync: `SchemaGen/generate → ok ⟹ DeploymentValidator/validate`
+  - [ ] Verify `copf deploy` CLI works through the concept
+  - [ ] Delete `kernel/src/deploy.ts`
+- [ ] Implement `Migration` concept
+  - [ ] Write `migration.concept` spec (Section 17.3)
+  - [ ] Move `kernel/src/migration.ts` logic into `migration.impl.ts`
+  - [ ] Wire sync: `Registry/register → ok ⟹ Migration/check`
+  - [ ] Verify `copf migrate` CLI works through the concept
+  - [ ] Delete `kernel/src/migration.ts`
+- [ ] Verify kernel LOC reduced by ~722 lines
+- [ ] All conformance and integration tests pass
+
+### Phase 16: Kernel Extraction — Eventual Queue Fold (Weeks 39)
+
+Fold the `DistributedSyncEngine` into the `SyncEngine` concept rather than keeping it as a separate module. See Section 17.4 for rationale.
+
+- [ ] Extend `sync-engine.concept` spec with eventual queue actions
+  - [ ] `queueSync(sync, bindings, flow) → ok(pendingId)`
+  - [ ] `onAvailabilityChange(conceptUri, available) → ok(drained: list ActionInvocation)`
+  - [ ] `drainConflicts() → ok(conflicts: list ActionCompletion)`
+- [ ] Merge `kernel/src/eventual-queue.ts` logic into `sync-engine.impl.ts`
+  - [ ] Eliminate duplicated matching/evaluation code (~60% overlap)
+  - [ ] Annotation-aware routing (`[eventual]`, `[local]`, `[eager]`) handled inside `onCompletion`
+  - [ ] Pending sync queue becomes SyncEngine state, not a separate module
+- [ ] Delete `kernel/src/eventual-queue.ts`
+- [ ] Verify all distributed sync tests pass (including offline/eventual convergence)
+- [ ] Verify kernel LOC reduced by ~299 lines
+
+### Phase 17: Stage 3.5 — Eliminate Bootstrap Chain (Weeks 40-42)
+
+The largest single kernel shrinkage step. The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. This phase introduces a pre-compilation step so the kernel boots from compiled artifacts instead of re-parsing specs.
+
+- [ ] Design `.copf-cache/` pre-compiled artifact format
+  - [ ] Serialized `CompiledSync` objects (JSON or binary)
+  - [ ] Concept registrations with transport configs
+  - [ ] ConceptManifest snapshots for each loaded concept
+  - [ ] Cache invalidation: hash of source `.concept` + `.sync` files
+- [ ] Implement `copf compile --cache` command
+  - [ ] Runs full compile pipeline (parse → schema → codegen → sync compile)
+  - [ ] Writes compiled artifacts to `.copf-cache/`
+  - [ ] Records source file hashes for staleness detection
+- [ ] Implement cached boot path in kernel
+  - [ ] On startup, check for `.copf-cache/` with valid hashes
+  - [ ] If valid: load pre-compiled syncs and registrations directly (no parsing)
+  - [ ] If stale or missing: fall back to full compile (with deprecation warning)
+  - [ ] `createSelfHostedKernel()` becomes the default (and only) path
+- [ ] Remove Stage 0 scaffolding from kernel
+  - [ ] Delete `kernel/src/parser.ts` (579 LOC)
+  - [ ] Delete `kernel/src/sync-parser.ts` (500 LOC)
+  - [ ] Remove Stage 0 `SyncEngine` class from `kernel/src/engine.ts` (~300 LOC)
+  - [ ] Remove Stage 0 `ActionLog` class from `kernel/src/engine.ts` (~100 LOC)
+  - [ ] Remove inline registry from `kernel/src/transport.ts` (~40 LOC)
+- [ ] Verify all startup paths work through cached boot
+  - [ ] `copf dev` uses cached boot with file watcher for incremental recompile
+  - [ ] `copf deploy` uses cached boot
+  - [ ] Integration tests use cached boot
+- [ ] Verify kernel LOC reduced by ~1,523 lines
+
+### Phase 18: Kernel Cleanup — Barrel Exports (Weeks 42)
+
+Final cleanup after Stage 3.5. The kernel's `index.ts` shrinks from ~411 LOC to ~40 LOC of pre-conceptual dispatch code plus minimal exports.
+
+- [ ] Remove all Stage 0 factory functions (`createKernel`, etc.)
+- [ ] Remove all re-exports of concept interfaces now served by concept implementations
+- [ ] Retain only: `processFlow` dispatch, cached boot loader, transport factory
+- [ ] Verify kernel total is ≤600 LOC (target: ~584 LOC matching Section 10.3)
+- [ ] Update architecture doc Section 10.3 with final measured LOC
 
 ---
 
@@ -4082,6 +4315,282 @@ This is sufficient for all common auth patterns:
 - **API keys:** A `Key` concept validates keys. Same sync pattern as JWT.
 
 No first-class authorization layer is needed in the engine. Authorization is coordination between concepts, which is what syncs express. Adding an engine-level auth layer would violate the "syncs are the only coordination mechanism" principle.
+
+---
+
+## 17. Kernel Shrinkage Architecture
+
+The kernel is currently ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach that target. See Phases 14-18 in the roadmap for implementation order.
+
+### 17.1 FlowTrace Concept (from `kernel/src/flow-trace.ts`, 353 LOC)
+
+The architecture doc (Section 16.1) already designs FlowTrace as a concept-level concern — it reads from ActionLog (a concept) and produces debug trees. It has clear state and meaningful action variants.
+
+```
+concept FlowTrace [F] {
+  purpose {
+    Build and render interactive debug traces from action log records.
+    Each flow becomes a navigable tree showing the causal chain of
+    actions, syncs, and completions with timing and failure status.
+  }
+
+  state {
+    traces: set F
+    tree: F -> FlowTree
+    rendered: F -> String
+  }
+
+  actions {
+    action build(flowId: String) {
+      -> ok(trace: F, tree: FlowTree) {
+        Walk the ActionLog's provenance edges from the flow's root.
+        For each completion, check the sync index for candidate syncs
+        and mark unfired ones. Compute per-action timing.
+        Build a FlowTree (TraceNode / TraceSyncNode structure from
+        Section 16.1).
+      }
+      -> error(message: String) {
+        If the flowId does not exist in the ActionLog.
+      }
+    }
+
+    action render(trace: F, options: RenderOptions) {
+      -> ok(output: String) {
+        Render the FlowTree as a human-readable annotated tree.
+        Options control: format (text/json), filter (failed-only),
+        verbosity (show/hide completion fields).
+      }
+    }
+  }
+}
+```
+
+**Sync wiring:**
+
+```
+sync BuildFlowTrace {
+  when {
+    ActionLog/query: [ flow: ?flowId ] => [ records: ?records ]
+  }
+  then {
+    FlowTrace/build: [ flowId: ?flowId ]
+  }
+}
+```
+
+The `copf trace <flow-id>` CLI calls `FlowTrace/build` then `FlowTrace/render` through the concept transport, not via direct kernel function calls.
+
+### 17.2 DeploymentValidator Concept (from `kernel/src/deploy.ts`, 254 LOC)
+
+Build/deploy-time tooling with zero runtime coupling. Has clear state (parsed manifests, validation results, deployment plans) and meaningful action variants.
+
+```
+concept DeploymentValidator [M] {
+  purpose {
+    Parse and validate deployment manifests against compiled concepts
+    and syncs. Produce deployment plans with transport assignments,
+    runtime mappings, and sync-to-engine bindings.
+  }
+
+  state {
+    manifests: set M
+    plan: M -> DeploymentPlan
+    issues: M -> list ValidationIssue
+  }
+
+  actions {
+    action parse(raw: String) {
+      -> ok(manifest: M) {
+        Parse YAML deployment manifest into structured form.
+        Validate basic structure (required fields, known runtime types).
+      }
+      -> error(message: String) {
+        If YAML is malformed or required fields are missing.
+      }
+    }
+
+    action validate(manifest: M, concepts: list ConceptManifest, syncs: list CompiledSync) {
+      -> ok(plan: DeploymentPlan) {
+        Cross-reference manifest against compiled concepts and syncs.
+        Check: all referenced concepts have specs, all syncs reference
+        valid concepts, capability requirements met by runtimes,
+        transport configs are valid, engine hierarchy is acyclic.
+        Produce a DeploymentPlan with concrete transport assignments.
+      }
+      -> warning(plan: DeploymentPlan, issues: list String) {
+        Validation passed but with non-fatal issues (e.g., a concept
+        declared in manifest but not referenced by any sync).
+      }
+      -> error(issues: list String) {
+        Fatal validation failures (missing concepts, broken references).
+      }
+    }
+  }
+}
+```
+
+**Sync wiring:**
+
+```
+sync ValidateDeployment {
+  when {
+    SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+  }
+  then {
+    DeploymentValidator/validate: [ manifest: ?deployManifest;
+      concepts: [?manifest]; syncs: [] ]
+  }
+}
+```
+
+### 17.3 Migration Concept (from `kernel/src/migration.ts`, 115 LOC)
+
+Schema migration tracking is a genuine domain concern with state (version per concept, pending set), actions (check, complete), and meaningful variants (ok vs needsMigration). Complements the `@version(N)` spec annotation and the per-concept `migrate` action convention from Section 16.5.
+
+```
+concept Migration [C] {
+  purpose {
+    Track concept schema versions and gate concept startup.
+    Detect when a concept's deployed storage schema differs from
+    its current spec version and coordinate migration steps.
+  }
+
+  state {
+    versions: C -> Int
+    pending: set C
+  }
+
+  actions {
+    action check(concept: C, specVersion: Int) {
+      -> ok() {
+        The concept's storage version matches the spec version.
+        Concept is clear to serve requests.
+      }
+      -> needsMigration(from: Int, to: Int) {
+        Storage version is behind spec version. Concept should
+        reject all non-migrate requests until migration completes.
+        Returns the version gap for the concept's migrate action.
+      }
+    }
+
+    action complete(concept: C, version: Int) {
+      -> ok() {
+        Record that the concept has been migrated to the given version.
+        Remove from pending set. Concept can now serve requests.
+      }
+    }
+  }
+}
+```
+
+**Sync wiring:**
+
+```
+sync CheckMigrationOnRegister {
+  when {
+    Registry/register: [ uri: ?uri ] => [ concept: ?c ]
+  }
+  where {
+    SchemaGen { manifest(?uri).version as ?specVersion }
+  }
+  then {
+    Migration/check: [ concept: ?c; specVersion: ?specVersion ]
+  }
+}
+```
+
+This sync fires every time a concept registers, automatically checking whether its storage version matches its spec version. If `Migration/check → needsMigration`, the concept enters migration-required state (Section 16.5).
+
+### 17.4 SyncEngine Eventual Queue Extensions
+
+The `DistributedSyncEngine` (`kernel/src/eventual-queue.ts`, 299 LOC) is tightly coupled to engine internals — it imports `matchWhenClause()`, `evaluateWhere()`, `buildInvocations()`, and duplicates ~60% of `SyncEngine.onCompletion()` logic. Making it a separate concept would require leaking internal matching abstractions across concept boundaries.
+
+Instead, annotation-aware routing and queuing fold into the existing `sync-engine.concept` as additional actions:
+
+```
+// Extensions to sync-engine.concept (Section 10.1)
+
+action queueSync(sync: CompiledSync, bindings: Bindings, flow: String) {
+  -> ok(pendingId: String) {
+    Queue an [eventual] sync for later execution when the target
+    concept becomes available. Store bindings and flow context.
+  }
+}
+
+action onAvailabilityChange(conceptUri: String, available: Bool) {
+  -> ok(drained: list ActionInvocation) {
+    When a concept comes online, re-evaluate all pending syncs
+    that reference it. Return produced invocations for dispatch.
+  }
+}
+
+action drainConflicts() {
+  -> ok(conflicts: list ActionCompletion) {
+    Return all conflict completions accumulated during eventual
+    sync replay, for downstream handling via conflict resolution
+    syncs (Section 16.6).
+  }
+}
+```
+
+The `onCompletion` action gains annotation-aware routing:
+
+- `[eager]` syncs (default): evaluate immediately, as before.
+- `[eventual]` syncs: if target concept is unavailable, call `queueSync` instead of dispatching. If available, evaluate normally.
+- `[local]` syncs: evaluate only on the local engine instance, never forward upstream.
+
+This eliminates the 60% code duplication because evaluation logic is shared within the concept, not reimplemented in a separate module.
+
+### 17.5 Stage 3.5: Pre-Compilation Boot Path
+
+The kernel currently re-parses all `.concept` and `.sync` files on every startup, even though concept implementations of the parsers exist. This is the Stage 0 bootstrap chain — it works but prevents removing the ~1,523 LOC of Stage 0 scaffolding.
+
+**Design: `.copf-cache/` compiled artifact directory**
+
+```
+.copf-cache/
+├── manifest.json              # cache metadata
+│   ├── version: "1"
+│   ├── sourceHashes: { "specs/password.concept": "abc123...", ... }
+│   └── compiledAt: "2025-03-15T10:00:00Z"
+├── concepts/
+│   ├── password.manifest.json   # serialized ConceptManifest
+│   ├── user.manifest.json
+│   └── ...
+├── syncs/
+│   ├── auth.compiled.json       # serialized CompiledSync objects
+│   └── ...
+└── registrations.json           # concept URI → transport config mappings
+```
+
+**Cache invalidation:** On startup, the kernel computes SHA-256 hashes of all `.concept` and `.sync` source files. If any hash differs from what's recorded in `manifest.json`, the cache is stale. Stale cache triggers a deprecation warning and falls back to full compilation (which itself goes through the concept pipeline, not the Stage 0 parsers).
+
+**Boot sequence after Stage 3.5:**
+
+1. Kernel starts (pre-conceptual: process entry, transport factory, storage factory)
+2. Check `.copf-cache/manifest.json` — if valid, load pre-compiled artifacts directly
+3. Instantiate concept transports from `registrations.json`
+4. Load `CompiledSync` objects from `syncs/` into the SyncEngine concept
+5. Ready to serve — no parsing, no schema generation, no code generation at boot time
+
+The `copf compile --cache` command runs the full pipeline through the concept implementations (SpecParser, SchemaGen, TypeScriptGen, SyncParser, SyncCompiler) and writes the output to `.copf-cache/`. This is a build step, not a boot step.
+
+**After Stage 3.5, `createSelfHostedKernel()` becomes the only boot path.** The Stage 0 `createKernel()` factory and all Stage 0 parser/engine/log code are deleted.
+
+### 17.6 Kernel Target State
+
+After all five phases, the kernel contains only pre-conceptual code per Section 10.3:
+
+| Module | LOC | Responsibility |
+|--------|----:|----------------|
+| `http-transport.ts` | ~212 | HTTP transport adapter instantiation |
+| `ws-transport.ts` | ~162 | WebSocket transport adapter instantiation |
+| `storage.ts` | ~117 | In-memory storage (backs every concept) |
+| `transport.ts` | ~53 | In-process transport adapter |
+| `index.ts` | ~40 | Message dispatch, cached boot loader |
+| **Total** | **~584** | **Matches ~500 LOC target** |
+
+Everything above this layer is spec-driven and self-hosting. The kernel's only jobs are: start the process, create transport connections, provide storage primitives, and route messages between the SyncEngine concept and other concepts.
 
 ---
 
