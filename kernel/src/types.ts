@@ -45,12 +45,36 @@ export interface ActionRecord {
 
 // --- Storage Interface ---
 
+/** Metadata for a stored entry (Phase 13: Conflict Resolution) */
+export interface EntryMeta {
+  lastWrittenAt: string;
+}
+
+/** Conflict resolution result (Phase 13) */
+export type ConflictResolution =
+  | { action: 'keep-existing' }
+  | { action: 'accept-incoming' }
+  | { action: 'merge'; merged: Record<string, unknown> }
+  | { action: 'escalate' };
+
+/** Conflict details passed to onConflict callback (Phase 13) */
+export interface ConflictInfo {
+  relation: string;
+  key: string;
+  existing: { fields: Record<string, unknown>; writtenAt: string };
+  incoming: { fields: Record<string, unknown>; writtenAt: string };
+}
+
 export interface ConceptStorage {
   put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
   get(relation: string, key: string): Promise<Record<string, unknown> | null>;
   find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
   del(relation: string, key: string): Promise<void>;
   delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+  /** Phase 13: Retrieve write timestamp for a stored entry */
+  getMeta?(relation: string, key: string): Promise<EntryMeta | null>;
+  /** Phase 13: Conflict detection callback for concurrent writes */
+  onConflict?: (info: ConflictInfo) => ConflictResolution;
 }
 
 // --- Concept Handler ---
