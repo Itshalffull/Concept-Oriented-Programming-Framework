@@ -98,6 +98,7 @@ export interface ConceptTransport {
 export interface ConceptQuery {
   relation: string;
   args?: Record<string, unknown>;
+  graphql?: string;
 }
 
 // --- Concept Registry ---
@@ -146,7 +147,12 @@ export interface QueryBinding {
   field: string;
 }
 
-export type WhereEntry = WhereClause | WhereQuery;
+export interface WhereFilter {
+  type: 'filter';
+  expr: string;
+}
+
+export type WhereEntry = WhereClause | WhereQuery | WhereFilter;
 
 export interface ThenAction {
   concept: string;

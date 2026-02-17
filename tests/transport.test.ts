@@ -472,7 +472,8 @@ describe('WebSocket Transport Adapter', () => {
     adapter.onPushCompletion((c) => receivedCompletions.push(c));
 
     // Simulate a push completion from server
-    if (pushMsgHandler) {
+    const handler = pushMsgHandler as ((data: string) => void) | null;
+    if (handler) {
       const pushMsg = JSON.stringify({
         type: 'completion',
         id: 'push-1',
@@ -487,7 +488,7 @@ describe('WebSocket Transport Adapter', () => {
           timestamp: new Date().toISOString(),
         },
       });
-      pushMsgHandler(pushMsg);
+      handler(pushMsg);
     }
 
     expect(receivedCompletions).toHaveLength(1);
