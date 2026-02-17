@@ -1,7 +1,7 @@
 // ============================================================
-// Stage 1/4 — SchemaGen Concept Implementation
+// SchemaGen Concept Implementation
 //
-// Refactored in Stage 4 to produce a rich, language-neutral
+// Produces a rich, language-neutral
 // ConceptManifest instead of standalone GraphQL/JSON schemas.
 // The manifest contains:
 //   - Relation schemas (with merge/grouping from state section)
@@ -14,7 +14,7 @@
 //   - Section 3.2: JSON Schema generation
 //   - Section 3.3: Type mapping table
 //   - Section 4.1: GraphQL schema from state
-//   - Section 10.1 Stage 4: ConceptManifest as language-neutral IR
+//   - Section 10.1: ConceptManifest as language-neutral IR
 // ============================================================
 
 import type {

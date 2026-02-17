@@ -14,7 +14,7 @@ import {
 import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
 import type { ConceptAST } from '../kernel/src/types.js';
 
-// Stage 1 concept handlers
+// Framework concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 
 // Paths to spec files
@@ -29,7 +29,7 @@ function readSpec(category: string, name: string): string {
 // 1. Concept Spec Parsing
 // ============================================================
 
-describe('Stage 1 — Concept Specs', () => {
+describe('Concept Specs', () => {
   it('parses all 7 framework concept specs', () => {
     const specNames = [
       'spec-parser', 'schema-gen', 'typescript-gen',
@@ -75,7 +75,7 @@ describe('Stage 1 — Concept Specs', () => {
 // 2. SpecParser Concept Handler
 // ============================================================
 
-describe('Stage 1 — SpecParser Concept', () => {
+describe('SpecParser Concept', () => {
   it('parses a valid concept source', async () => {
     const storage = createInMemoryStorage();
     const source = readSpec('app', 'password');

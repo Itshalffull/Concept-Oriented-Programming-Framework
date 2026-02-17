@@ -37,7 +37,7 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 // 1. SchemaGen Concept (produces ConceptManifest)
 // ============================================================
 
-describe('Stage 1 — SchemaGen Concept', () => {
+describe('SchemaGen Concept', () => {
   it('generates ConceptManifest from Password concept', async () => {
     const storage = createInMemoryStorage();
     const ast = parseConceptFile(readSpec('app', 'password'));
@@ -102,7 +102,7 @@ describe('Stage 1 — SchemaGen Concept', () => {
 // 2. ConceptManifest Structure Validation
 // ============================================================
 
-describe('Stage 4 — ConceptManifest Structure', () => {
+describe('ConceptManifest Structure', () => {
   it('Password manifest has correct top-level structure', async () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);

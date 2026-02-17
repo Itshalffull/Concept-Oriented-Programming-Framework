@@ -1,11 +1,11 @@
 // ============================================================
-// Stage 1 — SyncCompiler Concept Implementation
+// SyncCompiler Concept Implementation
 //
 // Compiles parsed synchronization ASTs into executable
 // registrations (CompiledSync objects) that the kernel's
 // sync engine can register and evaluate.
 //
-// In Stage 0, parseSyncFile already produces CompiledSync
+// The bootstrap parseSyncFile already produces CompiledSync
 // objects directly. The SyncCompiler concept validates and
 // normalizes them, resolving where-clause queries into
 // query plans per Section 6.5 of the architecture doc.
@@ -84,7 +84,7 @@ export const syncCompilerHandler: ConceptHandler = {
       }
 
       // The compiled sync is the AST itself (already in CompiledSync form
-      // from the Stage 0 parser). In later stages, this step would perform
+      // from the bootstrap parser). In later stages, this step would perform
       // additional transformations like query plan generation.
       const compiled: CompiledSync = {
         name: ast.name,

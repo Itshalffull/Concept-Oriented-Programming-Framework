@@ -1,7 +1,7 @@
 // ============================================================
-// Stage 1 — SyncParser Concept Implementation
+// SyncParser Concept Implementation
 //
-// Wraps the Stage 0 kernel's parseSyncFile as a proper concept
+// Wraps the bootstrap kernel's parseSyncFile as a proper concept
 // handler. Parses .sync source strings into structured ASTs
 // and validates concept/action references against manifests.
 // ============================================================
@@ -15,7 +15,7 @@ import { generateId } from '../../../kernel/src/types.js';
 export const parseSyncFile = parseSyncFileKernel;
 
 // A manifest is a summary of a concept's actions and state,
-// used for validation. In Stage 1 we derive it from ConceptAST.
+// used for validation. We derive it from ConceptAST.
 interface Manifest {
   name: string;
   uri: string;

@@ -287,8 +287,8 @@ export interface SyncThenField {
     | { type: 'variable'; name: string };
 }
 
-// --- ConceptManifest (Stage 4: language-neutral IR) ---
-// Architecture doc Section 10.1, Stage 4.
+// --- ConceptManifest (language-neutral IR) ---
+// Architecture doc Section 10.1.
 // SchemaGen produces a ConceptManifest containing everything
 // a per-language code generator needs.
 

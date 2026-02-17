@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 0 — Test B: Registration Flow — Multi-Concept
+// Registration Flow Tests — Multi-Concept
 // Validates: multiple concepts, sync chaining, error handling,
 // where-clause queries, provenance graph.
 // ============================================================
@@ -16,7 +16,7 @@ import { resolve } from 'path';
 const SPECS_DIR = resolve(__dirname, '../specs/app');
 const SYNCS_DIR = resolve(__dirname, '../syncs/app');
 
-describe('Stage 0 — Test B: Registration Flow', () => {
+describe('Registration Flow', () => {
 
   it('parses all concept specs correctly', () => {
     for (const file of ['user.concept', 'password.concept', 'jwt.concept']) {

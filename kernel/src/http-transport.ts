@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 5 — HTTP Transport Adapters
+// HTTP Transport Adapters
 //
 // Provides ConceptTransport implementations that communicate
 // with remote concepts over HTTP. Two adapters per Section 6.4:

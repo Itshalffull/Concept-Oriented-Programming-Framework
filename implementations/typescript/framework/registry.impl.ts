@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 1 — Registry Concept Implementation
+// Registry Concept Implementation
 //
 // Tracks deployed concepts, their locations, and availability.
 // Stores concept registrations with URIs and transport configs.

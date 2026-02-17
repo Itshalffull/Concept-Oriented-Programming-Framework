@@ -82,7 +82,7 @@ async function registerUser(
 // 1. Login Flow
 // ============================================================
 
-describe('Stage 7 — Login Flow (end-to-end)', () => {
+describe('Login Flow (end-to-end)', () => {
   it('registers a user then logs in successfully', async () => {
     const kernel = createRealWorldKernel();
 
@@ -126,7 +126,7 @@ describe('Stage 7 — Login Flow (end-to-end)', () => {
 // 2. Article CRUD Flow
 // ============================================================
 
-describe('Stage 7 — Article CRUD Flow (end-to-end)', () => {
+describe('Article CRUD Flow (end-to-end)', () => {
   it('creates an article with JWT auth', async () => {
     const kernel = createRealWorldKernel();
 
@@ -190,7 +190,7 @@ describe('Stage 7 — Article CRUD Flow (end-to-end)', () => {
 // 3. Cascade Delete Comments
 // ============================================================
 
-describe('Stage 7 — Cascade Delete Comments (end-to-end)', () => {
+describe('Cascade Delete Comments (end-to-end)', () => {
   it('deleting an article cascades to delete its comments', async () => {
     const kernel = createRealWorldKernel();
 
@@ -250,7 +250,7 @@ describe('Stage 7 — Cascade Delete Comments (end-to-end)', () => {
 // 4. Comment Flow
 // ============================================================
 
-describe('Stage 7 — Comment Flow (end-to-end)', () => {
+describe('Comment Flow (end-to-end)', () => {
   it('creates a comment with JWT auth', async () => {
     const kernel = createRealWorldKernel();
 
@@ -300,7 +300,7 @@ describe('Stage 7 — Comment Flow (end-to-end)', () => {
 // 5. Follow Flow
 // ============================================================
 
-describe('Stage 7 — Follow Flow (end-to-end)', () => {
+describe('Follow Flow (end-to-end)', () => {
   it('follows and unfollows a user', async () => {
     const kernel = createRealWorldKernel();
 
@@ -331,7 +331,7 @@ describe('Stage 7 — Follow Flow (end-to-end)', () => {
 // 6. Favorite Flow
 // ============================================================
 
-describe('Stage 7 — Favorite Flow (end-to-end)', () => {
+describe('Favorite Flow (end-to-end)', () => {
   it('favorites and unfavorites an article', async () => {
     const kernel = createRealWorldKernel();
 
@@ -362,7 +362,7 @@ describe('Stage 7 — Favorite Flow (end-to-end)', () => {
 // 7. Profile Flow
 // ============================================================
 
-describe('Stage 7 — Profile Flow (end-to-end)', () => {
+describe('Profile Flow (end-to-end)', () => {
   it('updates a user profile with JWT auth', async () => {
     const kernel = createRealWorldKernel();
 
@@ -388,7 +388,7 @@ describe('Stage 7 — Profile Flow (end-to-end)', () => {
 // 8. Full RealWorld User Journey
 // ============================================================
 
-describe('Stage 7 — Full User Journey', () => {
+describe('Full User Journey', () => {
   it('register → login → create article → comment → favorite → follow', async () => {
     const kernel = createRealWorldKernel();
 

@@ -37,7 +37,7 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 // RustGen Concept — Type Mapping
 // ============================================================
 
-describe('Stage 5 — RustGen Type Mapping', () => {
+describe('RustGen Type Mapping', () => {
   it('RustGen concept spec exists and matches TypeScriptGen pattern', () => {
     const source = readSpec('framework', 'rust-gen');
     const ast = parseConceptFile(source);

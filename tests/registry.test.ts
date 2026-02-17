@@ -15,7 +15,7 @@ import { registryHandler } from '../implementations/typescript/framework/registr
 // Registry Concept
 // ============================================================
 
-describe('Stage 1 — Registry Concept', () => {
+describe('Registry Concept', () => {
   it('registers and queries concepts', async () => {
     const storage = createInMemoryStorage();
 

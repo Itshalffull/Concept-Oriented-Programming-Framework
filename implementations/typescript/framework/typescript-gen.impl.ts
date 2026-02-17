@@ -1,9 +1,9 @@
 // ============================================================
-// Stage 4 — TypeScriptGen Concept Implementation
+// TypeScriptGen Concept Implementation
 //
 // Generates TypeScript skeleton code from a ConceptManifest.
-// Extracted from the Stage 1 CodeGen concept as part of the
-// Stage 4 codegen refactor (Section 10.1).
+// Extracted from the original CodeGen concept as part of the
+// codegen refactor (Section 10.1).
 //
 // Reads from ConceptManifest (language-neutral IR) rather than
 // raw concept ASTs. Produces identical output to the original
