@@ -1,0 +1,47 @@
+concept Relation [R] {
+
+  purpose {
+    Manage typed relationships between entities. Each relation
+    has a source entity, target entity, and relation type.
+  }
+
+  state {
+    relations: set R
+    source: R -> String
+    target: R -> String
+    relType: R -> String
+  }
+
+  actions {
+    action link(rel: R, source: String, target: String, relType: String) {
+      -> ok(rel: R) {
+        Add relation to set. Store source, target, and type.
+        Return relation reference.
+      }
+    }
+
+    action unlink(rel: R) {
+      -> ok(rel: R) {
+        Remove relation from set. Delete all data.
+        Return relation reference.
+      }
+      -> notfound(message: String) {
+        If relation does not exist.
+      }
+    }
+
+    action get(rel: R) {
+      -> ok(rel: R, source: String, target: String, relType: String) {
+        Return relation data.
+      }
+      -> notfound(message: String) {
+        If relation does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after link(rel: r, source: "e1", target: "e2", relType: "references") -> ok(rel: r)
+    then get(rel: r) -> ok(rel: r, source: "e1", target: "e2", relType: "references")
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "kit": {
+    "name": "content-management",
+    "version": "0.1.0",
+    "description": "Drupal-style entity/field/relation system for structured content. Provides typed entities with attachable fields and inter-entity relationships, with cascade lifecycle management."
+  },
+  "concepts": {
+    "Entity": {
+      "spec": "./entity.concept",
+      "params": {
+        "E": { "as": "entity-ref", "description": "Reference to an entity" }
+      }
+    },
+    "Field": {
+      "spec": "./field.concept",
+      "params": {
+        "F": { "as": "field-ref", "description": "Reference to a field instance" },
+        "T": { "as": "entity-ref" }
+      }
+    },
+    "Relation": {
+      "spec": "./relation.concept",
+      "params": {
+        "R": { "as": "relation-ref", "description": "Reference to a relation" },
+        "T": { "as": "entity-ref" }
+      }
+    },
+    "Node": {
+      "spec": "./node.concept",
+      "params": {
+        "N": { "as": "entity-ref" }
+      }
+    }
+  },
+  "syncs": {
+    "required": [
+      {
+        "path": "./syncs/cascade-delete-fields.sync",
+        "name": "CascadeDeleteFields",
+        "description": "When an entity is deleted, all attached fields are detached and deleted. Without this, the Field concept accumulates orphaned records."
+      },
+      {
+        "path": "./syncs/cascade-delete-relations.sync",
+        "name": "CascadeDeleteRelations",
+        "description": "When an entity is deleted, all relations sourced from or targeting it are unlinked. Without this, the Relation concept holds dangling references."
+      },
+      {
+        "path": "./syncs/entity-lifecycle.sync",
+        "name": "EntityLifecycle",
+        "description": "Sets created/updated timestamps on entity create. Without this, entity timestamps are never populated."
+      }
+    ],
+    "recommended": [
+      {
+        "path": "./syncs/default-title-field.sync",
+        "name": "DefaultTitleField",
+        "description": "When a node is created, automatically attach a title field. Override if your app uses a different title convention."
+      },
+      {
+        "path": "./syncs/node-create-entity.sync",
+        "name": "NodeCreateEntity",
+        "description": "When a node is created, create the underlying entity first. Override if you need custom entity initialization logic."
+      }
+    ]
+  },
+  "integrations": [
+    {
+      "kit": "auth",
+      "syncs": [
+        {
+          "path": "./syncs/entity-ownership.sync",
+          "description": "When a user creates an entity, record ownership. Requires the auth kit's User concept."
+        }
+      ]
+    }
+  ]
+}

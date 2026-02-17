@@ -1,0 +1,29 @@
+concept User [U] {
+
+  purpose {
+    Associate identifying information with users.
+  }
+
+  state {
+    users: set U
+    name: U -> String
+    email: U -> String
+  }
+
+  actions {
+    action register(user: U, name: String, email: String) {
+      -> ok(user: U) {
+        Add user to users set. Store name and email.
+        Return user reference.
+      }
+      -> error(message: String) {
+        If name or email is not unique, return error.
+      }
+    }
+  }
+
+  invariant {
+    after register(user: x, name: "alice", email: "a@b.com") -> ok(user: x)
+    then register(user: y, name: "alice", email: "c@d.com") -> error(message: "name already taken")
+  }
+}

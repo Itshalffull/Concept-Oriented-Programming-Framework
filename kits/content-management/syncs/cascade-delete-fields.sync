@@ -1,0 +1,14 @@
+// Required: When an entity is deleted, detach all attached fields.
+// Without this, the Field concept accumulates orphaned records.
+
+sync CascadeDeleteFields [eager]
+when {
+  Entity/delete: [ entity: ?entity ]
+    => [ entity: ?entity ]
+}
+where {
+  Field: { ?field target: ?entity }
+}
+then {
+  Field/detach: [ field: ?field ]
+}

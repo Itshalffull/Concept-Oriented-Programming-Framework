@@ -80,6 +80,26 @@ export type {
   MockWebSocket,
   WebSocketFactory,
 } from './ws-transport.js';
+// Phase 5: Concept Kits
+export {
+  parseKitManifest,
+  loadKit,
+  validateKitTypeAlignment,
+  validateSyncTiers,
+  resolveKitSyncs,
+  scaffoldKit,
+  listKitsFromDeployment,
+  checkOverrides,
+} from './kit.js';
+export type {
+  KitManifest,
+  KitConceptEntry,
+  KitParamDecl,
+  KitSyncEntry,
+  KitIntegration,
+  KitValidationResult,
+  ResolvedKitSyncs,
+} from './kit.js';
 export type {
   ConceptHandler,
   ConceptStorage,

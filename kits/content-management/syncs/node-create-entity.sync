@@ -1,0 +1,18 @@
+// Recommended: When a node is created via Web request, create
+// the underlying entity first. Override if you need custom
+// entity initialization logic.
+
+sync NodeCreateEntity [eager]
+when {
+  Web/request: [
+    method: "create_node";
+    bundle: ?bundle;
+    title: ?title ]
+    => []
+}
+where {
+  bind(uuid() as ?entity)
+}
+then {
+  Entity/create: [ entity: ?entity; bundle: ?bundle ]
+}

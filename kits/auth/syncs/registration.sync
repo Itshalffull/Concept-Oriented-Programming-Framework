@@ -1,0 +1,97 @@
+sync ValidatePassword [eager]
+when {
+  Web/request: [ method: "register"; password: ?password ]
+    => [ request: ?request ]
+}
+then {
+  Password/validate: [ password: ?password ]
+}
+
+sync ValidatePasswordError [eager]
+when {
+  Web/request: [ method: "register" ]
+    => [ request: ?request ]
+  Password/validate: [ password: ?password ]
+    => [ valid: false ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    error: "Password does not meet requirements";
+    code: 422 ]
+}
+
+sync RegisterUser [eager]
+when {
+  Web/request: [
+    method: "register";
+    username: ?username;
+    email: ?email ]
+    => []
+  Password/validate: []
+    => [ valid: true ]
+}
+where {
+  bind(uuid() as ?user)
+}
+then {
+  User/register: [ user: ?user; name: ?username; email: ?email ]
+}
+
+sync SetPassword [eager]
+when {
+  Web/request: [ method: "register"; password: ?password ]
+    => []
+  User/register: []
+    => [ user: ?user ]
+}
+then {
+  Password/set: [ user: ?user; password: ?password ]
+}
+
+sync GenerateToken [eager]
+when {
+  User/register: []
+    => [ user: ?user ]
+}
+then {
+  JWT/generate: [ user: ?user ]
+}
+
+sync RegistrationResponse [eager]
+when {
+  Web/request: [ method: "register" ]
+    => [ request: ?request ]
+  User/register: []
+    => [ user: ?user ]
+  Password/set: []
+    => [ user: ?user ]
+  JWT/generate: []
+    => [ token: ?token ]
+}
+where {
+  User: { ?u name: ?username; email: ?email }
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [
+      user: [
+        username: ?username;
+        email: ?email;
+        token: ?token ] ] ]
+}
+
+sync RegistrationError [eager]
+when {
+  Web/request: [ method: "register" ]
+    => [ request: ?request ]
+  User/register: []
+    => [ message: ?error ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    error: ?error;
+    code: 422 ]
+}

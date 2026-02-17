@@ -1,0 +1,58 @@
+concept Entity [E] {
+
+  purpose {
+    Manage entity lifecycle — creation, deletion, and metadata.
+    Each entity belongs to a bundle (type category) and tracks
+    timestamps. Timestamps are populated by the EntityLifecycle
+    sync, not by the concept itself.
+  }
+
+  state {
+    entities: set E
+    bundle: E -> String
+    createdAt: E -> String
+    updatedAt: E -> String
+  }
+
+  actions {
+    action create(entity: E, bundle: String) {
+      -> ok(entity: E) {
+        Add entity to set. Store bundle. Return entity reference.
+        Timestamps are set by the EntityLifecycle sync.
+      }
+    }
+
+    action delete(entity: E) {
+      -> ok(entity: E) {
+        Remove entity from set. Delete all fields. Return entity reference.
+      }
+      -> notfound(message: String) {
+        If entity does not exist.
+      }
+    }
+
+    action get(entity: E) {
+      -> ok(entity: E, bundle: String) {
+        Return entity metadata.
+      }
+      -> notfound(message: String) {
+        If entity does not exist.
+      }
+    }
+
+    action touch(entity: E) {
+      -> ok(entity: E) {
+        Update the entity's updatedAt timestamp to now.
+        If createdAt is not set, set it too.
+      }
+      -> notfound(message: String) {
+        If entity does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(entity: e, bundle: "page") -> ok(entity: e)
+    then get(entity: e) -> ok(entity: e, bundle: "page")
+  }
+}

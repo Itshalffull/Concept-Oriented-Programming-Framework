@@ -1,0 +1,43 @@
+{
+  "kit": {
+    "name": "auth",
+    "version": "0.1.0",
+    "description": "Authentication kit providing user registration, credential management, and JWT-based sessions."
+  },
+  "concepts": {
+    "User": {
+      "spec": "./user.concept",
+      "params": {
+        "U": { "as": "user-ref", "description": "Reference to a user" }
+      }
+    },
+    "Password": {
+      "spec": "./password.concept",
+      "params": {
+        "U": { "as": "user-ref", "description": "Same user reference as User.U" }
+      }
+    },
+    "JWT": {
+      "spec": "./jwt.concept",
+      "params": {
+        "U": { "as": "user-ref", "description": "Same user reference as User.U" }
+      }
+    }
+  },
+  "syncs": {
+    "required": [],
+    "recommended": [
+      {
+        "path": "./syncs/registration.sync",
+        "name": "Registration",
+        "description": "Full user registration flow: validate password, create user, set password, generate JWT, respond."
+      },
+      {
+        "path": "./syncs/token-refresh.sync",
+        "name": "TokenRefresh",
+        "description": "Refresh an expiring JWT by verifying the current token and issuing a new one."
+      }
+    ]
+  },
+  "integrations": []
+}

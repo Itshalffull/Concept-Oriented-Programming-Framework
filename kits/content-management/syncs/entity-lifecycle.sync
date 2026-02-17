@@ -1,0 +1,11 @@
+// Required: Set timestamps on entity creation. Without this,
+// entity timestamps are never populated.
+
+sync EntityLifecycleCreate [eager]
+when {
+  Entity/create: [ entity: ?entity ]
+    => [ entity: ?entity ]
+}
+then {
+  Entity/touch: [ entity: ?entity ]
+}

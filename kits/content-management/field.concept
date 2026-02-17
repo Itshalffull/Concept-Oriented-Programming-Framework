@@ -1,0 +1,47 @@
+concept Field [F] {
+
+  purpose {
+    Manage attachable fields on entities. Fields have a name,
+    value, and target entity reference. Fields are the primary
+    mechanism for attaching typed data to entities.
+  }
+
+  state {
+    fields: set F
+    target: F -> String
+    name: F -> String
+    value: F -> String
+  }
+
+  actions {
+    action attach(field: F, target: String, name: String, value: String) {
+      -> ok(field: F) {
+        Add field to set. Store target, name, and value.
+        Return field reference.
+      }
+    }
+
+    action detach(field: F) {
+      -> ok(field: F) {
+        Remove field from set. Delete all data. Return field reference.
+      }
+      -> notfound(message: String) {
+        If field does not exist.
+      }
+    }
+
+    action get(field: F) {
+      -> ok(field: F, target: String, name: String, value: String) {
+        Return field data.
+      }
+      -> notfound(message: String) {
+        If field does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after attach(field: f, target: "e1", name: "title", value: "Hello") -> ok(field: f)
+    then get(field: f) -> ok(field: f, target: "e1", name: "title", value: "Hello")
+  }
+}

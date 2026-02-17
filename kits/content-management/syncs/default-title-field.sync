@@ -1,0 +1,23 @@
+// Recommended: When a node is created, automatically attach a
+// title field to the underlying entity. Override if your app
+// uses a different title convention.
+
+sync DefaultTitleField [eager]
+when {
+  Web/request: [
+    method: "create_node";
+    title: ?title ]
+    => []
+  Entity/create: [ entity: ?entity ]
+    => [ entity: ?entity ]
+}
+where {
+  bind(uuid() as ?field)
+}
+then {
+  Field/attach: [
+    field: ?field;
+    target: ?entity;
+    name: "title";
+    value: ?title ]
+}

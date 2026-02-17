@@ -1,0 +1,48 @@
+// Token refresh flow: verify existing JWT, issue a new one
+
+sync TokenRefreshVerify [eager]
+when {
+  Web/request: [ method: "refresh_token"; token: ?token ]
+    => [ request: ?request ]
+}
+then {
+  JWT/verify: [ token: ?token ]
+}
+
+sync TokenRefreshGenerate [eager]
+when {
+  Web/request: [ method: "refresh_token" ]
+    => []
+  JWT/verify: []
+    => [ user: ?user ]
+}
+then {
+  JWT/generate: [ user: ?user ]
+}
+
+sync TokenRefreshResponse [eager]
+when {
+  Web/request: [ method: "refresh_token" ]
+    => [ request: ?request ]
+  JWT/generate: []
+    => [ token: ?token ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ token: ?token ] ]
+}
+
+sync TokenRefreshError [eager]
+when {
+  Web/request: [ method: "refresh_token" ]
+    => [ request: ?request ]
+  JWT/verify: []
+    => [ message: ?error ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    error: ?error;
+    code: 401 ]
+}

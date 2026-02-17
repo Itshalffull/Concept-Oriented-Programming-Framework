@@ -1,0 +1,36 @@
+concept Node [N] {
+
+  purpose {
+    Higher-level content entity that wraps an entity with a
+    bundle type. Nodes are the primary content type that users
+    interact with. The underlying entity is created by the
+    NodeCreateEntity sync.
+  }
+
+  state {
+    nodes: set N
+    bundle: N -> String
+  }
+
+  actions {
+    action create(node: N, bundle: String) {
+      -> ok(node: N, bundle: String) {
+        Add node to set. Store bundle. Return node reference.
+      }
+    }
+
+    action get(node: N) {
+      -> ok(node: N, bundle: String) {
+        Return node data.
+      }
+      -> notfound(message: String) {
+        If node does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(node: n, bundle: "article") -> ok(node: n, bundle: "article")
+    then get(node: n) -> ok(node: n, bundle: "article")
+  }
+}

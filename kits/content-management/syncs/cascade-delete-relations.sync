@@ -1,0 +1,27 @@
+// Required: When an entity is deleted, unlink all relations
+// sourced from or targeting it. Without this, the Relation
+// concept holds dangling references.
+
+sync CascadeDeleteRelationsSource [eager]
+when {
+  Entity/delete: [ entity: ?entity ]
+    => [ entity: ?entity ]
+}
+where {
+  Relation: { ?rel source: ?entity }
+}
+then {
+  Relation/unlink: [ rel: ?rel ]
+}
+
+sync CascadeDeleteRelationsTarget [eager]
+when {
+  Entity/delete: [ entity: ?entity ]
+    => [ entity: ?entity ]
+}
+where {
+  Relation: { ?rel target: ?entity }
+}
+then {
+  Relation/unlink: [ rel: ?rel ]
+}
