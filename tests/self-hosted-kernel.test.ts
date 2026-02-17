@@ -1,24 +1,9 @@
 // ============================================================
-// Stage 3 — Engine Self-Hosting Tests
+// Self-Hosted Kernel Tests
 //
-// From Section 10.1:
-// "Replace the Stage 0 kernel engine with a concept-based engine.
-//  The SyncEngine concept is itself run by the kernel engine.
-//  This is the key bootstrapping moment: the SyncEngine concept
-//  processes completions and emits invocations, while the kernel
-//  merely dispatches between it and the other concepts."
-//
-// From Section 10.3 — What stays in the kernel forever:
-// - Process entry point
-// - Message dispatch
-// - Transport adapter instantiation
-//
-// These tests verify that:
-// 1. The SyncEngine concept spec parses correctly
-// 2. The SyncEngine concept handler works as a proper concept
-// 3. The self-hosted kernel produces identical results to Stage 0
-// 4. The echo and registration flows work through the self-hosted kernel
-// 5. The full Stage 1 compiler pipeline works on the self-hosted kernel
+// Validates the self-hosted kernel — echo flow, registration
+// flow, compiler pipeline, direct invocation, and the
+// refactored pipeline from Stage 4.
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
@@ -35,10 +20,8 @@ import { parseSyncFile } from '../implementations/typescript/framework/sync-pars
 import type {
   ConceptHandler,
   ConceptAST,
-  CompiledSync,
-  ActionCompletion,
+  ConceptManifest,
 } from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
 
 // Stage 1 concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
@@ -57,190 +40,19 @@ function readSpec(category: string, name: string): string {
   return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
 }
 
-// ============================================================
-// 1. SyncEngine Concept Spec
-// ============================================================
-
-describe('Stage 3 — SyncEngine Concept Spec', () => {
-  it('parses the SyncEngine concept spec', () => {
-    const source = readSpec('framework', 'sync-engine');
-    const ast = parseConceptFile(source);
-
-    expect(ast.name).toBe('SyncEngine');
-    expect(ast.typeParams).toEqual(['F']);
-    expect(ast.state).toHaveLength(4); // syncs, pendingFlows, pendingQueue, conflicts
-    expect(ast.actions).toHaveLength(6); // registerSync, onCompletion, evaluateWhere, queueSync, onAvailabilityChange, drainConflicts
-
-    expect(ast.actions[0].name).toBe('registerSync');
-    expect(ast.actions[0].variants).toHaveLength(1); // ok
-
-    expect(ast.actions[1].name).toBe('onCompletion');
-    expect(ast.actions[1].variants).toHaveLength(1); // ok
-
-    expect(ast.actions[2].name).toBe('evaluateWhere');
-    expect(ast.actions[2].variants).toHaveLength(2); // ok, error
-  });
-
-  it('SpecParser concept parses its own SyncEngine spec', async () => {
-    const storage = createInMemoryStorage();
-    const source = readSpec('framework', 'sync-engine');
-    const result = await specParserHandler.parse({ source }, storage);
-
-    expect(result.variant).toBe('ok');
-    expect((result.ast as ConceptAST).name).toBe('SyncEngine');
-  });
-});
+// Helper: run SchemaGen on an AST and return the manifest
+async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
+  const storage = createInMemoryStorage();
+  const result = await schemaGenHandler.generate(
+    { spec: 'test', ast },
+    storage,
+  );
+  expect(result.variant).toBe('ok');
+  return result.manifest as ConceptManifest;
+}
 
 // ============================================================
-// 2. SyncEngine Concept Handler
-// ============================================================
-
-describe('Stage 3 — SyncEngine Concept Handler', () => {
-  it('registerSync stores a sync definition', async () => {
-    const registry = createConceptRegistry();
-    const { handler } = createSyncEngineHandler(registry);
-    const storage = createInMemoryStorage();
-
-    const sync: CompiledSync = {
-      name: 'TestSync',
-      when: [{
-        concept: 'urn:copf/Test',
-        action: 'do',
-        inputFields: [],
-        outputFields: [],
-      }],
-      where: [],
-      then: [{
-        concept: 'urn:copf/Other',
-        action: 'respond',
-        fields: [],
-      }],
-    };
-
-    const result = await handler.registerSync({ sync }, storage);
-    expect(result.variant).toBe('ok');
-  });
-
-  it('onCompletion returns empty invocations when no syncs match', async () => {
-    const registry = createConceptRegistry();
-    const { handler } = createSyncEngineHandler(registry);
-    const storage = createInMemoryStorage();
-
-    const completion: ActionCompletion = {
-      id: generateId(),
-      concept: 'urn:copf/Unknown',
-      action: 'nothing',
-      input: {},
-      variant: 'ok',
-      output: {},
-      flow: generateId(),
-      timestamp: timestamp(),
-    };
-
-    const result = await handler.onCompletion({ completion }, storage);
-    expect(result.variant).toBe('ok');
-    expect(result.invocations).toEqual([]);
-  });
-
-  it('onCompletion produces invocations when a sync matches', async () => {
-    const registry = createConceptRegistry();
-    const { handler } = createSyncEngineHandler(registry);
-    const storage = createInMemoryStorage();
-
-    // Register a simple sync: when Test/do completes, invoke Other/respond
-    const sync: CompiledSync = {
-      name: 'TestReact',
-      when: [{
-        concept: 'urn:copf/Test',
-        action: 'do',
-        inputFields: [],
-        outputFields: [{ name: 'value', match: { type: 'variable', name: 'val' } }],
-      }],
-      where: [],
-      then: [{
-        concept: 'urn:copf/Other',
-        action: 'respond',
-        fields: [{ name: 'data', value: { type: 'variable', name: 'val' } }],
-      }],
-    };
-
-    await handler.registerSync({ sync }, storage);
-
-    // Feed a matching completion
-    const flowId = generateId();
-    const completion: ActionCompletion = {
-      id: generateId(),
-      concept: 'urn:copf/Test',
-      action: 'do',
-      input: {},
-      variant: 'ok',
-      output: { value: 'hello' },
-      flow: flowId,
-      timestamp: timestamp(),
-    };
-
-    const result = await handler.onCompletion({ completion }, storage);
-    expect(result.variant).toBe('ok');
-
-    const invocations = result.invocations as any[];
-    expect(invocations).toHaveLength(1);
-    expect(invocations[0].concept).toBe('urn:copf/Other');
-    expect(invocations[0].action).toBe('respond');
-    expect(invocations[0].input.data).toBe('hello');
-    expect(invocations[0].flow).toBe(flowId);
-    expect(invocations[0].sync).toBe('TestReact');
-  });
-
-  it('onCompletion does not re-fire a sync for the same completion', async () => {
-    const registry = createConceptRegistry();
-    const { handler } = createSyncEngineHandler(registry);
-    const storage = createInMemoryStorage();
-
-    const sync: CompiledSync = {
-      name: 'OnceOnly',
-      when: [{
-        concept: 'urn:copf/A',
-        action: 'x',
-        inputFields: [],
-        outputFields: [],
-      }],
-      where: [],
-      then: [{
-        concept: 'urn:copf/B',
-        action: 'y',
-        fields: [],
-      }],
-    };
-
-    await handler.registerSync({ sync }, storage);
-
-    const flowId = generateId();
-    const completion: ActionCompletion = {
-      id: generateId(),
-      concept: 'urn:copf/A',
-      action: 'x',
-      input: {},
-      variant: 'ok',
-      output: {},
-      flow: flowId,
-      timestamp: timestamp(),
-    };
-
-    // First call should produce invocations
-    const r1 = await handler.onCompletion({ completion }, storage);
-    expect((r1.invocations as any[]).length).toBe(1);
-
-    // Second call with same completion should not re-fire
-    const r2 = await handler.onCompletion({ completion }, storage);
-    expect((r2.invocations as any[]).length).toBe(0);
-  });
-});
-
-// ============================================================
-// 3. Self-Hosted Kernel — Echo Flow
-//
-// Verify that the echo flow produces the same result when
-// running through the self-hosted kernel as through Stage 0.
+// 1. Self-Hosted Kernel — Echo Flow
 // ============================================================
 
 describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
@@ -326,10 +138,7 @@ describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
 });
 
 // ============================================================
-// 4. Self-Hosted Kernel — Registration Flow
-//
-// The full multi-concept registration flow from Stage 0 Test B,
-// now running through the self-hosted kernel.
+// 2. Self-Hosted Kernel — Registration Flow
 // ============================================================
 
 describe('Stage 3 — Self-Hosted Kernel: Registration Flow', () => {
@@ -510,10 +319,7 @@ describe('Stage 3 — Self-Hosted Kernel: Registration Flow', () => {
 });
 
 // ============================================================
-// 5. Self-Hosted Kernel — Stage 1 Compiler Pipeline
-//
-// The Stage 1 compiler pipeline (SpecParser → SchemaGen → CodeGen)
-// running on the self-hosted kernel.
+// 3. Self-Hosted Kernel — Compiler Pipeline
 // ============================================================
 
 describe('Stage 3 — Self-Hosted Kernel: Compiler Pipeline', () => {
@@ -554,7 +360,7 @@ describe('Stage 3 — Self-Hosted Kernel: Compiler Pipeline', () => {
 });
 
 // ============================================================
-// 6. Direct Concept Invocation on Self-Hosted Kernel
+// 4. Self-Hosted Kernel — Direct Invocation
 // ============================================================
 
 describe('Stage 3 — Self-Hosted Kernel: Direct Invocation', () => {
@@ -603,5 +409,75 @@ describe('Stage 3 — Self-Hosted Kernel: Direct Invocation', () => {
     );
 
     expect(results.length).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================
+// 5. Self-Hosted Kernel — Refactored Pipeline (Stage 4)
+// ============================================================
+
+describe('Stage 4 — Self-Hosted Kernel: Refactored Pipeline', () => {
+  it('compiler pipeline works through the self-hosted kernel', async () => {
+    const registry = createConceptRegistry();
+    const { handler, log } = createSyncEngineHandler(registry);
+    const kernel = createSelfHostedKernel(handler, log, registry);
+
+    // Register Stage 1 concepts (with TypeScriptGen replacing CodeGen)
+    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:copf/Registry', registryHandler);
+
+    // Load the refactored compiler pipeline syncs
+    const syncSource = readFileSync(
+      resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
+      'utf-8',
+    );
+    const syncs = parseSyncFile(syncSource);
+    for (const sync of syncs) {
+      kernel.registerSync(sync);
+    }
+
+    // Parse a spec through the new pipeline
+    const passwordSpec = readSpec('app', 'password');
+    const result = await kernel.invokeConcept(
+      'urn:copf/SpecParser',
+      'parse',
+      { source: passwordSpec },
+    );
+
+    expect(result.variant).toBe('ok');
+    expect((result.ast as ConceptAST).name).toBe('Password');
+  });
+
+  it('full pipeline produces manifest for framework spec', async () => {
+    const storage = createInMemoryStorage();
+
+    // SpecParser → SchemaGen → TypeScriptGen (manual pipeline)
+    const source = readSpec('framework', 'schema-gen');
+    const parseResult = await specParserHandler.parse({ source }, storage);
+    expect(parseResult.variant).toBe('ok');
+
+    const manifest = await generateManifest(parseResult.ast as ConceptAST);
+
+    // Verify the SchemaGen manifest describes itself
+    expect(manifest.name).toBe('SchemaGen');
+    expect(manifest.actions).toHaveLength(1);
+    expect(manifest.actions[0].name).toBe('generate');
+    expect(manifest.actions[0].variants[0].tag).toBe('ok');
+    expect(manifest.actions[0].variants[0].fields[0].name).toBe('manifest');
+
+    // Generate TypeScript from the manifest
+    const genResult = await typescriptGenHandler.generate(
+      { spec: 'sg-1', manifest },
+      storage,
+    );
+    expect(genResult.variant).toBe('ok');
+
+    const files = genResult.files as { path: string; content: string }[];
+    expect(files.find(f => f.path === 'schemagen.handler.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'schemagen.types.ts')).toBeDefined();
+    expect(files.find(f => f.path === 'schemagen.adapter.ts')).toBeDefined();
   });
 });

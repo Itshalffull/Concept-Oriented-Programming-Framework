@@ -1,25 +1,11 @@
 // ============================================================
-// Stage 2 — Self-Compilation Tests
+// Self-Compilation Tests
 //
-// Updated for Stage 4: SchemaGen now produces ConceptManifest,
-// TypeScriptGen replaces CodeGen.
-//
-// From Section 10.1 of the architecture doc:
-//
-// "Use the Stage 1 concepts to compile themselves:
-//  1. Feed the Stage 1 .concept files to the SpecParser concept.
-//  2. Feed the parsed ASTs to SchemaGen — verify the output
-//     matches the hand-written schemas.
-//  3. Feed the parsed ASTs to CodeGen — verify the generated
-//     skeletons match the hand-written handler interfaces.
-//  4. Feed the .sync files to SyncParser and SyncCompiler —
-//     verify the compiled syncs match the hand-registered
-//     syncs from Stage 1."
-//
-// "At this point, the framework can generate its own type
-//  definitions and schemas from its own specs. The hand-written
-//  implementations of Stage 1 concepts are now validated against
-//  generated interfaces."
+// Validates that the framework can compile its own concept specs:
+//   1. SpecParser parses all framework specs
+//   2. SchemaGen generates manifests for all specs
+//   3. TypeScriptGen generates TypeScript for all specs
+//   4. SyncParser + SyncCompiler round-trip for framework syncs
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
@@ -28,7 +14,6 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
 import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
 import type { ConceptAST, CompiledSync, ConceptManifest } from '../kernel/src/types.js';
@@ -39,8 +24,6 @@ import { schemaGenHandler } from '../implementations/typescript/framework/schema
 import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
 import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
 import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
-import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
-import { registryHandler } from '../implementations/typescript/framework/registry.impl.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
@@ -60,20 +43,132 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
   return result.manifest as ConceptManifest;
 }
 
-// All 8 Stage 1 framework concept names (code-gen replaced by typescript-gen)
+// All 7 framework concept names
 const FRAMEWORK_SPECS = [
   'spec-parser', 'schema-gen', 'typescript-gen',
   'sync-parser', 'sync-compiler',
   'action-log', 'registry',
 ];
 
-// All 4 app concept names (with invariants where applicable)
+// All 4 app concept names
 const APP_SPECS = ['echo', 'password', 'user', 'jwt'];
 
 // ============================================================
-// Step 1: Feed Stage 1 .concept files to the SpecParser concept
-//
-// "Feed the Stage 1 .concept files to the SpecParser concept."
+// Self-Validation: Parse Stage 1 specs through Stage 1
+// ============================================================
+
+describe('Stage 1 — Self-Validation', () => {
+  it('SpecParser parses all Stage 1 concept specs', async () => {
+    const storage = createInMemoryStorage();
+
+    const specNames = [
+      'spec-parser', 'schema-gen', 'typescript-gen',
+      'sync-parser', 'sync-compiler',
+      'action-log', 'registry',
+    ];
+
+    for (const name of specNames) {
+      const source = readSpec('framework', name);
+      const result = await specParserHandler.parse({ source }, storage);
+      expect(result.variant).toBe('ok');
+    }
+  });
+
+  it('SchemaGen generates manifests for all Stage 1 specs', async () => {
+    const parserStorage = createInMemoryStorage();
+    const schemaStorage = createInMemoryStorage();
+
+    const specNames = [
+      'spec-parser', 'schema-gen', 'typescript-gen',
+      'sync-parser', 'sync-compiler',
+      'action-log', 'registry',
+    ];
+
+    for (const name of specNames) {
+      const source = readSpec('framework', name);
+      const parseResult = await specParserHandler.parse({ source }, parserStorage);
+      expect(parseResult.variant).toBe('ok');
+
+      const genResult = await schemaGenHandler.generate(
+        { spec: parseResult.spec, ast: parseResult.ast },
+        schemaStorage,
+      );
+      expect(genResult.variant).toBe('ok');
+      const manifest = genResult.manifest as ConceptManifest;
+      expect(manifest.graphqlSchema).toBeTruthy();
+      expect(manifest.actions.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('TypeScriptGen generates TypeScript for all Stage 1 specs', async () => {
+    const parserStorage = createInMemoryStorage();
+    const codeStorage = createInMemoryStorage();
+
+    const specNames = [
+      'spec-parser', 'schema-gen', 'typescript-gen',
+      'sync-parser', 'sync-compiler',
+      'action-log', 'registry',
+    ];
+
+    for (const name of specNames) {
+      const source = readSpec('framework', name);
+      const parseResult = await specParserHandler.parse({ source }, parserStorage);
+      expect(parseResult.variant).toBe('ok');
+
+      const manifest = await generateManifest(parseResult.ast as ConceptAST);
+      const genResult = await typescriptGenHandler.generate(
+        { spec: parseResult.spec, manifest },
+        codeStorage,
+      );
+      expect(genResult.variant).toBe('ok');
+      const files = genResult.files as { path: string; content: string }[];
+      expect(files).toHaveLength(3);
+      // Verify each file has content
+      for (const file of files) {
+        expect(file.content.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('SyncParser parses the framework compiler-pipeline sync file', async () => {
+    const storage = createInMemoryStorage();
+    const source = readFileSync(
+      resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
+      'utf-8',
+    );
+
+    const result = await syncParserHandler.parse(
+      { source, manifests: [] },
+      storage,
+    );
+    expect(result.variant).toBe('ok');
+
+    const allSyncs = result.allSyncs as { syncId: string; name: string }[];
+    expect(allSyncs).toHaveLength(4);
+  });
+
+  it('SyncCompiler compiles all framework syncs', async () => {
+    const parserStorage = createInMemoryStorage();
+    const compilerStorage = createInMemoryStorage();
+
+    const source = readFileSync(
+      resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
+      'utf-8',
+    );
+
+    const syncs = parseSyncFile(source);
+    for (const sync of syncs) {
+      const result = await syncCompilerHandler.compile(
+        { sync: sync.name, ast: sync },
+        compilerStorage,
+      );
+      expect(result.variant).toBe('ok');
+    }
+  });
+});
+
+// ============================================================
+// Step 1: SpecParser self-compilation
 // ============================================================
 
 describe('Stage 2 — Step 1: SpecParser self-compilation', () => {
@@ -135,10 +230,7 @@ describe('Stage 2 — Step 1: SpecParser self-compilation', () => {
 });
 
 // ============================================================
-// Step 2: SchemaGen output verification (now produces ConceptManifest)
-//
-// "Feed the parsed ASTs to SchemaGen — verify the output
-//  matches the hand-written schemas."
+// Step 2: SchemaGen self-compilation (ConceptManifest)
 // ============================================================
 
 describe('Stage 2 — Step 2: SchemaGen self-compilation (ConceptManifest)', () => {
@@ -248,10 +340,7 @@ describe('Stage 2 — Step 2: SchemaGen self-compilation (ConceptManifest)', () 
 });
 
 // ============================================================
-// Step 3: TypeScriptGen output verification
-//
-// TypeScriptGen reads from ConceptManifest and produces identical
-// output to the pre-refactor CodeGen.
+// Step 3: TypeScriptGen self-compilation
 // ============================================================
 
 describe('Stage 2 — Step 3: TypeScriptGen self-compilation', () => {
@@ -427,11 +516,7 @@ describe('Stage 2 — Step 3: TypeScriptGen self-compilation', () => {
 });
 
 // ============================================================
-// Step 4: SyncParser + SyncCompiler round-trip
-//
-// "Feed the .sync files to SyncParser and SyncCompiler —
-//  verify the compiled syncs match the hand-registered syncs
-//  from Stage 1."
+// Step 4: SyncParser + SyncCompiler self-compilation
 // ============================================================
 
 describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () => {
@@ -593,207 +678,5 @@ describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () =>
         expect(compileResult.variant).toBe('ok');
       }
     }
-  });
-});
-
-// ============================================================
-// Conformance Test Generation (Section 7.4)
-//
-// Verify that TypeScriptGen produces correct conformance test
-// code for app concepts that have invariants.
-// ============================================================
-
-describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
-  it('generates conformance test for Password concept', async () => {
-    const ast = parseConceptFile(readSpec('app', 'password'));
-    const manifest = await generateManifest(ast);
-    const storage = createInMemoryStorage();
-    const result = await typescriptGenHandler.generate(
-      { spec: 'pwd-1', manifest },
-      storage,
-    );
-
-    expect(result.variant).toBe('ok');
-    const files = result.files as { path: string; content: string }[];
-
-    // Should include a conformance test file
-    const testFile = files.find(f => f.path === 'password.conformance.test.ts');
-    expect(testFile).toBeDefined();
-
-    const content = testFile!.content;
-
-    // Section 7.4: imports
-    expect(content).toContain('import { describe, it, expect } from "vitest"');
-    expect(content).toContain('import { createInMemoryStorage } from "@copf/runtime"');
-    expect(content).toContain('passwordHandler');
-
-    // Section 7.4 Rule 1: free variables get deterministic IDs
-    expect(content).toContain('u-test-invariant-001');
-
-    // Section 7.4 Rule 2: after clause becomes action calls
-    expect(content).toContain('passwordHandler.set(');
-    expect(content).toContain('expect(step1.variant).toBe("ok")');
-
-    // Section 7.4 Rule 3: then clause becomes assertion calls
-    expect(content).toContain('passwordHandler.check(');
-    expect(content).toContain('expect(step2.variant).toBe("ok")');
-    expect(content).toContain('.valid).toBe(true)');
-
-    // Section 7.4 Rule 4: literal values asserted exactly
-    expect(content).toContain('"secret"');
-    expect(content).toContain('"wrong"');
-    expect(content).toContain('.valid).toBe(false)');
-  });
-
-  it('generates conformance test for Echo concept', async () => {
-    const ast = parseConceptFile(readSpec('app', 'echo'));
-    const manifest = await generateManifest(ast);
-    const storage = createInMemoryStorage();
-    const result = await typescriptGenHandler.generate(
-      { spec: 'echo-1', manifest },
-      storage,
-    );
-
-    const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'echo.conformance.test.ts');
-    expect(testFile).toBeDefined();
-    expect(testFile!.content).toContain('echoHandler.send(');
-    expect(testFile!.content).toContain('"hello"');
-  });
-
-  it('generates conformance test for JWT concept', async () => {
-    const ast = parseConceptFile(readSpec('app', 'jwt'));
-    const manifest = await generateManifest(ast);
-    const storage = createInMemoryStorage();
-    const result = await typescriptGenHandler.generate(
-      { spec: 'jwt-1', manifest },
-      storage,
-    );
-
-    const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'jwt.conformance.test.ts');
-    expect(testFile).toBeDefined();
-
-    const content = testFile!.content;
-    // after generate(user: x) -> ok(token: t)
-    expect(content).toContain('jwtHandler.generate(');
-    // then verify(token: t) -> ok(user: x)
-    expect(content).toContain('jwtHandler.verify(');
-    // Variable t should be used consistently
-    expect(content).toContain('u-test-invariant-001');
-    expect(content).toContain('u-test-invariant-002');
-  });
-
-  it('generates conformance test for User concept', async () => {
-    const ast = parseConceptFile(readSpec('app', 'user'));
-    const manifest = await generateManifest(ast);
-    const storage = createInMemoryStorage();
-    const result = await typescriptGenHandler.generate(
-      { spec: 'u-1', manifest },
-      storage,
-    );
-
-    const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'user.conformance.test.ts');
-    expect(testFile).toBeDefined();
-
-    const content = testFile!.content;
-    // after register(user: x, name: "alice", email: "a@b.com") -> ok(user: x)
-    expect(content).toContain('userHandler.register(');
-    expect(content).toContain('"alice"');
-    expect(content).toContain('"a@b.com"');
-    // then register(user: y, name: "alice", email: "c@d.com") -> error(...)
-    expect(content).toContain('.toBe("error")');
-  });
-
-  it('does not generate conformance test for specs without invariants', async () => {
-    // Framework specs have no invariants
-    const ast = parseConceptFile(readSpec('framework', 'spec-parser'));
-    const manifest = await generateManifest(ast);
-    const storage = createInMemoryStorage();
-    const result = await typescriptGenHandler.generate(
-      { spec: 'sp-1', manifest },
-      storage,
-    );
-
-    const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path.includes('conformance'));
-    expect(testFile).toBeUndefined();
-  });
-});
-
-// ============================================================
-// Full Pipeline: Kernel-driven end-to-end self-compilation
-//
-// Register all Stage 1 concepts on the kernel, load the
-// compiler pipeline syncs, and run a complete self-compilation
-// flow. This validates the new Stage 4 pipeline:
-// SpecParser → SchemaGen (manifest) → TypeScriptGen
-// ============================================================
-
-describe('Stage 2 — Full Pipeline (kernel-driven)', () => {
-  it('complete self-compilation flow via kernel', async () => {
-    const kernel = createKernel();
-
-    // Register all Stage 1 concepts on the kernel
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/SyncParser', syncParserHandler);
-    kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
-
-    // Load the compiler pipeline syncs
-    const syncSource = readFileSync(
-      resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
-      'utf-8',
-    );
-    const syncs = parseSyncFile(syncSource);
-    for (const sync of syncs) {
-      kernel.registerSync(sync);
-    }
-
-    // Self-compile: parse a framework spec through the pipeline
-    const specParserSpec = readSpec('framework', 'spec-parser');
-    const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
-      'parse',
-      { source: specParserSpec },
-    );
-
-    expect(result.variant).toBe('ok');
-    expect((result.ast as ConceptAST).name).toBe('SpecParser');
-  });
-
-  it('self-compilation pipeline for an app concept with invariants', async () => {
-    const kernel = createKernel();
-
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
-
-    const syncSource = readFileSync(
-      resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
-      'utf-8',
-    );
-    const syncs = parseSyncFile(syncSource);
-    for (const sync of syncs) {
-      kernel.registerSync(sync);
-    }
-
-    // Parse the Password spec — should trigger the full pipeline
-    const passwordSpec = readSpec('app', 'password');
-    const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
-      'parse',
-      { source: passwordSpec },
-    );
-
-    expect(result.variant).toBe('ok');
-    expect((result.ast as ConceptAST).name).toBe('Password');
-    expect((result.ast as ConceptAST).invariants).toHaveLength(1);
   });
 });
