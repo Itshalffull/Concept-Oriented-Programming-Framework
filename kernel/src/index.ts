@@ -19,6 +19,8 @@ import { createInProcessAdapter, createConceptRegistry } from './transport.js';
 import { SyncEngine, ActionLog } from './engine.js';
 import { parseConceptFile } from './parser.js';
 import { parseSyncFile } from './sync-parser.js';
+import { buildFlowTrace } from './flow-trace.js';
+import type { FlowTrace } from './flow-trace.js';
 
 // Re-export everything for consumers
 export { createInMemoryStorage } from './storage.js';
@@ -80,6 +82,11 @@ export type {
   MockWebSocket,
   WebSocketFactory,
 } from './ws-transport.js';
+// Phase 10: Flow Tracing
+export { buildFlowTrace, renderFlowTrace } from './flow-trace.js';
+export type { FlowTrace, TraceNode, TraceSyncNode } from './flow-trace.js';
+// Phase 10: Test Helpers
+export { createMockHandler } from './test-helpers.js';
 export type {
   ConceptHandler,
   ConceptStorage,
@@ -157,6 +164,9 @@ export interface Kernel {
 
   /** Get the action log for a specific flow */
   getFlowLog(flowId: string): ActionRecord[];
+
+  /** Get a structured FlowTrace for a specific flow (Phase 10) */
+  getFlowTrace(flowId: string): FlowTrace | null;
 
   /** Directly invoke a concept action */
   invokeConcept(
@@ -263,6 +273,15 @@ export function createKernel(): Kernel {
 
     getFlowLog(flowId: string): ActionRecord[] {
       return log.getFlowRecords(flowId);
+    },
+
+    getFlowTrace(flowId: string): FlowTrace | null {
+      return buildFlowTrace(
+        flowId,
+        log,
+        engine.getSyncIndex(),
+        engine.getRegisteredSyncs(),
+      );
     },
 
     async invokeConcept(

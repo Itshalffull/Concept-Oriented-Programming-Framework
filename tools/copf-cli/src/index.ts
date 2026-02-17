@@ -24,6 +24,7 @@ import { testCommand } from './commands/test.js';
 import { deployCommand } from './commands/deploy.js';
 import { kitCommand } from './commands/kit.js';
 import { devCommand } from './commands/dev.js';
+import { traceCommand } from './commands/trace.js';
 
 const VERSION = '0.1.0';
 
@@ -75,6 +76,9 @@ Commands:
     --integration                  Run full integration tests
   dev                            Start the development server
   deploy --manifest <file>       Deploy according to manifest
+  trace <flow-id>                Render a flow trace for debugging
+    --failed                       Show only failed/unfired branches
+    --json                         Output as JSON for tooling
   kit <subcommand>               Kit management
     init <name>                    Scaffold a new kit directory
     validate <path>                Validate kit manifest and syncs
@@ -120,6 +124,9 @@ export async function main(argv: string[] = process.argv): Promise<void> {
         break;
       case 'dev':
         await devCommand(parsed.positional, parsed.flags);
+        break;
+      case 'trace':
+        await traceCommand(parsed.positional, parsed.flags);
         break;
       case 'deploy':
         await deployCommand(parsed.positional, parsed.flags);
