@@ -481,4 +481,18 @@ export class SyncEngine {
   getLog(): ActionLog {
     return this.log;
   }
+
+  getSyncIndex(): SyncIndex {
+    return this.index;
+  }
+
+  getRegisteredSyncs(): CompiledSync[] {
+    const seen = new Set<CompiledSync>();
+    for (const syncs of this.index.values()) {
+      for (const sync of syncs) {
+        seen.add(sync);
+      }
+    }
+    return [...seen];
+  }
 }
