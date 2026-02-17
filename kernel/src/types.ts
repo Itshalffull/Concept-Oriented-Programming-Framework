@@ -158,6 +158,8 @@ export interface ConceptAST {
   name: string;
   typeParams: string[];
   purpose?: string;
+  /** Schema version declared via @version(N). Undefined means unversioned. */
+  version?: number;
   state: StateEntry[];
   actions: ActionDecl[];
   invariants: InvariantDecl[];

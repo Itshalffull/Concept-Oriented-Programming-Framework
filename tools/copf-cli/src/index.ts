@@ -25,6 +25,7 @@ import { deployCommand } from './commands/deploy.js';
 import { kitCommand } from './commands/kit.js';
 import { devCommand } from './commands/dev.js';
 import { traceCommand } from './commands/trace.js';
+import { migrateCommand } from './commands/migrate.js';
 
 const VERSION = '0.1.0';
 
@@ -79,6 +80,9 @@ Commands:
   trace <flow-id>                Render a flow trace for debugging
     --failed                       Show only failed/unfired branches
     --json                         Output as JSON for tooling
+  migrate <concept>              Run schema migration for a concept
+    --check                        Report version status for all concepts
+    --all                          Migrate all concepts needing migration
   kit <subcommand>               Kit management
     init <name>                    Scaffold a new kit directory
     validate <path>                Validate kit manifest and syncs
@@ -127,6 +131,9 @@ export async function main(argv: string[] = process.argv): Promise<void> {
         break;
       case 'trace':
         await traceCommand(parsed.positional, parsed.flags);
+        break;
+      case 'migrate':
+        await migrateCommand(parsed.positional, parsed.flags);
         break;
       case 'deploy':
         await deployCommand(parsed.positional, parsed.flags);

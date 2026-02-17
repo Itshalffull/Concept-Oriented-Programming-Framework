@@ -21,6 +21,12 @@ import { parseConceptFile } from './parser.js';
 import { parseSyncFile } from './sync-parser.js';
 import { buildFlowTrace } from './flow-trace.js';
 import type { FlowTrace } from './flow-trace.js';
+import {
+  checkMigrationNeeded,
+  createMigrationGatedTransport,
+  getStoredVersion,
+  setStoredVersion,
+} from './migration.js';
 
 // Re-export everything for consumers
 export { createInMemoryStorage } from './storage.js';
@@ -85,6 +91,13 @@ export type {
 // Phase 10: Flow Tracing
 export { buildFlowTrace, renderFlowTrace } from './flow-trace.js';
 export type { FlowTrace, TraceNode, TraceSyncNode } from './flow-trace.js';
+// Phase 12: Schema Migration
+export {
+  checkMigrationNeeded,
+  createMigrationGatedTransport,
+  getStoredVersion,
+  setStoredVersion,
+} from './migration.js';
 // Phase 10: Test Helpers
 export { createMockHandler } from './test-helpers.js';
 export type {
@@ -146,9 +159,30 @@ interface WebResponse {
  * The Kernel is the Stage 0 minimal runtime.
  * It boots the sync engine, registers concepts, and processes flows.
  */
+export interface MigrationStatus {
+  uri: string;
+  currentVersion: number;
+  requiredVersion: number;
+  migrationRequired: boolean;
+}
+
 export interface Kernel {
   /** Register a concept handler with in-memory storage */
   registerConcept(uri: string, handler: ConceptHandler): void;
+
+  /**
+   * Register a versioned concept. Checks storage for schema version
+   * and gates the concept if migration is required.
+   * Returns migration status (null if unversioned or version matches).
+   */
+  registerVersionedConcept(
+    uri: string,
+    handler: ConceptHandler,
+    specVersion?: number,
+  ): Promise<MigrationStatus | null>;
+
+  /** Get migration status for all registered concepts */
+  getMigrationStatus(): MigrationStatus[];
 
   /** Register a compiled sync definition */
   registerSync(sync: CompiledSync): void;
@@ -215,11 +249,61 @@ export function createKernel(): Kernel {
   const webStorage = createInMemoryStorage();
   registry.register(WEB_CONCEPT_URI, createInProcessAdapter(webHandler, webStorage));
 
+  // Track migration status per concept
+  const migrationStatuses = new Map<string, MigrationStatus>();
+
   return {
     registerConcept(uri: string, handler: ConceptHandler): void {
       const storage = createInMemoryStorage();
       const transport = createInProcessAdapter(handler, storage);
       registry.register(uri, transport);
+    },
+
+    async registerVersionedConcept(
+      uri: string,
+      handler: ConceptHandler,
+      specVersion?: number,
+    ): Promise<MigrationStatus | null> {
+      const storage = createInMemoryStorage();
+      const baseTransport = createInProcessAdapter(handler, storage);
+
+      const needed = await checkMigrationNeeded(specVersion, storage);
+
+      if (needed) {
+        // Wrap with migration gate
+        const gated = createMigrationGatedTransport(
+          baseTransport,
+          storage,
+          needed.currentVersion,
+          needed.requiredVersion,
+        );
+        registry.register(uri, gated);
+
+        const status: MigrationStatus = {
+          uri,
+          currentVersion: needed.currentVersion,
+          requiredVersion: needed.requiredVersion,
+          migrationRequired: true,
+        };
+        migrationStatuses.set(uri, status);
+        return status;
+      }
+
+      // No migration needed — register normally
+      registry.register(uri, baseTransport);
+      if (specVersion !== undefined) {
+        migrationStatuses.set(uri, {
+          uri,
+          currentVersion: specVersion,
+          requiredVersion: specVersion,
+          migrationRequired: false,
+        });
+      }
+      return null;
+    },
+
+    getMigrationStatus(): MigrationStatus[] {
+      return [...migrationStatuses.values()];
     },
 
     registerSync(sync: CompiledSync): void {
