@@ -150,7 +150,7 @@ export function createHttpGraphQLAdapter(
 
     async query(request: ConceptQuery): Promise<Record<string, unknown>[]> {
       // Full-GraphQL mode: translate ConceptQuery to GraphQL query
-      const graphqlQuery = request.graphql || buildGraphQLQuery(request);
+      const graphqlQuery = request.graphql ?? buildGraphQLQuery(request);
 
       const response = await doFetch(`${baseUrl}/graphql`, {
         method: 'POST',
@@ -252,7 +252,7 @@ export function createHttpConceptServer(
       // For full-GraphQL mode, pass through to the transport's query
       try {
         const { query } = body as { query: string };
-        const results = await transport.query({ relation: '', graphql: query } as ConceptQuery & { graphql: string });
+        const results = await transport.query({ relation: '', graphql: query });
         return { status: 200, body: { data: { results } } };
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
@@ -270,12 +270,14 @@ function defaultFetch(
   url: string,
   options: { method: string; headers: Record<string, string>; body: string },
 ): Promise<{ status: number; json(): Promise<unknown> }> {
-  if (typeof globalThis.fetch === 'function') {
-    return globalThis.fetch(url, {
+  const g = globalThis as Record<string, unknown>;
+  if (typeof g['fetch'] === 'function') {
+    const fetchFn = g['fetch'] as (url: string, init: Record<string, unknown>) => Promise<{ status: number; json(): Promise<unknown> }>;
+    return fetchFn(url, {
       method: options.method,
       headers: options.headers,
       body: options.method !== 'GET' ? options.body : undefined,
-    }) as Promise<{ status: number; json(): Promise<unknown> }>;
+    });
   }
   throw new Error('No fetch implementation available. Provide a custom fetchFn.');
 }

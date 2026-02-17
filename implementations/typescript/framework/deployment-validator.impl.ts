@@ -149,7 +149,7 @@ export function parseDeploymentManifest(raw: Record<string, unknown>): Deploymen
     });
   }
 
-  return { app, runtimes, concepts, syncs };
+  return { app: { name: app.name, version: app.version, uri: app.uri }, runtimes, concepts, syncs };
 }
 
 // --- Validate Deployment Manifest ---

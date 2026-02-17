@@ -46,11 +46,13 @@ export async function deployCommand(
   // Parse the deployment manifest
   let manifest;
   try {
-    manifest = parseDeploymentManifest(source);
+    const raw = JSON.parse(source) as Record<string, unknown>;
+    manifest = parseDeploymentManifest(raw);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`Manifest parse error: ${message}`);
     process.exit(1);
+    return;
   }
 
   // Load concept specs for capability checking
@@ -68,17 +70,28 @@ export async function deployCommand(
     }
   }
 
+  // Build validation inputs from concept ASTs
+  const registeredConcepts = [...conceptASTs.keys()];
+  const syncConceptRefs: Record<string, string[]> = {};
+  const conceptCapabilities: Record<string, string[]> = {};
+  for (const [name, ast] of conceptASTs) {
+    conceptCapabilities[name] = ast.capabilities || [];
+  }
+
   // Validate the manifest
-  const validation = validateDeploymentManifest(manifest, conceptASTs);
+  const validation = validateDeploymentManifest(
+    manifest,
+    registeredConcepts,
+    syncConceptRefs,
+    conceptCapabilities,
+  );
 
   // Print runtimes
   console.log('Runtimes:');
-  if (manifest.runtimes && manifest.runtimes.length > 0) {
-    for (const rt of manifest.runtimes) {
-      console.log(`  - ${rt.name} (${rt.type})`);
-      if (rt.capabilities) {
-        console.log(`    capabilities: ${rt.capabilities.join(', ')}`);
-      }
+  const runtimeEntries = Object.entries(manifest.runtimes);
+  if (runtimeEntries.length > 0) {
+    for (const [name, rt] of runtimeEntries) {
+      console.log(`  - ${name} (${rt.type})`);
     }
   } else {
     console.log('  (none defined)');
@@ -86,9 +99,11 @@ export async function deployCommand(
 
   // Print concept placements
   console.log('\nConcept Placements:');
-  if (manifest.concepts && manifest.concepts.length > 0) {
-    for (const c of manifest.concepts) {
-      console.log(`  - ${c.name} → ${c.runtime}`);
+  const conceptEntries = Object.entries(manifest.concepts);
+  if (conceptEntries.length > 0) {
+    for (const [name, c] of conceptEntries) {
+      const runtimeNames = c.implementations.map(i => i.runtime).join(', ');
+      console.log(`  - ${name} → ${runtimeNames}`);
     }
   } else {
     console.log('  (none defined)');
@@ -96,9 +111,9 @@ export async function deployCommand(
 
   // Print sync assignments
   console.log('\nSync Assignments:');
-  if (manifest.syncs && manifest.syncs.length > 0) {
+  if (manifest.syncs.length > 0) {
     for (const s of manifest.syncs) {
-      console.log(`  - ${s.name} → ${s.runtime}`);
+      console.log(`  - ${s.path} → ${s.engine}`);
     }
   } else {
     console.log('  (none defined)');

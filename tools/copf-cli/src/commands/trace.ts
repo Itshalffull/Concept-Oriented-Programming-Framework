@@ -149,6 +149,7 @@ export async function traceCommand(
   if (!trace) {
     console.error(`No trace data found for flow: ${flowId}`);
     process.exit(1);
+    return;
   }
 
   // Render
