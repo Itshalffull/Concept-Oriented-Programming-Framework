@@ -1,0 +1,12 @@
+{
+  "name": "@copf/cli",
+  "version": "0.1.0",
+  "description": "CLI for the Concept-Oriented Programming Framework",
+  "type": "module",
+  "bin": {
+    "copf": "../../dist/tools/copf-cli/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b ../../tsconfig.json"
+  }
+}

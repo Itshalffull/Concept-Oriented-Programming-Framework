@@ -4,10 +4,14 @@
   "description": "Concept-Oriented Programming Framework",
   "private": true,
   "type": "module",
+  "bin": {
+    "copf": "./dist/tools/copf-cli/src/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "copf": "npx tsx tools/copf-cli/src/index.ts"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
