@@ -5,7 +5,8 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createKernel, parseConceptFile } from '@copf/kernel';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
 import { userHandler } from '../implementations/typescript/app/user.impl';
 import { passwordHandler } from '../implementations/typescript/app/password.impl';
 import { jwtHandler } from '../implementations/typescript/app/jwt.impl';

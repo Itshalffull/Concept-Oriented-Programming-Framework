@@ -3,8 +3,8 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { parseConceptFile } from '@copf/kernel';
-import { parseSyncFile } from '@copf/kernel';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
+import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

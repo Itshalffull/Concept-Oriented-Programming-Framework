@@ -22,14 +22,12 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-  ActionLog,
-  parseSyncFile,
-  LiteQueryAdapter,
-  createStorageLiteProtocol,
-  DistributedSyncEngine,
   createWebSocketAdapter,
   createWebSocketConceptServer,
 } from '../kernel/src/index.js';
+import { ActionLog, DistributedSyncEngine } from '../implementations/typescript/framework/sync-engine.impl.js';
+import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { LiteQueryAdapter, createStorageLiteProtocol } from '../implementations/typescript/framework/lite-query-adapter.js';
 import type {
   ConceptHandler,
   ConceptTransport,

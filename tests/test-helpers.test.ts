@@ -9,11 +9,9 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import {
-  createKernel,
-  createMockHandler,
-  parseConceptFile,
-} from '@copf/kernel';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory';
+import { createMockHandler } from '../implementations/typescript/framework/mock-handler';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

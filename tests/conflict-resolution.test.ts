@@ -16,12 +16,10 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-  DistributedSyncEngine,
-  ActionLog,
-  LiteQueryAdapter,
-  createStorageLiteProtocol,
-  parseDeploymentManifest,
 } from '@copf/kernel';
+import { DistributedSyncEngine, ActionLog } from '../implementations/typescript/framework/sync-engine.impl';
+import { LiteQueryAdapter, createStorageLiteProtocol } from '../implementations/typescript/framework/lite-query-adapter';
+import { parseDeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl';
 import type {
   ConceptStorage,
   ConflictResolution,

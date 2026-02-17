@@ -19,19 +19,18 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
-  createKernel,
   createSelfHostedKernel,
   createInMemoryStorage,
   createConceptRegistry,
   createInProcessAdapter,
-  parseConceptFile,
-  parseSyncFile,
   createHttpLiteAdapter,
   createHttpGraphQLAdapter,
   createHttpConceptServer,
-  parseDeploymentManifest,
-  validateDeploymentManifest,
 } from '../kernel/src/index.js';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { parseDeploymentManifest, validateDeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl.js';
 import type {
   ConceptHandler,
   ConceptAST,

@@ -10,8 +10,8 @@
 // ============================================================
 
 import type { ActionRecord, CompiledSync, WhenPattern } from '../../../kernel/src/types.js';
-import type { SyncIndex } from '../../../kernel/src/engine.js';
-import { ActionLog, indexKey } from '../../../kernel/src/engine.js';
+import type { SyncIndex } from './engine.js';
+import { ActionLog, indexKey } from './engine.js';
 
 // --- FlowTrace Types ---
 

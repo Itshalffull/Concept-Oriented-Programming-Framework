@@ -13,7 +13,7 @@ import type {
   InvariantDecl,
   ActionPattern,
   ArgPattern,
-} from './types.js';
+} from '../../../kernel/src/types.js';
 
 // --- Token Types ---
 

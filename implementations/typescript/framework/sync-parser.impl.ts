@@ -7,7 +7,7 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptAST } from '../../../kernel/src/types.js';
-import { parseSyncFile as parseSyncFileKernel } from '../../../kernel/src/sync-parser.js';
+import { parseSyncFile as parseSyncFileKernel } from './sync-parser.js';
 import { generateId } from '../../../kernel/src/types.js';
 
 // Re-export the raw parse function so consumers can import it
