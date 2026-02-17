@@ -1,7 +1,7 @@
 // ============================================================
 // Stage 5 — Multi-Target Tests
 //
-// From the Phase 8 checklist:
+// Covers:
 //   - RustGen concept: Rust type mapping, templates for structs/
 //     traits/adapters, conformance tests
 //   - Pipeline sync: SchemaGen/generate => RustGen/generate

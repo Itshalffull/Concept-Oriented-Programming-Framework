@@ -1,5 +1,5 @@
 // ============================================================
-// Phase 13 — Conflict Resolution Tests
+// Conflict Resolution Tests
 //
 // Tests for:
 // 1. Storage: lastWrittenAt timestamps on put, getMeta retrieval
@@ -31,7 +31,7 @@ import type {
 
 // --- 1. Storage: lastWrittenAt Timestamps ---
 
-describe('Phase 13 — Storage lastWrittenAt', () => {
+describe('Storage lastWrittenAt', () => {
   it('stores a lastWrittenAt timestamp on put', async () => {
     const storage = createInMemoryStorage();
     await storage.put('users', 'u-1', { name: 'alice' });
@@ -110,7 +110,7 @@ describe('Phase 13 — Storage lastWrittenAt', () => {
 
 // --- 2. Storage: LWW Warning ---
 
-describe('Phase 13 — Storage LWW Warning', () => {
+describe('Storage LWW Warning', () => {
   it('logs warning when overwriting a more recent entry (no onConflict)', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const storage = createInMemoryStorage();
@@ -131,7 +131,7 @@ describe('Phase 13 — Storage LWW Warning', () => {
 
 // --- 3. Storage: onConflict Callback ---
 
-describe('Phase 13 — Storage onConflict Callback', () => {
+describe('Storage onConflict Callback', () => {
   it('calls onConflict when overwriting an existing entry', async () => {
     const storage = createInMemoryStorage();
     await storage.put('users', 'u-1', { name: 'alice' });
@@ -244,7 +244,7 @@ describe('Phase 13 — Storage onConflict Callback', () => {
 
 // --- 4. DistributedSyncEngine: Conflict Completions ---
 
-describe('Phase 13 — DistributedSyncEngine Conflict Completions', () => {
+describe('DistributedSyncEngine Conflict Completions', () => {
   it('produces a conflict completion from escalated conflict', () => {
     const log = new ActionLog();
     const registry = createConceptRegistry();
@@ -327,7 +327,7 @@ describe('Phase 13 — DistributedSyncEngine Conflict Completions', () => {
 
 // --- 5. LiteQueryAdapter: Threshold Warnings ---
 
-describe('Phase 13 — LiteQueryAdapter Diagnostics', () => {
+describe('LiteQueryAdapter Diagnostics', () => {
   it('warns when snapshot exceeds threshold', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -389,7 +389,7 @@ describe('Phase 13 — LiteQueryAdapter Diagnostics', () => {
 
 // --- 6. Deploy Manifest: liteQueryWarnThreshold ---
 
-describe('Phase 13 — Deploy Manifest liteQueryWarnThreshold', () => {
+describe('Deploy Manifest liteQueryWarnThreshold', () => {
   it('parses liteQueryWarnThreshold from runtime config', () => {
     const manifest = parseDeploymentManifest({
       app: { name: 'test', version: '1.0', uri: 'urn:app/test' },
@@ -428,7 +428,7 @@ describe('Phase 13 — Deploy Manifest liteQueryWarnThreshold', () => {
 
 // --- 7. End-to-End: Concurrent Write Simulation ---
 
-describe('Phase 13 — End-to-End Concurrent Writes', () => {
+describe('End-to-End Concurrent Writes', () => {
   it('simulates phone + server concurrent writes with merge resolution', async () => {
     const storage = createInMemoryStorage();
 

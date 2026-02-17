@@ -1,5 +1,5 @@
 // ============================================================
-// Phase 12 — Schema Migration Tests
+// Schema Migration Tests
 //
 // Tests for:
 // 1. Parser: @version(N) annotation parsing
@@ -56,7 +56,7 @@ function createVersionedHandler(): ConceptHandler {
 
 // --- 1. Parser: @version(N) Annotation Tests ---
 
-describe('Phase 12 — Parser @version(N)', () => {
+describe('Parser @version(N)', () => {
   it('parses @version annotation inside concept body', () => {
     const source = `
 concept User [U] {
@@ -165,7 +165,7 @@ concept WithPurpose {
 
 // --- 2. Migration Module Tests ---
 
-describe('Phase 12 — Migration Module', () => {
+describe('Migration Module', () => {
   describe('getStoredVersion / setStoredVersion', () => {
     it('returns undefined for fresh storage', async () => {
       const storage = createInMemoryStorage();
@@ -394,7 +394,7 @@ describe('Phase 12 — Migration Module', () => {
 
 // --- 3. Kernel Integration Tests ---
 
-describe('Phase 12 — Kernel registerVersionedConcept', () => {
+describe('Kernel registerVersionedConcept', () => {
   it('registers versioned concept without migration on fresh storage', async () => {
     const kernel = createKernel();
     const handler = createVersionedHandler();
@@ -469,7 +469,7 @@ describe('Phase 12 — Kernel registerVersionedConcept', () => {
 
 // --- 4. End-to-End Migration Scenario ---
 
-describe('Phase 12 — End-to-End Migration', () => {
+describe('End-to-End Migration', () => {
   it('blocks actions on version mismatch, resumes after migration', async () => {
     const handler = createVersionedHandler();
     const storage = createInMemoryStorage();

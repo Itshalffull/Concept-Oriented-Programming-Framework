@@ -1,5 +1,5 @@
 // ============================================================
-// Phase 10 — Test Helpers Tests
+// Test Helpers Tests
 //
 // Tests for createMockHandler:
 // 1. Generates default ok responses from concept AST
@@ -19,7 +19,7 @@ import { resolve } from 'path';
 
 const SPECS_DIR = resolve(__dirname, '../specs/app');
 
-describe('Phase 10 — createMockHandler', () => {
+describe('createMockHandler', () => {
 
   it('generates a handler from Echo concept AST', () => {
     const source = readFileSync(resolve(SPECS_DIR, 'echo.concept'), 'utf-8');

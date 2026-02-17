@@ -7,7 +7,7 @@
 //   --failed   Filter to only failed/unfired branches
 //   --json     Output FlowTrace as JSON for tooling
 //
-// Per Architecture doc Section 16.1 (Phase 10).
+// Per Architecture doc Section 16.1.
 // ============================================================
 
 import { readFileSync, existsSync } from 'fs';

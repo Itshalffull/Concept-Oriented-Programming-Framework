@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 7 — RealWorld Benchmark Tests (Phase 4)
+// Stage 7 — RealWorld Benchmark Tests
 //
 // Validates the full Conduit/RealWorld application concepts:
 // Profile, Article, Comment, Tag, Favorite, Follow.

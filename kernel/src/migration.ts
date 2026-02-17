@@ -1,10 +1,8 @@
 // ============================================================
 // COPF Kernel - Schema Migration Support
 //
-// Phase 12: Version-aware concept loading, migration-required
+// Version-aware concept loading, migration-required
 // state, and version tracking in storage.
-//
-// See Architecture doc Section 16.5.
 // ============================================================
 
 import type {

@@ -1,5 +1,5 @@
 // ============================================================
-// Telemetry Concept Implementation (Phase 11)
+// Telemetry Concept Implementation
 //
 // Reference exporter that maps ActionLog records to
 // OpenTelemetry-compatible spans. Supports two modes:

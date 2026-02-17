@@ -1,5 +1,5 @@
 // ============================================================
-// Phase 10 — Flow Tracing Tests
+// Flow Tracing Tests
 //
 // Tests for:
 // 1. FlowTrace builder — tree construction from ActionLog
@@ -20,7 +20,7 @@ import { userHandler } from '../implementations/typescript/app/user.impl';
 import { passwordHandler } from '../implementations/typescript/app/password.impl';
 import { jwtHandler } from '../implementations/typescript/app/jwt.impl';
 
-describe('Phase 10 — Flow Tracing', () => {
+describe('Flow Tracing', () => {
 
   // --- Helper: set up an echo kernel ---
   function setupEchoKernel() {

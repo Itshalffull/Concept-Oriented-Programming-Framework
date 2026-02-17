@@ -3,8 +3,8 @@
 //
 // Starts the development server — boots the sync engine,
 // registers all local concepts, and listens for requests.
-// Phase 11: Watches .concept, .sync, and .impl.ts files for
-// changes, hot-reloads syncs and concepts on modification.
+// Watches .concept, .sync, and .impl.ts files for changes,
+// hot-reloads syncs and concepts on modification.
 //
 // Per Section 12 and Section 16.3 of architecture doc.
 // ============================================================
@@ -184,7 +184,7 @@ export async function devCommand(
     console.log(`  GET  /health  — health check`);
   });
 
-  // --- Phase 11: File watching for hot reload ---
+  // --- File watching for hot reload ---
   if (flags.watch !== false) {
     const watchDirs: string[] = [];
     const absSpecsDir = resolve(projectDir, specsDir);
