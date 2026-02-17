@@ -17,7 +17,7 @@ import { parseConceptFile } from '../implementations/typescript/framework/spec-p
 import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
-// Stage 1 concept handlers
+// Framework concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
 import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
@@ -49,11 +49,11 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 // 1. Compiler Pipeline via Syncs (end-to-end)
 // ============================================================
 
-describe('Stage 1 — Compiler Pipeline (end-to-end)', () => {
+describe('Compiler Pipeline (end-to-end)', () => {
   it('SpecParser → SchemaGen → TypeScriptGen pipeline fires via syncs', async () => {
     const kernel = createKernel();
 
-    // Register the Stage 1 concepts
+    // Register the framework concepts
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
     kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
@@ -114,11 +114,11 @@ describe('Stage 1 — Compiler Pipeline (end-to-end)', () => {
 // 2. Full Pipeline: Kernel-driven end-to-end self-compilation
 // ============================================================
 
-describe('Stage 2 — Full Pipeline (kernel-driven)', () => {
+describe('Full Pipeline (kernel-driven)', () => {
   it('complete self-compilation flow via kernel', async () => {
     const kernel = createKernel();
 
-    // Register all Stage 1 concepts on the kernel
+    // Register all framework concepts on the kernel
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
     kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
@@ -185,7 +185,7 @@ describe('Stage 2 — Full Pipeline (kernel-driven)', () => {
 // 3. Pipeline Syncs
 // ============================================================
 
-describe('Stage 4 — Pipeline Syncs', () => {
+describe('Pipeline Syncs', () => {
   it('GenerateManifest sync replaces GenerateSchemas', async () => {
     const source = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
@@ -245,7 +245,7 @@ describe('Stage 4 — Pipeline Syncs', () => {
 // 4. Pipeline Integration — RustGen Sync
 // ============================================================
 
-describe('Stage 5 — Pipeline Integration', () => {
+describe('Pipeline Integration', () => {
   it('GenerateRust sync exists in compiler pipeline', () => {
     const source = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),

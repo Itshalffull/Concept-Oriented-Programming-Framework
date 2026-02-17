@@ -23,7 +23,7 @@ import { followHandler } from '../implementations/typescript/app/follow.impl.js'
 // 1. Profile Concept
 // ============================================================
 
-describe('Stage 7 — Profile Concept', () => {
+describe('Profile Concept', () => {
   it('updates and retrieves a profile', async () => {
     const storage = createInMemoryStorage();
 
@@ -52,7 +52,7 @@ describe('Stage 7 — Profile Concept', () => {
 // 2. Article Concept
 // ============================================================
 
-describe('Stage 7 — Article Concept', () => {
+describe('Article Concept', () => {
   it('creates and retrieves an article', async () => {
     const storage = createInMemoryStorage();
 
@@ -116,7 +116,7 @@ describe('Stage 7 — Article Concept', () => {
 // 3. Comment Concept
 // ============================================================
 
-describe('Stage 7 — Comment Concept', () => {
+describe('Comment Concept', () => {
   it('creates and deletes a comment', async () => {
     const storage = createInMemoryStorage();
 
@@ -158,7 +158,7 @@ describe('Stage 7 — Comment Concept', () => {
 // 4. Tag Concept
 // ============================================================
 
-describe('Stage 7 — Tag Concept', () => {
+describe('Tag Concept', () => {
   it('adds tags to articles', async () => {
     const storage = createInMemoryStorage();
 
@@ -191,7 +191,7 @@ describe('Stage 7 — Tag Concept', () => {
 // 5. Favorite Concept
 // ============================================================
 
-describe('Stage 7 — Favorite Concept', () => {
+describe('Favorite Concept', () => {
   it('favorites and unfavorites articles', async () => {
     const storage = createInMemoryStorage();
 
@@ -226,7 +226,7 @@ describe('Stage 7 — Favorite Concept', () => {
 // 6. Follow Concept
 // ============================================================
 
-describe('Stage 7 — Follow Concept', () => {
+describe('Follow Concept', () => {
   it('follows and unfollows users', async () => {
     const storage = createInMemoryStorage();
 

@@ -1,5 +1,5 @@
 // JWT Concept Implementation
-// Simplified JWT for Stage 0 — uses base64 encoding with HMAC signature
+// Simplified JWT — uses base64 encoding with HMAC signature
 import { createHmac, randomBytes } from 'crypto';
 import type { ConceptHandler } from '@copf/kernel';
 

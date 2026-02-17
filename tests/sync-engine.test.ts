@@ -20,10 +20,10 @@ import type {
 } from '../kernel/src/types.js';
 import { generateId, timestamp } from '../kernel/src/types.js';
 
-// Stage 1 concept handlers
+// Framework concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 
-// Stage 3: SyncEngine concept handler
+// SyncEngine concept handler
 import { createSyncEngineHandler } from '../implementations/typescript/framework/sync-engine.impl.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
@@ -36,7 +36,7 @@ function readSpec(category: string, name: string): string {
 // 1. SyncEngine Concept Spec
 // ============================================================
 
-describe('Stage 3 — SyncEngine Concept Spec', () => {
+describe('SyncEngine Concept Spec', () => {
   it('parses the SyncEngine concept spec', () => {
     const source = readSpec('framework', 'sync-engine');
     const ast = parseConceptFile(source);
@@ -70,7 +70,7 @@ describe('Stage 3 — SyncEngine Concept Spec', () => {
 // 2. SyncEngine Concept Handler
 // ============================================================
 
-describe('Stage 3 — SyncEngine Concept Handler', () => {
+describe('SyncEngine Concept Handler', () => {
   it('registerSync stores a sync definition', async () => {
     const registry = createConceptRegistry();
     const { handler } = createSyncEngineHandler(registry);

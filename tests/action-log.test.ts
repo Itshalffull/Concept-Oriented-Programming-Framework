@@ -15,7 +15,7 @@ import { actionLogHandler } from '../implementations/typescript/framework/action
 // ActionLog Concept
 // ============================================================
 
-describe('Stage 1 — ActionLog Concept', () => {
+describe('ActionLog Concept', () => {
   it('appends records and queries by flow', async () => {
     const storage = createInMemoryStorage();
 

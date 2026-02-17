@@ -323,7 +323,7 @@ export async function evaluateWhere(
           if (valid) newBindings.push(newBinding);
         }
       }
-      // filter type: skip for now (not needed for Stage 0)
+      // filter type: skip for now (not needed for bootstrap)
     }
 
     bindings = newBindings;

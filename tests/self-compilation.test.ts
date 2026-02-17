@@ -18,7 +18,7 @@ import { parseConceptFile } from '../implementations/typescript/framework/spec-p
 import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
 import type { ConceptAST, CompiledSync, ConceptManifest } from '../kernel/src/types.js';
 
-// Stage 1 concept handlers
+// Framework concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
 import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
@@ -54,11 +54,11 @@ const FRAMEWORK_SPECS = [
 const APP_SPECS = ['echo', 'password', 'user', 'jwt'];
 
 // ============================================================
-// Self-Validation: Parse Stage 1 specs through Stage 1
+// Self-Validation: Parse framework specs through framework concepts
 // ============================================================
 
-describe('Stage 1 — Self-Validation', () => {
-  it('SpecParser parses all Stage 1 concept specs', async () => {
+describe('Self-Validation', () => {
+  it('SpecParser parses all framework concept specs', async () => {
     const storage = createInMemoryStorage();
 
     const specNames = [
@@ -74,7 +74,7 @@ describe('Stage 1 — Self-Validation', () => {
     }
   });
 
-  it('SchemaGen generates manifests for all Stage 1 specs', async () => {
+  it('SchemaGen generates manifests for all framework specs', async () => {
     const parserStorage = createInMemoryStorage();
     const schemaStorage = createInMemoryStorage();
 
@@ -100,7 +100,7 @@ describe('Stage 1 — Self-Validation', () => {
     }
   });
 
-  it('TypeScriptGen generates TypeScript for all Stage 1 specs', async () => {
+  it('TypeScriptGen generates TypeScript for all framework specs', async () => {
     const parserStorage = createInMemoryStorage();
     const codeStorage = createInMemoryStorage();
 
@@ -171,7 +171,7 @@ describe('Stage 1 — Self-Validation', () => {
 // Step 1: SpecParser self-compilation
 // ============================================================
 
-describe('Stage 2 — Step 1: SpecParser self-compilation', () => {
+describe('SpecParser Self-Compilation', () => {
   it('SpecParser parses all 7 framework concept specs', async () => {
     const storage = createInMemoryStorage();
 
@@ -233,7 +233,7 @@ describe('Stage 2 — Step 1: SpecParser self-compilation', () => {
 // Step 2: SchemaGen self-compilation (ConceptManifest)
 // ============================================================
 
-describe('Stage 2 — Step 2: SchemaGen self-compilation (ConceptManifest)', () => {
+describe('SchemaGen Self-Compilation (ConceptManifest)', () => {
   it('generates manifests for all framework specs', async () => {
     const parserStorage = createInMemoryStorage();
     const schemaStorage = createInMemoryStorage();
@@ -343,7 +343,7 @@ describe('Stage 2 — Step 2: SchemaGen self-compilation (ConceptManifest)', () 
 // Step 3: TypeScriptGen self-compilation
 // ============================================================
 
-describe('Stage 2 — Step 3: TypeScriptGen self-compilation', () => {
+describe('TypeScriptGen Self-Compilation', () => {
   it('generates TypeScript skeletons for all framework specs', async () => {
     const parserStorage = createInMemoryStorage();
     const codeStorage = createInMemoryStorage();
@@ -519,7 +519,7 @@ describe('Stage 2 — Step 3: TypeScriptGen self-compilation', () => {
 // Step 4: SyncParser + SyncCompiler self-compilation
 // ============================================================
 
-describe('Stage 2 — Step 4: SyncParser + SyncCompiler self-compilation', () => {
+describe('SyncParser + SyncCompiler Self-Compilation', () => {
   it('SyncParser parses the framework compiler-pipeline sync file', async () => {
     const storage = createInMemoryStorage();
     const source = readFileSync(

@@ -37,7 +37,7 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 // 1. TypeScriptGen Concept Handler
 // ============================================================
 
-describe('Stage 1 — TypeScriptGen Concept', () => {
+describe('TypeScriptGen Concept', () => {
   it('generates TypeScript skeleton for Password concept', async () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);
@@ -99,7 +99,7 @@ describe('Stage 1 — TypeScriptGen Concept', () => {
 // 2. TypeScriptGen Output Identity
 // ============================================================
 
-describe('Stage 4 — TypeScriptGen Output Identity', () => {
+describe('TypeScriptGen Output Identity', () => {
   it('Password types file is identical through manifest pipeline', async () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);

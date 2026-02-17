@@ -22,7 +22,7 @@ const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 // 1. SyncParser Concept
 // ============================================================
 
-describe('Stage 1 — SyncParser Concept', () => {
+describe('SyncParser Concept', () => {
   it('parses the echo sync file', async () => {
     const storage = createInMemoryStorage();
     const source = readFileSync(resolve(SYNCS_DIR, 'app', 'echo.sync'), 'utf-8');
@@ -82,7 +82,7 @@ describe('Stage 1 — SyncParser Concept', () => {
 // 2. SyncCompiler Concept
 // ============================================================
 
-describe('Stage 1 — SyncCompiler Concept', () => {
+describe('SyncCompiler Concept', () => {
   it('compiles a parsed sync into a CompiledSync', async () => {
     const storage = createInMemoryStorage();
     const source = readFileSync(resolve(SYNCS_DIR, 'app', 'echo.sync'), 'utf-8');

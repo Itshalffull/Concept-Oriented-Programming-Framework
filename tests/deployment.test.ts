@@ -16,7 +16,7 @@ import type {
 // Deployment Manifest — Parsing & Validation
 // ============================================================
 
-describe('Stage 5 — Deployment Manifest', () => {
+describe('Deployment Manifest', () => {
   const validManifestData: Record<string, unknown> = {
     app: {
       name: 'conduit',

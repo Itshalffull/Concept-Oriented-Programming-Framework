@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 0 — Test A: Echo
+// Echo Flow Tests
 // Validates: spec parsing, concept registration, sync registration,
 // flow execution, and response assembly.
 // ============================================================
@@ -14,7 +14,7 @@ import { resolve } from 'path';
 const SPECS_DIR = resolve(__dirname, '../specs/app');
 const SYNCS_DIR = resolve(__dirname, '../syncs/app');
 
-describe('Stage 0 — Test A: Echo', () => {
+describe('Echo Flow', () => {
 
   it('parses the echo.concept spec correctly', () => {
     const source = readFileSync(resolve(SPECS_DIR, 'echo.concept'), 'utf-8');

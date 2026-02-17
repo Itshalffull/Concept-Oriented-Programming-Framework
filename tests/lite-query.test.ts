@@ -19,7 +19,7 @@ import type {
 // Lite Query Protocol + Adapter with Caching
 // ============================================================
 
-describe('Stage 6 — LiteQueryProtocol + Adapter', () => {
+describe('LiteQueryProtocol + Adapter', () => {
   it('LiteQueryAdapter resolves queries via snapshot', async () => {
     const storage = createInMemoryStorage();
     await storage.put('entries', 'u-1', { user: 'u-1', name: 'Alice' });

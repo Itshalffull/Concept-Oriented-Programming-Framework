@@ -37,10 +37,10 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 }
 
 // ============================================================
-// 1. Extensibility (Stage 4)
+// 1. Extensibility
 // ============================================================
 
-describe('Stage 4 — Extensibility', () => {
+describe('Extensibility', () => {
   it('a mock RustGen concept can consume the same manifest as TypeScriptGen', async () => {
     // The key extensibility property: the ConceptManifest is language-neutral.
     // Any new generator concept receives the same manifest and produces files.
@@ -146,12 +146,12 @@ describe('Stage 4 — Extensibility', () => {
 });
 
 // ============================================================
-// 2. Extensibility Validation (Stage 5)
+// 2. Extensibility Validation
 // ============================================================
 
-describe('Stage 5 — Extensibility Validation', () => {
+describe('Extensibility Validation', () => {
   it('RustGen was added without modifying TypeScriptGen', async () => {
-    // Verify that TypeScriptGen output is unchanged from Stage 4
+    // Verify that TypeScriptGen output is unchanged after adding RustGen
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);
     const storage = createInMemoryStorage();
@@ -161,7 +161,7 @@ describe('Stage 5 — Extensibility Validation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    // Same 4 files as in Stage 4
+    // Same 4 files as before
     expect(files).toHaveLength(4);
     expect(files.find(f => f.path === 'password.types.ts')).toBeDefined();
     expect(files.find(f => f.path === 'password.handler.ts')).toBeDefined();
@@ -174,7 +174,7 @@ describe('Stage 5 — Extensibility Validation', () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);
 
-    // Same fields as Stage 4
+    // Same fields as before
     expect(manifest.uri).toBe('urn:copf/Password');
     expect(manifest.name).toBe('Password');
     expect(manifest.typeParams).toHaveLength(1);

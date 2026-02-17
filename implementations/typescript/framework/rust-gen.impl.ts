@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 5 — RustGen Concept Implementation
+// RustGen Concept Implementation
 //
 // Generates Rust skeleton code from a ConceptManifest.
 // Follows the same pattern as TypeScriptGen but maps

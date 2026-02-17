@@ -1,7 +1,7 @@
 // ============================================================
-// Stage 1 — SpecParser Concept Implementation
+// SpecParser Concept Implementation
 //
-// Wraps the Stage 0 kernel's parseConceptFile as a proper
+// Wraps the bootstrap kernel's parseConceptFile as a proper
 // concept handler. Parses .concept source strings into ASTs
 // and stores them keyed by a generated spec reference.
 // ============================================================

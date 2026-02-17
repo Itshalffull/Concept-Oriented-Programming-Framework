@@ -23,7 +23,7 @@ import { generateId, timestamp } from '../kernel/src/types.js';
 // 1. Eventual Sync Queue
 // ============================================================
 
-describe('Stage 6 — Eventual Sync Queue', () => {
+describe('Eventual Sync Queue', () => {
   function makeCompletion(
     concept: string,
     action: string,
@@ -280,7 +280,7 @@ describe('Stage 6 — Eventual Sync Queue', () => {
 // 2. Engine Hierarchy
 // ============================================================
 
-describe('Stage 6 — Engine Hierarchy', () => {
+describe('Engine Hierarchy', () => {
   it('downstream engine forwards completions upstream', async () => {
     const serverLog = new ActionLog();
     const serverRegistry = createConceptRegistry();
@@ -457,7 +457,7 @@ describe('Stage 6 — Engine Hierarchy', () => {
 // 3. Offline-Capable Sync with Eventual Convergence
 // ============================================================
 
-describe('Stage 6 — Offline Convergence', () => {
+describe('Offline Convergence', () => {
   it('full offline-to-online cycle', async () => {
     // Simulate: ios device goes offline, makes local changes,
     // comes back online, eventual syncs fire
@@ -666,7 +666,7 @@ describe('Stage 6 — Offline Convergence', () => {
 // 4. Sync Annotation Semantics
 // ============================================================
 
-describe('Stage 6 — Sync Annotations', () => {
+describe('Sync Annotations', () => {
   it('parser correctly identifies sync annotations', () => {
     const source = `
       sync Eager [eager]

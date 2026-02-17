@@ -36,7 +36,7 @@ import type { MockWebSocket } from '../kernel/src/ws-transport.js';
 // 1. HTTP Transport Adapters
 // ============================================================
 
-describe('Stage 5 — HTTP Transport Adapters', () => {
+describe('HTTP Transport Adapters', () => {
   it('HttpLiteAdapter invokes actions via mock HTTP', async () => {
     // Create a concept handler to serve as the "remote" concept
     const passwordHandler: ConceptHandler = {
@@ -221,7 +221,7 @@ describe('Stage 5 — HTTP Transport Adapters', () => {
 // 2. Cross-Language Interop Simulation
 // ============================================================
 
-describe('Stage 5 — Cross-Language Interop', () => {
+describe('Cross-Language Interop', () => {
   it('TS sync engine invokes "Rust" concept via HTTP adapter', async () => {
     // Simulate a Rust Password concept as a mock HTTP service.
     // In production, this would be a real Rust binary serving over HTTP.
@@ -370,7 +370,7 @@ describe('Stage 5 — Cross-Language Interop', () => {
 // 3. WebSocket Transport Adapter
 // ============================================================
 
-describe('Stage 6 — WebSocket Transport Adapter', () => {
+describe('WebSocket Transport Adapter', () => {
   function createMockWebSocketPair(): {
     clientWs: MockWebSocket;
     serverHandler: (message: string) => Promise<string | null>;

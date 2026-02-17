@@ -49,7 +49,7 @@ const REALWORLD_SYNCS = ['login.sync', 'articles.sync', 'comments.sync', 'social
 // 1. Self-Compilation: New Concept Specs through the Pipeline
 // ============================================================
 
-describe('Stage 7 — Self-Compilation of RealWorld Specs', () => {
+describe('Self-Compilation of RealWorld Specs', () => {
   it('SpecParser parses all 6 new concept specs', async () => {
     const storage = createInMemoryStorage();
 
@@ -141,7 +141,7 @@ describe('Stage 7 — Self-Compilation of RealWorld Specs', () => {
 // 2. Sync File Parsing
 // ============================================================
 
-describe('Stage 7 — RealWorld Sync Parsing', () => {
+describe('RealWorld Sync Parsing', () => {
   it('parses all 5 new sync files', () => {
     for (const file of REALWORLD_SYNCS) {
       const source = readFileSync(resolve(SYNCS_DIR, 'app', file), 'utf-8');

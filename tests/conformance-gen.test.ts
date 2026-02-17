@@ -37,7 +37,7 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 // Conformance Test Generation (Section 7.4)
 // ============================================================
 
-describe('Stage 2 — Conformance Test Generation (Section 7.4)', () => {
+describe('Conformance Test Generation (Section 7.4)', () => {
   it('generates conformance test for Password concept', async () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);

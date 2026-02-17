@@ -3,7 +3,7 @@
 //
 // Validates the self-hosted kernel — echo flow, registration
 // flow, compiler pipeline, direct invocation, and the
-// refactored pipeline from Stage 4.
+// refactored pipeline.
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
@@ -23,14 +23,14 @@ import type {
   ConceptManifest,
 } from '../kernel/src/types.js';
 
-// Stage 1 concept handlers
+// Framework concept handlers
 import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
 import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
 import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
 import { registryHandler } from '../implementations/typescript/framework/registry.impl.js';
 
-// Stage 3: SyncEngine concept handler
+// SyncEngine concept handler
 import { createSyncEngineHandler } from '../implementations/typescript/framework/sync-engine.impl.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
@@ -55,8 +55,8 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 // 1. Self-Hosted Kernel — Echo Flow
 // ============================================================
 
-describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
-  // Echo concept handler (same as used in Stage 0 tests)
+describe('Self-Hosted Kernel: Echo Flow', () => {
+  // Echo concept handler (same as used in echo flow tests)
   const echoHandler: ConceptHandler = {
     async send(input, storage) {
       const id = input.id as string;
@@ -73,7 +73,7 @@ describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
     return kernel;
   }
 
-  it('processes echo flow identically to Stage 0', async () => {
+  it('processes echo flow identically to basic kernel', async () => {
     // Set up self-hosted kernel
     const kernel = setupSelfHostedKernel();
 
@@ -96,25 +96,25 @@ describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
       text: 'hello world',
     });
 
-    // Verify response matches Stage 0 behavior
+    // Verify response matches basic kernel behavior
     expect(response.body).toBeDefined();
     expect(response.body!.echo).toBe('hello world');
     expect(response.flowId).toBeTruthy();
   });
 
-  it('matches Stage 0 kernel echo response exactly', async () => {
-    // Run through Stage 0 kernel
-    const stage0 = createKernel();
-    stage0.registerConcept('urn:copf/Echo', echoHandler);
+  it('matches basic kernel echo response exactly', async () => {
+    // Run through basic kernel
+    const basicKernel = createKernel();
+    basicKernel.registerConcept('urn:copf/Echo', echoHandler);
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'app', 'echo.sync'),
       'utf-8',
     );
     const syncs = parseSyncFile(syncSource);
     for (const sync of syncs) {
-      stage0.registerSync(sync);
+      basicKernel.registerSync(sync);
     }
-    const stage0Response = await stage0.handleRequest({
+    const basicResponse = await basicKernel.handleRequest({
       method: 'echo',
       text: 'test-message',
     });
@@ -122,18 +122,18 @@ describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
     // Run through self-hosted kernel
     const registry = createConceptRegistry();
     const { handler, log } = createSyncEngineHandler(registry);
-    const stage3 = createSelfHostedKernel(handler, log, registry);
-    stage3.registerConcept('urn:copf/Echo', echoHandler);
+    const selfHosted = createSelfHostedKernel(handler, log, registry);
+    selfHosted.registerConcept('urn:copf/Echo', echoHandler);
     for (const sync of syncs) {
-      stage3.registerSync(sync);
+      selfHosted.registerSync(sync);
     }
-    const stage3Response = await stage3.handleRequest({
+    const selfHostedResponse = await selfHosted.handleRequest({
       method: 'echo',
       text: 'test-message',
     });
 
     // Body content should be identical
-    expect(stage3Response.body).toEqual(stage0Response.body);
+    expect(selfHostedResponse.body).toEqual(basicResponse.body);
   });
 });
 
@@ -141,8 +141,8 @@ describe('Stage 3 — Self-Hosted Kernel: Echo Flow', () => {
 // 2. Self-Hosted Kernel — Registration Flow
 // ============================================================
 
-describe('Stage 3 — Self-Hosted Kernel: Registration Flow', () => {
-  // Concept handlers (same as Stage 0 tests)
+describe('Self-Hosted Kernel: Registration Flow', () => {
+  // Concept handlers (same as registration flow tests)
   const userHandler: ConceptHandler = {
     async register(input, storage) {
       const user = input.user as string;
@@ -277,30 +277,30 @@ describe('Stage 3 — Self-Hosted Kernel: Registration Flow', () => {
     expect(response.error || response.body!.error || response.code).toBeTruthy();
   });
 
-  it('matches Stage 0 kernel valid registration response', async () => {
-    // Stage 0
-    const stage0 = createKernel();
-    stage0.registerConcept('urn:copf/User', userHandler);
-    stage0.registerConcept('urn:copf/Password', passwordHandler);
-    stage0.registerConcept('urn:copf/JWT', jwtHandler);
+  it('matches basic kernel valid registration response', async () => {
+    // Basic kernel
+    const basicKernel = createKernel();
+    basicKernel.registerConcept('urn:copf/User', userHandler);
+    basicKernel.registerConcept('urn:copf/Password', passwordHandler);
+    basicKernel.registerConcept('urn:copf/JWT', jwtHandler);
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'app', 'registration.sync'),
       'utf-8',
     );
     const syncs = parseSyncFile(syncSource);
     for (const sync of syncs) {
-      stage0.registerSync(sync);
+      basicKernel.registerSync(sync);
     }
-    const s0 = await stage0.handleRequest({
+    const s0 = await basicKernel.handleRequest({
       method: 'register',
       username: 'dave',
       email: 'dave@example.com',
       password: 'password123',
     });
 
-    // Stage 3
-    const stage3 = setupRegistrationKernel();
-    const s3 = await stage3.handleRequest({
+    // Self-hosted kernel
+    const selfHosted = setupRegistrationKernel();
+    const s3 = await selfHosted.handleRequest({
       method: 'register',
       username: 'dave',
       email: 'dave@example.com',
@@ -322,13 +322,13 @@ describe('Stage 3 — Self-Hosted Kernel: Registration Flow', () => {
 // 3. Self-Hosted Kernel — Compiler Pipeline
 // ============================================================
 
-describe('Stage 3 — Self-Hosted Kernel: Compiler Pipeline', () => {
+describe('Self-Hosted Kernel: Compiler Pipeline', () => {
   it('compiler pipeline works through the self-hosted kernel', async () => {
     const registry = createConceptRegistry();
     const { handler, log } = createSyncEngineHandler(registry);
     const kernel = createSelfHostedKernel(handler, log, registry);
 
-    // Register Stage 1 concepts
+    // Register framework concepts
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
     kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
@@ -363,7 +363,7 @@ describe('Stage 3 — Self-Hosted Kernel: Compiler Pipeline', () => {
 // 4. Self-Hosted Kernel — Direct Invocation
 // ============================================================
 
-describe('Stage 3 — Self-Hosted Kernel: Direct Invocation', () => {
+describe('Self-Hosted Kernel: Direct Invocation', () => {
   it('invokeConcept works for concepts on the self-hosted kernel', async () => {
     const registry = createConceptRegistry();
     const { handler, log } = createSyncEngineHandler(registry);
@@ -413,16 +413,16 @@ describe('Stage 3 — Self-Hosted Kernel: Direct Invocation', () => {
 });
 
 // ============================================================
-// 5. Self-Hosted Kernel — Refactored Pipeline (Stage 4)
+// 5. Self-Hosted Kernel — Refactored Pipeline
 // ============================================================
 
-describe('Stage 4 — Self-Hosted Kernel: Refactored Pipeline', () => {
+describe('Self-Hosted Kernel: Refactored Pipeline', () => {
   it('compiler pipeline works through the self-hosted kernel', async () => {
     const registry = createConceptRegistry();
     const { handler, log } = createSyncEngineHandler(registry);
     const kernel = createSelfHostedKernel(handler, log, registry);
 
-    // Register Stage 1 concepts (with TypeScriptGen replacing CodeGen)
+    // Register framework concepts (with TypeScriptGen replacing CodeGen)
     kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
     kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
     kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);

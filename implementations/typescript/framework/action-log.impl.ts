@@ -1,5 +1,5 @@
 // ============================================================
-// Stage 1 — ActionLog Concept Implementation
+// ActionLog Concept Implementation
 //
 // Append-only log of all action invocations and completions.
 // The engine's memory, exposed as a concept so it can be
