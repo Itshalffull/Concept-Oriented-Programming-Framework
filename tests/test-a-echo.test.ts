@@ -5,7 +5,8 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createKernel, parseConceptFile } from '@copf/kernel';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
 import { echoHandler } from '../implementations/typescript/app/echo.impl';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';

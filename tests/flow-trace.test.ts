@@ -10,11 +10,9 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import {
-  createKernel,
-  renderFlowTrace,
-} from '@copf/kernel';
-import type { FlowTrace, TraceNode, TraceSyncNode } from '@copf/kernel';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory';
+import { renderFlowTrace } from '../implementations/typescript/framework/flow-trace.impl';
+import type { FlowTrace, TraceNode, TraceSyncNode } from '../implementations/typescript/framework/flow-trace.impl';
 import { echoHandler } from '../implementations/typescript/app/echo.impl';
 import { userHandler } from '../implementations/typescript/app/user.impl';
 import { passwordHandler } from '../implementations/typescript/app/password.impl';

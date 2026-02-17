@@ -10,16 +10,18 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  createKernel,
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-  parseConceptFile,
+} from '@copf/kernel';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
+import {
   checkMigrationNeeded,
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
-} from '@copf/kernel';
+} from '../implementations/typescript/framework/migration.impl';
 import type { ConceptHandler, ConceptStorage, ActionInvocation } from '@copf/kernel';
 import { generateId, timestamp } from '../kernel/src/types';
 

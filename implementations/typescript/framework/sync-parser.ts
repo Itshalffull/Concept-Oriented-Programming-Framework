@@ -2,7 +2,7 @@
 // COPF Kernel - .sync File Parser
 // ============================================================
 
-import type { CompiledSync, WhenPattern, FieldPattern, WhereEntry, ThenAction, ThenField } from './types.js';
+import type { CompiledSync, WhenPattern, FieldPattern, WhereEntry, ThenAction, ThenField } from '../../../kernel/src/types.js';
 
 // --- Token Types ---
 

@@ -14,13 +14,15 @@ import { parseArgs } from '../tools/copf-cli/src/index';
 import { findFiles } from '../tools/copf-cli/src/util';
 
 // Import kernel modules used by commands
-import { parseConceptFile } from '@copf/kernel';
-import { parseSyncFile, createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@copf/kernel';
+import type { ConceptManifest } from '@copf/kernel';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
+import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
 import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl';
 import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl';
 import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl';
 import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl';
-import type { ConceptAST, ConceptManifest } from '@copf/kernel';
+import type { ConceptAST } from '../kernel/src/types';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const SPECS_DIR = resolve(PROJECT_ROOT, 'specs');

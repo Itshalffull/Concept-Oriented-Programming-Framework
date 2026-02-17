@@ -26,11 +26,11 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
-  createKernel,
   createInMemoryStorage,
-  parseConceptFile,
-  parseSyncFile,
 } from '../kernel/src/index.js';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
 import type { ConceptAST, CompiledSync, ConceptManifest } from '../kernel/src/types.js';
 
 // Stage 1 concept handlers

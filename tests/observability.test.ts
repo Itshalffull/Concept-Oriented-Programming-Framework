@@ -12,14 +12,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  createKernel,
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-  SyncEngine,
-  ActionLog,
-  buildSyncIndex,
 } from '@copf/kernel';
+import { createKernel } from '../implementations/typescript/framework/kernel-factory';
+import { SyncEngine, ActionLog, buildSyncIndex } from '../implementations/typescript/framework/sync-engine.impl';
 import type { CompiledSync, ConceptHandler, ActionCompletion } from '@copf/kernel';
 import { generateId, timestamp } from '../kernel/src/types';
 import {

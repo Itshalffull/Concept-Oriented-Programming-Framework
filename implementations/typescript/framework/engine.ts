@@ -15,8 +15,8 @@ import type {
   ThenField,
   Binding,
   ConceptRegistry,
-} from './types.js';
-import { generateId, timestamp } from './types.js';
+} from '../../../kernel/src/types.js';
+import { generateId, timestamp } from '../../../kernel/src/types.js';
 
 // --- Action Log ---
 

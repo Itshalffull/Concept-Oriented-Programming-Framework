@@ -33,8 +33,8 @@ import {
   buildInvocations,
   indexKey,
   buildSyncIndex,
-} from '../../../kernel/src/engine.js';
-import type { SyncIndex } from '../../../kernel/src/engine.js';
+} from './engine.js';
+import type { SyncIndex } from './engine.js';
 import { generateId, timestamp } from '../../../kernel/src/types.js';
 
 // Re-export engine classes and functions so consumers can import
