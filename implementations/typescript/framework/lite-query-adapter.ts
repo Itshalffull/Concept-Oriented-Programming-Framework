@@ -1,43 +1,24 @@
 // ============================================================
-// Lite Query Protocol & LiteQueryAdapter
+// Lite Query Adapter
 //
 // Section 4.2: Mode B — Lite Query Protocol
-//
-// Three operations (simplest to most expressive):
-//   snapshot()  — full state snapshot
-//   lookup(relation, key)  — single record by key
-//   filter(criteria)  — records matching simple filters
 //
 // LiteQueryAdapter sits engine-side and translates ConceptQuery
 // into lite protocol calls, with a TTL-based cache. Push
 // invalidations happen automatically when the concept returns
 // an action completion (Section 4.4).
+//
+// createStorageLiteProtocol creates a LiteQueryProtocol backed
+// by ConceptStorage, used by generated code to expose concept
+// state via the lite protocol.
 // ============================================================
 
-import type { ConceptStorage } from './types.js';
-
-// --- Lite Filter (Section 4.3) ---
-
-export interface LiteFilter {
-  field: string;
-  op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains';
-  value: unknown;
-}
-
-// --- State Snapshot (Section 4.2) ---
-
-export interface ConceptStateSnapshot {
-  asOf: string;
-  relations: Record<string, Record<string, unknown>[]>;
-}
-
-// --- Lite Query Protocol Interface ---
-
-export interface LiteQueryProtocol {
-  snapshot(): Promise<ConceptStateSnapshot>;
-  lookup?(relation: string, key: string): Promise<Record<string, unknown> | null>;
-  filter?(criteria: LiteFilter[]): Promise<Record<string, unknown>[]>;
-}
+import type {
+  ConceptStorage,
+  ConceptStateSnapshot,
+  LiteFilter,
+  LiteQueryProtocol,
+} from '../../../kernel/src/types.js';
 
 // --- LiteQueryAdapter with Caching (Section 4.2) ---
 
