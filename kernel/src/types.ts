@@ -375,6 +375,25 @@ export interface ConceptManifest {
   purpose: string;
 }
 
+// --- Lite Query Protocol (Section 4.2) ---
+
+export interface LiteFilter {
+  field: string;
+  op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains';
+  value: unknown;
+}
+
+export interface ConceptStateSnapshot {
+  asOf: string;
+  relations: Record<string, Record<string, unknown>[]>;
+}
+
+export interface LiteQueryProtocol {
+  snapshot(): Promise<ConceptStateSnapshot>;
+  lookup?(relation: string, key: string): Promise<Record<string, unknown> | null>;
+  filter?(criteria: LiteFilter[]): Promise<Record<string, unknown>[]>;
+}
+
 // --- Utility ---
 
 export function generateId(): string {

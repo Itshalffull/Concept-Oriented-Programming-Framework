@@ -62,16 +62,17 @@ export type {
   ConceptPlacement,
   SyncAssignment,
 } from './deploy.js';
-// Lite query protocol + adapter
+// Lite query adapter (moved to implementations/typescript/framework/)
 export {
   LiteQueryAdapter,
   createStorageLiteProtocol,
-} from './lite-query.js';
+} from '../../implementations/typescript/framework/lite-query-adapter.js';
+// Lite query protocol types (in shared types)
 export type {
   LiteQueryProtocol,
   LiteFilter as LiteQueryFilter,
   ConceptStateSnapshot as LiteStateSnapshot,
-} from './lite-query.js';
+} from './types.js';
 // Eventual sync queue + distributed engine
 export { DistributedSyncEngine } from './eventual-queue.js';
 export type {
@@ -98,8 +99,8 @@ export {
   getStoredVersion,
   setStoredVersion,
 } from './migration.js';
-// Test helpers
-export { createMockHandler } from './test-helpers.js';
+// Mock handler (moved to implementations/typescript/framework/)
+export { createMockHandler } from '../../implementations/typescript/framework/mock-handler.js';
 export type {
   ConceptHandler,
   ConceptStorage,
@@ -141,6 +142,10 @@ export type {
   EntryMeta,
   ConflictResolution,
   ConflictInfo,
+  // Lite Query Protocol types
+  LiteQueryProtocol,
+  LiteFilter,
+  ConceptStateSnapshot,
 } from './types.js';
 
 // --- Web Bootstrap Concept ---

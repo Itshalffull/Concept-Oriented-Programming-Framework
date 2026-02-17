@@ -41,7 +41,7 @@ import { generateId, timestamp } from '../kernel/src/types.js';
 import type {
   LiteQueryProtocol,
   ConceptStateSnapshot,
-} from '../kernel/src/lite-query.js';
+} from '../kernel/src/types.js';
 import type { MockWebSocket } from '../kernel/src/ws-transport.js';
 
 // ============================================================

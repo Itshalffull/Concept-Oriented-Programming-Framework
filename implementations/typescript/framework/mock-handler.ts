@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Test Helpers
+// Mock Handler Generator
 //
 // createMockHandler: generates a ConceptHandler from a ConceptAST
 // where every action returns its first (ok) variant by default,
@@ -13,7 +13,7 @@ import type {
   ConceptHandler,
   TypeExpr,
   ConceptStorage,
-} from './types.js';
+} from '../../../kernel/src/types.js';
 
 type ActionHandler = (
   input: Record<string, unknown>,
