@@ -1,0 +1,28 @@
+# ============================================================
+# Reorg Compensation — Recommended Sync
+#
+# When ChainMonitor detects a reorg via onBlock, flag downstream
+# actions triggered by the reorged completion. Uses the provenance
+# graph to walk the causal chain from the reorged completion forward.
+#
+# Override: replace with app-specific compensation logic
+#   (rollback minted tokens, notify users, retry on different chain)
+# Disable: if your app handles reorgs at the application layer
+# ============================================================
+
+// Recommended: override with app-specific compensation
+sync ReorgCompensation [recommended]
+when {
+  ChainMonitor/onBlock: [ chainId: ?chain ]
+    => reorg(chainId: ?chain; depth: ?depth; fromBlock: ?from)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "reorg_detected";
+      chain: ?chain;
+      depth: ?depth;
+      fromBlock: ?from
+    }
+  ]
+}

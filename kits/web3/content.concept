@@ -1,0 +1,76 @@
+concept Content [C] {
+
+  purpose {
+    Manage content stored on IPFS with CID tracking, pinning, and
+    resolution. Each content item is identified by its content-addressed
+    hash (CID). The unavailable variant enables reactive sync chains
+    for retry, fallback, or alerting.
+  }
+
+  state {
+    items: set C
+    cid: C -> String
+    metadata: C -> { name: String, contentType: String, size: Int }
+    pinned: C -> Bool
+  }
+
+  actions {
+    action store(data: Bytes, name: String, contentType: String) {
+      -> ok(cid: String, size: Int) {
+        Content stored on IPFS. Returns the content-addressed hash (CID)
+        and size in bytes. The CID is deterministic — same data always
+        produces the same CID.
+      }
+      -> error(message: String) {
+        Failed to store content. IPFS node unreachable or storage quota
+        exceeded.
+      }
+    }
+
+    action pin(cid: String) {
+      -> ok(cid: String) {
+        CID pinned via the configured pinning service. The content will
+        not be garbage collected.
+      }
+      -> error(cid: String, message: String) {
+        Pinning failed. The CID may not exist or the pinning service
+        is unreachable.
+      }
+    }
+
+    action unpin(cid: String) {
+      -> ok(cid: String) {
+        CID unpinned. The content may be garbage collected by IPFS
+        nodes that don't have it pinned elsewhere.
+      }
+      -> error(cid: String, message: String) {
+        Unpin failed.
+      }
+    }
+
+    action resolve(cid: String) {
+      -> ok(data: Bytes, contentType: String, size: Int) {
+        Content retrieved from IPFS. Returns the raw data, content type,
+        and size.
+      }
+      -> notFound(cid: String) {
+        No content exists with this CID on any reachable IPFS node.
+      }
+      -> unavailable(cid: String, message: String) {
+        Content exists but is currently unreachable. Syncs can react
+        to this variant with retry logic, fallback to a different
+        gateway, or alert operators.
+      }
+    }
+  }
+
+  invariant "store then resolve returns same data" {
+    after {
+      store(data: d, name: "test.txt", contentType: "text/plain")
+        -> ok(cid: c, size: s)
+    }
+    then {
+      resolve(cid: c) -> ok(data: d, contentType: "text/plain", size: s)
+    }
+  }
+}

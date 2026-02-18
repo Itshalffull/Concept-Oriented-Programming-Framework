@@ -1,0 +1,76 @@
+concept Wallet [W] {
+
+  purpose {
+    Verify wallet signatures and manage wallet addresses.
+    Wraps ecrecover and EIP-712 typed data verification.
+    Same auth pattern as JWT — syncs check Wallet/verify → ok
+    before protected actions. Integrates with auth kit via
+    integration sync.
+  }
+
+  state {
+    addresses: set W
+    nonces: W -> Int
+    labels: W -> String
+  }
+
+  actions {
+    action verify(address: String, message: String, signature: String) {
+      -> ok(address: String, recoveredAddress: String) {
+        Signature is valid. The recovered address matches the claimed
+        address. Downstream syncs can trust the caller's identity.
+      }
+      -> invalid(address: String, recoveredAddress: String) {
+        Signature verification failed. The recovered address does not
+        match the claimed address.
+      }
+      -> error(message: String) {
+        Verification could not be performed (malformed signature,
+        unsupported signature type, etc.).
+      }
+    }
+
+    action verifyTypedData(
+      address: String,
+      domain: String,
+      types: String,
+      value: String,
+      signature: String
+    ) {
+      -> ok(address: String) {
+        EIP-712 typed data signature is valid.
+      }
+      -> invalid(address: String) {
+        EIP-712 typed data signature verification failed.
+      }
+      -> error(message: String) {
+        Verification could not be performed.
+      }
+    }
+
+    action getNonce(address: String) {
+      -> ok(address: String, nonce: Int) {
+        Returns the current nonce for replay protection.
+      }
+      -> notFound(address: String) {
+        No nonce record for this address. First interaction.
+      }
+    }
+
+    action incrementNonce(address: String) {
+      -> ok(address: String, nonce: Int) {
+        Nonce incremented. Returns the new nonce value.
+      }
+    }
+  }
+
+  invariant "valid signature verifies" {
+    after {
+      verify(address: addr, message: msg, signature: sig)
+        -> ok(address: addr, recoveredAddress: addr)
+    }
+    then {
+      // recoveredAddress matches the claimed address
+    }
+  }
+}

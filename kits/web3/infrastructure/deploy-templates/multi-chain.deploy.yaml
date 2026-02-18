@@ -1,0 +1,88 @@
+# Multi-Chain Deploy Template
+#
+# Deployment spanning Ethereum L1 + Arbitrum L2 + StarkNet.
+# Each chain gets its own transport adapter and ChainMonitor
+# instance. Syncs coordinate cross-chain actions via the
+# finality gate pattern.
+deploy:
+  name: multi-chain
+  description: >
+    Multi-chain deployment spanning Ethereum L1, Arbitrum L2,
+    and StarkNet. Cross-chain syncs use finality-gated flows
+    to prevent reorg-induced inconsistency. Each chain runs
+    its own ChainMonitor instance with chain-specific finality.
+
+  runtime:
+    engine: copf-sync-engine
+    transport: http
+
+  concepts:
+    ChainMonitor:
+      instances:
+        - name: ethereum-monitor
+          params: { B: ethereum-block }
+          config:
+            chainId: 1
+            finalityType: confirmations
+            threshold: 12
+        - name: arbitrum-monitor
+          params: { B: arbitrum-block }
+          config:
+            chainId: 42161
+            finalityType: l1-batch
+            softFinality: sequencer
+        - name: starknet-monitor
+          params: { B: starknet-block }
+          config:
+            chainId: "SN_MAIN"
+            finalityType: validity-proof
+
+    Content:
+      params:
+        C: ipfs-cid
+
+    Wallet:
+      params:
+        W: multi-chain-address
+
+  infrastructure:
+    transports:
+      ethereum:
+        type: evm
+        config:
+          chainId: 1
+          rpcUrl: "${ETHEREUM_RPC_URL}"
+          wsUrl: "${ETHEREUM_WS_URL}"
+          gasStrategy: eip1559
+          maxGasPrice: 100
+
+      arbitrum:
+        type: evm
+        config:
+          chainId: 42161
+          rpcUrl: "${ARBITRUM_RPC_URL}"
+          gasStrategy: eip1559
+          maxGasPrice: 1
+
+      starknet:
+        type: starknet
+        config:
+          chainId: "SN_MAIN"
+          rpcUrl: "${STARKNET_RPC_URL}"
+          accountAddress: "${STARKNET_ACCOUNT}"
+          privateKey: "${STARKNET_PRIVATE_KEY}"
+
+    storage:
+      ipfs:
+        type: ipfs
+        config:
+          apiUrl: "${IPFS_API_URL}"
+          gatewayUrl: "${IPFS_GATEWAY_URL}"
+          pinning: pinata
+          apiKey: "${PINATA_API_KEY}"
+
+  syncs:
+    - finality-gate
+    - reorg-compensation
+    - content-pinning
+    - wallet-auth

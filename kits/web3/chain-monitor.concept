@@ -1,0 +1,84 @@
+@gate
+concept ChainMonitor [B] {
+
+  purpose {
+    Monitor blockchain state for finality, reorgs, and confirmation tracking.
+    Async gate concept: awaitFinality holds invocations and completes them
+    when the chain-specific finality condition is met (confirmations, L1 batch,
+    validity proof). Replaces engine-level confirmation annotations.
+  }
+
+  state {
+    subscriptions: set B
+    blockHeight: B -> Int
+    confirmations: B -> Int
+    chainConfig: B -> {
+      chainId: Int,
+      finalityType: String,
+      threshold: Int
+    }
+  }
+
+  actions {
+    action awaitFinality(txHash: String, level: String) {
+      -> ok(chain: String, block: Int, confirmations: Int) {
+        Finality condition met. The transaction has reached the requested
+        finality level (e.g., 12 confirmations, L1 batch posted, validity
+        proof accepted). Downstream syncs can safely proceed with
+        cross-chain actions.
+      }
+      -> reorged(txHash: String, depth: Int) {
+        Chain reorganization invalidated the transaction. The reorg depth
+        indicates how many blocks were reverted. Triggers compensating
+        sync chains (freeze, unlock, flag).
+      }
+      -> timeout(txHash: String) {
+        Exceeded maximum wait time for finality. The transaction may
+        still be valid but has not reached the requested finality level
+        within the configured timeout window.
+      }
+    }
+
+    action subscribe(chainId: Int, rpcUrl: String) {
+      -> ok(chainId: Int) {
+        Successfully subscribed to block events on the given chain.
+        The monitor will track new blocks and update confirmation counts.
+      }
+      -> error(message: String) {
+        Failed to connect to the chain RPC endpoint.
+      }
+    }
+
+    action onBlock(chainId: Int, blockNumber: Int, blockHash: String) {
+      -> ok(chainId: Int, blockNumber: Int) {
+        New block received. Confirmation counts updated for all
+        pending subscriptions on this chain.
+      }
+      -> reorg(chainId: Int, depth: Int, fromBlock: Int) {
+        Reorg detected. Blocks from fromBlock onward are no longer
+        canonical. All pending finality requests for affected transactions
+        receive reorged completions.
+      }
+    }
+  }
+
+  invariant "finality completion removes subscription" {
+    after {
+      awaitFinality(txHash: tx, level: "confirmations")
+        -> ok(chain: "ethereum", block: 100, confirmations: 12)
+    }
+    then {
+      // txHash is no longer in subscriptions
+    }
+  }
+
+  invariant "reorg completion removes subscription" {
+    after {
+      awaitFinality(txHash: tx, level: "confirmations")
+        -> reorged(txHash: tx, depth: 3)
+    }
+    then {
+      // txHash is no longer in subscriptions
+    }
+  }
+}

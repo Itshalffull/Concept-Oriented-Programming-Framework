@@ -1,0 +1,17 @@
+# ============================================================
+# Wallet Auth Integration — Activates with auth kit
+#
+# Wires Wallet/verify into the auth kit's JWT flow.
+# Wallet signature verification as an authentication method.
+#
+# Only loads if the auth kit is also present in the app.
+# ============================================================
+
+sync WalletAuth [eager]
+when {
+  Wallet/verify: [ address: ?addr ]
+    => ok(address: ?addr; recoveredAddress: ?addr)
+}
+then {
+  JWT/generate: [ subject: ?addr; claims: { wallet: ?addr } ]
+}

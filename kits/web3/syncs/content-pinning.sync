@@ -1,0 +1,18 @@
+# ============================================================
+# Content Pinning — Recommended Sync
+#
+# When Content/store completes successfully, auto-pin the CID.
+#
+# Override: replace with custom pinning strategy (batch pinning,
+#   different service, conditional pinning by content type)
+# Disable: if managing pinning externally (cron, separate service)
+# ============================================================
+
+// Recommended: auto-pin on store
+sync ContentPinning [recommended]
+when {
+  Content/store: [] => ok(cid: ?cid; size: ?size)
+}
+then {
+  Content/pin: [ cid: ?cid ]
+}
