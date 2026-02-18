@@ -3,12 +3,15 @@
 #
 # Multi-target compiler pipeline: SchemaGen produces a rich
 # ConceptManifest, and per-language generators (TypeScriptGen,
-# RustGen) each consume the manifest via their own sync.
-# Adding a new language target requires only a new generator
-# concept + one sync — no existing code changes.
+# RustGen, SwiftGen, SolidityGen) each consume the manifest
+# via their own sync. Adding a new language target requires
+# only a new generator concept + one sync — no existing code
+# changes.
 #
 # Pipeline: SpecParser → SchemaGen → TypeScriptGen
 #                                  → RustGen
+#                                  → SwiftGen
+#                                  → SolidityGen
 # ============================================================
 
 # When a spec is parsed, generate the manifest
@@ -36,6 +39,24 @@ when {
 }
 then {
   RustGen/generate: [ spec: ?spec; manifest: ?manifest ]
+}
+
+# When a manifest is generated, generate Swift code
+sync GenerateSwift [eager]
+when {
+  SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+}
+then {
+  SwiftGen/generate: [ spec: ?spec; manifest: ?manifest ]
+}
+
+# When a manifest is generated, generate Solidity code
+sync GenerateSolidity [eager]
+when {
+  SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+}
+then {
+  SolidityGen/generate: [ spec: ?spec; manifest: ?manifest ]
 }
 
 # When a concept is registered, log it

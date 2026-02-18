@@ -1,0 +1,28 @@
+concept SolidityGen [S] {
+
+  purpose {
+    Generate Solidity contract skeletons from a ConceptManifest.
+    Produces contract definitions, event declarations, and Foundry
+    test harnesses. Invariants become require statements.
+    Handles Solidity constraints: no generics, fixed-size types.
+  }
+
+  state {
+    outputs: S -> list { path: String, content: String }
+  }
+
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String, content: String }) {
+        Map ResolvedTypes to Solidity types (string, int256, uint256, bool, bytes, etc.).
+        Emit contract skeleton with storage variables from concept state.
+        Emit function signatures from actions with return structs for variants.
+        Emit event declarations for each action completion.
+        Emit Foundry test harness with require statements from invariants.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to Solidity.
+      }
+    }
+  }
+}

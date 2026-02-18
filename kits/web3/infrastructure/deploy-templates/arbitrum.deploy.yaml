@@ -1,0 +1,56 @@
+# Arbitrum Deploy Template
+#
+# Arbitrum One L2 deployment with L1-batch finality.
+# Soft finality from sequencer, hard finality from L1 batch posting.
+deploy:
+  name: arbitrum
+  description: >
+    Arbitrum One L2 deployment. Soft finality from sequencer
+    confirmation (~250ms), hard finality when L1 batch is posted
+    (~15 minutes). Use soft finality for UX, hard finality for
+    cross-chain bridges.
+
+  runtime:
+    engine: copf-sync-engine
+    transport: http
+
+  concepts:
+    ChainMonitor:
+      params:
+        B: arbitrum-block
+      config:
+        chainId: 42161
+        finalityType: l1-batch
+        softFinality: sequencer
+
+    Content:
+      params:
+        C: ipfs-cid
+
+    Wallet:
+      params:
+        W: ethereum-address
+
+  infrastructure:
+    transports:
+      evm:
+        type: evm
+        config:
+          chainId: 42161
+          rpcUrl: "${ARBITRUM_RPC_URL}"
+          gasStrategy: eip1559
+          maxGasPrice: 1
+          confirmationTimeout: 60000
+
+    storage:
+      ipfs:
+        type: ipfs
+        config:
+          apiUrl: "${IPFS_API_URL}"
+          gatewayUrl: "${IPFS_GATEWAY_URL}"
+          pinning: web3storage
+          apiKey: "${WEB3STORAGE_TOKEN}"
+
+  syncs:
+    - finality-gate
+    - content-pinning

@@ -1,0 +1,44 @@
+# ============================================================
+# Finality Gate — Required Sync
+#
+# Two-sync chain pattern for finality-aware cross-chain actions.
+# Without this, reorgs cause permanent state inconsistency.
+#
+# Step 1: Chain action completes → route through gate
+# Step 2: Gate completes → proceed with downstream action
+#
+# This is a PATTERN sync — apps clone and customize it for
+# their specific cross-chain flows, replacing the placeholder
+# concept/action references with their actual vault/bridge/etc.
+# ============================================================
+
+# Step 1: Route through finality gate after chain action completes
+# Apps replace "Contract/call" with their specific on-chain action
+sync WaitForFinality [eager]
+when {
+  Contract/call: [] => ok(txHash: ?tx; chain: ?chain)
+}
+then {
+  ChainMonitor/awaitFinality: [ txHash: ?tx; level: "default" ]
+}
+
+# Step 2: Proceed when finality is confirmed
+# Apps replace "Contract/execute" with their downstream cross-chain action
+sync ProceedAfterFinality [eager]
+when {
+  ChainMonitor/awaitFinality: [ txHash: ?tx ]
+    => ok(chain: ?chain; block: ?block; confirmations: ?confs)
+}
+then {
+  Contract/execute: [ txHash: ?tx; proof: ?block ]
+}
+
+# Step 3: Handle reorg (compensating action)
+sync HandleReorg [eager]
+when {
+  ChainMonitor/awaitFinality: [ txHash: ?tx ]
+    => reorged(txHash: ?tx; depth: ?depth)
+}
+then {
+  Contract/flagReorged: [ txHash: ?tx; depth: ?depth ]
+}

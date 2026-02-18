@@ -59,11 +59,13 @@ describe('SyncParser Concept', () => {
 
     expect(result.variant).toBe('ok');
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
-    expect(allSyncs).toHaveLength(4);
+    expect(allSyncs).toHaveLength(6);
     const names = allSyncs.map(s => s.name);
     expect(names).toContain('GenerateManifest');
     expect(names).toContain('GenerateTypeScript');
     expect(names).toContain('GenerateRust');
+    expect(names).toContain('GenerateSwift');
+    expect(names).toContain('GenerateSolidity');
     expect(names).toContain('LogRegistration');
   });
 

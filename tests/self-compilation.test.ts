@@ -144,7 +144,7 @@ describe('Self-Validation', () => {
     expect(result.variant).toBe('ok');
 
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
-    expect(allSyncs).toHaveLength(4);
+    expect(allSyncs).toHaveLength(6);
   });
 
   it('SyncCompiler compiles all framework syncs', async () => {
@@ -533,10 +533,12 @@ describe('SyncParser + SyncCompiler Self-Compilation', () => {
 
     expect(result.variant).toBe('ok');
     const allSyncs = result.allSyncs as { syncId: string; name: string }[];
-    expect(allSyncs).toHaveLength(4);
+    expect(allSyncs).toHaveLength(6);
     expect(allSyncs.map(s => s.name)).toContain('GenerateManifest');
     expect(allSyncs.map(s => s.name)).toContain('GenerateTypeScript');
     expect(allSyncs.map(s => s.name)).toContain('GenerateRust');
+    expect(allSyncs.map(s => s.name)).toContain('GenerateSwift');
+    expect(allSyncs.map(s => s.name)).toContain('GenerateSolidity');
     expect(allSyncs.map(s => s.name)).toContain('LogRegistration');
   });
 

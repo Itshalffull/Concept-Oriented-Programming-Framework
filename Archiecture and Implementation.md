@@ -2,13 +2,14 @@
 
 ## Architecture & Implementation Specification
 
-**Version:** 0.18.0
+**Version:** 0.19.0
 **Date:** 2026-02-18
 
 ### Changelog
 
 | Version | Date | Summary |
 |---------|------|---------|
+| 0.19.0 | 2026-02-18 | §16.13 SDK vs Generator Distinction: generators (RustGen, SwiftGen, SolidityGen) for local concepts with complex type systems, SDKs (Python ~200 LOC, Go ~300 LOC) for remote concepts behind HTTP. Priority order defined. §16.14 Pre-Conceptual Taxonomy: concept test table (storage/transport/SDK/CLI = not concepts; REST gateway/rate limiter/auth/registry/cron = concepts; EVM adapter = split). Edge runtime in §8.1: `cloudflare-worker` and `vercel-edge` types, follow phone pattern. "All domains" boundary test added to §16.11. Phases 20-22: multi-language generators + SDKs, edge runtime storage adapters (Cloudflare KV/DO, Vercel KV), web3 domain kit (EVM/StarkNet transports, IPFS storage, ChainMonitor/Content/Wallet concepts, sync patterns). |
 | 0.18.0 | 2026-02-18 | Marked phases 1-18 complete, all bootstrap stages complete. Added §16.11 Engine/Concept Boundary Principle, §16.12 Async Gate Convention. `@gate` annotation in grammar. Domain kit directory structure with `infrastructure/` for pre-conceptual code. `copf check --pattern` and `copf trace --gates` CLI. Gate-aware `TraceNode`/`TraceSyncNode` interfaces. Phase 19 (async gate implementation) added as next. Version changelog added. |
 | 0.17.0 | 2026-02-18 | Kernel shrinkage architecture: §17 with 6 subsections. FlowTrace, DeploymentValidator, Migration concept specs. SyncEngine eventual queue fold (§17.4). Stage 3.5 pre-compilation design (§17.5). Kernel target state table (§17.6). Phases 14-18 (kernel extraction through barrel cleanup). Bootstrap §10 updated with new concepts, syncs, Stage 3.5. Dependency graph updated. |
 | 0.16.0 | 2026-02-18 | Operational architecture integration across all sections. §16 added with 10 subsections (error tracing, observability, hot reloading, test helpers, schema migration, conflict resolution, lite query diagnostics, ordering, sync composition, authorization). Grammar extended with `@version(N)` annotation. Storage interface extended (`getMeta`, `getVersion`, `onConflict`). Telemetry concept + sync. Registry reload/deregister actions. Deploy manifest `engine:` config. Phases 10-13 added. §15 open questions all resolved. |
@@ -1771,6 +1772,32 @@ engine:
       - ./implementations/
 ```
 
+**Edge runtime types:**
+
+Edge runtimes (Cloudflare Workers, Vercel Edge Functions) are request-scoped and stateless — they follow the same pattern as phone runtimes: thin handlers with lite query mode, coordinated by a server-side engine.
+
+```yaml
+runtimes:
+  server:
+    type: node
+    engine: true
+    transport: in-process
+
+  edge:
+    type: cloudflare-worker  # or vercel-edge
+    engine: false            # no local engine — edge is request-scoped
+    transport: http
+    upstream: server         # coordinated by server engine
+    storage: cloudflare-kv   # or cloudflare-do, vercel-kv
+```
+
+Edge concepts are ideal candidates for pre-compiled `.copf-cache/` artifacts (Section 17.5) — no parsing at runtime means minimal cold start. The deploy manifest lists the available edge runtime types:
+
+| Runtime Type | Storage Options | Notes |
+|-------------|----------------|-------|
+| `cloudflare-worker` | `cloudflare-kv`, `cloudflare-do` | KV for simple key-value; Durable Objects for transactional guarantees |
+| `vercel-edge` | `vercel-kv` | Vercel KV backed by Redis |
+
 ### 8.2 Engine Hierarchy
 
 When multiple runtimes have `engine: true`, the system forms an engine hierarchy:
@@ -3048,6 +3075,8 @@ Some things cannot be concepts without infinite regress:
 
 These form the **trusted kernel** — ~584 lines of TypeScript (see Section 17.6 for the module breakdown). Everything above is spec-driven and self-hosting.
 
+See Section 16.14 for a comprehensive taxonomy of what is and isn't a concept — storage adapters, transport adapters, SDKs, and CLI are pre-conceptual; REST gateway, rate limiter, auth, and package registry are concepts.
+
 ---
 
 ## 11. Project Structure
@@ -3552,6 +3581,114 @@ Implements the engine/concept boundary principle (Section 16.11) and async gate 
   - [ ] Pattern validator: validate conforming gate concept passes, non-gate concept fails gracefully
   - [ ] FlowTrace: synthetic flow with a gate action, verify `TraceNode.gate` populated correctly
   - [ ] Trace renderer: snapshot test of gate-annotated output (completed, pending, failed)
+
+### Phase 20: Multi-Language Generators (Weeks 45-50)
+
+Implement additional language targets using the `ConceptManifest → target code` pattern from Phase 7. See Section 16.13 for the SDK vs generator distinction.
+
+- [ ] RustGen concept
+  - [ ] Rust type mapping function (`ResolvedType` → Rust syntax: `String`, `i64`, `f64`, `bool`, `Vec<u8>`, `DateTime<Utc>`, `String` for ID)
+  - [ ] Templates: struct definitions, handler trait, transport adapter, conformance tests
+  - [ ] Write `rust-gen.concept` spec
+  - [ ] Wire sync: `SchemaGen/generate → RustGen/generate`
+  - [ ] Covers: high-perf server concepts, WASM compilation (browser + edge + embedded), native mobile FFI to Swift/Kotlin
+- [ ] SwiftGen concept
+  - [ ] Swift type mapping (`ResolvedType` → Swift syntax: `String`, `Int`, `Double`, `Bool`, `Data`, `Date`, `String` for ID)
+  - [ ] Templates: struct definitions, protocol conformance, transport adapter
+  - [ ] Write `swift-gen.concept` spec
+  - [ ] Wire sync: `SchemaGen/generate → SwiftGen/generate`
+  - [ ] Scoped to native iOS platform API concepts only (CoreData, HealthKit, ARKit, CoreML). React Native covers everything else
+- [ ] SolidityGen concept
+  - [ ] Solidity type mapping (`ResolvedType` → Solidity syntax: `string`, `int256`, `uint256`, `bool`, `bytes`, `uint256` for DateTime, `bytes32` for ID)
+  - [ ] Invariants → `require` statements + Foundry test cases
+  - [ ] Handles Solidity constraints: no generics (type param becomes fixed `bytes32`), fixed-size types, storage layout
+  - [ ] Templates: contract skeleton, event definitions, Foundry test harness
+  - [ ] Write `solidity-gen.concept` spec
+  - [ ] Wire sync: `SchemaGen/generate → SolidityGen/generate`
+- [ ] Python SDK (~200 LOC, NOT a generator)
+  - [ ] `ConceptHandler` base class with `async handle(action, input, storage)` dispatch
+  - [ ] `@register("urn:app/ConceptName")` decorator for handler registration
+  - [ ] HTTP transport server (receive invocations, return completions)
+  - [ ] Message serialization matching framework wire format
+  - [ ] Target: ML pipeline concepts behind HTTP transport
+- [ ] Go SDK (~300 LOC, NOT a generator)
+  - [ ] `ConceptHandler` interface with `Handle(action string, input map, storage Storage) Completion`
+  - [ ] `Register(uri string, handler ConceptHandler)` function
+  - [ ] HTTP transport server
+  - [ ] Message serialization matching framework wire format
+  - [ ] Target: infrastructure concepts behind HTTP transport
+
+### Phase 21: Edge Runtime Support (Weeks 51-54)
+
+Folds into the distribution architecture (Phase 9 design). Edge concepts follow the phone pattern: thin handlers with lite query mode, coordinated by a server-side engine.
+
+- [ ] Cloudflare KV storage adapter
+  - [ ] Implements `ConceptStorage` backed by Cloudflare KV
+  - [ ] `put/get/del` → KV operations, `find` → list + filter
+  - [ ] `lastWrittenAt` via KV metadata field
+  - [ ] Handle eventual consistency semantics (KV is eventually consistent across regions)
+- [ ] Cloudflare Durable Objects storage adapter
+  - [ ] Implements `ConceptStorage` for stateful edge concepts needing transactional guarantees
+  - [ ] Each concept instance maps to a Durable Object
+  - [ ] Supports `onConflict` hooks (Section 16.6)
+- [ ] Vercel KV storage adapter
+  - [ ] Implements `ConceptStorage` backed by Vercel KV (Redis-compatible)
+  - [ ] `put/get/del` → Redis SET/GET/DEL, `find` → SCAN + filter
+  - [ ] `lastWrittenAt` via Redis hash field
+- [ ] Edge runtime type in deploy manifest
+  - [ ] `cloudflare-worker` and `vercel-edge` as runtime types (Section 8.1)
+  - [ ] `engine: false` enforced — edge runtimes are request-scoped, no local engine
+  - [ ] `upstream: server` required — server engine coordinates
+  - [ ] Validate: edge concept with Cloudflare KV storage, lite query mode, upstream coordination
+- [ ] Documentation: "edge concepts follow the phone pattern"
+  - [ ] Edge functions are thin handlers with lite query mode
+  - [ ] Pre-compiled `.copf-cache/` artifacts minimize cold start (no parsing at runtime)
+  - [ ] Server-side engine coordinates all cross-concept syncs
+
+### Phase 22: Web3 Kit (Weeks 55-60)
+
+Implement the web3 domain kit. All domain logic lives in concepts + syncs — zero engine extensions. See Section 16.11 for the engine/concept boundary principle.
+
+- [ ] Pre-conceptual infrastructure
+  - [ ] EVM transport adapter (~300 LOC)
+    - [ ] Implements `ConceptTransport`
+    - [ ] `invoke()` → submit transaction via ethers.js/viem (gas estimation, nonce management, receipt polling)
+    - [ ] `query()` → read contract storage slots via `eth_call`
+    - [ ] `subscribe()` → event log subscriptions (contract events arrive as completions that trigger syncs)
+    - [ ] Works for all EVM chains (Ethereum, Arbitrum, Optimism, Base, Polygon) — different RPC endpoints, same adapter
+  - [ ] StarkNet transport adapter
+    - [ ] Separate adapter: Cairo VM is not EVM
+    - [ ] Uses starknet.js for transaction submission and storage reads
+  - [ ] IPFS storage adapter (~200 LOC)
+    - [ ] Implements `ConceptStorage`
+    - [ ] Content-addressed: store returns CID, retrieve by CID
+    - [ ] Maintains mutable index (key → CID) on top of immutable content
+    - [ ] Index can live on-chain, in IPNS, or in a sidecar DB
+    - [ ] Pinning config in deploy manifest: `gateway`, `pinning` service, `apiKey`
+- [ ] Concepts
+  - [ ] ChainMonitor concept (~250 LOC impl)
+    - [ ] `@gate` annotated (Section 16.12)
+    - [ ] Tracks blockchain state: subscriptions, current block per chain, finality status
+    - [ ] `awaitFinality(txHash, level)` — long-running action, completes when finality threshold met
+    - [ ] Variants: `ok(chain, block, confirmations)`, `reorged(txHash, depth)`, `timeout(txHash)`
+    - [ ] Replaces engine-level `[confirmations: 12]` annotations — finality is a domain concern
+  - [ ] Content concept (~150 LOC impl)
+    - [ ] CID tracking + pinning
+    - [ ] State: items, cid mapping, metadata, pinned status
+    - [ ] Actions: `store → ok(cid) | error`, `pin/unpin`, `resolve → ok(data) | notFound | unavailable`
+    - [ ] `unavailable` variant is meaningful — syncs react to it (retry, fallback, alert)
+    - [ ] Uses IPFS storage adapter internally
+  - [ ] Wallet concept
+    - [ ] Wraps signature verification (ecrecover / EIP-712)
+    - [ ] Same auth pattern as JWT: syncs check `Wallet/verify → ok` before protected actions
+    - [ ] Integrates with auth kit via integration sync
+- [ ] Chain configs in deploy manifest
+  - [ ] Finality policy per chain (Section 9.1, web3 kit manifest)
+  - [ ] EVM chain deploy templates (~30 LOC per chain): Ethereum mainnet, Arbitrum, Optimism, Base, multi-chain
+- [ ] Sync patterns (examples + templates, not engine code)
+  - [ ] Finality-gated bridge pattern: two-sync chain through ChainMonitor/awaitFinality
+  - [ ] Reorg compensation pattern: `ChainMonitor/onBlock → reorg` triggers compensating actions (freeze, burn, flag). Provenance graph for causal chain walkback
+  - [ ] Wallet auth integration: `Wallet/verify` wired into auth kit's JWT flow via integration sync
 
 ---
 
@@ -4666,6 +4803,8 @@ No new annotations, no engine changes, no special handling. The engine processes
 
 That's 200+ lines of blockchain-specific code in the engine — code that helps nobody who isn't building on blockchains. The engine grows with every domain. By contrast, a `ChainMonitor` concept encapsulates all of this, and apps that don't use blockchains never load it.
 
+**The second test:** would this annotation make sense across ALL domains, or only a specific one? `[eager]` and `[eventual]` make sense whether you're building a social app, an IoT system, or a blockchain bridge — they're about delivery semantics. `[confirmations: 12]` only makes sense for blockchains. If only specific domains would ever use an annotation, it belongs in a concept.
+
 **The rule:** if you find yourself wanting a new engine annotation to change sync evaluation behavior, write a concept instead and put it in a sync chain. The engine stays at ~584 LOC forever.
 
 ### 16.12 Async Gate Convention
@@ -4807,6 +4946,65 @@ interface TraceNode {
 ```
 
 The `gate` field is populated by the trace builder when it detects the target concept has `@gate` in its AST. The `waitDescription` and `progress` are optional fields that gate concept implementations can include in their completion or in-progress reporting — they're not required by the convention.
+
+### 16.13 SDK vs Generator Distinction
+
+The framework supports two strategies for multi-language concept development. The choice depends on whether the language runs concepts locally with the engine, or always behind a transport boundary.
+
+**Generators** produce typed handler skeletons from concept specs via the `ConceptManifest → target code` pattern established in Phase 7 (Section 7.2). Use generators for languages where:
+
+- Concepts run **locally** with a sync engine instance (in-process transport)
+- The language has a **complex type system** that benefits from generated types (Rust traits, Swift protocols, Solidity interfaces)
+- **Conformance tests** should be generated alongside skeletons
+
+| Generator | Target | Use Case |
+|-----------|--------|----------|
+| TypeScriptGen | TypeScript/JavaScript | Server, browser, edge, React Native concepts |
+| RustGen | Rust | High-perf server concepts, WASM compilation (browser + edge + embedded), native mobile FFI to Swift/Kotlin |
+| SwiftGen | Swift | Native iOS platform API concepts only (CoreData, HealthKit, ARKit, CoreML). React Native covers everything else |
+| SolidityGen | Solidity | On-chain contract skeletons. Invariants → `require` statements + Foundry test cases. Harder than other generators: no generics, fixed-size types |
+
+Adding a generator is a concept: write a `<Lang>Gen` concept spec, wire `SchemaGen/generate → <Lang>Gen/generate` sync, implement the `ConceptManifest → code` transform. See Phase 8 for the pattern.
+
+**SDKs** are thin protocol libraries (~200-300 LOC) that implement the handler/transport protocol so developers in that language can write concept handlers natively. Use SDKs for languages where:
+
+- Concepts are always **remote services** behind HTTP transport
+- Developers prefer **their own code structure** over generated skeletons
+- The language ecosystem has **different conventions** for project layout (e.g., Python packages, Go modules)
+
+| SDK | LOC | Target | API Shape |
+|-----|-----|--------|-----------|
+| Python SDK | ~200 | ML pipeline concepts behind HTTP transport | `@register("urn:app/Recommender")` decorator on `ConceptHandler` subclass |
+| Go SDK | ~300 | Infrastructure concepts behind HTTP transport | `ConceptHandler` interface + `Register()` function |
+
+An SDK implements three things:
+
+1. **Handler protocol** — base class/interface with `async handle(action, input, storage) → completion` dispatch
+2. **Transport registration** — register a concept URI, start an HTTP server that speaks the concept wire protocol (invocation → handler → completion)
+3. **Message serialization** — JSON marshaling of `ActionInvocation` and `ActionCompletion` matching the framework's wire format
+
+SDKs are NOT concepts — they're pre-conceptual protocol libraries (Section 10.3). They don't generate code, don't use `ConceptManifest`, and don't integrate with the compiler pipeline. They just let external services speak the concept protocol.
+
+**Priority order:** TypeScript ✅ → Rust → Swift → Python SDK → Go SDK → Kotlin (only if native Android platform APIs become a real need)
+
+### 16.14 Pre-Conceptual Taxonomy
+
+Not everything in a COPF system is a concept. The concept test (Section 1.1): does this thing have **independent state**, **meaningful actions with domain-specific variants**, and **operational principles that compose via syncs**? If all three, it's a concept. Otherwise, it's pre-conceptual infrastructure.
+
+| Component | Is it a concept? | Why / Why not |
+|-----------|:---:|---|
+| Storage adapters (SQLite, Postgres, in-memory) | No | No independent state. Implements a generic interface. Different adapters are interchangeable. |
+| Transport adapters (HTTP, WebSocket, in-process) | No | No independent state. Protocol plumbing. The engine calls `invoke()` and `query()` without caring which adapter. |
+| SDKs (Python, Go) | No | Protocol libraries. No state, no actions, no variants. |
+| CLI (`copf` commands) | No | User-facing shell. Invokes concepts but has no state or actions of its own. |
+| REST gateway | **Yes** | Has state (route table), actions (register/deregister route), domain-specific variants (methodNotAllowed, notFound). Web/request sync triggers downstream. |
+| Rate limiter | **Yes** | Has state (counters per key, window config), actions (check → ok/throttled), meaningful variants. |
+| Auth (JWT, Password) | **Yes** | Has state (credentials, tokens), actions (verify → ok/invalid), domain-specific variants. |
+| Package registry | **Yes** | Has state (published packages, versions), actions (publish, resolve), domain-specific variants (versionConflict). |
+| Cron scheduler | **Yes** | Has state (scheduled jobs, last run), actions (schedule, tick → ok/missed), meaningful variants. |
+| EVM adapter | **Split** | Transport adapter is pre-conceptual (maps invoke → contract call). But specific contract wrappers like Vault or TokenBridge are concepts (state, actions, variants). |
+
+**The split case** is important: when a domain requires both infrastructure and concepts, the infrastructure goes in the kit's `infrastructure/` directory (Section 9.6) and the concepts go in the kit's root as `.concept` files. The web3 kit demonstrates this — the EVM transport adapter is pre-conceptual, but ChainMonitor, Content, and Wallet are concepts.
 
 ---
 
@@ -5111,3 +5309,5 @@ Everything above this layer is spec-driven and self-hosting. The kernel's only j
 | Debugging | Not addressed | `copf trace` provenance graph renderer, FlowTrace API |
 | Domain extensibility | Not addressed | Engine/concept boundary: engine handles delivery, domains add gating concepts in sync chains |
 | Convention validation | Not addressed | `@gate` annotation + `copf check --pattern` for structural conformance |
+| Multi-language strategy | Not addressed | Generators for local concepts (TS, Rust, Swift, Solidity), SDKs for remote services (Python, Go) |
+| Edge deployment | Not addressed | Edge runtimes follow phone pattern: thin handlers, lite queries, server-coordinated |
