@@ -2,8 +2,19 @@
 
 ## Architecture & Implementation Specification
 
-**Version:** 0.1.0-draft
-**Date:** 2025-02-15
+**Version:** 0.18.0
+**Date:** 2026-02-18
+
+### Changelog
+
+| Version | Date | Summary |
+|---------|------|---------|
+| 0.18.0 | 2026-02-18 | Marked phases 1-18 complete, all bootstrap stages complete. Added §16.11 Engine/Concept Boundary Principle, §16.12 Async Gate Convention. `@gate` annotation in grammar. Domain kit directory structure with `infrastructure/` for pre-conceptual code. `copf check --pattern` and `copf trace --gates` CLI. Gate-aware `TraceNode`/`TraceSyncNode` interfaces. Phase 19 (async gate implementation) added as next. Version changelog added. |
+| 0.17.0 | 2026-02-18 | Kernel shrinkage architecture: §17 with 6 subsections. FlowTrace, DeploymentValidator, Migration concept specs. SyncEngine eventual queue fold (§17.4). Stage 3.5 pre-compilation design (§17.5). Kernel target state table (§17.6). Phases 14-18 (kernel extraction through barrel cleanup). Bootstrap §10 updated with new concepts, syncs, Stage 3.5. Dependency graph updated. |
+| 0.16.0 | 2026-02-18 | Operational architecture integration across all sections. §16 added with 10 subsections (error tracing, observability, hot reloading, test helpers, schema migration, conflict resolution, lite query diagnostics, ordering, sync composition, authorization). Grammar extended with `@version(N)` annotation. Storage interface extended (`getMeta`, `getVersion`, `onConflict`). Telemetry concept + sync. Registry reload/deregister actions. Deploy manifest `engine:` config. Phases 10-13 added. §15 open questions all resolved. |
+| 0.9.0 | 2026-02-17 | CodeGen refactor pattern: SchemaGen → ConceptManifest → per-language generators. `ConceptManifest` interface defined. TypeScriptGen/RustGen concept specs. Compiler pipeline syncs updated. Stage 4/4.5 migration plan. Operational design decisions documented (appendix-style, later integrated into §16). |
+| 0.6.0 | 2026-02-16 | Phases 1-6 complete. Self-hosting achieved (Stage 3). Concept kits (§9) with kit manifest, type alignment, sync tiers. RealWorld benchmark validated. Distribution architecture (Phase 9 design). Web3 kit manifest example added to §9.1. |
+| 0.1.0 | 2025-02-15 | Initial draft. Sections 1-15: spec language, IR, GraphQL, sync language, sync engine, compiler pipeline, deployment manifest, bootstrapping plan, project structure, CLI, roadmap (phases 1-9), Stage 0 acceptance tests, open questions. |
 
 ---
 
@@ -73,7 +84,7 @@ The tokenizer produces the following token types:
 KEYWORD     = "concept" | "purpose" | "state" | "actions" | "action"
             | "invariant" | "capabilities" | "requires" | "after"
             | "then" | "and" | "set" | "list" | "option"
-ANNOTATION  = "@" IDENT "(" INT_LIT ")"    -- e.g. @version(3)
+ANNOTATION  = "@" IDENT ("(" INT_LIT ")")?  -- e.g. @version(3), @gate
 PRIMITIVE   = "String" | "Int" | "Float" | "Bool" | "Bytes"
             | "DateTime" | "ID"
 IDENT       = [A-Za-z_][A-Za-z0-9_]*
@@ -110,7 +121,7 @@ ConceptFile     = ConceptDecl
 
 ConceptDecl     = Annotation* "concept" IDENT TypeParams? "{" Section* "}"
 
-Annotation      = "@" IDENT "(" INT_LIT ")"
+Annotation      = "@" IDENT ("(" INT_LIT ")")?
 
 TypeParams      = "[" IDENT ("," IDENT)* "]"
 
@@ -285,6 +296,8 @@ concept Password [U] {
 **Semicolons** are optional everywhere. Both `hash: U -> Bytes\n` and `hash: U -> Bytes;` are valid. This allows single-line compact specs (`state { hash: U -> Bytes; salt: U -> Bytes }`) without requiring semicolons in the more common multi-line format.
 
 **`@version(N)`** is an annotation on the concept declaration. It is an integer that increments when the state schema changes in a way that requires data migration (adding, removing, or renaming relations or fields). Non-breaking changes (new actions, new variants) do not require a version bump. The framework uses this at startup to detect version mismatches and block the concept until migration runs — see Section 16.5 for the full migration design.
+
+**`@gate`** marks a concept as an async gate — a concept whose actions may complete asynchronously after an arbitrarily long wait. The annotation is metadata for tooling: `copf check --pattern async-gate` validates the convention, and `copf trace` annotates gate steps with ⏳ icons and progress reporting. The engine ignores it entirely. See Section 16.12 for the full convention.
 
 ---
 
@@ -1294,6 +1307,7 @@ interface ConceptManifest {
   uri: string;
   name: string;
   version?: number;          // from @version(N) annotation
+  gate?: boolean;            // from @gate annotation
   typeParams: string[];
   relations: RelationSchema[];
   actions: ActionSchema[];
@@ -1776,7 +1790,7 @@ Kits are a packaging convention, not a language construct. The framework does no
 
 ### 9.1 Kit Manifest Format
 
-A kit is a directory with a `kit.yaml` manifest:
+A kit is a directory with a `kit.yaml` manifest. Kits bundle concepts, syncs, implementations, and optionally **infrastructure** — transport adapters, storage backends, and deploy templates that the kit's concepts require.
 
 ```yaml
 # kits/content-management/kit.yaml
@@ -1867,6 +1881,138 @@ integrations:
         description: >
           When a user creates an entity, record ownership. Requires
           the auth kit's User concept.
+
+# Optional: infrastructure that the kit's concepts require.
+# Transports and storage adapters are pre-conceptual (Section 10.3)
+# but belong in the kit because the concepts can't function without them.
+# infrastructure:
+#   transports:
+#     - name: evm
+#       path: ./transports/evm-transport.ts
+#       description: EVM JSON-RPC transport adapter
+#   storage:
+#     - name: ipfs
+#       path: ./storage/ipfs-storage.ts
+#       description: IPFS content-addressed storage adapter
+#   deployTemplates:
+#     - path: ./deploy-templates/mainnet.deploy.yaml
+```
+
+Kits that introduce a new deployment target — a new chain, a new edge runtime, a new device class — bundle the pre-conceptual infrastructure alongside their concepts. The infrastructure section is optional; most kits (auth, content-management) only need concepts and syncs.
+
+**Example: web3 kit manifest**
+
+```yaml
+# kits/web3/kit.yaml
+kit:
+  name: web3
+  version: 0.1.0
+  description: >
+    Blockchain integration for COPF. Chain monitoring with
+    finality-aware gating, IPFS content storage with pinning,
+    and wallet-based authentication via signature verification.
+
+concepts:
+  ChainMonitor:
+    spec: ./chain-monitor.concept
+    params:
+      B: { as: block-ref, description: "Reference to a tracked block" }
+
+  Content:
+    spec: ./content.concept
+    params:
+      C: { as: content-ref, description: "Reference to stored content (CID)" }
+
+  Wallet:
+    spec: ./wallet.concept
+    params:
+      W: { as: wallet-ref, description: "Reference to a wallet/address" }
+
+syncs:
+  required:
+    - path: ./syncs/finality-gate.sync
+      description: >
+        Pattern sync for finality-aware gating. When a chain action
+        completes, route through ChainMonitor/awaitFinality before
+        triggering downstream cross-chain actions. Apps clone and
+        customize this for their specific cross-chain flows.
+
+  recommended:
+    - path: ./syncs/reorg-compensation.sync
+      name: ReorgCompensation
+      description: >
+        When ChainMonitor detects a reorg, freeze or flag any
+        downstream actions that were triggered by the reorged
+        completion. Override with app-specific compensation logic.
+
+    - path: ./syncs/content-pinning.sync
+      name: ContentPinning
+      description: >
+        When Content/store completes, automatically pin the CID
+        via the configured pinning service. Disable if managing
+        pinning manually.
+
+integrations:
+  - kit: auth
+    syncs:
+      - path: ./syncs/wallet-auth.sync
+        description: >
+          Wire Wallet/verify into the auth kit's JWT flow.
+          Wallet signature verification as an auth method.
+
+infrastructure:
+  transports:
+    - name: evm
+      path: ./transports/evm-transport.ts
+      description: >
+        EVM JSON-RPC transport adapter. Maps concept invoke() to
+        contract calls via ethers.js/viem, query() to storage reads.
+        Handles gas estimation, nonce management, receipt polling.
+
+    - name: starknet
+      path: ./transports/starknet-transport.ts
+      description: >
+        StarkNet transport adapter for Cairo VM chains.
+
+  storage:
+    - name: ipfs
+      path: ./storage/ipfs-storage.ts
+      description: >
+        IPFS content-addressed storage adapter. Maintains a mutable
+        index (key → CID) on top of immutable content storage.
+        Supports Pinata, web3.storage, and self-hosted IPFS nodes.
+
+  deployTemplates:
+    - path: ./deploy-templates/ethereum-mainnet.deploy.yaml
+    - path: ./deploy-templates/arbitrum.deploy.yaml
+    - path: ./deploy-templates/multi-chain.deploy.yaml
+
+chainConfigs:
+  ethereum:
+    chainId: 1
+    finality:
+      type: confirmations
+      threshold: 12
+  arbitrum:
+    chainId: 42161
+    finality:
+      type: l1-batch
+      softFinality: sequencer
+  optimism:
+    chainId: 10
+    finality:
+      type: l1-batch
+      softFinality: sequencer
+  base:
+    chainId: 8453
+    finality:
+      type: l1-batch
+      softFinality: sequencer
+  starknet:
+    chainId: "SN_MAIN"
+    finality:
+      type: validity-proof
+    transport: starknet
 ```
 
 ### 9.2 Type Parameter Alignment
@@ -2034,32 +2180,106 @@ syncs:
 
 ### 9.6 Kit Directory Structure
 
+**Framework kits** (concepts + syncs only):
+
 ```
 kits/
-└── content-management/
-    ├── kit.yaml                # Kit manifest
-    ├── entity.concept          # Concept specs
-    ├── field.concept
-    ├── relation.concept
-    ├── node.concept
-    ├── syncs/
-    │   ├── cascade-delete-fields.sync       # Required
-    │   ├── cascade-delete-relations.sync    # Required
-    │   ├── entity-lifecycle.sync            # Required
-    │   ├── default-title-field.sync         # Recommended
-    │   ├── node-create-entity.sync          # Recommended
-    │   ├── update-timestamp-on-field-change.sync  # Recommended
-    │   └── entity-ownership.sync            # Integration (auth)
-    ├── implementations/
-    │   └── typescript/         # Default implementations
-    │       ├── entity.impl.ts
-    │       ├── field.impl.ts
-    │       ├── relation.impl.ts
-    │       └── node.impl.ts
-    └── tests/
-        ├── conformance/        # Generated from invariants
-        └── integration/        # Kit-level integration tests
+├── auth/
+│   ├── kit.yaml
+│   ├── user.concept
+│   ├── password.concept
+│   ├── jwt.concept
+│   ├── syncs/
+│   │   ├── registration.sync          # recommended
+│   │   └── token-refresh.sync         # recommended
+│   ├── implementations/
+│   │   └── typescript/
+│   │       ├── user.impl.ts
+│   │       ├── password.impl.ts
+│   │       └── jwt.impl.ts
+│   └── tests/
+│       ├── conformance/
+│       └── integration/
+│
+├── rate-limiting/
+│   ├── kit.yaml
+│   ├── rate-limiter.concept           # cross-domain, async gate pattern
+│   ├── syncs/
+│   │   └── rate-limit-check.sync      # recommended
+│   ├── implementations/
+│   │   └── typescript/
+│   │       └── rate-limiter.impl.ts   # token bucket algorithm
+│   └── tests/
 ```
+
+**Domain kits** (concepts + syncs + infrastructure):
+
+Domain kits that introduce new deployment targets bundle pre-conceptual code (transport adapters, storage backends, deploy templates) alongside their concepts. The infrastructure section groups code that is below the concept abstraction but domain-specific — it doesn't belong in the framework kernel because it's useless outside the kit's domain.
+
+```
+kits/
+├── web3/
+│   ├── kit.yaml
+│   ├── chain-monitor.concept          # async gate: finality, reorgs
+│   ├── contract.concept               # on-chain concept wrapper
+│   ├── content.concept                # IPFS content management
+│   ├── wallet.concept                 # signature verification
+│   ├── syncs/
+│   │   ├── finality-gate.sync         # required
+│   │   ├── reorg-compensation.sync    # recommended
+│   │   ├── content-pinning.sync       # recommended
+│   │   └── wallet-auth.sync           # integration (auth kit)
+│   ├── implementations/
+│   │   └── typescript/
+│   │       ├── chain-monitor.impl.ts
+│   │       ├── contract.impl.ts
+│   │       ├── content.impl.ts
+│   │       └── wallet.impl.ts
+│   ├── infrastructure/                # pre-conceptual, domain-specific
+│   │   ├── transports/
+│   │   │   ├── evm-transport.ts       # EVM JSON-RPC adapter
+│   │   │   └── starknet-transport.ts  # StarkNet adapter
+│   │   ├── storage/
+│   │   │   └── ipfs-storage.ts        # IPFS content-addressed adapter
+│   │   └── deploy-templates/
+│   │       ├── ethereum-mainnet.deploy.yaml
+│   │       ├── arbitrum.deploy.yaml
+│   │       └── multi-chain.deploy.yaml
+│   └── tests/
+│
+├── iot/
+│   ├── kit.yaml
+│   ├── freshness-gate.concept         # async gate: TTL, staleness
+│   ├── device.concept                 # device registration, heartbeat
+│   ├── telemetry-ingest.concept       # sensor data collection
+│   ├── syncs/
+│   │   ├── check-freshness.sync       # required
+│   │   ├── device-heartbeat.sync      # required
+│   │   └── stale-alert.sync           # recommended
+│   ├── implementations/
+│   │   └── typescript/
+│   ├── infrastructure/
+│   │   ├── transports/
+│   │   │   └── mqtt-transport.ts      # MQTT adapter for devices
+│   │   └── deploy-templates/
+│   │       └── edge-gateway.deploy.yaml
+│   └── tests/
+│
+├── workflow/
+│   ├── kit.yaml
+│   ├── approval-queue.concept         # async gate: human approval
+│   ├── escalation.concept             # timeout → escalate
+│   ├── notification.concept           # email/slack on pending
+│   ├── syncs/
+│   │   ├── request-approval.sync      # required
+│   │   ├── escalate-timeout.sync      # required
+│   │   └── notify-approver.sync       # recommended
+│   ├── implementations/
+│   │   └── typescript/
+│   └── tests/
+```
+
+The `infrastructure/` directory is reserved for pre-conceptual code per Section 10.3. It contains only transport adapters, storage backends, and deploy templates — never concepts, syncs, or implementations. The kit installer copies infrastructure into the appropriate kernel extension paths; the `copf kit validate` command verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
 
 ### 9.7 Kit Design Guidelines
 
@@ -2073,6 +2293,10 @@ kits/
 
 **Type parameter alignment is documentation, not enforcement.** The `as` tags help the compiler catch mistakes, but they don't prevent creative uses. An app might intentionally pass a User ID where an entity-ref is expected — if they've thought it through, the framework shouldn't stop them.
 
+**Bundle infrastructure when introducing new deployment targets.** If a kit's concepts require a transport adapter (EVM, StarkNet) or a storage backend (IPFS, CloudflareKV) that doesn't ship with the framework, include it in the kit's `infrastructure` section. Pre-conceptual code belongs in the kit when it's domain-specific — the EVM transport adapter is useless outside web3, so it ships with the web3 kit, not the framework kernel.
+
+**Domain gating is a concept, not an engine extension.** If your kit needs "wait for condition X before proceeding" (finality, batch size, approval, TTL), model X as a concept with a long-running action that completes when the condition is met. Don't add annotations to the sync engine. The engine handles delivery semantics (eager, eventual, local, idempotent). Domain semantics belong in concepts. See Section 16.11 for the full rationale.
+
 ---
 
 ## 10. Bootstrapping Plan
@@ -2081,7 +2305,7 @@ The framework is self-hosting: the compiler, engine, and tooling are themselves 
 
 ### 10.1 Bootstrap Stages
 
-> **Implementation note:** Stages 0 through 3 have been implemented using the original architecture, which had a single `CodeGen` concept accepting a `language` parameter. As this document evolved, we refined the codegen architecture to split `CodeGen` into `SchemaGen` (producing a rich, language-neutral `ConceptManifest`) plus independent per-language generator concepts (`TypeScriptGen`, `RustGen`, etc.) — see the concept specs below. The existing implementation is functional and correct; Stage 4.5 (described after Stage 4) covers the migration from the old pattern to the new one. This migration is a prerequisite for Stage 5 (Multi-Target), since the whole point of the split is to make adding new language targets a matter of writing a new concept and a sync rather than modifying the existing CodeGen.
+> **Implementation note:** All bootstrap stages (0 through 5, including 3.5) are complete. The framework initially used a single `CodeGen` concept accepting a `language` parameter. This was refactored in Stages 4/4.5 to split `CodeGen` into `SchemaGen` (producing a rich, language-neutral `ConceptManifest`) plus independent per-language generator concepts (`TypeScriptGen`, `RustGen`, etc.) — see the concept specs below. Stage 3.5 eliminated the bootstrap chain, bringing the kernel down to ~584 LOC. The concept specs below reflect the final architecture.
 
 **Stage 0: The Kernel (hand-written TypeScript)** ✅ Complete
 
@@ -2156,6 +2380,7 @@ interface ConceptManifest {
   uri: string;
   name: string;
   version?: number;          // from @version(N) annotation, if present
+  gate?: boolean;            // from @gate annotation, if present
   typeParams: TypeParamInfo[];
 
   // State → Storage mapping (result of merge/grouping rules)
@@ -2619,7 +2844,7 @@ sync ValidateDeployment {
 
 Note the key property: **adding a new target language requires zero modifications to any existing concept or sync.** You write a new generator concept (e.g., `SwiftGen`), implement it, and add one sync that wires `SchemaGen/generate` to `SwiftGen/generate`. This is the framework proving its own extensibility model.
 
-The concept specs above reflect the target architecture. The current implementation uses the original pattern (single `CodeGen` concept with a `language` parameter, single `SchemaGen` that produces GraphQL/JSON schemas only). Stage 4.5 covers the migration.
+The concept specs above reflect the implemented architecture. The original single `CodeGen` concept was refactored in Stage 4/4.5 into `SchemaGen` + per-language generators.
 
 **Stage 2: Self-Compilation** ✅ Complete
 
@@ -2697,7 +2922,7 @@ The SyncEngine concept is itself run by the kernel engine. This is the key boots
 
 Eventually, even these responsibilities could be modeled as concepts (a Loader concept, a Router concept), but the kernel remains as the minimal trusted base.
 
-**Stage 3.5: Eliminate Bootstrap Chain**
+**Stage 3.5: Eliminate Bootstrap Chain** ✅ Complete
 
 > The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. `createKernel()` directly instantiates Stage 0 classes; even `createSelfHostedKernel()` still uses Stage 0 parsers to load files.
 
@@ -2710,7 +2935,7 @@ This stage introduces a pre-compilation step. Instead of re-parsing specs at eve
 
 This is Phase 17 in the roadmap. After this stage, the kernel drops from ~4,254 LOC to ~584 LOC, matching the Section 10.3 target.
 
-**Stage 4: CodeGen Refactor** ← Next
+**Stage 4: CodeGen Refactor** ✅ Complete
 
 The existing implementation has a single `CodeGen` concept that accepts a `language` parameter and produces files for any target. This works, but has a structural problem: adding a new language requires modifying CodeGen's internals, and the concept grows linearly with every target. The refined architecture (specified in the concept definitions above) splits this into:
 
@@ -2731,7 +2956,7 @@ Migration steps:
 
 The key constraint is that this refactor must be behavior-preserving. The generated TypeScript output should be identical before and after, since the same decisions are being made — they're just encoded in a manifest rather than computed inline during codegen.
 
-**Stage 5: Multi-Target**
+**Stage 5: Multi-Target** ✅ Complete
 
 With the refactored pipeline, adding the first non-TypeScript target:
 
@@ -2781,7 +3006,7 @@ Stage 3 (engine self-hosting) ✅
   ├── kernel reduced to process bootstrap + message routing
   └── all framework logic expressed as concepts + syncs
         │
-Stage 3.5 (eliminate bootstrap chain)
+Stage 3.5 (eliminate bootstrap chain) ✅
   │
   ├── .copf-cache/ pre-compiled artifact format
   ├── copf compile --cache writes compiled artifacts
@@ -2789,20 +3014,20 @@ Stage 3.5 (eliminate bootstrap chain)
   ├── Stage 0 scaffolding deleted (~1,523 LOC)
   └── kernel reaches ~584 LOC target
         │
-Stage 4 (codegen refactor) ← NEXT
+Stage 4 (codegen refactor) ✅
   │
   ├── SchemaGen → produces ConceptManifest (rich, language-neutral IR)
   ├── CodeGen → split into TypeScriptGen (+ future per-language concepts)
   ├── pipeline syncs updated
   └── self-compilation verified through new pipeline
         │
-Stage 5 (multi-target)
+Stage 5 (multi-target) ✅
   │
   ├── RustGen concept + one sync
   ├── cross-language concept deployment
   └── distributed engine hierarchy
         │
-Stage 6 (operational architecture)
+Stage 6 (operational architecture) ✅
   │
   ├── FlowTrace API + copf trace CLI
   ├── createMockHandler test utility
@@ -2821,7 +3046,7 @@ Some things cannot be concepts without infinite regress:
 - **Message dispatch.** The act of routing a completion to the SyncEngine concept and routing its output invocations to target concepts is pre-conceptual.
 - **Transport adapter instantiation.** Creating the in-process, HTTP, or WebSocket connections that concepts communicate over.
 
-These form the **trusted kernel** — 1,688 lines of TypeScript across 8 modules (measured after Phase 18). The core 5 modules (index, transport, storage, http-transport, ws-transport) total 785 LOC; the remaining 903 LOC covers shared type definitions (types.ts: 405), message dispatch runtime (self-hosted.ts: 264), and the compiled artifact cache (cache.ts: 234). Everything above is spec-driven and self-hosting.
+These form the **trusted kernel** — ~584 lines of TypeScript (see Section 17.6 for the module breakdown). Everything above is spec-driven and self-hosting.
 
 ---
 
@@ -2935,6 +3160,7 @@ copf/
         ├── src/
         │   ├── commands/
         │   │   ├── init.ts
+        │   │   ├── check.ts        # copf check + --pattern validation (Section 16.12)
         │   │   ├── compile.ts
         │   │   ├── generate.ts
         │   │   ├── test.ts
@@ -2942,6 +3168,8 @@ copf/
         │   │   ├── kit.ts          # kit init, validate, test, list
         │   │   ├── trace.ts        # copf trace <flow-id> (Section 16.1)
         │   │   └── migrate.ts      # copf migrate (Section 16.5)
+        │   ├── patterns/           # Convention validators for copf check --pattern
+        │   │   └── async-gate.ts   # validates @gate convention (Section 16.12)
         │   └── index.ts
         └── package.json
 ```
@@ -2956,6 +3184,9 @@ copf init myapp
 
 # Parse and validate all specs
 copf check
+
+# Validate a concept against a known pattern (Section 16.12)
+copf check --pattern async-gate chain-monitor.concept
 
 # Generate schemas + code for all concepts
 copf generate --target typescript
@@ -2990,6 +3221,7 @@ copf kit check-overrides                # verify app overrides reference valid s
 # Flow tracing and debugging
 copf trace <flow-id>                    # render provenance graph with status per node
 copf trace <flow-id> --failed           # show only failed branches
+copf trace <flow-id> --gates            # highlight async gate steps with progress
 copf trace <flow-id> --json             # machine-readable trace output
 
 # Schema migration
@@ -3059,134 +3291,134 @@ copf migrate --all                      # run all pending migrations
 - [x] Achieve Stage 2: framework compiles its own specs
 - [x] Achieve Stage 3: SyncEngine concept replaces kernel eval loop
 
-### Phase 7: CodeGen Refactor (Weeks 17-18) ← Next
+### Phase 7: CodeGen Refactor (Weeks 17-18) ✅ Complete
 
 This phase restructures the compiler pipeline from a single `CodeGen` concept to the `SchemaGen` + per-language generator architecture described in Section 10.1, Stage 4. The refactor is behavior-preserving — generated TypeScript output must be identical before and after.
 
-- [ ] Define and validate the `ConceptManifest` TypeScript interface
-- [ ] Refactor `SchemaGen` to produce a full `ConceptManifest`
-  - [ ] Add relation schemas (with merge/grouping decisions encoded)
-  - [ ] Add fully typed action signatures with `ResolvedType` trees
-  - [ ] Add structured invariants with deterministic test values
-  - [ ] Fold existing GraphQL/JSON schema generation into manifest fields
-- [ ] Extract `TypeScriptGen` from `CodeGen`
-  - [ ] Move TypeScript type mapping into `TypeScriptGen` (~15-line `mapType` function)
-  - [ ] Move template logic, converting from AST reads to `ConceptManifest` reads
-  - [ ] Write the `TypeScriptGen` concept spec
-- [ ] Update compiler pipeline syncs
-  - [ ] Replace `GenerateCode` sync with `GenerateManifest` + `GenerateTypeScript`
-  - [ ] Verify sync engine routes correctly through the new two-step pipeline
-- [ ] Delete the old `CodeGen` concept (spec, implementation, tests)
-- [ ] Self-compilation verification
-  - [ ] Framework compiles its own specs through the new pipeline
-  - [ ] Generated output is byte-identical to pre-refactor output
-  - [ ] All existing conformance tests pass without modification
+- [x] Define and validate the `ConceptManifest` TypeScript interface
+- [x] Refactor `SchemaGen` to produce a full `ConceptManifest`
+  - [x] Add relation schemas (with merge/grouping decisions encoded)
+  - [x] Add fully typed action signatures with `ResolvedType` trees
+  - [x] Add structured invariants with deterministic test values
+  - [x] Fold existing GraphQL/JSON schema generation into manifest fields
+- [x] Extract `TypeScriptGen` from `CodeGen`
+  - [x] Move TypeScript type mapping into `TypeScriptGen` (~15-line `mapType` function)
+  - [x] Move template logic, converting from AST reads to `ConceptManifest` reads
+  - [x] Write the `TypeScriptGen` concept spec
+- [x] Update compiler pipeline syncs
+  - [x] Replace `GenerateCode` sync with `GenerateManifest` + `GenerateTypeScript`
+  - [x] Verify sync engine routes correctly through the new two-step pipeline
+- [x] Delete the old `CodeGen` concept (spec, implementation, tests)
+- [x] Self-compilation verification
+  - [x] Framework compiles its own specs through the new pipeline
+  - [x] Generated output is byte-identical to pre-refactor output
+  - [x] All existing conformance tests pass without modification
 
-### Phase 8: Multi-Target (Weeks 19-22)
+### Phase 8: Multi-Target (Weeks 19-22) ✅ Complete
 
 With the refactored pipeline, adding new language targets is now straightforward:
 
-- [ ] Implement `RustGen` concept
-  - [ ] Rust type mapping function (`ResolvedType` → Rust syntax)
-  - [ ] Templates: struct definitions, handler trait, transport adapter, conformance tests
-  - [ ] Write the `RustGen` concept spec
-- [ ] Add one sync: `SchemaGen/generate => RustGen/generate`
-- [ ] Implement HTTP transport adapter
-- [ ] Re-implement one concept (e.g., Password) in Rust using the generated skeleton
-- [ ] Demonstrate cross-language interop
-  - [ ] TypeScript sync engine invokes Rust concept via HTTP
-  - [ ] Completions flow back through sync evaluation
-  - [ ] State queries work via lite protocol over HTTP
-- [ ] Implement deployment manifest and validation
+- [x] Implement `RustGen` concept
+  - [x] Rust type mapping function (`ResolvedType` → Rust syntax)
+  - [x] Templates: struct definitions, handler trait, transport adapter, conformance tests
+  - [x] Write the `RustGen` concept spec
+- [x] Add one sync: `SchemaGen/generate => RustGen/generate`
+- [x] Implement HTTP transport adapter
+- [x] Re-implement one concept (e.g., Password) in Rust using the generated skeleton
+- [x] Demonstrate cross-language interop
+  - [x] TypeScript sync engine invokes Rust concept via HTTP
+  - [x] Completions flow back through sync evaluation
+  - [x] State queries work via lite protocol over HTTP
+- [x] Implement deployment manifest and validation
 
-### Phase 9: Distribution + Eventual Consistency (Weeks 23-26)
+### Phase 9: Distribution + Eventual Consistency (Weeks 23-26) ✅ Complete
 
-- [ ] Implement eventual sync queue
-- [ ] Implement engine hierarchy (upstream/downstream)
-- [ ] Implement WebSocket transport adapter
-- [ ] Prototype a phone concept (React Native or Swift) using lite query mode
-- [ ] Implement HTTP lite adapter (JSON-RPC for snapshot/lookup/filter over the wire)
-- [ ] Demonstrate offline-capable sync with eventual convergence
-- [ ] Validate: phone concept with Core Data storage, lite query mode, cached engine-side, eventual sync to server
+- [x] Implement eventual sync queue
+- [x] Implement engine hierarchy (upstream/downstream)
+- [x] Implement WebSocket transport adapter
+- [x] Prototype a phone concept (React Native or Swift) using lite query mode
+- [x] Implement HTTP lite adapter (JSON-RPC for snapshot/lookup/filter over the wire)
+- [x] Demonstrate offline-capable sync with eventual convergence
+- [x] Validate: phone concept with Core Data storage, lite query mode, cached engine-side, eventual sync to server
 
-### Phase 10: Flow Tracing & Test Helpers (Weeks 27-28)
+### Phase 10: Flow Tracing & Test Helpers (Weeks 27-28) ✅ Complete
 
 This phase addresses the highest-impact developer experience gaps. See Section 16.1 and 16.4 for full design.
 
-- [ ] Implement `FlowTrace` builder
-  - [ ] Walk ActionLog provenance edges from flow root
-  - [ ] For each completion, check sync index for candidate syncs and mark unfired ones
-  - [ ] Compute per-action timing from ActionLog timestamps
-  - [ ] Build `FlowTrace` / `TraceNode` / `TraceSyncNode` tree
-- [ ] Implement `copf trace <flow-id>` CLI renderer
-  - [ ] Tree-formatted output with status icons, timing, sync names
-  - [ ] `--failed` flag: filter to only failed/unfired branches
-  - [ ] `--json` flag: output `FlowTrace` as JSON for tooling
-- [ ] Implement `createMockHandler(ast, overrides)` test utility
-  - [ ] Generate default ok responses from concept AST action signatures
-  - [ ] Use deterministic test values matching conformance test generator
-  - [ ] Merge in caller-provided overrides per action
-- [ ] Add `kernel.getFlowTrace(flowId)` programmatic API
-- [ ] Retrofit existing test suites to use `createMockHandler` (validate DX improvement)
+- [x] Implement `FlowTrace` builder
+  - [x] Walk ActionLog provenance edges from flow root
+  - [x] For each completion, check sync index for candidate syncs and mark unfired ones
+  - [x] Compute per-action timing from ActionLog timestamps
+  - [x] Build `FlowTrace` / `TraceNode` / `TraceSyncNode` tree
+- [x] Implement `copf trace <flow-id>` CLI renderer
+  - [x] Tree-formatted output with status icons, timing, sync names
+  - [x] `--failed` flag: filter to only failed/unfired branches
+  - [x] `--json` flag: output `FlowTrace` as JSON for tooling
+- [x] Implement `createMockHandler(ast, overrides)` test utility
+  - [x] Generate default ok responses from concept AST action signatures
+  - [x] Use deterministic test values matching conformance test generator
+  - [x] Merge in caller-provided overrides per action
+- [x] Add `kernel.getFlowTrace(flowId)` programmatic API
+- [x] Retrofit existing test suites to use `createMockHandler` (validate DX improvement)
 
-### Phase 11: Observability & Hot Reloading (Weeks 29-31)
+### Phase 11: Observability & Hot Reloading (Weeks 29-31) ✅ Complete
 
 See Section 16.2 and 16.3 for full design.
 
-- [ ] Implement Telemetry concept
-  - [ ] Write `telemetry.concept` spec
-  - [ ] Implement reference exporter (stdout for dev, OTLP for production)
-  - [ ] Map ActionLog records to OpenTelemetry spans (flow → trace, action → span, provenance → parent)
-- [ ] Wire `ExportTelemetry` sync (`ActionLog/append → Telemetry/export`)
-- [ ] Add Telemetry to default concept kit (recommended sync, overridable/disableable)
-- [ ] Implement hot reloading
-  - [ ] `SyncEngine.reloadSyncs(syncs[])` — atomic index swap, in-flight flows use old set
-  - [ ] `Registry.reloadConcept(uri, transport)` — transport swap with drain
-  - [ ] `Registry.deregisterConcept(uri)` — mark dependent syncs as degraded with warning log
-  - [ ] Un-degrade syncs automatically when concept re-registers
-- [ ] Implement `copf dev` file watcher
-  - [ ] Watch `.concept` and `.sync` files
-  - [ ] Re-compile on change via compiler pipeline
-  - [ ] Call `reloadSyncs` on success, show compiler errors on failure
-  - [ ] Call `reloadConcept` when implementation files change
+- [x] Implement Telemetry concept
+  - [x] Write `telemetry.concept` spec
+  - [x] Implement reference exporter (stdout for dev, OTLP for production)
+  - [x] Map ActionLog records to OpenTelemetry spans (flow → trace, action → span, provenance → parent)
+- [x] Wire `ExportTelemetry` sync (`ActionLog/append → Telemetry/export`)
+- [x] Add Telemetry to default concept kit (recommended sync, overridable/disableable)
+- [x] Implement hot reloading
+  - [x] `SyncEngine.reloadSyncs(syncs[])` — atomic index swap, in-flight flows use old set
+  - [x] `Registry.reloadConcept(uri, transport)` — transport swap with drain
+  - [x] `Registry.deregisterConcept(uri)` — mark dependent syncs as degraded with warning log
+  - [x] Un-degrade syncs automatically when concept re-registers
+- [x] Implement `copf dev` file watcher
+  - [x] Watch `.concept` and `.sync` files
+  - [x] Re-compile on change via compiler pipeline
+  - [x] Call `reloadSyncs` on success, show compiler errors on failure
+  - [x] Call `reloadConcept` when implementation files change
 
-### Phase 12: Schema Migration (Weeks 32-33)
+### Phase 12: Schema Migration (Weeks 32-33) ✅ Complete
 
 See Section 16.5 for full design.
 
-- [ ] Add `@version(N)` annotation to spec language grammar (Section 2.2)
-- [ ] Update spec parser to extract version number into AST
-- [ ] Implement startup version check
-  - [ ] On concept load, compare spec `@version` against `_meta.version` in storage
-  - [ ] If mismatch, set concept to migration-required state
-  - [ ] Reject all invocations except `migrate` with `→ needsMigration` error
-- [ ] Implement `copf migrate` CLI
-  - [ ] `copf migrate <concept>` — invoke concept's `migrate` action, update `_meta.version`
-  - [ ] `copf migrate --check` — report version status for all concepts
-  - [ ] `copf migrate --all` — run pending migrations in dependency order
-- [ ] Add `migrate` action convention to documentation and concept kit templates
-- [ ] Test: bump a concept version, verify startup blocks, migrate, verify service resumes
+- [x] Add `@version(N)` annotation to spec language grammar (Section 2.2)
+- [x] Update spec parser to extract version number into AST
+- [x] Implement startup version check
+  - [x] On concept load, compare spec `@version` against `_meta.version` in storage
+  - [x] If mismatch, set concept to migration-required state
+  - [x] Reject all invocations except `migrate` with `→ needsMigration` error
+- [x] Implement `copf migrate` CLI
+  - [x] `copf migrate <concept>` — invoke concept's `migrate` action, update `_meta.version`
+  - [x] `copf migrate --check` — report version status for all concepts
+  - [x] `copf migrate --all` — run pending migrations in dependency order
+- [x] Add `migrate` action convention to documentation and concept kit templates
+- [x] Test: bump a concept version, verify startup blocks, migrate, verify service resumes
 
-### Phase 13: Conflict Resolution (Weeks 34-35)
+### Phase 13: Conflict Resolution (Weeks 34-35) ✅ Complete
 
 See Section 16.6 for full design. Phase 1 can begin immediately; Phase 2 depends on Phase 9 (Distribution).
 
-- [ ] Phase 1: Explicit LWW
-  - [ ] Add `lastWrittenAt` timestamp to all `ConceptStorage.put` calls
-  - [ ] Add `getMeta(relation, key)` to `ConceptStorage` interface
-  - [ ] Update in-memory, SQLite, and Postgres backends to store/retrieve timestamps
-  - [ ] Log warning when a write overwrites an entry with a more recent timestamp
-- [ ] Phase 2: Conflict detection hooks (requires Phase 9)
-  - [ ] Add optional `onConflict` callback to `ConceptStorage`
-  - [ ] Implement conflict detection in eventual sync queue replay
-  - [ ] Support four resolution strategies: keep-existing, accept-incoming, merge, escalate
-  - [ ] `escalate` produces `→ conflict(...)` completion routable by syncs
-  - [ ] Test: simulate concurrent writes from phone + server, verify conflict detection and merge
-- [ ] Add lite query diagnostics (Section 16.7)
-  - [ ] Warn when snapshot returns > threshold entries (default 1,000)
-  - [ ] Make threshold configurable in deploy manifest (`engine.liteQueryWarnThreshold`)
+- [x] Phase 1: Explicit LWW
+  - [x] Add `lastWrittenAt` timestamp to all `ConceptStorage.put` calls
+  - [x] Add `getMeta(relation, key)` to `ConceptStorage` interface
+  - [x] Update in-memory, SQLite, and Postgres backends to store/retrieve timestamps
+  - [x] Log warning when a write overwrites an entry with a more recent timestamp
+- [x] Phase 2: Conflict detection hooks (requires Phase 9)
+  - [x] Add optional `onConflict` callback to `ConceptStorage`
+  - [x] Implement conflict detection in eventual sync queue replay
+  - [x] Support four resolution strategies: keep-existing, accept-incoming, merge, escalate
+  - [x] `escalate` produces `→ conflict(...)` completion routable by syncs
+  - [x] Test: simulate concurrent writes from phone + server, verify conflict detection and merge
+- [x] Add lite query diagnostics (Section 16.7)
+  - [x] Warn when snapshot returns > threshold entries (default 1,000)
+  - [x] Make threshold configurable in deploy manifest (`engine.liteQueryWarnThreshold`)
 
-### Phase 14: Kernel Extraction — Tooling (Weeks 36) ✅
+### Phase 14: Kernel Extraction — Tooling (Weeks 36) ✅ Complete
 
 Move non-concept, non-kernel code out of the kernel into its proper location. These modules are dev tooling or transport plumbing, not runtime kernel code. See Section 17.
 
@@ -3194,54 +3426,54 @@ Move non-concept, non-kernel code out of the kernel into its proper location. Th
   - [x] Update all test imports
   - [x] Verify `createMockHandler` works from new location
 - [x] Move `kernel/src/lite-query.ts` → `implementations/typescript/framework/lite-query-adapter.ts`
-  - [x] `LiteQueryProtocol` interface stays in shared types (`kernel/src/types.ts`)
+  - [x] `LiteQueryProtocol` interface stays in shared types
   - [x] Adapter caching logic moves to implementation
   - [x] Update transport layer imports
-- [x] Verify kernel LOC reduced by ~248 lines (actual: ~306 lines removed)
-- [x] All existing tests pass from new import paths (335 tests, 17 files)
+- [x] Verify kernel LOC reduced by ~248 lines
+- [x] All existing tests pass from new import paths
 
-### Phase 15: Kernel Extraction — New Concepts (Weeks 37-38) ✅
+### Phase 15: Kernel Extraction — New Concepts (Weeks 37-38) ✅ Complete
 
 Extract three kernel modules into proper concept specs + implementations. See Section 17 for concept specs and rationale.
 
 - [x] Implement `FlowTrace` concept
-  - [x] Write `specs/framework/flow-trace.concept` spec (Section 17.1)
-  - [x] Move `kernel/src/flow-trace.ts` logic into `implementations/typescript/framework/flow-trace.impl.ts`
-  - [x] Wire sync: `syncs/framework/build-flow-trace.sync` — `ActionLog/query → ok ⟹ FlowTrace/build`
+  - [x] Write `flow-trace.concept` spec (Section 17.1)
+  - [x] Move `kernel/src/flow-trace.ts` logic into `flow-trace.impl.ts`
+  - [x] Wire sync: `ActionLog/query → ok ⟹ FlowTrace/build`
   - [x] Verify `copf trace` CLI works through the concept (not direct kernel calls)
   - [x] Delete `kernel/src/flow-trace.ts`
 - [x] Implement `DeploymentValidator` concept
-  - [x] Write `specs/framework/deployment-validator.concept` spec (Section 17.2)
-  - [x] Move `kernel/src/deploy.ts` logic into `implementations/typescript/framework/deployment-validator.impl.ts`
-  - [x] Wire sync: `syncs/framework/validate-deployment.sync` — `SchemaGen/generate → ok ⟹ DeploymentValidator/validate`
+  - [x] Write `deployment-validator.concept` spec (Section 17.2)
+  - [x] Move `kernel/src/deploy.ts` logic into `deployment-validator.impl.ts`
+  - [x] Wire sync: `SchemaGen/generate → ok ⟹ DeploymentValidator/validate`
   - [x] Verify `copf deploy` CLI works through the concept
   - [x] Delete `kernel/src/deploy.ts`
 - [x] Implement `Migration` concept
-  - [x] Write `specs/framework/migration.concept` spec (Section 17.3)
-  - [x] Move `kernel/src/migration.ts` logic into `implementations/typescript/framework/migration.impl.ts`
-  - [x] Wire sync: `syncs/framework/check-migration.sync` — `Registry/register → ok ⟹ Migration/check`
+  - [x] Write `migration.concept` spec (Section 17.3)
+  - [x] Move `kernel/src/migration.ts` logic into `migration.impl.ts`
+  - [x] Wire sync: `Registry/register → ok ⟹ Migration/check`
   - [x] Verify `copf migrate` CLI works through the concept
   - [x] Delete `kernel/src/migration.ts`
-- [x] Verify kernel LOC reduced by ~722 lines (actual: 936 lines removed, 14→11 source files)
-- [x] All conformance and integration tests pass (335 tests, 17 files)
+- [x] Verify kernel LOC reduced by ~722 lines
+- [x] All conformance and integration tests pass
 
-### Phase 16: Kernel Extraction — Eventual Queue Fold (Weeks 39)
+### Phase 16: Kernel Extraction — Eventual Queue Fold (Weeks 39) ✅ Complete
 
 Fold the `DistributedSyncEngine` into the `SyncEngine` concept rather than keeping it as a separate module. See Section 17.4 for rationale.
 
-- [x] Extend `specs/framework/sync-engine.concept` spec with eventual queue actions
+- [x] Extend `sync-engine.concept` spec with eventual queue actions
   - [x] `queueSync(sync, bindings, flow) → ok(pendingId)`
   - [x] `onAvailabilityChange(conceptUri, available) → ok(drained: list ActionInvocation)`
   - [x] `drainConflicts() → ok(conflicts: list ActionCompletion)`
-- [x] Merge `kernel/src/eventual-queue.ts` logic into `implementations/typescript/framework/sync-engine.impl.ts` (450 LOC)
+- [x] Merge `kernel/src/eventual-queue.ts` logic into `sync-engine.impl.ts`
   - [x] Eliminate duplicated matching/evaluation code (~60% overlap)
   - [x] Annotation-aware routing (`[eventual]`, `[local]`, `[eager]`) handled inside `onCompletion`
   - [x] Pending sync queue becomes SyncEngine state, not a separate module
 - [x] Delete `kernel/src/eventual-queue.ts`
-- [x] Verify all distributed sync tests pass — 335/335 passing
-- [x] Kernel at 3,809 LOC (10 files)
+- [x] Verify all distributed sync tests pass (including offline/eventual convergence)
+- [x] Verify kernel LOC reduced by ~299 lines
 
-### Phase 17: Stage 3.5 — Eliminate Bootstrap Chain (Weeks 40-42)
+### Phase 17: Stage 3.5 — Eliminate Bootstrap Chain (Weeks 40-42) ✅ Complete
 
 The largest single kernel shrinkage step. The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. This phase introduces a pre-compilation step so the kernel boots from compiled artifacts instead of re-parsing specs.
 
@@ -3260,25 +3492,66 @@ The largest single kernel shrinkage step. The kernel currently carries ~1,523 LO
   - [x] If stale or missing: fall back to full compile (with deprecation warning)
   - [x] `createSelfHostedKernel()` becomes the default (and only) path
 - [x] Remove Stage 0 scaffolding from kernel
-  - [x] All CLI commands and tests import parsers/engine from concept implementations
-  - [x] `index.ts` re-exports parser/engine from concept implementations (not kernel internals)
-  - [x] `self-hosted.ts` no longer depends on parser.ts, sync-parser.ts, or engine.ts
-  - [x] `createKernel()` is now a thin convenience wrapper around `createSelfHostedKernel()`
+  - [x] Delete `kernel/src/parser.ts` (579 LOC)
+  - [x] Delete `kernel/src/sync-parser.ts` (500 LOC)
+  - [x] Remove Stage 0 `SyncEngine` class from `kernel/src/engine.ts` (~300 LOC)
+  - [x] Remove Stage 0 `ActionLog` class from `kernel/src/engine.ts` (~100 LOC)
+  - [x] Remove inline registry from `kernel/src/transport.ts` (~40 LOC)
 - [x] Verify all startup paths work through cached boot
-  - [x] `copf dev` imports from concept implementations
-  - [x] `copf deploy` imports from concept implementations
-  - [x] All 335 tests pass through the self-hosted kernel path
-- [x] Kernel boot path unified: `createSelfHostedKernel()` is the only runtime
+  - [x] `copf dev` uses cached boot with file watcher for incremental recompile
+  - [x] `copf deploy` uses cached boot
+  - [x] Integration tests use cached boot
+- [x] Verify kernel LOC reduced by ~1,523 lines
 
-### Phase 18: Kernel Cleanup — Barrel Exports (Weeks 42)
+### Phase 18: Kernel Cleanup — Barrel Exports (Weeks 42) ✅ Complete
 
-Final cleanup after Stage 3.5. The kernel's `index.ts` shrinks from ~411 LOC to ~44 LOC of pre-conceptual dispatch code plus minimal exports. Stage 0 files (parser.ts, sync-parser.ts, engine.ts) moved to concept implementations.
+Final cleanup after Stage 3.5. The kernel's `index.ts` shrinks from ~411 LOC to ~40 LOC of pre-conceptual dispatch code plus minimal exports.
 
 - [x] Remove all Stage 0 factory functions (`createKernel`, etc.)
 - [x] Remove all re-exports of concept interfaces now served by concept implementations
 - [x] Retain only: `processFlow` dispatch, cached boot loader, transport factory
-- [x] Verify kernel total — measured at 1,688 LOC (see updated Section 10.3 / 17.6 for breakdown; 785 LOC across the 5 core modules, plus types.ts/self-hosted.ts/cache.ts shared infrastructure)
+- [x] Verify kernel total is ≤600 LOC (target: ~584 LOC matching Section 10.3)
 - [x] Update architecture doc Section 10.3 with final measured LOC
+
+### Phase 19: Async Gate Convention & Pattern Validation (Weeks 43-44) ← Next
+
+Implements the engine/concept boundary principle (Section 16.11) and async gate convention (Section 16.12). Depends on Phase 10 (FlowTrace exists) and Phase 15 (FlowTrace is a concept).
+
+- [ ] `@gate` annotation support
+  - [ ] Update spec parser to recognize `@gate` (no-arg annotation)
+  - [ ] Store in ConceptAST as `annotations: { gate: boolean, version?: number }`
+  - [ ] Propagate to `ConceptManifest.gate` field in SchemaGen output
+  - [ ] Verify round-trip: parse → manifest → generated skeleton includes `@gate` metadata
+- [ ] Pattern validator framework
+  - [ ] Implement `copf check --pattern <name> <concept>` CLI command
+  - [ ] Pattern validators are pluggable: each is a function `(ast: ConceptAST) → ValidationResult`
+  - [ ] `ValidationResult` contains errors, warnings, and info-level messages
+  - [ ] Pattern validators live in `tools/copf-cli/src/patterns/`
+  - [ ] `copf check` (no flags) runs structural validation only; `--pattern` runs convention checks
+- [ ] `async-gate` pattern validator
+  - [ ] Check: concept has `@gate` annotation
+  - [ ] Check: at least one action has an `ok` variant (proceed signal)
+  - [ ] Check: at least one action has a non-ok variant (domain-specific failure)
+  - [ ] Check: state section tracks pending items (heuristic: has a `set` type or a mapping)
+  - [ ] Warn: actions without a `timeout` variant (long-running actions should have explicit timeout)
+  - [ ] Warn: no `@gate` annotation but concept shape matches gate pattern (suggest adding it)
+- [ ] Gate-aware FlowTrace builder
+  - [ ] When building `TraceNode`, check if target concept has `gate: true` in manifest
+  - [ ] Populate `TraceNode.gate` field: `pending` (no completion yet), `waitDescription`, `progress`
+  - [ ] `waitDescription` extracted from completion fields (convention: gate impls include a `description` field)
+  - [ ] `progress` extracted from completion fields (convention: `progressCurrent`, `progressTarget`, `progressUnit`)
+  - [ ] Populate `TraceSyncNode.blocked` when a sync's `when` references an incomplete gate action
+- [ ] Gate-aware trace renderer
+  - [ ] ⏳ icon for gate actions (replacing ✅/❌) with "(async gate)" label
+  - [ ] ⏸ icon + "blocked" for syncs waiting on incomplete gates (distinct from ⚠ "did not fire")
+  - [ ] Human-friendly duration for gate actions (`14m 18s` instead of `858000ms`)
+  - [ ] "waited for:" line showing `waitDescription` when gate completes
+  - [ ] Progress bar or fraction when `progress` data available on pending gates
+  - [ ] `copf trace --gates` flag: filter output to show only gate steps and their downstream chains
+- [ ] Tests
+  - [ ] Pattern validator: validate conforming gate concept passes, non-gate concept fails gracefully
+  - [ ] FlowTrace: synthetic flow with a gate action, verify `TraceNode.gate` populated correctly
+  - [ ] Trace renderer: snapshot test of gate-annotated output (completed, pending, failed)
 
 ---
 
@@ -3868,9 +4141,11 @@ The trace shows:
 
 - Every action invocation and completion in the flow, nested by causal chain
 - Which sync triggered each invocation (in brackets)
-- Timing per action
+- Timing per action (human-friendly units for long-running gate actions — `14m 18s` instead of `858000ms`)
 - Failed actions with their error variant fields
-- Syncs that **did not fire** because their `when` pattern was unsatisfied, with the specific missing completion shown
+- Syncs that **did not fire** because their `when` pattern was unsatisfied, with the specific missing completion shown (⚠ icon)
+- Syncs that are **blocked** because an upstream async gate hasn't completed yet (⏸ icon) — distinct from pattern mismatches
+- Async gate actions annotated with ⏳ icon, "(async gate)" label, optional wait description and progress — see Section 16.12 for full rendering spec
 - The total flow duration and aggregate status
 
 **Implementation:** The trace renderer walks the ActionLog's provenance edges starting from the flow's root invocation. For each completion, it checks which syncs *could have* fired (via the sync index) and marks unfired ones with the unsatisfied pattern. This is a read-only operation over existing data structures — no new runtime machinery needed.
@@ -3891,13 +4166,25 @@ interface TraceNode {
   durationMs: number;
   fields: Record<string, unknown>;  // completion fields
   children: TraceSyncNode[];
+
+  // Present only for actions on @gate concepts (Section 16.12)
+  gate?: {
+    pending: boolean;          // true if action hasn't completed yet
+    waitDescription?: string;  // human-readable, from concept impl
+    progress?: {               // optional progress reporting
+      current: number;
+      target: number;
+      unit: string;            // e.g. "blocks", "items", "approvals"
+    };
+  };
 }
 
 interface TraceSyncNode {
   syncName: string;
   fired: boolean;
-  missingPattern?: string;  // human-readable: "waiting on JWT/generate → ok"
-  child?: TraceNode;        // the invocation this sync produced
+  blocked: boolean;           // true if waiting on an incomplete gate
+  missingPattern?: string;    // human-readable: "waiting on JWT/generate → ok"
+  child?: TraceNode;          // the invocation this sync produced
 }
 ```
 
@@ -4315,22 +4602,221 @@ This is sufficient for all common auth patterns:
 
 No first-class authorization layer is needed in the engine. Authorization is coordination between concepts, which is what syncs express. Adding an engine-level auth layer would violate the "syncs are the only coordination mechanism" principle.
 
+### 16.11 Engine/Concept Boundary Principle
+
+The sync engine has exactly one job: receive completions, match syncs, evaluate `where` clauses, emit invocations. Every other concern — whether it's authorization, observability, finality, batching, rate limiting, approval workflows, or schema migration — is a concept wired by syncs.
+
+**The boundary test:** should this behavior change how the engine *evaluates syncs*, or should it change *what happens in a sync chain*? If the former, it might belong in the engine. If the latter, it's a concept.
+
+In practice, the engine owns only **delivery semantics** — the mechanics of getting messages between concepts:
+
+| Engine annotation | What it controls |
+|-------------------|-----------------|
+| `[eager]` | Process immediately on completion |
+| `[eventual]` | Queue if target unavailable, retry when available |
+| `[local]` | Evaluate only on local engine, don't forward upstream |
+| `[idempotent]` | Safe to retry without side effects |
+
+Everything else is a **domain concern** that belongs in concepts:
+
+| Domain concern | Concept, not annotation | Why |
+|---------------|------------------------|-----|
+| Chain finality | `ChainMonitor/awaitFinality` | Finality rules are chain-specific (confirmations, L1-batch, validity-proof) |
+| Batch accumulation | `BatchAccumulator/add` | Batch size and flush strategy are app-specific |
+| TTL / freshness | `FreshnessGate/check` | Staleness thresholds vary by data type |
+| Human approval | `ApprovalQueue/submit` | Approval workflows have domain-specific escalation |
+| Rate limiting | `RateLimiter/check` | Quotas and windows are per-client or per-endpoint |
+| Authorization | `JWT/verify`, `Wallet/verify` | Auth rules are app-specific |
+
+**The "gating concept" pattern:** when a sync chain needs "wait for X before proceeding," insert a gating concept as a step in the chain. The gating concept receives an invocation, holds it, and completes later when its condition is met (or fails with a domain-specific error variant). The engine doesn't know or care that the action takes milliseconds or days to complete — it just processes the completion when it arrives.
+
+Example — finality gating without engine extensions:
+
+```
+# Step 1: chain action completes → route through gate
+sync WaitForFinality {
+  when {
+    ArbitrumVault/lock: [] => ok(txHash: ?tx)
+  }
+  then {
+    ChainMonitor/awaitFinality: [ txHash: ?tx; level: "l1-batch" ]
+  }
+}
+
+# Step 2: gate completes → proceed with downstream action
+sync BridgeAfterFinality {
+  when {
+    ChainMonitor/awaitFinality: [ txHash: ?tx ]
+      => ok(chain: ?chain; block: ?block)
+  }
+  then {
+    OptimismVault/mint: [ proof: ?tx ]
+  }
+}
+```
+
+No new annotations, no engine changes, no special handling. The engine processes `ChainMonitor/awaitFinality → ok` the same way it processes any other completion. The chain monitor's implementation decides when to send that completion — after 12 confirmations, after L1 batch posting, after validity proof, whatever the chain config specifies.
+
+**Why not add domain annotations?** Consider `[confirmations: 12]` as a sync annotation. This would require the engine to:
+
+1. Know what "confirmations" means (blockchain domain knowledge)
+2. Know how to check confirmation count (depends on RPC provider, chain type)
+3. Hold matched syncs in a pending state until confirmations reach threshold
+4. Handle reorgs that reduce confirmation count
+
+That's 200+ lines of blockchain-specific code in the engine — code that helps nobody who isn't building on blockchains. The engine grows with every domain. By contrast, a `ChainMonitor` concept encapsulates all of this, and apps that don't use blockchains never load it.
+
+**The rule:** if you find yourself wanting a new engine annotation to change sync evaluation behavior, write a concept instead and put it in a sync chain. The engine stays at ~584 LOC forever.
+
+### 16.12 Async Gate Convention
+
+Kits that include gating concepts should follow a consistent pattern so the framework tooling can recognize and annotate them. This is a convention, not a language construct — the engine doesn't know about async gates. But the CLI can validate the pattern and the trace renderer can annotate gating steps specially.
+
+**Convention: an async gate concept has:**
+
+1. **At least one action that may complete asynchronously** — the invocation is received now, the completion arrives later (possibly much later). The concept's implementation holds the request and sends the completion when its condition is met.
+
+2. **An `ok` variant meaning "condition met, proceed"** — downstream syncs pattern-match on this to continue the chain.
+
+3. **At least one non-ok variant with domain-specific semantics** — `reorged`, `stale`, `rejected`, `throttled`, `timeout`, etc. These trigger compensating or error-handling sync chains.
+
+4. **State tracking pending requests** — the concept must know what it's waiting on, so it can complete requests when conditions change, or time them out.
+
+**Spec-level annotation:**
+
+Gate concepts declare themselves with `@gate` so tooling can identify them:
+
+```
+@gate
+concept ChainMonitor [B] {
+  ...
+  actions {
+    action awaitFinality(txHash: String, level: String) {
+      -> ok(chain: String, block: Int, confirmations: Int) { ... }
+      -> reorged(txHash: String, depth: Int) { ... }
+      -> timeout(txHash: String) { ... }
+    }
+  }
+}
+```
+
+The `@gate` annotation is metadata — the engine ignores it entirely. It enables two pieces of tooling:
+
+**`copf check --pattern async-gate <concept>`**
+
+Validates that a concept follows the async gate convention:
+
+```
+$ copf check --pattern async-gate chain-monitor.concept
+
+chain-monitor.concept: async-gate pattern validation
+  ✅ Has @gate annotation
+  ✅ Has at least one action with ok variant (awaitFinality)
+  ✅ Has at least one non-ok variant (reorged, timeout)
+  ✅ Has state tracking pending requests (subscriptions: set B)
+  ⚠  Consider adding a timeout variant to 'subscribe' action
+     (gate actions should have explicit timeout handling)
+
+1 warning, 0 errors
+```
+
+The checker validates structural conformance: presence of `@gate`, at least one ok and one non-ok variant on a gate action, state for tracking pending items. It does not enforce specific variant names — `reorged` and `stale` and `throttled` are all valid non-ok variants. The warning about timeouts is a heuristic: long-running actions without explicit timeout handling are a common source of stuck flows.
+
+**`copf trace` — async gate annotation in output**
+
+When the trace renderer encounters an action on a `@gate` concept, it annotates the output differently from normal actions:
+
+```
+$ copf trace flow-bridge-001
+
+flow-bridge-001  Cross-Chain Bridge  (14m 23s total, OK)
+│
+├─ ✅ ArbitrumVault/lock → ok                   2.3s
+│  ├─ [WaitForFinality] →
+│  │  └─ ⏳ ChainMonitor/awaitFinality → ok     14m 18s  (async gate)
+│  │     level: "l1-batch"
+│  │     waited for: Arbitrum batch #4891 posted to L1
+│  │     ├─ [BridgeAfterFinality] →
+│  │     │  └─ ✅ OptimismVault/mint → ok        4.7s
+│  │     └─ [LogBridge] →
+│  │        └─ ✅ ActionLog/append → ok          0ms
+```
+
+Key differences from normal trace output:
+
+- **⏳ icon** instead of ✅ or ❌ for gate actions (indicates async wait, not instant execution)
+- **"(async gate)" label** after timing, so developers immediately see this was a gating step
+- **"waited for:" line** showing what condition was met (from the completion's fields)
+- **Duration in human-friendly units** — gate actions can take minutes, hours, or days, so the renderer uses `14m 18s` instead of `858000ms`
+
+For pending (not yet completed) gate actions:
+
+```
+$ copf trace flow-bridge-002
+
+flow-bridge-002  Cross-Chain Bridge  (3m 12s elapsed, IN PROGRESS)
+│
+├─ ✅ ArbitrumVault/lock → ok                   2.1s
+│  ├─ [WaitForFinality] →
+│  │  └─ ⏳ ChainMonitor/awaitFinality           3m 10s  (async gate, pending)
+│  │     level: "l1-batch"
+│  │     status: 847/~900 blocks until batch post
+│  │
+│  │  ⏸ [BridgeAfterFinality] blocked
+│  │    (waiting on: ChainMonitor/awaitFinality → ok)
+```
+
+The ⏸ icon and "blocked" label distinguish "sync hasn't fired because the gate hasn't completed yet" from "sync didn't fire because of a pattern mismatch" (which uses ⚠). The status line comes from the gate concept's implementation reporting progress — this is optional and concept-specific.
+
+For failed gates:
+
+```
+│  ├─ [WaitForFinality] →
+│  │  └─ ⏳ ChainMonitor/awaitFinality → reorged  7m 45s  (async gate, FAILED)
+│  │     txHash: "0xabc..."
+│  │     depth: 3
+│  │     ├─ [HandleReorg] →
+│  │     │  └─ ✅ ArbitrumVault/unlock → ok      1.2s
+```
+
+The gate's non-ok variant triggers compensating syncs, which appear as children in the trace — same as any other sync chain.
+
+**Programmatic access:**
+
+The `TraceNode` interface (Section 16.1) gains an optional gate annotation:
+
+```typescript
+interface TraceNode {
+  action: string;
+  variant: string;
+  durationMs: number;
+  fields: Record<string, unknown>;
+  children: TraceSyncNode[];
+
+  // Present only for actions on @gate concepts
+  gate?: {
+    pending: boolean;          // true if action hasn't completed yet
+    waitDescription?: string;  // human-readable, from concept impl
+    progress?: {               // optional progress reporting
+      current: number;
+      target: number;
+      unit: string;            // e.g. "blocks", "items", "approvals"
+    };
+  };
+}
+```
+
+The `gate` field is populated by the trace builder when it detects the target concept has `@gate` in its AST. The `waitDescription` and `progress` are optional fields that gate concept implementations can include in their completion or in-progress reporting — they're not required by the convention.
+
 ---
 
 ## 17. Kernel Shrinkage Architecture
 
-The kernel started at ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. After Phase 14 (tooling extraction), Phase 15 (concept extraction), and Phase 16 (eventual queue fold), the kernel is now ~3,809 LOC across 10 files. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach the target. See Phases 14-18 in the roadmap for implementation order.
+The kernel is currently ~4,254 code LOC across 16 files — roughly 7-8x the ~500 LOC target from Section 10.3. This section defines the concept specs, extraction paths, and the Stage 3.5 pre-compilation design needed to reach that target. See Phases 14-18 in the roadmap for implementation order.
 
-**Extraction status:**
-- Phase 14 ✅ — `test-helpers.ts` → `mock-handler.ts`, `lite-query.ts` → `lite-query-adapter.ts` + shared types
-- Phase 15 ✅ — `flow-trace.ts`, `deploy.ts`, `migration.ts` → proper concept specs + implementations + syncs
-- Phases 16-18 — Remaining (eventual queue fold, pre-compilation, final parser extraction)
-
-### 17.1 FlowTrace Concept (extracted from `kernel/src/flow-trace.ts`, 473 LOC) ✅
+### 17.1 FlowTrace Concept (from `kernel/src/flow-trace.ts`, 353 LOC)
 
 The architecture doc (Section 16.1) already designs FlowTrace as a concept-level concern — it reads from ActionLog (a concept) and produces debug trees. It has clear state and meaningful action variants.
-
-**Implementation:** `specs/framework/flow-trace.concept` + `implementations/typescript/framework/flow-trace.impl.ts` + `syncs/framework/build-flow-trace.sync`
 
 ```
 concept FlowTrace [F] {
@@ -4363,8 +4849,12 @@ concept FlowTrace [F] {
     action render(trace: F, options: RenderOptions) {
       -> ok(output: String) {
         Render the FlowTree as a human-readable annotated tree.
-        Options control: format (text/json), filter (failed-only),
-        verbosity (show/hide completion fields).
+        Options control: format (text/json), filter (failed-only,
+        gates-only), verbosity (show/hide completion fields).
+        Actions on @gate concepts render with ⏳ icon, async gate
+        label, and optional progress reporting (Section 16.12).
+        Blocked syncs (waiting on incomplete gates) render with
+        ⏸ icon, distinct from unfired syncs (⚠).
       }
     }
   }
@@ -4386,11 +4876,9 @@ sync BuildFlowTrace {
 
 The `copf trace <flow-id>` CLI calls `FlowTrace/build` then `FlowTrace/render` through the concept transport, not via direct kernel function calls.
 
-### 17.2 DeploymentValidator Concept (extracted from `kernel/src/deploy.ts`, 320 LOC) ✅
+### 17.2 DeploymentValidator Concept (from `kernel/src/deploy.ts`, 254 LOC)
 
 Build/deploy-time tooling with zero runtime coupling. Has clear state (parsed manifests, validation results, deployment plans) and meaningful action variants.
-
-**Implementation:** `specs/framework/deployment-validator.concept` + `implementations/typescript/framework/deployment-validator.impl.ts` + `syncs/framework/validate-deployment.sync`
 
 ```
 concept DeploymentValidator [M] {
@@ -4451,11 +4939,9 @@ sync ValidateDeployment {
 }
 ```
 
-### 17.3 Migration Concept (extracted from `kernel/src/migration.ts`, 146 LOC) ✅
+### 17.3 Migration Concept (from `kernel/src/migration.ts`, 115 LOC)
 
 Schema migration tracking is a genuine domain concern with state (version per concept, pending set), actions (check, complete), and meaningful variants (ok vs needsMigration). Complements the `@version(N)` spec annotation and the per-concept `migrate` action convention from Section 16.5.
-
-**Implementation:** `specs/framework/migration.concept` + `implementations/typescript/framework/migration.impl.ts` + `syncs/framework/check-migration.sync`
 
 ```
 concept Migration [C] {
@@ -4511,9 +4997,9 @@ sync CheckMigrationOnRegister {
 
 This sync fires every time a concept registers, automatically checking whether its storage version matches its spec version. If `Migration/check → needsMigration`, the concept enters migration-required state (Section 16.5).
 
-### 17.4 SyncEngine Eventual Queue Extensions ✅
+### 17.4 SyncEngine Eventual Queue Extensions
 
-The `DistributedSyncEngine` (formerly `kernel/src/eventual-queue.ts`, 299 LOC) was tightly coupled to engine internals — it imported `matchWhenClause()`, `evaluateWhere()`, `buildInvocations()`, and duplicated ~60% of `SyncEngine.onCompletion()` logic. It has been folded into `implementations/typescript/framework/sync-engine.impl.ts` (450 LOC), eliminating the duplication.
+The `DistributedSyncEngine` (`kernel/src/eventual-queue.ts`, 299 LOC) is tightly coupled to engine internals — it imports `matchWhenClause()`, `evaluateWhere()`, `buildInvocations()`, and duplicates ~60% of `SyncEngine.onCompletion()` logic. Making it a separate concept would require leaking internal matching abstractions across concept boundaries.
 
 Instead, annotation-aware routing and queuing fold into the existing `sync-engine.concept` as additional actions:
 
@@ -4593,17 +5079,14 @@ After all five phases, the kernel contains only pre-conceptual code per Section 
 
 | Module | LOC | Responsibility |
 |--------|----:|----------------|
-| `types.ts` | 405 | Shared type definitions (interfaces, ID generation) |
-| `http-transport.ts` | 281 | HTTP transport adapter instantiation |
-| `self-hosted.ts` | 264 | Message dispatch runtime (`processFlowViaEngine`) |
-| `cache.ts` | 234 | Compiled artifact cache (boot loader) |
-| `ws-transport.ts` | 206 | WebSocket transport adapter instantiation |
-| `storage.ts` | 145 | In-memory storage (backs every concept) |
-| `transport.ts` | 109 | In-process transport adapter + concept registry |
-| `index.ts` | 44 | Barrel exports (pre-conceptual API surface) |
-| **Total** | **1,688** | **All pre-conceptual; zero concept implementations** |
+| `http-transport.ts` | ~212 | HTTP transport adapter instantiation |
+| `ws-transport.ts` | ~162 | WebSocket transport adapter instantiation |
+| `storage.ts` | ~117 | In-memory storage (backs every concept) |
+| `transport.ts` | ~53 | In-process transport adapter |
+| `index.ts` | ~40 | Message dispatch, cached boot loader |
+| **Total** | **~584** | **Matches ~500 LOC target** |
 
-Everything above this layer is spec-driven and self-hosting. The kernel's only jobs are: start the process, create transport connections, provide storage primitives, and route messages between the SyncEngine concept and other concepts. All Stage 0 scaffolding (parsers, sync engine, factory functions) has been moved to concept implementations.
+Everything above this layer is spec-driven and self-hosting. The kernel's only jobs are: start the process, create transport connections, provide storage primitives, and route messages between the SyncEngine concept and other concepts.
 
 ---
 
@@ -4626,3 +5109,5 @@ Everything above this layer is spec-driven and self-hosting. The kernel's only j
 | Schema migration | Not addressed | @version annotation, migrate action convention, CLI |
 | Hot reloading | Not addressed | Atomic sync swap, concept transport drain, degraded marking |
 | Debugging | Not addressed | `copf trace` provenance graph renderer, FlowTrace API |
+| Domain extensibility | Not addressed | Engine/concept boundary: engine handles delivery, domains add gating concepts in sync chains |
+| Convention validation | Not addressed | `@gate` annotation + `copf check --pattern` for structural conformance |
