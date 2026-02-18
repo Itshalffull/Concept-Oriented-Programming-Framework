@@ -185,3 +185,11 @@ This will generate $ARGUMENTS code for all concepts in `specs/` and write output
 - **Idiomatic output** — use the target language's conventions (snake_case for Rust/Python, camelCase for Java/Kotlin, etc.)
 - **Deterministic output** — same manifest must always produce identical code
 - **No external dependencies in generated code** — only reference the COPF runtime types
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept` | Design concept specs that the language target generates code from |
+| `/create-implementation` | Write TypeScript implementations (the reference target) |
+| `/create-concept-kit` | Create kits whose concepts need code generation in the new language |

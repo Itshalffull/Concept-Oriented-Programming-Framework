@@ -1,6 +1,6 @@
 # Kit Manifest Reference
 
-Complete specification for `kit.yaml` — the manifest file that declares a concept kit's contents, type alignments, sync tiers, and integrations.
+Complete specification for `kit.yaml` — the manifest file that declares a concept kit's contents, type alignments, sync tiers, integrations, and infrastructure.
 
 ## File Location
 
@@ -9,6 +9,8 @@ kits/<kit-name>/kit.yaml
 ```
 
 ## Full Manifest Structure
+
+### Framework Kit Manifest
 
 ```yaml
 # Kit metadata
@@ -49,6 +51,97 @@ integrations:
           What this integration does.
 
 # Optional: other kits this kit requires
+dependencies: []
+```
+
+### Domain Kit Manifest
+
+Domain kits add an `infrastructure` section and may include domain-specific top-level fields:
+
+```yaml
+kit:
+  name: web3
+  version: 0.1.0
+  description: >
+    Blockchain integration for COPF. Chain monitoring with
+    finality-aware gating, IPFS content storage with pinning,
+    and wallet-based authentication via signature verification.
+
+concepts:
+  ChainMonitor:
+    spec: ./chain-monitor.concept
+    params:
+      B: { as: block-ref, description: "Reference to a tracked block" }
+  Content:
+    spec: ./content.concept
+    params:
+      C: { as: content-ref, description: "Reference to stored content (CID)" }
+  Wallet:
+    spec: ./wallet.concept
+    params:
+      W: { as: wallet-ref, description: "Reference to a wallet/address" }
+
+syncs:
+  required:
+    - path: ./syncs/finality-gate.sync
+      description: >
+        Pattern sync for finality-aware gating. Routes through
+        ChainMonitor/awaitFinality before cross-chain actions.
+  recommended:
+    - path: ./syncs/reorg-compensation.sync
+      name: ReorgCompensation
+      description: >
+        When ChainMonitor detects a reorg, freeze or flag downstream
+        actions triggered by the reorged completion.
+    - path: ./syncs/content-pinning.sync
+      name: ContentPinning
+      description: >
+        When Content/store completes, automatically pin the CID.
+        Disable if managing pinning manually.
+
+integrations:
+  - kit: auth
+    syncs:
+      - path: ./syncs/wallet-auth.sync
+        description: >
+          Wire Wallet/verify into the auth kit's JWT flow.
+
+# Domain kit infrastructure — pre-conceptual code (Section 10.3)
+infrastructure:
+  transports:
+    - name: evm
+      path: ./transports/evm-transport.ts
+      description: >
+        EVM JSON-RPC transport adapter. Maps concept invoke() to
+        contract calls via ethers.js/viem, query() to storage reads.
+    - name: starknet
+      path: ./transports/starknet-transport.ts
+      description: >
+        StarkNet transport adapter for Cairo VM chains.
+  storage:
+    - name: ipfs
+      path: ./storage/ipfs-storage.ts
+      description: >
+        IPFS content-addressed storage adapter. Maintains a mutable
+        index (key -> CID) on top of immutable content storage.
+  deployTemplates:
+    - path: ./deploy-templates/ethereum-mainnet.deploy.yaml
+    - path: ./deploy-templates/arbitrum.deploy.yaml
+    - path: ./deploy-templates/multi-chain.deploy.yaml
+
+# Domain-specific configuration (optional, kit-specific)
+chainConfigs:
+  ethereum:
+    chainId: 1
+    finality:
+      type: confirmations
+      threshold: 12
+  arbitrum:
+    chainId: 42161
+    finality:
+      type: l1-batch
+      softFinality: sequencer
+
 dependencies: []
 ```
 
@@ -156,6 +249,75 @@ integrations:
 
 **Key**: Integration syncs are neither required nor recommended. They're conditional — they only load if the named kit is also present.
 
+### `infrastructure` (optional, domain kits only)
+
+Pre-conceptual code that the kit's concepts require to function. Only present in domain kits that introduce new deployment targets.
+
+```yaml
+infrastructure:
+  transports:
+    - name: evm
+      path: ./transports/evm-transport.ts
+      description: EVM JSON-RPC transport adapter
+  storage:
+    - name: ipfs
+      path: ./storage/ipfs-storage.ts
+      description: IPFS content-addressed storage adapter
+  deployTemplates:
+    - path: ./deploy-templates/mainnet.deploy.yaml
+```
+
+**Transport entries:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Transport name, used in deploy manifests |
+| `path` | string | Yes | Relative path to the transport adapter source file |
+| `description` | string | No | What the transport does, what protocol it speaks |
+
+**Storage entries:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Storage backend name, used in deploy manifests |
+| `path` | string | Yes | Relative path to the storage adapter source file |
+| `description` | string | No | What the storage does, what backend it wraps |
+
+**Deploy template entries:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Yes | Relative path to the `.deploy.yaml` template |
+
+**The infrastructure boundary rule**: The `infrastructure/` directory contains only transport adapters, storage backends, and deploy templates. Never concepts, syncs, or implementations. This code is pre-conceptual (Section 10.3). The kit installer copies infrastructure into the appropriate kernel extension paths; `copf kit validate` verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
+
+### Domain-specific config (optional)
+
+Kits may define their own top-level configuration fields for domain-specific settings. These are not part of the standard manifest schema — they're kit-specific extensions.
+
+Example: the web3 kit defines `chainConfigs` for per-chain finality settings:
+
+```yaml
+chainConfigs:
+  ethereum:
+    chainId: 1
+    finality:
+      type: confirmations
+      threshold: 12
+  arbitrum:
+    chainId: 42161
+    finality:
+      type: l1-batch
+      softFinality: sequencer
+  starknet:
+    chainId: "SN_MAIN"
+    finality:
+      type: validity-proof
+    transport: starknet
+```
+
+The framework doesn't validate domain-specific config — the kit's own tooling or implementation reads these values.
+
 ### `dependencies` (optional)
 
 Other kits that must be present for this kit to function:
@@ -191,7 +353,7 @@ kits:
 |-------|------|----------|-------------|
 | `name` | string | Yes | Kit name (matches `kit.name` in manifest) |
 | `path` | string | Yes | Relative path to kit directory |
-| `overrides` | map | No | Map of sync name → replacement sync file path |
+| `overrides` | map | No | Map of sync name -> replacement sync file path |
 | `disable` | list | No | List of recommended sync names to disable |
 
 **Override**: The app provides a different sync with the same name. The app's version replaces the kit's version.
@@ -207,12 +369,14 @@ The `copf kit validate` command checks:
 3. All referenced `.sync` files exist and parse successfully
 4. Sync tier annotations match the manifest declarations
 5. Type parameter alignment consistency (advisory warnings)
+6. Infrastructure files exist and implement correct interfaces (domain kits)
+7. Deploy templates are valid YAML (domain kits)
 
 ```bash
 npx tsx tools/copf-cli/src/index.ts kit validate kits/<kit-name>
 ```
 
-Output:
+Output for a framework kit:
 ```
 Validating kit: kits/content-management
 
@@ -227,6 +391,34 @@ Validating kit: kits/content-management
     [OK] CascadeDeleteRelations (syncs/cascade-delete-relations.sync)
     ...
   Sync tiers: 3 required, 3 recommended
+
+Kit is valid.
+```
+
+Output for a domain kit:
+```
+Validating kit: kits/web3
+
+  Kit: web3
+  Concepts: 3
+    [OK] ChainMonitor (chain-monitor.concept) [@gate]
+    [OK] Content (content.concept)
+    [OK] Wallet (wallet.concept)
+  Syncs: 3
+    [OK] finality-gate (syncs/finality-gate.sync) [required]
+    [OK] ReorgCompensation (syncs/reorg-compensation.sync) [recommended]
+    [OK] ContentPinning (syncs/content-pinning.sync) [recommended]
+  Infrastructure:
+    Transports: 2
+      [OK] evm (transports/evm-transport.ts) implements ConceptTransport
+      [OK] starknet (transports/starknet-transport.ts) implements ConceptTransport
+    Storage: 1
+      [OK] ipfs (storage/ipfs-storage.ts) implements ConceptStorage
+    Deploy templates: 3
+      [OK] deploy-templates/ethereum-mainnet.deploy.yaml
+      [OK] deploy-templates/arbitrum.deploy.yaml
+      [OK] deploy-templates/multi-chain.deploy.yaml
+  Sync tiers: 1 required, 2 recommended
 
 Kit is valid.
 ```

@@ -278,3 +278,12 @@ See [references/runtime-configuration.md](references/runtime-configuration.md) f
 See [references/validation-rules.md](references/validation-rules.md) for all validation rules and error messages.
 See [examples/deployment-scenarios.md](examples/deployment-scenarios.md) for single-runtime, multi-runtime, and offline-first deployments.
 See [templates/deployment-scaffold.md](templates/deployment-scaffold.md) for copy-paste manifest templates.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-transport-adapter` | Write custom transport adapters referenced in the manifest |
+| `/create-storage-adapter` | Write custom storage backends referenced in the manifest |
+| `/create-concept-kit` | Create kits whose deploy templates this manifest can use |
+| `/create-implementation` | Write implementations assigned to runtimes in the manifest |

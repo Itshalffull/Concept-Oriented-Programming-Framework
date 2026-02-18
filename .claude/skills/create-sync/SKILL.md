@@ -229,3 +229,12 @@ See [references/pattern-matching.md](references/pattern-matching.md) for when-cl
 See [references/variable-binding.md](references/variable-binding.md) for variable scoping and binding.
 See [examples/realworld-syncs.md](examples/realworld-syncs.md) for all patterns from the RealWorld implementation.
 See [templates/sync-scaffold.md](templates/sync-scaffold.md) for copy-paste templates.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept` | Design the concepts that syncs connect |
+| `/create-concept-kit` | Bundle concepts and their syncs into a reusable kit |
+| `/create-implementation` | Write the implementation that handles actions syncs invoke |
+| `/configure-deployment` | Assign syncs to engines in deployment manifests |
