@@ -18,10 +18,12 @@ import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { schemaGenHandler } from '../../../../implementations/typescript/framework/schema-gen.impl.js';
 import { typescriptGenHandler } from '../../../../implementations/typescript/framework/typescript-gen.impl.js';
 import { rustGenHandler } from '../../../../implementations/typescript/framework/rust-gen.impl.js';
-import type { ConceptAST, ConceptManifest } from '../../../../kernel/src/types.js';
+import { swiftGenHandler } from '../../../../implementations/typescript/framework/swift-gen.impl.js';
+import { solidityGenHandler } from '../../../../implementations/typescript/framework/solidity-gen.impl.js';
+import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
-const SUPPORTED_TARGETS = ['typescript', 'rust'] as const;
+const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity'] as const;
 type Target = (typeof SUPPORTED_TARGETS)[number];
 
 export async function generateCommand(
@@ -107,8 +109,13 @@ export async function generateCommand(
 
     // CodeGen — produce target-language files
     const codeStorage = createInMemoryStorage();
-    const generator =
-      target === 'typescript' ? typescriptGenHandler : rustGenHandler;
+    const generators: Record<string, ConceptHandler> = {
+      typescript: typescriptGenHandler,
+      rust: rustGenHandler,
+      swift: swiftGenHandler,
+      solidity: solidityGenHandler,
+    };
+    const generator = generators[target];
 
     const codeResult = await generator.generate(
       { spec: file, manifest },
