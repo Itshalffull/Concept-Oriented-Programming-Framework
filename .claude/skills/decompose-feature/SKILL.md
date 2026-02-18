@@ -230,3 +230,12 @@ Before finalizing, verify:
 ## Full Decomposition Example
 
 See [examples/social-blogging-platform.md](examples/social-blogging-platform.md) for a complete worked example showing how the existing COPF app was decomposed from a "social blogging platform" feature description into 9 independent concepts with 7 sync files containing 30+ sync rules.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept` | Design each concept identified during decomposition |
+| `/create-sync` | Write the sync rules that connect decomposed concepts |
+| `/create-concept-kit` | Bundle the decomposed concepts into a reusable kit |
+| `/create-implementation` | Write implementations for each decomposed concept |

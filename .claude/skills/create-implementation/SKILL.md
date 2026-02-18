@@ -315,3 +315,13 @@ See [references/storage-interface.md](references/storage-interface.md) for the f
 See [references/action-dispatch.md](references/action-dispatch.md) for dispatch, testing, and registration.
 See [examples/realworld-implementations.md](examples/realworld-implementations.md) for all RealWorld app implementations.
 See [templates/implementation-scaffold.md](templates/implementation-scaffold.md) for copy-paste templates.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept` | Design the concept spec that this implementation fulfills |
+| `/create-sync` | Write syncs that invoke actions on this implementation |
+| `/create-storage-adapter` | Write the storage backend this implementation uses |
+| `/create-transport-adapter` | Write the transport that delivers actions to this implementation |
+| `/create-concept-kit` | Bundle this implementation into a kit with its concept and syncs |

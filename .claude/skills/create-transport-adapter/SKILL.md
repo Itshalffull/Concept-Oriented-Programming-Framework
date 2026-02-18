@@ -231,3 +231,12 @@ See [references/query-protocols.md](references/query-protocols.md) for GraphQL v
 See [references/adapter-patterns.md](references/adapter-patterns.md) for invoke, query, health, error handling, and server-side patterns.
 See [examples/existing-adapters.md](examples/existing-adapters.md) for annotated walkthroughs of all four existing adapters.
 See [templates/adapter-scaffold.md](templates/adapter-scaffold.md) for copy-paste adapter templates.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-storage-adapter` | Write the storage backend that persists concept state |
+| `/create-implementation` | Write the concept handler this transport delivers actions to |
+| `/configure-deployment` | Wire this transport into a deployment manifest |
+| `/create-concept-kit` | Bundle this transport into a domain kit's infrastructure |

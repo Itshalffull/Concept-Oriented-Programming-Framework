@@ -272,3 +272,12 @@ concept Name [T] {
 For complete examples with design rationale:
 - [examples/domain-concepts.md](examples/domain-concepts.md) — Password, Follow, Article, User
 - [examples/framework-concepts.md](examples/framework-concepts.md) — SchemaGen, Registry, SyncEngine
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept-kit` | Bundle multiple related concepts into a reusable kit |
+| `/create-sync` | Write sync rules that connect this concept to others |
+| `/create-implementation` | Write the TypeScript implementation for this concept |
+| `/decompose-feature` | Break down a feature into concepts before designing each one |

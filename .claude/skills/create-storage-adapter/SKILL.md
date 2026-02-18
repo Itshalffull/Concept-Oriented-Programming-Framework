@@ -269,3 +269,12 @@ See [references/conflict-resolution.md](references/conflict-resolution.md) for t
 See [references/relation-patterns.md](references/relation-patterns.md) for how concepts use storage (patterns from all RealWorld concepts).
 See [examples/existing-storage.md](examples/existing-storage.md) for annotated walkthrough of the in-memory implementation.
 See [templates/storage-scaffold.md](templates/storage-scaffold.md) for copy-paste adapter templates.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-transport-adapter` | Write the transport adapter that delivers actions to concepts |
+| `/create-implementation` | Write the concept handler that uses this storage |
+| `/configure-deployment` | Wire this storage into a deployment manifest |
+| `/create-concept-kit` | Bundle this storage into a domain kit's infrastructure |
