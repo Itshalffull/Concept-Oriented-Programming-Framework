@@ -1,0 +1,28 @@
+concept SwiftGen [S] {
+
+  purpose {
+    Generate Swift skeleton code from a ConceptManifest.
+    Produces type definitions, handler protocol, transport adapter,
+    and conformance tests. Scoped to native iOS platform API
+    concepts (CoreData, HealthKit, ARKit, CoreML).
+  }
+
+  state {
+    outputs: S -> list { path: String, content: String }
+  }
+
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String, content: String }) {
+        Map ResolvedTypes to Swift types (String, Int, Double, Bool, Data, Date, etc.).
+        Emit struct definitions for action inputs/outputs.
+        Emit handler protocol with async methods per action.
+        Emit transport adapter.
+        Emit conformance tests.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to Swift.
+      }
+    }
+  }
+}
