@@ -172,9 +172,9 @@ describe('TypeScriptGen Output Identity', () => {
     // Exact content checks for conformance test structure
     expect(testFile.content).toContain('const x = "u-test-invariant-001"');
     expect(testFile.content).toContain('// --- AFTER clause ---');
-    expect(testFile.content).toContain('// set(user: x, password: "secret") -> ok(user: x)');
+    expect(testFile.content).toContain('// set(user: x, password: "secret123") -> ok(user: x)');
     expect(testFile.content).toContain('// --- THEN clause ---');
-    expect(testFile.content).toContain('// check(user: x, password: "secret") -> ok(valid: true)');
-    expect(testFile.content).toContain('// check(user: x, password: "wrong") -> ok(valid: false)');
+    expect(testFile.content).toContain('// check(user: x, password: "secret123") -> ok(valid: true)');
+    expect(testFile.content).toContain('// check(user: x, password: "wrongpass") -> ok(valid: false)');
   });
 });

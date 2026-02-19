@@ -74,8 +74,8 @@ describe('Conformance Test Generation (Section 7.4)', () => {
     expect(content).toContain('.valid).toBe(true)');
 
     // Section 7.4 Rule 4: literal values asserted exactly
-    expect(content).toContain('"secret"');
-    expect(content).toContain('"wrong"');
+    expect(content).toContain('"secret123"');
+    expect(content).toContain('"wrongpass"');
     expect(content).toContain('.valid).toBe(false)');
   });
 
