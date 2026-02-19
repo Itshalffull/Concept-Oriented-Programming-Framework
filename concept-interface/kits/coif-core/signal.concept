@@ -1,0 +1,66 @@
+@version(1)
+concept Signal [G] {
+
+  purpose {
+    Reactive state container aligned with TC39 Signals proposal.
+    A getter/setter pair with automatic dependency tracking. When
+    a signal's value changes, all computed signals and effects that
+    read from it re-execute — and only those. Each concept binding
+    produces one signal per state field. Signals are runtime-only.
+  }
+
+  state {
+    value: G -> String
+    kind: G -> String
+    dependencies: G -> set G
+    subscribers: G -> set G
+    version: G -> Int
+  }
+
+  actions {
+    action create(signal: G, kind: String, initialValue: String) {
+      -> ok(signal: G) {
+        Create a signal. Kind: "state" (writable), "computed"
+        (read-only derived), "effect" (side-effect on change).
+      }
+      -> invalid(message: String) { Kind not recognized. }
+    }
+
+    action read(signal: G) {
+      -> ok(signal: G, value: String, version: Int) {
+        Read current value and register caller as dependency.
+      }
+      -> notfound(message: String) { Signal does not exist. }
+    }
+
+    action write(signal: G, value: String) {
+      -> ok(signal: G, version: Int) {
+        Update value, increment version, notify subscribers.
+        Notifications batched within a microtask.
+      }
+      -> readonly(message: String) { Cannot write to computed signal. }
+      -> notfound(message: String) { Signal does not exist. }
+    }
+
+    action batch(signals: String) {
+      -> ok(count: Int) {
+        Update multiple signals atomically. Subscribers notified
+        once after all updates, not per-signal.
+      }
+      -> partial(message: String, succeeded: Int, failed: Int) {
+        Some updates failed.
+      }
+    }
+
+    action dispose(signal: G) {
+      -> ok(signal: G) { Remove signal, unsubscribe from dependencies. }
+      -> notfound(message: String) { Signal does not exist. }
+    }
+  }
+
+  invariant {
+    after create(signal: g, kind: "state", initialValue: "hello")
+      -> ok(signal: g)
+    then read(signal: g) -> ok(signal: g, value: "hello", version: _)
+  }
+}

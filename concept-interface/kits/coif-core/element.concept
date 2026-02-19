@@ -1,0 +1,64 @@
+@version(1)
+concept Element [E] {
+
+  purpose {
+    Abstract, modality-independent interaction units. An Element
+    describes WHAT a user can do — select, input, trigger, navigate,
+    display — without specifying HOW it renders. Drawn from the
+    CAMELEON Reference Framework's Abstract Interaction Objects.
+    The same Element renders as a dropdown in GUI, a prompt in CLI,
+    an enum in API, or a picker in mobile.
+  }
+
+  state {
+    kind: E -> String
+    label: E -> String
+    description: E -> option String
+    dataType: E -> String
+    required: E -> Bool
+    constraints: E -> option String
+    children: E -> list E
+    parent: E -> option E
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(element: E, kind: String, label: String, dataType: String) {
+      -> ok(element: E) {
+        Create an abstract element. Kind is one of:
+        input-text, input-number, input-date, input-bool,
+        selection-single, selection-multi, trigger, navigation,
+        output-text, output-number, output-date, output-bool,
+        group, container, rich-text, file-upload, media-display.
+      }
+      -> invalid(message: String) { The kind is not recognized. }
+    }
+
+    action nest(parent: E, child: E) {
+      -> ok(parent: E) { Add a child to a group or container. }
+      -> invalid(message: String) { Parent cannot contain children. }
+    }
+
+    action setConstraints(element: E, constraints: String) {
+      -> ok(element: E) {
+        Apply constraints as JSON: min, max, minLength,
+        maxLength, pattern, options (for selections).
+      }
+      -> notfound(message: String) { Element does not exist. }
+    }
+
+    action remove(element: E) {
+      -> ok(element: E) { Remove element and detach children. }
+      -> notfound(message: String) { Element does not exist. }
+    }
+  }
+
+  invariant {
+    after create(element: e, kind: "input-text", label: "Title",
+                 dataType: "String") -> ok(element: e)
+    then remove(element: e) -> ok(element: e)
+  }
+}
