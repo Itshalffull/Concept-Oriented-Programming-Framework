@@ -1,9 +1,7 @@
-sync ValidateDeployment {
-  when {
-    SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
-  }
-  then {
-    DeploymentValidator/validate: [ manifest: ?deployManifest;
-      concepts: [?manifest]; syncs: [] ]
-  }
+sync ValidateDeployment [eager]
+when {
+  SchemaGen/generate: [ spec: ?spec ] => [ manifest: ?manifest ]
+}
+then {
+  DeploymentValidator/validate: [ manifest: ?manifest ]
 }

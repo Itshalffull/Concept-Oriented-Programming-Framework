@@ -17,8 +17,9 @@ import type {
  */
 async function recoverAddress(message: string, signature: string): Promise<string> {
   try {
+    // @ts-expect-error — ethers is an optional peer dependency for web3 kit
     const { verifyMessage } = await import('ethers');
-    return verifyMessage(message, signature);
+    return verifyMessage(message, signature) as string;
   } catch {
     // Stub for environments without ethers — always returns zero address
     return '0x0000000000000000000000000000000000000000';
@@ -35,6 +36,7 @@ async function recoverTypedDataSigner(
   signature: string,
 ): Promise<string> {
   try {
+    // @ts-expect-error — ethers is an optional peer dependency for web3 kit
     const { verifyTypedData } = await import('ethers');
     return verifyTypedData(
       JSON.parse(domain),

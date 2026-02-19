@@ -1,11 +1,10 @@
-sync CheckMigrationOnRegister {
-  when {
-    Registry/register: [ uri: ?uri ] => [ concept: ?c ]
-  }
-  where {
-    SchemaGen { manifest(?uri).version as ?specVersion }
-  }
-  then {
-    Migration/check: [ concept: ?c; specVersion: ?specVersion ]
-  }
+sync CheckMigrationOnRegister [eager]
+when {
+  Registry/register: [ uri: ?uri ] => [ concept: ?c ]
+}
+where {
+  SchemaGen: { ?uri manifest: ?specVersion }
+}
+then {
+  Migration/check: [ concept: ?c; specVersion: ?specVersion ]
 }

@@ -179,11 +179,11 @@ function generateContractFile(manifest: ConceptManifest): string {
     lines.push(`    // --- Storage (from concept state) ---`);
     lines.push('');
     for (const rel of manifest.relations) {
-      lines.push(`    // ${rel.name}: ${rel.description || ''}`);
-      if (rel.type === 'set') {
+      lines.push(`    // ${rel.name}`);
+      if (rel.source === 'set-valued') {
         lines.push(`    mapping(bytes32 => bool) private ${camelCase(rel.name)};`);
         lines.push(`    bytes32[] private ${camelCase(rel.name)}Keys;`);
-      } else if (rel.type === 'map') {
+      } else if (rel.source === 'merged') {
         lines.push(`    mapping(bytes32 => bytes) private ${camelCase(rel.name)};`);
       } else {
         lines.push(`    mapping(bytes32 => bytes) private ${camelCase(rel.name)};`);
