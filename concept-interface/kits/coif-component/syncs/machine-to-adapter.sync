@@ -1,0 +1,19 @@
+# ============================================================
+# MachineToFrameworkAdapter — coif-component recommended sync
+#
+# When a machine produces framework-neutral props via connect(),
+# send them to the active framework adapter for normalization
+# into framework-specific bindings (React, Solid, Vue, etc.).
+# ============================================================
+
+sync MachineToFrameworkAdapter [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter status: "active" }
+}
+then {
+  FrameworkAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}

@@ -1,0 +1,66 @@
+@version(1)
+concept Machine [M] {
+
+  purpose {
+    Finite state machine runtime. Instantiates and executes
+    behavioral state machines defined by Widget. A Machine
+    instance holds current state, processes events, executes
+    guards and actions, and produces output via connect().
+
+    The connect() function transforms machine state into a
+    framework-neutral props API. For a dialog in "open" state:
+    { getRootProps(), getTriggerProps(), getContentProps(),
+      isOpen: true, open(), close() }
+
+    These props are plain objects — no framework dependency.
+    Each FrameworkAdapter transforms them into framework bindings.
+  }
+
+  state {
+    current: M -> String
+    context: M -> String
+    component: M -> String
+    status: M -> String
+  }
+
+  actions {
+    action spawn(machine: M, component: String, context: String) {
+      -> ok(machine: M) {
+        Create machine instance from registered component type.
+        Initialize with component defaults merged with context.
+      }
+      -> notfound(message: String) { Widget type not registered. }
+    }
+
+    action send(machine: M, event: String) {
+      -> ok(machine: M, state: String) {
+        Send event to machine. Evaluates transitions from current
+        state: checks guards, executes actions, moves to target.
+        Events: { "type": "OPEN" } or { "type": "SET_VALUE", "value": "..." }
+      }
+      -> invalid(message: String) { Event not valid in current state. }
+      -> notfound(message: String) { Machine does not exist. }
+    }
+
+    action connect(machine: M) {
+      -> ok(machine: M, props: String) {
+        Produce framework-neutral props API. JSON object where keys
+        are anatomy part names and values are prop objects with
+        event handlers, ARIA attributes, data attributes, state flags.
+      }
+      -> notfound(message: String) { Machine does not exist. }
+    }
+
+    action destroy(machine: M) {
+      -> ok(machine: M) { Tear down, run exit actions, clean up timers. }
+      -> notfound(message: String) { Machine does not exist. }
+    }
+  }
+
+  invariant {
+    after spawn(machine: m, component: "dialog",
+                context: "{ \"open\": false }")
+      -> ok(machine: m)
+    then connect(machine: m) -> ok(machine: m, props: _)
+  }
+}

@@ -1,0 +1,60 @@
+# kits/coif-component/kit.yaml
+kit:
+  name: coif-component
+  version: 0.1.0
+  description: >
+    Headless component state machines, anatomies, and slot composition.
+    Widgets are behavioral specifications without rendering — finite
+    state machines that produce a props API via connect(), consumable
+    by any framework adapter.
+
+concepts:
+  Widget:
+    spec: ./widget.concept
+    params:
+      P: { as: widget-ref, description: "Reference to a registered widget type" }
+
+  Machine:
+    spec: ./machine.concept
+    params:
+      M: { as: machine-ref, description: "Reference to a running machine instance" }
+
+  Anatomy:
+    spec: ./anatomy.concept
+    params:
+      N: { as: anatomy-ref, description: "Reference to a component anatomy definition" }
+
+  Slot:
+    spec: ./slot.concept
+    params:
+      L: { as: slot-ref, description: "Reference to a named insertion point" }
+
+syncs:
+  required:
+    - path: ./syncs/destroy-machine-on-unbind.sync
+      name: DestroyMachineOnUnbind
+      description: >
+        When a binding is removed, destroy all associated machine
+        instances to clean up timers and state.
+
+  recommended:
+    - path: ./syncs/element-to-machine.sync
+      name: ElementToMachine
+      description: >
+        When abstract elements are extracted, query the component
+        registry for appropriate widget machines.
+
+    - path: ./syncs/spawn-machine-for-element.sync
+      name: SpawnMachineForElement
+      description: >
+        When a widget spec is retrieved, spawn a machine instance
+        with auto-generated context.
+
+    - path: ./syncs/machine-to-adapter.sync
+      name: MachineToFrameworkAdapter
+      description: >
+        When a machine produces props via connect(), send to the
+        active framework adapter for normalization.
+
+dependencies:
+  - coif-core: ">=0.1.0"
