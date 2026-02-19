@@ -11,7 +11,7 @@
 // and run flow-level tests.
 // ============================================================
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { resolve, relative, join } from 'path';
 import { spawn } from 'child_process';
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
@@ -186,22 +186,51 @@ async function runIntegrationTests(
   });
 }
 
+function toKebabCase(name: string): string {
+  return name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
 function findImplementation(
   projectDir: string,
   implsDir: string,
   conceptName: string,
 ): string | null {
   const lowerName = conceptName.toLowerCase();
-  // Check in app/ and framework/ subdirectories
+  const kebabName = toKebabCase(conceptName);
+  // Check in app/ and framework/ subdirectories, trying both
+  // flat lowercase (e.g. "registry") and kebab-case (e.g. "spec-parser")
   const candidates = [
     join(projectDir, implsDir, 'app', `${lowerName}.impl.ts`),
+    join(projectDir, implsDir, 'app', `${kebabName}.impl.ts`),
     join(projectDir, implsDir, 'framework', `${lowerName}.impl.ts`),
+    join(projectDir, implsDir, 'framework', `${kebabName}.impl.ts`),
     join(projectDir, implsDir, `${lowerName}.impl.ts`),
+    join(projectDir, implsDir, `${kebabName}.impl.ts`),
   ];
 
   for (const path of candidates) {
     if (existsSync(path)) return path;
   }
+
+  // Fallback: scan directories for a .impl.ts file whose name (without hyphens)
+  // matches the lowercased concept name. Handles compound words like
+  // TypeScriptGen → typescript-gen.impl.ts (kebab gives type-script-gen which misses).
+  const dirs = [
+    join(projectDir, implsDir, 'app'),
+    join(projectDir, implsDir, 'framework'),
+    join(projectDir, implsDir),
+  ];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue;
+    for (const file of readdirSync(dir)) {
+      if (!file.endsWith('.impl.ts')) continue;
+      const normalized = file.replace('.impl.ts', '').replace(/-/g, '');
+      if (normalized === lowerName) {
+        return join(dir, file);
+      }
+    }
+  }
+
   return null;
 }
 

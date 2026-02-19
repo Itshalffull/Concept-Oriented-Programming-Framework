@@ -28,4 +28,9 @@ concept Telemetry [S] {
       -> ok() { Set or update the export target. }
     }
   }
+
+  invariant {
+    after configure(exporter: "stdout") -> ok()
+    then configure(exporter: "stdout") -> ok()
+  }
 }

@@ -18,6 +18,9 @@
 // See Architecture doc Section 17.2.
 // ============================================================
 
+import type { ConceptHandler } from '../../../kernel/src/types.js';
+import { generateId } from '../../../kernel/src/types.js';
+
 // --- Deployment Manifest Types ---
 
 export interface DeploymentManifest {
@@ -375,3 +378,42 @@ export function validateDeploymentManifest(
     plan,
   };
 }
+
+// --- Concept Handler ---
+
+export const deploymentValidatorHandler: ConceptHandler = {
+  async parse(input, storage) {
+    const raw = input.raw as string;
+    if (!raw || typeof raw !== 'string') {
+      return { variant: 'error', message: 'raw is required and must be a string' };
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      const manifest = parseDeploymentManifest(parsed);
+      const manifestId = generateId();
+
+      await storage.put('manifests', manifestId, { manifestId });
+      await storage.put('plan', manifestId, { manifestId, manifest });
+
+      return { variant: 'ok', manifest: manifestId };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { variant: 'error', message };
+    }
+  },
+
+  async validate(input, storage) {
+    const manifestRef = input.manifest as string;
+    if (!manifestRef) {
+      return { variant: 'error', issues: ['manifest reference is required'] };
+    }
+
+    const stored = await storage.get('plan', manifestRef);
+    if (!stored || !stored.manifest) {
+      return { variant: 'error', issues: ['manifest not found'] };
+    }
+
+    return { variant: 'error', issues: ['full validation requires concept and sync registrations'] };
+  },
+};

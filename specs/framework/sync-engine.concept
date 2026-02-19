@@ -69,4 +69,9 @@ concept SyncEngine [F] {
       }
     }
   }
+
+  invariant {
+    after onCompletion(completion: "") -> ok(invocations: i)
+    then onCompletion(completion: "") -> ok(invocations: j)
+  }
 }

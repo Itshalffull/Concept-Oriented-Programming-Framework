@@ -22,4 +22,9 @@ concept SpecParser [S] {
       }
     }
   }
+
+  invariant {
+    after parse(source: "") -> error(message: m, line: 0)
+    then parse(source: "") -> error(message: m, line: 0)
+  }
 }

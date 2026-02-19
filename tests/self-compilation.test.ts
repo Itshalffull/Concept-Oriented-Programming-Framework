@@ -122,7 +122,7 @@ describe('Self-Validation', () => {
       );
       expect(genResult.variant).toBe('ok');
       const files = genResult.files as { path: string; content: string }[];
-      expect(files).toHaveLength(3);
+      expect(files).toHaveLength(4);
       // Verify each file has content
       for (const file of files) {
         expect(file.content.length).toBeGreaterThan(0);

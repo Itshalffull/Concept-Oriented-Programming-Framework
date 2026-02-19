@@ -31,4 +31,9 @@ concept Migration [C] {
       }
     }
   }
+
+  invariant {
+    after complete(concept: "c1", version: 1) -> ok()
+    then check(concept: "c1", specVersion: 2) -> needsMigration(from: 1, to: 2)
+  }
 }

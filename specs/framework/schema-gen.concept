@@ -28,4 +28,9 @@ concept SchemaGen [S] {
       }
     }
   }
+
+  invariant {
+    after generate(spec: "test", ast: "") -> error(message: m)
+    then generate(spec: "test", ast: "") -> error(message: m)
+  }
 }

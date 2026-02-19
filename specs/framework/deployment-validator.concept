@@ -39,4 +39,9 @@ concept DeploymentValidator [M] {
       }
     }
   }
+
+  invariant {
+    after parse(raw: "invalid") -> error(message: m)
+    then parse(raw: "invalid") -> error(message: m)
+  }
 }

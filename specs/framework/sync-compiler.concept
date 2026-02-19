@@ -21,4 +21,9 @@ concept SyncCompiler [Y] {
       }
     }
   }
+
+  invariant {
+    after compile(sync: "test", ast: "") -> error(message: m)
+    then compile(sync: "test", ast: "") -> error(message: m)
+  }
 }
