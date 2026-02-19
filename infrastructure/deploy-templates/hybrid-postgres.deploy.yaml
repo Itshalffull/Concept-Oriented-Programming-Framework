@@ -1,0 +1,61 @@
+# Hybrid Serverless Deploy Template — PostgreSQL Storage
+#
+# Concepts run on Lambda or Cloud Functions, engine runs on
+# ECS Fargate or Cloud Run with PostgreSQL (Aurora Serverless
+# or Cloud SQL) as the shared storage backend.
+#
+# Best for: teams already using PostgreSQL, apps needing
+# rich SQL queries, or hybrid cloud deployments.
+#
+# Usage:
+#   copf deploy --manifest hybrid-postgres.deploy.yaml
+
+deploy:
+  name: hybrid-postgres
+  description: >
+    Hybrid serverless deployment with PostgreSQL storage.
+    Concepts run on serverless compute, engine runs on
+    managed containers. Works with Aurora Serverless (AWS)
+    or Cloud SQL (GCP).
+
+runtimes:
+  concepts:
+    type: aws-lambda     # or google-cloud-function
+    region: "${REGION:-us-east-1}"
+    memory: 256
+    timeout: 30
+    engine: false
+    transport: http
+    upstream: engine
+    storage: postgres
+
+  engine:
+    type: ecs-fargate    # or cloud-run
+    region: "${REGION:-us-east-1}"
+    cpu: 256
+    memory: 512
+    engine: true
+    transport: http
+    storage: postgres
+    minInstances: 1
+
+infrastructure:
+  storage:
+    postgres:
+      type: postgres
+      config:
+        host: "${DB_HOST}"
+        port: "${DB_PORT:-5432}"
+        database: "${DB_NAME}"
+        username: "${DB_USERNAME}"
+        password: "${DB_PASSWORD}"
+        ssl: true
+        poolMin: 2
+        poolMax: 10
+
+  transports:
+    http:
+      type: http
+      config:
+        engineUrl: "${ENGINE_URL}"
+        timeout: 10000

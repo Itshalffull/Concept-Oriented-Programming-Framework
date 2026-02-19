@@ -1,0 +1,54 @@
+# AWS Serverless Deploy Template — Persistent Engine
+#
+# Concepts run on Lambda, engine runs on ECS Fargate.
+# Lowest latency for eager sync chains (~$5-15/mo engine cost).
+# Storage: DynamoDB (pay-per-request).
+# Transport: HTTP between Lambda concepts and ECS engine.
+#
+# Usage:
+#   copf deploy --manifest aws-persistent-engine.deploy.yaml
+
+deploy:
+  name: aws-persistent-engine
+  description: >
+    AWS serverless deployment with Lambda concepts and a persistent
+    ECS Fargate engine. Best for production workloads needing low
+    latency and predictable performance.
+
+runtimes:
+  concepts:
+    type: aws-lambda
+    region: "${AWS_REGION:-us-east-1}"
+    memory: 256
+    timeout: 30
+    engine: false
+    transport: http
+    upstream: engine
+    storage: dynamodb
+
+  engine:
+    type: ecs-fargate
+    region: "${AWS_REGION:-us-east-1}"
+    cpu: 256
+    memory: 512
+    engine: true
+    transport: http
+    storage: dynamodb
+    minInstances: 1
+
+infrastructure:
+  storage:
+    dynamodb:
+      type: dynamodb
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        tablePrefix: "${APP_NAME:-myapp}-${STAGE:-prod}-"
+        singleTable: true
+        billingMode: PAY_PER_REQUEST
+
+  transports:
+    http:
+      type: http
+      config:
+        engineUrl: "${ENGINE_URL}"
+        timeout: 10000

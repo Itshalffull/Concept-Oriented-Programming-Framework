@@ -1,0 +1,63 @@
+# GCP Serverless Deploy Template — Event-Driven Engine
+#
+# Concepts run on Cloud Functions, engine evaluator runs on Cloud Functions.
+# All communication via Pub/Sub. Fully serverless, auto-scaling.
+# Storage: Firestore. Action log: Firestore.
+#
+# Best for: high-fan-out patterns, batch processing, event-heavy
+# workloads on Google Cloud.
+#
+# Usage:
+#   copf deploy --manifest gcp-event-driven.deploy.yaml
+
+deploy:
+  name: gcp-event-driven
+  description: >
+    Fully serverless GCP deployment with Pub/Sub-based communication.
+    Both concepts and engine evaluator run on Cloud Functions.
+    Zero idle cost, auto-scaling.
+
+runtimes:
+  concepts:
+    type: google-cloud-function
+    region: "${GCP_REGION:-us-central1}"
+    memory: 256
+    timeout: 60
+    engine: false
+    transport: pubsub
+    upstream: engine
+    storage: firestore
+
+  engine:
+    type: google-cloud-function
+    region: "${GCP_REGION:-us-central1}"
+    memory: 512
+    timeout: 120
+    engine: true
+    transport: pubsub
+    storage: firestore
+    actionLog: firestore
+    syncCache: gcs
+
+infrastructure:
+  storage:
+    firestore:
+      type: firestore
+      config:
+        projectId: "${GCP_PROJECT_ID}"
+        collectionPrefix: "${APP_NAME:-myapp}-${STAGE:-prod}"
+
+  transports:
+    pubsub:
+      type: pubsub
+      config:
+        projectId: "${GCP_PROJECT_ID}"
+        topicPrefix: "${APP_NAME:-myapp}-${STAGE:-prod}-"
+        ackDeadlineSeconds: 60
+
+  actionLog:
+    firestore:
+      type: firestore
+      config:
+        projectId: "${GCP_PROJECT_ID}"
+        collectionPrefix: "${APP_NAME:-myapp}-${STAGE:-prod}-logs"

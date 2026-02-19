@@ -1,0 +1,52 @@
+# GCP Serverless Deploy Template — Persistent Engine
+#
+# Concepts run on Cloud Functions, engine runs on Cloud Run.
+# Lowest latency for eager sync chains.
+# Storage: Firestore.
+# Transport: HTTP between Cloud Functions concepts and Cloud Run engine.
+#
+# Usage:
+#   copf deploy --manifest gcp-persistent-engine.deploy.yaml
+
+deploy:
+  name: gcp-persistent-engine
+  description: >
+    GCP serverless deployment with Cloud Functions concepts and a
+    persistent Cloud Run engine. Best for production workloads
+    needing low latency on Google Cloud.
+
+runtimes:
+  concepts:
+    type: google-cloud-function
+    region: "${GCP_REGION:-us-central1}"
+    memory: 256
+    timeout: 60
+    engine: false
+    transport: http
+    upstream: engine
+    storage: firestore
+
+  engine:
+    type: cloud-run
+    region: "${GCP_REGION:-us-central1}"
+    cpu: 1
+    memory: 512
+    engine: true
+    transport: http
+    storage: firestore
+    minInstances: 1
+
+infrastructure:
+  storage:
+    firestore:
+      type: firestore
+      config:
+        projectId: "${GCP_PROJECT_ID}"
+        collectionPrefix: "${APP_NAME:-myapp}-${STAGE:-prod}"
+
+  transports:
+    http:
+      type: http
+      config:
+        engineUrl: "${ENGINE_URL}"
+        timeout: 10000
