@@ -1,0 +1,68 @@
+@version(1)
+concept Layout [Y] {
+
+  purpose {
+    Spatial arrangement of components. Describes positioning
+    without specifying CSS or terminal coordinates — constraint-based
+    descriptions interpreted per-Surface. Layouts compose recursively:
+    a page layout contains region layouts containing component layouts.
+  }
+
+  state {
+    name: Y -> String
+    kind: Y -> String
+    direction: Y -> option String
+    gap: Y -> option String
+    columns: Y -> option String
+    rows: Y -> option String
+    areas: Y -> option String
+    children: Y -> list Y
+    responsive: Y -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(layout: Y, name: String, kind: String) {
+      -> ok(layout: Y) {
+        Create layout. Kind: "stack", "grid", "split", "overlay",
+        "flow", "sidebar", "center".
+      }
+      -> invalid(message: String) { Kind not recognized. }
+    }
+
+    action configure(layout: Y, config: String) {
+      -> ok(layout: Y) {
+        Apply config: direction, gap (token ref), columns/rows,
+        areas, alignment, padding.
+      }
+      -> notfound(message: String) { Layout does not exist. }
+    }
+
+    action nest(parent: Y, child: Y) {
+      -> ok(parent: Y) { Nest layout inside another. }
+      -> cycle(message: String) { Would create circular reference. }
+    }
+
+    action setResponsive(layout: Y, breakpoints: String) {
+      -> ok(layout: Y) {
+        Define responsive overrides keyed by breakpoint (sm, md, lg, xl).
+      }
+      -> notfound(message: String) { Layout does not exist. }
+    }
+
+    action remove(layout: Y) {
+      -> ok(layout: Y) { Remove and detach children. }
+      -> notfound(message: String) { Layout does not exist. }
+    }
+  }
+
+  invariant {
+    after create(layout: y, name: "main", kind: "sidebar")
+      -> ok(layout: y)
+    then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
+      -> ok(layout: y)
+  }
+}

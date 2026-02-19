@@ -1,0 +1,45 @@
+@version(1)
+concept Viewport [V] {
+
+  purpose {
+    Responsive breakpoint and adaptation. Observes surface dimensions,
+    evaluates breakpoint conditions, produces active breakpoints for
+    Layout and Widget via signals. Defaults: xs (0-479), sm (480-767),
+    md (768-1023), lg (1024-1279), xl (1280+).
+  }
+
+  state {
+    width: V -> Int
+    height: V -> Int
+    breakpoint: V -> String
+    orientation: V -> String
+    customBreakpoints: V -> option String
+  }
+
+  actions {
+    action observe(viewport: V, width: Int, height: Int) {
+      -> ok(viewport: V, breakpoint: String, orientation: String) {
+        Report dimensions, return active breakpoint and orientation.
+      }
+    }
+
+    action setBreakpoints(viewport: V, breakpoints: String) {
+      -> ok(viewport: V) { Override defaults. }
+      -> invalid(message: String) { Values must be ascending positive integers. }
+    }
+
+    action getBreakpoint(viewport: V) {
+      -> ok(viewport: V, breakpoint: String, width: Int, height: Int) {
+        Return current breakpoint and dimensions.
+      }
+      -> notfound(message: String) { Viewport not initialized. }
+    }
+  }
+
+  invariant {
+    after observe(viewport: v, width: 1024, height: 768)
+      -> ok(viewport: v, breakpoint: "lg", orientation: "landscape")
+    then getBreakpoint(viewport: v)
+      -> ok(viewport: v, breakpoint: "lg", width: 1024, height: 768)
+  }
+}
