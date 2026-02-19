@@ -32,12 +32,30 @@ export interface DeploymentManifest {
 }
 
 export interface RuntimeConfig {
-  type: 'node' | 'swift' | 'browser' | 'embedded' | string;
+  type: 'node' | 'swift' | 'browser' | 'embedded'
+    | 'aws-lambda' | 'ecs-fargate' | 'google-cloud-function' | 'cloud-run'
+    | string;
   engine: boolean;
-  transport: 'in-process' | 'http' | 'websocket' | 'worker';
+  transport: 'in-process' | 'http' | 'websocket' | 'worker' | 'sqs' | 'pubsub';
   upstream?: string;
   /** Configurable warn threshold for lite query snapshot size. */
   liteQueryWarnThreshold?: number;
+  /** Storage backend for this runtime. */
+  storage?: 'dynamodb' | 'firestore' | 'redis' | 'memory' | string;
+  /** Durable action log backend (required for per-request and event-driven engines). */
+  actionLog?: 'dynamodb' | 'firestore' | string;
+  /** Location of compiled sync artifacts (for serverless engines). */
+  syncCache?: 's3' | 'gcs' | 'bundled' | string;
+  /** Memory allocation in MB (serverless). */
+  memory?: number;
+  /** Timeout in seconds (serverless). */
+  timeout?: number;
+  /** CPU allocation (managed compute). */
+  cpu?: number;
+  /** Minimum instances (managed compute, 0 for scale-to-zero). */
+  minInstances?: number;
+  /** AWS/GCP region. */
+  region?: string;
 }
 
 export interface ConceptDeployment {
@@ -96,6 +114,10 @@ const RUNTIME_CAPABILITIES: Record<string, string[]> = {
   swift: ['crypto', 'coredata', 'network', 'ui'],
   browser: ['network', 'ui', 'localstorage'],
   embedded: ['crypto', 'minimal-compute'],
+  'aws-lambda': ['crypto', 'network', 'database', 'full-compute'],
+  'ecs-fargate': ['crypto', 'fs', 'network', 'database', 'full-compute'],
+  'google-cloud-function': ['crypto', 'network', 'database', 'full-compute'],
+  'cloud-run': ['crypto', 'fs', 'network', 'database', 'full-compute'],
 };
 
 // --- Parse Deployment Manifest ---
@@ -119,6 +141,14 @@ export function parseDeploymentManifest(raw: Record<string, unknown>): Deploymen
       transport: (cfg.transport as string) as RuntimeConfig['transport'] || 'in-process',
       upstream: cfg.upstream as string | undefined,
       liteQueryWarnThreshold: cfg.liteQueryWarnThreshold as number | undefined,
+      storage: cfg.storage as string | undefined,
+      actionLog: cfg.actionLog as string | undefined,
+      syncCache: cfg.syncCache as string | undefined,
+      memory: cfg.memory as number | undefined,
+      timeout: cfg.timeout as number | undefined,
+      cpu: cfg.cpu as number | undefined,
+      minInstances: cfg.minInstances as number | undefined,
+      region: cfg.region as string | undefined,
     };
   }
 
@@ -268,6 +298,32 @@ export function validateDeploymentManifest(
         chain.add(current);
         current = manifest.runtimes[current]?.upstream;
       }
+    }
+  }
+
+  // Rule 6: Serverless engines without persistent compute need a durable action log
+  for (const [name, runtime] of Object.entries(manifest.runtimes)) {
+    if (!runtime.engine) continue;
+    const isServerless = ['aws-lambda', 'google-cloud-function'].includes(runtime.type);
+    if (isServerless && !runtime.actionLog) {
+      warnings.push(
+        `Serverless engine runtime "${name}" (${runtime.type}) has no actionLog configured. ` +
+        `Engine state will be lost between invocations. Consider setting actionLog to "dynamodb" or "firestore".`
+      );
+    }
+  }
+
+  // Rule 7: Queue-based transports require matching cloud provider
+  for (const [name, runtime] of Object.entries(manifest.runtimes)) {
+    if (runtime.transport === 'sqs' && !['aws-lambda', 'ecs-fargate'].includes(runtime.type) && runtime.type !== 'node') {
+      warnings.push(
+        `Runtime "${name}" uses SQS transport but is type "${runtime.type}". SQS transport is designed for AWS runtimes.`
+      );
+    }
+    if (runtime.transport === 'pubsub' && !['google-cloud-function', 'cloud-run'].includes(runtime.type) && runtime.type !== 'node') {
+      warnings.push(
+        `Runtime "${name}" uses Pub/Sub transport but is type "${runtime.type}". Pub/Sub transport is designed for GCP runtimes.`
+      );
     }
   }
 
