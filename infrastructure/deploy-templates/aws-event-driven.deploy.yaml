@@ -1,0 +1,66 @@
+# AWS Serverless Deploy Template — Event-Driven Engine
+#
+# Concepts run on Lambda, engine evaluator runs on Lambda.
+# All communication via SQS queues. Fully serverless, auto-scaling.
+# Storage: DynamoDB. Action log: DynamoDB.
+#
+# Best for: high-fan-out patterns, batch processing, event-heavy
+# workloads, and environments where zero idle cost is required.
+#
+# Usage:
+#   copf deploy --manifest aws-event-driven.deploy.yaml
+
+deploy:
+  name: aws-event-driven
+  description: >
+    Fully serverless AWS deployment with SQS-based communication.
+    Both concepts and engine evaluator run on Lambda. Zero idle cost,
+    auto-scaling. Higher per-sync latency (~50-200ms per hop).
+
+runtimes:
+  concepts:
+    type: aws-lambda
+    region: "${AWS_REGION:-us-east-1}"
+    memory: 256
+    timeout: 30
+    engine: false
+    transport: sqs
+    upstream: engine
+    storage: dynamodb
+
+  engine:
+    type: aws-lambda
+    region: "${AWS_REGION:-us-east-1}"
+    memory: 512
+    timeout: 60
+    engine: true
+    transport: sqs
+    storage: dynamodb
+    actionLog: dynamodb
+    syncCache: s3
+
+infrastructure:
+  storage:
+    dynamodb:
+      type: dynamodb
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        tablePrefix: "${APP_NAME:-myapp}-${STAGE:-prod}-"
+        singleTable: true
+        billingMode: PAY_PER_REQUEST
+
+  transports:
+    sqs:
+      type: sqs
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        queuePrefix: "${APP_NAME:-myapp}-${STAGE:-prod}-"
+        visibilityTimeout: 60
+        batchSize: 10
+
+  actionLog:
+    dynamodb:
+      type: dynamodb
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        tableName: "${APP_NAME:-myapp}-${STAGE:-prod}-action-log"
