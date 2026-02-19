@@ -23,6 +23,8 @@
   "include": [
     "kernel/src/**/*.ts",
     "implementations/**/*.ts",
+    "infrastructure/**/*.ts",
+    "engine/**/*.ts",
     "tests/**/*.ts",
     "tools/**/*.ts"
   ]
