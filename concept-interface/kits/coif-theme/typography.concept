@@ -1,0 +1,47 @@
+@version(1)
+concept Typography [X] {
+
+  purpose {
+    Type scale, font stacks, and text styles. Generates harmonious
+    type scale from modular ratio (default: major third, 1.25).
+    Composes scale sizes with font stacks and weights into named
+    presets: heading-1, body, caption, label, code.
+  }
+
+  state {
+    name: X -> String
+    kind: X -> String
+    value: X -> String
+    scale: X -> option String
+  }
+
+  actions {
+    action defineScale(typography: X, baseSize: Float, ratio: Float, steps: Int) {
+      -> ok(typography: X, scale: String) {
+        Generate type scale: { "xs": 12, "sm": 14, "base": 16, ... }
+      }
+      -> invalid(message: String) { Base must be positive, ratio > 1. }
+    }
+
+    action defineFontStack(typography: X, name: String, fonts: String, category: String) {
+      -> ok(typography: X) { Register font stack. Category: serif, sans-serif, monospace, display. }
+      -> duplicate(message: String) { Already exists. }
+    }
+
+    action defineStyle(typography: X, name: String, config: String) {
+      -> ok(typography: X) {
+        Create named text style: { "scale": "xl", "fontStack": "heading",
+        "weight": 700, "lineHeight": 1.2, "letterSpacing": "-0.02em" }
+      }
+      -> invalid(message: String) { Referenced scale or fontStack not found. }
+    }
+  }
+
+  invariant {
+    after defineScale(typography: x, baseSize: 16, ratio: 1.25, steps: 6)
+      -> ok(typography: x, scale: _)
+    then defineStyle(typography: x, name: "heading-1",
+                     config: "{ \"scale\": \"3xl\", \"weight\": 700 }")
+      -> ok(typography: x)
+  }
+}

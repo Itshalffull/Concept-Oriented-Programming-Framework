@@ -1,0 +1,17 @@
+# ============================================================
+# PaletteToTokens — coif-theme recommended sync
+#
+# When a palette generates a color scale, register each shade
+# as a primitive design token. This bridges the color system
+# to the token system automatically.
+# ============================================================
+
+sync PaletteToTokens [eager]
+when {
+  Palette/generate: [ palette: ?p ]
+    => ok(palette: ?p; scale: ?scale)
+}
+then {
+  DesignToken/define: [ token: ?p; name: ?p; value: ?scale;
+                        type: "color"; tier: "primitive" ]
+}

@@ -1,0 +1,17 @@
+# ============================================================
+# ThemeTokensToSignals — coif-theme required sync
+#
+# When a theme is resolved, batch-update all token signals so
+# the UI reflects the new theme instantly. This is the same
+# reactive mechanism used for concept state — themes are just
+# another set of signals.
+# ============================================================
+
+sync ThemeTokensToSignals [eager]
+when {
+  Theme/resolve: [ theme: ?theme ]
+    => ok(tokens: ?tokens)
+}
+then {
+  Signal/batch: [ signals: ?tokens ]
+}
