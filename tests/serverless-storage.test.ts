@@ -377,6 +377,33 @@ function runStorageContractTests(name: string, createStorage: () => ConceptStora
       expect(posts).toHaveLength(1);
       expect(posts[0].type).toBe('post');
     });
+
+    it('delMany removes matching entries and returns count', async () => {
+      await storage.put('items', 'a', { id: 'a', category: 'x', label: 'one' });
+      await storage.put('items', 'b', { id: 'b', category: 'y', label: 'two' });
+      await storage.put('items', 'c', { id: 'c', category: 'x', label: 'three' });
+
+      if (storage.delMany) {
+        const deleted = await storage.delMany('items', { category: 'x' });
+        expect(deleted).toBe(2);
+
+        const remaining = await storage.find('items');
+        expect(remaining).toHaveLength(1);
+        expect(remaining[0].label).toBe('two');
+      }
+    });
+
+    it('delMany returns 0 when no entries match', async () => {
+      await storage.put('items', 'a', { id: 'a', category: 'x' });
+
+      if (storage.delMany) {
+        const deleted = await storage.delMany('items', { category: 'nonexistent' });
+        expect(deleted).toBe(0);
+
+        const remaining = await storage.find('items');
+        expect(remaining).toHaveLength(1);
+      }
+    });
   });
 }
 
