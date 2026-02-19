@@ -1,0 +1,19 @@
+# ============================================================
+# RendererFeedsAdapter — coif-integration recommended sync
+#
+# Route the library Renderer's content-to-render-tree output
+# through COIF's framework adapter for framework-specific
+# normalization.
+# ============================================================
+
+sync RendererFeedsAdapter [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter status: "active" }
+}
+then {
+  FrameworkAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}

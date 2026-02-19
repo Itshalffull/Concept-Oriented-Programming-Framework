@@ -1,0 +1,16 @@
+# ============================================================
+# WorkflowStateToSignal — coif-integration recommended sync
+#
+# Reflect workflow state transitions in COIF signals for live
+# status display. When an entity transitions to a new workflow
+# state, update the corresponding UI signal.
+# ============================================================
+
+sync WorkflowStateToSignal [eager]
+when {
+  Workflow/transition: [ entityId: ?entity; targetState: ?state ]
+    => ok(entityId: ?entity)
+}
+then {
+  Signal/write: [ signal: ?entity; value: ?state ]
+}

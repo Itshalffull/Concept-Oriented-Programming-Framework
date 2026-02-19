@@ -1,0 +1,16 @@
+# ============================================================
+# SchemaApplyDrivesBinding — coif-integration required sync
+#
+# Create a data binding when a library Schema is applied to a
+# node. This wires the node's data to COIF's reactive signals
+# for live editing.
+# ============================================================
+
+sync SchemaApplyDrivesBinding [eager]
+when {
+  Schema/applyTo: [ nodeId: ?node ]
+    => ok(schema: ?schemaId)
+}
+then {
+  Binding/bind: [ concept: ?node; mode: "coupled" ]
+}
