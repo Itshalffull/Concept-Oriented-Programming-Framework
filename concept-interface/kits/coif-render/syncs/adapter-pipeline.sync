@@ -1,0 +1,97 @@
+# ============================================================
+# Adapter Pipeline — coif-render framework adapter syncs
+#
+# Multi-framework adapter pipeline: Machine/connect produces
+# framework-neutral props, and per-framework adapters (React,
+# Solid, Vue, Svelte, Ink, Vanilla) each normalize the props
+# via their own sync. Adding a new framework adapter requires
+# only a new adapter concept + one sync — no existing code
+# changes.
+#
+# Pipeline: Machine/connect → ReactAdapter/normalize
+#                            → SolidAdapter/normalize
+#                            → VueAdapter/normalize
+#                            → SvelteAdapter/normalize
+#                            → InkAdapter/normalize
+#                            → VanillaAdapter/normalize
+#
+# Compare: syncs/framework/compiler-pipeline.sync in COPF
+# ============================================================
+
+# When props are produced, normalize for React
+sync NormalizeReact [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "react"; status: "active" }
+}
+then {
+  ReactAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+# When props are produced, normalize for Solid
+sync NormalizeSolid [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "solid"; status: "active" }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+# When props are produced, normalize for Vue
+sync NormalizeVue [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vue"; status: "active" }
+}
+then {
+  VueAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+# When props are produced, normalize for Svelte
+sync NormalizeSvelte [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "svelte"; status: "active" }
+}
+then {
+  SvelteAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+# When props are produced, normalize for Ink (terminal)
+sync NormalizeInk [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "ink"; status: "active" }
+}
+then {
+  InkAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+# When props are produced, normalize for Vanilla DOM
+sync NormalizeVanilla [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vanilla"; status: "active" }
+}
+then {
+  VanillaAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
