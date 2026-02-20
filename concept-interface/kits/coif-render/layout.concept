@@ -64,5 +64,7 @@ concept Layout [Y] {
       -> ok(layout: y)
     then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
       -> ok(layout: y)
+    and create(layout: y2, name: "bad", kind: "nonexistent")
+      -> invalid(message: _)
   }
 }

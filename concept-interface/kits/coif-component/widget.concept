@@ -68,6 +68,10 @@ concept Widget [P] {
                    anatomy: "{ \"parts\": [\"root\"] }",
                    a11ySpec: "{ \"role\": \"button\" }")
       -> ok(component: p)
-    then get(component: p) -> ok(component: p, machineSpec: _, anatomy: _, a11ySpec: _)
+    then get(component: p)
+      -> ok(component: p,
+            machineSpec: "{ \"initial\": \"idle\" }",
+            anatomy: "{ \"parts\": [\"root\"] }",
+            a11ySpec: "{ \"role\": \"button\" }")
   }
 }

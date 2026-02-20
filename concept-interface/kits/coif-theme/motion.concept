@@ -39,7 +39,10 @@ concept Motion [O] {
 
   invariant {
     after defineDuration(motion: o, name: "normal", ms: 200) -> ok(motion: o)
-    then defineEasing(motion: o2, name: "ease-out",
-                      value: "cubic-bezier(0, 0, 0.2, 1)") -> ok(motion: o2)
+    then defineTransition(motion: o2, name: "fade",
+           config: "{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }")
+      -> ok(motion: o2)
+    and defineDuration(motion: o3, name: "bad", ms: -1)
+      -> invalid(message: _)
   }
 }

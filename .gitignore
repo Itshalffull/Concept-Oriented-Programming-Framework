@@ -1,6 +1,8 @@
 node_modules/
 dist/
-generated/
+generated/schemas/
+generated/typescript/
+generated/concept-interface/schemas/
 *.js
 *.d.ts
 *.js.map

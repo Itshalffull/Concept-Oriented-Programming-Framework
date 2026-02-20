@@ -24,9 +24,9 @@ describe('SyncParser invariant debug', () => {
     const schemaResult = await schemaGenHandler.generate({ spec: 'test', ast }, s1);
     expect(schemaResult.variant).toBe('ok');
     
-    const manifest = schemaResult.manifest;
+    const manifest = (schemaResult as any).manifest;
     console.log('Invariant steps:', JSON.stringify(manifest.invariants[0], null, 2));
-    
+
     // Now run the first step (parse with valid source)
     const step = manifest.invariants[0].setup[0];
     const input: Record<string, unknown> = {};

@@ -150,6 +150,8 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
     let varCount = 0;
 
     function collectVar(name: string) {
+      // Skip '_' — it's a wildcard meaning "don't care", not a real variable
+      if (name === '_') return;
       if (!seenVars.has(name)) {
         seenVars.add(name);
         varCount++;
