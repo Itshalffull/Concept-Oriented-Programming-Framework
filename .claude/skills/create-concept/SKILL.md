@@ -96,11 +96,11 @@ Actions are the concept's API. Each action:
 
 ### Step 5: Write the Operational Principle (Invariants)
 
-Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns.
+Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns, anti-patterns, and detailed guidance.
 
 The operational principle is a "defining story" — a scenario that proves the concept fulfills its purpose. In COPF, these are expressed as `invariant` blocks.
 
-**Every concept MUST have at least one invariant.** A concept without invariants has no machine-verifiable behavioral contract and cannot generate meaningful conformance tests. The invariant demonstrates the concept's core workflow:
+**Every concept MUST have at least one invariant.** A concept without invariants has no machine-verifiable behavioral contract and cannot generate meaningful conformance tests.
 
 ```
 invariant {
@@ -110,30 +110,82 @@ invariant {
 }
 ```
 
-**Invariant patterns for domain concepts:**
-- **Create then query**: Verify created entities are retrievable
-- **Mutate then verify**: Verify state changes are observable
-- **Action then reverse**: Verify undo/toggle behavior
-- **Constraint violation**: Verify that invalid operations fail correctly
+#### What makes an invariant meaningful
 
-**Invariant patterns for framework/infrastructure concepts:**
-- **Process structured input**: Pass a minimal-but-real record/list literal for the happy path, then pass invalid input for the error path. Use record `{ field: value }` and list `[item, item]` literals to construct structured inputs like ASTs, manifests, and configurations.
+A meaningful invariant would **catch a real bug** if the implementation were broken. The litmus test: *if you replaced the handler with a stub that always returns `{ variant: 'ok' }`, would this invariant fail?* If not, it's testing nothing.
+
+**Three rules for meaningful invariants:**
+
+1. **Exercise real logic** — Input must be rich enough to pass through the handler's actual code paths, not just hit a guard clause. For a code generator that iterates over `manifest.actions[].variants[]`, you need at least one action with one variant. An empty `actions: []` tests nothing.
+
+2. **Test different behaviors** — The `after` and `then` steps must exercise different code paths. Good pairings:
+   - Create → Query (state was stored correctly)
+   - Register → Match (registration enables matching)
+   - Valid input → Invalid input (happy path vs error path)
+   - Bad pairings: same action twice with slightly different strings, or two identical error checks
+
+3. **Match the handler's interface** — Field names and nesting must match what the handler code actually reads. If the handler reads `variant.tag`, don't write `tag: "ok"` in the spec but `name: "ok"` in the invariant. Read the handler code or type definitions.
+
+#### Common anti-patterns to avoid
+
+```
+// BAD: Guard clause only — both steps do the same thing
+invariant {
+  after generate(spec: "x") -> ok(manifest: m)
+  then generate(spec: "y") -> ok(manifest: n)
+}
+
+// BAD: Degenerate input — empty object skips all logic
+invariant {
+  after generate(spec: "s1", ast: {}) -> error(message: e1)
+  then generate(spec: "s2", ast: {}) -> error(message: e2)
+}
+```
+
+#### Domain concept patterns
+
+| Pattern | What it proves | Example |
+|---------|---------------|---------|
+| Create → Query | "What you store is what you get back" | Article: create then get |
+| Mutate → Verify → Reverse | "Changes are observable and reversible" | Follow: follow → isFollowing → unfollow |
+| Set → Check correct → Check wrong | "Validation distinguishes good from bad" | Password: set → check right → check wrong |
+| Create → Create duplicate | "Constraints are enforced" | User: register → register same name |
+
+#### Framework/infrastructure concept patterns
+
+For concepts that process structured data (ASTs, manifests, configs), use record `{ }` and list `[ ]` literals:
 
 ```
 invariant {
   after generate(spec: "s1", manifest: {
     name: "Ping", uri: "urn:copf/Ping", typeParams: [],
     actions: [{ name: "ping", params: [],
-      variants: [{ tag: "ok", fields: [] }] }]
+      variants: [{ tag: "ok", fields: [] }] }],
+    invariants: [], graphqlSchema: "",
+    jsonSchemas: { invocations: {}, completions: {} },
+    capabilities: [], purpose: "A test."
   }) -> ok(files: f)
   then generate(spec: "s2", manifest: { name: "" }) -> error(message: e)
 }
 ```
 
-**Invariant quality checklist:**
-- Does the first step pass **realistic, minimal data** (not empty/degenerate input)?
-- Does the second step test a **different behavior** (error path, not just the same thing twice)?
-- Do the invariant arguments match the **actual handler's expected field names and types**?
+The first step passes the **smallest complete input** that exercises the handler's core logic. The second step passes structurally broken input.
+
+For multi-step flow concepts (SyncEngine, FlowTrace), the second step should **depend on state** from the first:
+```
+invariant {
+  after registerSync(sync: { ... when-clause matching concept A ... }) -> ok()
+  then onCompletion(completion: { concept: A, action: "act", ... }) -> ok(invocations: inv)
+}
+```
+
+#### Final quality check
+
+Before finalizing, answer these questions:
+- Would a trivial stub handler pass this invariant? **It must not.**
+- Does the first step input include enough structure to exercise the handler's core transformation/logic? **Not just guard clauses.**
+- Does the second step test genuinely different behavior from the first? **Not the same call with a different string.**
+- Do field names exactly match the types the handler reads? **Read the code or types.**
 
 ### Step 6: Declare Capabilities (If Needed)
 

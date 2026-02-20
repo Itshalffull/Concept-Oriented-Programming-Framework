@@ -6,6 +6,133 @@ In Daniel Jackson's methodology, the **operational principle** is a "defining st
 
 An invariant says: "If you perform these setup actions, then these verification actions produce these results."
 
+## What Makes an Invariant Meaningful
+
+An invariant is meaningful when it would **catch a real bug** if the implementation were broken. Ask yourself: "If I deleted the core logic from this handler and replaced it with a stub that just returns `{ variant: 'ok' }`, would this invariant fail?" If not, the invariant is testing nothing.
+
+### The Three Requirements
+
+1. **Exercise real logic** — The input must be rich enough to pass through the handler's actual code paths, not just hit guard clauses or trivially succeed.
+
+2. **Test different behaviors across steps** — The `after` and `then` steps should exercise different code paths. A good invariant tests the happy path AND either a query that confirms state, a different action that depends on the first, or an error path with genuinely different input.
+
+3. **Match the handler's actual interface** — Field names, nesting, and types must match what the handler code reads. If the handler reads `input.manifest.name`, your invariant must provide `manifest: { name: "..." }`, not `manifest: "..."`.
+
+### Bad Invariants (Anti-Patterns)
+
+These invariants provide zero value and should never be written:
+
+**Anti-pattern 1: Guard-clause only (same behavior tested twice)**
+```
+// BAD — both steps do the exact same thing
+invariant {
+  after generate(spec: "x") -> ok(manifest: m)
+  then generate(spec: "y") -> ok(manifest: n)
+}
+```
+This tests that `generate` returns `ok` for any string. It doesn't test that the handler actually *does* anything with the input. A stub handler would pass.
+
+**Anti-pattern 2: Degenerate input**
+```
+// BAD — empty/minimal input that skips all real logic
+invariant {
+  after generate(spec: "s1", ast: {}) -> ok(manifest: m)
+  then generate(spec: "s2", ast: {}) -> error(message: e)
+}
+```
+Empty objects bypass all the handler's interesting logic. The handler might check `if (!ast.name)` and return early — you've only tested the first 3 lines of a 200-line function.
+
+**Anti-pattern 3: Same degenerate input, same variant**
+```
+// BAD — tests literally nothing, both calls are identical
+invariant {
+  after generate(spec: "a") -> error(message: e1)
+  then generate(spec: "b") -> error(message: e2)
+}
+```
+Both steps hit the same error guard. The second step doesn't depend on the first. No state is established, no behavior is verified.
+
+**Anti-pattern 4: Mismatched field names**
+```
+// BAD — handler reads manifest.tag but invariant says manifest.name
+invariant {
+  after generate(spec: "s1", manifest: {
+    variants: [{ name: "ok" }]
+  }) -> ok(files: f)
+}
+```
+The handler expects `variant.tag` (from VariantSchema), not `variant.name`. This invariant either crashes on a TypeError or silently produces garbage because `tag` is `undefined`. Always read the handler code or type definitions to get field names right.
+
+### Good Invariants (What to Aim For)
+
+**Good: Happy path exercises real transformation logic**
+```
+invariant {
+  after generate(spec: "s1", ast: {
+    name: "Ping", typeParams: ["T"], purpose: "A test.",
+    state: [], actions: [{
+      name: "ping", params: [],
+      variants: [{ name: "ok", params: [], description: "Pong." }]
+    }], invariants: [], capabilities: []
+  }) -> ok(manifest: m)
+  then generate(spec: "s2", ast: { name: "" }) -> error(message: e)
+}
+```
+The first step passes a minimal but **complete** AST with a real action and variant. The handler must walk the AST, resolve types, build schemas — not just check for emptiness. The second step tests genuine error detection with structurally different input.
+
+**Good: Multi-step state flow**
+```
+invariant {
+  after registerSync(sync: {
+    name: "TestSync", annotations: ["eager"],
+    when: [{ concept: "urn:copf/Test", action: "act",
+             inputFields: [], outputFields: [] }],
+    where: [],
+    then: [{ concept: "urn:copf/Other", action: "do", fields: [] }]
+  }) -> ok()
+  then onCompletion(completion: {
+    id: "c1", concept: "urn:copf/Test", action: "act",
+    input: {}, variant: "ok", output: {}, flow: "f1",
+    timestamp: "2024-01-01T00:00:00Z"
+  }) -> ok(invocations: inv)
+}
+```
+The first step registers a sync rule. The second step fires a completion that *matches* the sync's when-clause. This tests the core engine logic: indexing, pattern matching, variable binding, invocation building. If the matching logic were broken, this invariant would fail.
+
+**Good: Create-then-query proves storage works**
+```
+invariant {
+  after register(uri: "test://concept-a", transport: "in-process") -> ok(concept: c)
+  then heartbeat(uri: "test://concept-a") -> ok(available: true)
+}
+```
+The second step depends on state established by the first. If `register` didn't store the concept, `heartbeat` would fail. This is the fundamental operational principle: "if you register a concept, it's available."
+
+**Good: Positive and negative in one invariant**
+```
+invariant {
+  after set(user: x, password: "secret") -> ok(user: x)
+  then check(user: x, password: "secret") -> ok(valid: true)
+  and  check(user: x, password: "wrong")  -> ok(valid: false)
+}
+```
+Three steps, two different outcomes. The first check proves correct passwords work, the second proves incorrect passwords are rejected. A stub handler returning `valid: true` always would fail the third step.
+
+### How to Design an Invariant: Step by Step
+
+1. **Read the handler code** (or at minimum the spec's action prose). Understand what the handler actually does with its inputs.
+
+2. **Identify the minimal valid input** that exercises the handler's core logic — not just guard clauses. For a code generator, this means a manifest with at least one action and one variant. For a parser, this means a syntactically valid source string. For a registry, this means a URI and transport config.
+
+3. **Choose what the second step should prove**:
+   - If the concept has a query action: query the state created by step 1
+   - If the concept has only one action: test the error path with structurally different (not just empty) input
+   - If the concept processes multi-step flows: the second step should depend on state from the first
+
+4. **Verify field names against the handler/types**. Read `kernel/src/types.ts` or the handler implementation. Common mistakes: `name` vs `tag`, `params` vs `fields`, `description` vs `prose`.
+
+5. **Ask: "Would a trivial stub pass this?"** If yes, your invariant needs more substance.
+
 ## Invariant Structure
 
 ```
@@ -219,12 +346,65 @@ Choose test values that are:
 - **Realistic**: `"Test Article"` not `"foo"`, `"a@b.com"` not `"email"`
 - **Distinguishable**: If testing uniqueness, use different values for different variables
 - **Deterministic**: If testing computed values (like slugs), know what the output will be
+- **Sufficient**: Include enough fields/structure to exercise the handler's real logic, not just its guard clauses
+- **Accurate**: Field names must match the handler's actual expectations (`tag` not `name` for VariantSchema, etc.)
+
+### Choosing Input Complexity
+
+The right level of input complexity depends on the handler:
+
+| Handler accepts... | Invariant should pass... |
+|-------------------|------------------------|
+| Simple scalars (String, Int, Bool) | String/number/boolean literals |
+| An opaque ID (type parameter) | A free variable (`user: x`) |
+| A structured object (AST, Manifest) | A record literal with all fields the handler reads |
+| A list of structured objects | A list with at least one complete item |
+| A string that gets parsed (JSON, YAML, source code) | A realistic string the parser accepts |
+
+**The key principle**: your invariant input should be the **smallest input that still exercises the handler's core logic path**. Not empty, not degenerate, not a real-world 500-field monster — just enough to make the handler do real work.
+
+For example, a code generator handler that iterates over `manifest.actions` and for each action iterates over `action.variants` needs at minimum:
+```
+manifest: {
+  name: "Ping", ...,
+  actions: [{ name: "ping", params: [],
+    variants: [{ tag: "ok", fields: [], prose: "Pong." }] }]
+}
+```
+One action, one variant. This exercises the iteration logic, type mapping, and template generation. An empty `actions: []` would skip all of that.
+
+### Common Mistakes with Test Values
+
+| Mistake | Why it's bad | Fix |
+|---------|-------------|-----|
+| `manifest: {}` | Skips all handler logic, hits first guard | Include all fields the handler reads |
+| `source: ""` | Empty string hits "nothing to parse" guard | Use a minimal valid source string |
+| Same value in both steps | Second step doesn't test anything new | Use structurally different input |
+| Wrong field names | Handler reads `undefined`, may silently produce garbage | Read the types or handler code |
+| Giant real-world input | Hard to read, maintain, and debug | Use minimal sufficient input |
 
 ## Invariant Design Checklist
 
+Before finalizing an invariant, verify ALL of these:
+
+**Purpose alignment:**
 - [ ] Does the invariant demonstrate the concept's core purpose?
-- [ ] Does it cover the "happy path" (primary operational principle)?
-- [ ] If the concept has constraints, is there an invariant showing constraint violation?
+- [ ] Could you explain in one sentence what behavior this invariant proves?
+
+**Input quality:**
+- [ ] Does the first step pass input rich enough to exercise real handler logic (not just guard clauses)?
+- [ ] For structured inputs: are all fields that the handler reads present with correct names?
+- [ ] Would a trivial stub handler (`return { variant: 'ok' }`) FAIL this invariant?
+
+**Step relationships:**
+- [ ] Do the steps test DIFFERENT behaviors (not the same action with slightly different strings)?
+- [ ] Does at least one step depend on state established by a previous step? Or does the second step test a genuinely different code path (error vs ok)?
+
+**Coverage:**
+- [ ] Does the invariant cover the "happy path" (primary operational principle)?
+- [ ] If the concept has constraints or error conditions, is there an invariant showing them?
+
+**Variable usage:**
 - [ ] Are free variables used for entity IDs (not hardcoded strings)?
 - [ ] Are literal values realistic and meaningful?
 - [ ] Does each invariant test one logical scenario (not multiple unrelated things)?
