@@ -26,7 +26,14 @@ concept RustGen [S] {
   }
 
   invariant {
-    after generate(spec: "test", manifest: "") -> error(message: m)
-    then generate(spec: "test", manifest: "") -> error(message: m)
+    after generate(spec: "s1", manifest: {
+      name: "Ping", uri: "urn:copf/Ping", typeParams: [], relations: [],
+      actions: [{ name: "ping", params: [],
+        variants: [{ tag: "ok", fields: [], prose: "Pong." }] }],
+      invariants: [], graphqlSchema: "",
+      jsonSchemas: { invocations: {}, completions: {} },
+      capabilities: [], purpose: "A test."
+    }) -> ok(files: f)
+    then generate(spec: "s2", manifest: { name: "" }) -> error(message: e)
   }
 }

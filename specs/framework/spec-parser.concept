@@ -24,7 +24,7 @@ concept SpecParser [S] {
   }
 
   invariant {
-    after parse(source: "") -> error(message: m, line: 0)
+    after parse(source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }") -> ok(spec: s, ast: a)
     then parse(source: "") -> error(message: m, line: 0)
   }
 }

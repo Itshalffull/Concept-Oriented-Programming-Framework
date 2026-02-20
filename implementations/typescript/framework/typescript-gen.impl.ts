@@ -238,6 +238,23 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
   return lines.join('\n');
 }
 
+function invariantValueToTS(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal':
+      return JSON.stringify(v.value);
+    case 'variable':
+      return v.name;
+    case 'record': {
+      const fields = v.fields.map(f => `${f.name}: ${invariantValueToTS(f.value)}`);
+      return `{ ${fields.join(', ')} }`;
+    }
+    case 'list': {
+      const items = v.items.map(item => invariantValueToTS(item));
+      return `[${items.join(', ')}]`;
+    }
+  }
+}
+
 function generateStepCode(
   handlerVar: string,
   step: InvariantStep,
@@ -247,21 +264,12 @@ function generateStepCode(
   const varName = `step${stepNum}`;
 
   // Build the comment showing the original pattern
-  const inputStr = step.inputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
-  const outputStr = step.expectedOutputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
+  const inputStr = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
+  const outputStr = step.expectedOutputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
   lines.push(`    // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
   // Build input object
-  const inputFields = step.inputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
+  const inputFields = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
 
   lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
   lines.push(`      { ${inputFields} },`);
@@ -275,9 +283,12 @@ function generateStepCode(
   for (const out of step.expectedOutputs) {
     if (out.value.kind === 'literal') {
       lines.push(`    expect((${varName} as any).${out.name}).toBe(${JSON.stringify(out.value.value)});`);
-    } else {
+    } else if (out.value.kind === 'variable') {
       // Variable reference — assert consistency
       lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
+    } else {
+      // Record or list — use deep equality
+      lines.push(`    expect((${varName} as any).${out.name}).toEqual(${invariantValueToTS(out.value)});`);
     }
   }
 

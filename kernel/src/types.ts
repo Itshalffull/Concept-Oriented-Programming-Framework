@@ -242,10 +242,14 @@ export interface ActionPattern {
 
 export interface ArgPattern {
   name: string;
-  value:
-    | { type: 'literal'; value: string | number | boolean }
-    | { type: 'variable'; name: string };
+  value: ArgPatternValue;
 }
+
+export type ArgPatternValue =
+  | { type: 'literal'; value: string | number | boolean }
+  | { type: 'variable'; name: string }
+  | { type: 'record'; fields: ArgPattern[] }
+  | { type: 'list'; items: ArgPatternValue[] };
 
 // --- Sync AST ---
 
@@ -363,7 +367,9 @@ export interface InvariantStep {
 
 export type InvariantValue =
   | { kind: 'literal'; value: string | number | boolean }
-  | { kind: 'variable'; name: string };
+  | { kind: 'variable'; name: string }
+  | { kind: 'record'; fields: { name: string; value: InvariantValue }[] }
+  | { kind: 'list'; items: InvariantValue[] };
 
 export interface ConceptManifest {
   uri: string;

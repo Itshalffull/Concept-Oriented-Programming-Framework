@@ -30,7 +30,13 @@ concept SchemaGen [S] {
   }
 
   invariant {
-    after generate(spec: "test", ast: "") -> error(message: m)
-    then generate(spec: "test", ast: "") -> error(message: m)
+    after generate(spec: "s1", ast: {
+      name: "Ping", typeParams: ["T"], purpose: "A test.",
+      state: [], actions: [{
+        name: "ping", params: [],
+        variants: [{ name: "ok", params: [], description: "Pong." }]
+      }], invariants: [], capabilities: []
+    }) -> ok(manifest: m)
+    then generate(spec: "s2", ast: { name: "" }) -> error(message: e)
   }
 }

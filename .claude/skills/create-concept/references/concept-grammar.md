@@ -212,6 +212,20 @@ invariant {
 | `param: "literal"` | String literal | `password: "secret"` |
 | `param: 123` | Numeric literal | `count: 0` |
 | `param: true/false` | Boolean literal | `valid: true` |
+| `param: { f: "v", g: 42 }` | Record literal | `manifest: { name: "Ping" }` |
+| `param: ["a", "b"]` | List literal | `items: ["x", "y"]` |
+| `param: []` | Empty list | `manifests: []` |
+
+Record and list literals can be nested arbitrarily:
+```
+param: {
+  name: "Ping",
+  actions: [{ name: "ping", params: [],
+    variants: [{ tag: "ok", fields: [] }] }]
+}
+```
+
+Multi-line record/list literals are supported — newlines inside `{ }` and `[ ]` are ignored by the parser.
 
 Free variables (like `x`, `y`) are bound on first use and reused across steps. They receive deterministic test values during conformance test generation (e.g., `"u-test-invariant-001"`).
 

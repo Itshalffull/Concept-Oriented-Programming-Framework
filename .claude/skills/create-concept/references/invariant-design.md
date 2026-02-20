@@ -30,8 +30,14 @@ Multiple `invariant` blocks are allowed for different scenarios.
 | `param: "text"` | String literal |
 | `param: 123` | Numeric literal |
 | `param: true` / `param: false` | Boolean literal |
+| `param: { f1: "v", f2: 42 }` | Record literal — nested object with named fields |
+| `param: ["a", "b", "c"]` | List literal — ordered collection of values |
+| `param: []` | Empty list literal |
+| `param: { name: "X", items: [{ tag: "ok" }] }` | Nested records and lists can be combined |
 
 Free variables receive deterministic test values during conformance test generation (e.g., `x` becomes `"u-test-invariant-001"`, `y` becomes `"u-test-invariant-002"`).
+
+Record and list literals are essential for testing framework/infrastructure concepts that accept structured inputs (ASTs, manifests, configuration objects). Use them whenever a handler expects structured data rather than simple scalars.
 
 ## Invariant Patterns
 
@@ -156,6 +162,32 @@ invariant {
 
 **Examples**: JWT
 
+### Pattern 8: Process Structured Input (Pipeline/Transform)
+
+Proves: the concept correctly processes valid structured data and rejects invalid input.
+
+```
+invariant {
+  after generate(spec: "s1", manifest: {
+    name: "Ping", uri: "urn:copf/Ping", typeParams: [], relations: [],
+    actions: [{ name: "ping", params: [],
+      variants: [{ tag: "ok", fields: [], prose: "Pong." }] }],
+    invariants: [], graphqlSchema: "",
+    jsonSchemas: { invocations: {}, completions: {} },
+    capabilities: [], purpose: "A test."
+  }) -> ok(files: f)
+  then generate(spec: "s2", manifest: { name: "" }) -> error(message: e)
+}
+```
+
+**When to use**: Framework/infrastructure concepts that transform, validate, or process structured data (ASTs, manifests, configurations, sync rules).
+
+**What it proves**: "Given valid structured input, the concept produces correct output. Given invalid input, it returns an error."
+
+**Key technique**: Use record `{ }` and list `[ ]` literals to pass minimal-but-real structured input. The first step passes a complete (though minimal) valid structure. The second step passes a deliberately broken structure to verify error handling.
+
+**Examples**: SchemaGen, TypeScriptGen, RustGen, SwiftGen, SolidityGen, SyncCompiler, SyncParser, SyncEngine, FlowTrace, DeploymentValidator
+
 ## Variable Binding Conventions
 
 | Variable | Typical use |
@@ -177,9 +209,9 @@ Use short, single-letter names. Variables are bound on first occurrence and reus
 | Relationship (toggle) | 1 | One showing full cycle: add, verify, remove |
 | Authentication | 1 | One showing set, check-correct, check-wrong |
 | Constraint enforcement | 1 | One showing the constraint violation |
-| Infrastructure/pipeline | 0 | Often have no user-facing invariants |
+| Infrastructure/pipeline | 1-2 | One for valid structured input → ok, one for invalid → error |
 
-**Every domain concept should have at least one invariant.** Framework/infrastructure concepts may omit invariants if their behavior is purely transformational.
+**Every concept should have at least one invariant.** This includes framework/infrastructure concepts — use record and list literals (Pattern 8) to pass minimal valid structured inputs. A concept without invariants has no machine-verifiable behavioral contract.
 
 ## Test Value Guidelines
 
