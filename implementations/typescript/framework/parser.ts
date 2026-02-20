@@ -126,6 +126,28 @@ function tokenize(source: string): Token[] {
       continue;
     }
 
+    // Negative number literal (e.g. -1, -3.14)
+    if (ch === '-' && i + 1 < source.length && /[0-9]/.test(source[i + 1])) {
+      advance(); // consume '-'
+      let num = '-';
+      while (i < source.length && /[0-9]/.test(source[i])) {
+        num += source[i];
+        advance();
+      }
+      if (i < source.length && source[i] === '.' && i + 1 < source.length && /[0-9]/.test(source[i + 1])) {
+        num += '.';
+        advance();
+        while (i < source.length && /[0-9]/.test(source[i])) {
+          num += source[i];
+          advance();
+        }
+        pushToken('FLOAT_LIT', num, l, c);
+      } else {
+        pushToken('INT_LIT', num, l, c);
+      }
+      continue;
+    }
+
     if (ch === ':') { advance(); pushToken('COLON', ':', l, c); continue; }
     if (ch === ',') { advance(); pushToken('COMMA', ',', l, c); continue; }
     if (ch === '(') { advance(); pushToken('LPAREN', '(', l, c); continue; }
@@ -280,6 +302,26 @@ class Parser {
 
   parseConcept(): ConceptAST {
     this.skipSeps();
+
+    // Handle top-level annotations before 'concept' keyword (e.g. @version(1))
+    let version: number | undefined;
+    while (this.peek().type === 'AT') {
+      this.expect('AT');
+      const tok = this.peek();
+      if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'version') {
+        this.advance();
+        this.expect('LPAREN');
+        const versionTok = this.expect('INT_LIT');
+        version = parseInt(versionTok.value, 10);
+        this.expect('RPAREN');
+      } else {
+        throw new Error(
+          `Parse error at line ${tok.line}:${tok.col}: unknown annotation @${tok.value}`,
+        );
+      }
+      this.skipSeps();
+    }
+
     this.expect('KEYWORD', 'concept');
     const name = this.expectIdent().value;
     const typeParams = this.parseTypeParams();
@@ -292,6 +334,7 @@ class Parser {
       actions: [],
       invariants: [],
       capabilities: [],
+      version,
     };
 
     while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
@@ -562,12 +605,15 @@ class Parser {
 
   private parseParamList(typeParams: string[]): ParamDecl[] {
     const params: ParamDecl[] = [];
+    this.skipSeps();
     if (this.peek().type === 'RPAREN') return params;
 
     params.push(this.parseParam(typeParams));
     while (this.match('COMMA')) {
+      this.skipSeps(); // Skip newlines after comma in multi-line param lists
       params.push(this.parseParam(typeParams));
     }
+    this.skipSeps();
     return params;
   }
 
@@ -622,10 +668,12 @@ class Parser {
   }
 
   private parseActionPattern(): ActionPattern {
+    this.skipSeps(); // Skip newlines before action name (e.g. after 'and' keyword)
     const actionName = this.expectIdent().value;
     this.expect('LPAREN');
     const inputArgs = this.parseArgPatterns();
     this.expect('RPAREN');
+    this.skipSeps(); // Skip newlines before -> in multi-line invariant steps
     this.expect('ARROW');
     const variantName = this.expectIdent().value;
     this.expect('LPAREN');
@@ -636,12 +684,15 @@ class Parser {
 
   private parseArgPatterns(): ArgPattern[] {
     const args: ArgPattern[] = [];
+    this.skipSeps();
     if (this.peek().type === 'RPAREN') return args;
 
     args.push(this.parseArgPattern());
     while (this.match('COMMA')) {
+      this.skipSeps(); // Skip newlines after comma in multi-line arg lists
       args.push(this.parseArgPattern());
     }
+    this.skipSeps();
     return args;
   }
 
@@ -722,13 +773,12 @@ class Parser {
       if (this.peek().type === 'RBRACE') break;
 
       this.expect('KEYWORD', 'requires');
-      // Capability name may contain hyphens, so we need to handle IDENT-IDENT
+      // Handle hyphenated capability names (e.g. persistent-storage).
+      // The tokenizer drops '-' as an unknown character, leaving consecutive IDENTs.
       let capName = this.expectIdent().value;
-      while (this.peek().type === 'ARROW') {
-        // Actually hyphens tokenize as part of ARROW, let's handle differently
-        break;
+      while (this.peek().type === 'IDENT') {
+        capName += '-' + this.advance().value;
       }
-      // Handle hyphenated identifiers by checking for minus sign
       caps.push(capName);
       this.skipSeps();
     }

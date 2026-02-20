@@ -48,6 +48,7 @@ concept Surface [F] {
   invariant {
     after create(surface: f, kind: "browser-dom", mountPoint: "#app")
       -> ok(surface: f)
-    then destroy(surface: f) -> ok(surface: f)
+    then attach(surface: f, renderer: "react-19") -> ok(surface: f)
+    and resize(surface: f, width: 1024, height: 768) -> ok(surface: f)
   }
 }

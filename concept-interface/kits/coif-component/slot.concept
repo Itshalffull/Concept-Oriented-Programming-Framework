@@ -50,5 +50,6 @@ concept Slot [L] {
       -> ok(slot: l)
     then fill(slot: l, content: "{ \"type\": \"text\", \"value\": \"Hello\" }")
       -> ok(slot: l)
+    and clear(slot: l) -> ok(slot: l)
   }
 }

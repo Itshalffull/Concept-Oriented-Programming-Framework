@@ -41,6 +41,10 @@ concept Elevation [W] {
     after define(elevation: w, level: 2,
                  shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]")
       -> ok(elevation: w)
-    then get(elevation: w) -> ok(elevation: w, shadow: _)
+    then get(elevation: w)
+      -> ok(elevation: w,
+            shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]")
+    and define(elevation: w2, level: 7, shadow: "[]")
+      -> invalid(message: _)
   }
 }

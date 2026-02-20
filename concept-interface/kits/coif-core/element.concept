@@ -59,6 +59,10 @@ concept Element [E] {
   invariant {
     after create(element: e, kind: "input-text", label: "Title",
                  dataType: "String") -> ok(element: e)
-    then remove(element: e) -> ok(element: e)
+    then setConstraints(element: e,
+           constraints: "{ \"maxLength\": 100, \"pattern\": \"^[A-Z]\" }")
+      -> ok(element: e)
+    and create(element: e2, kind: "not-a-real-kind", label: "X",
+               dataType: "String") -> invalid(message: _)
   }
 }
