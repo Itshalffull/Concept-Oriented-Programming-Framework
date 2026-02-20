@@ -7,6 +7,8 @@ import "../src/Echo.sol";
 contract EchoTest is Test {
     Echo public target;
 
+    event Echoed(bytes32 indexed id, string text);
+
     function setUp() public {
         target = new Echo();
     }
@@ -63,7 +65,7 @@ contract EchoTest is Test {
         bytes32 id = keccak256("msg1");
 
         vm.expectEmit(true, false, false, true);
-        emit Echo.Echoed(id, "hello event");
+        emit Echoed(id, "hello event");
 
         target.send(id, "hello event");
     }
