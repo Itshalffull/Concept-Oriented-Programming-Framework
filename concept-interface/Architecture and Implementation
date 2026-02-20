@@ -1010,7 +1010,7 @@ concept FrameworkAdapter [R] {
 
 Each supported framework has its own adapter concept that handles prop normalization. This mirrors COPF's per-language gen pattern: just as `TypeScriptGen`, `RustGen`, and `SwiftGen` each consume a `ConceptManifest` to produce language-specific code, each framework adapter concept consumes framework-neutral props (from `Machine/connect`) to produce framework-specific bindings.
 
-Adding a new framework requires creating a new adapter concept + one sync rule in the adapter pipeline — no existing code changes. This is the same extension model as adding a new COPF language target.
+Adding a new framework requires creating a new adapter concept + sync rules in the single adapter pipeline file — no existing code changes. This is the same extension model as adding a new COPF language target.
 
 **Pattern (same for all framework adapters):**
 
@@ -1637,11 +1637,14 @@ then {
 
 #### 4.3.1 Adapter Pipeline
 
-The adapter pipeline routes framework-neutral props to the correct per-framework adapter concept. This mirrors COPF's `compiler-pipeline.sync` — each framework gets its own sync rule, and adding a new framework means adding one rule.
+The adapter pipeline routes framework-neutral props to the correct per-framework adapter concept. This mirrors COPF's `compiler-pipeline.sync` — each framework gets its own sync rules in ONE file, and adding a new framework means adding rules to this single file.
+
+Both trigger sources (Machine/connect from component state machines and Renderer/render from the library renderer) are consolidated here so that adding a framework never requires editing more than one sync file.
 
 ```
-# When props are produced, normalize for React
-sync NormalizeReact [eager]
+# ── React ──────────────────────────────────────────────────
+
+sync NormalizeReactFromMachine [eager]
 when {
   Machine/connect: [ machine: ?machine ]
     => [ machine: ?machine; props: ?props ]
@@ -1653,21 +1656,20 @@ then {
   ReactAdapter/normalize: [ adapter: ?adapter; props: ?props ]
 }
 
-# When props are produced, normalize for Solid
-sync NormalizeSolid [eager]
+sync NormalizeReactFromRenderer [eager]
 when {
-  Machine/connect: [ machine: ?machine ]
-    => [ machine: ?machine; props: ?props ]
+  Renderer/render: [ element: ?el ]
+    => [ renderTree: ?tree ]
 }
 where {
-  FrameworkAdapter: { ?adapter framework: "solid"; status: "active" }
+  FrameworkAdapter: { ?adapter framework: "react"; status: "active" }
 }
 then {
-  SolidAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+  ReactAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
 }
 ```
 
-*Each framework adapter gets its own sync rule. Compare: `syncs/framework/compiler-pipeline.sync` in COPF, where each language gen gets its own sync.*
+*Each framework gets a pair of sync rules (one per trigger). Adding a new framework: copy a block, change the framework name and adapter concept. Compare: `syncs/framework/compiler-pipeline.sync` in COPF.*
 
 ```
 sync ResizeTriggersViewport [eager]
@@ -2373,7 +2375,7 @@ Adding a framework adapter to COIF mirrors adding a language target to COPF. Bot
 |------|---------------------|----------------------|
 | 1. Concept spec | `specs/framework/<lang>-gen.concept` | `kits/coif-render/<framework>-adapter.concept` |
 | 2. Implementation | `implementations/typescript/framework/<lang>-gen.impl.ts` | `generated/concept-interface/typescript/<framework>adapter.impl.ts` |
-| 3. Pipeline sync | Add sync rule in `compiler-pipeline.sync` | Add sync rule in `adapter-pipeline.sync` |
+| 3. Pipeline sync | Add sync rule in `compiler-pipeline.sync` | Add sync rules in `adapter-pipeline.sync` |
 
 **Step 1 — Concept spec** (copy an existing adapter, change name + purpose):
 
@@ -2424,10 +2426,12 @@ export const angularAdapterHandler: ConceptHandler = {
 };
 ```
 
-**Step 3 — Pipeline sync** (one rule in `adapter-pipeline.sync`):
+**Step 3 — Pipeline syncs** (two rules in `adapter-pipeline.sync` — one per trigger source):
 
 ```
-sync NormalizeAngular [eager]
+# ── Angular ────────────────────────────────────────────────
+
+sync NormalizeAngularFromMachine [eager]
 when {
   Machine/connect: [ machine: ?machine ]
     => [ machine: ?machine; props: ?props ]
@@ -2438,9 +2442,21 @@ where {
 then {
   AngularAdapter/normalize: [ adapter: ?adapter; props: ?props ]
 }
+
+sync NormalizeAngularFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => [ renderTree: ?tree ]
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "angular"; status: "active" }
+}
+then {
+  AngularAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
 ```
 
-No existing code changes. The engine evaluates all pipeline syncs — only the one whose `where` clause matches the active framework fires. Compare `syncs/framework/compiler-pipeline.sync` in COPF.
+No existing code changes — just add to the single pipeline file. The engine evaluates all pipeline syncs; only the one whose `where` clause matches the active framework fires. Compare `syncs/framework/compiler-pipeline.sync` in COPF.
 
 ---
 
@@ -2685,7 +2701,7 @@ All theme changes propagate through the same engine: Theme/activate → engine f
 
 ### Stage 4: Additional Framework Adapters
 
-Deploy SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter concepts with implementations. Add their sync rules to adapter-pipeline.sync. Each follows the same pattern as ReactAdapter — a concept spec (~35 LOC), an implementation (~200 LOC), and one sync rule (~10 LOC). This mirrors how COPF adds language targets: RustGen, SwiftGen, and SolidityGen each followed the TypeScriptGen pattern.
+Deploy SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter concepts with implementations. Add their sync rules to adapter-pipeline.sync. Each follows the same pattern as ReactAdapter — a concept spec (~35 LOC), an implementation (~200 LOC), and two sync rules in the pipeline file (~20 LOC). This mirrors how COPF adds language targets: RustGen, SwiftGen, and SolidityGen each followed the TypeScriptGen pattern.
 
 **Acceptance tests:**
 - Same concept spec + same core syncs → working interfaces in React, Solid, Vue, Svelte, Ink
