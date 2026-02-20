@@ -32,5 +32,7 @@ concept ReactNativeAdapter [A] {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
   }
 }

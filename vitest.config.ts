@@ -9,7 +9,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/**/*.test.ts', 'generated/concept-interface/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'generated/concept-interface/**/*.test.ts', 'generated/typescript/**/*.test.ts'],
     globals: true,
   },
 });
