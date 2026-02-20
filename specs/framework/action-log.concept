@@ -33,7 +33,7 @@ concept ActionLog [R] {
   }
 
   invariant {
-    after query(flow: "nonexistent") -> ok(records: r)
-    then query(flow: "other") -> ok(records: s)
+    after append(record: { flow: "f1", concept: "Echo", action: "send", type: "completion", variant: "ok" }) -> ok(id: r)
+    then query(flow: "f1") -> ok(records: recs)
   }
 }

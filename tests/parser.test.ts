@@ -197,6 +197,54 @@ concept Collection [T] {
     expect(ast.invariants[0].afterPatterns[0].actionName).toBe('set');
     expect(ast.invariants[0].thenPatterns[0].actionName).toBe('list');
   });
+
+  it('parses record and list literals in invariants', () => {
+    const source = `concept Log [R] {
+  purpose { Test structured invariant values. }
+  state { records: set R }
+  actions {
+    action append(record: ActionRecord) {
+      -> ok(id: R) { Append. }
+    }
+    action query(flow: String) {
+      -> ok(records: list ActionRecord) { Query. }
+    }
+  }
+  invariant {
+    after append(record: { flow: "f1", concept: "Echo", action: "send", tags: ["a", "b"] }) -> ok(id: r)
+    then query(flow: "f1") -> ok(records: recs)
+  }
+}`;
+    const ast = parseConceptFile(source);
+    expect(ast.invariants).toHaveLength(1);
+
+    const afterPattern = ast.invariants[0].afterPatterns[0];
+    expect(afterPattern.actionName).toBe('append');
+
+    // Record literal input
+    const recordArg = afterPattern.inputArgs[0];
+    expect(recordArg.name).toBe('record');
+    expect(recordArg.value.type).toBe('record');
+    if (recordArg.value.type === 'record') {
+      expect(recordArg.value.fields).toHaveLength(4);
+      expect(recordArg.value.fields[0]).toEqual({ name: 'flow', value: { type: 'literal', value: 'f1' } });
+      expect(recordArg.value.fields[1]).toEqual({ name: 'concept', value: { type: 'literal', value: 'Echo' } });
+      // Nested list literal
+      const tagsField = recordArg.value.fields[3];
+      expect(tagsField.name).toBe('tags');
+      expect(tagsField.value.type).toBe('list');
+      if (tagsField.value.type === 'list') {
+        expect(tagsField.value.items).toHaveLength(2);
+        expect(tagsField.value.items[0]).toEqual({ type: 'literal', value: 'a' });
+        expect(tagsField.value.items[1]).toEqual({ type: 'literal', value: 'b' });
+      }
+    }
+
+    // Variable output
+    const thenPattern = ast.invariants[0].thenPatterns[0];
+    expect(thenPattern.actionName).toBe('query');
+    expect(thenPattern.outputArgs[0].value.type).toBe('variable');
+  });
 });
 
 describe('Sync Parser', () => {

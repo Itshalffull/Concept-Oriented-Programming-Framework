@@ -359,6 +359,57 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
   return lines.join('\n');
 }
 
+// --- InvariantValue → Rust expression ---
+//
+// Recursively converts an InvariantValue to a Rust expression string.
+// For `record` and `list` kinds the generated code emits `todo!()`
+// with a descriptive comment, because the Rust conformance tests from
+// codegen are not the primary test path — real testing happens through
+// the TypeScript CLI test runner (test.ts).
+
+function invariantValueToRust(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal': {
+      const val = v.value;
+      if (typeof val === 'string') return `"${val}".to_string()`;
+      if (typeof val === 'boolean') return `${val}`;
+      return `${val}`;
+    }
+    case 'variable':
+      return `${snakeCase(v.name)}.clone()`;
+    case 'record': {
+      const fieldStrs = v.fields.map(
+        f => `"${f.name}": ${invariantValueToRust(f.value)}`
+      ).join(', ');
+      return `todo!(/* record: { ${fieldStrs} } */)`;
+    }
+    case 'list': {
+      const itemStrs = v.items.map(
+        item => invariantValueToRust(item)
+      ).join(', ');
+      return `todo!(/* list: [${itemStrs}] */)`;
+    }
+  }
+}
+
+// Helper: produce a human-readable summary of an InvariantValue for comments.
+function invariantValueToComment(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal':
+      return JSON.stringify(v.value);
+    case 'variable':
+      return v.name;
+    case 'record': {
+      const fields = v.fields.map(f => `${f.name}: ${invariantValueToComment(f.value)}`).join(', ');
+      return `{ ${fields} }`;
+    }
+    case 'list': {
+      const items = v.items.map(item => invariantValueToComment(item)).join(', ');
+      return `[${items}]`;
+    }
+  }
+}
+
 function generateRustStepCode(
   step: InvariantStep,
   stepNum: number,
@@ -367,26 +418,18 @@ function generateRustStepCode(
   const varName = `step${stepNum}`;
 
   // Comment
-  const inputStr = step.inputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
-  const outputStr = step.expectedOutputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
+  const inputStr = step.inputs.map(a =>
+    `${a.name}: ${invariantValueToComment(a.value)}`
+  ).join(', ');
+  const outputStr = step.expectedOutputs.map(a =>
+    `${a.name}: ${invariantValueToComment(a.value)}`
+  ).join(', ');
   lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
   // Build input struct fields
-  const inputFields = step.inputs.map(a => {
-    if (a.value.kind === 'literal') {
-      const val = a.value.value;
-      if (typeof val === 'string') return `${snakeCase(a.name)}: "${val}".to_string()`;
-      if (typeof val === 'boolean') return `${snakeCase(a.name)}: ${val}`;
-      return `${snakeCase(a.name)}: ${val}`;
-    }
-    return `${snakeCase(a.name)}: ${snakeCase(a.value.name)}.clone()`;
-  }).join(', ');
+  const inputFields = step.inputs.map(a =>
+    `${snakeCase(a.name)}: ${invariantValueToRust(a.value)}`
+  ).join(', ');
 
   // Build the struct name: ConceptNameActionInput
   // We don't have concept name here, so we'll use a placeholder
@@ -403,18 +446,8 @@ function generateRustStepCode(
     lines.push(`            ${capitalize(step.action)}Output::${variantName} { ${bindings}, .. } => {`);
 
     for (const out of step.expectedOutputs) {
-      if (out.value.kind === 'literal') {
-        const val = out.value.value;
-        if (typeof val === 'string') {
-          lines.push(`                assert_eq!(${snakeCase(out.name)}, "${val}");`);
-        } else if (typeof val === 'boolean') {
-          lines.push(`                assert_eq!(${snakeCase(out.name)}, ${val});`);
-        } else {
-          lines.push(`                assert_eq!(${snakeCase(out.name)}, ${val});`);
-        }
-      } else {
-        lines.push(`                assert_eq!(${snakeCase(out.name)}, ${snakeCase(out.value.name)});`);
-      }
+      const expected = invariantValueToRust(out.value);
+      lines.push(`                assert_eq!(${snakeCase(out.name)}, ${expected});`);
     }
 
     lines.push(`            },`);

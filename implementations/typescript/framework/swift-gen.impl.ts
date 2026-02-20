@@ -78,6 +78,28 @@ function camelCase(s: string): string {
   return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
+// --- InvariantValue → Swift literal ---
+
+function invariantValueToSwift(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal': {
+      const val = v.value;
+      if (typeof val === 'string') return `"${val}"`;
+      return `${val}`;
+    }
+    case 'variable':
+      return `${camelCase(v.name)}`;
+    case 'record': {
+      const entries = v.fields.map(f => `"${f.name}": ${invariantValueToSwift(f.value)}`);
+      return `[${entries.join(', ')}]`;
+    }
+    case 'list': {
+      const items = v.items.map(item => invariantValueToSwift(item));
+      return `[${items.join(', ')}]`;
+    }
+  }
+}
+
 // --- Codable conformance helpers ---
 
 function needsFoundation(manifest: ConceptManifest): boolean {
@@ -349,27 +371,15 @@ function generateSwiftStepCode(
   const varName = `step${stepNum}`;
 
   // Comment
-  const inputStr = step.inputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
-  const outputStr = step.expectedOutputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
+  const inputStr = step.inputs.map(a => `${a.name}: ${invariantValueToSwift(a.value)}`).join(', ');
+  const outputStr = step.expectedOutputs.map(a => `${a.name}: ${invariantValueToSwift(a.value)}`).join(', ');
   lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
   // Build input
   const inputType = `${conceptName}${capitalize(step.action)}Input`;
-  const inputFields = step.inputs.map(a => {
-    if (a.value.kind === 'literal') {
-      const val = a.value.value;
-      if (typeof val === 'string') return `${camelCase(a.name)}: "${val}"`;
-      if (typeof val === 'boolean') return `${camelCase(a.name)}: ${val}`;
-      return `${camelCase(a.name)}: ${val}`;
-    }
-    return `${camelCase(a.name)}: ${camelCase(a.value.name)}`;
-  }).join(', ');
+  const inputFields = step.inputs.map(a =>
+    `${camelCase(a.name)}: ${invariantValueToSwift(a.value)}`
+  ).join(', ');
 
   lines.push(`        let ${varName} = try await handler.${camelCase(step.action)}(`);
   lines.push(`            input: ${inputType}(${inputFields}),`);
@@ -385,16 +395,7 @@ function generateSwiftStepCode(
     lines.push(`        if case .${variantName}(${bindings}) = ${varName} {`);
 
     for (const out of step.expectedOutputs) {
-      if (out.value.kind === 'literal') {
-        const val = out.value.value;
-        if (typeof val === 'string') {
-          lines.push(`            XCTAssertEqual(${camelCase(out.name)}, "${val}")`);
-        } else {
-          lines.push(`            XCTAssertEqual(${camelCase(out.name)}, ${val})`);
-        }
-      } else {
-        lines.push(`            XCTAssertEqual(${camelCase(out.name)}, ${camelCase(out.value.name)})`);
-      }
+      lines.push(`            XCTAssertEqual(${camelCase(out.name)}, ${invariantValueToSwift(out.value)})`);
     }
 
     lines.push(`        } else {`);

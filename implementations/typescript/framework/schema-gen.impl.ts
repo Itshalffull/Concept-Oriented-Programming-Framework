@@ -160,20 +160,42 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
       }
     }
 
-    function convertValue(v: { type: 'literal'; value: string | number | boolean } | { type: 'variable'; name: string }): InvariantValue {
+    function convertValue(v: import('../../../kernel/src/types.js').ArgPatternValue): InvariantValue {
       if (v.type === 'literal') {
         return { kind: 'literal', value: v.value };
       }
-      return { kind: 'variable', name: v.name };
+      if (v.type === 'variable') {
+        return { kind: 'variable', name: v.name };
+      }
+      if (v.type === 'record') {
+        return {
+          kind: 'record',
+          fields: v.fields.map(f => ({ name: f.name, value: convertValue(f.value) })),
+        };
+      }
+      if (v.type === 'list') {
+        return { kind: 'list', items: v.items.map(item => convertValue(item)) };
+      }
+      return { kind: 'literal', value: '' };
+    }
+
+    function collectVarsFromValue(v: import('../../../kernel/src/types.js').ArgPatternValue): void {
+      if (v.type === 'variable') {
+        collectVar(v.name);
+      } else if (v.type === 'record') {
+        for (const f of v.fields) collectVarsFromValue(f.value);
+      } else if (v.type === 'list') {
+        for (const item of v.items) collectVarsFromValue(item);
+      }
     }
 
     function convertPatternToStep(pattern: ActionPattern): InvariantStep {
       // Collect variables (inputs first, then outputs — preserves ordering)
       for (const arg of pattern.inputArgs) {
-        if (arg.value.type === 'variable') collectVar(arg.value.name);
+        collectVarsFromValue(arg.value);
       }
       for (const arg of pattern.outputArgs) {
-        if (arg.value.type === 'variable') collectVar(arg.value.name);
+        collectVarsFromValue(arg.value);
       }
 
       return {

@@ -328,26 +328,63 @@ function generateFoundryTestFile(manifest: ConceptManifest): string | null {
   return lines.join('\n');
 }
 
-function generateSolidityStepCode(step: InvariantStep): string[] {
-  const lines: string[] = [];
-
-  // Comment
-  const inputStr = step.inputs.map(a => {
-    if (a.value.kind === 'literal') return `${a.name}: ${JSON.stringify(a.value.value)}`;
-    return `${a.name}: ${a.value.name}`;
-  }).join(', ');
-  lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}`);
-
-  // Build function call
-  const args = step.inputs.map(a => {
-    if (a.value.kind === 'literal') {
-      const val = a.value.value;
+function invariantValueToSolidity(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal': {
+      const val = v.value;
       if (typeof val === 'string') return `"${val}"`;
       if (typeof val === 'boolean') return val ? 'true' : 'false';
       return String(val);
     }
-    return camelCase(a.value.name);
-  }).join(', ');
+    case 'variable':
+      return camelCase(v.name);
+    case 'record': {
+      const fieldEntries = v.fields
+        .map(f => `${f.name}: ${invariantValueToSolidity(f.value)}`)
+        .join(', ');
+      return `/* struct { ${fieldEntries} } */`;
+    }
+    case 'list': {
+      const itemEntries = v.items
+        .map(item => invariantValueToSolidity(item))
+        .join(', ');
+      return `/* [${itemEntries}] */`;
+    }
+  }
+}
+
+function invariantValueToComment(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal':
+      return JSON.stringify(v.value);
+    case 'variable':
+      return v.name;
+    case 'record': {
+      const fieldEntries = v.fields
+        .map(f => `${f.name}: ${invariantValueToComment(f.value)}`)
+        .join(', ');
+      return `{ ${fieldEntries} }`;
+    }
+    case 'list': {
+      const itemEntries = v.items
+        .map(item => invariantValueToComment(item))
+        .join(', ');
+      return `[${itemEntries}]`;
+    }
+  }
+}
+
+function generateSolidityStepCode(step: InvariantStep): string[] {
+  const lines: string[] = [];
+
+  // Comment
+  const inputStr = step.inputs.map(a =>
+    `${a.name}: ${invariantValueToComment(a.value)}`
+  ).join(', ');
+  lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}`);
+
+  // Build function call
+  const args = step.inputs.map(a => invariantValueToSolidity(a.value)).join(', ');
 
   lines.push(`        // target.${camelCase(step.action)}(${args});`);
   lines.push(`        // TODO: Assert ${step.expectedVariant} variant`);

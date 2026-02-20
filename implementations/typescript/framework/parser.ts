@@ -13,6 +13,7 @@ import type {
   InvariantDecl,
   ActionPattern,
   ArgPattern,
+  ArgPatternValue,
 } from '../../../kernel/src/types.js';
 
 // --- Token Types ---
@@ -646,31 +647,61 @@ class Parser {
   private parseArgPattern(): ArgPattern {
     const name = this.expectIdent().value;
     this.expect('COLON');
+    const value = this.parseArgPatternValue();
+    return { name, value };
+  }
 
+  private parseArgPatternValue(): ArgPatternValue {
     const tok = this.peek();
     if (tok.type === 'STRING_LIT') {
       this.advance();
-      return { name, value: { type: 'literal', value: tok.value } };
+      return { type: 'literal', value: tok.value };
     }
     if (tok.type === 'INT_LIT') {
       this.advance();
-      return { name, value: { type: 'literal', value: parseInt(tok.value, 10) } };
+      return { type: 'literal', value: parseInt(tok.value, 10) };
     }
     if (tok.type === 'FLOAT_LIT') {
       this.advance();
-      return { name, value: { type: 'literal', value: parseFloat(tok.value) } };
+      return { type: 'literal', value: parseFloat(tok.value) };
     }
     if (tok.type === 'BOOL_LIT') {
       this.advance();
-      return { name, value: { type: 'literal', value: tok.value === 'true' } };
+      return { type: 'literal', value: tok.value === 'true' };
+    }
+    // Record literal: { field: value, field: value, ... }
+    if (tok.type === 'LBRACE') {
+      this.advance();
+      const fields: ArgPattern[] = [];
+      if (this.peek().type !== 'RBRACE') {
+        fields.push(this.parseArgPattern());
+        while (this.match('COMMA')) {
+          fields.push(this.parseArgPattern());
+        }
+      }
+      this.expect('RBRACE');
+      return { type: 'record', fields };
+    }
+    // List literal: [value, value, ...]
+    if (tok.type === 'LBRACKET') {
+      this.advance();
+      const items: ArgPatternValue[] = [];
+      if (this.peek().type !== 'RBRACKET') {
+        items.push(this.parseArgPatternValue());
+        while (this.match('COMMA')) {
+          items.push(this.parseArgPatternValue());
+        }
+      }
+      this.expect('RBRACKET');
+      return { type: 'list', items };
     }
     // Variable
     if (tok.type === 'IDENT') {
       this.advance();
-      return { name, value: { type: 'variable', name: tok.value } };
+      return { type: 'variable', name: tok.value };
     }
 
-    throw new Error(`Parse error at line ${tok.line}: expected literal or variable in arg pattern, got ${tok.type}(${tok.value})`);
+    throw new Error(`Parse error at line ${tok.line}: expected literal, variable, record, or list in arg pattern, got ${tok.type}(${tok.value})`);
   }
 
   private parseCapabilities(): string[] {

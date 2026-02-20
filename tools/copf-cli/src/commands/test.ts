@@ -267,7 +267,42 @@ interface InvariantStep {
 
 type InvariantValue =
   | { kind: 'literal'; value: string | number | boolean }
-  | { kind: 'variable'; name: string };
+  | { kind: 'variable'; name: string }
+  | { kind: 'record'; fields: { name: string; value: InvariantValue }[] }
+  | { kind: 'list'; items: InvariantValue[] };
+
+function resolveValue(value: InvariantValue, bindings: Record<string, unknown>): unknown {
+  if (value.kind === 'literal') return value.value;
+  if (value.kind === 'variable') return bindings[value.name];
+  if (value.kind === 'record') {
+    const obj: Record<string, unknown> = {};
+    for (const f of value.fields) {
+      obj[f.name] = resolveValue(f.value, bindings);
+    }
+    return obj;
+  }
+  if (value.kind === 'list') {
+    return value.items.map(item => resolveValue(item, bindings));
+  }
+  return undefined;
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object') return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((v, i) => deepEqual(v, b[i]));
+  }
+  const aObj = a as Record<string, unknown>;
+  const bObj = b as Record<string, unknown>;
+  const keys = Object.keys(aObj);
+  if (keys.length !== Object.keys(bObj).length) return false;
+  return keys.every(k => deepEqual(aObj[k], bObj[k]));
+}
 
 async function executeInvariant(
   handler: Record<string, Function>,
@@ -309,7 +344,7 @@ async function executeStep(
   // Build input from step definition
   const input: Record<string, unknown> = {};
   for (const { name, value } of step.inputs) {
-    input[name] = value.kind === 'literal' ? value.value : bindings[value.name];
+    input[name] = resolveValue(value, bindings);
   }
 
   const result = await fn(input, storage);
@@ -333,17 +368,18 @@ async function executeStep(
       } else {
         // Variable was bound before — assert it matches
         const expected = bindings[value.name];
-        if (actual !== expected) {
+        if (!deepEqual(actual, expected)) {
           throw new Error(
             `Expected ${name}=${JSON.stringify(expected)} but got ${JSON.stringify(actual)} from ${step.action}`,
           );
         }
       }
     } else {
-      // Literal value — always assert
-      if (actual !== value.value) {
+      // Literal or structured value — resolve and deep compare
+      const expected = resolveValue(value, bindings);
+      if (!deepEqual(actual, expected)) {
         throw new Error(
-          `Expected ${name}=${JSON.stringify(value.value)} but got ${JSON.stringify(actual)} from ${step.action}`,
+          `Expected ${name}=${JSON.stringify(expected)} but got ${JSON.stringify(actual)} from ${step.action}`,
         );
       }
     }
