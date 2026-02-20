@@ -88,7 +88,7 @@ function createMockDOStorage() {
         }
       }
     },
-    async delete(keyOrKeys: string | string[]): Promise<boolean | number> {
+    async delete(keyOrKeys: string | string[]): Promise<number> {
       if (Array.isArray(keyOrKeys)) {
         let count = 0;
         for (const k of keyOrKeys) {
@@ -98,7 +98,7 @@ function createMockDOStorage() {
       }
       const had = store.has(keyOrKeys);
       store.delete(keyOrKeys);
-      return had;
+      return had ? 1 : 0;
     },
     async list<T = unknown>(options?: { prefix?: string }): Promise<Map<string, T>> {
       const prefix = options?.prefix ?? '';
@@ -116,7 +116,7 @@ function createMockDOStorage() {
     },
   };
 
-  return doStorage;
+  return doStorage as any;
 }
 
 // ============================================================

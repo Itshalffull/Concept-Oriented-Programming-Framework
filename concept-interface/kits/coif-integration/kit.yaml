@@ -1,0 +1,106 @@
+# kits/coif-integration/kit.yaml
+kit:
+  name: coif-integration
+  version: 0.1.0
+  description: >
+    Syncs that bridge COPF Concept Library domain concepts to COIF
+    interface concepts. Requires both COIF kits and the relevant
+    library kits to be active. No new concepts — this kit is
+    syncs-only.
+
+uses:
+  "@copf/classification":
+    concepts: [Schema]
+  "@copf/foundation":
+    concepts: [ContentParser, Intent]
+  "@copf/presentation":
+    concepts: [View, Renderer]
+  "@copf/infrastructure":
+    concepts: [EventBus, Validator]
+  "@copf/automation":
+    concepts: [Workflow, Control]
+  "@copf/layout":
+    concepts: [Component]
+  "@copf/notification":
+    concepts: [Notification]
+
+concepts: []  # No new concepts — this kit is syncs-only
+
+syncs:
+  required:
+    - path: ./syncs/schema-def-drives-ui.sync
+      name: SchemaDefDrivesUI
+      description: >
+        Auto-generate interface when a concept schema is defined.
+
+    - path: ./syncs/schema-apply-drives-binding.sync
+      name: SchemaApplyDrivesBinding
+      description: >
+        Create data binding when a schema is applied to a node.
+
+  recommended:
+    - path: ./syncs/intent-enriches-ui.sync
+      name: IntentEnrichesUI
+      description: >
+        Use concept purpose to enhance generated interface labels.
+
+    - path: ./syncs/view-drives-layout.sync
+      name: ViewDrivesLayout
+      description: >
+        Map View layout type to COIF spatial arrangement.
+
+    - path: ./syncs/view-fields-drive-uischema.sync
+      name: ViewFieldsDriveUISchema
+      description: >
+        Reflect visible field changes in UI schema overrides.
+
+    - path: ./syncs/view-embed-creates-surface.sync
+      name: ViewEmbedCreatesInlineSurface
+      description: >
+        Embed a View inside a ContentNode as an inline COIF surface.
+
+    - path: ./syncs/form-validates-via-validator.sync
+      name: FormValidatesViaValidator
+      description: >
+        Delegate form submission validation to library Validator.
+
+    - path: ./syncs/validation-result-to-form.sync
+      name: ValidationResultToForm
+      description: >
+        Route validation results back to form machine.
+
+    - path: ./syncs/workflow-state-to-signal.sync
+      name: WorkflowStateToSignal
+      description: >
+        Reflect workflow state changes in UI signals.
+
+    - path: ./syncs/eventbus-feeds-signals.sync
+      name: EventBusFeedsSignals
+      description: >
+        Route domain events to subscribed UI signals.
+
+    - path: ./syncs/notification-to-toast.sync
+      name: NotificationToToast
+      description: >
+        Display notifications as toast UI widgets.
+
+    - path: ./syncs/parsed-content-to-richtext.sync
+      name: ParsedContentToRichText
+      description: >
+        Feed parsed AST to rich-text widget for interactive rendering.
+
+    - path: ./syncs/renderer-feeds-adapter.sync
+      name: RendererFeedsAdapter
+      description: >
+        Route rendered content tree through framework adapter.
+
+    - path: ./syncs/layout-component-via-widget.sync
+      name: LayoutComponentRendersViaWidget
+      description: >
+        Render layout components through COIF widget state machines.
+
+dependencies:
+  - coif-core: ">=0.2.0"
+  - coif-component: ">=0.2.0"
+  - coif-render: ">=0.2.0"
+  - coif-theme: ">=0.2.0"

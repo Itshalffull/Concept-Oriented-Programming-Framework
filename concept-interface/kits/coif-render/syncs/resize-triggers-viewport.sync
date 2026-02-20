@@ -1,0 +1,16 @@
+# ============================================================
+# ResizeTriggersViewport — coif-render recommended sync
+#
+# When a surface reports a resize, trigger viewport breakpoint
+# recalculation. Surface resize → viewport observation →
+# breakpoint signal update.
+# ============================================================
+
+sync ResizeTriggersViewport [eager]
+when {
+  Surface/resize: [ surface: ?surface; width: ?w; height: ?h ]
+    => ok(surface: ?surface)
+}
+then {
+  Viewport/observe: [ viewport: ?surface; width: ?w; height: ?h ]
+}

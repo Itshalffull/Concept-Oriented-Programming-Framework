@@ -1,0 +1,46 @@
+@version(1)
+concept Elevation [W] {
+
+  purpose {
+    Shadow and depth system. Numbered scale (0-5):
+    0 = flat, 1 = raised, 2 = floating, 3 = overlay,
+    4 = modal, 5 = top. Each level uses multi-layer shadows.
+    Adapts to theme: light uses gray shadows, dark uses
+    darker shadows or ambient glow.
+  }
+
+  state {
+    level: W -> Int
+    shadow: W -> String
+    color: W -> option String
+  }
+
+  actions {
+    action define(elevation: W, level: Int, shadow: String) {
+      -> ok(elevation: W) {
+        Define shadow for elevation level. Shadow: JSON array
+        of layers: [{ "y": 2, "blur": 4, "color": "rgba(0,0,0,0.1)" }]
+      }
+      -> invalid(message: String) { Level must be 0-5. }
+    }
+
+    action get(elevation: W) {
+      -> ok(elevation: W, shadow: String) { Return shadow definition. }
+      -> notfound(message: String) { Not defined for this level. }
+    }
+
+    action generateScale(baseColor: String) {
+      -> ok(shadows: String) {
+        Auto-generate all 6 levels from base shadow color.
+      }
+      -> invalid(message: String) { Invalid color. }
+    }
+  }
+
+  invariant {
+    after define(elevation: w, level: 2,
+                 shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]")
+      -> ok(elevation: w)
+    then get(elevation: w) -> ok(elevation: w, shadow: _)
+  }
+}

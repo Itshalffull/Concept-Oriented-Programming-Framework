@@ -1,0 +1,19 @@
+# ============================================================
+# ConceptStateToSignal — coif-core required sync
+#
+# When a binding syncs from the backend, batch-update all
+# mapped signals. This is the backend→UI direction of the
+# reactive loop.
+# ============================================================
+
+sync ConceptStateToSignal [eager]
+when {
+  Binding/sync: [ binding: ?binding ]
+    => ok(binding: ?binding)
+}
+where {
+  Binding: { ?binding signalMap: ?map }
+}
+then {
+  Signal/batch: [ signals: ?map ]
+}

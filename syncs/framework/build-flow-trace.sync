@@ -1,8 +1,7 @@
-sync BuildFlowTrace {
-  when {
-    ActionLog/query: [ flow: ?flowId ] => [ records: ?records ]
-  }
-  then {
-    FlowTrace/build: [ flowId: ?flowId ]
-  }
+sync BuildFlowTrace [eager]
+when {
+  ActionLog/query: [ flow: ?flowId ] => [ records: ?records ]
+}
+then {
+  FlowTrace/build: [ flowId: ?flowId ]
 }

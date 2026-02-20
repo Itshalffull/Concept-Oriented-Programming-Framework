@@ -74,8 +74,8 @@ describe('Conformance Test Generation (Section 7.4)', () => {
     expect(content).toContain('.valid).toBe(true)');
 
     // Section 7.4 Rule 4: literal values asserted exactly
-    expect(content).toContain('"secret"');
-    expect(content).toContain('"wrong"');
+    expect(content).toContain('"secret123"');
+    expect(content).toContain('"wrongpass"');
     expect(content).toContain('.valid).toBe(false)');
   });
 
@@ -141,8 +141,17 @@ describe('Conformance Test Generation (Section 7.4)', () => {
   });
 
   it('does not generate conformance test for specs without invariants', async () => {
-    // Framework specs have no invariants
-    const ast = parseConceptFile(readSpec('framework', 'spec-parser'));
+    // Use an inline concept with no invariant block
+    const ast = parseConceptFile(`concept Bare [X] {
+  purpose { Minimal concept with no invariants. }
+  state { items: set X }
+  actions {
+    action get(id: X) {
+      -> ok(item: X) { Return the item. }
+      -> error(message: String) { Not found. }
+    }
+  }
+}`);
     const manifest = await generateManifest(ast);
     const storage = createInMemoryStorage();
     const result = await typescriptGenHandler.generate(

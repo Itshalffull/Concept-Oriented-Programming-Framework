@@ -31,4 +31,9 @@ concept ActionLog [R] {
       }
     }
   }
+
+  invariant {
+    after query(flow: "nonexistent") -> ok(records: r)
+    then query(flow: "other") -> ok(records: s)
+  }
 }

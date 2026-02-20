@@ -463,3 +463,13 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
 
   return { handler, engine, log };
 }
+
+// --- Static handler for conformance testing ---
+
+const _testRegistry: ConceptRegistry = {
+  register() {},
+  resolve() { return undefined; },
+  available() { return false; },
+};
+
+export const syncEngineHandler = createSyncEngineHandler(_testRegistry).handler;

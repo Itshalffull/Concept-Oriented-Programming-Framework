@@ -79,7 +79,6 @@ export const chainMonitorHandler: ConceptHandler = {
     blockHashes.set(chainId, new Map());
 
     await storage.put('chainConfig', String(chainId), {
-      chainId,
       rpcUrl,
       ...config,
     });

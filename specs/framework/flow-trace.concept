@@ -33,4 +33,9 @@ concept FlowTrace [F] {
       }
     }
   }
+
+  invariant {
+    after build(flowId: "") -> error(message: m)
+    then build(flowId: "") -> error(message: m)
+  }
 }

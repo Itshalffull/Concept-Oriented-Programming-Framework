@@ -11,7 +11,7 @@
 // and run flow-level tests.
 // ============================================================
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { resolve, relative, join } from 'path';
 import { spawn } from 'child_process';
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
@@ -186,22 +186,51 @@ async function runIntegrationTests(
   });
 }
 
+function toKebabCase(name: string): string {
+  return name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
 function findImplementation(
   projectDir: string,
   implsDir: string,
   conceptName: string,
 ): string | null {
   const lowerName = conceptName.toLowerCase();
-  // Check in app/ and framework/ subdirectories
+  const kebabName = toKebabCase(conceptName);
+  // Check in app/ and framework/ subdirectories, trying both
+  // flat lowercase (e.g. "registry") and kebab-case (e.g. "spec-parser")
   const candidates = [
     join(projectDir, implsDir, 'app', `${lowerName}.impl.ts`),
+    join(projectDir, implsDir, 'app', `${kebabName}.impl.ts`),
     join(projectDir, implsDir, 'framework', `${lowerName}.impl.ts`),
+    join(projectDir, implsDir, 'framework', `${kebabName}.impl.ts`),
     join(projectDir, implsDir, `${lowerName}.impl.ts`),
+    join(projectDir, implsDir, `${kebabName}.impl.ts`),
   ];
 
   for (const path of candidates) {
     if (existsSync(path)) return path;
   }
+
+  // Fallback: scan directories for a .impl.ts file whose name (without hyphens)
+  // matches the lowercased concept name. Handles compound words like
+  // TypeScriptGen → typescript-gen.impl.ts (kebab gives type-script-gen which misses).
+  const dirs = [
+    join(projectDir, implsDir, 'app'),
+    join(projectDir, implsDir, 'framework'),
+    join(projectDir, implsDir),
+  ];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue;
+    for (const file of readdirSync(dir)) {
+      if (!file.endsWith('.impl.ts')) continue;
+      const normalized = file.replace('.impl.ts', '').replace(/-/g, '');
+      if (normalized === lowerName) {
+        return join(dir, file);
+      }
+    }
+  }
+
   return null;
 }
 
@@ -246,20 +275,22 @@ async function executeInvariant(
   storage: { put: Function; get: Function; find: Function; del: Function; delMany: Function },
 ): Promise<void> {
   const bindings: Record<string, unknown> = {};
+  // Track which variables have been bound from actual outputs (not test values)
+  const outputBindings: Record<string, unknown> = {};
 
-  // Initialize free variable bindings
+  // Initialize free variable bindings (used for inputs like user IDs)
   for (const fv of inv.freeVariables) {
     bindings[fv.name] = fv.testValue;
   }
 
   // Execute setup (after clause)
   for (const step of inv.setup) {
-    await executeStep(handler, step, bindings, storage);
+    await executeStep(handler, step, bindings, outputBindings, storage);
   }
 
   // Execute assertions (then clause)
   for (const step of inv.assertions) {
-    await executeStep(handler, step, bindings, storage);
+    await executeStep(handler, step, bindings, outputBindings, storage);
   }
 }
 
@@ -267,6 +298,7 @@ async function executeStep(
   handler: Record<string, Function>,
   step: InvariantStep,
   bindings: Record<string, unknown>,
+  outputBindings: Record<string, unknown>,
   storage: unknown,
 ): Promise<void> {
   const fn = handler[step.action];
@@ -289,18 +321,31 @@ async function executeStep(
     );
   }
 
-  // Assert outputs
+  // Assert outputs and bind variables
   for (const { name, value } of step.expectedOutputs) {
     const actual = result[name];
-    const expected = value.kind === 'literal' ? value.value : bindings[value.name];
-    if (actual !== expected) {
-      throw new Error(
-        `Expected ${name}=${JSON.stringify(expected)} but got ${JSON.stringify(actual)} from ${step.action}`,
-      );
-    }
-    // If it's a variable, bind it for future steps
     if (value.kind === 'variable') {
-      bindings[value.name] = actual;
+      // If variable was never bound from an actual result, bind it now
+      // (first appearance as output — captures the value for later steps)
+      if (!(value.name in outputBindings)) {
+        outputBindings[value.name] = actual;
+        bindings[value.name] = actual;
+      } else {
+        // Variable was bound before — assert it matches
+        const expected = bindings[value.name];
+        if (actual !== expected) {
+          throw new Error(
+            `Expected ${name}=${JSON.stringify(expected)} but got ${JSON.stringify(actual)} from ${step.action}`,
+          );
+        }
+      }
+    } else {
+      // Literal value — always assert
+      if (actual !== value.value) {
+        throw new Error(
+          `Expected ${name}=${JSON.stringify(value.value)} but got ${JSON.stringify(actual)} from ${step.action}`,
+        );
+      }
     }
   }
 }

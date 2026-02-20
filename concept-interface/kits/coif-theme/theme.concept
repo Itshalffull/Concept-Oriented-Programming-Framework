@@ -1,0 +1,61 @@
+@version(1)
+concept Theme [H] {
+
+  purpose {
+    Compose tokens into a complete visual language. A Theme is a
+    named collection of token overrides: "dark" remaps color-background
+    from white to gray-900. Themes are layered: base + variants.
+    Multiple variants can be active (dark + compact + high-contrast).
+    Conflicts resolve by specificity then activation order.
+  }
+
+  state {
+    name: H -> String
+    base: H -> option H
+    overrides: H -> String
+    active: H -> Bool
+    priority: H -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(theme: H, name: String, overrides: String) {
+      -> ok(theme: H) { Create theme with token overrides JSON. }
+      -> duplicate(message: String) { Already exists. }
+    }
+
+    action extend(theme: H, base: H, overrides: String) {
+      -> ok(theme: H) { Create theme extending a base. }
+      -> notfound(message: String) { Base does not exist. }
+    }
+
+    action activate(theme: H, priority: Int) {
+      -> ok(theme: H) { Activate — overrides take effect immediately. }
+      -> notfound(message: String) { Does not exist. }
+    }
+
+    action deactivate(theme: H) {
+      -> ok(theme: H) { Deactivate — values revert. }
+      -> notfound(message: String) { Does not exist. }
+    }
+
+    action resolve(theme: H) {
+      -> ok(tokens: String) {
+        Return fully resolved token map: all base + overrides,
+        aliases resolved to final values.
+      }
+      -> notfound(message: String) { Does not exist. }
+    }
+  }
+
+  invariant {
+    after create(theme: h, name: "dark",
+                 overrides: "{ \"color-bg\": \"#1a1a1a\" }")
+      -> ok(theme: h)
+    then activate(theme: h, priority: 1) -> ok(theme: h)
+    and resolve(theme: h) -> ok(tokens: _)
+  }
+}

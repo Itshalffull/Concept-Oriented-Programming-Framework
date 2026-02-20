@@ -1,0 +1,15 @@
+# ============================================================
+# ThemeActivateTokens — coif-theme required sync
+#
+# When a theme is activated, resolve all its tokens to produce
+# the complete token map (base + overrides, aliases resolved).
+# ============================================================
+
+sync ThemeActivateTokens [eager]
+when {
+  Theme/activate: [ theme: ?theme ]
+    => ok(theme: ?theme)
+}
+then {
+  Theme/resolve: [ theme: ?theme ]
+}

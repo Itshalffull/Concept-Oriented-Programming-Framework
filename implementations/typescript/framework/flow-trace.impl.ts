@@ -9,7 +9,7 @@
 // See Architecture doc Section 16.1 / 17.1.
 // ============================================================
 
-import type { ActionRecord, CompiledSync, WhenPattern } from '../../../kernel/src/types.js';
+import type { ActionRecord, CompiledSync, ConceptHandler, WhenPattern } from '../../../kernel/src/types.js';
 import type { SyncIndex } from './engine.js';
 import { ActionLog, indexKey } from './engine.js';
 
@@ -470,3 +470,31 @@ function hasFailedDescendant(node: TraceNode): boolean {
   }
   return false;
 }
+
+// --- Concept Handler ---
+
+export const flowTraceHandler: ConceptHandler = {
+  async build(input, _storage) {
+    const flowId = input.flowId as string;
+    if (!flowId) {
+      return { variant: 'error', message: 'flowId is required' };
+    }
+
+    // Building a trace requires ActionLog and SyncIndex which are
+    // only available via the engine runtime. Return error for
+    // standalone invocations.
+    return { variant: 'error', message: 'No action log available for flow: ' + flowId };
+  },
+
+  async render(input, _storage) {
+    const trace = input.trace as FlowTrace | undefined;
+    const options = input.options as { failed?: boolean; json?: boolean } | undefined;
+
+    if (!trace || !trace.flowId) {
+      return { variant: 'ok', output: '' };
+    }
+
+    const output = renderFlowTrace(trace, options || {});
+    return { variant: 'ok', output };
+  },
+};

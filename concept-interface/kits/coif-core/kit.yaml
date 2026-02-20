@@ -1,0 +1,66 @@
+# kits/coif-core/kit.yaml
+kit:
+  name: coif-core
+  version: 0.1.0
+  description: >
+    Foundation concepts for COIF: design tokens, abstract elements,
+    UI schemas, concept bindings, and reactive signals. Required by
+    all other COIF kits. Implements the core pipeline: concept spec
+    inspection → UI schema generation → signal-based reactive state.
+
+concepts:
+  DesignToken:
+    spec: ./design-token.concept
+    params:
+      T: { as: token-ref, description: "Reference to a design token" }
+
+  Element:
+    spec: ./element.concept
+    params:
+      E: { as: element-ref, description: "Reference to an abstract interaction element" }
+
+  UISchema:
+    spec: ./ui-schema.concept
+    params:
+      S: { as: schema-ref, description: "Reference to a UI schema instance" }
+      C: { as: concept-ref, description: "Reference to the source COPF concept" }
+
+  Binding:
+    spec: ./binding.concept
+    params:
+      B: { as: binding-ref, description: "Reference to a concept-interface binding" }
+      C: { as: concept-ref, description: "Reference to the bound COPF concept" }
+
+  Signal:
+    spec: ./signal.concept
+    params:
+      G: { as: signal-ref, description: "Reference to a reactive signal" }
+
+syncs:
+  required:
+    - path: ./syncs/inspect-and-generate.sync
+      name: InspectAndGenerate
+      description: >
+        When a binding is created, auto-generate UI schema from
+        the bound concept spec. Entry point for the COIF pipeline.
+
+    - path: ./syncs/concept-state-to-signal.sync
+      name: ConceptStateToSignal
+      description: >
+        When a binding syncs from backend, batch-update all mapped
+        signals. Backend → UI direction of the reactive loop.
+
+    - path: ./syncs/binding-state-sync.sync
+      name: BindingStateSync
+      description: >
+        When a signal is written (user input), sync back to the
+        bound concept. UI → backend direction of the reactive loop.
+
+  recommended:
+    - path: ./syncs/schema-to-elements.sync
+      name: UISchemaToElements
+      description: >
+        When a UI schema is generated, extract abstract element tree
+        for consumption by the Widget concept.
+
+dependencies: []

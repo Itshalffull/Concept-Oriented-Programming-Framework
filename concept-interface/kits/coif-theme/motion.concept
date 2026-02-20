@@ -1,0 +1,45 @@
+@version(1)
+concept Motion [O] {
+
+  purpose {
+    Animation timing, easing, and transitions. All values are
+    named, referenceable, and overridable via themes. Respects
+    prefers-reduced-motion: all durations collapse to 0ms.
+  }
+
+  state {
+    name: O -> String
+    kind: O -> String
+    value: O -> String
+    reducedMotion: O -> option String
+  }
+
+  actions {
+    action defineDuration(motion: O, name: String, ms: Int) {
+      -> ok(motion: O) {
+        Named duration. Standard: instant (0), fast (100),
+        normal (200), slow (300), slower (500).
+      }
+      -> invalid(message: String) { Must be non-negative. }
+    }
+
+    action defineEasing(motion: O, name: String, value: String) {
+      -> ok(motion: O) { Named easing curve (CSS cubic-bezier or keyword). }
+      -> invalid(message: String) { Invalid easing value. }
+    }
+
+    action defineTransition(motion: O, name: String, config: String) {
+      -> ok(motion: O) {
+        Named transition preset: { "property": "opacity",
+        "duration": "normal", "easing": "ease-out" }
+      }
+      -> invalid(message: String) { Referenced duration or easing not found. }
+    }
+  }
+
+  invariant {
+    after defineDuration(motion: o, name: "normal", ms: 200) -> ok(motion: o)
+    then defineEasing(motion: o2, name: "ease-out",
+                      value: "cubic-bezier(0, 0, 0.2, 1)") -> ok(motion: o2)
+  }
+}

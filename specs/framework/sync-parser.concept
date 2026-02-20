@@ -23,4 +23,9 @@ concept SyncParser [Y] {
       }
     }
   }
+
+  invariant {
+    after parse(source: "", manifests: "") -> error(message: m, line: 0)
+    then parse(source: "", manifests: "") -> error(message: m, line: 0)
+  }
 }

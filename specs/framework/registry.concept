@@ -35,4 +35,9 @@ concept Registry [C] {
       }
     }
   }
+
+  invariant {
+    after register(uri: "test://concept-a", transport: "in-process") -> ok(concept: c)
+    then heartbeat(uri: "test://concept-a") -> ok(available: true)
+  }
 }

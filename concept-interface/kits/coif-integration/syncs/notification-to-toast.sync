@@ -1,0 +1,17 @@
+# ============================================================
+# NotificationToToast — coif-integration recommended sync
+#
+# Display library Notifications as COIF toast widgets. Each
+# notification spawns a toast machine instance with the message
+# and appropriate variant.
+# ============================================================
+
+sync NotificationToToast [eager]
+when {
+  Notification/send: [ userId: ?user; message: ?msg ]
+    => ok(notification: ?notif)
+}
+then {
+  Machine/spawn: [ machine: ?notif; widget: "toast";
+    context: "{ \"message\": ?msg, \"variant\": \"info\" }" ]
+}

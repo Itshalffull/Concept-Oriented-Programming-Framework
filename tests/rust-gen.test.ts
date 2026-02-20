@@ -184,7 +184,17 @@ describe('RustGen Type Mapping', () => {
   });
 
   it('generates files for concept without invariants (no conformance.rs)', async () => {
-    const ast = parseConceptFile(readSpec('framework', 'schema-gen'));
+    // Use an inline concept with no invariant block
+    const ast = parseConceptFile(`concept Bare [X] {
+  purpose { Minimal concept with no invariants. }
+  state { items: set X }
+  actions {
+    action get(id: X) {
+      -> ok(item: X) { Return the item. }
+      -> error(message: String) { Not found. }
+    }
+  }
+}`);
     const manifest = await generateManifest(ast);
     const storage = createInMemoryStorage();
     const result = await rustGenHandler.generate(

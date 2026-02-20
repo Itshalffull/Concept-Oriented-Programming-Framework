@@ -24,4 +24,9 @@ concept RustGen [S] {
       }
     }
   }
+
+  invariant {
+    after generate(spec: "test", manifest: "") -> error(message: m)
+    then generate(spec: "test", manifest: "") -> error(message: m)
+  }
 }

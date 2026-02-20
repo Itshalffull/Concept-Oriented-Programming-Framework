@@ -1,0 +1,54 @@
+@version(1)
+concept Slot [L] {
+
+  purpose {
+    Named insertion points for component composition. Enables the
+    compound component pattern without coupling. Replaces Atomic
+    Design's rigid hierarchy with flexible, on-demand composition.
+    Supports named slots, default slots, and scoped slots.
+  }
+
+  state {
+    name: L -> String
+    component: L -> String
+    defaultContent: L -> option String
+    scope: L -> option String
+    filled: L -> Bool
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(slot: L, name: String, component: String) {
+      -> ok(slot: L) { Define a slot on a component. }
+      -> invalid(message: String) { Anatomy does not include this slot. }
+    }
+
+    action fill(slot: L, content: String) {
+      -> ok(slot: L) {
+        Fill with content: component reference, raw content,
+        or scoped render function key.
+      }
+      -> notfound(message: String) { Slot does not exist. }
+    }
+
+    action setDefault(slot: L, defaultContent: String) {
+      -> ok(slot: L) { Set fallback content when no fill provided. }
+      -> notfound(message: String) { Slot does not exist. }
+    }
+
+    action clear(slot: L) {
+      -> ok(slot: L) { Remove fill, revert to default. }
+      -> notfound(message: String) { Slot does not exist. }
+    }
+  }
+
+  invariant {
+    after define(slot: l, name: "header", component: "card")
+      -> ok(slot: l)
+    then fill(slot: l, content: "{ \"type\": \"text\", \"value\": \"Hello\" }")
+      -> ok(slot: l)
+  }
+}

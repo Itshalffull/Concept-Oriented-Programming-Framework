@@ -1,0 +1,83 @@
+@version(1)
+concept DesignToken [T] {
+
+  purpose {
+    Store design decisions as structured, platform-agnostic data.
+    Tokens are the atomic unit of visual design — a color value,
+    a spacing size, a font family. They form a three-tier
+    hierarchy: primitive (raw values), semantic (meaning/purpose),
+    and component (bound to specific UI elements). Follows the
+    W3C Design Tokens Community Group specification (2025.10).
+  }
+
+  state {
+    name: T -> String
+    value: T -> String
+    type: T -> String
+    tier: T -> String
+    description: T -> option String
+    reference: T -> option T
+    group: T -> option String
+    extensions: T -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(token: T, name: String, value: String, type: String, tier: String) {
+      -> ok(token: T) {
+        Register a new token. Type is one of: color, dimension,
+        fontFamily, fontWeight, duration, cubicBezier, shadow,
+        border, typography, gradient. Tier is one of: primitive,
+        semantic, component.
+      }
+      -> duplicate(message: String) {
+        A token with this name already exists in this group.
+      }
+    }
+
+    action alias(token: T, name: String, reference: T, tier: String) {
+      -> ok(token: T) {
+        Create a token that references another token's value.
+        The alias resolves at consumption time, enabling theming
+        by remapping semantic tokens to different primitives.
+      }
+      -> notfound(message: String) { The referenced token does not exist. }
+      -> cycle(message: String) { The alias would create a circular reference chain. }
+    }
+
+    action resolve(token: T) {
+      -> ok(token: T, resolvedValue: String) {
+        Walk the reference chain and return the final concrete value.
+      }
+      -> notfound(message: String) { The token does not exist. }
+      -> broken(message: String, brokenAt: T) { The reference chain is broken. }
+    }
+
+    action update(token: T, value: option String) {
+      -> ok(token: T) { Update the token's value or reference target. }
+      -> notfound(message: String) { The token does not exist. }
+    }
+
+    action remove(token: T) {
+      -> ok(token: T) { Delete the token. Aliases pointing here become broken. }
+      -> notfound(message: String) { The token does not exist. }
+    }
+
+    action export(format: String) {
+      -> ok(output: String) {
+        Export all tokens. Formats: "dtcg" (W3C JSON), "css"
+        (Custom Properties), "swift", "kotlin", "json".
+      }
+      -> unsupported(message: String) { Format not supported. }
+    }
+  }
+
+  invariant {
+    after define(token: t, name: "blue-500", value: "#3b82f6",
+                 type: "color", tier: "primitive") -> ok(token: t)
+    then resolve(token: t) -> ok(token: t, resolvedValue: "#3b82f6")
+  }
+}

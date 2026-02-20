@@ -1,0 +1,16 @@
+# ============================================================
+# ElementToMachine — coif-component recommended sync
+#
+# When abstract elements are extracted from a UI schema, query
+# the component registry for appropriate widget machines to
+# handle each element type.
+# ============================================================
+
+sync ElementToMachine [eager]
+when {
+  UISchema/getElements: []
+    => ok(elements: ?elements)
+}
+then {
+  Widget/list: [ category: ?_ ]
+}

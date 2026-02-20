@@ -8,6 +8,7 @@
 // ============================================================
 
 import type {
+  ConceptHandler,
   ConceptTransport,
   ConceptQuery,
   ConceptStorage,
@@ -145,3 +146,34 @@ export function createMigrationGatedTransport(
     },
   };
 }
+
+// --- Concept Handler ---
+
+export const migrationHandler: ConceptHandler = {
+  async check(input, storage) {
+    const specVersion = input.specVersion as number;
+
+    if (specVersion === undefined || specVersion === null) {
+      return { variant: 'ok' };
+    }
+
+    const result = await checkMigrationNeeded(specVersion, storage);
+
+    if (result === null) {
+      return { variant: 'ok' };
+    }
+
+    return { variant: 'needsMigration', from: result.currentVersion, to: result.requiredVersion };
+  },
+
+  async complete(input, storage) {
+    const version = input.version as number;
+
+    if (version === undefined || version === null) {
+      return { variant: 'ok' };
+    }
+
+    await setStoredVersion(storage, version);
+    return { variant: 'ok' };
+  },
+};

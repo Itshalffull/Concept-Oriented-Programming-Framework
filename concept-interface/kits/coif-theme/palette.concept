@@ -1,0 +1,48 @@
+@version(1)
+concept Palette [C] {
+
+  purpose {
+    Color system with semantic roles and WCAG accessibility enforcement.
+    Generates complete 50-950 color scales from seed colors using
+    perceptual color space (OKLCH). Every color pair validated against
+    WCAG 2.1: AA (4.5:1 normal, 3:1 large) and AAA (7:1 normal).
+  }
+
+  state {
+    name: C -> String
+    hue: C -> Float
+    scale: C -> String
+    role: C -> option String
+    contrastRatio: C -> option Float
+  }
+
+  actions {
+    action generate(palette: C, name: String, seed: String) {
+      -> ok(palette: C, scale: String) {
+        Generate 50-950 color scale from seed using OKLCH.
+      }
+      -> invalid(message: String) { Not a valid color. }
+    }
+
+    action assignRole(palette: C, role: String) {
+      -> ok(palette: C) {
+        Assign semantic role: primary, secondary, accent, success,
+        warning, error, neutral, surface. Auto-generates semantic tokens.
+      }
+      -> notfound(message: String) { Palette does not exist. }
+    }
+
+    action checkContrast(foreground: C, background: C) {
+      -> ok(ratio: Float, passesAA: Bool, passesAAA: Bool) {
+        Calculate contrast ratio and report WCAG compliance.
+      }
+      -> notfound(message: String) { Color not found. }
+    }
+  }
+
+  invariant {
+    after generate(palette: c, name: "blue", seed: "#3b82f6")
+      -> ok(palette: c, scale: _)
+    then assignRole(palette: c, role: "primary") -> ok(palette: c)
+  }
+}
