@@ -5,10 +5,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@copf/kernel': path.resolve(__dirname, './kernel/src/index.ts'),
+      '@copf/runtime': path.resolve(__dirname, './kernel/src/index.ts'),
     },
   },
   test: {
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'generated/concept-interface/**/*.test.ts'],
     globals: true,
   },
 });

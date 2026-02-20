@@ -284,8 +284,13 @@ function generateStepCode(
     if (out.value.kind === 'literal') {
       lines.push(`    expect((${varName} as any).${out.name}).toBe(${JSON.stringify(out.value.value)});`);
     } else if (out.value.kind === 'variable') {
-      // Variable reference — assert consistency
-      lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
+      if (out.value.name === '_') {
+        // Wildcard — just assert the field exists
+        lines.push(`    expect((${varName} as any).${out.name}).toBeDefined();`);
+      } else {
+        // Variable reference — assert consistency
+        lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
+      }
     } else {
       // Record or list — use deep equality
       lines.push(`    expect((${varName} as any).${out.name}).toEqual(${invariantValueToTS(out.value)});`);
