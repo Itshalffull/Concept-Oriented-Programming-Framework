@@ -1,0 +1,36 @@
+@version(1)
+concept WatchKitAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into watchOS SwiftUI bindings.
+    Constrained variant of SwiftUIAdapter for Apple Watch: smaller
+    viewport, Digital Crown input, complications, reduced animation.
+    Maps to watchOS-specific components (NavigationStack, TabView
+    with .tabViewStyle(.verticalPage)). Implementation in Swift,
+    runs natively on watchOS.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to watchOS SwiftUI bindings.
+        Convert onclick to .onTapGesture. Constrain layout to
+        single-column vertical scroll. Map Digital Crown to
+        scroll/value-change. Reduce motion durations.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to watchOS.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+  }
+}

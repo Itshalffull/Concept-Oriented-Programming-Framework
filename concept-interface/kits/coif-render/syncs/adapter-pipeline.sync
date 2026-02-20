@@ -3,8 +3,8 @@
 #
 # Multi-framework adapter pipeline: both Machine/connect and
 # Renderer/render produce framework-neutral props, and
-# per-framework adapters (React, Solid, Vue, Svelte, Ink,
-# Vanilla) each normalize them via their own sync rules.
+# per-framework adapters each normalize them via their own
+# sync rules.
 #
 # Adding a new framework adapter requires only a new adapter
 # concept + two sync rules in THIS file — no other code changes.
@@ -16,14 +16,21 @@
 #   Machine/connect  (component state machine produces props)
 #   Renderer/render  (library renderer produces render tree)
 #
-# Pipeline:
-#   Machine/connect  → ReactAdapter/normalize
-#   Renderer/render  → ReactAdapter/normalize
-#                    → SolidAdapter/normalize
-#                    → VueAdapter/normalize
-#                    → SvelteAdapter/normalize
-#                    → InkAdapter/normalize
-#                    → VanillaAdapter/normalize
+# ── Web ──
+#   → ReactAdapter, SolidAdapter, VueAdapter, SvelteAdapter,
+#     InkAdapter, VanillaAdapter
+#
+# ── JS-Runtime Native ──
+#   → ReactNativeAdapter, NativeScriptAdapter
+#
+# ── Apple ──
+#   → SwiftUIAdapter, WatchKitAdapter
+#
+# ── Android ──
+#   → ComposeAdapter, WearComposeAdapter
+#
+# ── Desktop ──
+#   → WinUIAdapter, AppKitAdapter, GTKAdapter
 #
 # Compare: syncs/framework/compiler-pipeline.sync in COPF
 # ============================================================
@@ -188,4 +195,267 @@ where {
 }
 then {
   VanillaAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ══════════════════════════════════════════════════════════════
+# JS-Runtime Native Adapters
+# ══════════════════════════════════════════════════════════════
+
+
+# ── React Native ──────────────────────────────────────────────
+
+sync NormalizeReactNativeFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "react-native"; status: "active" }
+}
+then {
+  ReactNativeAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeReactNativeFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "react-native"; status: "active" }
+}
+then {
+  ReactNativeAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── NativeScript ──────────────────────────────────────────────
+
+sync NormalizeNativeScriptFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "nativescript"; status: "active" }
+}
+then {
+  NativeScriptAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeNativeScriptFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "nativescript"; status: "active" }
+}
+then {
+  NativeScriptAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ══════════════════════════════════════════════════════════════
+# Apple Platform Adapters
+# ══════════════════════════════════════════════════════════════
+
+
+# ── SwiftUI ───────────────────────────────────────────────────
+
+sync NormalizeSwiftUIFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "swiftui"; status: "active" }
+}
+then {
+  SwiftUIAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeSwiftUIFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "swiftui"; status: "active" }
+}
+then {
+  SwiftUIAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── WatchKit (watchOS) ────────────────────────────────────────
+
+sync NormalizeWatchKitFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "watchkit"; status: "active" }
+}
+then {
+  WatchKitAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeWatchKitFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "watchkit"; status: "active" }
+}
+then {
+  WatchKitAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ══════════════════════════════════════════════════════════════
+# Android Platform Adapters
+# ══════════════════════════════════════════════════════════════
+
+
+# ── Jetpack Compose ───────────────────────────────────────────
+
+sync NormalizeComposeFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "compose"; status: "active" }
+}
+then {
+  ComposeAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeComposeFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "compose"; status: "active" }
+}
+then {
+  ComposeAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── Wear Compose (Wear OS) ───────────────────────────────────
+
+sync NormalizeWearComposeFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "wear-compose"; status: "active" }
+}
+then {
+  WearComposeAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeWearComposeFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "wear-compose"; status: "active" }
+}
+then {
+  WearComposeAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ══════════════════════════════════════════════════════════════
+# Desktop Platform Adapters
+# ══════════════════════════════════════════════════════════════
+
+
+# ── WinUI 3 (Windows) ────────────────────────────────────────
+
+sync NormalizeWinUIFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "winui"; status: "active" }
+}
+then {
+  WinUIAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeWinUIFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "winui"; status: "active" }
+}
+then {
+  WinUIAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── AppKit (macOS) ────────────────────────────────────────────
+
+sync NormalizeAppKitFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "appkit"; status: "active" }
+}
+then {
+  AppKitAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeAppKitFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "appkit"; status: "active" }
+}
+then {
+  AppKitAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── GTK 4 (Linux) ────────────────────────────────────────────
+
+sync NormalizeGTKFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "gtk"; status: "active" }
+}
+then {
+  GTKAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeGTKFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "gtk"; status: "active" }
+}
+then {
+  GTKAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
 }

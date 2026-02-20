@@ -1,0 +1,36 @@
+@version(1)
+concept WearComposeAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into Wear OS Compose bindings.
+    Constrained variant of ComposeAdapter for Android wearables:
+    round display support, rotary input (crown), reduced animations,
+    Horologist components. Maps to Wear-specific Composables
+    (ScalingLazyColumn, PositionIndicator, TimeText).
+    Implementation in Kotlin, runs natively on Wear OS.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to Wear Compose bindings.
+        Convert onclick to Modifier.clickable. Constrain layout
+        to ScalingLazyColumn. Map rotary input to scroll/value-change.
+        Apply round display edge-aware padding.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to Wear Compose.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+  }
+}

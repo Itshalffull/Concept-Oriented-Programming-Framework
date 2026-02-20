@@ -1,0 +1,35 @@
+@version(1)
+concept NativeScriptAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into NativeScript-specific
+    bindings. Transforms COIF's generic event model into
+    NativeScript conventions: tap/loaded events, CSS-subset
+    styling, native view hierarchy (StackLayout, GridLayout,
+    Label, Button). Implementation in TypeScript, runs on
+    NativeScript runtime.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to NativeScript bindings.
+        Convert onclick to tap. Convert class to NativeScript CSS.
+        Map layout to StackLayout/GridLayout/FlexboxLayout.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to NativeScript.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+  }
+}

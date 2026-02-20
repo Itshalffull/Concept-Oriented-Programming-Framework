@@ -1,0 +1,35 @@
+@version(1)
+concept AppKitAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into AppKit-specific bindings.
+    Transforms COIF's generic event model into AppKit conventions:
+    NSView subclasses, target-action pattern, Auto Layout constraints,
+    NSStackView layout. For macOS apps that need AppKit (not SwiftUI).
+    Implementation in Swift, runs natively on macOS.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to AppKit bindings.
+        Convert onclick to target-action. Convert class to
+        NSAppearance properties. Map layout to Auto Layout
+        constraints or NSStackView.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to AppKit.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+  }
+}

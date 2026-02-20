@@ -14,14 +14,26 @@ import type { ConceptHandler } from '../../../kernel/src/types.js';
 const RELATION = 'adapter';
 
 const VALID_FRAMEWORKS = [
+  // Web
   'react',
   'solid',
   'vue',
   'svelte',
   'ink',
   'vanilla',
+  // JS-runtime native
   'react-native',
-  'angular',
+  'nativescript',
+  // Apple
+  'swiftui',
+  'watchkit',
+  // Android
+  'compose',
+  'wear-compose',
+  // Desktop
+  'winui',
+  'appkit',
+  'gtk',
 ];
 
 export const frameworkadapterHandler: ConceptHandler = {
