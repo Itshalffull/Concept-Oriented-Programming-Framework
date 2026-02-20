@@ -1,0 +1,39 @@
+@version(1)
+concept BrowserAdapter [A] {
+
+  purpose {
+    Translate Navigator transitions, Shell zones, and platform events
+    into browser-specific primitives. Maps destinations to URL
+    pushState/replaceState, zones to DOM layout regions, overlays
+    to portal divs, and popstate/hashchange events to Navigator
+    actions. Handles deep link parsing and URL pattern matching.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map platform-neutral navigation/zone/overlay props to
+        browser primitives. Convert destination to URL via
+        urlPattern. Map zone roles: navigated to main content
+        area, persistent to sidebar/header, transient to
+        notification area. Map overlays to portal div insertion.
+        Map back events to history.pushState/popstate.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to browser.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"urlPattern\": \"/articles/:id\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

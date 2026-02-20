@@ -1,0 +1,42 @@
+@version(1)
+concept WatchAdapter [A] {
+
+  purpose {
+    Translate Navigator transitions, Shell zones, and platform events
+    into watch-specific primitives. Maps destinations to single-focus
+    full-screen pages (WatchOS page list, Wear OS tiles), zones to
+    the single primary view (watch only supports one zone), overlays
+    to haptic alerts, and crown press / hardware button events to
+    Navigator actions. Enforces auto-save on navigation since watch
+    users cannot easily recover unsaved state.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map platform-neutral navigation/zone/overlay props to
+        watch primitives. Convert destination to full-screen
+        page push. Map zone roles: only "navigated" to full
+        screen, silently skip persistent/transient (watch has
+        no sidebar or notification area). Map overlays to
+        haptic alert. Map crown press to Navigator/back.
+        Inject auto-save trigger before navigation.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to watch.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"type\": \"navigation\", \"destination\": \"heartRate\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

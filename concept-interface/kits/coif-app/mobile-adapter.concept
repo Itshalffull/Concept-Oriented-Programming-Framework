@@ -1,0 +1,40 @@
+@version(1)
+concept MobileAdapter [A] {
+
+  purpose {
+    Translate Navigator transitions, Shell zones, and platform events
+    into mobile-specific primitives. Maps destinations to React
+    Navigation stack/tab/drawer pushes, zones to bottom tab bar
+    and stack screens, overlays to modal sheets, and hardware back
+    button / swipe-back gestures to Navigator actions. Handles
+    deep link config and push notification navigation.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map platform-neutral navigation/zone/overlay props to
+        mobile primitives. Convert destination to stack push
+        via stackBehavior hint. Map zone roles: navigated to
+        stack screen, persistent to bottom tab bar, transient
+        to toast. Map overlays to modal sheet presentation.
+        Map hardware back and swipe-back to Navigator/back.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to mobile.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"stackBehavior\": \"push\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

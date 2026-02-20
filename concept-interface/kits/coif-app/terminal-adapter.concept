@@ -1,0 +1,42 @@
+@version(1)
+concept TerminalAdapter [A] {
+
+  purpose {
+    Translate Navigator transitions, Shell zones, and platform events
+    into terminal-specific primitives. Maps destinations to screen
+    buffer switches (clear + render), zones to main buffer and
+    status line, overlays to floating text boxes, and Escape key
+    to Navigator/back. No URL persistence, no history beyond the
+    current session. Smallest adapter (~80 LOC) — terminal is
+    text-only with keyboard-driven interaction.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map platform-neutral navigation/zone/overlay props to
+        terminal primitives. Convert destination to screen
+        buffer clear + render. Map zone roles: navigated to
+        main buffer, persistent to status line, transient
+        ignored (terminal has no toast equivalent). Map
+        overlays to floating text box. Map Escape to
+        Navigator/back. No URL or deep link support.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to terminal.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"type\": \"navigation\", \"destination\": \"logs\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

@@ -1,0 +1,41 @@
+@version(1)
+concept DesktopAdapter [A] {
+
+  purpose {
+    Translate Navigator transitions, Shell zones, and platform events
+    into desktop-specific primitives. Maps destinations to window
+    focus/creation, zones to panels and main window regions, overlays
+    to modal dialogs, and keyboard shortcuts (Cmd+[, Alt+Left) to
+    Navigator actions. Supports multi-window management, menubar
+    integration, and system tray interaction.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map platform-neutral navigation/zone/overlay props to
+        desktop primitives. Convert destination to window focus
+        or new window via windowConfig hint. Map zone roles:
+        navigated to main window, persistent to panel/sidebar,
+        transient to notification. Map overlays to modal dialog.
+        Map Cmd+[/Alt+Left to Navigator/back, window close to
+        Navigator cleanup.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to desktop.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"type\": \"navigation\", \"destination\": \"settings\", \"windowConfig\": { \"reuse\": true } }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

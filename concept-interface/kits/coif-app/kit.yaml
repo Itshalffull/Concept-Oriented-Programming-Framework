@@ -3,8 +3,9 @@ kit:
   version: 0.1.0
   description: >
     Application orchestration: navigation, lifecycle management,
-    network transport, platform composition. All concepts are
-    platform-agnostic; PlatformAdapter handles platform specifics.
+    network transport, platform composition. PlatformAdapter
+    provides generic registration; per-platform adapters (Browser,
+    Mobile, Desktop, Watch, Terminal) handle platform specifics.
 
 concepts:
   Navigator:
@@ -22,6 +23,21 @@ concepts:
   PlatformAdapter:
     spec: ./platform-adapter.concept
     params: { D: { as: platform-adapter-ref } }
+  BrowserAdapter:
+    spec: ./browser-adapter.concept
+    params: { A: { as: browser-adapter-ref } }
+  MobileAdapter:
+    spec: ./mobile-adapter.concept
+    params: { A: { as: mobile-adapter-ref } }
+  DesktopAdapter:
+    spec: ./desktop-adapter.concept
+    params: { A: { as: desktop-adapter-ref } }
+  WatchAdapter:
+    spec: ./watch-adapter.concept
+    params: { A: { as: watch-adapter-ref } }
+  TerminalAdapter:
+    spec: ./terminal-adapter.concept
+    params: { A: { as: terminal-adapter-ref } }
 
 syncs:
   required:
@@ -56,6 +72,8 @@ syncs:
       name: ShellOverlayToPlatform
     - path: ./syncs/navigator-go-assigns-host-to-shell.sync
       name: NavigatorGoAssignsHostToShell
+    - path: ./syncs/platform-pipeline.sync
+      name: PlatformPipeline
 
 dependencies:
   - coif-core: ">=0.2.0"
