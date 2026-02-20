@@ -3,7 +3,10 @@
 #
 # Route the library Renderer's content-to-render-tree output
 # through COIF's framework adapter for framework-specific
-# normalization.
+# normalization. Uses the same FrameworkAdapter dispatch path
+# as MachineToFrameworkAdapter — the adapter-pipeline.sync
+# in coif-render routes to the correct per-framework adapter
+# concept (ReactAdapter, SolidAdapter, etc.).
 # ============================================================
 
 sync RendererFeedsAdapter [eager]

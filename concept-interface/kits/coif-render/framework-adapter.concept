@@ -2,11 +2,14 @@
 concept FrameworkAdapter [R] {
 
   purpose {
-    Framework adapter registry. Translates Machine connect() output
-    into framework-specific bindings. Implements normalizeProps()
-    — the thin layer between COIF's generic event model and
-    framework conventions (React SyntheticEvent, Solid native
-    events, Vue v-on). Each adapter is ~200 LOC.
+    Framework adapter registry and lifecycle management. Tracks which
+    framework adapters are available, their status, and mount targets.
+    Each registered framework has a corresponding adapter concept
+    (ReactAdapter, SolidAdapter, VueAdapter, etc.) that handles
+    prop normalization via the adapter pipeline sync — mirroring
+    how COPF's per-language gen concepts (TypeScriptGen, RustGen)
+    are wired via compiler-pipeline.sync. Adding a new framework
+    requires a new adapter concept + one sync rule.
   }
 
   state {

@@ -2,8 +2,18 @@
 # MachineToFrameworkAdapter — coif-component recommended sync
 #
 # When a machine produces framework-neutral props via connect(),
-# send them to the active framework adapter for normalization
-# into framework-specific bindings (React, Solid, Vue, etc.).
+# route them to the active per-framework adapter concept for
+# normalization into framework-specific bindings.
+#
+# This sync is the trigger — the actual normalization is handled
+# by the adapter-pipeline.sync in coif-render, which routes to
+# the correct per-framework adapter concept (ReactAdapter,
+# SolidAdapter, etc.). This mirrors how COPF's SchemaGen
+# completion triggers per-language gen syncs in
+# compiler-pipeline.sync.
+#
+# For backward compatibility, FrameworkAdapter/normalize is
+# also available as a direct dispatch path.
 # ============================================================
 
 sync MachineToFrameworkAdapter [eager]

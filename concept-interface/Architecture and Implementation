@@ -2,8 +2,8 @@
 
 ## Architecture & Implementation Specification
 
-**Version:** 0.2.0
-**Date:** 2026-02-19
+**Version:** 0.3.0
+**Date:** 2026-02-20
 **Companion to:** COPF v0.19.0
 
 ### Changelog
@@ -12,6 +12,7 @@
 |---------|------|---------|
 | 0.1.0 | 2026-02-19 | Initial specification. 18 concepts across 4 kits. |
 | 0.2.0 | 2026-02-19 | Concept Library integration. 4 renames (Token→DesignToken, Component→Widget, Renderer→FrameworkAdapter, Schema→UISchema) to resolve name collisions with library concepts. Replaces library FormBuilder, DisplayMode, ExposedFilter. 16 new cross-system syncs binding COIF to Library Schema, View, Validator, Workflow, EventBus, Notification, ContentParser, Intent. Core pipeline: UISchema → Element → Widget → FrameworkAdapter. |
+| 0.3.0 | 2026-02-20 | COPF idiom alignment. Per-framework adapter concepts (ReactAdapter, SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter) mirror COPF's per-language gen pattern. New adapter-pipeline.sync mirrors compiler-pipeline.sync. Progressive customization ladder rewritten from JS APIs to concept DSL. Framework extension model now matches language extension model: concept spec + implementation + pipeline sync rule. |
 
 ---
 
@@ -948,11 +949,13 @@ concept Slot [L] {
 concept FrameworkAdapter [R] {
 
   purpose {
-    Framework adapter registry. Translates Machine connect() output
-    into framework-specific bindings. Implements normalizeProps()
-    — the thin layer between COIF's generic event model and
-    framework conventions (React SyntheticEvent, Solid native
-    events, Vue v-on). Each adapter is ~200 LOC.
+    Framework adapter registry and lifecycle management. Tracks which
+    framework adapters are available, their status, and mount targets.
+    Each registered framework has a corresponding adapter concept
+    (ReactAdapter, SolidAdapter, etc.) that handles the actual
+    prop normalization — this concept manages the registry only.
+    Mirrors COPF's Registry concept: registration, discovery,
+    and lifecycle management without domain logic.
   }
 
   state {
@@ -1002,6 +1005,49 @@ concept FrameworkAdapter [R] {
   }
 }
 ```
+
+### 3.10.1 Per-Framework Adapter Concepts
+
+Each supported framework has its own adapter concept that handles prop normalization. This mirrors COPF's per-language gen pattern: just as `TypeScriptGen`, `RustGen`, and `SwiftGen` each consume a `ConceptManifest` to produce language-specific code, each framework adapter concept consumes framework-neutral props (from `Machine/connect`) to produce framework-specific bindings.
+
+Adding a new framework requires creating a new adapter concept + one sync rule in the adapter pipeline — no existing code changes. This is the same extension model as adding a new COPF language target.
+
+**Pattern (same for all framework adapters):**
+
+```
+@version(1)
+concept <Framework>Adapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into <Framework>-specific
+    bindings. Transforms COIF's generic event model into
+    <Framework> conventions.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to <Framework> bindings.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to <Framework>.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+  }
+}
+```
+
+**Shipped adapters:** ReactAdapter, SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter.
 
 ### 3.11 Surface
 
@@ -1567,7 +1613,7 @@ then {
 }
 ```
 
-*When a machine produces props, send to active renderer for normalization.*
+*When a machine produces props, send to active renderer for normalization. The adapter-pipeline sync (§4.3.1) then routes to the appropriate per-framework adapter concept.*
 
 ```
 sync DestroyMachineOnUnbind [eager]
@@ -1602,6 +1648,40 @@ then {
 ```
 
 *When a renderer registers, attach to any ready surface.*
+
+#### 4.3.1 Adapter Pipeline
+
+The adapter pipeline routes framework-neutral props to the correct per-framework adapter concept. This mirrors COPF's `compiler-pipeline.sync` — each framework gets its own sync rule, and adding a new framework means adding one rule.
+
+```
+# When props are produced, normalize for React
+sync NormalizeReact [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => [ machine: ?machine; props: ?props ]
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "react"; status: "active" }
+}
+then {
+  ReactAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+# When props are produced, normalize for Solid
+sync NormalizeSolid [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => [ machine: ?machine; props: ?props ]
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "solid"; status: "active" }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+```
+
+*Each framework adapter gets its own sync rule. Compare: `syncs/framework/compiler-pipeline.sync` in COPF, where each language gen gets its own sync.*
 
 ```
 sync ResizeTriggersViewport [eager]
@@ -1785,6 +1865,26 @@ concepts:
   FrameworkAdapter:
     spec: ./framework-adapter.concept
     params: { R: { as: adapter-ref } }
+  # Per-framework adapter concepts — mirrors COPF's per-language gen pattern.
+  # Adding a new framework: create <framework>-adapter.concept + one sync rule.
+  ReactAdapter:
+    spec: ./react-adapter.concept
+    params: { A: { as: adapter-ref } }
+  SolidAdapter:
+    spec: ./solid-adapter.concept
+    params: { A: { as: adapter-ref } }
+  VueAdapter:
+    spec: ./vue-adapter.concept
+    params: { A: { as: adapter-ref } }
+  SvelteAdapter:
+    spec: ./svelte-adapter.concept
+    params: { A: { as: adapter-ref } }
+  InkAdapter:
+    spec: ./ink-adapter.concept
+    params: { A: { as: adapter-ref } }
+  VanillaAdapter:
+    spec: ./vanilla-adapter.concept
+    params: { A: { as: adapter-ref } }
   Surface:
     spec: ./surface.concept
     params: { F: { as: surface-ref } }
@@ -1798,6 +1898,11 @@ concepts:
 syncs:
   required:
     - path: ./syncs/attach-adapter-to-surface.sync
+    - path: ./syncs/adapter-pipeline.sync
+      name: AdapterPipeline
+      description: >
+        Per-framework normalization syncs. Mirrors COPF's
+        compiler-pipeline.sync — one sync rule per framework.
   recommended:
     - path: ./syncs/resize-triggers-viewport.sync
       name: ResizeTriggersViewport
@@ -1807,22 +1912,22 @@ syncs:
 infrastructure:
   adapters:
     - name: react
-      path: ./adapters/react/
+      concept: ReactAdapter
       description: React 18+ with hooks (useCoif, useSignal, useMachine)
     - name: solid
-      path: ./adapters/solid/
+      concept: SolidAdapter
       description: Solid.js with reactive primitives
     - name: vue
-      path: ./adapters/vue/
+      concept: VueAdapter
       description: Vue 3 Composition API
     - name: svelte
-      path: ./adapters/svelte/
+      concept: SvelteAdapter
       description: Svelte 5 with runes
     - name: ink
-      path: ./adapters/ink/
+      concept: InkAdapter
       description: Ink (React for terminal)
     - name: vanilla
-      path: ./adapters/vanilla/
+      concept: VanillaAdapter
       description: Framework-free DOM APIs
 ```
 
@@ -2274,150 +2379,233 @@ interface:
 | **native** | React Native components | Mobile apps | ~25KB core |
 | **edge** | Worker-compatible bundle | Cloudflare/Vercel edge | ~20KB |
 
-### 7.3 Framework Adapter Interface
+### 7.3 Framework Adapter Pattern
 
-Each adapter is ~200 LOC implementing:
+Adding a framework adapter to COIF mirrors adding a language target to COPF. Both follow the same three-step process:
 
-```typescript
-interface CoifAdapter {
-  normalizeProps(props: CoifProps): FrameworkProps;
-  createSignal<T>(initial: T): [get: () => T, set: (v: T) => void];
-  useSignal<T>(signal: CoifSignal<T>): T;
-  useMachine(component: string, config?: Record<string, unknown>): MachineAPI;
-  mount(tree: CoifTree, target: Element | string): Disposable;
+| Step | COPF (add language) | COIF (add framework) |
+|------|---------------------|----------------------|
+| 1. Concept spec | `specs/framework/<lang>-gen.concept` | `kits/coif-render/<framework>-adapter.concept` |
+| 2. Implementation | `implementations/typescript/framework/<lang>-gen.impl.ts` | `generated/concept-interface/typescript/<framework>adapter.impl.ts` |
+| 3. Pipeline sync | Add sync rule in `compiler-pipeline.sync` | Add sync rule in `adapter-pipeline.sync` |
+
+**Step 1 — Concept spec** (copy an existing adapter, change name + purpose):
+
+```
+@version(1)
+concept AngularAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into Angular-specific bindings.
+    Transforms COIF's generic event model into Angular conventions:
+    (event) output bindings, [property] input bindings, NgZone
+    change detection integration.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to Angular bindings.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to Angular.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+  }
 }
 ```
 
-**React adapter example:**
+**Step 2 — Implementation** follows the standard COPF handler pattern:
 
-```typescript
-// @coif/react — ~200 LOC
-import { useSyncExternalStore, useRef, useEffect } from 'react';
+```
+import type { ConceptHandler } from '../../../kernel/src/types.js';
 
-export function useSignal<T>(signal: CoifSignal<T>): T {
-  return useSyncExternalStore(
-    signal.subscribe, signal.getSnapshot, signal.getServerSnapshot
-  );
+export const angularAdapterHandler: ConceptHandler = {
+  async normalize(input, storage) {
+    // ... Angular-specific prop normalization
+    return { variant: 'ok', adapter: input.adapter, normalized };
+  },
+};
+```
+
+**Step 3 — Pipeline sync** (one rule in `adapter-pipeline.sync`):
+
+```
+sync NormalizeAngular [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => [ machine: ?machine; props: ?props ]
 }
-
-export function useMachine(component: string, config?: Record<string, unknown>) {
-  const ref = useRef<MachineInstance>(null);
-  if (!ref.current) ref.current = coifRuntime.spawnMachine(component, config);
-
-  const state = useSignal(ref.current.stateSignal);
-  const props = ref.current.connect(state);
-  const normalized = normalizeReactProps(props);
-
-  useEffect(() => () => ref.current?.destroy(), []);
-  return { state, props: normalized, send: ref.current.send };
+where {
+  FrameworkAdapter: { ?adapter framework: "angular"; status: "active" }
 }
-
-export function useBinding(conceptUri: string, mode: BindingMode = 'coupled') {
-  const ref = useRef<BindingInstance>(null);
-  if (!ref.current) ref.current = coifRuntime.createBinding(conceptUri, mode);
-
-  const data = useSignal(ref.current.dataSignal);
-  const status = useSignal(ref.current.statusSignal);
-
-  useEffect(() => () => ref.current?.unbind(), []);
-  return { data, status, invoke: ref.current.invoke, refresh: ref.current.sync };
+then {
+  AngularAdapter/normalize: [ adapter: ?adapter; props: ?props ]
 }
 ```
 
-**Usage:**
-
-```tsx
-import { useBinding, useMachine } from '@coif/react';
-import { CoifForm, CoifList } from '@coif/react/components';
-
-function ArticleEditor() {
-  const articles = useBinding('urn:app/Article');
-  const dialog = useMachine('dialog', { open: false });
-
-  return (
-    <div>
-      <CoifList binding={articles} view="list" />
-      <button {...dialog.props.getTriggerProps()}>New</button>
-      {dialog.state.open && (
-        <div {...dialog.props.getContentProps()}>
-          <CoifForm binding={articles} view="create" />
-        </div>
-      )}
-    </div>
-  );
-}
-```
+No existing code changes. The engine evaluates all pipeline syncs — only the one whose `where` clause matches the active framework fires. Compare `syncs/framework/compiler-pipeline.sync` in COPF.
 
 ---
 
 ## 8. Progressive Customization Ladder
 
-### Level 0: Zero Config
-```typescript
-const ArticleUI = coif.auto('urn:app/Article');
-// Generates complete CRUD: list, detail, create, edit views
+Every level uses the same mechanism COPF uses: `.concept` specs, syncs, and concept actions. No framework-specific API surfaces until Level 4, where framework-native rendering code is unavoidable.
+
+### Level 0: Zero Config (deployment manifest only)
+
+No code, no configuration. Deploy a concept with COIF kits and the engine auto-generates the full interface via the sync pipeline.
+
+```yaml
+# app.deploy.yaml — just list the concept and COIF kits
+app:
+  name: my-app
+
+kits:
+  - name: coif-core
+  - name: coif-component
+  - name: coif-render
+  - name: coif-theme
+
+concepts:
+  - spec: ./article.concept
+
+interface:
+  renderer: react
+  surface:
+    kind: browser-dom
+    mountPoint: "#app"
 ```
 
-### Level 1: Field-Level
-```typescript
-const ArticleUI = coif.auto('urn:app/Article', {
-  fields: {
-    title: { placeholder: 'Enter title...' },
-    body: { widget: 'rich-text', rows: 20 },
-    createdAt: { hidden: true },
-  },
-});
+*The engine fires: Binding/bind → UISchema/inspect → elements → Widget/get → Machine/spawn → Machine/connect → ReactAdapter/normalize. Complete CRUD interface with zero custom code.*
+
+### Level 1: Field-Level (interface section in .concept spec)
+
+Add an `interface` section to the concept spec — flat, declarative key-value pairs. No JavaScript.
+
 ```
+concept Article [A, U] {
 
-### Level 2: View-Level
-```typescript
-const ArticleUI = coif.auto('urn:app/Article', {
-  views: {
-    list: {
-      columns: ['title', 'author', 'published', 'updatedAt'],
-      defaultSort: { field: 'updatedAt', direction: 'desc' },
-      pageSize: 25,
-    },
-    detail: {
-      layout: 'sidebar',
-      sections: [
-        { name: 'content', fields: ['title', 'body'] },
-        { name: 'meta', fields: ['author', 'published', 'createdAt'] },
-      ],
-    },
-  },
-});
-```
+  state {
+    title: A -> String
+    body: A -> String
+    published: A -> Bool
+    createdAt: A -> DateTime
+  }
 
-### Level 3: Widget-Level (Slots)
-```tsx
-const ArticleUI = coif.auto('urn:app/Article', {
-  slots: {
-    'list.row': ({ data }) => <CustomArticleRow article={data} />,
-    'detail.header': ({ data }) => <HeroImage src={data.coverImage} />,
-    'form.body': ({ field, onChange }) => <MyEditor value={field.value} onChange={onChange} />,
-  },
-});
-```
+  actions { ... }
 
-### Level 4: Full Custom (Headless Hooks)
-```tsx
-function CustomArticleEditor() {
-  const articles = useBinding('urn:app/Article');
-  const form = useMachine('form', {
-    fields: articles.schema.createFields,
-    onSubmit: (v) => articles.invoke('create', v),
-  });
-
-  return (
-    <form {...form.props.getRootProps()}>
-      <input {...form.props.getFieldProps('title')} className="custom" />
-      <RichEditor {...form.props.getFieldProps('body')} />
-      <button {...form.props.getSubmitProps()}>Create</button>
-    </form>
-  );
+  interface {
+    field title {
+      widget: "text-input"
+      placeholder: "Enter article title..."
+      validation: { minLength: "1"; maxLength: "200" }
+    }
+    field body {
+      widget: "rich-text"
+      label: "Body"
+    }
+    field createdAt {
+      widget: "datetime-display"
+      readOnly: "true"
+    }
+  }
 }
 ```
+
+*UISchema/inspect reads the `interface` section and overrides defaults. The pipeline runs the same way — just with customized widget selections.*
+
+### Level 2: View-Level (interface section view mappings)
+
+Add `view` entries to the `interface` section for layout customization.
+
+```
+  interface {
+    field title { ... }
+    field body { ... }
+
+    view list {
+      columns: "title, author, published, updatedAt"
+      defaultSort: "updatedAt"
+      sortDirection: "desc"
+      searchable: "title, body"
+    }
+    view detail {
+      layout: "sidebar"
+      sections: "content: title, body; meta: author, published, createdAt"
+      actions: "update, publish, delete"
+    }
+    view create {
+      fields: "title, body"
+      submit: "create"
+    }
+  }
+```
+
+*Still flat DSL, still no framework code. The UISchema concept generates element trees for each view, which the Widget and Layout concepts render.*
+
+### Level 3: Widget-Level (Slot concept + syncs)
+
+Replace specific parts of generated UI using the Slot concept and syncs. No framework-specific API — composition via concept actions.
+
+```
+# Fill the form body slot with a custom rich-text editor widget
+sync CustomArticleEditor [eager]
+when {
+  Machine/spawn: [ machine: ?m; widget: "form" ]
+    => ok(machine: ?m)
+}
+where {
+  Slot: { ?slot name: "body"; component: "form" }
+}
+then {
+  Slot/fill: [ slot: ?slot;
+    content: "{ \"widget\": \"custom-rich-text\", \"config\": { \"toolbar\": \"full\" } }" ]
+}
+
+# Fill the list row slot with a custom card layout
+sync CustomArticleRow [eager]
+when {
+  Machine/spawn: [ machine: ?m; widget: "listview" ]
+    => ok(machine: ?m)
+}
+where {
+  Slot: { ?slot name: "row"; component: "listview" }
+}
+then {
+  Slot/fill: [ slot: ?slot;
+    content: "{ \"widget\": \"article-card\", \"anatomy\": \"hero-image, title, excerpt\" }" ]
+}
+```
+
+*Composition through syncs — the same coordination mechanism COPF uses everywhere.*
+
+### Level 4: Full Custom (direct concept invocations)
+
+For fully custom rendering, invoke Machine and Binding concept actions directly. This is the only level where framework-specific code appears — and it's the implementation of a per-framework adapter concept, following the standard COPF handler pattern.
+
+```
+# The concept actions powering the custom UI:
+Binding/bind:   [ concept: "urn:app/Article"; mode: "coupled" ]
+Machine/spawn:  [ machine: "form-001"; widget: "form";
+                  context: "{ \"fields\": [\"title\", \"body\"] }" ]
+Machine/connect: [ machine: "form-001" ]
+  => ok(machine: "form-001"; props: { ... })
+Binding/invoke: [ binding: "b-001"; action: "create";
+                  input: "{ \"title\": \"...\", \"body\": \"...\" }" ]
+```
+
+*The framework adapter concept (ReactAdapter, SolidAdapter, etc.) transforms these props into framework-native code. The adapter implementation is the only place where framework-specific code lives — ~200 LOC following the standard COPF handler pattern.*
 
 ---
 
@@ -2486,16 +2674,16 @@ The pipeline now runs end-to-end via syncs: a Binding/bind triggers schema inspe
 
 ### Stage 2: Render Kit + React Adapter
 
-Deploy coif-render's 4 concepts (Renderer, Surface, Layout, Viewport) and 3 syncs (AttachAdapterToSurface, ResizeTriggersViewport, ViewportTriggersLayout). Build the React adapter (~200 LOC) as a Renderer implementation registered via FrameworkAdapter/register.
+Deploy coif-render's concepts: FrameworkAdapter (registry), ReactAdapter (first per-framework adapter), Surface, Layout, Viewport. Deploy syncs: AttachAdapterToSurface, adapter-pipeline (NormalizeReact rule), ResizeTriggersViewport, ViewportTriggersLayout.
 
-The adapter translates Machine/connect props to React bindings. The hooks API (useBinding, useMachine, useSignal) wraps COPF concept interactions in React idioms — but underneath, every data flow is a COPF action routed through the engine.
+The ReactAdapter concept normalizes Machine/connect props into React bindings — following the same concept + implementation + sync pattern as COPF's TypeScriptGen. The adapter-pipeline.sync routes props to ReactAdapter/normalize when the active framework is "react", just as compiler-pipeline.sync routes manifests to TypeScriptGen/generate.
 
 **Acceptance tests:**
 - FrameworkAdapter/register → engine fires AttachAdapterToSurface → renderer connected to surface
+- Machine/connect → engine fires NormalizeReact (adapter-pipeline) → ReactAdapter/normalize produces React bindings
 - Surface/resize → engine fires ResizeTriggersViewport → Viewport/observe → breakpoint signal updated
 - Viewport breakpoint change → engine fires ViewportTriggersLayout → layouts reconfigured
-- React useBinding('urn:app/TestConcept') produces working CRUD interface end-to-end
-- React useMachine('dialog') gives full headless control with proper ARIA
+- Full pipeline: concept spec → UISchema → elements → Widget → Machine → ReactAdapter → rendered UI
 
 ### Stage 3: Theme Kit
 
@@ -2511,21 +2699,22 @@ All theme changes propagate through the same engine: Theme/activate → engine f
 
 ### Stage 4: Additional Framework Adapters
 
-Build Solid, Vue, Svelte, Ink adapters (~200 LOC each). Each registers via FrameworkAdapter/register — the engine's AttachAdapterToSurface sync handles the rest. No adapter-specific wiring needed.
+Deploy SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter concepts with implementations. Add their sync rules to adapter-pipeline.sync. Each follows the same pattern as ReactAdapter — a concept spec (~35 LOC), an implementation (~200 LOC), and one sync rule (~10 LOC). This mirrors how COPF adds language targets: RustGen, SwiftGen, and SolidityGen each followed the TypeScriptGen pattern.
 
 **Acceptance tests:**
-- Same concept spec + same syncs → working interfaces in React, Solid, Vue, Svelte, Ink
-- Adapter switch is a single FrameworkAdapter/register action, no code changes to concepts or syncs
+- Same concept spec + same core syncs → working interfaces in React, Solid, Vue, Svelte, Ink
+- Adapter switch: FrameworkAdapter/register with different framework → engine evaluates adapter-pipeline → correct per-framework adapter fires
 - Ink adapter produces terminal UI from the same Machine/connect output that React uses
+- Adding a new adapter (e.g. AngularAdapter) requires zero changes to existing code — only new concept + impl + sync rule
 
 ### Stage 5: CDN, SSR, Native, and Edge Deployment
 
 Extend the deployment manifest to support all 5 modes. The COPF engine runs differently per target — in-process for bundled/CDN, server-side for SSR, on-device for native, request-scoped for edge — but the concepts and syncs are identical. Deploy targets are COPF runtime configurations (§8 of COPF spec), not COIF-specific code.
 
 **Acceptance tests:**
-- CDN mode: single `<script>` tag loads COIF runtime + engine + concepts, `coif.auto()` works
-- SSR mode: server renders HTML from Machine/connect output, client hydrates with React adapter
-- Native mode: React Native adapter renders same component tree on iOS/Android
+- CDN mode: single `<script>` tag loads COIF runtime + engine + concepts, zero-config deploy manifest produces working UI
+- SSR mode: server renders HTML from Machine/connect output, client hydrates with ReactAdapter
+- Native mode: ReactNativeAdapter renders same component tree on iOS/Android
 - Edge mode: Cloudflare Worker runs COPF engine with lite-query concepts, returns rendered HTML
 
 ---
@@ -2557,4 +2746,4 @@ COIF's theme system is foundational, not an afterthought. The default themes pro
 
 **Considered elevation.** Multi-layer shadows for realism. Dark mode: rgba(0,0,0,0.3) vs light mode's rgba(0,0,0,0.1). Elevation 0 is a 1px border, not "no shadow."
 
-The result: `coif.auto('urn:app/Article')` produces an interface that looks intentionally designed — this is the standard every token and default serves.
+The result: a zero-config deployment manifest with `spec: ./article.concept` produces an interface that looks intentionally designed — this is the standard every token and default serves.
