@@ -11,7 +11,7 @@ describe("FrameworkAdapter Concept", () => {
     it("registers a valid framework and returns ok", async () => {
       const storage = createInMemoryStorage();
       const result = await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "react", version: "19", normalizer: "reactNorm", mountFn: "reactMount" },
+        { renderer: "r-1", framework: "react", version: "19" },
         storage,
       );
       expect(result.variant).toBe("ok");
@@ -21,7 +21,7 @@ describe("FrameworkAdapter Concept", () => {
     it("returns duplicate for an invalid framework name", async () => {
       const storage = createInMemoryStorage();
       const result = await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "ember", version: "5", normalizer: "emberNorm", mountFn: "emberMount" },
+        { renderer: "r-1", framework: "ember", version: "5" },
         storage,
       );
       expect(result.variant).toBe("duplicate");
@@ -31,11 +31,11 @@ describe("FrameworkAdapter Concept", () => {
     it("returns duplicate when registering the same framework twice", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "react", version: "19", normalizer: "norm1", mountFn: "mount1" },
+        { renderer: "r-1", framework: "react", version: "19" },
         storage,
       );
       const result = await frameworkadapterHandler.register(
-        { renderer: "r-2", framework: "react", version: "18", normalizer: "norm2", mountFn: "mount2" },
+        { renderer: "r-2", framework: "react", version: "18" },
         storage,
       );
       expect(result.variant).toBe("duplicate");
@@ -45,11 +45,11 @@ describe("FrameworkAdapter Concept", () => {
     it("registers two different frameworks successfully", async () => {
       const storage = createInMemoryStorage();
       const r1 = await frameworkadapterHandler.register(
-        { renderer: "r-react", framework: "react", version: "19", normalizer: "reactNorm", mountFn: "reactMount" },
+        { renderer: "r-react", framework: "react", version: "19" },
         storage,
       );
       const r2 = await frameworkadapterHandler.register(
-        { renderer: "r-vue", framework: "vue", version: "3", normalizer: "vueNorm", mountFn: "vueMount" },
+        { renderer: "r-vue", framework: "vue", version: "3" },
         storage,
       );
       expect(r1.variant).toBe("ok");
@@ -57,59 +57,16 @@ describe("FrameworkAdapter Concept", () => {
       expect(r2.variant).toBe("ok");
       expect((r2 as any).renderer).toBe("r-vue");
     });
-  });
 
-  // ---------------------------------------------------------------
-  // normalize
-  // ---------------------------------------------------------------
-
-  describe("normalize", () => {
-    it("wraps valid JSON props with normalizer and framework metadata", async () => {
+    it("sets status to active on registration", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "react", version: "19", normalizer: "reactNorm", mountFn: "reactMount" },
+        { renderer: "r-1", framework: "solid", version: "1" },
         storage,
       );
-
-      const result = await frameworkadapterHandler.normalize(
-        { renderer: "r-1", props: '{"onClick":"handler_1","className":"btn"}' },
-        storage,
-      );
-      expect(result.variant).toBe("ok");
-
-      const normalized = JSON.parse((result as any).normalized);
-      expect(normalized.normalizer).toBe("reactNorm");
-      expect(normalized.framework).toBe("react");
-      expect(normalized.props).toEqual({ onClick: "handler_1", className: "btn" });
-    });
-
-    it("wraps non-JSON props string as {raw: props}", async () => {
-      const storage = createInMemoryStorage();
-      await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "solid", version: "1", normalizer: "solidNorm", mountFn: "solidMount" },
-        storage,
-      );
-
-      const result = await frameworkadapterHandler.normalize(
-        { renderer: "r-1", props: "not-valid-json" },
-        storage,
-      );
-      expect(result.variant).toBe("ok");
-
-      const normalized = JSON.parse((result as any).normalized);
-      expect(normalized.normalizer).toBe("solidNorm");
-      expect(normalized.framework).toBe("solid");
-      expect(normalized.props).toEqual({ raw: "not-valid-json" });
-    });
-
-    it("returns notfound for a nonexistent renderer", async () => {
-      const storage = createInMemoryStorage();
-      const result = await frameworkadapterHandler.normalize(
-        { renderer: "r-missing", props: '{"a":1}' },
-        storage,
-      );
-      expect(result.variant).toBe("notfound");
-      expect((result as any).message).toContain("r-missing");
+      const record = await storage.get("adapter", "r-1");
+      expect(record).not.toBeNull();
+      expect(record!.status).toBe("active");
     });
   });
 
@@ -121,7 +78,7 @@ describe("FrameworkAdapter Concept", () => {
     it("stores target-to-machine mapping and sets status to mounted", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "react", version: "19", normalizer: "norm", mountFn: "mount" },
+        { renderer: "r-1", framework: "react", version: "19" },
         storage,
       );
 
@@ -131,7 +88,6 @@ describe("FrameworkAdapter Concept", () => {
       );
       expect(result.variant).toBe("ok");
 
-      // Verify stored state
       const record = await storage.get("adapter", "r-1");
       expect(record).not.toBeNull();
       expect(record!.status).toBe("mounted");
@@ -152,7 +108,7 @@ describe("FrameworkAdapter Concept", () => {
     it("adds a second target to the same renderer without removing the first", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "svelte", version: "4", normalizer: "norm", mountFn: "mount" },
+        { renderer: "r-1", framework: "svelte", version: "4" },
         storage,
       );
 
@@ -181,7 +137,7 @@ describe("FrameworkAdapter Concept", () => {
     it("removes a target from mounts", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "vue", version: "3", normalizer: "norm", mountFn: "mount" },
+        { renderer: "r-1", framework: "vue", version: "3" },
         storage,
       );
       await frameworkadapterHandler.mount(
@@ -212,7 +168,7 @@ describe("FrameworkAdapter Concept", () => {
     it("returns notfound for a nonexistent target", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "ink", version: "4", normalizer: "norm", mountFn: "mount" },
+        { renderer: "r-1", framework: "ink", version: "4" },
         storage,
       );
 
@@ -224,10 +180,10 @@ describe("FrameworkAdapter Concept", () => {
       expect((result as any).message).toContain("t-nonexistent");
     });
 
-    it("reverts status to registered when the last mount is removed", async () => {
+    it("reverts status to active when the last mount is removed", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "angular", version: "17", normalizer: "norm", mountFn: "mount" },
+        { renderer: "r-1", framework: "angular", version: "17" },
         storage,
       );
       await frameworkadapterHandler.mount(
@@ -238,9 +194,41 @@ describe("FrameworkAdapter Concept", () => {
       await frameworkadapterHandler.unmount({ renderer: "r-1", target: "t-1" }, storage);
 
       const record = await storage.get("adapter", "r-1");
-      expect(record!.status).toBe("registered");
+      expect(record!.status).toBe("active");
       const mounts = JSON.parse(record!.mounts as string);
       expect(Object.keys(mounts)).toHaveLength(0);
+    });
+  });
+
+  // ---------------------------------------------------------------
+  // unregister
+  // ---------------------------------------------------------------
+
+  describe("unregister", () => {
+    it("removes adapter from registry", async () => {
+      const storage = createInMemoryStorage();
+      await frameworkadapterHandler.register(
+        { renderer: "r-1", framework: "react", version: "19" },
+        storage,
+      );
+
+      const result = await frameworkadapterHandler.unregister(
+        { renderer: "r-1" },
+        storage,
+      );
+      expect(result.variant).toBe("ok");
+
+      const record = await storage.get("adapter", "r-1");
+      expect(record).toBeNull();
+    });
+
+    it("returns notfound for nonexistent renderer", async () => {
+      const storage = createInMemoryStorage();
+      const result = await frameworkadapterHandler.unregister(
+        { renderer: "r-missing" },
+        storage,
+      );
+      expect(result.variant).toBe("notfound");
     });
   });
 
@@ -249,12 +237,12 @@ describe("FrameworkAdapter Concept", () => {
   // ---------------------------------------------------------------
 
   describe("integration", () => {
-    it("register -> mount two targets -> unmount first -> verify mounted -> unmount second -> verify registered", async () => {
+    it("register -> mount two targets -> unmount first -> verify mounted -> unmount second -> verify active", async () => {
       const storage = createInMemoryStorage();
 
       // Step 1: register react
       const reg = await frameworkadapterHandler.register(
-        { renderer: "r-react", framework: "react", version: "19", normalizer: "reactNorm", mountFn: "reactMount" },
+        { renderer: "r-react", framework: "react", version: "19" },
         storage,
       );
       expect(reg.variant).toBe("ok");
@@ -300,9 +288,9 @@ describe("FrameworkAdapter Concept", () => {
       );
       expect(u2.variant).toBe("ok");
 
-      // Verify status reverted to registered
+      // Verify status reverted to active
       record = await storage.get("adapter", "r-react");
-      expect(record!.status).toBe("registered");
+      expect(record!.status).toBe("active");
       mounts = JSON.parse(record!.mounts as string);
       expect(Object.keys(mounts)).toHaveLength(0);
     });

@@ -1,0 +1,191 @@
+# ============================================================
+# Adapter Pipeline — coif-render framework adapter syncs
+#
+# Multi-framework adapter pipeline: both Machine/connect and
+# Renderer/render produce framework-neutral props, and
+# per-framework adapters (React, Solid, Vue, Svelte, Ink,
+# Vanilla) each normalize them via their own sync rules.
+#
+# Adding a new framework adapter requires only a new adapter
+# concept + two sync rules in THIS file — no other code changes.
+# This is the single file to edit, matching how COPF's
+# compiler-pipeline.sync is the single file for adding
+# language targets.
+#
+# Triggers:
+#   Machine/connect  (component state machine produces props)
+#   Renderer/render  (library renderer produces render tree)
+#
+# Pipeline:
+#   Machine/connect  → ReactAdapter/normalize
+#   Renderer/render  → ReactAdapter/normalize
+#                    → SolidAdapter/normalize
+#                    → VueAdapter/normalize
+#                    → SvelteAdapter/normalize
+#                    → InkAdapter/normalize
+#                    → VanillaAdapter/normalize
+#
+# Compare: syncs/framework/compiler-pipeline.sync in COPF
+# ============================================================
+
+
+# ── React ──────────────────────────────────────────────────
+
+sync NormalizeReactFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "react"; status: "active" }
+}
+then {
+  ReactAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeReactFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "react"; status: "active" }
+}
+then {
+  ReactAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── Solid ──────────────────────────────────────────────────
+
+sync NormalizeSolidFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "solid"; status: "active" }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeSolidFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "solid"; status: "active" }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── Vue ────────────────────────────────────────────────────
+
+sync NormalizeVueFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vue"; status: "active" }
+}
+then {
+  VueAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeVueFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vue"; status: "active" }
+}
+then {
+  VueAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── Svelte ─────────────────────────────────────────────────
+
+sync NormalizeSvelteFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "svelte"; status: "active" }
+}
+then {
+  SvelteAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeSvelteFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "svelte"; status: "active" }
+}
+then {
+  SvelteAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── Ink (terminal) ─────────────────────────────────────────
+
+sync NormalizeInkFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "ink"; status: "active" }
+}
+then {
+  InkAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeInkFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "ink"; status: "active" }
+}
+then {
+  InkAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+
+# ── Vanilla DOM ────────────────────────────────────────────
+
+sync NormalizeVanillaFromMachine [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vanilla"; status: "active" }
+}
+then {
+  VanillaAdapter/normalize: [ adapter: ?adapter; props: ?props ]
+}
+
+sync NormalizeVanillaFromRenderer [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vanilla"; status: "active" }
+}
+then {
+  VanillaAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}

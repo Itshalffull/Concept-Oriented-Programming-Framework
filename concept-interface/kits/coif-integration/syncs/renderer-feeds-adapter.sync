@@ -1,19 +1,14 @@
 # ============================================================
 # RendererFeedsAdapter — coif-integration recommended sync
 #
-# Route the library Renderer's content-to-render-tree output
-# through COIF's framework adapter for framework-specific
-# normalization.
+# SUPERSEDED by adapter-pipeline.sync in coif-render.
+#
+# Previously this file contained per-framework sync rules for
+# Renderer/render → per-framework adapter normalization. These
+# rules now live in adapter-pipeline.sync alongside the
+# Machine/connect rules, so that adding a new framework only
+# requires editing ONE file.
+#
+# This file is retained for documentation — the actual routing
+# lives in coif-render/syncs/adapter-pipeline.sync.
 # ============================================================
-
-sync RendererFeedsAdapter [eager]
-when {
-  Renderer/render: [ element: ?el ]
-    => ok(renderTree: ?tree)
-}
-where {
-  FrameworkAdapter: { ?adapter status: "active" }
-}
-then {
-  FrameworkAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
-}

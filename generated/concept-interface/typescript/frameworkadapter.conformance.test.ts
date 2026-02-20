@@ -5,28 +5,28 @@ import { frameworkadapterHandler } from "./frameworkadapter.impl";
 
 describe("FrameworkAdapter conformance", () => {
 
-  it("invariant 1: after register, normalize behaves correctly", async () => {
+  it("invariant 1: after register, mount behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
     const r = "u-test-invariant-001";
 
     // --- AFTER clause ---
-    // register(renderer: r, framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount") -> ok(renderer: r)
+    // register(renderer: r, framework: "react", version: "19") -> ok(renderer: r)
     const step1 = await frameworkadapterHandler.register(
-      { renderer: r, framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" },
+      { renderer: r, framework: "react", version: "19" },
       storage,
     );
     expect(step1.variant).toBe("ok");
     expect((step1 as any).renderer).toBe(r);
 
     // --- THEN clause ---
-    // normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }") -> ok(normalized: _)
-    const step2 = await frameworkadapterHandler.normalize(
-      { renderer: r, props: "{ \"onClick\": \"handler_1\" }" },
+    // mount(renderer: r, machine: "dialog-001", target: "#app") -> ok(renderer: r)
+    const step2 = await frameworkadapterHandler.mount(
+      { renderer: r, machine: "dialog-001", target: "#app" },
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).normalized).toBeDefined();
+    expect((step2 as any).renderer).toBe(r);
   });
 
 });
