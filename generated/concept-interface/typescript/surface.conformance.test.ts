@@ -5,7 +5,7 @@ import { surfaceHandler } from "./surface.impl";
 
 describe("Surface conformance", () => {
 
-  it("invariant 1: after create, attach, resize behaves correctly", async () => {
+  it("invariant 1: after create, destroy behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
     const f = "u-test-invariant-001";
@@ -20,20 +20,43 @@ describe("Surface conformance", () => {
     expect((step1 as any).surface).toBe(f);
 
     // --- THEN clause ---
-    // attach(surface: f, renderer: "react-19") -> ok(surface: f)
-    const step2 = await surfaceHandler.attach(
-      { surface: f, renderer: "react-19" },
+    // destroy(surface: f) -> ok(surface: f)
+    const step2 = await surfaceHandler.destroy(
+      { surface: f },
       storage,
     );
     expect(step2.variant).toBe("ok");
     expect((step2 as any).surface).toBe(f);
-    // resize(surface: f, width: 1024, height: 768) -> ok(surface: f)
-    const step3 = await surfaceHandler.resize(
-      { surface: f, width: 1024, height: 768 },
+  });
+
+  it("mount and unmount lifecycle", async () => {
+    const storage = createInMemoryStorage();
+
+    const f = "u-test-mount-001";
+
+    // Create and attach a renderer
+    await surfaceHandler.create(
+      { surface: f, kind: "browser-dom", mountPoint: "#app" },
       storage,
     );
-    expect(step3.variant).toBe("ok");
-    expect((step3 as any).surface).toBe(f);
+    await surfaceHandler.attach(
+      { surface: f, renderer: "react-19" },
+      storage,
+    );
+
+    // Mount a tree
+    const mountResult = await surfaceHandler.mount(
+      { surface: f, tree: '{"type":"div"}', zone: "primary" },
+      storage,
+    );
+    expect(mountResult.variant).toBe("ok");
+
+    // Unmount from zone
+    const unmountResult = await surfaceHandler.unmount(
+      { surface: f, zone: "primary" },
+      storage,
+    );
+    expect(unmountResult.variant).toBe("ok");
   });
 
 });

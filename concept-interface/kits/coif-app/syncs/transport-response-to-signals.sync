@@ -1,0 +1,15 @@
+# TransportResponseToSignals — coif-app required sync
+# Route transport responses to concept signals
+
+sync TransportResponseToSignals [eager]
+  purpose: "Route transport responses to concept signals"
+when {
+  Transport/fetch: [ transport: ?transport ]
+    => [ transport: ?transport; response: ?data ]
+}
+where {
+  Binding: { ?binding endpoint: ?_ }
+}
+then {
+  Signal/batch: [ signals: ?data ]
+}

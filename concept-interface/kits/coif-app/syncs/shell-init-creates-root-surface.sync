@@ -1,0 +1,14 @@
+# ShellInitCreatesRootSurface — coif-app recommended sync
+# On initialization, create the root Surface and Layout
+
+sync ShellInitCreatesRootSurface [eager]
+  purpose: "On initialization, create the root Surface and Layout"
+when {
+  Shell/initialize: [ shell: ?shell; config: ?config ]
+    => [ shell: ?shell ]
+}
+then {
+  Surface/create: [ surface: ?shell; kind: "browser-dom";
+    mountPoint: "#app" ]
+  Layout/create: [ name: ?shell; kind: ?config ]
+}

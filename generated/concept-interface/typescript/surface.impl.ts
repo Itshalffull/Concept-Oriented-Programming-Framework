@@ -133,6 +133,102 @@ export const surfaceHandler: ConceptHandler = {
   },
 
   /**
+   * mount(surface, tree, zone)
+   *   -> ok(surface) | error(message) | notfound(message)
+   *
+   * Render a component tree to the surface. If zone specified,
+   * mount into that sub-region. Requires an attached renderer.
+   */
+  async mount(input, storage) {
+    const surface = input.surface as string;
+    const tree = input.tree as string;
+    const zone = (input.zone as string | null) ?? null;
+
+    const record = await storage.get(RELATION, surface);
+    if (!record) {
+      return {
+        variant: 'notfound',
+        message: `Surface "${surface}" not found`,
+      };
+    }
+
+    if (!record.renderer) {
+      return {
+        variant: 'error',
+        message: `Surface "${surface}" has no attached renderer`,
+      };
+    }
+
+    // Track mounted trees per zone
+    let mountedZones: Record<string, string>;
+    try {
+      mountedZones = JSON.parse((record.mountedZones as string) || '{}') as Record<string, string>;
+    } catch {
+      mountedZones = {};
+    }
+
+    const zoneKey = zone ?? '__root__';
+    mountedZones[zoneKey] = tree;
+
+    await storage.put(RELATION, surface, {
+      ...record,
+      status: 'mounted',
+      mountedZones: JSON.stringify(mountedZones),
+    });
+
+    return { variant: 'ok', surface };
+  },
+
+  /**
+   * unmount(surface, zone)
+   *   -> ok(surface) | notfound(message)
+   *
+   * Unmount component tree from surface or zone. If no zone,
+   * unmounts root.
+   */
+  async unmount(input, storage) {
+    const surface = input.surface as string;
+    const zone = (input.zone as string | null) ?? null;
+
+    const record = await storage.get(RELATION, surface);
+    if (!record) {
+      return {
+        variant: 'notfound',
+        message: `Surface "${surface}" not found`,
+      };
+    }
+
+    let mountedZones: Record<string, string>;
+    try {
+      mountedZones = JSON.parse((record.mountedZones as string) || '{}') as Record<string, string>;
+    } catch {
+      mountedZones = {};
+    }
+
+    const zoneKey = zone ?? '__root__';
+    if (!(zoneKey in mountedZones)) {
+      return {
+        variant: 'notfound',
+        message: zone
+          ? `Nothing mounted in zone "${zone}" on surface "${surface}"`
+          : `Nothing mounted on surface "${surface}"`,
+      };
+    }
+
+    delete mountedZones[zoneKey];
+
+    const hasMounts = Object.keys(mountedZones).length > 0;
+
+    await storage.put(RELATION, surface, {
+      ...record,
+      status: hasMounts ? 'mounted' : 'attached',
+      mountedZones: JSON.stringify(mountedZones),
+    });
+
+    return { variant: 'ok', surface };
+  },
+
+  /**
    * destroy(surface) -> ok(surface) | notfound(message)
    *
    * Destroys a surface, removing it from storage entirely.

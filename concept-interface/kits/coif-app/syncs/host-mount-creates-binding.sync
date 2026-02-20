@@ -1,0 +1,13 @@
+# HostMountCreatesBinding — coif-app required sync
+# When Host mounts, create Binding for the concept
+
+sync HostMountCreatesBinding [eager]
+  purpose: "When Host mounts, create Binding for the concept"
+when {
+  Host/mount: [ host: ?host; config: ?config ]
+    => [ host: ?host ]
+}
+then {
+  Binding/bind: [ binding: ?host; concept: ?config;
+                  mode: "coupled" ]
+}

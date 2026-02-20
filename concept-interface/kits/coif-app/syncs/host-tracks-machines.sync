@@ -1,0 +1,16 @@
+# HostTracksMachines — coif-app recommended sync
+# Register spawned machines with their owning Host
+
+sync HostTracksMachines [eager]
+  purpose: "Register spawned machines with their owning Host"
+when {
+  Machine/spawn: [ machine: ?machine ]
+    => [ machine: ?machine ]
+}
+where {
+  Host: { ?host status: "hydrating" }
+}
+then {
+  Host/updateConfig: [ host: ?host;
+    config: "{ \"addMachine\": \"?machine\" }" ]
+}

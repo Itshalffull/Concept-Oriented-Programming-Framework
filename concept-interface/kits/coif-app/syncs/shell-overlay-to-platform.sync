@@ -1,0 +1,15 @@
+# ShellOverlayToPlatform — coif-app recommended sync
+# Route overlay pushes through platform adapter
+
+sync ShellOverlayToPlatform [eager]
+  purpose: "Route overlay pushes through platform adapter"
+when {
+  Shell/pushOverlay: [ shell: ?shell; overlay: ?overlay; host: ?host ]
+    => [ shell: ?shell ]
+}
+where {
+  PlatformAdapter: { ?adapter status: "active" }
+}
+then {
+  PlatformAdapter/mapOverlay: [ adapter: ?adapter; overlay: ?overlay ]
+}

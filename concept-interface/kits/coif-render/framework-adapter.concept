@@ -2,20 +2,19 @@
 concept FrameworkAdapter [R] {
 
   purpose {
-    Framework adapter registry and lifecycle management. Tracks which
-    framework adapters are available, their status, and mount targets.
-    Each registered framework has a corresponding adapter concept
-    (ReactAdapter, SolidAdapter, VueAdapter, etc.) that handles
-    prop normalization via the adapter pipeline sync — mirroring
-    how COPF's per-language gen concepts (TypeScriptGen, RustGen)
-    are wired via compiler-pipeline.sync. Adding a new framework
-    requires a new adapter concept + one sync rule.
+    Framework adapter registry. Translates Machine connect() output
+    into framework-specific bindings. Implements normalizeProps()
+    — the thin layer between COIF's generic event model and
+    framework conventions (React SyntheticEvent, Solid native
+    events, Vue v-on). Each adapter is ~200 LOC.
   }
 
   state {
     framework: R -> String
     version: R -> String
     status: R -> String
+    normalizer: R -> String
+    mountFn: R -> String
   }
 
   capabilities {
@@ -23,37 +22,52 @@ concept FrameworkAdapter [R] {
   }
 
   actions {
-    action register(renderer: R, framework: String, version: String) {
+    action register(renderer: R, framework: String, version: String,
+                    normalizer: String, mountFn: String) {
       -> ok(renderer: R) {
         Register adapter. Framework: "react", "solid", "vue",
         "svelte", "ink", "vanilla", "react-native", "angular".
-        Sets status to "active". The corresponding per-framework
-        adapter concept handles normalization via the adapter
-        pipeline sync.
+        Sets status to "active".
       }
       -> duplicate(message: String) { Already registered. }
     }
 
+    action normalize(renderer: R, props: String) {
+      -> ok(normalized: String) { Transform to framework-specific bindings. }
+      -> notfound(message: String) { Not registered. }
+    }
+
     action mount(renderer: R, machine: String, target: String) {
-      -> ok(renderer: R) { Create and mount component tree at target. }
+      -> ok(renderer: R) { Create and mount a single machine's component. }
       -> error(message: String) { Mount failed. }
+    }
+
+    action render(renderer: R, tree: String, target: String) {
+      -> ok(renderer: R) {
+        Render a complete component tree to a target. Takes a tree
+        of machine props (collected from a Host's machine set),
+        composes them into a framework-specific component hierarchy,
+        and calls the framework's root mount function:
+        - React: ReactDOM.createRoot(target).render(tree)
+        - Solid: render(() => tree, target)
+        - Ink: render(tree)
+        - React Native: AppRegistry.registerComponent
+        Used by Host after collecting all spawned machines.
+      }
+      -> error(message: String) { Render failed. }
     }
 
     action unmount(renderer: R, target: String) {
       -> ok(renderer: R) { Unmount and clean up. }
       -> notfound(message: String) { Nothing mounted at target. }
     }
-
-    action unregister(renderer: R) {
-      -> ok(renderer: R) { Remove adapter from registry. }
-      -> notfound(message: String) { Not registered. }
-    }
   }
 
   invariant {
-    after register(renderer: r, framework: "react", version: "19")
+    after register(renderer: r, framework: "react", version: "19",
+                   normalizer: "reactNormalizer", mountFn: "reactMount")
       -> ok(renderer: r)
-    then mount(renderer: r, machine: "dialog-001", target: "#app")
-      -> ok(renderer: r)
+    then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
+      -> ok(normalized: _)
   }
 }

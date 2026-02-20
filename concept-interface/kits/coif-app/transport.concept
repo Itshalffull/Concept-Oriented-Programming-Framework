@@ -1,0 +1,108 @@
+@version(1)
+concept Transport [P] {
+
+  purpose {
+    Network communication for concept data synchronization.
+    Pluggable backends: REST, GraphQL, WebSocket, gRPC, local.
+    Handles request construction, auth injection, response parsing,
+    error classification, retry logic, request deduplication,
+    optimistic updates, and offline queueing.
+
+    Transport is to Binding as ContentStorage is to ContentNode —
+    the communication mechanism abstracted from the data model.
+    All transports work identically across platforms (browser,
+    mobile, watch, desktop, terminal).
+  }
+
+  state {
+    transports: P -> String
+    baseUrl: P -> option String
+    headers: P -> String
+    status: P -> String
+    retryPolicy: P -> String
+    cache: P -> String
+    pendingQueue: P -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(transport: P, config: String) {
+      -> ok(transport: P) {
+        Set up transport. Config: { type: "rest" | "graphql" |
+        "websocket" | "local", baseUrl, defaultHeaders,
+        retryPolicy, cacheTTL }.
+      }
+      -> invalid(message: String) { Config invalid. }
+    }
+
+    action fetch(transport: P, request: String) {
+      -> ok(transport: P, response: String) {
+        Execute a read request. Checks response cache first.
+        On miss, executes network request. Parses response,
+        maps to concept field structure. Returns JSON with
+        data + pagination metadata.
+      }
+      -> error(transport: P, status: Int, message: String) {
+        Request failed. Status: HTTP code (0 for network error).
+        Retries per policy before returning error.
+      }
+      -> offline(transport: P) { Network unavailable; request queued. }
+    }
+
+    action mutate(transport: P, request: String) {
+      -> ok(transport: P, response: String) {
+        Execute a write request (create, update, delete).
+        Supports optimistic updates: returns predicted response
+        immediately, reconciles when server responds.
+      }
+      -> error(transport: P, status: Int, message: String) { Mutation failed. }
+      -> conflict(transport: P, serverState: String) {
+        Optimistic update conflicted with server state.
+      }
+      -> offline(transport: P) { Mutation queued for when online. }
+    }
+
+    action subscribe(transport: P, channel: String) {
+      -> ok(transport: P, subscription: String) {
+        Open persistent connection (WebSocket, SSE, polling).
+        Delivers updates via Signal/write when messages arrive.
+      }
+      -> unsupported(message: String) { Transport doesn't support subscriptions. }
+      -> error(message: String) { Connection failed. }
+    }
+
+    action unsubscribe(transport: P, subscription: String) {
+      -> ok(transport: P) { Close subscription channel. }
+      -> notfound(message: String) { Subscription not found. }
+    }
+
+    action setAuth(transport: P, auth: String) {
+      -> ok(transport: P) {
+        Update auth credentials (bearer token, API key, cookie).
+        Applied to all subsequent requests. Triggers re-auth
+        when token expires.
+      }
+      -> invalid(message: String) { Auth config invalid. }
+    }
+
+    action flushQueue(transport: P) {
+      -> ok(transport: P, results: String) {
+        Replay queued offline mutations now that network available.
+        Returns results for each queued request.
+      }
+      -> error(message: String) { Some queued requests failed. }
+    }
+  }
+
+  invariant {
+    after configure(transport: t,
+      config: "{ \"type\": \"rest\", \"baseUrl\": \"http://localhost\" }")
+      -> ok(transport: t)
+    then fetch(transport: t,
+      request: "{ \"method\": \"GET\", \"path\": \"/health\" }")
+      -> ok(transport: t, response: _)
+  }
+}

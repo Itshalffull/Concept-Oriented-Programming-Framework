@@ -39,6 +39,25 @@ concept Surface [F] {
       -> notfound(message: String) { Surface does not exist. }
     }
 
+    action mount(surface: F, tree: String, zone: option String) {
+      -> ok(surface: F) {
+        Render a component tree to the surface. If zone specified,
+        mount into that sub-region. Calls the attached FrameworkAdapter's
+        render function (e.g., ReactDOM.createRoot().render() for
+        browser-dom, Ink render() for terminal).
+      }
+      -> error(message: String) { No adapter attached or mount target missing. }
+      -> notfound(message: String) { Surface does not exist. }
+    }
+
+    action unmount(surface: F, zone: option String) {
+      -> ok(surface: F) {
+        Unmount component tree from surface or zone. Calls
+        framework-specific cleanup. If no zone, unmounts root.
+      }
+      -> notfound(message: String) { Nothing mounted in zone. }
+    }
+
     action destroy(surface: F) {
       -> ok(surface: F) { Tear down, unmount all renderers. }
       -> notfound(message: String) { Surface does not exist. }
@@ -48,7 +67,6 @@ concept Surface [F] {
   invariant {
     after create(surface: f, kind: "browser-dom", mountPoint: "#app")
       -> ok(surface: f)
-    then attach(surface: f, renderer: "react-19") -> ok(surface: f)
-    and resize(surface: f, width: 1024, height: 768) -> ok(surface: f)
+    then destroy(surface: f) -> ok(surface: f)
   }
 }

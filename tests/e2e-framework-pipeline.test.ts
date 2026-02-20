@@ -281,13 +281,13 @@ describe('E2E Framework Pipeline — Framework Concepts Through Pipeline', () =>
 // ============================================================
 
 describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
-  it('adapter-pipeline.sync has 12 sync declarations (2 per framework × 6 frameworks)', () => {
+  it('adapter-pipeline.sync has 30 sync declarations (2 per framework × 15 frameworks)', () => {
     const source = readFileSync(
       resolve(COIF_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     const syncDecls = source.match(/^sync \w+/gm) || [];
-    expect(syncDecls.length).toBe(12);
+    expect(syncDecls.length).toBe(30);
   });
 
   it('each framework has Machine and Renderer trigger syncs', () => {

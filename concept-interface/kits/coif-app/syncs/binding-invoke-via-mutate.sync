@@ -1,0 +1,19 @@
+# BindingInvokeViaMutate — coif-app recommended sync
+# Route concept action invocations through Transport
+
+sync BindingInvokeViaMutate [eager]
+  purpose: "Route concept action invocations through Transport"
+when {
+  Binding/invoke: [ binding: ?binding; action: ?action; input: ?input ]
+    => []
+}
+where {
+  Binding: { ?binding mode: ?mode; endpoint: ?endpoint }
+  Transport: { ?transport status: ?_ }
+  filter(?mode != "coupled")
+}
+then {
+  Transport/mutate: [ transport: ?transport;
+    request: "{ \"method\": \"POST\", \"path\": \"?endpoint\",
+               \"body\": \"?input\" }" ]
+}

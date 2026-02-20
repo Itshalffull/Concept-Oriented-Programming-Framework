@@ -60,7 +60,8 @@ describe('Framework Target Integration — Concept File Structure', () => {
     expect(source).toContain('action register(');
     expect(source).toContain('action mount(');
     expect(source).toContain('action unmount(');
-    expect(source).toContain('action unregister(');
+    expect(source).toContain('action normalize(');
+    expect(source).toContain('action render(');
     expect(source).toContain('capabilities {');
   });
 
@@ -317,10 +318,10 @@ describe('Framework Target Integration — Adapter Pipeline Syncs', () => {
     expect(fwAdapterRefs.length).toBe(syncDecls.length);
   });
 
-  it('has exactly 12 sync declarations (2 per framework × 6 frameworks)', () => {
+  it('has exactly 30 sync declarations (2 per framework × 15 frameworks)', () => {
     const source = readFileSync(adapterPipelinePath, 'utf-8');
     const syncDecls = source.match(/^sync \w+/gm) || [];
-    expect(syncDecls.length).toBe(12);
+    expect(syncDecls.length).toBe(30);
   });
 });
 

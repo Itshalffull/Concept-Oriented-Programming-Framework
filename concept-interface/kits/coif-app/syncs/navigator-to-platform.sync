@@ -1,0 +1,17 @@
+# NavigatorToPlatform — coif-app recommended sync
+# Route navigation transitions through platform adapter
+
+sync NavigatorToPlatform [eager]
+  purpose: "Route navigation transitions through platform adapter"
+when {
+  Navigator/go: [ nav: ?nav; destination: ?dest ]
+    => [ nav: ?nav; resolved: ?config ]
+}
+where {
+  PlatformAdapter: { ?adapter status: "active" }
+}
+then {
+  PlatformAdapter/mapNavigation: [ adapter: ?adapter;
+    transition: "{ \"type\": \"push\", \"destination\": \"?dest\",
+                  \"config\": ?config }" ]
+}

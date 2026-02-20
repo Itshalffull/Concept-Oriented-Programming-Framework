@@ -1,0 +1,88 @@
+@version(1)
+concept Host [W] {
+
+  purpose {
+    Orchestrate the full lifecycle of rendering a concept instance
+    as a widget tree. Host is the missing integration layer — it
+    triggers Binding/bind (starting the sync cascade through UISchema,
+    Elements, Widgets, Machines, FrameworkAdapter), owns the resulting
+    set of machines as a unit, and manages the async lifecycle:
+    loading → hydrating → interactive → unmounting.
+
+    Host IS the coif.auto() implementation. One Host per route,
+    one per embedded view, one per modal. The progressive
+    customization API (Levels 0-4) maps to Host configurations.
+  }
+
+  state {
+    concept: W -> String
+    view: W -> String
+    zone: W -> option String
+    status: W -> String
+    binding: W -> option String
+    machines: W -> set String
+    errorInfo: W -> option String
+    config: W -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action mount(host: W, config: String) {
+      -> ok(host: W) {
+        Begin the rendering lifecycle:
+        1. Parse config to extract concept URN, view, customizations
+        2. Binding/bind triggers UISchema cascade (via syncs)
+        3. Transport/fetch brings data, Signal/batch updates
+        4. Collect spawned Machine refs into machines set
+        5. FrameworkAdapter/render to Surface/mount to zone
+        6. Status: created to loading to hydrating to interactive
+      }
+      -> error(message: String) { Concept not found, binding or transport failed. }
+    }
+
+    action unmount(host: W) {
+      -> ok(host: W) {
+        Clean teardown:
+        1. Machine/destroy for each owned machine
+        2. Binding/unbind
+        3. Surface/unmount from zone
+        4. Status set to unmounted
+      }
+      -> notfound(message: String) { Host does not exist. }
+    }
+
+    action refresh(host: W) {
+      -> ok(host: W) {
+        Re-fetch data via Transport, update signals.
+        Machines re-render via signal subscriptions.
+      }
+      -> error(message: String) { Transport or binding error. }
+    }
+
+    action setError(host: W, errorInfo: String) {
+      -> ok(host: W) {
+        Transition to error state. Renders error boundary widget.
+      }
+      -> notfound(message: String) { Host does not exist. }
+    }
+
+    action updateConfig(host: W, config: String) {
+      -> ok(host: W) {
+        Hot-update configuration (visible fields, layout)
+        without full unmount/remount. Applies UISchema/override
+        and re-renders affected machines.
+      }
+      -> notfound(message: String) { Host does not exist. }
+    }
+  }
+
+  invariant {
+    after mount(host: w,
+      config: "{ \"concept\": \"urn:app/Article\", \"view\": \"list\" }")
+      -> ok(host: w)
+    then unmount(host: w) -> ok(host: w)
+  }
+}

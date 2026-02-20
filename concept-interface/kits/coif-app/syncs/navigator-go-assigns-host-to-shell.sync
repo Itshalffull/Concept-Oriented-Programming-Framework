@@ -1,0 +1,15 @@
+# NavigatorGoAssignsHostToShell — coif-app recommended sync
+# Assign the mounted Host to the Shell's primary zone
+
+sync NavigatorGoAssignsHostToShell [eager]
+  purpose: "Assign the mounted Host to the Shell's primary zone"
+when {
+  Host/mount: [ host: ?host; config: ?config ]
+    => [ host: ?host ]
+}
+where {
+  Shell: { ?shell zones: ?zones }
+}
+then {
+  Shell/assignHost: [ shell: ?shell; zone: "primary"; host: ?host ]
+}

@@ -1,0 +1,16 @@
+# ShellZoneToPlatform — coif-app recommended sync
+# Map shell zones through platform adapter
+
+sync ShellZoneToPlatform [eager]
+  purpose: "Map shell zones through platform adapter"
+when {
+  Shell/initialize: [ shell: ?shell; config: ?config ]
+    => [ shell: ?shell ]
+}
+where {
+  PlatformAdapter: { ?adapter status: "active" }
+}
+then {
+  PlatformAdapter/mapZone: [ adapter: ?adapter;
+    zone: ?config; role: ?config ]
+}

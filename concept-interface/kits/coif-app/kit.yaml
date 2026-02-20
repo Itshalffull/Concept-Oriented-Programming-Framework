@@ -1,0 +1,63 @@
+kit:
+  name: coif-app
+  version: 0.1.0
+  description: >
+    Application orchestration: navigation, lifecycle management,
+    network transport, platform composition. All concepts are
+    platform-agnostic; PlatformAdapter handles platform specifics.
+
+concepts:
+  Navigator:
+    spec: ./navigator.concept
+    params: { N: { as: navigator-ref } }
+  Host:
+    spec: ./host.concept
+    params: { W: { as: host-ref } }
+  Transport:
+    spec: ./transport.concept
+    params: { P: { as: transport-ref } }
+  Shell:
+    spec: ./shell.concept
+    params: { A: { as: shell-ref } }
+  PlatformAdapter:
+    spec: ./platform-adapter.concept
+    params: { D: { as: platform-adapter-ref } }
+
+syncs:
+  required:
+    - path: ./syncs/host-mount-creates-binding.sync
+      name: HostMountCreatesBinding
+    - path: ./syncs/host-unmount-cleans-up.sync
+      name: HostUnmountCleansUp
+    - path: ./syncs/binding-sync-via-transport.sync
+      name: BindingSyncViaTransport
+    - path: ./syncs/transport-response-to-signals.sync
+      name: TransportResponseToSignals
+  recommended:
+    - path: ./syncs/navigator-go-mounts-host.sync
+      name: NavigatorGoMountsHost
+    - path: ./syncs/navigator-go-unmounts-previous.sync
+      name: NavigatorGoUnmountsPrevious
+    - path: ./syncs/host-tracks-machines.sync
+      name: HostTracksMachines
+    - path: ./syncs/binding-invoke-via-mutate.sync
+      name: BindingInvokeViaMutate
+    - path: ./syncs/navigator-to-platform.sync
+      name: NavigatorToPlatform
+    - path: ./syncs/navigator-back-to-platform.sync
+      name: NavigatorBackToPlatform
+    - path: ./syncs/platform-event-to-navigator.sync
+      name: PlatformEventToNavigator
+    - path: ./syncs/shell-init-creates-root-surface.sync
+      name: ShellInitCreatesRootSurface
+    - path: ./syncs/shell-zone-to-platform.sync
+      name: ShellZoneToPlatform
+    - path: ./syncs/shell-overlay-to-platform.sync
+      name: ShellOverlayToPlatform
+    - path: ./syncs/navigator-go-assigns-host-to-shell.sync
+      name: NavigatorGoAssignsHostToShell
+
+dependencies:
+  - coif-core: ">=0.2.0"
+  - coif-component: ">=0.2.0"
+  - coif-render: ">=0.2.0"

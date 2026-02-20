@@ -38,17 +38,18 @@ const VALID_FRAMEWORKS = [
 
 export const frameworkadapterHandler: ConceptHandler = {
   /**
-   * register(renderer, framework, version)
+   * register(renderer, framework, version, normalizer, mountFn)
    *   -> ok(renderer) | duplicate(message)
    *
    * Registers a framework adapter. Sets status to "active".
-   * The corresponding per-framework adapter concept handles
-   * normalization via the adapter pipeline sync.
+   * Stores normalizer and mount function references.
    */
   async register(input, storage) {
     const renderer = input.renderer as string;
     const framework = input.framework as string;
     const version = input.version as string;
+    const normalizer = (input.normalizer as string) ?? '';
+    const mountFn = (input.mountFn as string) ?? '';
 
     if (!VALID_FRAMEWORKS.includes(framework)) {
       return {
@@ -70,8 +71,77 @@ export const frameworkadapterHandler: ConceptHandler = {
       renderer,
       framework,
       version,
+      normalizer,
+      mountFn,
       status: 'active',
       mounts: '{}',
+    });
+
+    return { variant: 'ok', renderer };
+  },
+
+  /**
+   * normalize(renderer, props) -> ok(normalized) | notfound(message)
+   *
+   * Transform generic COIF props to framework-specific bindings
+   * using the adapter's registered normalizer.
+   */
+  async normalize(input, storage) {
+    const renderer = input.renderer as string;
+    const props = input.props as string;
+
+    const record = await storage.get(RELATION, renderer);
+    if (!record) {
+      return {
+        variant: 'notfound',
+        message: `Adapter for renderer "${renderer}" not found`,
+      };
+    }
+
+    // In a real runtime, this would invoke the registered normalizer function.
+    // For the concept implementation, we return the props with framework metadata.
+    const normalized = JSON.stringify({
+      framework: record.framework,
+      props: typeof props === 'string' ? JSON.parse(props) : props,
+      normalizer: record.normalizer,
+    });
+
+    return { variant: 'ok', normalized };
+  },
+
+  /**
+   * render(renderer, tree, target) -> ok(renderer) | error(message)
+   *
+   * Render a complete component tree to a target. Composes machine props
+   * into a framework-specific hierarchy and calls the root mount function.
+   */
+  async render(input, storage) {
+    const renderer = input.renderer as string;
+    const tree = input.tree as string;
+    const target = input.target as string;
+
+    const record = await storage.get(RELATION, renderer);
+    if (!record) {
+      return {
+        variant: 'error',
+        message: `Adapter for renderer "${renderer}" not found`,
+      };
+    }
+
+    // Track renders like mounts
+    let mounts: Record<string, string>;
+    try {
+      mounts = JSON.parse(record.mounts as string) as Record<string, string>;
+    } catch {
+      mounts = {};
+    }
+
+    mounts[target] = `tree:${tree}`;
+
+    await storage.put(RELATION, renderer, {
+      ...record,
+      status: 'mounted',
+      mounts: JSON.stringify(mounts),
     });
 
     return { variant: 'ok', renderer };

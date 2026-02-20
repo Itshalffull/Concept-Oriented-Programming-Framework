@@ -1,0 +1,15 @@
+# NavigatorGoUnmountsPrevious — coif-app recommended sync
+# Unmount previous Host when navigating away
+
+sync NavigatorGoUnmountsPrevious [eager]
+  purpose: "Unmount previous Host when navigating away"
+when {
+  Navigator/go: [ nav: ?nav ]
+    => [ nav: ?nav ]
+}
+where {
+  Host: { ?host status: "interactive"; zone: "primary" }
+}
+then {
+  Host/unmount: [ host: ?host ]
+}
