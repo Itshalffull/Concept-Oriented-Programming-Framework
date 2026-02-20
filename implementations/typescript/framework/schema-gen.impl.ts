@@ -439,7 +439,7 @@ function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
   const graphqlSchema = generateGraphQLSchema(ast, relations);
   const jsonSchemas = buildJsonSchemas(conceptUri, actions);
 
-  return {
+  const manifest: ConceptManifest = {
     uri: conceptUri,
     name: ast.name,
     typeParams,
@@ -451,6 +451,13 @@ function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
     capabilities: ast.capabilities || [],
     purpose: ast.purpose || '',
   };
+
+  // Propagate @gate annotation to manifest
+  if (ast.annotations?.gate) {
+    manifest.gate = true;
+  }
+
+  return manifest;
 }
 
 // --- Handler ---

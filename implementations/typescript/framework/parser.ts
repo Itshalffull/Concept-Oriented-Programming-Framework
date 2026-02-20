@@ -303,8 +303,9 @@ class Parser {
   parseConcept(): ConceptAST {
     this.skipSeps();
 
-    // Handle top-level annotations before 'concept' keyword (e.g. @version(1))
+    // Handle top-level annotations before 'concept' keyword (e.g. @version(1), @gate)
     let version: number | undefined;
+    const topAnnotations: { gate?: boolean } = {};
     while (this.peek().type === 'AT') {
       this.expect('AT');
       const tok = this.peek();
@@ -314,9 +315,12 @@ class Parser {
         const versionTok = this.expect('INT_LIT');
         version = parseInt(versionTok.value, 10);
         this.expect('RPAREN');
+      } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'gate') {
+        this.advance();
+        topAnnotations.gate = true;
       } else {
         throw new Error(
-          `Parse error at line ${tok.line}:${tok.col}: unknown annotation @${tok.value}`,
+          `Parse error at line ${tok.line}:${tok.col}: unknown top-level annotation @${tok.value}`,
         );
       }
       this.skipSeps();
@@ -336,6 +340,11 @@ class Parser {
       capabilities: [],
       version,
     };
+
+    // Apply top-level annotations
+    if (topAnnotations.gate) {
+      ast.annotations = { ...ast.annotations, gate: true };
+    }
 
     while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
       this.skipSeps();

@@ -9,7 +9,7 @@
 // See Architecture doc Section 16.1 / 17.1.
 // ============================================================
 
-import type { ActionRecord, CompiledSync, ConceptHandler, WhenPattern } from '../../../kernel/src/types.js';
+import type { ActionRecord, CompiledSync, ConceptAST, ConceptHandler, WhenPattern } from '../../../kernel/src/types.js';
 import type { SyncIndex } from './engine.js';
 import { ActionLog, indexKey } from './engine.js';
 
@@ -28,6 +28,17 @@ export interface TraceNode {
   durationMs: number;
   fields: Record<string, unknown>;  // completion fields
   children: TraceSyncNode[];
+
+  // Present only for actions on @gate concepts
+  gate?: {
+    pending: boolean;          // true if action hasn't completed yet
+    waitDescription?: string;  // human-readable, from concept impl
+    progress?: {               // optional progress reporting
+      current: number;
+      target: number;
+      unit: string;            // e.g. "blocks", "items", "approvals"
+    };
+  };
 }
 
 export interface TraceSyncNode {
@@ -35,6 +46,7 @@ export interface TraceSyncNode {
   fired: boolean;
   missingPattern?: string;  // human-readable: "waiting on JWT/generate → ok"
   child?: TraceNode;        // the invocation this sync produced
+  blocked?: string;         // "waiting on: Concept/action → ok" when gate is pending
 }
 
 // --- FlowTrace Builder ---
@@ -50,11 +62,18 @@ export interface TraceSyncNode {
  * 5. Mark unfired syncs with the missing pattern
  * 6. Compute timing and aggregate status
  */
+/**
+ * Lookup function to determine if a concept URI has @gate annotation.
+ * Returns the AST if available, used to check ast.annotations?.gate.
+ */
+export type GateLookup = (conceptUri: string) => ConceptAST | undefined;
+
 export function buildFlowTrace(
   flowId: string,
   log: ActionLog,
   syncIndex: SyncIndex,
   registeredSyncs: CompiledSync[],
+  gateLookup?: GateLookup,
 ): FlowTrace | null {
   const records = log.getFlowRecords(flowId);
   if (records.length === 0) return null;
@@ -107,6 +126,7 @@ export function buildFlowTrace(
     registeredSyncs,
     completions,
     globallyFiredSyncs,
+    gateLookup,
   );
 
   // Compute aggregate status
@@ -135,6 +155,7 @@ function buildTraceNode(
   registeredSyncs: CompiledSync[],
   allCompletions: ActionRecord[],
   globallyFiredSyncs: Set<string>,
+  gateLookup?: GateLookup,
 ): TraceNode {
   // Get invocations triggered by this completion
   const triggeredInvocations = completionToInvocations.get(completion.id) || [];
@@ -160,7 +181,39 @@ function buildTraceNode(
         registeredSyncs,
         allCompletions,
         globallyFiredSyncs,
+        gateLookup,
       );
+    } else if (gateLookup) {
+      // No completion yet — if this is a gate concept, create a pending gate node
+      const ast = gateLookup(inv.concept);
+      if (ast?.annotations?.gate) {
+        const invTime = new Date(inv.timestamp).getTime();
+        const now = Date.now();
+        const conceptName = formatConceptName(inv.concept);
+        const pendingGate: TraceNode['gate'] = { pending: true };
+
+        // Extract progress from invocation input fields if present
+        if (
+          typeof inv.input.progressCurrent === 'number' &&
+          typeof inv.input.progressTarget === 'number' &&
+          typeof inv.input.progressUnit === 'string'
+        ) {
+          pendingGate.progress = {
+            current: inv.input.progressCurrent,
+            target: inv.input.progressTarget,
+            unit: inv.input.progressUnit,
+          };
+        }
+
+        childNode = {
+          action: `${conceptName}/${inv.action}`,
+          variant: 'pending',
+          durationMs: Math.max(0, now - invTime),
+          fields: inv.input || {},
+          children: [],
+          gate: pendingGate,
+        };
+      }
     }
 
     children.push({
@@ -191,10 +244,30 @@ function buildTraceNode(
         allCompletions,
       );
 
+      // Check if the unfired sync is blocked by a pending gate
+      let blocked: string | undefined;
+      if (gateLookup && missingPattern.startsWith('waiting on:')) {
+        // Find the concept URI from the sync's when patterns that is missing
+        for (const pattern of sync.when) {
+          const patternAst = gateLookup(pattern.concept);
+          if (patternAst?.annotations?.gate) {
+            // Check if there's an invocation but no completion for this gate
+            const hasPendingGate = allCompletions.every(
+              c => c.concept !== pattern.concept || c.action !== pattern.action,
+            );
+            if (hasPendingGate) {
+              const gateConceptName = formatConceptName(pattern.concept);
+              blocked = `waiting on: ${gateConceptName}/${pattern.action} \u2192 ok`;
+            }
+          }
+        }
+      }
+
       children.push({
         syncName: sync.name,
         fired: false,
         missingPattern,
+        blocked,
       });
     }
   }
@@ -219,13 +292,57 @@ function buildTraceNode(
   const conceptName = formatConceptName(completion.concept);
   const action = `${conceptName}/${completion.action}`;
 
-  return {
+  const node: TraceNode = {
     action,
     variant: completion.variant || 'ok',
     durationMs: Math.max(0, durationMs),
     fields: completion.output || {},
     children,
   };
+
+  // Check if this is a gate concept and populate gate metadata
+  if (gateLookup) {
+    const ast = gateLookup(completion.concept);
+    if (ast?.annotations?.gate) {
+      const fields = completion.output || {};
+      const pending = false; // Completed actions are not pending
+      const gate: TraceNode['gate'] = { pending };
+
+      // Extract waitDescription from completion fields (convention: 'description' field)
+      if (typeof fields.description === 'string') {
+        gate.waitDescription = fields.description;
+      }
+
+      // Extract progress from completion fields (convention: progressCurrent, progressTarget, progressUnit)
+      if (
+        typeof fields.progressCurrent === 'number' &&
+        typeof fields.progressTarget === 'number' &&
+        typeof fields.progressUnit === 'string'
+      ) {
+        gate.progress = {
+          current: fields.progressCurrent,
+          target: fields.progressTarget,
+          unit: fields.progressUnit,
+        };
+      }
+
+      node.gate = gate;
+    }
+  }
+
+  // Mark unfired syncs as "blocked" if they're waiting on an incomplete gate action
+  for (const syncChild of children) {
+    if (!syncChild.fired && syncChild.missingPattern && node.gate) {
+      // If this node IS a gate and hasn't completed its full chain,
+      // downstream unfired syncs are blocked, not simply unmatched
+      const isWaitingOnGate = syncChild.missingPattern.startsWith('waiting on:');
+      if (isWaitingOnGate) {
+        syncChild.blocked = syncChild.missingPattern;
+      }
+    }
+  }
+
+  return node;
 }
 
 /**
@@ -386,9 +503,29 @@ function computeStatus(node: TraceNode): 'ok' | 'failed' | 'partial' {
  * │  │  └─ ✅ Password/validate → ok              12ms
  * ```
  */
+/**
+ * Format a duration in milliseconds to human-friendly units.
+ * Gate actions can take minutes, hours, or days, so the renderer
+ * uses "14m 18s" instead of "858000ms".
+ */
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const totalSeconds = Math.floor(ms / 1000);
+  if (totalSeconds < 60) return `${totalSeconds}.${Math.floor((ms % 1000) / 100)}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes < 60) return `${minutes}m ${seconds}s`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 24) return `${hours}h ${remainingMinutes}m`;
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return `${days}d ${remainingHours}h`;
+}
+
 export function renderFlowTrace(
   trace: FlowTrace,
-  options: { failed?: boolean; json?: boolean } = {},
+  options: { failed?: boolean; json?: boolean; gates?: boolean } = {},
 ): string {
   if (options.json) {
     return JSON.stringify(trace, null, 2);
@@ -397,12 +534,16 @@ export function renderFlowTrace(
   const statusLabel = trace.status.toUpperCase();
   const lines: string[] = [];
 
+  const totalDuration = hasGateNode(trace.root)
+    ? formatDuration(trace.durationMs)
+    : `${trace.durationMs}ms`;
+
   lines.push(
-    `${trace.flowId}  (${trace.durationMs}ms total, ${statusLabel})`,
+    `${trace.flowId}  (${totalDuration} total, ${statusLabel})`,
   );
   lines.push('│');
 
-  renderNode(trace.root, lines, '', true, options.failed || false);
+  renderNode(trace.root, lines, '', true, options.failed || false, options.gates || false);
 
   return lines.join('\n');
 }
@@ -413,53 +554,128 @@ function renderNode(
   prefix: string,
   isLast: boolean,
   failedOnly: boolean,
+  gatesOnly: boolean = false,
 ): void {
-  const connector = isLast ? '└─' : '├─';
-  const icon = node.variant === 'ok' ? '✅' : '❌';
-  const timingStr = `${node.durationMs}ms`;
+  const connector = isLast ? '\u2514\u2500' : '\u251C\u2500';
+
+  // Determine icon and label based on gate status
+  let icon: string;
+  let gateLabel = '';
+  let timingStr: string;
+
+  if (node.gate) {
+    icon = '\u23F3'; // ⏳ for gate actions
+    if (node.gate.pending) {
+      gateLabel = '  (async gate, pending)';
+    } else if (node.variant !== 'ok') {
+      gateLabel = '  (async gate, FAILED)';
+    } else {
+      gateLabel = '  (async gate)';
+    }
+    timingStr = formatDuration(node.durationMs);
+  } else {
+    icon = node.variant === 'ok' ? '\u2705' : '\u274C';
+    timingStr = `${node.durationMs}ms`;
+  }
 
   // If --failed mode, skip successful branches with no errors
   if (failedOnly && node.variant === 'ok' && !hasFailedDescendant(node)) {
     return;
   }
 
-  lines.push(`${prefix}${connector} ${icon} ${node.action} → ${node.variant}${' '.repeat(Math.max(1, 40 - node.action.length - node.variant.length))}${timingStr}`);
+  // If --gates mode, skip non-gate branches unless they contain gate nodes
+  if (gatesOnly && !node.gate && !hasGateDescendant(node)) {
+    return;
+  }
 
-  // If error variant, show fields
-  if (node.variant !== 'ok' && Object.keys(node.fields).length > 0) {
-    const childPrefix = prefix + (isLast ? '   ' : '│  ');
+  const variantStr = node.gate?.pending ? '' : ` \u2192 ${node.variant}`;
+  const padding = Math.max(1, 40 - node.action.length - (node.gate?.pending ? 0 : node.variant.length + 4));
+  lines.push(`${prefix}${connector} ${icon} ${node.action}${variantStr}${' '.repeat(padding)}${timingStr}${gateLabel}`);
+
+  const childPrefix = prefix + (isLast ? '   ' : '\u2502  ');
+
+  // Show gate-specific details
+  if (node.gate) {
+    // Show input fields for gate actions (e.g. level: "l1-batch")
+    if (node.variant !== 'ok' || node.gate.pending) {
+      for (const [key, value] of Object.entries(node.fields)) {
+        if (key !== 'description' && key !== 'progressCurrent' && key !== 'progressTarget' && key !== 'progressUnit') {
+          lines.push(`${childPrefix}   ${key}: ${JSON.stringify(value)}`);
+        }
+      }
+    }
+
+    // "waited for:" line when gate completes with a description
+    if (node.gate.waitDescription && !node.gate.pending) {
+      lines.push(`${childPrefix}   waited for: ${node.gate.waitDescription}`);
+    }
+
+    // Progress bar/fraction for pending gates
+    if (node.gate.progress && node.gate.pending) {
+      const { current, target, unit } = node.gate.progress;
+      lines.push(`${childPrefix}   status: ${current}/${target === 0 ? '?' : `~${target}`} ${unit}`);
+    }
+  } else if (node.variant !== 'ok' && Object.keys(node.fields).length > 0) {
+    // If error variant (non-gate), show fields
     for (const [key, value] of Object.entries(node.fields)) {
       lines.push(`${childPrefix}   ${key}: ${JSON.stringify(value)}`);
     }
   }
 
-  const childPrefix = prefix + (isLast ? '   ' : '│  ');
-
   // Render children (sync nodes)
-  const visibleChildren = failedOnly
+  let visibleChildren = failedOnly
     ? node.children.filter(c => !c.fired || (c.child && hasFailedDescendant(c.child)))
     : node.children;
+
+  if (gatesOnly) {
+    visibleChildren = visibleChildren.filter(c =>
+      c.blocked || (c.child && (c.child.gate || hasGateDescendant(c.child))),
+    );
+  }
 
   for (let i = 0; i < visibleChildren.length; i++) {
     const syncNode = visibleChildren[i];
     const isLastChild = i === visibleChildren.length - 1;
-    const syncConnector = isLastChild ? '└─' : '├─';
+    const syncConnector = isLastChild ? '\u2514\u2500' : '\u251C\u2500';
 
     if (syncNode.fired && syncNode.child) {
       // Fired sync with result
-      lines.push(`${childPrefix}${syncConnector} [${syncNode.syncName}] →`);
-      const syncChildPrefix = childPrefix + (isLastChild ? '   ' : '│  ');
-      renderNode(syncNode.child, lines, syncChildPrefix, true, failedOnly);
+      lines.push(`${childPrefix}${syncConnector} [${syncNode.syncName}] \u2192`);
+      const syncChildPrefix = childPrefix + (isLastChild ? '   ' : '\u2502  ');
+      renderNode(syncNode.child, lines, syncChildPrefix, true, failedOnly, gatesOnly);
+    } else if (syncNode.blocked) {
+      // Blocked by pending gate — distinct from unfired (⚠)
+      lines.push(`${childPrefix}${syncConnector} \u23F8 [${syncNode.syncName}] blocked`);
+      const blockedPrefix = childPrefix + (isLastChild ? '   ' : '\u2502  ');
+      lines.push(`${blockedPrefix}   (${syncNode.blocked})`);
     } else if (!syncNode.fired) {
       // Unfired sync
-      const warnIcon = '⚠';
-      lines.push(`${childPrefix}${syncConnector} ${warnIcon} [${syncNode.syncName}] did not fire`);
+      lines.push(`${childPrefix}${syncConnector} \u26A0 [${syncNode.syncName}] did not fire`);
       if (syncNode.missingPattern) {
-        const unfiredPrefix = childPrefix + (isLastChild ? '   ' : '│  ');
+        const unfiredPrefix = childPrefix + (isLastChild ? '   ' : '\u2502  ');
         lines.push(`${unfiredPrefix}   (${syncNode.missingPattern})`);
       }
     }
   }
+}
+
+function hasGateNode(node: TraceNode): boolean {
+  if (node.gate) return true;
+  for (const child of node.children) {
+    if (child.child && hasGateNode(child.child)) return true;
+  }
+  return false;
+}
+
+function hasGateDescendant(node: TraceNode): boolean {
+  for (const child of node.children) {
+    if (child.blocked) return true;
+    if (child.child) {
+      if (child.child.gate) return true;
+      if (hasGateDescendant(child.child)) return true;
+    }
+  }
+  return false;
 }
 
 function hasFailedDescendant(node: TraceNode): boolean {

@@ -1898,16 +1898,20 @@ syncs:
         When a field is attached or updated, touch the entity's
         updated timestamp. Disable if you manage timestamps differently.
 
-# Optional: concepts from other kits that this kit works with.
-# These are not dependencies — the kit functions without them —
-# but if present, additional syncs activate.
-integrations:
+# External concepts from other kits that this kit's syncs reference.
+# Required by default; set optional: true for conditional syncs
+# that only load when the named kit is present.
+uses:
   - kit: auth
+    optional: true
+    concepts:
+      - name: JWT
+      - name: User
     syncs:
       - path: ./syncs/entity-ownership.sync
         description: >
-          When a user creates an entity, record ownership. Requires
-          the auth kit's User concept.
+          When a user creates an entity, record ownership.
+          Only loads if the auth kit is present.
 
 # Optional: infrastructure that the kit's concepts require.
 # Transports and storage adapters are pre-conceptual (Section 10.3)
@@ -1926,6 +1930,8 @@ integrations:
 ```
 
 Kits that introduce a new deployment target — a new chain, a new edge runtime, a new device class — bundle the pre-conceptual infrastructure alongside their concepts. The infrastructure section is optional; most kits (auth, content-management) only need concepts and syncs.
+
+**The `uses` section** declares external concepts from other kits that this kit's syncs reference. Required by default — the named kit must be present for this kit to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present. The `copf kit validate` command checks that every concept referenced in a sync is either a local concept, declared in `uses`, or a built-in like `Web`. Optional uses syncs are exempt from strict validation since they only load conditionally. Concepts remain fully independent per Design Principle 2; only syncs create cross-kit references, and `uses` makes those references explicit for the compiler.
 
 **Example: web3 kit manifest**
 
@@ -1979,8 +1985,11 @@ syncs:
         via the configured pinning service. Disable if managing
         pinning manually.
 
-integrations:
+uses:
   - kit: auth
+    optional: true
+    concepts:
+      - name: JWT
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >

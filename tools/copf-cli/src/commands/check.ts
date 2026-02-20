@@ -12,6 +12,7 @@ import { resolve, relative, basename } from 'path';
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import type { ConceptAST } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
+import { getPattern, listPatterns } from '../patterns/index.js';
 
 interface CheckResult {
   file: string;
@@ -75,9 +76,14 @@ function validateAST(ast: ConceptAST, file: string): string[] {
 }
 
 export async function checkCommand(
-  _positional: string[],
+  positional: string[],
   flags: Record<string, string | boolean>,
 ): Promise<void> {
+  // --pattern mode: validate a specific concept against a pattern
+  if (typeof flags.pattern === 'string') {
+    return patternCheckCommand(flags.pattern, positional, flags);
+  }
+
   const projectDir = resolve(process.cwd());
   const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
 
@@ -141,6 +147,87 @@ export async function checkCommand(
   );
 
   if (hasErrors) {
+    process.exit(1);
+  }
+}
+
+/**
+ * copf check --pattern <name> <concept-file>
+ *
+ * Run a pattern validator against a specific concept file.
+ */
+async function patternCheckCommand(
+  patternName: string,
+  positional: string[],
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const validator = getPattern(patternName);
+  if (!validator) {
+    console.error(`Unknown pattern: ${patternName}`);
+    console.error(`Available patterns: ${listPatterns().join(', ')}`);
+    process.exit(1);
+    return;
+  }
+
+  const conceptFile = positional[0];
+  if (!conceptFile) {
+    console.error(`Usage: copf check --pattern ${patternName} <concept-file>`);
+    process.exit(1);
+    return;
+  }
+
+  const projectDir = resolve(process.cwd());
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+
+  // Resolve concept file — try as-is, then relative to specs dir
+  let filePath = resolve(projectDir, conceptFile);
+  try {
+    readFileSync(filePath, 'utf-8');
+  } catch {
+    filePath = resolve(projectDir, specsDir, conceptFile);
+  }
+
+  let source: string;
+  try {
+    source = readFileSync(filePath, 'utf-8');
+  } catch {
+    console.error(`Cannot read: ${conceptFile}`);
+    process.exit(1);
+    return;
+  }
+
+  let ast: ConceptAST;
+  try {
+    ast = parseConceptFile(source);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`Parse error: ${message}`);
+    process.exit(1);
+    return;
+  }
+
+  const relPath = relative(projectDir, filePath);
+  const result = validator(ast);
+
+  console.log(`\n${relPath}: ${result.pattern} pattern validation`);
+
+  const errors = result.messages.filter(m => m.level === 'error');
+  const warnings = result.messages.filter(m => m.level === 'warning');
+  const infos = result.messages.filter(m => m.level === 'info');
+
+  for (const msg of infos) {
+    console.log(`  \u2705 ${msg.message}`);
+  }
+  for (const msg of warnings) {
+    console.log(`  \u26A0  ${msg.message}`);
+  }
+  for (const msg of errors) {
+    console.log(`  \u274C ${msg.message}`);
+  }
+
+  console.log(`\n${warnings.length} warning(s), ${errors.length} error(s)`);
+
+  if (errors.length > 0) {
     process.exit(1);
   }
 }

@@ -70,6 +70,7 @@ Usage: copf <command> [options]
 Commands:
   init <name>                    Initialize a new COPF project
   check                          Parse and validate all concept specs
+    --pattern <name> <concept>     Validate concept against a convention pattern
   generate --target <lang>       Generate schemas + code for all concepts
     --target typescript|rust       Target language
     --concept <Name>               Generate for a single concept only
@@ -81,13 +82,14 @@ Commands:
   deploy --manifest <file>       Deploy according to manifest
   trace <flow-id>                Render a flow trace for debugging
     --failed                       Show only failed/unfired branches
+    --gates                        Show only gate steps and downstream chains
     --json                         Output as JSON for tooling
   migrate <concept>              Run schema migration for a concept
     --check                        Report version status for all concepts
     --all                          Migrate all concepts needing migration
   kit <subcommand>               Kit management
     init <name>                    Scaffold a new kit directory
-    validate <path>                Validate kit manifest and syncs
+    validate <path>                Validate kit manifest, syncs, and cross-kit concept references
     test <path>                    Run kit conformance + integration tests
     list                           Show kits used by the current app
     check-overrides                Verify app overrides reference valid syncs

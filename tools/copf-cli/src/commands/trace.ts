@@ -18,7 +18,7 @@ import { createInProcessAdapter, createConceptRegistry } from '../../../../kerne
 import { SyncEngine, ActionLog } from '../../../../implementations/typescript/framework/sync-engine.impl.js';
 import { parseSyncFile } from '../../../../implementations/typescript/framework/sync-parser.impl.js';
 import { buildFlowTrace, renderFlowTrace } from '../../../../implementations/typescript/framework/flow-trace.impl.js';
-import type { ConceptHandler } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptAST } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
 export async function traceCommand(
@@ -27,10 +27,11 @@ export async function traceCommand(
 ): Promise<void> {
   const flowId = positional[0];
   if (!flowId) {
-    console.error('Usage: copf trace <flow-id> [--failed] [--json]');
+    console.error('Usage: copf trace <flow-id> [--failed] [--json] [--gates]');
     console.error('\nRender a flow trace for debugging.');
     console.error('\nFlags:');
     console.error('  --failed   Show only failed/unfired branches');
+    console.error('  --gates    Show only gate steps and their downstream chains');
     console.error('  --json     Output as JSON for tooling');
     process.exit(1);
   }
@@ -54,13 +55,16 @@ export async function traceCommand(
   const webStorage = createInMemoryStorage();
   registry.register('urn:copf/Web', createInProcessAdapter(webHandler, webStorage));
 
-  // Discover and register concepts (for sync index)
+  // Discover and register concepts (for sync index and gate lookup)
   const conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
+  const conceptAstMap = new Map<string, ConceptAST>();
+
   for (const file of conceptFiles) {
     const source = readFileSync(file, 'utf-8');
     try {
       const ast = parseConceptFile(source);
       const uri = `urn:copf/${ast.name}`;
+      conceptAstMap.set(uri, ast);
       const implPath = findImplementation(projectDir, implsDir, ast.name);
       if (implPath) {
         try {
@@ -78,6 +82,11 @@ export async function traceCommand(
       // Skip specs that fail to parse
     }
   }
+
+  // Gate lookup: resolve concept URI → AST for gate detection
+  const gateLookup = (conceptUri: string): ConceptAST | undefined => {
+    return conceptAstMap.get(conceptUri);
+  };
 
   // Load sync definitions (needed for unfired sync detection)
   const syncFiles = findFiles(resolve(projectDir, syncsDir), '.sync');
@@ -144,6 +153,7 @@ export async function traceCommand(
     log,
     engine.getSyncIndex(),
     engine.getRegisteredSyncs(),
+    gateLookup,
   );
 
   if (!trace) {
@@ -156,6 +166,7 @@ export async function traceCommand(
   const output = renderFlowTrace(trace, {
     failed: flags.failed === true,
     json: flags.json === true,
+    gates: flags.gates === true,
   });
 
   console.log(output);

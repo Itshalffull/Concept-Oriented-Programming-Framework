@@ -190,6 +190,8 @@ export interface ConceptAST {
   purpose?: string;
   /** Schema version declared via @version(N). Undefined means unversioned. */
   version?: number;
+  /** Annotations parsed from @-prefixed decorators (e.g. @gate). */
+  annotations?: { gate?: boolean };
   state: StateEntry[];
   actions: ActionDecl[];
   invariants: InvariantDecl[];
@@ -385,6 +387,46 @@ export interface ConceptManifest {
   };
   capabilities: string[];
   purpose: string;
+  /** True if concept has @gate annotation (async gate convention). */
+  gate?: boolean;
+}
+
+// --- Kit Manifest (Section 9) ---
+
+/** A single external concept declared in a kit's uses section. */
+export interface UsesConceptEntry {
+  name: string;
+  params?: Record<string, { as: string; description?: string }>;
+}
+
+/**
+ * A uses declaration grouping external concepts by source kit.
+ *
+ * When `optional` is true, the entry's syncs only load if the named
+ * kit is present (what was previously the `integrations` section).
+ * When false or omitted, the concepts are required for this kit to
+ * function — the compiler errors if they're unavailable.
+ */
+export interface UsesEntry {
+  kit: string;
+  optional?: boolean;
+  concepts: UsesConceptEntry[];
+  syncs?: Array<{ path: string; description?: string }>;
+}
+
+/** Parsed kit manifest structure (kit.yaml). */
+export interface KitManifest {
+  kit: { name: string; version: string; description: string };
+  concepts: Record<string, {
+    spec: string;
+    params: Record<string, { as: string; description?: string }>;
+  }>;
+  syncs: {
+    required: Array<{ path: string; description: string }>;
+    recommended: Array<{ path: string; name: string; description: string }>;
+  };
+  uses: UsesEntry[];
+  dependencies: Array<{ name: string; version: string }>;
 }
 
 // --- Lite Query Protocol (Section 4.2) ---
