@@ -2,7 +2,7 @@
 
 ## Architecture & Implementation Specification
 
-**Version:** 0.3.0
+**Version:** 0.3.1
 **Date:** 2026-02-20
 **Companion to:** COPF v0.19.0
 
@@ -13,6 +13,7 @@
 | 0.1.0 | 2026-02-19 | Initial specification. 18 concepts across 4 kits. |
 | 0.2.0 | 2026-02-19 | Concept Library integration. 4 renames (Token→DesignToken, Component→Widget, Renderer→FrameworkAdapter, Schema→UISchema) to resolve name collisions with library concepts. Replaces library FormBuilder, DisplayMode, ExposedFilter. 16 new cross-system syncs binding COIF to Library Schema, View, Validator, Workflow, EventBus, Notification, ContentParser, Intent. Core pipeline: UISchema → Element → Widget → FrameworkAdapter. |
 | 0.3.0 | 2026-02-20 | COPF idiom alignment. Per-framework adapter concepts (ReactAdapter, SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter) mirror COPF's per-language gen pattern. New adapter-pipeline.sync mirrors compiler-pipeline.sync. Progressive customization ladder rewritten from JS APIs to concept DSL. Framework extension model now matches language extension model: concept spec + implementation + pipeline sync rule. |
+| 0.3.1 | 2026-02-20 | Native and desktop platform adapters. Added 9 new adapter concepts: ReactNativeAdapter, NativeScriptAdapter (JS-runtime native); SwiftUIAdapter, WatchKitAdapter (Apple); ComposeAdapter, WearComposeAdapter (Android); WinUIAdapter, AppKitAdapter, GTKAdapter (desktop). All wired into adapter-pipeline.sync. 15 total framework adapters across web, mobile, wearable, and desktop. |
 
 ---
 
@@ -1047,7 +1048,15 @@ concept <Framework>Adapter [A] {
 }
 ```
 
-**Shipped adapters:** ReactAdapter, SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter.
+**Shipped adapters:**
+
+| Category | Adapters | Implementation Language |
+|----------|----------|------------------------|
+| Web | ReactAdapter, SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter | TypeScript |
+| JS-runtime native | ReactNativeAdapter, NativeScriptAdapter | TypeScript |
+| Apple | SwiftUIAdapter, WatchKitAdapter | Swift |
+| Android | ComposeAdapter, WearComposeAdapter | Kotlin |
+| Desktop | WinUIAdapter (Windows), AppKitAdapter (macOS), GTKAdapter (Linux) | C#/Rust, Swift, Rust/C |
 
 ### 3.11 Surface
 
@@ -1873,6 +1882,37 @@ concepts:
   VanillaAdapter:
     spec: ./vanilla-adapter.concept
     params: { A: { as: adapter-ref } }
+  # JS-runtime native adapters
+  ReactNativeAdapter:
+    spec: ./react-native-adapter.concept
+    params: { A: { as: adapter-ref } }
+  NativeScriptAdapter:
+    spec: ./nativescript-adapter.concept
+    params: { A: { as: adapter-ref } }
+  # Apple platform adapters
+  SwiftUIAdapter:
+    spec: ./swiftui-adapter.concept
+    params: { A: { as: adapter-ref } }
+  WatchKitAdapter:
+    spec: ./watchkit-adapter.concept
+    params: { A: { as: adapter-ref } }
+  # Android platform adapters
+  ComposeAdapter:
+    spec: ./compose-adapter.concept
+    params: { A: { as: adapter-ref } }
+  WearComposeAdapter:
+    spec: ./wear-compose-adapter.concept
+    params: { A: { as: adapter-ref } }
+  # Desktop platform adapters
+  WinUIAdapter:
+    spec: ./winui-adapter.concept
+    params: { A: { as: adapter-ref } }
+  AppKitAdapter:
+    spec: ./appkit-adapter.concept
+    params: { A: { as: adapter-ref } }
+  GTKAdapter:
+    spec: ./gtk-adapter.concept
+    params: { A: { as: adapter-ref } }
   Surface:
     spec: ./surface.concept
     params: { F: { as: surface-ref } }
@@ -1917,6 +1957,37 @@ infrastructure:
     - name: vanilla
       concept: VanillaAdapter
       description: Framework-free DOM APIs
+    # JS-runtime native
+    - name: react-native
+      concept: ReactNativeAdapter
+      description: React Native for iOS/Android (Hermes/JSC runtime)
+    - name: nativescript
+      concept: NativeScriptAdapter
+      description: NativeScript for iOS/Android (native API access)
+    # Apple
+    - name: swiftui
+      concept: SwiftUIAdapter
+      description: SwiftUI for iOS/macOS/tvOS/visionOS (Swift impl)
+    - name: watchkit
+      concept: WatchKitAdapter
+      description: WatchKit/SwiftUI for watchOS (Swift impl)
+    # Android
+    - name: compose
+      concept: ComposeAdapter
+      description: Jetpack Compose for Android/Desktop (Kotlin impl)
+    - name: wear-compose
+      concept: WearComposeAdapter
+      description: Wear Compose for Wear OS (Kotlin impl)
+    # Desktop
+    - name: winui
+      concept: WinUIAdapter
+      description: WinUI 3 for Windows 11 (C#/Rust impl)
+    - name: appkit
+      concept: AppKitAdapter
+      description: AppKit for macOS (Swift impl)
+    - name: gtk
+      concept: GTKAdapter
+      description: GTK 4 for Linux (Rust/C impl)
 ```
 
 ### 5.4 coif-theme
@@ -2701,12 +2772,17 @@ All theme changes propagate through the same engine: Theme/activate → engine f
 
 ### Stage 4: Additional Framework Adapters
 
-Deploy SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter concepts with implementations. Add their sync rules to adapter-pipeline.sync. Each follows the same pattern as ReactAdapter — a concept spec (~35 LOC), an implementation (~200 LOC), and two sync rules in the pipeline file (~20 LOC). This mirrors how COPF adds language targets: RustGen, SwiftGen, and SolidityGen each followed the TypeScriptGen pattern.
+Deploy remaining web adapters (SolidAdapter, VueAdapter, SvelteAdapter, InkAdapter, VanillaAdapter), JS-runtime native adapters (ReactNativeAdapter, NativeScriptAdapter), Apple adapters (SwiftUIAdapter, WatchKitAdapter), Android adapters (ComposeAdapter, WearComposeAdapter), and desktop adapters (WinUIAdapter, AppKitAdapter, GTKAdapter). Add their sync rules to adapter-pipeline.sync.
+
+Each follows the same pattern as ReactAdapter — a concept spec (~35 LOC), an implementation (~200 LOC), and two sync rules in the pipeline file (~20 LOC). The concept spec is language-neutral; only the implementation language differs (TypeScript for web/JS-runtime, Swift for Apple, Kotlin for Android, C#/Rust for desktop). This mirrors how COPF adds language targets: RustGen, SwiftGen, and SolidityGen each followed the TypeScriptGen pattern.
 
 **Acceptance tests:**
 - Same concept spec + same core syncs → working interfaces in React, Solid, Vue, Svelte, Ink
 - Adapter switch: FrameworkAdapter/register with different framework → engine evaluates adapter-pipeline → correct per-framework adapter fires
 - Ink adapter produces terminal UI from the same Machine/connect output that React uses
+- SwiftUIAdapter produces SwiftUI View structs from the same Machine/connect output (Swift impl via COPF's SwiftGen)
+- ComposeAdapter produces @Composable functions from the same Machine/connect output (Kotlin impl via COPF's KotlinGen)
+- GTKAdapter produces GtkWidget trees from the same Machine/connect output (Rust impl via COPF's RustGen)
 - Adding a new adapter (e.g. AngularAdapter) requires zero changes to existing code — only new concept + impl + sync rule
 
 ### Stage 5: CDN, SSR, Native, and Edge Deployment
@@ -2716,7 +2792,7 @@ Extend the deployment manifest to support all 5 modes. The COPF engine runs diff
 **Acceptance tests:**
 - CDN mode: single `<script>` tag loads COIF runtime + engine + concepts, zero-config deploy manifest produces working UI
 - SSR mode: server renders HTML from Machine/connect output, client hydrates with ReactAdapter
-- Native mode: ReactNativeAdapter renders same component tree on iOS/Android
+- Native mode: SwiftUIAdapter/ComposeAdapter render same component tree on iOS/Android natively; ReactNativeAdapter as JS-runtime alternative
 - Edge mode: Cloudflare Worker runs COPF engine with lite-query concepts, returns rendered HTML
 
 ---

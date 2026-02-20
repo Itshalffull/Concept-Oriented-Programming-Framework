@@ -183,7 +183,7 @@ describe("FrameworkAdapter Concept", () => {
     it("reverts status to active when the last mount is removed", async () => {
       const storage = createInMemoryStorage();
       await frameworkadapterHandler.register(
-        { renderer: "r-1", framework: "angular", version: "17" },
+        { renderer: "r-1", framework: "compose", version: "1.6" },
         storage,
       );
       await frameworkadapterHandler.mount(

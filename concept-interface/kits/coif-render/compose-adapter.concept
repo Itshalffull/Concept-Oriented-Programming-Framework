@@ -1,0 +1,37 @@
+@version(1)
+concept ComposeAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into Jetpack Compose-specific
+    bindings. Transforms COIF's generic event model into Compose
+    conventions: @Composable functions, Modifier chains, remember/
+    mutableStateOf state, Column/Row/Box layout. Implementation
+    in Kotlin, runs natively on Android/Desktop JVM.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to Compose bindings.
+        Convert onclick to Modifier.clickable. Convert class to
+        Modifier chains. Map layout to Column/Row/Box composition.
+        Resolve design tokens to Compose MaterialTheme values.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to Jetpack Compose.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}
