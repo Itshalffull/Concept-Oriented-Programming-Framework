@@ -952,18 +952,17 @@ concept FrameworkAdapter [R] {
     Framework adapter registry and lifecycle management. Tracks which
     framework adapters are available, their status, and mount targets.
     Each registered framework has a corresponding adapter concept
-    (ReactAdapter, SolidAdapter, etc.) that handles the actual
-    prop normalization — this concept manages the registry only.
-    Mirrors COPF's Registry concept: registration, discovery,
-    and lifecycle management without domain logic.
+    (ReactAdapter, SolidAdapter, VueAdapter, etc.) that handles
+    prop normalization via the adapter pipeline sync — mirroring
+    how COPF's per-language gen concepts (TypeScriptGen, RustGen)
+    are wired via compiler-pipeline.sync. Adding a new framework
+    requires a new adapter concept + one sync rule.
   }
 
   state {
     framework: R -> String
     version: R -> String
     status: R -> String
-    normalizer: R -> String
-    mountFn: R -> String
   }
 
   capabilities {
@@ -971,22 +970,19 @@ concept FrameworkAdapter [R] {
   }
 
   actions {
-    action register(renderer: R, framework: String, version: String,
-                    normalizer: String, mountFn: String) {
+    action register(renderer: R, framework: String, version: String) {
       -> ok(renderer: R) {
         Register adapter. Framework: "react", "solid", "vue",
         "svelte", "ink", "vanilla", "react-native", "angular".
+        Sets status to "active". The corresponding per-framework
+        adapter concept handles normalization via the adapter
+        pipeline sync.
       }
       -> duplicate(message: String) { Already registered. }
     }
 
-    action normalize(renderer: R, props: String) {
-      -> ok(normalized: String) { Transform to framework-specific bindings. }
-      -> notfound(message: String) { Not registered. }
-    }
-
     action mount(renderer: R, machine: String, target: String) {
-      -> ok(renderer: R) { Create and mount component tree. }
+      -> ok(renderer: R) { Create and mount component tree at target. }
       -> error(message: String) { Mount failed. }
     }
 
@@ -994,14 +990,18 @@ concept FrameworkAdapter [R] {
       -> ok(renderer: R) { Unmount and clean up. }
       -> notfound(message: String) { Nothing mounted at target. }
     }
+
+    action unregister(renderer: R) {
+      -> ok(renderer: R) { Remove adapter from registry. }
+      -> notfound(message: String) { Not registered. }
+    }
   }
 
   invariant {
-    after register(renderer: r, framework: "react", version: "19",
-                   normalizer: "reactNormalizer", mountFn: "reactMount")
+    after register(renderer: r, framework: "react", version: "19")
       -> ok(renderer: r)
-    then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
-      -> ok(normalized: _)
+    then mount(renderer: r, machine: "dialog-001", target: "#app")
+      -> ok(renderer: r)
   }
 }
 ```
@@ -1599,21 +1599,7 @@ then {
 
 *When a component spec is retrieved, spawn a machine instance.*
 
-```
-sync MachineToFrameworkAdapter [eager]
-when {
-  Machine/connect: [ machine: ?machine ]
-    => [ machine: ?machine; props: ?props ]
-}
-where {
-  FrameworkAdapter: { ?adapter status: "active" }
-}
-then {
-  FrameworkAdapter/normalize: [ adapter: ?adapter; props: ?props ]
-}
-```
-
-*When a machine produces props, send to active renderer for normalization. The adapter-pipeline sync (§4.3.1) then routes to the appropriate per-framework adapter concept.*
+*When a machine produces props, the adapter-pipeline sync (§4.3.1) routes to the appropriate per-framework adapter concept for normalization. See the per-framework sync rules below.*
 
 ```
 sync DestroyMachineOnUnbind [eager]

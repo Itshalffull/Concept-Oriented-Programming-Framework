@@ -1,10 +1,11 @@
 // ============================================================
 // FrameworkAdapter Concept Implementation
 //
-// Framework adapter registry. Manages registration of rendering
-// framework adapters (React, Solid, Vue, etc.), normalizes props
-// through framework-specific normalizers, and handles mount/unmount
-// lifecycle for render targets.
+// Framework adapter registry and lifecycle management. Tracks
+// which framework adapters are available, their status, and
+// mount targets. Each registered framework has a corresponding
+// adapter concept (ReactAdapter, SolidAdapter, etc.) that
+// handles prop normalization via the adapter pipeline sync.
 // Relation: 'adapter' keyed by renderer (R).
 // ============================================================
 
@@ -25,18 +26,17 @@ const VALID_FRAMEWORKS = [
 
 export const frameworkadapterHandler: ConceptHandler = {
   /**
-   * register(renderer, framework, version, normalizer, mountFn)
+   * register(renderer, framework, version)
    *   -> ok(renderer) | duplicate(message)
    *
-   * Registers a framework adapter for the given renderer. Checks
-   * that no other adapter with the same framework is already registered.
+   * Registers a framework adapter. Sets status to "active".
+   * The corresponding per-framework adapter concept handles
+   * normalization via the adapter pipeline sync.
    */
   async register(input, storage) {
     const renderer = input.renderer as string;
     const framework = input.framework as string;
     const version = input.version as string;
-    const normalizer = input.normalizer as string;
-    const mountFn = input.mountFn as string;
 
     if (!VALID_FRAMEWORKS.includes(framework)) {
       return {
@@ -58,52 +58,11 @@ export const frameworkadapterHandler: ConceptHandler = {
       renderer,
       framework,
       version,
-      normalizer,
-      mountFn,
-      status: 'registered',
+      status: 'active',
       mounts: '{}',
     });
 
     return { variant: 'ok', renderer };
-  },
-
-  /**
-   * normalize(renderer, props) -> ok(normalized) | notfound(message)
-   *
-   * Applies the registered normalizer to the given props. Performs a
-   * simple pass-through transform wrapping the input with the
-   * framework-specific normalizer reference.
-   */
-  async normalize(input, storage) {
-    const renderer = input.renderer as string;
-    const props = input.props as string;
-
-    const record = await storage.get(RELATION, renderer);
-    if (!record) {
-      return {
-        variant: 'notfound',
-        message: `Adapter for renderer "${renderer}" not found`,
-      };
-    }
-
-    const framework = record.framework as string;
-    const normalizer = record.normalizer as string;
-
-    // Framework-specific normalization: wrap props with normalizer metadata
-    let parsedProps: Record<string, unknown>;
-    try {
-      parsedProps = JSON.parse(props) as Record<string, unknown>;
-    } catch {
-      parsedProps = { raw: props };
-    }
-
-    const normalized = JSON.stringify({
-      normalizer,
-      framework,
-      props: parsedProps,
-    });
-
-    return { variant: 'ok', normalized };
   },
 
   /**
@@ -181,9 +140,30 @@ export const frameworkadapterHandler: ConceptHandler = {
 
     await storage.put(RELATION, renderer, {
       ...record,
-      status: hasActiveMounts ? 'mounted' : 'registered',
+      status: hasActiveMounts ? 'mounted' : 'active',
       mounts: JSON.stringify(mounts),
     });
+
+    return { variant: 'ok', renderer };
+  },
+
+  /**
+   * unregister(renderer) -> ok(renderer) | notfound(message)
+   *
+   * Removes the adapter from the registry.
+   */
+  async unregister(input, storage) {
+    const renderer = input.renderer as string;
+
+    const record = await storage.get(RELATION, renderer);
+    if (!record) {
+      return {
+        variant: 'notfound',
+        message: `Adapter for renderer "${renderer}" not found`,
+      };
+    }
+
+    await storage.del(RELATION, renderer);
 
     return { variant: 'ok', renderer };
   },

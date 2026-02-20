@@ -2,21 +2,79 @@
 # RendererFeedsAdapter — coif-integration recommended sync
 #
 # Route the library Renderer's content-to-render-tree output
-# through COIF's framework adapter for framework-specific
-# normalization. Uses the same FrameworkAdapter dispatch path
-# as MachineToFrameworkAdapter — the adapter-pipeline.sync
-# in coif-render routes to the correct per-framework adapter
-# concept (ReactAdapter, SolidAdapter, etc.).
+# through the active per-framework adapter concept for
+# framework-specific normalization. Follows the same
+# per-framework routing pattern as adapter-pipeline.sync.
 # ============================================================
 
-sync RendererFeedsAdapter [eager]
+sync RendererFeedsReactAdapter [eager]
 when {
   Renderer/render: [ element: ?el ]
     => ok(renderTree: ?tree)
 }
 where {
-  FrameworkAdapter: { ?adapter status: "active" }
+  FrameworkAdapter: { ?adapter framework: "react"; status: "active" }
 }
 then {
-  FrameworkAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+  ReactAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+sync RendererFeedsSolidAdapter [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "solid"; status: "active" }
+}
+then {
+  SolidAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+sync RendererFeedsVueAdapter [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vue"; status: "active" }
+}
+then {
+  VueAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+sync RendererFeedsSvelteAdapter [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "svelte"; status: "active" }
+}
+then {
+  SvelteAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+sync RendererFeedsInkAdapter [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "ink"; status: "active" }
+}
+then {
+  InkAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
+}
+
+sync RendererFeedsVanillaAdapter [eager]
+when {
+  Renderer/render: [ element: ?el ]
+    => ok(renderTree: ?tree)
+}
+where {
+  FrameworkAdapter: { ?adapter framework: "vanilla"; status: "active" }
+}
+then {
+  VanillaAdapter/normalize: [ adapter: ?adapter; props: ?tree ]
 }

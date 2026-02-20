@@ -16,8 +16,6 @@ concept FrameworkAdapter [R] {
     framework: R -> String
     version: R -> String
     status: R -> String
-    normalizer: R -> String
-    mountFn: R -> String
   }
 
   capabilities {
@@ -25,22 +23,19 @@ concept FrameworkAdapter [R] {
   }
 
   actions {
-    action register(renderer: R, framework: String, version: String,
-                    normalizer: String, mountFn: String) {
+    action register(renderer: R, framework: String, version: String) {
       -> ok(renderer: R) {
         Register adapter. Framework: "react", "solid", "vue",
         "svelte", "ink", "vanilla", "react-native", "angular".
+        Sets status to "active". The corresponding per-framework
+        adapter concept handles normalization via the adapter
+        pipeline sync.
       }
       -> duplicate(message: String) { Already registered. }
     }
 
-    action normalize(renderer: R, props: String) {
-      -> ok(normalized: String) { Transform to framework-specific bindings. }
-      -> notfound(message: String) { Not registered. }
-    }
-
     action mount(renderer: R, machine: String, target: String) {
-      -> ok(renderer: R) { Create and mount component tree. }
+      -> ok(renderer: R) { Create and mount component tree at target. }
       -> error(message: String) { Mount failed. }
     }
 
@@ -48,13 +43,17 @@ concept FrameworkAdapter [R] {
       -> ok(renderer: R) { Unmount and clean up. }
       -> notfound(message: String) { Nothing mounted at target. }
     }
+
+    action unregister(renderer: R) {
+      -> ok(renderer: R) { Remove adapter from registry. }
+      -> notfound(message: String) { Not registered. }
+    }
   }
 
   invariant {
-    after register(renderer: r, framework: "react", version: "19",
-                   normalizer: "reactNormalizer", mountFn: "reactMount")
+    after register(renderer: r, framework: "react", version: "19")
       -> ok(renderer: r)
-    then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
-      -> ok(normalized: _)
+    then mount(renderer: r, machine: "dialog-001", target: "#app")
+      -> ok(renderer: r)
   }
 }
