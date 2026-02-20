@@ -28,6 +28,8 @@
     "engine/**/*.ts",
     "tests/**/*.ts",
     "tools/**/*.ts",
-    "generated/concept-interface/**/*.ts"
+    "generated/concept-interface/**/*.ts",
+    "framework-widgets/**/*.ts",
+    "framework-widgets/**/*.tsx"
   ]
 }
