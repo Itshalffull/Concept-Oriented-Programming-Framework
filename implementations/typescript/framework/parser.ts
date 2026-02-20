@@ -145,7 +145,8 @@ function tokenize(source: string): Token[] {
       while (i < source.length && source[i] !== '"') {
         if (source[i] === '\\' && i + 1 < source.length) {
           advance();
-          str += source[i];
+          const esc = source[i];
+          str += esc === 'n' ? '\n' : esc === 't' ? '\t' : esc === 'r' ? '\r' : esc;
         } else {
           str += source[i];
         }
@@ -672,26 +673,32 @@ class Parser {
     // Record literal: { field: value, field: value, ... }
     if (tok.type === 'LBRACE') {
       this.advance();
+      this.skipSeps();
       const fields: ArgPattern[] = [];
       if (this.peek().type !== 'RBRACE') {
         fields.push(this.parseArgPattern());
         while (this.match('COMMA')) {
+          this.skipSeps();
           fields.push(this.parseArgPattern());
         }
       }
+      this.skipSeps();
       this.expect('RBRACE');
       return { type: 'record', fields };
     }
     // List literal: [value, value, ...]
     if (tok.type === 'LBRACKET') {
       this.advance();
+      this.skipSeps();
       const items: ArgPatternValue[] = [];
       if (this.peek().type !== 'RBRACKET') {
         items.push(this.parseArgPatternValue());
         while (this.match('COMMA')) {
+          this.skipSeps();
           items.push(this.parseArgPatternValue());
         }
       }
+      this.skipSeps();
       this.expect('RBRACKET');
       return { type: 'list', items };
     }

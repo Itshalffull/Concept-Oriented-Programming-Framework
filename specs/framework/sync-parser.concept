@@ -25,7 +25,7 @@ concept SyncParser [Y] {
   }
 
   invariant {
-    after parse(source: "", manifests: "") -> error(message: m, line: 0)
-    then parse(source: "", manifests: "") -> error(message: m, line: 0)
+    after parse(source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: []) -> ok(sync: s, ast: a)
+    then parse(source: "invalid", manifests: []) -> error(message: e, line: 0)
   }
 }

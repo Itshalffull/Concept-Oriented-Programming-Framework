@@ -35,7 +35,10 @@ concept FlowTrace [F] {
   }
 
   invariant {
-    after build(flowId: "") -> error(message: m)
-    then build(flowId: "") -> error(message: m)
+    after render(trace: {
+      flowId: "f1", status: "ok", durationMs: 100,
+      root: { action: "Test/ping", variant: "ok", durationMs: 50, fields: {}, children: [] }
+    }, options: {}) -> ok(output: o)
+    then build(flowId: "f1") -> error(message: e)
   }
 }

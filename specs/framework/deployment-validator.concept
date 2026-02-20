@@ -41,6 +41,11 @@ concept DeploymentValidator [M] {
   }
 
   invariant {
+    after parse(raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}") -> ok(manifest: m)
+    then validate(manifest: m) -> error(issues: i)
+  }
+
+  invariant {
     after parse(raw: "{\"app\":{\"name\":\"t\",\"version\":\"1\",\"uri\":\"u\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}") -> ok(manifest: m)
     then parse(raw: "not json") -> error(message: e)
   }

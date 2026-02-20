@@ -100,7 +100,7 @@ Read [references/invariant-design.md](references/invariant-design.md) for invari
 
 The operational principle is a "defining story" — a scenario that proves the concept fulfills its purpose. In COPF, these are expressed as `invariant` blocks.
 
-**Every concept with user-facing behavior should have at least one invariant.** The invariant demonstrates the concept's core workflow:
+**Every concept MUST have at least one invariant.** A concept without invariants has no machine-verifiable behavioral contract and cannot generate meaningful conformance tests. The invariant demonstrates the concept's core workflow:
 
 ```
 invariant {
@@ -110,11 +110,30 @@ invariant {
 }
 ```
 
-**Invariant patterns:**
+**Invariant patterns for domain concepts:**
 - **Create then query**: Verify created entities are retrievable
 - **Mutate then verify**: Verify state changes are observable
 - **Action then reverse**: Verify undo/toggle behavior
 - **Constraint violation**: Verify that invalid operations fail correctly
+
+**Invariant patterns for framework/infrastructure concepts:**
+- **Process structured input**: Pass a minimal-but-real record/list literal for the happy path, then pass invalid input for the error path. Use record `{ field: value }` and list `[item, item]` literals to construct structured inputs like ASTs, manifests, and configurations.
+
+```
+invariant {
+  after generate(spec: "s1", manifest: {
+    name: "Ping", uri: "urn:copf/Ping", typeParams: [],
+    actions: [{ name: "ping", params: [],
+      variants: [{ tag: "ok", fields: [] }] }]
+  }) -> ok(files: f)
+  then generate(spec: "s2", manifest: { name: "" }) -> error(message: e)
+}
+```
+
+**Invariant quality checklist:**
+- Does the first step pass **realistic, minimal data** (not empty/degenerate input)?
+- Does the second step test a **different behavior** (error path, not just the same thing twice)?
+- Do the invariant arguments match the **actual handler's expected field names and types**?
 
 ### Step 6: Declare Capabilities (If Needed)
 
@@ -139,7 +158,7 @@ Run through this final checklist:
 - [ ] **Not over-scoped** — No state fields or actions that serve a different purpose
 - [ ] **Not coupled** — No references to other concept types (use type params instead)
 - [ ] **Not under-specified** — All state fields are covered by actions
-- [ ] **Not missing invariants** — At least one operational principle for domain concepts
+- [ ] **Not missing invariants** — At least one operational principle for EVERY concept (domain and framework)
 - [ ] **Proper naming** — Actions use verb-first names, variants use lowercase tags
 
 ### Step 8: Write the .concept File

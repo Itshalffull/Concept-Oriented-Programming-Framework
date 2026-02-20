@@ -259,6 +259,27 @@ it('satisfies invariant: after set, check returns true', async () => {
 });
 ```
 
+For framework concepts with record/list literal invariants, the inputs arrive as nested objects. Ensure your handler correctly destructures them:
+
+```typescript
+it('satisfies invariant: generates from manifest', async () => {
+  const storage = createInMemoryStorage();
+  // Record literal from the spec becomes a nested object input
+  const result = await handler.generate({
+    spec: 's1',
+    manifest: {
+      name: 'Ping', uri: 'urn:copf/Ping', typeParams: [], relations: [],
+      actions: [{ name: 'ping', params: [],
+        variants: [{ tag: 'ok', fields: [], prose: 'Pong.' }] }],
+      invariants: [], graphqlSchema: '',
+      jsonSchemas: { invocations: {}, completions: {} },
+      capabilities: [], purpose: 'A test.',
+    },
+  }, storage);
+  expect(result.variant).toBe('ok');
+});
+```
+
 #### Flow test (with syncs)
 
 ```typescript
