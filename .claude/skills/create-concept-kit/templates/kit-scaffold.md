@@ -50,13 +50,22 @@ syncs:
         TODO: Describe what this sync does and how apps might customize it.
         What would an app replace this with?
 
-# Optional: syncs that activate when another kit is present
-# integrations:
+# External concepts from other kits that this kit's syncs reference.
+# Required by default; set optional: true for conditional syncs.
+# uses:
 #   - kit: TODO-other-kit
+#     concepts:
+#       - name: TODO_ConceptName
+#         params:
+#           TODO_PARAM: { as: TODO-type-ref }
+#   - kit: TODO-optional-kit
+#     optional: true
+#     concepts:
+#       - name: TODO_OptionalConcept
 #     syncs:
-#       - path: ./syncs/TODO-integration-sync.sync
+#       - path: ./syncs/TODO-conditional-sync.sync
 #         description: >
-#           TODO: What this integration provides.
+#           TODO: Only loads if TODO-optional-kit is present.
 
 dependencies: []
 ```
@@ -147,7 +156,8 @@ dependencies: []
 | `TODO_SyncRuleName` | Sync rule name in PascalCase (used for overrides) | `ReorgCompensation` |
 | `TODO-required-sync.sync` | Sync file name in kebab-case | `finality-gate.sync` |
 | `TODO-recommended-sync.sync` | Sync file name in kebab-case | `reorg-compensation.sync` |
-| `TODO-other-kit` | Name of kit to integrate with | `auth` |
+| `TODO-other-kit` | Name of kit to integrate with or use concepts from | `auth` |
+| `TODO_ConceptName` (in uses) | External concept name in PascalCase | `User` |
 | `TODO-transport-name` | Transport name in kebab-case | `evm` |
 | `TODO-transport.ts` | Transport file name | `evm-transport.ts` |
 | `TODO-storage-name` | Storage backend name | `ipfs` |

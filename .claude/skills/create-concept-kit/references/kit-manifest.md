@@ -1,6 +1,6 @@
 # Kit Manifest Reference
 
-Complete specification for `kit.yaml` — the manifest file that declares a concept kit's contents, type alignments, sync tiers, integrations, and infrastructure.
+Complete specification for `kit.yaml` — the manifest file that declares a concept kit's contents, type alignments, sync tiers, integrations, infrastructure, and external concept references.
 
 ## File Location
 
@@ -42,13 +42,23 @@ syncs:
       description: >
         What this sync does. How apps can override it.
 
-# Optional: syncs that activate when other kits are present
-integrations:
+# External concepts from other kits that this kit's syncs reference.
+# Required by default; set optional: true for conditional syncs
+# that only load when the named kit is present.
+uses:
   - kit: other-kit-name
+    concepts:
+      - name: ConceptName
+        params:
+          T: { as: shared-type-tag }
+  - kit: another-kit
+    optional: true
+    concepts:
+      - name: OptionalConcept
     syncs:
-      - path: ./syncs/integration-sync.sync
+      - path: ./syncs/conditional-sync.sync
         description: >
-          What this integration does.
+          Only loads if another-kit is present.
 
 # Optional: other kits this kit requires
 dependencies: []
@@ -228,26 +238,69 @@ syncs:
 
 **Why `name` is required for recommended but not required syncs**: Apps override recommended syncs by declaring a sync with the same name. Required syncs can't be overridden, so naming is informational only.
 
-### `integrations` (optional)
+### `uses` (optional)
 
-Syncs that activate only when another kit is also present in the app:
+Declares external concepts from other kits that this kit's syncs reference. The `copf kit validate` command checks that all concept references in syncs are either local concepts, declared in `uses`, or built-in (e.g., `Web`).
+
+Each entry is **required by default** — the external kit must be present for this kit to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present (what was previously handled by a separate `integrations` section).
+
+**Required uses** (default):
 
 ```yaml
-integrations:
+uses:
   - kit: auth
+    concepts:
+      - name: User
+        params:
+          U: { as: user-ref }
+      - name: JWT
+```
+
+**Optional uses** (conditional syncs):
+
+```yaml
+uses:
+  - kit: auth
+    optional: true
+    concepts:
+      - name: User
+      - name: JWT
     syncs:
       - path: ./syncs/entity-ownership.sync
         description: >
-          When a user creates an entity, record ownership. Requires
-          the auth kit's User concept.
+          When a user creates an entity, record ownership.
+          Only loads if the auth kit is present.
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `kit` | string | Yes | Name of the other kit |
-| `syncs` | list | Yes | Sync files that activate with the integration |
+| `kit` | string | Yes | Name of the external kit providing the concepts |
+| `optional` | boolean | No | When `true`, the entry's syncs only load if the named kit is present. Default: `false` (required). |
+| `concepts` | list | Yes | Concept entries from that kit |
+| `syncs` | list | No | Sync files that depend on the external kit. Primarily used with `optional: true`. |
 
-**Key**: Integration syncs are neither required nor recommended. They're conditional — they only load if the named kit is also present.
+**Concept entry fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Concept name as referenced in syncs (e.g., `User`) |
+| `params` | map | No | Type parameter alignment using `as` tags, same format as the `concepts` section |
+
+**Relationship to `dependencies`:**
+
+| Section | Purpose |
+|---------|---------|
+| `dependencies` | Kit-level version constraint |
+| `uses` | Concept-level declarations — which external concepts this kit's syncs reference |
+
+A required `uses` entry implies the external kit must be present. Consider also listing it in `dependencies` for version constraint enforcement.
+
+**Validation behavior:**
+- If a `uses` section is present, syncs referencing undeclared external concepts produce **errors**
+- If no `uses` section exists, undeclared external references produce **warnings** (backward compatibility)
+- Optional uses syncs are exempt from strict validation — they only load conditionally
+- Concepts declared in `uses` but never referenced by any sync produce a **warning**
+- A required `uses` kit not listed in `dependencies` produces a **warning**
 
 ### `infrastructure` (optional, domain kits only)
 
@@ -328,7 +381,7 @@ dependencies:
     version: ">=0.1.0"
 ```
 
-Most kits have no dependencies. Use integrations (optional enhancement) over dependencies (hard requirement) when possible.
+Most kits have no dependencies. Use optional `uses` entries (conditional enhancement) over dependencies (hard requirement) when possible.
 
 ## App-Side Usage
 
@@ -371,6 +424,8 @@ The `copf kit validate` command checks:
 5. Type parameter alignment consistency (advisory warnings)
 6. Infrastructure files exist and implement correct interfaces (domain kits)
 7. Deploy templates are valid YAML (domain kits)
+8. Sync concept references — all concepts referenced in syncs must be local, declared in `uses`, or built-in (`Web`)
+9. Optional uses syncs are exempt from strict reference checking (they only load conditionally)
 
 ```bash
 npx tsx tools/copf-cli/src/index.ts kit validate kits/<kit-name>
@@ -381,12 +436,15 @@ Output for a framework kit:
 Validating kit: kits/content-management
 
   Kit: content-management
+  Uses: 2 external concept(s) from 1 kit
+    [OK] User (from auth)
+    [OK] JWT (from auth)
   Concepts: 4
     [OK] Entity (entity.concept)
     [OK] Field (field.concept)
     [OK] Relation (relation.concept)
     [OK] Node (node.concept)
-  Syncs: 6
+  Syncs: 7
     [OK] CascadeDeleteFields (syncs/cascade-delete-fields.sync)
     [OK] CascadeDeleteRelations (syncs/cascade-delete-relations.sync)
     ...

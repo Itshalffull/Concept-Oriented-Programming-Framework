@@ -108,18 +108,23 @@ The primary parameter (`F`) is the concept's own entity type. The secondary para
 
 ### Cross-kit alignment
 
-When a kit integrates with another kit, use the same `as` tags:
+When a kit uses concepts from another kit, use the same `as` tags:
 
 ```yaml
 # content-management kit
-integrations:
+uses:
   - kit: auth
+    optional: true
+    concepts:
+      - name: User
+        params:
+          U: { as: user-ref }
     syncs:
       - path: ./syncs/entity-ownership.sync
         description: Record which user created an entity.
 ```
 
-In the integration sync, the `?user` variable would carry `user-ref` (from the auth kit) and `?entity` would carry `entity-ref` (from this kit). Even though the kits are separate, the `as` tags let the compiler check consistency.
+In the uses sync, the `?user` variable would carry `user-ref` (from the auth kit) and `?entity` would carry `entity-ref` (from this kit). Even though the kits are separate, the `as` tags let the compiler check consistency.
 
 ## Compiler Validation
 

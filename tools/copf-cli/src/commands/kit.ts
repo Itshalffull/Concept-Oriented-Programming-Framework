@@ -14,6 +14,7 @@ import { join, resolve, relative, basename } from 'path';
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { parseSyncFile } from '../../../../implementations/typescript/framework/sync-parser.impl.js';
 import { findFiles } from '../util.js';
+import type { CompiledSync, UsesEntry } from '../../../../kernel/src/types.js';
 
 const KIT_YAML_TEMPLATE = `# Kit Manifest
 name: {{NAME}}
@@ -28,6 +29,23 @@ syncs:
   - name: example-flow
     file: syncs/example.sync
     tier: recommended
+
+# External concepts from other kits that this kit's syncs reference.
+# Required uses: concepts must be available for the kit to function.
+# Optional uses: syncs only load if the named kit is present.
+# uses:
+#   - kit: other-kit-name
+#     concepts:
+#       - name: ConceptName
+#         params:
+#           T: { as: shared-type-tag }
+#   - kit: another-kit
+#     optional: true
+#     concepts:
+#       - name: OptionalConcept
+#     syncs:
+#       - path: ./syncs/optional-integration.sync
+#         description: Only loads if another-kit is present.
 
 dependencies: []
 `;
@@ -64,6 +82,271 @@ then {
   Example/create: [ id: ?id ]
 }
 `;
+
+// ---- Helpers for uses parsing and sync reference validation ----
+
+/**
+ * Extract all unique concept names referenced in a compiled sync's
+ * when, where, and then clauses. Concept references are stored as
+ * URNs (urn:copf/Name) by the sync parser.
+ */
+export function extractConceptRefs(sync: CompiledSync): Set<string> {
+  const refs = new Set<string>();
+  for (const pattern of sync.when) {
+    refs.add(stripUrn(pattern.concept));
+  }
+  for (const entry of sync.where) {
+    if (entry.type === 'query') {
+      refs.add(stripUrn(entry.concept));
+    }
+  }
+  for (const action of sync.then) {
+    refs.add(stripUrn(action.concept));
+  }
+  return refs;
+}
+
+function stripUrn(conceptRef: string): string {
+  // urn:copf/ConceptName -> ConceptName
+  const slash = conceptRef.lastIndexOf('/');
+  return slash >= 0 ? conceptRef.slice(slash + 1) : conceptRef;
+}
+
+/**
+ * Parse the `uses` section from a kit manifest YAML source.
+ * Uses line-by-line parsing to handle the nested structure:
+ *
+ *   uses:
+ *     - kit: auth
+ *       optional: true
+ *       concepts:
+ *         - name: User
+ *           params:
+ *             U: { as: user-ref }
+ *         - name: JWT
+ *       syncs:
+ *         - path: ./syncs/entity-ownership.sync
+ *           description: Only loads if auth kit is present.
+ */
+export function parseUsesSection(source: string): UsesEntry[] {
+  const lines = source.split('\n');
+  const result: UsesEntry[] = [];
+
+  // Find the `uses:` top-level key
+  let i = 0;
+  while (i < lines.length) {
+    if (/^uses:\s*$/.test(lines[i]) || /^uses:\s*\[\s*\]\s*$/.test(lines[i])) break;
+    i++;
+  }
+  if (i >= lines.length) return [];
+  // `uses: []` — explicit empty
+  if (/^uses:\s*\[\s*\]\s*$/.test(lines[i])) return [];
+  i++;
+
+  // Parse list items under `uses:`
+  let currentEntry: UsesEntry | null = null;
+  let inConcepts = false;
+  let inSyncs = false;
+  let currentConcept: { name: string; params?: Record<string, { as: string; description?: string }> } | null = null;
+  let inParams = false;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Stop if we hit a new top-level key (no leading whitespace)
+    if (/^\S/.test(line) && line.trim() !== '') break;
+
+    const trimmed = line.trim();
+
+    // Skip empty lines and comments
+    if (trimmed === '' || trimmed.startsWith('#')) {
+      i++;
+      continue;
+    }
+
+    // New uses entry: `  - kit: <name>`
+    const kitMatch = trimmed.match(/^-\s*kit:\s*(.+)$/);
+    if (kitMatch) {
+      // Save previous concept and entry
+      if (currentConcept && currentEntry) {
+        currentEntry.concepts.push(currentConcept);
+      }
+      if (currentEntry) {
+        result.push(currentEntry);
+      }
+      currentEntry = { kit: kitMatch[1].trim(), concepts: [] };
+      currentConcept = null;
+      inConcepts = false;
+      inSyncs = false;
+      inParams = false;
+      i++;
+      continue;
+    }
+
+    // `optional: true/false` on a uses entry
+    const optionalMatch = trimmed.match(/^optional:\s*(true|false)$/);
+    if (optionalMatch && currentEntry) {
+      currentEntry.optional = optionalMatch[1] === 'true';
+      i++;
+      continue;
+    }
+
+    // `concepts:` sub-key
+    if (trimmed === 'concepts:' && currentEntry) {
+      // Flush any pending concept before switching context
+      if (currentConcept) {
+        currentEntry.concepts.push(currentConcept);
+        currentConcept = null;
+      }
+      inConcepts = true;
+      inSyncs = false;
+      inParams = false;
+      i++;
+      continue;
+    }
+
+    // `syncs:` sub-key on a uses entry (for optional syncs)
+    if (trimmed === 'syncs:' && currentEntry) {
+      // Flush any pending concept
+      if (currentConcept) {
+        currentEntry.concepts.push(currentConcept);
+        currentConcept = null;
+      }
+      currentEntry.syncs = currentEntry.syncs || [];
+      inSyncs = true;
+      inConcepts = false;
+      inParams = false;
+      i++;
+      continue;
+    }
+
+    // Sync path entry: `- path: ./syncs/foo.sync`
+    const syncPathMatch = trimmed.match(/^-\s*path:\s*(.+)$/);
+    if (syncPathMatch && inSyncs && currentEntry) {
+      currentEntry.syncs = currentEntry.syncs || [];
+      currentEntry.syncs.push({ path: syncPathMatch[1].trim() });
+      i++;
+      continue;
+    }
+
+    // Sync description: `description: ...`
+    const syncDescMatch = trimmed.match(/^description:\s*(.*)$/);
+    if (syncDescMatch && inSyncs && currentEntry?.syncs?.length) {
+      const lastSync = currentEntry.syncs[currentEntry.syncs.length - 1];
+      lastSync.description = syncDescMatch[1].trim();
+      i++;
+      continue;
+    }
+
+    // New concept entry: `- name: <Name>`
+    const nameMatch = trimmed.match(/^-\s*name:\s*(.+)$/);
+    if (nameMatch && inConcepts && currentEntry) {
+      if (currentConcept) {
+        currentEntry.concepts.push(currentConcept);
+      }
+      currentConcept = { name: nameMatch[1].trim() };
+      inParams = false;
+      i++;
+      continue;
+    }
+
+    // `params:` sub-key under a concept
+    if (trimmed === 'params:' && currentConcept) {
+      currentConcept.params = {};
+      inParams = true;
+      i++;
+      continue;
+    }
+
+    // Param entry: `T: { as: type-ref }` or `T: { as: type-ref, description: "..." }`
+    if (inParams && currentConcept?.params) {
+      const paramMatch = trimmed.match(
+        /^(\w+):\s*\{\s*as:\s*([^,}]+)(?:,\s*description:\s*"([^"]*)")?\s*\}$/,
+      );
+      if (paramMatch) {
+        const [, paramName, asTag, desc] = paramMatch;
+        currentConcept.params[paramName] = { as: asTag.trim() };
+        if (desc) {
+          currentConcept.params[paramName].description = desc;
+        }
+      }
+      i++;
+      continue;
+    }
+
+    i++;
+  }
+
+  // Flush last concept and entry
+  if (currentConcept && currentEntry) {
+    currentEntry.concepts.push(currentConcept);
+  }
+  if (currentEntry) {
+    result.push(currentEntry);
+  }
+
+  return result;
+}
+
+/**
+ * Get sync paths from optional uses entries. These are syncs that only
+ * load when the external kit is present — exempt from strict validation.
+ * Returns a set of resolved absolute paths.
+ */
+export function getOptionalSyncPaths(uses: UsesEntry[], kitDir: string): Set<string> {
+  const paths = new Set<string>();
+  for (const entry of uses) {
+    if (entry.optional && entry.syncs) {
+      for (const s of entry.syncs) {
+        const syncPath = s.path.replace(/^\.\//, '');
+        paths.add(resolve(kitDir, syncPath));
+      }
+    }
+  }
+  return paths;
+}
+
+/**
+ * Parse concept names declared in the manifest's `concepts:` section.
+ * Works by finding `concepts:` as a top-level key and collecting names.
+ */
+export function parseLocalConceptNames(source: string): Set<string> {
+  const names = new Set<string>();
+  const lines = source.split('\n');
+
+  let i = 0;
+  // Find `concepts:` top-level key
+  while (i < lines.length) {
+    if (/^concepts:\s*$/.test(lines[i])) break;
+    i++;
+  }
+  if (i >= lines.length) return names;
+  i++;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    // Stop at next top-level key
+    if (/^\S/.test(line) && line.trim() !== '') break;
+
+    const trimmed = line.trim();
+    // List format: `- name: ConceptName`
+    const listMatch = trimmed.match(/^-\s*name:\s*(\w+)/);
+    if (listMatch) {
+      names.add(listMatch[1]);
+      i++;
+      continue;
+    }
+    // Map format: `ConceptName:`  (used in architecture examples)
+    const mapMatch = trimmed.match(/^(\w+):\s*$/);
+    if (mapMatch && !['spec', 'params', 'description'].includes(mapMatch[1])) {
+      names.add(mapMatch[1]);
+    }
+
+    i++;
+  }
+
+  return names;
+}
 
 export async function kitCommand(
   positional: string[],
@@ -177,7 +460,6 @@ async function kitValidate(
 
   console.log(`Validating kit: ${kitPath}\n`);
 
-  let hasErrors = false;
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -188,6 +470,36 @@ async function kitValidate(
 
   console.log(`  Kit: ${kitName}`);
 
+  // Parse uses declarations
+  const uses = parseUsesSection(manifestSource);
+  const usesConceptNames = new Set<string>();
+  for (const entry of uses) {
+    for (const c of entry.concepts) {
+      usesConceptNames.add(c.name);
+    }
+  }
+  const hasUsesSection = /^uses:\s*/m.test(manifestSource);
+
+  if (uses.length > 0) {
+    const totalExternal = uses.reduce((sum, u) => sum + u.concepts.length, 0);
+    const requiredUses = uses.filter(u => !u.optional);
+    const optionalUses = uses.filter(u => u.optional);
+    console.log(`  Uses: ${totalExternal} external concept(s) from ${uses.length} kit(s)`);
+    for (const entry of requiredUses) {
+      for (const c of entry.concepts) {
+        console.log(`    [OK] ${c.name} (from ${entry.kit})`);
+      }
+    }
+    for (const entry of optionalUses) {
+      for (const c of entry.concepts) {
+        console.log(`    [OK] ${c.name} (from ${entry.kit}, optional)`);
+      }
+    }
+  }
+
+  // Parse local concept names from manifest and concept files
+  const localConceptNames = parseLocalConceptNames(manifestSource);
+
   // Validate concept specs
   const conceptFiles = findFiles(kitDir, '.concept');
   console.log(`  Concepts: ${conceptFiles.length}`);
@@ -197,29 +509,82 @@ async function kitValidate(
     const source = readFileSync(file, 'utf-8');
     try {
       const ast = parseConceptFile(source);
+      localConceptNames.add(ast.name);
       console.log(`    [OK] ${ast.name} (${relPath})`);
     } catch (err: unknown) {
-      hasErrors = true;
       const message = err instanceof Error ? err.message : String(err);
       errors.push(`${relPath}: ${message}`);
       console.log(`    [FAIL] ${relPath}: ${message}`);
     }
   }
 
-  // Validate sync files
+  // Build known concepts set: local + uses + builtins
+  const knownConcepts = new Set<string>([
+    ...localConceptNames,
+    ...usesConceptNames,
+    'Web', // bootstrap concept
+  ]);
+
+  // Get optional uses sync paths (exempt from strict validation)
+  const optionalSyncPaths = getOptionalSyncPaths(uses, kitDir);
+
+  // Validate sync files and check concept references
   const syncFiles = findFiles(join(kitDir, 'syncs'), '.sync');
   console.log(`  Syncs: ${syncFiles.length}`);
+  const referencedUsesNames = new Set<string>();
 
   for (const file of syncFiles) {
     const relPath = relative(kitDir, file);
     const source = readFileSync(file, 'utf-8');
+    const isOptionalSync = optionalSyncPaths.has(resolve(file));
+
     try {
       const syncs = parseSyncFile(source);
       for (const s of syncs) {
-        console.log(`    [OK] ${s.name} (${relPath})`);
+        const refs = extractConceptRefs(s);
+        const unknownRefs: string[] = [];
+
+        for (const ref of refs) {
+          if (usesConceptNames.has(ref)) {
+            referencedUsesNames.add(ref);
+          }
+          if (!knownConcepts.has(ref)) {
+            unknownRefs.push(ref);
+          }
+        }
+
+        if (unknownRefs.length > 0) {
+          if (isOptionalSync) {
+            // Optional uses syncs get a warning, not an error —
+            // they only load when the external kit is present
+            for (const ref of unknownRefs) {
+              warnings.push(
+                `${relPath}: Optional sync "${s.name}" references "${ref}" which is not declared in uses concepts`,
+              );
+            }
+            console.log(`    [WARN] ${s.name} (${relPath}) — references external concept(s): ${unknownRefs.join(', ')}`);
+          } else if (hasUsesSection) {
+            // uses section exists — strict mode: unknown refs are errors
+            for (const ref of unknownRefs) {
+              errors.push(
+                `${relPath}: Sync "${s.name}" references unknown concept "${ref}" — declare it in 'uses' if it comes from another kit`,
+              );
+            }
+            console.log(`    [FAIL] ${s.name} (${relPath}) — unknown concept(s): ${unknownRefs.join(', ')}`);
+          } else {
+            // No uses section — backward-compatible: warn with hint
+            for (const ref of unknownRefs) {
+              warnings.push(
+                `${relPath}: Sync "${s.name}" references "${ref}" which is not a local concept — add a 'uses' section to declare external concepts`,
+              );
+            }
+            console.log(`    [WARN] ${s.name} (${relPath}) — external concept(s): ${unknownRefs.join(', ')}`);
+          }
+        } else {
+          console.log(`    [OK] ${s.name} (${relPath})`);
+        }
       }
     } catch (err: unknown) {
-      hasErrors = true;
       const message = err instanceof Error ? err.message : String(err);
       errors.push(`${relPath}: ${message}`);
       console.log(`    [FAIL] ${relPath}: ${message}`);
@@ -232,6 +597,34 @@ async function kitValidate(
   console.log(
     `  Sync tiers: ${requiredSyncs?.length || 0} required, ${recommendedSyncs?.length || 0} recommended`,
   );
+
+  // Warn about unused uses entries
+  for (const name of usesConceptNames) {
+    if (!referencedUsesNames.has(name)) {
+      warnings.push(`Uses concept "${name}" is declared but never referenced by any sync`);
+    }
+  }
+
+  // Warn about uses kits not in dependencies
+  const depsMatch = manifestSource.match(/^dependencies:\s*$/m);
+  if (depsMatch && uses.length > 0) {
+    for (const entry of uses) {
+      const depPattern = new RegExp(`name:\\s*${entry.kit}`, 'm');
+      if (!depPattern.test(manifestSource)) {
+        warnings.push(
+          `Uses references kit "${entry.kit}" which is not listed in 'dependencies'`,
+        );
+      }
+    }
+  }
+
+  // Report warnings
+  if (warnings.length > 0) {
+    console.log(`\n  Warnings: ${warnings.length}`);
+    for (const w of warnings) {
+      console.log(`    [WARN] ${w}`);
+    }
+  }
 
   if (errors.length > 0) {
     console.log(`\nValidation failed: ${errors.length} error(s)`);

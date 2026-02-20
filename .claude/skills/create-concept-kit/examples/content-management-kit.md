@@ -180,11 +180,11 @@ then {
 
 **Disable scenario**: An app might batch field updates and only touch the timestamp once at the end. Disable `UpdateTimestamp` and manage timestamps in a custom sync.
 
-### Integration Syncs (1)
+### Optional Uses Syncs (1)
 
 **7. Entity Ownership** (activates with auth kit)
 
-When a user creates an entity, record ownership. This sync only loads if the auth kit is also present.
+When a user creates an entity, record ownership. This sync only loads if the auth kit is also present. Declared as an optional uses entry.
 
 ```
 sync EntityOwnership [eager]
@@ -262,13 +262,17 @@ syncs:
         When a field is attached or updated, touch the entity's
         updated timestamp. Disable if you manage timestamps differently.
 
-integrations:
+uses:
   - kit: auth
+    optional: true
+    concepts:
+      - name: JWT
+      - name: User
     syncs:
       - path: ./syncs/entity-ownership.sync
         description: >
-          When a user creates an entity, record ownership. Requires
-          the auth kit's User concept.
+          When a user creates an entity, record ownership.
+          Only loads if the auth kit is present.
 
 dependencies: []
 ```
@@ -284,9 +288,9 @@ kits:
     path: ./kits/content-management
 ```
 
-All 3 required + 3 recommended syncs load. Integration syncs are ignored (no auth kit present).
+All 3 required + 3 recommended syncs load. Optional uses syncs are skipped (no auth kit present).
 
-### With auth kit integration
+### With auth kit
 
 ```yaml
 kits:
@@ -296,7 +300,7 @@ kits:
     path: ./kits/auth
 ```
 
-All 6 kit syncs + 1 integration sync (EntityOwnership) load.
+All 6 kit syncs + 1 optional uses sync (EntityOwnership) load.
 
 ### With overrides and disables
 
