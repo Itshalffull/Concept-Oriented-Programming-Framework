@@ -225,3 +225,333 @@ impl WorkflowHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── define_state tests ─────────────────────────────────
+
+    #[tokio::test]
+    async fn define_state_returns_ok_with_state_name() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        let result = handler
+            .define_state(
+                WorkflowDefineStateInput {
+                    workflow_id: "wf1".into(),
+                    name: "draft".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            WorkflowDefineStateOutput::Ok {
+                workflow_id,
+                state_name,
+            } => {
+                assert_eq!(workflow_id, "wf1");
+                assert_eq!(state_name, "draft");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn define_state_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        handler
+            .define_state(
+                WorkflowDefineStateInput {
+                    workflow_id: "wf1".into(),
+                    name: "published".into(),
+                    config: r#"{"final":true}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("workflow", "wf1:published").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["type"].as_str().unwrap(), "state");
+    }
+
+    // ── define_transition tests ────────────────────────────
+
+    #[tokio::test]
+    async fn define_transition_returns_ok() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        let result = handler
+            .define_transition(
+                WorkflowDefineTransitionInput {
+                    workflow_id: "wf1".into(),
+                    from_state: "draft".into(),
+                    to_state: "review".into(),
+                    guard: "has_content".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            WorkflowDefineTransitionOutput::Ok { workflow_id } => {
+                assert_eq!(workflow_id, "wf1");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn define_transition_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        handler
+            .define_transition(
+                WorkflowDefineTransitionInput {
+                    workflow_id: "wf1".into(),
+                    from_state: "review".into(),
+                    to_state: "published".into(),
+                    guard: "approved".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage
+            .get("workflow", "wf1:review:published")
+            .await
+            .unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["type"].as_str().unwrap(), "transition");
+        assert_eq!(record["guard"].as_str().unwrap(), "approved");
+    }
+
+    // ── transition tests ───────────────────────────────────
+
+    #[tokio::test]
+    async fn transition_succeeds_when_allowed() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        // Define a transition from __initial__ to draft
+        handler
+            .define_transition(
+                WorkflowDefineTransitionInput {
+                    workflow_id: "wf1".into(),
+                    from_state: "__initial__".into(),
+                    to_state: "draft".into(),
+                    guard: "none".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .transition(
+                WorkflowTransitionInput {
+                    entity_id: "doc1".into(),
+                    workflow_id: "wf1".into(),
+                    target_state: "draft".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            WorkflowTransitionOutput::Ok {
+                entity_id,
+                from_state,
+                to_state,
+            } => {
+                assert_eq!(entity_id, "doc1");
+                assert_eq!(from_state, "__initial__");
+                assert_eq!(to_state, "draft");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn transition_returns_not_allowed_when_undefined() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        let result = handler
+            .transition(
+                WorkflowTransitionInput {
+                    entity_id: "doc1".into(),
+                    workflow_id: "wf1".into(),
+                    target_state: "published".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            WorkflowTransitionOutput::NotAllowed { .. }
+        ));
+    }
+
+    #[tokio::test]
+    async fn transition_chains_correctly() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        handler
+            .define_transition(
+                WorkflowDefineTransitionInput {
+                    workflow_id: "wf1".into(),
+                    from_state: "__initial__".into(),
+                    to_state: "draft".into(),
+                    guard: "none".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .define_transition(
+                WorkflowDefineTransitionInput {
+                    workflow_id: "wf1".into(),
+                    from_state: "draft".into(),
+                    to_state: "published".into(),
+                    guard: "none".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        // First transition: __initial__ -> draft
+        handler
+            .transition(
+                WorkflowTransitionInput {
+                    entity_id: "doc1".into(),
+                    workflow_id: "wf1".into(),
+                    target_state: "draft".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        // Second transition: draft -> published
+        let result = handler
+            .transition(
+                WorkflowTransitionInput {
+                    entity_id: "doc1".into(),
+                    workflow_id: "wf1".into(),
+                    target_state: "published".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            WorkflowTransitionOutput::Ok {
+                from_state,
+                to_state,
+                ..
+            } => {
+                assert_eq!(from_state, "draft");
+                assert_eq!(to_state, "published");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    // ── get_current_state tests ────────────────────────────
+
+    #[tokio::test]
+    async fn get_current_state_returns_state_after_transition() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        handler
+            .define_transition(
+                WorkflowDefineTransitionInput {
+                    workflow_id: "wf1".into(),
+                    from_state: "__initial__".into(),
+                    to_state: "active".into(),
+                    guard: "none".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .transition(
+                WorkflowTransitionInput {
+                    entity_id: "item1".into(),
+                    workflow_id: "wf1".into(),
+                    target_state: "active".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_current_state(
+                WorkflowGetCurrentStateInput {
+                    entity_id: "item1".into(),
+                    workflow_id: "wf1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            WorkflowGetCurrentStateOutput::Ok { entity_id, state } => {
+                assert_eq!(entity_id, "item1");
+                assert_eq!(state, "active");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_current_state_returns_notfound_when_no_state() {
+        let storage = InMemoryStorage::new();
+        let handler = WorkflowHandler;
+
+        let result = handler
+            .get_current_state(
+                WorkflowGetCurrentStateInput {
+                    entity_id: "unknown".into(),
+                    workflow_id: "wf1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            WorkflowGetCurrentStateOutput::NotFound { .. }
+        ));
+    }
+}
