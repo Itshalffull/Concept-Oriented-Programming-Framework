@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conduit — React</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333; background: #f5f5f5; }
+    a { color: #5cb85c; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+    nav { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 0; margin-bottom: 24px; }
+    nav .container { display: flex; justify-content: space-between; align-items: center; }
+    nav .brand { font-size: 1.4rem; font-weight: bold; color: #5cb85c; }
+    nav .nav-links a { margin-left: 16px; color: #999; }
+    nav .nav-links a:hover, nav .nav-links a.active { color: #333; }
+    .banner { background: #5cb85c; color: #fff; text-align: center; padding: 32px 0; margin-bottom: 24px; }
+    .banner h1 { font-size: 2.5rem; margin-bottom: 8px; }
+    .btn { display: inline-block; padding: 8px 16px; border: 1px solid #5cb85c; color: #5cb85c; border-radius: 4px; cursor: pointer; background: transparent; font-size: 0.9rem; }
+    .btn:hover { background: #5cb85c; color: #fff; text-decoration: none; }
+    .btn-primary { background: #5cb85c; color: #fff; }
+    .btn-danger { border-color: #dc3545; color: #dc3545; }
+    .btn-danger:hover { background: #dc3545; color: #fff; }
+    .form-group { margin-bottom: 16px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+    .form-group textarea { min-height: 120px; resize: vertical; }
+    .error-msg { color: #dc3545; margin-bottom: 12px; }
+    .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px; margin-bottom: 16px; }
+    .tag { display: inline-block; background: #818a91; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin: 2px; cursor: pointer; }
+    .tag:hover { background: #5cb85c; }
+    .article-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; color: #999; font-size: 0.85rem; }
+    .article-meta img { width: 32px; height: 32px; border-radius: 50%; }
+    .two-col { display: grid; grid-template-columns: 3fr 1fr; gap: 24px; }
+    .loading { text-align: center; padding: 40px; color: #999; }
+    .auth-page { max-width: 480px; margin: 0 auto; }
+    .comment-form textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; min-height: 80px; margin-bottom: 8px; }
+    .comment { border-bottom: 1px solid #eee; padding: 12px 0; }
+    .comment:last-child { border-bottom: none; }
+    .profile-header { text-align: center; padding: 32px 0; background: #fff; margin-bottom: 24px; }
+    .profile-header img { width: 96px; height: 96px; border-radius: 50%; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/main.tsx"></script>
+</body>
+</html>
