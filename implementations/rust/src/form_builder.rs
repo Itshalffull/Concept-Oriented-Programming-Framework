@@ -236,3 +236,192 @@ impl FormBuilderHandler {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn build_form_schema_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        let result = handler
+            .build_form(
+                BuildFormInput {
+                    schema_id: "nonexistent".into(),
+                    mode: "edit".into(),
+                    entity_id: "e1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, BuildFormOutput::SchemaNotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn build_form_with_schema() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        // Create a schema in storage
+        storage
+            .put(
+                "schema",
+                "article",
+                serde_json::json!({
+                    "schema_id": "article",
+                    "fields": [
+                        {"name": "title", "type": "text", "required": true},
+                        {"name": "body", "type": "textarea", "required": false}
+                    ]
+                }),
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .build_form(
+                BuildFormInput {
+                    schema_id: "article".into(),
+                    mode: "edit".into(),
+                    entity_id: "e1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            BuildFormOutput::Ok { form_id, fields } => {
+                assert_eq!(form_id, "form_article_e1");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&fields).unwrap();
+                assert_eq!(parsed.len(), 2);
+            }
+            BuildFormOutput::SchemaNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn validate_form_valid() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        storage
+            .put(
+                "schema",
+                "article",
+                serde_json::json!({
+                    "schema_id": "article",
+                    "fields": [
+                        {"name": "title", "type": "text", "required": true}
+                    ]
+                }),
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .validate_form(
+                ValidateFormInput {
+                    form_data: r#"{"title": "Hello"}"#.into(),
+                    schema_id: "article".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ValidateFormOutput::Ok { valid } => assert!(valid),
+            ValidateFormOutput::Invalid { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn validate_form_missing_required_field() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        storage
+            .put(
+                "schema",
+                "article",
+                serde_json::json!({
+                    "schema_id": "article",
+                    "fields": [
+                        {"name": "title", "type": "text", "required": true}
+                    ]
+                }),
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .validate_form(
+                ValidateFormInput {
+                    form_data: r#"{}"#.into(),
+                    schema_id: "article".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, ValidateFormOutput::Invalid { .. }));
+    }
+
+    #[tokio::test]
+    async fn process_submission_ok() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        let result = handler
+            .process_submission(
+                ProcessSubmissionInput {
+                    form_data: r#"{"title": "Test"}"#.into(),
+                    node_id: "n1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ProcessSubmissionOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+            ProcessSubmissionOutput::ValidationFailed { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn process_submission_empty_data() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        let result = handler
+            .process_submission(
+                ProcessSubmissionInput {
+                    form_data: r#"{}"#.into(),
+                    node_id: "n1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, ProcessSubmissionOutput::ValidationFailed { .. }));
+    }
+
+    #[tokio::test]
+    async fn register_widget() {
+        let storage = InMemoryStorage::new();
+        let handler = FormBuilderHandler;
+        let result = handler
+            .register_widget(
+                RegisterWidgetInput {
+                    field_type: "date".into(),
+                    widget_id: "datepicker_v2".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            RegisterWidgetOutput::Ok { field_type, widget_id } => {
+                assert_eq!(field_type, "date");
+                assert_eq!(widget_id, "datepicker_v2");
+            }
+        }
+    }
+}

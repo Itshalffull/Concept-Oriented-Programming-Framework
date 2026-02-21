@@ -139,3 +139,130 @@ impl MediaAssetHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn create_media() {
+        let storage = InMemoryStorage::new();
+        let handler = MediaAssetHandler;
+        let result = handler
+            .create_media(
+                MediaAssetCreateMediaInput {
+                    media_type: "image".into(),
+                    source: "photo.jpg".into(),
+                    metadata: r#"{"width": 800, "height": 600}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            MediaAssetCreateMediaOutput::Ok { media_id } => {
+                assert!(media_id.starts_with("media_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn extract_metadata_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = MediaAssetHandler;
+        let create_result = handler
+            .create_media(
+                MediaAssetCreateMediaInput {
+                    media_type: "image".into(),
+                    source: "photo.jpg".into(),
+                    metadata: r#"{"width": 1920}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let media_id = match create_result {
+            MediaAssetCreateMediaOutput::Ok { media_id } => media_id,
+        };
+
+        let result = handler
+            .extract_metadata(
+                MediaAssetExtractMetadataInput { media_id: media_id.clone() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            MediaAssetExtractMetadataOutput::Ok { media_id: mid, metadata } => {
+                assert_eq!(mid, media_id);
+                assert!(metadata.contains("1920"));
+            }
+            MediaAssetExtractMetadataOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn extract_metadata_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = MediaAssetHandler;
+        let result = handler
+            .extract_metadata(
+                MediaAssetExtractMetadataInput { media_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, MediaAssetExtractMetadataOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn generate_thumbnail_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = MediaAssetHandler;
+        let create_result = handler
+            .create_media(
+                MediaAssetCreateMediaInput {
+                    media_type: "image".into(),
+                    source: "photo.jpg".into(),
+                    metadata: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let media_id = match create_result {
+            MediaAssetCreateMediaOutput::Ok { media_id } => media_id,
+        };
+
+        let result = handler
+            .generate_thumbnail(
+                MediaAssetGenerateThumbnailInput { media_id: media_id.clone() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            MediaAssetGenerateThumbnailOutput::Ok { media_id: mid, thumbnail_uri } => {
+                assert_eq!(mid, media_id);
+                assert!(thumbnail_uri.starts_with("/thumbnails/"));
+                assert!(thumbnail_uri.contains("photo.jpg"));
+            }
+            MediaAssetGenerateThumbnailOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn generate_thumbnail_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = MediaAssetHandler;
+        let result = handler
+            .generate_thumbnail(
+                MediaAssetGenerateThumbnailInput { media_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, MediaAssetGenerateThumbnailOutput::NotFound { .. }));
+    }
+}

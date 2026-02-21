@@ -209,3 +209,318 @@ impl PropertyHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── set tests ──────────────────────────────────────────
+
+    #[tokio::test]
+    async fn set_returns_ok_with_node_id_and_key() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        let result = handler
+            .set(
+                SetInput {
+                    node_id: "n1".into(),
+                    key: "color".into(),
+                    value: serde_json::json!("blue"),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            SetOutput::Ok { node_id, key } => {
+                assert_eq!(node_id, "n1");
+                assert_eq!(key, "color");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn set_stores_value_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        handler
+            .set(
+                SetInput {
+                    node_id: "n1".into(),
+                    key: "size".into(),
+                    value: serde_json::json!(42),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("property", "n1:size").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["value"], serde_json::json!(42));
+    }
+
+    // ── get tests ──────────────────────────────────────────
+
+    #[tokio::test]
+    async fn get_returns_value_after_set() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        handler
+            .set(
+                SetInput {
+                    node_id: "n1".into(),
+                    key: "title".into(),
+                    value: serde_json::json!("Hello"),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get(
+                GetInput {
+                    node_id: "n1".into(),
+                    key: "title".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetOutput::Ok { node_id, key, value } => {
+                assert_eq!(node_id, "n1");
+                assert_eq!(key, "title");
+                assert_eq!(value, serde_json::json!("Hello"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_returns_notfound_when_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        let result = handler
+            .get(
+                GetInput {
+                    node_id: "n1".into(),
+                    key: "missing".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, GetOutput::NotFound { .. }));
+    }
+
+    // ── delete tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn delete_removes_existing_property() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        handler
+            .set(
+                SetInput {
+                    node_id: "n1".into(),
+                    key: "temp".into(),
+                    value: serde_json::json!("val"),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .delete(
+                DeleteInput {
+                    node_id: "n1".into(),
+                    key: "temp".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DeleteOutput::Ok { .. }));
+
+        let get_result = handler
+            .get(
+                GetInput {
+                    node_id: "n1".into(),
+                    key: "temp".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(get_result, GetOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn delete_returns_notfound_when_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        let result = handler
+            .delete(
+                DeleteInput {
+                    node_id: "n1".into(),
+                    key: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DeleteOutput::NotFound { .. }));
+    }
+
+    // ── define_type tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn define_type_stores_type_definition() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        let result = handler
+            .define_type(
+                DefineTypeInput {
+                    key: "email".into(),
+                    prop_type: "string".into(),
+                    constraints: serde_json::json!({"format": "email"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DefineTypeOutput::Ok { key } => assert_eq!(key, "email"),
+        }
+
+        let record = storage.get("property_type", "email").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn define_type_returns_ok_for_different_types() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        let r1 = handler
+            .define_type(
+                DefineTypeInput {
+                    key: "age".into(),
+                    prop_type: "number".into(),
+                    constraints: serde_json::json!({"min": 0}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let r2 = handler
+            .define_type(
+                DefineTypeInput {
+                    key: "active".into(),
+                    prop_type: "boolean".into(),
+                    constraints: serde_json::json!({}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(r1, DefineTypeOutput::Ok { ref key } if key == "age"));
+        assert!(matches!(r2, DefineTypeOutput::Ok { ref key } if key == "active"));
+    }
+
+    // ── list_all tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn list_all_returns_all_properties_for_node() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        handler
+            .set(
+                SetInput {
+                    node_id: "n1".into(),
+                    key: "a".into(),
+                    value: serde_json::json!(1),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .set(
+                SetInput {
+                    node_id: "n1".into(),
+                    key: "b".into(),
+                    value: serde_json::json!(2),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .list_all(
+                ListAllInput {
+                    node_id: "n1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ListAllOutput::Ok { node_id, properties } => {
+                assert_eq!(node_id, "n1");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&properties).unwrap();
+                assert_eq!(parsed.len(), 2);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn list_all_returns_empty_for_unknown_node() {
+        let storage = InMemoryStorage::new();
+        let handler = PropertyHandler;
+
+        let result = handler
+            .list_all(
+                ListAllInput {
+                    node_id: "unknown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ListAllOutput::Ok { properties, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&properties).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+}

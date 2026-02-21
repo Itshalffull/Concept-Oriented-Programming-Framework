@@ -164,3 +164,240 @@ impl CacheHandler {
         Ok(CacheInvalidateByTagsOutput::Ok { count })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- set ---
+
+    #[tokio::test]
+    async fn set_stores_cache_entry() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        let result = handler
+            .set(
+                CacheSetInput {
+                    key: "k1".into(),
+                    value: "hello".into(),
+                    tags: "t1,t2".into(),
+                    max_age: 3600,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CacheSetOutput::Ok { key } => assert_eq!(key, "k1"),
+        }
+
+        let record = storage.get("cache_bin", "k1").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn set_overwrites_existing_entry() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        handler
+            .set(
+                CacheSetInput {
+                    key: "k1".into(),
+                    value: "first".into(),
+                    tags: "t1".into(),
+                    max_age: 3600,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .set(
+                CacheSetInput {
+                    key: "k1".into(),
+                    value: "second".into(),
+                    tags: "t1".into(),
+                    max_age: 3600,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("cache_bin", "k1").await.unwrap().unwrap();
+        assert_eq!(record["value"].as_str().unwrap(), "second");
+    }
+
+    // --- get ---
+
+    #[tokio::test]
+    async fn get_returns_cached_value() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        handler
+            .set(
+                CacheSetInput {
+                    key: "k1".into(),
+                    value: "cached_data".into(),
+                    tags: "".into(),
+                    max_age: 9999999,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get(CacheGetInput { key: "k1".into() }, &storage)
+            .await
+            .unwrap();
+
+        match result {
+            CacheGetOutput::Ok { key, value } => {
+                assert_eq!(key, "k1");
+                assert_eq!(value, "cached_data");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_returns_miss_for_missing_key() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        let result = handler
+            .get(CacheGetInput { key: "missing".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, CacheGetOutput::Miss { .. }));
+    }
+
+    // --- invalidate ---
+
+    #[tokio::test]
+    async fn invalidate_removes_entry() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        handler
+            .set(
+                CacheSetInput {
+                    key: "k1".into(),
+                    value: "data".into(),
+                    tags: "".into(),
+                    max_age: 9999999,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .invalidate(CacheInvalidateInput { key: "k1".into() }, &storage)
+            .await
+            .unwrap();
+
+        let result = handler
+            .get(CacheGetInput { key: "k1".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, CacheGetOutput::Miss { .. }));
+    }
+
+    #[tokio::test]
+    async fn invalidate_returns_ok_for_nonexistent_key() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        let result = handler
+            .invalidate(CacheInvalidateInput { key: "nope".into() }, &storage)
+            .await
+            .unwrap();
+
+        match result {
+            CacheInvalidateOutput::Ok { key } => assert_eq!(key, "nope"),
+        }
+    }
+
+    // --- invalidate_by_tags ---
+
+    #[tokio::test]
+    async fn invalidate_by_tags_removes_matching_entries() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        handler
+            .set(
+                CacheSetInput {
+                    key: "k1".into(),
+                    value: "v1".into(),
+                    tags: "alpha,beta".into(),
+                    max_age: 9999999,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .set(
+                CacheSetInput {
+                    key: "k2".into(),
+                    value: "v2".into(),
+                    tags: "gamma".into(),
+                    max_age: 9999999,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .invalidate_by_tags(
+                CacheInvalidateByTagsInput { tags: "alpha".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CacheInvalidateByTagsOutput::Ok { count } => assert_eq!(count, 1),
+        }
+
+        // k1 should be gone, k2 should remain
+        let r1 = handler.get(CacheGetInput { key: "k1".into() }, &storage).await.unwrap();
+        assert!(matches!(r1, CacheGetOutput::Miss { .. }));
+
+        let r2 = handler.get(CacheGetInput { key: "k2".into() }, &storage).await.unwrap();
+        assert!(matches!(r2, CacheGetOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn invalidate_by_tags_returns_zero_when_no_match() {
+        let storage = InMemoryStorage::new();
+        let handler = CacheHandler;
+
+        let result = handler
+            .invalidate_by_tags(
+                CacheInvalidateByTagsInput { tags: "nonexistent".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CacheInvalidateByTagsOutput::Ok { count } => assert_eq!(count, 0),
+        }
+    }
+}

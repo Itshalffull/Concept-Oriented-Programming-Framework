@@ -168,3 +168,221 @@ impl TypeSystemHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── register_type tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn register_type_returns_ok() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        let result = handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "string".into(),
+                    definition: serde_json::json!({"type": "string"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterTypeOutput::Ok { ref type_id } if type_id == "string"));
+    }
+
+    #[tokio::test]
+    async fn register_type_returns_already_exists_on_duplicate() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "number".into(),
+                    definition: serde_json::json!({"type": "number"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "number".into(),
+                    definition: serde_json::json!({"type": "number"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            RegisterTypeOutput::AlreadyExists { ref type_id } if type_id == "number"
+        ));
+    }
+
+    #[tokio::test]
+    async fn register_type_stores_definition() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "email".into(),
+                    definition: serde_json::json!({"type": "string", "format": "email"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("type_def", "email").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    // ── resolve tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn resolve_returns_type_definition() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "boolean".into(),
+                    definition: serde_json::json!({"type": "boolean"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .resolve(
+                ResolveInput {
+                    type_path: "boolean".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ResolveOutput::Ok { type_id, definition } => {
+                assert_eq!(type_id, "boolean");
+                assert_eq!(definition["type"].as_str().unwrap(), "boolean");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn resolve_returns_notfound_for_missing_type() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        let result = handler
+            .resolve(
+                ResolveInput {
+                    type_path: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ResolveOutput::NotFound { .. }));
+    }
+
+    // ── validate tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn validate_returns_valid_for_matching_type() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "str_type".into(),
+                    definition: serde_json::json!({"type": "string"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .validate(
+                ValidateInput {
+                    value: serde_json::json!("hello"),
+                    type_id: "str_type".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ValidateOutput::Ok { valid: true }));
+    }
+
+    #[tokio::test]
+    async fn validate_returns_invalid_for_type_mismatch() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        handler
+            .register_type(
+                RegisterTypeInput {
+                    type_id: "num_type".into(),
+                    definition: serde_json::json!({"type": "number"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .validate(
+                ValidateInput {
+                    value: serde_json::json!("not a number"),
+                    type_id: "num_type".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ValidateOutput::Invalid { .. }));
+    }
+
+    #[tokio::test]
+    async fn validate_returns_invalid_for_unregistered_type() {
+        let storage = InMemoryStorage::new();
+        let handler = TypeSystemHandler;
+
+        let result = handler
+            .validate(
+                ValidateInput {
+                    value: serde_json::json!("test"),
+                    type_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ValidateOutput::Invalid { .. }));
+    }
+}

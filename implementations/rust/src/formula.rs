@@ -197,3 +197,178 @@ impl FormulaHandler {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn set_expression_creates_formula() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        let result = handler
+            .set_expression(
+                FormulaSetExpressionInput {
+                    formula_id: "f1".into(),
+                    expression: "A1 + B1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FormulaSetExpressionOutput::Ok { formula_id } => {
+                assert_eq!(formula_id, "f1");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn evaluate_existing_formula() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        handler
+            .set_expression(
+                FormulaSetExpressionInput {
+                    formula_id: "f1".into(),
+                    expression: "A1 + B1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .evaluate(
+                FormulaEvaluateInput {
+                    formula_id: "f1".into(),
+                    context: r#"{"A1": 1, "B1": 2}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FormulaEvaluateOutput::Ok { formula_id, result } => {
+                assert_eq!(formula_id, "f1");
+                assert!(result.contains("A1 + B1"));
+            }
+            FormulaEvaluateOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn evaluate_missing_formula() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        let result = handler
+            .evaluate(
+                FormulaEvaluateInput {
+                    formula_id: "missing".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, FormulaEvaluateOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn get_dependencies() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        handler
+            .set_expression(
+                FormulaSetExpressionInput {
+                    formula_id: "f1".into(),
+                    expression: "x + y".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_dependencies(
+                FormulaGetDependenciesInput { formula_id: "f1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FormulaGetDependenciesOutput::Ok { formula_id, dependencies } => {
+                assert_eq!(formula_id, "f1");
+                assert_eq!(dependencies, "[]");
+            }
+            FormulaGetDependenciesOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_dependencies_missing_formula() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        let result = handler
+            .get_dependencies(
+                FormulaGetDependenciesInput { formula_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, FormulaGetDependenciesOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn invalidate_clears_cache() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        handler
+            .set_expression(
+                FormulaSetExpressionInput {
+                    formula_id: "f1".into(),
+                    expression: "x".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        handler
+            .evaluate(
+                FormulaEvaluateInput {
+                    formula_id: "f1".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .invalidate(
+                FormulaInvalidateInput { formula_id: "f1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FormulaInvalidateOutput::Ok { formula_id } => assert_eq!(formula_id, "f1"),
+            FormulaInvalidateOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn invalidate_missing_formula() {
+        let storage = InMemoryStorage::new();
+        let handler = FormulaHandler;
+        let result = handler
+            .invalidate(
+                FormulaInvalidateInput { formula_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, FormulaInvalidateOutput::NotFound { .. }));
+    }
+}

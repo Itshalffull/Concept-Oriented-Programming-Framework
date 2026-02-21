@@ -148,3 +148,99 @@ impl DisplayModeHandler {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn define_mode() {
+        let storage = InMemoryStorage::new();
+        let handler = DisplayModeHandler;
+        let result = handler
+            .define_mode(
+                DefineModeInput { name: "Full".into(), mode_type: "view".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            DefineModeOutput::Ok { mode_id } => {
+                assert_eq!(mode_id, "mode_view_full");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn configure_field_display() {
+        let storage = InMemoryStorage::new();
+        let handler = DisplayModeHandler;
+        handler
+            .define_mode(
+                DefineModeInput { name: "Teaser".into(), mode_type: "view".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let result = handler
+            .configure_field_display(
+                ConfigureFieldDisplayInput {
+                    schema_id: "article".into(),
+                    mode_id: "mode_view_teaser".into(),
+                    field_id: "title".into(),
+                    formatter: "plain_text".into(),
+                    settings: r#"{"trim": true}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ConfigureFieldDisplayOutput::Ok { mode_id } => {
+                assert_eq!(mode_id, "mode_view_teaser");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn render_in_mode_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = DisplayModeHandler;
+        let result = handler
+            .render_in_mode(
+                RenderInModeInput { node_id: "n1".into(), mode_id: "nonexistent".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, RenderInModeOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn render_in_mode_ok() {
+        let storage = InMemoryStorage::new();
+        let handler = DisplayModeHandler;
+        handler
+            .define_mode(
+                DefineModeInput { name: "Card".into(), mode_type: "view".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let result = handler
+            .render_in_mode(
+                RenderInModeInput { node_id: "node1".into(), mode_id: "mode_view_card".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            RenderInModeOutput::Ok { node_id, rendered } => {
+                assert_eq!(node_id, "node1");
+                assert!(rendered.contains("mode_view_card"));
+            }
+            RenderInModeOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+}

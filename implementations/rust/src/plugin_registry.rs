@@ -178,3 +178,261 @@ impl PluginRegistryHandler {
         Ok(PluginRegistryCreateInstanceOutput::Ok { instance_id })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── register_type tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn register_type_returns_ok_with_type_id() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        let result = handler
+            .register_type(
+                PluginRegistryRegisterTypeInput {
+                    type_id: "auth_plugin".into(),
+                    definition: "authentication plugins".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            PluginRegistryRegisterTypeOutput::Ok { type_id } => {
+                assert_eq!(type_id, "auth_plugin");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn register_type_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        handler
+            .register_type(
+                PluginRegistryRegisterTypeInput {
+                    type_id: "cache_plugin".into(),
+                    definition: "caching layer plugins".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("plugin_type", "cache_plugin").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["definition"].as_str().unwrap(), "caching layer plugins");
+    }
+
+    // ── register_plugin tests ──────────────────────────────
+
+    #[tokio::test]
+    async fn register_plugin_succeeds_when_type_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        handler
+            .register_type(
+                PluginRegistryRegisterTypeInput {
+                    type_id: "auth".into(),
+                    definition: "auth plugins".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .register_plugin(
+                PluginRegistryRegisterPluginInput {
+                    type_id: "auth".into(),
+                    plugin_id: "oauth2".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            PluginRegistryRegisterPluginOutput::Ok { type_id, plugin_id }
+            if type_id == "auth" && plugin_id == "oauth2"
+        ));
+    }
+
+    #[tokio::test]
+    async fn register_plugin_returns_type_notfound_when_type_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        let result = handler
+            .register_plugin(
+                PluginRegistryRegisterPluginInput {
+                    type_id: "nonexistent".into(),
+                    plugin_id: "p1".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            PluginRegistryRegisterPluginOutput::TypeNotFound { .. }
+        ));
+    }
+
+    // ── discover tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn discover_returns_plugins_for_type() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        handler
+            .register_type(
+                PluginRegistryRegisterTypeInput {
+                    type_id: "storage".into(),
+                    definition: "storage backends".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .register_plugin(
+                PluginRegistryRegisterPluginInput {
+                    type_id: "storage".into(),
+                    plugin_id: "redis".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .discover(
+                PluginRegistryDiscoverInput {
+                    type_id: "storage".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            PluginRegistryDiscoverOutput::Ok { type_id, plugins } => {
+                assert_eq!(type_id, "storage");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&plugins).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn discover_returns_type_notfound_when_type_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        let result = handler
+            .discover(
+                PluginRegistryDiscoverInput {
+                    type_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            PluginRegistryDiscoverOutput::TypeNotFound { .. }
+        ));
+    }
+
+    // ── create_instance tests ──────────────────────────────
+
+    #[tokio::test]
+    async fn create_instance_returns_ok_when_plugin_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        handler
+            .register_type(
+                PluginRegistryRegisterTypeInput {
+                    type_id: "db".into(),
+                    definition: "database plugins".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .register_plugin(
+                PluginRegistryRegisterPluginInput {
+                    type_id: "db".into(),
+                    plugin_id: "postgres".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .create_instance(
+                PluginRegistryCreateInstanceInput {
+                    type_id: "db".into(),
+                    plugin_id: "postgres".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            PluginRegistryCreateInstanceOutput::Ok { instance_id }
+            if instance_id.starts_with("inst_")
+        ));
+    }
+
+    #[tokio::test]
+    async fn create_instance_returns_notfound_when_plugin_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = PluginRegistryHandler;
+
+        let result = handler
+            .create_instance(
+                PluginRegistryCreateInstanceInput {
+                    type_id: "db".into(),
+                    plugin_id: "unknown".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            PluginRegistryCreateInstanceOutput::NotFound { .. }
+        ));
+    }
+}

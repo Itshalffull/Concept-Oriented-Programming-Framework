@@ -140,3 +140,119 @@ impl DailyNoteHandler {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn get_or_create_today_creates_new() {
+        let storage = InMemoryStorage::new();
+        let handler = DailyNoteHandler;
+        let result = handler
+            .get_or_create_today(GetOrCreateTodayInput {}, &storage)
+            .await
+            .unwrap();
+        match result {
+            GetOrCreateTodayOutput::Ok { page_id, date, created } => {
+                assert!(page_id.starts_with("daily_"));
+                assert!(!date.is_empty());
+                assert!(created);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_or_create_today_returns_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = DailyNoteHandler;
+        // First call creates
+        handler.get_or_create_today(GetOrCreateTodayInput {}, &storage).await.unwrap();
+        // Second call finds existing
+        let result = handler
+            .get_or_create_today(GetOrCreateTodayInput {}, &storage)
+            .await
+            .unwrap();
+        match result {
+            GetOrCreateTodayOutput::Ok { created, .. } => {
+                assert!(!created);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn navigate_to_date_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = DailyNoteHandler;
+        let result = handler
+            .navigate_to_date(
+                NavigateToDateInput { date: "2099-01-01".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, NavigateToDateOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn navigate_to_date_found() {
+        let storage = InMemoryStorage::new();
+        let handler = DailyNoteHandler;
+        // Create today's note first
+        let create_result = handler
+            .get_or_create_today(GetOrCreateTodayInput {}, &storage)
+            .await
+            .unwrap();
+        let today_date = match create_result {
+            GetOrCreateTodayOutput::Ok { date, .. } => date,
+        };
+        // Navigate to today's date
+        let result = handler
+            .navigate_to_date(
+                NavigateToDateInput { date: today_date.clone() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NavigateToDateOutput::Ok { page_id } => {
+                assert_eq!(page_id, format!("daily_{}", today_date));
+            }
+            NavigateToDateOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn list_recent_empty() {
+        let storage = InMemoryStorage::new();
+        let handler = DailyNoteHandler;
+        let result = handler
+            .list_recent(ListRecentInput { count: 5 }, &storage)
+            .await
+            .unwrap();
+        match result {
+            ListRecentOutput::Ok { notes } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&notes).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn list_recent_returns_notes() {
+        let storage = InMemoryStorage::new();
+        let handler = DailyNoteHandler;
+        handler.get_or_create_today(GetOrCreateTodayInput {}, &storage).await.unwrap();
+        let result = handler
+            .list_recent(ListRecentInput { count: 10 }, &storage)
+            .await
+            .unwrap();
+        match result {
+            ListRecentOutput::Ok { notes } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&notes).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+        }
+    }
+}

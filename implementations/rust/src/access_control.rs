@@ -118,3 +118,193 @@ impl AccessControlHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- check ---
+
+    #[tokio::test]
+    async fn check_returns_neutral_result() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .check(
+                CheckInput {
+                    entity_id: "doc1".into(),
+                    operation: "read".into(),
+                    user_id: "user1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CheckOutput::Ok { result, .. } => {
+                assert_eq!(result, "neutral");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn check_includes_cache_tags() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .check(
+                CheckInput {
+                    entity_id: "doc42".into(),
+                    operation: "write".into(),
+                    user_id: "admin".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CheckOutput::Ok { cache_tags, .. } => {
+                assert!(cache_tags.contains("entity:doc42"));
+                assert!(cache_tags.contains("user:admin"));
+                assert!(cache_tags.contains("op:write"));
+            }
+        }
+    }
+
+    // --- or_if ---
+
+    #[tokio::test]
+    async fn or_if_allowed_when_one_allowed() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .or_if(
+                OrIfInput {
+                    result_a: "allowed".into(),
+                    result_b: "neutral".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            OrIfOutput::Ok { result } => assert_eq!(result, "allowed"),
+        }
+    }
+
+    #[tokio::test]
+    async fn or_if_forbidden_overrides_allowed() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .or_if(
+                OrIfInput {
+                    result_a: "allowed".into(),
+                    result_b: "forbidden".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            OrIfOutput::Ok { result } => assert_eq!(result, "forbidden"),
+        }
+    }
+
+    #[tokio::test]
+    async fn or_if_neutral_when_both_neutral() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .or_if(
+                OrIfInput {
+                    result_a: "neutral".into(),
+                    result_b: "neutral".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            OrIfOutput::Ok { result } => assert_eq!(result, "neutral"),
+        }
+    }
+
+    // --- and_if ---
+
+    #[tokio::test]
+    async fn and_if_allowed_when_both_allowed() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .and_if(
+                AndIfInput {
+                    result_a: "allowed".into(),
+                    result_b: "allowed".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AndIfOutput::Ok { result } => assert_eq!(result, "allowed"),
+        }
+    }
+
+    #[tokio::test]
+    async fn and_if_forbidden_when_one_forbidden() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .and_if(
+                AndIfInput {
+                    result_a: "allowed".into(),
+                    result_b: "forbidden".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AndIfOutput::Ok { result } => assert_eq!(result, "forbidden"),
+        }
+    }
+
+    #[tokio::test]
+    async fn and_if_neutral_when_one_neutral() {
+        let storage = InMemoryStorage::new();
+        let handler = AccessControlHandler;
+
+        let result = handler
+            .and_if(
+                AndIfInput {
+                    result_a: "allowed".into(),
+                    result_b: "neutral".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AndIfOutput::Ok { result } => assert_eq!(result, "neutral"),
+        }
+    }
+}

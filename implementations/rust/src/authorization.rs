@@ -192,3 +192,220 @@ impl AuthorizationHandler {
         Ok(CheckPermissionOutput::Ok { allowed: false })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- grant_permission ---
+
+    #[tokio::test]
+    async fn grant_permission_stores_permission() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        let result = handler
+            .grant_permission(
+                GrantPermissionInput {
+                    role_id: "admin".into(),
+                    permission_id: "read".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GrantPermissionOutput::Ok { role_id, permission_id } => {
+                assert_eq!(role_id, "admin");
+                assert_eq!(permission_id, "read");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn grant_permission_creates_role_record() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        handler
+            .grant_permission(
+                GrantPermissionInput {
+                    role_id: "editor".into(),
+                    permission_id: "write".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let role = storage.get("role", "editor").await.unwrap();
+        assert!(role.is_some());
+    }
+
+    // --- revoke_permission ---
+
+    #[tokio::test]
+    async fn revoke_permission_removes_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        handler
+            .grant_permission(
+                GrantPermissionInput {
+                    role_id: "admin".into(),
+                    permission_id: "delete".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .revoke_permission(
+                RevokePermissionInput {
+                    role_id: "admin".into(),
+                    permission_id: "delete".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RevokePermissionOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn revoke_permission_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        let result = handler
+            .revoke_permission(
+                RevokePermissionInput {
+                    role_id: "admin".into(),
+                    permission_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RevokePermissionOutput::NotFound { .. }));
+    }
+
+    // --- assign_role ---
+
+    #[tokio::test]
+    async fn assign_role_stores_assignment() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        let result = handler
+            .assign_role(
+                AssignRoleInput {
+                    user_id: "user1".into(),
+                    role_id: "admin".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AssignRoleOutput::Ok { user_id, role_id } => {
+                assert_eq!(user_id, "user1");
+                assert_eq!(role_id, "admin");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn assign_role_persists_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        handler
+            .assign_role(
+                AssignRoleInput {
+                    user_id: "user1".into(),
+                    role_id: "editor".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("user_role", "user1:editor").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    // --- check_permission ---
+
+    #[tokio::test]
+    async fn check_permission_allowed_when_granted() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        handler
+            .grant_permission(
+                GrantPermissionInput {
+                    role_id: "admin".into(),
+                    permission_id: "delete".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .assign_role(
+                AssignRoleInput {
+                    user_id: "user1".into(),
+                    role_id: "admin".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .check_permission(
+                CheckPermissionInput {
+                    user_id: "user1".into(),
+                    permission_id: "delete".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CheckPermissionOutput::Ok { allowed } => assert!(allowed),
+        }
+    }
+
+    #[tokio::test]
+    async fn check_permission_denied_when_not_granted() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthorizationHandler;
+
+        let result = handler
+            .check_permission(
+                CheckPermissionInput {
+                    user_id: "user1".into(),
+                    permission_id: "delete".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CheckPermissionOutput::Ok { allowed } => assert!(!allowed),
+        }
+    }
+}

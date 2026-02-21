@@ -228,3 +228,160 @@ impl EventBusHandler {
         Ok(EventBusGetHistoryOutput::Ok { events })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn register_event_type() {
+        let storage = InMemoryStorage::new();
+        let handler = EventBusHandler;
+        let result = handler
+            .register_event_type(
+                EventBusRegisterEventTypeInput {
+                    event_type_id: "user.created".into(),
+                    payload_schema: r#"{"type": "object"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            EventBusRegisterEventTypeOutput::Ok { event_type_id } => {
+                assert_eq!(event_type_id, "user.created");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn subscribe_and_unsubscribe() {
+        let storage = InMemoryStorage::new();
+        let handler = EventBusHandler;
+        let sub_result = handler
+            .subscribe(
+                EventBusSubscribeInput {
+                    event_type_id: "user.created".into(),
+                    listener_id: "email_sender".into(),
+                    priority: 10,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match sub_result {
+            EventBusSubscribeOutput::Ok { event_type_id, listener_id } => {
+                assert_eq!(event_type_id, "user.created");
+                assert_eq!(listener_id, "email_sender");
+            }
+        }
+
+        let unsub_result = handler
+            .unsubscribe(
+                EventBusUnsubscribeInput {
+                    event_type_id: "user.created".into(),
+                    listener_id: "email_sender".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(unsub_result, EventBusUnsubscribeOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn unsubscribe_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = EventBusHandler;
+        let result = handler
+            .unsubscribe(
+                EventBusUnsubscribeInput {
+                    event_type_id: "evt".into(),
+                    listener_id: "missing".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, EventBusUnsubscribeOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn dispatch_counts_listeners() {
+        let storage = InMemoryStorage::new();
+        let handler = EventBusHandler;
+        handler
+            .subscribe(
+                EventBusSubscribeInput {
+                    event_type_id: "order.placed".into(),
+                    listener_id: "inventory".into(),
+                    priority: 1,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        handler
+            .subscribe(
+                EventBusSubscribeInput {
+                    event_type_id: "order.placed".into(),
+                    listener_id: "billing".into(),
+                    priority: 2,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .dispatch(
+                EventBusDispatchInput {
+                    event_type_id: "order.placed".into(),
+                    payload: r#"{"order_id": "123"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            EventBusDispatchOutput::Ok { event_type_id, listener_count } => {
+                assert_eq!(event_type_id, "order.placed");
+                assert_eq!(listener_count, 2);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_history_returns_events() {
+        let storage = InMemoryStorage::new();
+        let handler = EventBusHandler;
+        handler
+            .dispatch(
+                EventBusDispatchInput {
+                    event_type_id: "test.event".into(),
+                    payload: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_history(
+                EventBusGetHistoryInput {
+                    event_type_id: "test.event".into(),
+                    since: "2000-01-01T00:00:00Z".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            EventBusGetHistoryOutput::Ok { events } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&events).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+        }
+    }
+}

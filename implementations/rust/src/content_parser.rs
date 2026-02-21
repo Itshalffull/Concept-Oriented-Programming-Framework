@@ -187,3 +187,218 @@ impl ContentParserHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    async fn register_markdown(handler: &ContentParserHandler, storage: &InMemoryStorage) {
+        handler
+            .register_format(
+                RegisterFormatInput {
+                    format_id: "markdown".into(),
+                    parser_config: json!({ "type": "markdown" }),
+                },
+                storage,
+            )
+            .await
+            .unwrap();
+    }
+
+    // --- register_format ---
+
+    #[tokio::test]
+    async fn register_format_creates_new() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        let result = handler
+            .register_format(
+                RegisterFormatInput {
+                    format_id: "html".into(),
+                    parser_config: json!({ "type": "html" }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterFormatOutput::Ok { format_id } if format_id == "html"));
+    }
+
+    #[tokio::test]
+    async fn register_format_duplicate_returns_already_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        register_markdown(&handler, &storage).await;
+
+        let result = handler
+            .register_format(
+                RegisterFormatInput {
+                    format_id: "markdown".into(),
+                    parser_config: json!({}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterFormatOutput::AlreadyExists { .. }));
+    }
+
+    // --- parse ---
+
+    #[tokio::test]
+    async fn parse_returns_ast_for_known_format() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        register_markdown(&handler, &storage).await;
+
+        let result = handler
+            .parse(
+                ParseInput {
+                    content: "# Hello World".into(),
+                    format_id: "markdown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ParseOutput::Ok { ast, extracted_metadata } => {
+                assert!(ast.contains("document"));
+                assert!(extracted_metadata.contains("markdown"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn parse_returns_unknown_format() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        let result = handler
+            .parse(
+                ParseInput {
+                    content: "test".into(),
+                    format_id: "unknown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ParseOutput::UnknownFormat { .. }));
+    }
+
+    // --- extract_refs ---
+
+    #[tokio::test]
+    async fn extract_refs_finds_wiki_links() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        let result = handler
+            .extract_refs(
+                ExtractRefsInput {
+                    content: "See [[PageA]] and [[PageB]] for details".into(),
+                    format_id: "markdown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ExtractRefsOutput::Ok { refs } => {
+                let parsed: Vec<String> = serde_json::from_str(&refs).unwrap();
+                assert_eq!(parsed.len(), 2);
+                assert!(parsed.contains(&"PageA".to_string()));
+                assert!(parsed.contains(&"PageB".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn extract_refs_returns_empty_for_no_refs() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        let result = handler
+            .extract_refs(
+                ExtractRefsInput {
+                    content: "No references here".into(),
+                    format_id: "markdown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ExtractRefsOutput::Ok { refs } => {
+                let parsed: Vec<String> = serde_json::from_str(&refs).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    // --- extract_tags ---
+
+    #[tokio::test]
+    async fn extract_tags_finds_hashtags() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        let result = handler
+            .extract_tags(
+                ExtractTagsInput {
+                    content: "This is #important and also #urgent stuff".into(),
+                    format_id: "markdown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ExtractTagsOutput::Ok { tags } => {
+                let parsed: Vec<String> = serde_json::from_str(&tags).unwrap();
+                assert_eq!(parsed.len(), 2);
+                assert!(parsed.contains(&"important".to_string()));
+                assert!(parsed.contains(&"urgent".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn extract_tags_returns_empty_for_no_tags() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentParserHandler;
+
+        let result = handler
+            .extract_tags(
+                ExtractTagsInput {
+                    content: "No tags in this text".into(),
+                    format_id: "markdown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ExtractTagsOutput::Ok { tags } => {
+                let parsed: Vec<String> = serde_json::from_str(&tags).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+}

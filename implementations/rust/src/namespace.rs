@@ -246,3 +246,169 @@ impl NamespaceHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn create_namespaced_page_single_segment() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        let result = handler
+            .create_namespaced_page(
+                CreateNamespacedPageInput { full_path: "docs".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            CreateNamespacedPageOutput::Ok { page_id, parent_id } => {
+                assert_eq!(page_id, "ns_docs");
+                assert_eq!(parent_id, "root");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_namespaced_page_nested() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        let result = handler
+            .create_namespaced_page(
+                CreateNamespacedPageInput { full_path: "docs/api/reference".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            CreateNamespacedPageOutput::Ok { page_id, parent_id } => {
+                assert_eq!(page_id, "ns_docs_api_reference");
+                assert_eq!(parent_id, "ns_docs_api");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_children_after_creation() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        handler
+            .create_namespaced_page(
+                CreateNamespacedPageInput { full_path: "docs/api".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_children(GetChildrenInput { page_id: "ns_docs".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            GetChildrenOutput::Ok { page_id, children } => {
+                assert_eq!(page_id, "ns_docs");
+                let parsed: Vec<String> = serde_json::from_str(&children).unwrap();
+                assert!(parsed.contains(&"ns_docs_api".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_children_empty() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        let result = handler
+            .get_children(GetChildrenInput { page_id: "nonexistent".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            GetChildrenOutput::Ok { children, .. } => {
+                let parsed: Vec<String> = serde_json::from_str(&children).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_hierarchy() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        handler
+            .create_namespaced_page(
+                CreateNamespacedPageInput { full_path: "docs/api/reference".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_hierarchy(
+                GetHierarchyInput { page_id: "ns_docs_api_reference".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GetHierarchyOutput::Ok { page_id, ancestors } => {
+                assert_eq!(page_id, "ns_docs_api_reference");
+                let parsed: Vec<String> = serde_json::from_str(&ancestors).unwrap();
+                assert!(parsed.contains(&"ns_docs".to_string()));
+                assert!(parsed.contains(&"ns_docs_api".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn move_page_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        let result = handler
+            .move_page(
+                MovePageInput {
+                    page_id: "nonexistent".into(),
+                    new_parent_path: "other".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, MovePageOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn move_page_ok() {
+        let storage = InMemoryStorage::new();
+        let handler = NamespaceHandler;
+        handler
+            .create_namespaced_page(
+                CreateNamespacedPageInput { full_path: "docs/old".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        handler
+            .create_namespaced_page(
+                CreateNamespacedPageInput { full_path: "archive".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .move_page(
+                MovePageInput {
+                    page_id: "ns_docs_old".into(),
+                    new_parent_path: "archive".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            MovePageOutput::Ok { page_id } => assert_eq!(page_id, "ns_docs_old"),
+            MovePageOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+}

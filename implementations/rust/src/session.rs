@@ -247,3 +247,300 @@ impl SessionHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── create tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn create_returns_session_id() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let result = handler
+            .create(
+                CreateInput {
+                    user_id: "user1".into(),
+                    device_info: "Chrome/Linux".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CreateOutput::Ok { session_id } => {
+                assert!(session_id.starts_with("sess_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_stores_session_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let result = handler
+            .create(
+                CreateInput {
+                    user_id: "user2".into(),
+                    device_info: "Safari/macOS".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let session_id = match result {
+            CreateOutput::Ok { session_id } => session_id,
+        };
+
+        let record = storage.get("session", &session_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["user_id"].as_str().unwrap(), "user2");
+        assert_eq!(record["active"], serde_json::json!(true));
+    }
+
+    // ── validate tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn validate_returns_valid_for_active_session() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let create_result = handler
+            .create(
+                CreateInput {
+                    user_id: "u1".into(),
+                    device_info: "test".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let session_id = match create_result {
+            CreateOutput::Ok { session_id } => session_id,
+        };
+
+        let result = handler
+            .validate(
+                ValidateInput {
+                    session_id: session_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ValidateOutput::Ok { valid, user_id, .. } => {
+                assert!(valid);
+                assert_eq!(user_id, "u1");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn validate_returns_notfound_for_missing_session() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let result = handler
+            .validate(
+                ValidateInput {
+                    session_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ValidateOutput::NotFound { .. }));
+    }
+
+    // ── refresh tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn refresh_succeeds_for_active_session() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let create_result = handler
+            .create(
+                CreateInput {
+                    user_id: "u1".into(),
+                    device_info: "test".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let session_id = match create_result {
+            CreateOutput::Ok { session_id } => session_id,
+        };
+
+        let result = handler
+            .refresh(
+                RefreshInput {
+                    session_id: session_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RefreshOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn refresh_returns_notfound_for_missing_session() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let result = handler
+            .refresh(
+                RefreshInput {
+                    session_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RefreshOutput::NotFound { .. }));
+    }
+
+    // ── destroy tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn destroy_removes_session() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let create_result = handler
+            .create(
+                CreateInput {
+                    user_id: "u1".into(),
+                    device_info: "test".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let session_id = match create_result {
+            CreateOutput::Ok { session_id } => session_id,
+        };
+
+        let result = handler
+            .destroy(
+                DestroyInput {
+                    session_id: session_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DestroyOutput::Ok { .. }));
+
+        let record = storage.get("session", &session_id).await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn destroy_returns_notfound_for_missing_session() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let result = handler
+            .destroy(
+                DestroyInput {
+                    session_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DestroyOutput::NotFound { .. }));
+    }
+
+    // ── destroy_all tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn destroy_all_removes_all_user_sessions() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    user_id: "u1".into(),
+                    device_info: "device_a".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .create(
+                CreateInput {
+                    user_id: "u1".into(),
+                    device_info: "device_b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .destroy_all(
+                DestroyAllInput {
+                    user_id: "u1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DestroyAllOutput::Ok { user_id, count } => {
+                assert_eq!(user_id, "u1");
+                assert_eq!(count, 2);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn destroy_all_returns_zero_when_no_sessions() {
+        let storage = InMemoryStorage::new();
+        let handler = SessionHandler;
+
+        let result = handler
+            .destroy_all(
+                DestroyAllInput {
+                    user_id: "nobody".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DestroyAllOutput::Ok { count, .. } => {
+                assert_eq!(count, 0);
+            }
+        }
+    }
+}

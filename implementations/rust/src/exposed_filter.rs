@@ -165,3 +165,139 @@ impl ExposedFilterHandler {
         Ok(ResetToDefaultsOutput::Ok { count })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn expose_filter() {
+        let storage = InMemoryStorage::new();
+        let handler = ExposedFilterHandler;
+        let result = handler
+            .expose(
+                ExposeInput {
+                    filter_id: "status_filter".into(),
+                    config: r#"{"field": "status", "operator": "eq"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ExposeOutput::Ok { filter_id } => {
+                assert_eq!(filter_id, "status_filter");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn collect_input_existing_filter() {
+        let storage = InMemoryStorage::new();
+        let handler = ExposedFilterHandler;
+        handler
+            .expose(
+                ExposeInput { filter_id: "f1".into(), config: "{}".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .collect_input(
+                CollectInputData { filter_id: "f1".into(), user_value: "active".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            CollectInputOutput::Ok { filter_id } => assert_eq!(filter_id, "f1"),
+            CollectInputOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn collect_input_missing_filter() {
+        let storage = InMemoryStorage::new();
+        let handler = ExposedFilterHandler;
+        let result = handler
+            .collect_input(
+                CollectInputData { filter_id: "missing".into(), user_value: "val".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, CollectInputOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn apply_to_query_with_user_values() {
+        let storage = InMemoryStorage::new();
+        let handler = ExposedFilterHandler;
+        handler
+            .expose(ExposeInput { filter_id: "f1".into(), config: "{}".into() }, &storage)
+            .await
+            .unwrap();
+        handler
+            .collect_input(
+                CollectInputData { filter_id: "f1".into(), user_value: "active".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .apply_to_query(ApplyToQueryInput { query_id: "q1".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            ApplyToQueryOutput::Ok { query_id, applied_filters } => {
+                assert_eq!(query_id, "q1");
+                let parsed: Vec<serde_json::Value> =
+                    serde_json::from_str(&applied_filters).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn reset_to_defaults() {
+        let storage = InMemoryStorage::new();
+        let handler = ExposedFilterHandler;
+        handler
+            .expose(ExposeInput { filter_id: "f1".into(), config: "{}".into() }, &storage)
+            .await
+            .unwrap();
+        handler
+            .collect_input(
+                CollectInputData { filter_id: "f1".into(), user_value: "val".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .reset_to_defaults(ResetToDefaultsInput {}, &storage)
+            .await
+            .unwrap();
+        match result {
+            ResetToDefaultsOutput::Ok { count } => {
+                assert_eq!(count, 1);
+            }
+        }
+
+        // Verify user_value was reset
+        let apply_result = handler
+            .apply_to_query(ApplyToQueryInput { query_id: "q1".into() }, &storage)
+            .await
+            .unwrap();
+        match apply_result {
+            ApplyToQueryOutput::Ok { applied_filters, .. } => {
+                let parsed: Vec<serde_json::Value> =
+                    serde_json::from_str(&applied_filters).unwrap();
+                assert_eq!(parsed.len(), 0);
+            }
+        }
+    }
+}

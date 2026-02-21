@@ -251,3 +251,194 @@ impl IntentHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn define_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        let result = handler
+            .define(
+                DefineInput {
+                    target_id: "search".into(),
+                    purpose: "Full text search".into(),
+                    principles: json!(["fast", "relevant"]),
+                    description: "Provides search capabilities".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            DefineOutput::Ok { target_id } => assert_eq!(target_id, "search"),
+        }
+    }
+
+    #[tokio::test]
+    async fn update_existing_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        handler
+            .define(
+                DefineInput {
+                    target_id: "search".into(),
+                    purpose: "Search".into(),
+                    principles: json!([]),
+                    description: "Original".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .update(
+                UpdateInput {
+                    target_id: "search".into(),
+                    changes: json!({"purpose": "Advanced search"}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            UpdateOutput::Ok { target_id } => assert_eq!(target_id, "search"),
+            UpdateOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn update_missing_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        let result = handler
+            .update(
+                UpdateInput {
+                    target_id: "missing".into(),
+                    changes: json!({}),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, UpdateOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn verify_existing_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        handler
+            .define(
+                DefineInput {
+                    target_id: "auth".into(),
+                    purpose: "Authentication".into(),
+                    principles: json!(["secure", "fast", "stateless"]),
+                    description: "Auth concept".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .verify(VerifyInput { target_id: "auth".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            VerifyOutput::Ok { target_id, passed, failed } => {
+                assert_eq!(target_id, "auth");
+                assert_eq!(passed, 3);
+                assert_eq!(failed, 0);
+            }
+            VerifyOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn verify_missing_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        let result = handler
+            .verify(VerifyInput { target_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, VerifyOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn discover_by_purpose() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        handler
+            .define(
+                DefineInput {
+                    target_id: "search".into(),
+                    purpose: "Full text search".into(),
+                    principles: json!([]),
+                    description: "Search desc".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .discover(DiscoverInput { query: "search".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            DiscoverOutput::Ok { results } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&results).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn document_existing_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        handler
+            .define(
+                DefineInput {
+                    target_id: "cache".into(),
+                    purpose: "Caching layer".into(),
+                    principles: json!(["fast"]),
+                    description: "In-memory cache".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .document(DocumentInput { target_id: "cache".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            DocumentOutput::Ok { target_id, documentation } => {
+                assert_eq!(target_id, "cache");
+                assert!(documentation.contains("Caching layer"));
+                assert!(documentation.contains("In-memory cache"));
+            }
+            DocumentOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn document_missing_intent() {
+        let storage = InMemoryStorage::new();
+        let handler = IntentHandler;
+        let result = handler
+            .document(DocumentInput { target_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, DocumentOutput::NotFound { .. }));
+    }
+}

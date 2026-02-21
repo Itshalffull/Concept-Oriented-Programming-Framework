@@ -151,3 +151,214 @@ impl ContentStorageHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- save ---
+
+    #[tokio::test]
+    async fn save_persists_node_data() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        let result = handler
+            .save(
+                SaveInput {
+                    node_id: "n1".into(),
+                    data: json!({ "title": "Test", "body": "Content" }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            SaveOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+        }
+
+        let record = storage.get("persisted_node", "n1").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn save_overwrites_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        handler
+            .save(
+                SaveInput {
+                    node_id: "n1".into(),
+                    data: json!({ "v": 1 }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .save(
+                SaveInput {
+                    node_id: "n1".into(),
+                    data: json!({ "v": 2 }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("persisted_node", "n1").await.unwrap().unwrap();
+        assert_eq!(record["data"]["v"].as_i64().unwrap(), 2);
+    }
+
+    // --- load ---
+
+    #[tokio::test]
+    async fn load_returns_saved_data() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        handler
+            .save(
+                SaveInput {
+                    node_id: "n1".into(),
+                    data: json!({ "title": "Loaded" }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .load(LoadInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+
+        match result {
+            LoadOutput::Ok { node_id, data } => {
+                assert_eq!(node_id, "n1");
+                assert_eq!(data["title"].as_str().unwrap(), "Loaded");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn load_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        let result = handler
+            .load(LoadInput { node_id: "ghost".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LoadOutput::NotFound { .. }));
+    }
+
+    // --- delete ---
+
+    #[tokio::test]
+    async fn delete_removes_persisted_node() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        handler
+            .save(
+                SaveInput {
+                    node_id: "n1".into(),
+                    data: json!({ "x": 1 }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .delete(DeleteInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DeleteOutput::Ok { .. }));
+
+        let record = storage.get("persisted_node", "n1").await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn delete_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        let result = handler
+            .delete(DeleteInput { node_id: "ghost".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DeleteOutput::NotFound { .. }));
+    }
+
+    // --- query ---
+
+    #[tokio::test]
+    async fn query_returns_matching_results() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        handler
+            .save(
+                SaveInput {
+                    node_id: "n1".into(),
+                    data: json!({ "type": "page", "title": "Intro" }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .query(
+                QueryInput {
+                    conditions: json!({ "node_id": "n1" }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            QueryOutput::Ok { results } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&results).unwrap();
+                assert!(!parsed.is_empty());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn query_returns_empty_for_no_match() {
+        let storage = InMemoryStorage::new();
+        let handler = ContentStorageHandler;
+
+        let result = handler
+            .query(
+                QueryInput {
+                    conditions: json!({ "node_id": "nonexistent" }),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            QueryOutput::Ok { results } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&results).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+}

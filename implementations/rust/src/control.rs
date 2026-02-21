@@ -175,3 +175,151 @@ impl ControlHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn create_control() {
+        let storage = InMemoryStorage::new();
+        let handler = ControlHandler;
+        let result = handler
+            .create(
+                ControlCreateInput {
+                    control_type: "button".into(),
+                    label: "Submit".into(),
+                    value: "".into(),
+                    binding: "form.submit".into(),
+                    action: "submitForm".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ControlCreateOutput::Ok { control_id } => {
+                assert!(control_id.starts_with("ctrl_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn interact_existing_control() {
+        let storage = InMemoryStorage::new();
+        let handler = ControlHandler;
+        let create_result = handler
+            .create(
+                ControlCreateInput {
+                    control_type: "button".into(),
+                    label: "Click Me".into(),
+                    value: "".into(),
+                    binding: "ui.click".into(),
+                    action: "doSomething".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let control_id = match create_result {
+            ControlCreateOutput::Ok { control_id } => control_id,
+        };
+
+        let interact_result = handler
+            .interact(ControlInteractInput { control_id: control_id.clone() }, &storage)
+            .await
+            .unwrap();
+        match interact_result {
+            ControlInteractOutput::Ok { control_id: cid, action_triggered } => {
+                assert_eq!(cid, control_id);
+                assert_eq!(action_triggered, "doSomething");
+            }
+            ControlInteractOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn interact_missing_control() {
+        let storage = InMemoryStorage::new();
+        let handler = ControlHandler;
+        let result = handler
+            .interact(ControlInteractInput { control_id: "nonexistent".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, ControlInteractOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn get_and_set_value() {
+        let storage = InMemoryStorage::new();
+        let handler = ControlHandler;
+        let create_result = handler
+            .create(
+                ControlCreateInput {
+                    control_type: "textfield".into(),
+                    label: "Name".into(),
+                    value: "initial".into(),
+                    binding: "user.name".into(),
+                    action: "".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let control_id = match create_result {
+            ControlCreateOutput::Ok { control_id } => control_id,
+        };
+
+        let get_result = handler
+            .get_value(ControlGetValueInput { control_id: control_id.clone() }, &storage)
+            .await
+            .unwrap();
+        match get_result {
+            ControlGetValueOutput::Ok { value, .. } => assert_eq!(value, "initial"),
+            ControlGetValueOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+
+        handler
+            .set_value(
+                ControlSetValueInput { control_id: control_id.clone(), value: "updated".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let get_result2 = handler
+            .get_value(ControlGetValueInput { control_id: control_id.clone() }, &storage)
+            .await
+            .unwrap();
+        match get_result2 {
+            ControlGetValueOutput::Ok { value, .. } => assert_eq!(value, "updated"),
+            ControlGetValueOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_value_missing_control() {
+        let storage = InMemoryStorage::new();
+        let handler = ControlHandler;
+        let result = handler
+            .get_value(ControlGetValueInput { control_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, ControlGetValueOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn set_value_missing_control() {
+        let storage = InMemoryStorage::new();
+        let handler = ControlHandler;
+        let result = handler
+            .set_value(
+                ControlSetValueInput { control_id: "missing".into(), value: "val".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, ControlSetValueOutput::NotFound { .. }));
+    }
+}

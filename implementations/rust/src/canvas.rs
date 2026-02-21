@@ -198,3 +198,252 @@ impl CanvasHandler {
         Ok(GroupNodesOutput::Ok { group_id })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- add_node ---
+
+    #[tokio::test]
+    async fn add_node_creates_canvas_node() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let result = handler
+            .add_node(
+                AddNodeInput {
+                    node_type: "text".into(),
+                    position_x: 10.0,
+                    position_y: 20.0,
+                    content: "Hello".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AddNodeOutput::Ok { node_id } => {
+                assert!(node_id.starts_with("cnode_text_"));
+                let record = storage.get("canvas_node", &node_id).await.unwrap();
+                assert!(record.is_some());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn add_node_stores_position() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let result = handler
+            .add_node(
+                AddNodeInput {
+                    node_type: "image".into(),
+                    position_x: 100.5,
+                    position_y: 200.7,
+                    content: "img.png".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AddNodeOutput::Ok { node_id } => {
+                let record = storage.get("canvas_node", &node_id).await.unwrap().unwrap();
+                assert_eq!(record["position_x"].as_f64().unwrap(), 100.5);
+                assert_eq!(record["position_y"].as_f64().unwrap(), 200.7);
+            }
+        }
+    }
+
+    // --- move_node ---
+
+    #[tokio::test]
+    async fn move_node_updates_position() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let add_result = handler
+            .add_node(
+                AddNodeInput {
+                    node_type: "text".into(),
+                    position_x: 0.0,
+                    position_y: 0.0,
+                    content: "movable".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let node_id = match add_result {
+            AddNodeOutput::Ok { node_id } => node_id,
+        };
+
+        let result = handler
+            .move_node(
+                MoveNodeInput {
+                    node_id: node_id.clone(),
+                    new_x: 50.0,
+                    new_y: 75.0,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, MoveNodeOutput::Ok { .. }));
+
+        let record = storage.get("canvas_node", &node_id).await.unwrap().unwrap();
+        assert_eq!(record["position_x"].as_f64().unwrap(), 50.0);
+        assert_eq!(record["position_y"].as_f64().unwrap(), 75.0);
+    }
+
+    #[tokio::test]
+    async fn move_node_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let result = handler
+            .move_node(
+                MoveNodeInput {
+                    node_id: "nonexistent".into(),
+                    new_x: 1.0,
+                    new_y: 2.0,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, MoveNodeOutput::NotFound { .. }));
+    }
+
+    // --- connect_nodes ---
+
+    #[tokio::test]
+    async fn connect_nodes_creates_edge() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let result = handler
+            .connect_nodes(
+                ConnectNodesInput {
+                    from_id: "n1".into(),
+                    to_id: "n2".into(),
+                    label: "depends_on".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ConnectNodesOutput::Ok { edge_id } => {
+                assert!(edge_id.starts_with("cedge_n1_"));
+                let record = storage.get("canvas_edge", &edge_id).await.unwrap();
+                assert!(record.is_some());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn connect_nodes_stores_label() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let result = handler
+            .connect_nodes(
+                ConnectNodesInput {
+                    from_id: "a".into(),
+                    to_id: "b".into(),
+                    label: "flow".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ConnectNodesOutput::Ok { edge_id } => {
+                let record = storage.get("canvas_edge", &edge_id).await.unwrap().unwrap();
+                assert_eq!(record["label"].as_str().unwrap(), "flow");
+            }
+        }
+    }
+
+    // --- group_nodes ---
+
+    #[tokio::test]
+    async fn group_nodes_creates_group() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        // Add two nodes first
+        let r1 = handler
+            .add_node(
+                AddNodeInput {
+                    node_type: "text".into(),
+                    position_x: 0.0,
+                    position_y: 0.0,
+                    content: "a".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let n1 = match r1 { AddNodeOutput::Ok { node_id } => node_id };
+
+        let r2 = handler
+            .add_node(
+                AddNodeInput {
+                    node_type: "text".into(),
+                    position_x: 10.0,
+                    position_y: 10.0,
+                    content: "b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let n2 = match r2 { AddNodeOutput::Ok { node_id } => node_id };
+
+        let node_ids_json = serde_json::to_string(&vec![&n1, &n2]).unwrap();
+
+        let result = handler
+            .group_nodes(
+                GroupNodesInput { node_ids: node_ids_json },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GroupNodesOutput::Ok { group_id } => {
+                assert!(group_id.starts_with("cgroup_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn group_nodes_with_empty_list() {
+        let storage = InMemoryStorage::new();
+        let handler = CanvasHandler;
+
+        let result = handler
+            .group_nodes(
+                GroupNodesInput { node_ids: "[]".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, GroupNodesOutput::Ok { .. }));
+    }
+}

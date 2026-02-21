@@ -151,3 +151,189 @@ impl RendererHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── render tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn render_returns_html_output() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        let result = handler
+            .render(
+                RenderInput {
+                    element_id: "el1".into(),
+                    context: r#"{"content": "Hello World"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            RenderOutput::Ok { element_id, output } => {
+                assert_eq!(element_id, "el1");
+                assert!(output.contains("Hello World"));
+                assert!(output.contains("data-element=\"el1\""));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn render_caches_output_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        handler
+            .render(
+                RenderInput {
+                    element_id: "el2".into(),
+                    context: r#"{"content": "Cached"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("render_cache", "el2").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert!(record["output"].as_str().unwrap().contains("Cached"));
+    }
+
+    #[tokio::test]
+    async fn render_handles_empty_context() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        let result = handler
+            .render(
+                RenderInput {
+                    element_id: "el3".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            RenderOutput::Ok { output, .. } => {
+                assert!(output.contains("data-element=\"el3\""));
+            }
+        }
+    }
+
+    // ── auto_placeholder tests ─────────────────────────────
+
+    #[tokio::test]
+    async fn auto_placeholder_returns_placeholder_id() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        let result = handler
+            .auto_placeholder(
+                AutoPlaceholderInput {
+                    element_id: "widget1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AutoPlaceholderOutput::Ok {
+                element_id,
+                placeholder_id,
+            } => {
+                assert_eq!(element_id, "widget1");
+                assert_eq!(placeholder_id, "placeholder_widget1");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn auto_placeholder_stores_placeholder_in_cache() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        handler
+            .auto_placeholder(
+                AutoPlaceholderInput {
+                    element_id: "widget2".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage
+            .get("render_cache", "placeholder_widget2")
+            .await
+            .unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["is_placeholder"], serde_json::json!(true));
+    }
+
+    // ── merge_cacheability tests ───────────────────────────
+
+    #[tokio::test]
+    async fn merge_cacheability_unions_tags() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        let result = handler
+            .merge_cacheability(
+                MergeCacheabilityInput {
+                    parent_tags: r#"["user","page"]"#.into(),
+                    child_tags: r#"["page","block"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            MergeCacheabilityOutput::Ok { merged_tags } => {
+                let parsed: Vec<String> = serde_json::from_str(&merged_tags).unwrap();
+                assert_eq!(parsed.len(), 3);
+                assert!(parsed.contains(&"user".to_string()));
+                assert!(parsed.contains(&"page".to_string()));
+                assert!(parsed.contains(&"block".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn merge_cacheability_handles_empty_tags() {
+        let storage = InMemoryStorage::new();
+        let handler = RendererHandler;
+
+        let result = handler
+            .merge_cacheability(
+                MergeCacheabilityInput {
+                    parent_tags: "[]".into(),
+                    child_tags: r#"["tag1"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            MergeCacheabilityOutput::Ok { merged_tags } => {
+                let parsed: Vec<String> = serde_json::from_str(&merged_tags).unwrap();
+                assert_eq!(parsed.len(), 1);
+                assert_eq!(parsed[0], "tag1");
+            }
+        }
+    }
+}

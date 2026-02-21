@@ -256,3 +256,349 @@ impl SearchIndexHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── create_index tests ─────────────────────────────────
+
+    #[tokio::test]
+    async fn create_index_returns_ok_with_index_id() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        let result = handler
+            .create_index(
+                CreateIndexInput {
+                    index_id: "idx_articles".into(),
+                    config: r#"{"analyzer": "standard"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CreateIndexOutput::Ok { index_id } => {
+                assert_eq!(index_id, "idx_articles");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_index_stores_config_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .create_index(
+                CreateIndexInput {
+                    index_id: "idx_docs".into(),
+                    config: r#"{"language": "en"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("search_index", "idx_docs").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    // ── index_item tests ───────────────────────────────────
+
+    #[tokio::test]
+    async fn index_item_stores_item_with_tokens() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .create_index(
+                CreateIndexInput {
+                    index_id: "idx1".into(),
+                    config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "doc1".into(),
+                    content: "Hello World".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            IndexItemOutput::Ok { index_id, node_id } => {
+                assert_eq!(index_id, "idx1");
+                assert_eq!(node_id, "doc1");
+            }
+        }
+
+        let record = storage.get("indexed_item", "idx1:doc1").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        let tokens = record["tokens"].as_array().unwrap();
+        assert!(tokens.contains(&serde_json::json!("hello")));
+        assert!(tokens.contains(&serde_json::json!("world")));
+    }
+
+    #[tokio::test]
+    async fn index_item_indexes_multiple_items() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d1".into(),
+                    content: "first".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d2".into(),
+                    content: "second".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let r1 = storage.get("indexed_item", "idx1:d1").await.unwrap();
+        let r2 = storage.get("indexed_item", "idx1:d2").await.unwrap();
+        assert!(r1.is_some());
+        assert!(r2.is_some());
+    }
+
+    // ── remove_item tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn remove_item_deletes_indexed_item() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "doc1".into(),
+                    content: "removable".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_item(
+                RemoveItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "doc1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveItemOutput::Ok { .. }));
+
+        let record = storage.get("indexed_item", "idx1:doc1").await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn remove_item_returns_notfound_for_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        let result = handler
+            .remove_item(
+                RemoveItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveItemOutput::NotFound { .. }));
+    }
+
+    // ── search tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn search_finds_matching_items() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d1".into(),
+                    content: "Rust programming language".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d2".into(),
+                    content: "Python scripting language".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .search(
+                SearchInput {
+                    index_id: "idx1".into(),
+                    query_text: "Rust".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            SearchOutput::Ok { results, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&results).unwrap();
+                assert_eq!(parsed.len(), 1);
+                assert_eq!(parsed[0]["node_id"].as_str().unwrap(), "d1");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn search_returns_empty_when_no_match() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d1".into(),
+                    content: "Hello World".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .search(
+                SearchInput {
+                    index_id: "idx1".into(),
+                    query_text: "zzzzz".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            SearchOutput::Ok { results, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&results).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    // ── reindex tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn reindex_returns_count_of_items() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d1".into(),
+                    content: "first doc".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .index_item(
+                IndexItemInput {
+                    index_id: "idx1".into(),
+                    node_id: "d2".into(),
+                    content: "second doc".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .reindex(
+                ReindexInput {
+                    index_id: "idx1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ReindexOutput::Ok { index_id, count } => {
+                assert_eq!(index_id, "idx1");
+                assert_eq!(count, 2);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn reindex_returns_zero_for_empty_index() {
+        let storage = InMemoryStorage::new();
+        let handler = SearchIndexHandler;
+
+        let result = handler
+            .reindex(
+                ReindexInput {
+                    index_id: "empty_idx".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ReindexOutput::Ok { count, .. } => {
+                assert_eq!(count, 0);
+            }
+        }
+    }
+}

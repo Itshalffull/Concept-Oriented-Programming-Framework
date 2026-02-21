@@ -211,3 +211,197 @@ impl NotificationHandler {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn register_channel() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        let result = handler
+            .register_channel(
+                NotificationRegisterChannelInput {
+                    channel_id: "email".into(),
+                    delivery_config: r#"{"smtp": "mail.example.com"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NotificationRegisterChannelOutput::Ok { channel_id } => {
+                assert_eq!(channel_id, "email");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn subscribe_to_notifications() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        let result = handler
+            .subscribe(
+                NotificationSubscribeInput {
+                    user_id: "user1".into(),
+                    event_pattern: "order.*".into(),
+                    channel_ids: r#"["email", "push"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NotificationSubscribeOutput::Ok { user_id, event_pattern } => {
+                assert_eq!(user_id, "user1");
+                assert_eq!(event_pattern, "order.*");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn notify_creates_notification() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        let result = handler
+            .notify(
+                NotificationNotifyInput {
+                    user_id: "user1".into(),
+                    event_type: "order.placed".into(),
+                    context: r#"{"order_id": "123"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NotificationNotifyOutput::Ok { notification_id } => {
+                assert!(notification_id.starts_with("notif_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn mark_read_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        let notify_result = handler
+            .notify(
+                NotificationNotifyInput {
+                    user_id: "user1".into(),
+                    event_type: "test".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let notification_id = match notify_result {
+            NotificationNotifyOutput::Ok { notification_id } => notification_id,
+        };
+
+        let result = handler
+            .mark_read(
+                NotificationMarkReadInput { notification_id: notification_id.clone() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NotificationMarkReadOutput::Ok { notification_id: nid } => {
+                assert_eq!(nid, notification_id);
+            }
+            NotificationMarkReadOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn mark_read_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        let result = handler
+            .mark_read(
+                NotificationMarkReadInput { notification_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, NotificationMarkReadOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn get_unread_notifications() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        handler
+            .notify(
+                NotificationNotifyInput {
+                    user_id: "user1".into(),
+                    event_type: "msg".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_unread(
+                NotificationGetUnreadInput { user_id: "user1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NotificationGetUnreadOutput::Ok { user_id, notifications } => {
+                assert_eq!(user_id, "user1");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&notifications).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_unread_after_mark_read() {
+        let storage = InMemoryStorage::new();
+        let handler = NotificationHandler;
+        let notify_result = handler
+            .notify(
+                NotificationNotifyInput {
+                    user_id: "user1".into(),
+                    event_type: "msg".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let notification_id = match notify_result {
+            NotificationNotifyOutput::Ok { notification_id } => notification_id,
+        };
+
+        handler
+            .mark_read(
+                NotificationMarkReadInput { notification_id },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_unread(
+                NotificationGetUnreadInput { user_id: "user1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            NotificationGetUnreadOutput::Ok { notifications, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&notifications).unwrap();
+                assert_eq!(parsed.len(), 0);
+            }
+        }
+    }
+}

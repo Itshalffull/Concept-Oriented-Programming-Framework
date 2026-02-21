@@ -230,3 +230,262 @@ impl SyncedContentHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── create_reference tests ─────────────────────────────
+
+    #[tokio::test]
+    async fn create_reference_returns_ref_id() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let result = handler
+            .create_reference(
+                CreateReferenceInput {
+                    source_id: "src1".into(),
+                    target_location: "/page/2".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CreateReferenceOutput::Ok { ref_id } => {
+                assert!(ref_id.starts_with("ref_src1_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_reference_stores_reference_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let result = handler
+            .create_reference(
+                CreateReferenceInput {
+                    source_id: "src2".into(),
+                    target_location: "/page/3".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let ref_id = match result {
+            CreateReferenceOutput::Ok { ref_id } => ref_id,
+        };
+
+        let record = storage.get("synced_reference", &ref_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["source_id"].as_str().unwrap(), "src2");
+        assert_eq!(record["synced"], serde_json::json!(true));
+    }
+
+    // ── edit_original tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn edit_original_updates_content() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let create_result = handler
+            .create_reference(
+                CreateReferenceInput {
+                    source_id: "src1".into(),
+                    target_location: "/loc".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let ref_id = match create_result {
+            CreateReferenceOutput::Ok { ref_id } => ref_id,
+        };
+
+        let result = handler
+            .edit_original(
+                EditOriginalInput {
+                    ref_id: ref_id.clone(),
+                    new_content: "Updated content".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, EditOriginalOutput::Ok { .. }));
+
+        let original = storage.get("synced_original", "src1").await.unwrap().unwrap();
+        assert_eq!(original["content"].as_str().unwrap(), "Updated content");
+    }
+
+    #[tokio::test]
+    async fn edit_original_returns_notfound_for_missing_ref() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let result = handler
+            .edit_original(
+                EditOriginalInput {
+                    ref_id: "nonexistent".into(),
+                    new_content: "content".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, EditOriginalOutput::NotFound { .. }));
+    }
+
+    // ── delete_reference tests ─────────────────────────────
+
+    #[tokio::test]
+    async fn delete_reference_removes_synced_reference() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let create_result = handler
+            .create_reference(
+                CreateReferenceInput {
+                    source_id: "src1".into(),
+                    target_location: "/loc".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let ref_id = match create_result {
+            CreateReferenceOutput::Ok { ref_id } => ref_id,
+        };
+
+        let result = handler
+            .delete_reference(
+                DeleteReferenceInput {
+                    ref_id: ref_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DeleteReferenceOutput::Ok { .. }));
+
+        let record = storage.get("synced_reference", &ref_id).await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn delete_reference_returns_notfound_for_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let result = handler
+            .delete_reference(
+                DeleteReferenceInput {
+                    ref_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DeleteReferenceOutput::NotFound { .. }));
+    }
+
+    // ── convert_to_independent tests ───────────────────────
+
+    #[tokio::test]
+    async fn convert_to_independent_creates_independent_copy() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let create_result = handler
+            .create_reference(
+                CreateReferenceInput {
+                    source_id: "src1".into(),
+                    target_location: "/loc".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let ref_id = match create_result {
+            CreateReferenceOutput::Ok { ref_id } => ref_id,
+        };
+
+        // Set some content first
+        handler
+            .edit_original(
+                EditOriginalInput {
+                    ref_id: ref_id.clone(),
+                    new_content: "Original text".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .convert_to_independent(
+                ConvertToIndependentInput {
+                    ref_id: ref_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ConvertToIndependentOutput::Ok { new_node_id } => {
+                assert!(new_node_id.starts_with("independent_src1_"));
+
+                let independent = storage
+                    .get("synced_original", &new_node_id)
+                    .await
+                    .unwrap()
+                    .unwrap();
+                assert_eq!(independent["content"].as_str().unwrap(), "Original text");
+                assert_eq!(independent["independent"], serde_json::json!(true));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+
+        // The synced reference should be removed
+        let ref_record = storage.get("synced_reference", &ref_id).await.unwrap();
+        assert!(ref_record.is_none());
+    }
+
+    #[tokio::test]
+    async fn convert_to_independent_returns_notfound_for_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = SyncedContentHandler;
+
+        let result = handler
+            .convert_to_independent(
+                ConvertToIndependentInput {
+                    ref_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            ConvertToIndependentOutput::NotFound { .. }
+        ));
+    }
+}

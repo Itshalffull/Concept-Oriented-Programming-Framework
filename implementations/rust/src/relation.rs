@@ -205,3 +205,299 @@ impl RelationHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── define_relation tests ──────────────────────────────
+
+    #[tokio::test]
+    async fn define_relation_returns_ok_with_relation_id() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let result = handler
+            .define_relation(
+                DefineRelationInput {
+                    name: "authored_by".into(),
+                    source_type: "article".into(),
+                    target_type: "user".into(),
+                    cardinality: "many_to_one".into(),
+                    is_bidirectional: false,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DefineRelationOutput::Ok { relation_id } => {
+                assert!(relation_id.starts_with("rel_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn define_relation_stores_definition() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let result = handler
+            .define_relation(
+                DefineRelationInput {
+                    name: "contains".into(),
+                    source_type: "folder".into(),
+                    target_type: "file".into(),
+                    cardinality: "one_to_many".into(),
+                    is_bidirectional: false,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let relation_id = match result {
+            DefineRelationOutput::Ok { relation_id } => relation_id,
+        };
+
+        let record = storage.get("relation_def", &relation_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["name"].as_str().unwrap(), "contains");
+    }
+
+    // ── link tests ─────────────────────────────────────────
+
+    #[tokio::test]
+    async fn link_succeeds_when_relation_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let def_result = handler
+            .define_relation(
+                DefineRelationInput {
+                    name: "parent_of".into(),
+                    source_type: "node".into(),
+                    target_type: "node".into(),
+                    cardinality: "one_to_many".into(),
+                    is_bidirectional: false,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let relation_id = match def_result {
+            DefineRelationOutput::Ok { relation_id } => relation_id,
+        };
+
+        let result = handler
+            .link(
+                LinkInput {
+                    relation_id: relation_id.clone(),
+                    source_id: "node_a".into(),
+                    target_id: "node_b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LinkOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn link_returns_notfound_when_relation_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let result = handler
+            .link(
+                LinkInput {
+                    relation_id: "nonexistent".into(),
+                    source_id: "a".into(),
+                    target_id: "b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LinkOutput::NotFound { .. }));
+    }
+
+    // ── unlink tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn unlink_removes_existing_link() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let def_result = handler
+            .define_relation(
+                DefineRelationInput {
+                    name: "linked".into(),
+                    source_type: "a".into(),
+                    target_type: "b".into(),
+                    cardinality: "many_to_many".into(),
+                    is_bidirectional: false,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let relation_id = match def_result {
+            DefineRelationOutput::Ok { relation_id } => relation_id,
+        };
+
+        handler
+            .link(
+                LinkInput {
+                    relation_id: relation_id.clone(),
+                    source_id: "x".into(),
+                    target_id: "y".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .unlink(
+                UnlinkInput {
+                    relation_id: relation_id.clone(),
+                    source_id: "x".into(),
+                    target_id: "y".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, UnlinkOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn unlink_returns_notfound_when_link_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let result = handler
+            .unlink(
+                UnlinkInput {
+                    relation_id: "rel_x".into(),
+                    source_id: "a".into(),
+                    target_id: "b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, UnlinkOutput::NotFound { .. }));
+    }
+
+    // ── get_related tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn get_related_returns_linked_entities() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let def_result = handler
+            .define_relation(
+                DefineRelationInput {
+                    name: "follows".into(),
+                    source_type: "user".into(),
+                    target_type: "user".into(),
+                    cardinality: "many_to_many".into(),
+                    is_bidirectional: false,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let relation_id = match def_result {
+            DefineRelationOutput::Ok { relation_id } => relation_id,
+        };
+
+        handler
+            .link(
+                LinkInput {
+                    relation_id: relation_id.clone(),
+                    source_id: "user1".into(),
+                    target_id: "user2".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_related(
+                GetRelatedInput {
+                    node_id: "user1".into(),
+                    relation_id: relation_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetRelatedOutput::Ok { node_id, related } => {
+                assert_eq!(node_id, "user1");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&related).unwrap();
+                assert_eq!(parsed.len(), 1);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_related_returns_empty_when_no_links() {
+        let storage = InMemoryStorage::new();
+        let handler = RelationHandler;
+
+        let def_result = handler
+            .define_relation(
+                DefineRelationInput {
+                    name: "related_to".into(),
+                    source_type: "item".into(),
+                    target_type: "item".into(),
+                    cardinality: "many_to_many".into(),
+                    is_bidirectional: false,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let relation_id = match def_result {
+            DefineRelationOutput::Ok { relation_id } => relation_id,
+        };
+
+        let result = handler
+            .get_related(
+                GetRelatedInput {
+                    node_id: "lonely_node".into(),
+                    relation_id,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetRelatedOutput::Ok { related, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&related).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+}

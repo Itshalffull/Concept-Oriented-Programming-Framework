@@ -179,3 +179,173 @@ impl ExpressionLanguageHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn register_language() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        let result = handler
+            .register_language(
+                ExprLangRegisterLanguageInput {
+                    language_id: "cel".into(),
+                    grammar: "common expression language".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ExprLangRegisterLanguageOutput::Ok { language_id } => {
+                assert_eq!(language_id, "cel");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn register_function_for_existing_language() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        handler
+            .register_language(
+                ExprLangRegisterLanguageInput {
+                    language_id: "cel".into(),
+                    grammar: "grammar".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .register_function(
+                ExprLangRegisterFunctionInput {
+                    language_id: "cel".into(),
+                    name: "size".into(),
+                    signature: "(list) -> int".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ExprLangRegisterFunctionOutput::Ok { language_id, name } => {
+                assert_eq!(language_id, "cel");
+                assert_eq!(name, "size");
+            }
+            ExprLangRegisterFunctionOutput::LangNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn register_function_for_missing_language() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        let result = handler
+            .register_function(
+                ExprLangRegisterFunctionInput {
+                    language_id: "nonexistent".into(),
+                    name: "fn".into(),
+                    signature: "() -> void".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, ExprLangRegisterFunctionOutput::LangNotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn parse_expression() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        handler
+            .register_language(
+                ExprLangRegisterLanguageInput {
+                    language_id: "cel".into(),
+                    grammar: "grammar".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .parse(
+                ExprLangParseInput {
+                    language_id: "cel".into(),
+                    expression_string: "x + 1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ExprLangParseOutput::Ok { ast } => {
+                assert!(ast.contains("x + 1"));
+                assert!(ast.contains("cel"));
+            }
+            ExprLangParseOutput::ParseError { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn parse_missing_language() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        let result = handler
+            .parse(
+                ExprLangParseInput {
+                    language_id: "missing".into(),
+                    expression_string: "x".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, ExprLangParseOutput::ParseError { .. }));
+    }
+
+    #[tokio::test]
+    async fn evaluate_valid_ast() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        let result = handler
+            .evaluate(
+                ExprLangEvaluateInput {
+                    ast: r#"{"type": "parsed_expression"}"#.into(),
+                    context: r#"{"x": 1}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ExprLangEvaluateOutput::Ok { result } => {
+                assert!(result.contains("evaluated"));
+            }
+            ExprLangEvaluateOutput::EvalError { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn evaluate_invalid_ast() {
+        let storage = InMemoryStorage::new();
+        let handler = ExpressionLanguageHandler;
+        let result = handler
+            .evaluate(
+                ExprLangEvaluateInput {
+                    ast: "not valid json{{{".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, ExprLangEvaluateOutput::EvalError { .. }));
+    }
+}

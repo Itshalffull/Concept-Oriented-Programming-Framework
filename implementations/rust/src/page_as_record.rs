@@ -245,3 +245,208 @@ impl PageAsRecordHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+    use serde_json::json;
+
+    /// Helper to create a page record in storage.
+    async fn seed_page(storage: &InMemoryStorage, node_id: &str) {
+        storage
+            .put(
+                "page_record",
+                node_id,
+                json!({
+                    "node_id": node_id,
+                    "properties": {},
+                    "body": [],
+                    "schema_id": null,
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
+                }),
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn set_property_on_existing_page() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        seed_page(&storage, "page1").await;
+
+        let result = handler
+            .set_property(
+                SetPropertyInput {
+                    node_id: "page1".into(),
+                    name: "title".into(),
+                    value: json!("Hello World"),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            SetPropertyOutput::Ok { node_id } => assert_eq!(node_id, "page1"),
+            SetPropertyOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn set_property_page_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        let result = handler
+            .set_property(
+                SetPropertyInput {
+                    node_id: "missing".into(),
+                    name: "title".into(),
+                    value: json!("Test"),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, SetPropertyOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn get_property_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        seed_page(&storage, "page1").await;
+        handler
+            .set_property(
+                SetPropertyInput {
+                    node_id: "page1".into(),
+                    name: "status".into(),
+                    value: json!("published"),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_property(
+                GetPropertyInput { node_id: "page1".into(), name: "status".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GetPropertyOutput::Ok { node_id, name, value } => {
+                assert_eq!(node_id, "page1");
+                assert_eq!(name, "status");
+                assert_eq!(value, json!("published"));
+            }
+            GetPropertyOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_property_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        seed_page(&storage, "page1").await;
+
+        let result = handler
+            .get_property(
+                GetPropertyInput { node_id: "page1".into(), name: "nonexistent".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, GetPropertyOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn append_to_body() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        seed_page(&storage, "page1").await;
+
+        let result = handler
+            .append_to_body(
+                AppendToBodyInput { node_id: "page1".into(), child_node_id: "block1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            AppendToBodyOutput::Ok { node_id } => assert_eq!(node_id, "page1"),
+            AppendToBodyOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn append_to_body_page_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        let result = handler
+            .append_to_body(
+                AppendToBodyInput { node_id: "missing".into(), child_node_id: "block1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, AppendToBodyOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn attach_to_schema_creates_if_needed() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        let result = handler
+            .attach_to_schema(
+                AttachToSchemaInput { node_id: "new_page".into(), schema_id: "article".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            AttachToSchemaOutput::Ok { node_id } => assert_eq!(node_id, "new_page"),
+        }
+    }
+
+    #[tokio::test]
+    async fn detach_from_schema() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        handler
+            .attach_to_schema(
+                AttachToSchemaInput { node_id: "page1".into(), schema_id: "article".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .detach_from_schema(
+                DetachFromSchemaInput { node_id: "page1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            DetachFromSchemaOutput::Ok { node_id } => assert_eq!(node_id, "page1"),
+            DetachFromSchemaOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn detach_from_schema_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = PageAsRecordHandler;
+        let result = handler
+            .detach_from_schema(
+                DetachFromSchemaInput { node_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, DetachFromSchemaOutput::NotFound { .. }));
+    }
+}

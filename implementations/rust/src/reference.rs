@@ -130,3 +130,189 @@ impl ReferenceHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── add_ref tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn add_ref_returns_ok_with_ids() {
+        let storage = InMemoryStorage::new();
+        let handler = ReferenceHandler;
+
+        let result = handler
+            .add_ref(
+                AddRefInput {
+                    source_id: "s1".into(),
+                    target_id: "t1".into(),
+                    ref_type: "link".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AddRefOutput::Ok { source_id, target_id } => {
+                assert_eq!(source_id, "s1");
+                assert_eq!(target_id, "t1");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn add_ref_stores_reference_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = ReferenceHandler;
+
+        handler
+            .add_ref(
+                AddRefInput {
+                    source_id: "doc1".into(),
+                    target_id: "doc2".into(),
+                    ref_type: "citation".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("reference", "doc1:doc2").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["ref_type"].as_str().unwrap(), "citation");
+    }
+
+    // ── remove_ref tests ───────────────────────────────────
+
+    #[tokio::test]
+    async fn remove_ref_deletes_existing_reference() {
+        let storage = InMemoryStorage::new();
+        let handler = ReferenceHandler;
+
+        handler
+            .add_ref(
+                AddRefInput {
+                    source_id: "a".into(),
+                    target_id: "b".into(),
+                    ref_type: "link".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_ref(
+                RemoveRefInput {
+                    source_id: "a".into(),
+                    target_id: "b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveRefOutput::Ok { .. }));
+
+        let record = storage.get("reference", "a:b").await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn remove_ref_returns_notfound_when_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = ReferenceHandler;
+
+        let result = handler
+            .remove_ref(
+                RemoveRefInput {
+                    source_id: "x".into(),
+                    target_id: "y".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveRefOutput::NotFound { .. }));
+    }
+
+    // ── get_refs tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn get_refs_returns_all_refs_from_source() {
+        let storage = InMemoryStorage::new();
+        let handler = ReferenceHandler;
+
+        handler
+            .add_ref(
+                AddRefInput {
+                    source_id: "s1".into(),
+                    target_id: "t1".into(),
+                    ref_type: "link".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .add_ref(
+                AddRefInput {
+                    source_id: "s1".into(),
+                    target_id: "t2".into(),
+                    ref_type: "embed".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_refs(
+                GetRefsInput {
+                    source_id: "s1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetRefsOutput::Ok { source_id, refs } => {
+                assert_eq!(source_id, "s1");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&refs).unwrap();
+                assert_eq!(parsed.len(), 2);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_refs_returns_empty_when_no_refs() {
+        let storage = InMemoryStorage::new();
+        let handler = ReferenceHandler;
+
+        let result = handler
+            .get_refs(
+                GetRefsInput {
+                    source_id: "lonely".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetRefsOutput::Ok { refs, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&refs).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+}

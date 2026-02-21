@@ -350,3 +350,206 @@ impl OutlineHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+    use serde_json::json;
+
+    /// Helper to create an outline node in storage.
+    async fn seed_node(storage: &InMemoryStorage, node_id: &str, parent_id: &str, depth: u64, position: u64) {
+        storage
+            .put(
+                "outline_node",
+                node_id,
+                json!({
+                    "node_id": node_id,
+                    "parent_id": parent_id,
+                    "depth": depth,
+                    "position": position,
+                    "collapsed": false,
+                }),
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn indent_existing_node() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "n1", "root", 0, 0).await;
+
+        let result = handler
+            .indent(IndentInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            IndentOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+            IndentOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn indent_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        let result = handler
+            .indent(IndentInput { node_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, IndentOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn outdent_existing_node() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "parent", "root", 0, 0).await;
+        seed_node(&storage, "child", "parent", 1, 0).await;
+
+        let result = handler
+            .outdent(OutdentInput { node_id: "child".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            OutdentOutput::Ok { node_id } => assert_eq!(node_id, "child"),
+            OutdentOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn outdent_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        let result = handler
+            .outdent(OutdentInput { node_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, OutdentOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn move_up_existing_node() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "n1", "root", 0, 2).await;
+
+        let result = handler
+            .move_up(MoveUpInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            MoveUpOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+            MoveUpOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn move_down_existing_node() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "n1", "root", 0, 0).await;
+
+        let result = handler
+            .move_down(MoveDownInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            MoveDownOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+            MoveDownOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn reparent_node() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "n1", "root", 0, 0).await;
+
+        let result = handler
+            .reparent(
+                ReparentInput {
+                    node_id: "n1".into(),
+                    new_parent_id: "parent2".into(),
+                    position: 0,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            ReparentOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+        }
+    }
+
+    #[tokio::test]
+    async fn collapse_and_expand() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "n1", "root", 0, 0).await;
+
+        let collapse_result = handler
+            .collapse(CollapseInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match collapse_result {
+            CollapseOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+            CollapseOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+
+        let expand_result = handler
+            .expand(ExpandInput { node_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match expand_result {
+            ExpandOutput::Ok { node_id } => assert_eq!(node_id, "n1"),
+            ExpandOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn collapse_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        let result = handler
+            .collapse(CollapseInput { node_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, CollapseOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn zoom_into_node_with_children() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        seed_node(&storage, "parent", "root", 0, 0).await;
+        seed_node(&storage, "child1", "parent", 1, 0).await;
+        seed_node(&storage, "child2", "parent", 1, 1).await;
+
+        let result = handler
+            .zoom(ZoomInput { node_id: "parent".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            ZoomOutput::Ok { node_id, children } => {
+                assert_eq!(node_id, "parent");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&children).unwrap();
+                assert_eq!(parsed.len(), 2);
+            }
+            ZoomOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn zoom_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = OutlineHandler;
+        let result = handler
+            .zoom(ZoomInput { node_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, ZoomOutput::NotFound { .. }));
+    }
+}

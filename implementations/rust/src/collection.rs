@@ -192,3 +192,238 @@ impl CollectionHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- create ---
+
+    #[tokio::test]
+    async fn create_generates_collection_id() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        let result = handler
+            .create(
+                CreateInput {
+                    name: "My Docs".into(),
+                    collection_type: "concrete".into(),
+                    schema_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CreateOutput::Ok { collection_id } => {
+                assert_eq!(collection_id, "col_my_docs");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_stores_collection_data() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Photos".into(),
+                    collection_type: "virtual".into(),
+                    schema_id: Some("schema1".into()),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("collection", "col_photos").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["collection_type"].as_str().unwrap(), "virtual");
+    }
+
+    // --- add_member ---
+
+    #[tokio::test]
+    async fn add_member_adds_node_to_collection() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "test".into(),
+                    collection_type: "concrete".into(),
+                    schema_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .add_member(
+                AddMemberInput {
+                    collection_id: "col_test".into(),
+                    node_id: "node1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AddMemberOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn add_member_not_found_for_missing_collection() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        let result = handler
+            .add_member(
+                AddMemberInput {
+                    collection_id: "missing".into(),
+                    node_id: "node1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AddMemberOutput::NotFound { .. }));
+    }
+
+    // --- remove_member ---
+
+    #[tokio::test]
+    async fn remove_member_removes_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "rm".into(),
+                    collection_type: "concrete".into(),
+                    schema_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .add_member(
+                AddMemberInput {
+                    collection_id: "col_rm".into(),
+                    node_id: "node1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_member(
+                RemoveMemberInput {
+                    collection_id: "col_rm".into(),
+                    node_id: "node1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveMemberOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_member_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        let result = handler
+            .remove_member(
+                RemoveMemberInput {
+                    collection_id: "col_x".into(),
+                    node_id: "ghost".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveMemberOutput::NotFound { .. }));
+    }
+
+    // --- get_members ---
+
+    #[tokio::test]
+    async fn get_members_returns_member_list() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "items".into(),
+                    collection_type: "concrete".into(),
+                    schema_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .add_member(
+                AddMemberInput {
+                    collection_id: "col_items".into(),
+                    node_id: "n1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_members(
+                GetMembersInput { collection_id: "col_items".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetMembersOutput::Ok { members, .. } => {
+                let ids: Vec<String> = serde_json::from_str(&members).unwrap();
+                assert!(ids.contains(&"n1".to_string()));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_members_not_found_for_missing_collection() {
+        let storage = InMemoryStorage::new();
+        let handler = CollectionHandler;
+
+        let result = handler
+            .get_members(
+                GetMembersInput { collection_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, GetMembersOutput::NotFound { .. }));
+    }
+}

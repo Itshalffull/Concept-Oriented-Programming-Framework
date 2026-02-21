@@ -246,3 +246,207 @@ impl ClassificationTagHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- add_tag ---
+
+    #[tokio::test]
+    async fn add_tag_creates_tag_entry() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        let result = handler
+            .add_tag(
+                AddTagInput {
+                    node_id: "n1".into(),
+                    tag_name: "important".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AddTagOutput::Ok { node_id, tag_name } => {
+                assert_eq!(node_id, "n1");
+                assert_eq!(tag_name, "important");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn add_tag_updates_tag_index() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        handler
+            .add_tag(
+                AddTagInput { node_id: "n1".into(), tag_name: "urgent".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .add_tag(
+                AddTagInput { node_id: "n2".into(), tag_name: "urgent".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let index = storage.get("tag_index", "urgent").await.unwrap().unwrap();
+        let node_ids = index["node_ids"].as_array().unwrap();
+        assert_eq!(node_ids.len(), 2);
+    }
+
+    // --- remove_tag ---
+
+    #[tokio::test]
+    async fn remove_tag_deletes_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        handler
+            .add_tag(
+                AddTagInput { node_id: "n1".into(), tag_name: "temp".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_tag(
+                RemoveTagInput { node_id: "n1".into(), tag_name: "temp".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveTagOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_tag_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        let result = handler
+            .remove_tag(
+                RemoveTagInput { node_id: "n1".into(), tag_name: "ghost".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveTagOutput::NotFound { .. }));
+    }
+
+    // --- get_by_tag ---
+
+    #[tokio::test]
+    async fn get_by_tag_returns_tagged_nodes() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        handler
+            .add_tag(
+                AddTagInput { node_id: "n1".into(), tag_name: "featured".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_by_tag(
+                GetByTagInput { tag_name: "featured".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetByTagOutput::Ok { tag_name, node_ids } => {
+                assert_eq!(tag_name, "featured");
+                let ids: Vec<String> = serde_json::from_str(&node_ids).unwrap();
+                assert_eq!(ids, vec!["n1"]);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_by_tag_returns_empty_for_unknown_tag() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        let result = handler
+            .get_by_tag(
+                GetByTagInput { tag_name: "nonexistent".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetByTagOutput::Ok { node_ids, .. } => {
+                let ids: Vec<String> = serde_json::from_str(&node_ids).unwrap();
+                assert!(ids.is_empty());
+            }
+        }
+    }
+
+    // --- rename ---
+
+    #[tokio::test]
+    async fn rename_changes_tag_name() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        handler
+            .add_tag(
+                AddTagInput { node_id: "n1".into(), tag_name: "old_name".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .rename(
+                RenameInput { old_tag: "old_name".into(), new_tag: "new_name".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RenameOutput::Ok { .. }));
+
+        // Old tag should be gone, new tag should exist
+        let old_index = storage.get("tag_index", "old_name").await.unwrap();
+        assert!(old_index.is_none());
+
+        let new_index = storage.get("tag_index", "new_name").await.unwrap();
+        assert!(new_index.is_some());
+    }
+
+    #[tokio::test]
+    async fn rename_not_found_for_missing_tag() {
+        let storage = InMemoryStorage::new();
+        let handler = ClassificationTagHandler;
+
+        let result = handler
+            .rename(
+                RenameInput { old_tag: "ghost".into(), new_tag: "new".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RenameOutput::NotFound { .. }));
+    }
+}

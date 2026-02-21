@@ -193,3 +193,332 @@ impl ValidatorHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── register_constraint tests ──────────────────────────
+
+    #[tokio::test]
+    async fn register_constraint_returns_ok() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .register_constraint(
+                ValidatorRegisterConstraintInput {
+                    constraint_id: "required".into(),
+                    evaluator_config: r#"{"type":"required"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ValidatorRegisterConstraintOutput::Ok { constraint_id } => {
+                assert_eq!(constraint_id, "required");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn register_constraint_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        handler
+            .register_constraint(
+                ValidatorRegisterConstraintInput {
+                    constraint_id: "max_length".into(),
+                    evaluator_config: r#"{"max":255}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("constraint", "max_length").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(
+            record["evaluator_config"].as_str().unwrap(),
+            r#"{"max":255}"#
+        );
+    }
+
+    // ── add_rule tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn add_rule_stores_validation_rule() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .add_rule(
+                ValidatorAddRuleInput {
+                    schema_id: "schema_user".into(),
+                    field_id: "email".into(),
+                    constraint_id: "required".into(),
+                    params: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ValidatorAddRuleOutput::Ok { schema_id, field_id } => {
+                assert_eq!(schema_id, "schema_user");
+                assert_eq!(field_id, "email");
+            }
+        }
+
+        let record = storage
+            .get("validation_rule", "schema_user:email:required")
+            .await
+            .unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn add_rule_stores_multiple_rules() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        handler
+            .add_rule(
+                ValidatorAddRuleInput {
+                    schema_id: "s1".into(),
+                    field_id: "name".into(),
+                    constraint_id: "required".into(),
+                    params: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .add_rule(
+                ValidatorAddRuleInput {
+                    schema_id: "s1".into(),
+                    field_id: "name".into(),
+                    constraint_id: "max_length".into(),
+                    params: r#"{"max":100}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let r1 = storage
+            .get("validation_rule", "s1:name:required")
+            .await
+            .unwrap();
+        let r2 = storage
+            .get("validation_rule", "s1:name:max_length")
+            .await
+            .unwrap();
+        assert!(r1.is_some());
+        assert!(r2.is_some());
+    }
+
+    // ── validate tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn validate_returns_valid_when_no_rules_defined() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .validate(
+                ValidatorValidateInput {
+                    node_id: "n1".into(),
+                    proposed_changes: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ValidatorValidateOutput::Ok { valid: true }));
+    }
+
+    #[tokio::test]
+    async fn validate_returns_valid_when_constraints_registered() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        handler
+            .register_constraint(
+                ValidatorRegisterConstraintInput {
+                    constraint_id: "required".into(),
+                    evaluator_config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .add_rule(
+                ValidatorAddRuleInput {
+                    schema_id: "s1".into(),
+                    field_id: "name".into(),
+                    constraint_id: "required".into(),
+                    params: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .validate(
+                ValidatorValidateInput {
+                    node_id: "n1".into(),
+                    proposed_changes: r#"{"name":"value"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ValidatorValidateOutput::Ok { valid: true }));
+    }
+
+    #[tokio::test]
+    async fn validate_returns_invalid_when_constraint_not_registered() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        // Add a rule referencing a constraint that is NOT registered
+        handler
+            .add_rule(
+                ValidatorAddRuleInput {
+                    schema_id: "s1".into(),
+                    field_id: "email".into(),
+                    constraint_id: "unregistered".into(),
+                    params: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .validate(
+                ValidatorValidateInput {
+                    node_id: "n1".into(),
+                    proposed_changes: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            ValidatorValidateOutput::Invalid { .. }
+        ));
+    }
+
+    // ── validate_field tests ───────────────────────────────
+
+    #[tokio::test]
+    async fn validate_field_returns_valid_for_required_nonempty() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .validate_field(
+                ValidatorValidateFieldInput {
+                    value: "notempty".into(),
+                    field_type: "required".into(),
+                    constraints: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            ValidatorValidateFieldOutput::Ok { valid: true }
+        ));
+    }
+
+    #[tokio::test]
+    async fn validate_field_returns_invalid_for_required_empty() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .validate_field(
+                ValidatorValidateFieldInput {
+                    value: "".into(),
+                    field_type: "required".into(),
+                    constraints: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            ValidatorValidateFieldOutput::Invalid { .. }
+        ));
+    }
+
+    #[tokio::test]
+    async fn validate_field_returns_invalid_for_email_without_at() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .validate_field(
+                ValidatorValidateFieldInput {
+                    value: "notanemail".into(),
+                    field_type: "email".into(),
+                    constraints: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            ValidatorValidateFieldOutput::Invalid { .. }
+        ));
+    }
+
+    #[tokio::test]
+    async fn validate_field_returns_valid_for_email_with_at() {
+        let storage = InMemoryStorage::new();
+        let handler = ValidatorHandler;
+
+        let result = handler
+            .validate_field(
+                ValidatorValidateFieldInput {
+                    value: "user@example.com".into(),
+                    field_type: "email".into(),
+                    constraints: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            ValidatorValidateFieldOutput::Ok { valid: true }
+        ));
+    }
+}

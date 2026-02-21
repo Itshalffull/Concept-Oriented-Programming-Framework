@@ -273,3 +273,386 @@ impl SchemaHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── define_schema tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn define_schema_returns_deterministic_id() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        let result = handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Article".into(),
+                    fields: r#"[{"name":"title","type":"string"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DefineSchemaOutput::Ok { schema_id } => {
+                assert_eq!(schema_id, "schema_article");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn define_schema_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "User".into(),
+                    fields: r#"[{"name":"email","type":"string"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("schema", "schema_user").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["name"].as_str().unwrap(), "User");
+    }
+
+    // ── add_field tests ────────────────────────────────────
+
+    #[tokio::test]
+    async fn add_field_appends_field_to_schema() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Post".into(),
+                    fields: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .add_field(
+                AddFieldInput {
+                    schema_id: "schema_post".into(),
+                    field_def: r#"{"name":"body","type":"text"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AddFieldOutput::Ok { .. }));
+
+        let record = storage.get("schema", "schema_post").await.unwrap().unwrap();
+        let fields = record["fields"].as_array().unwrap();
+        assert_eq!(fields.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn add_field_returns_notfound_for_missing_schema() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        let result = handler
+            .add_field(
+                AddFieldInput {
+                    schema_id: "nonexistent".into(),
+                    field_def: r#"{"name":"x"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AddFieldOutput::NotFound { .. }));
+    }
+
+    // ── extend_schema tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn extend_schema_sets_parent_id() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Base".into(),
+                    fields: r#"[{"name":"id","type":"string"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Child".into(),
+                    fields: r#"[{"name":"extra","type":"string"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .extend_schema(
+                ExtendSchemaInput {
+                    child_id: "schema_child".into(),
+                    parent_id: "schema_base".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ExtendSchemaOutput::Ok { .. }));
+
+        let child = storage.get("schema", "schema_child").await.unwrap().unwrap();
+        assert_eq!(child["parent_id"].as_str().unwrap(), "schema_base");
+    }
+
+    #[tokio::test]
+    async fn extend_schema_returns_notfound_when_parent_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Orphan".into(),
+                    fields: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .extend_schema(
+                ExtendSchemaInput {
+                    child_id: "schema_orphan".into(),
+                    parent_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ExtendSchemaOutput::NotFound { .. }));
+    }
+
+    // ── apply_to tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn apply_to_assigns_schema_to_node() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Task".into(),
+                    fields: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .apply_to(
+                ApplyToInput {
+                    node_id: "node_1".into(),
+                    schema_id: "schema_task".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ApplyToOutput::Ok { .. }));
+
+        let assignment = storage
+            .get("schema_assignment", "node_1")
+            .await
+            .unwrap();
+        assert!(assignment.is_some());
+    }
+
+    #[tokio::test]
+    async fn apply_to_returns_schema_notfound_when_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        let result = handler
+            .apply_to(
+                ApplyToInput {
+                    node_id: "node_1".into(),
+                    schema_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ApplyToOutput::SchemaNotFound { .. }));
+    }
+
+    // ── remove_from tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn remove_from_deletes_assignment() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Temp".into(),
+                    fields: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .apply_to(
+                ApplyToInput {
+                    node_id: "node_2".into(),
+                    schema_id: "schema_temp".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_from(
+                RemoveFromInput {
+                    node_id: "node_2".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveFromOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_from_returns_notfound_when_no_assignment() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        let result = handler
+            .remove_from(
+                RemoveFromInput {
+                    node_id: "unassigned".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveFromOutput::NotFound { .. }));
+    }
+
+    // ── get_effective_fields tests ─────────────────────────
+
+    #[tokio::test]
+    async fn get_effective_fields_includes_inherited_fields() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Parent".into(),
+                    fields: r#"[{"name":"id","type":"string"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .define_schema(
+                DefineSchemaInput {
+                    name: "Derived".into(),
+                    fields: r#"[{"name":"extra","type":"number"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .extend_schema(
+                ExtendSchemaInput {
+                    child_id: "schema_derived".into(),
+                    parent_id: "schema_parent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_effective_fields(
+                GetEffectiveFieldsInput {
+                    schema_id: "schema_derived".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            GetEffectiveFieldsOutput::Ok { fields, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&fields).unwrap();
+                assert_eq!(parsed.len(), 2);
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_effective_fields_returns_notfound_for_missing_schema() {
+        let storage = InMemoryStorage::new();
+        let handler = SchemaHandler;
+
+        let result = handler
+            .get_effective_fields(
+                GetEffectiveFieldsInput {
+                    schema_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            GetEffectiveFieldsOutput::NotFound { .. }
+        ));
+    }
+}

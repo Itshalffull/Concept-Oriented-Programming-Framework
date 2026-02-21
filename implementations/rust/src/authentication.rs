@@ -197,3 +197,233 @@ impl AuthenticationHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- register ---
+
+    #[tokio::test]
+    async fn register_creates_new_account() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        let result = handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "pass123".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterOutput::Ok { user_id } if user_id == "u1"));
+    }
+
+    #[tokio::test]
+    async fn register_duplicate_returns_already_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "pass123".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "other".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterOutput::AlreadyExists { user_id } if user_id == "u1"));
+    }
+
+    // --- login ---
+
+    #[tokio::test]
+    async fn login_succeeds_with_correct_credentials() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "secret".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .login(
+                LoginInput {
+                    user_id: "u1".into(),
+                    credentials: "secret".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            LoginOutput::Ok { user_id, token } => {
+                assert_eq!(user_id, "u1");
+                assert!(token.starts_with("tok_"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn login_fails_with_wrong_credentials() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "secret".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .login(
+                LoginInput {
+                    user_id: "u1".into(),
+                    credentials: "wrong".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LoginOutput::InvalidCredentials { .. }));
+    }
+
+    #[tokio::test]
+    async fn login_fails_for_nonexistent_user() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        let result = handler
+            .login(
+                LoginInput {
+                    user_id: "ghost".into(),
+                    credentials: "anything".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LoginOutput::InvalidCredentials { .. }));
+    }
+
+    // --- logout ---
+
+    #[tokio::test]
+    async fn logout_succeeds_for_registered_user() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "pass".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .logout(LogoutInput { user_id: "u1".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LogoutOutput::Ok { user_id } if user_id == "u1"));
+    }
+
+    #[tokio::test]
+    async fn logout_not_found_for_missing_user() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        let result = handler
+            .logout(LogoutInput { user_id: "ghost".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, LogoutOutput::NotFound { .. }));
+    }
+
+    // --- reset_password ---
+
+    #[tokio::test]
+    async fn reset_password_generates_token() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        handler
+            .register(
+                RegisterInput {
+                    user_id: "u1".into(),
+                    credentials: "pass".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .reset_password(ResetPasswordInput { user_id: "u1".into() }, &storage)
+            .await
+            .unwrap();
+
+        match result {
+            ResetPasswordOutput::Ok { user_id, reset_token } => {
+                assert_eq!(user_id, "u1");
+                assert!(reset_token.starts_with("reset_"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn reset_password_not_found_for_missing_user() {
+        let storage = InMemoryStorage::new();
+        let handler = AuthenticationHandler;
+
+        let result = handler
+            .reset_password(ResetPasswordInput { user_id: "ghost".into() }, &storage)
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ResetPasswordOutput::NotFound { .. }));
+    }
+}

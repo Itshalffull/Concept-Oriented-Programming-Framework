@@ -168,3 +168,179 @@ impl TemplateHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── define tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn define_returns_ok_with_template_id() {
+        let storage = InMemoryStorage::new();
+        let handler = TemplateHandler;
+
+        let result = handler
+            .define(
+                DefineInput {
+                    template_id: "tpl_report".into(),
+                    block_tree: r#"[{"type":"heading"},{"type":"body"}]"#.into(),
+                    variables: r#"["title","author"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DefineOutput::Ok { template_id } => {
+                assert_eq!(template_id, "tpl_report");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn define_stores_template_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = TemplateHandler;
+
+        handler
+            .define(
+                DefineInput {
+                    template_id: "tpl_page".into(),
+                    block_tree: r#"[{"type":"section"}]"#.into(),
+                    variables: r#"["content"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("template", "tpl_page").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["template_id"].as_str().unwrap(), "tpl_page");
+    }
+
+    // ── instantiate tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn instantiate_creates_instance_from_template() {
+        let storage = InMemoryStorage::new();
+        let handler = TemplateHandler;
+
+        handler
+            .define(
+                DefineInput {
+                    template_id: "tpl_note".into(),
+                    block_tree: r#"[{"type":"text"}]"#.into(),
+                    variables: r#"["body"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .instantiate(
+                InstantiateInput {
+                    template_id: "tpl_note".into(),
+                    target_location: "/notes/new".into(),
+                    bindings: r#"{"body":"Hello"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            InstantiateOutput::Ok { instance_id } => {
+                assert!(instance_id.starts_with("inst_tpl_note_"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn instantiate_returns_notfound_for_missing_template() {
+        let storage = InMemoryStorage::new();
+        let handler = TemplateHandler;
+
+        let result = handler
+            .instantiate(
+                InstantiateInput {
+                    template_id: "nonexistent".into(),
+                    target_location: "/loc".into(),
+                    bindings: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, InstantiateOutput::NotFound { .. }));
+    }
+
+    // ── register_trigger tests ─────────────────────────────
+
+    #[tokio::test]
+    async fn register_trigger_adds_trigger_to_template() {
+        let storage = InMemoryStorage::new();
+        let handler = TemplateHandler;
+
+        handler
+            .define(
+                DefineInput {
+                    template_id: "tpl_auto".into(),
+                    block_tree: "[]".into(),
+                    variables: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .register_trigger(
+                RegisterTriggerInput {
+                    template_id: "tpl_auto".into(),
+                    condition: "on_create".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterTriggerOutput::Ok { .. }));
+
+        let record = storage.get("template", "tpl_auto").await.unwrap().unwrap();
+        let triggers = record["triggers"].as_array().unwrap();
+        assert_eq!(triggers.len(), 1);
+        assert_eq!(
+            triggers[0]["condition"].as_str().unwrap(),
+            "on_create"
+        );
+    }
+
+    #[tokio::test]
+    async fn register_trigger_returns_notfound_for_missing_template() {
+        let storage = InMemoryStorage::new();
+        let handler = TemplateHandler;
+
+        let result = handler
+            .register_trigger(
+                RegisterTriggerInput {
+                    template_id: "nonexistent".into(),
+                    condition: "on_update".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RegisterTriggerOutput::NotFound { .. }));
+    }
+}

@@ -260,3 +260,271 @@ impl VersionHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── snapshot tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn snapshot_returns_version_id() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let result = handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "doc1".into(),
+                    snapshot_data: r#"{"title":"Hello"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            SnapshotOutput::Ok {
+                entity_id,
+                version_id,
+            } => {
+                assert_eq!(entity_id, "doc1");
+                assert!(version_id.starts_with("v_doc1_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn snapshot_stores_version_in_history() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let result = handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "doc2".into(),
+                    snapshot_data: r#"{"content":"data"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let version_id = match result {
+            SnapshotOutput::Ok { version_id, .. } => version_id,
+        };
+
+        let record = storage.get("version_history", &version_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["entity_id"].as_str().unwrap(), "doc2");
+    }
+
+    // ── list_versions tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn list_versions_returns_all_snapshots() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "e1".into(),
+                    snapshot_data: r#"{"v":1}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "e1".into(),
+                    snapshot_data: r#"{"v":2}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .list_versions(
+                ListVersionsInput {
+                    entity_id: "e1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ListVersionsOutput::Ok { entity_id, versions } => {
+                assert_eq!(entity_id, "e1");
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&versions).unwrap();
+                assert_eq!(parsed.len(), 2);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn list_versions_returns_empty_for_unknown_entity() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let result = handler
+            .list_versions(
+                ListVersionsInput {
+                    entity_id: "unknown".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ListVersionsOutput::Ok { versions, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&versions).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    // ── rollback tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn rollback_creates_new_version_from_old() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let snap_result = handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "e1".into(),
+                    snapshot_data: r#"{"v":1}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let version_id = match snap_result {
+            SnapshotOutput::Ok { version_id, .. } => version_id,
+        };
+
+        let result = handler
+            .rollback(
+                RollbackInput {
+                    entity_id: "e1".into(),
+                    version_id: version_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RollbackOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn rollback_returns_version_notfound_for_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let result = handler
+            .rollback(
+                RollbackInput {
+                    entity_id: "e1".into(),
+                    version_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RollbackOutput::VersionNotFound { .. }));
+    }
+
+    // ── diff tests ─────────────────────────────────────────
+
+    #[tokio::test]
+    async fn diff_shows_changes_between_versions() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let snap_a = handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "e1".into(),
+                    snapshot_data: r#"{"title":"Old","status":"draft"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let version_a = match snap_a {
+            SnapshotOutput::Ok { version_id, .. } => version_id,
+        };
+
+        // Small delay to ensure different timestamp
+        let snap_b = handler
+            .snapshot(
+                SnapshotInput {
+                    entity_id: "e1".into(),
+                    snapshot_data: r#"{"title":"New","status":"published"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let version_b = match snap_b {
+            SnapshotOutput::Ok { version_id, .. } => version_id,
+        };
+
+        let result = handler
+            .diff(
+                DiffInput {
+                    entity_id: "e1".into(),
+                    version_a,
+                    version_b,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DiffOutput::Ok { changes, .. } => {
+                let parsed: Vec<serde_json::Value> = serde_json::from_str(&changes).unwrap();
+                assert!(!parsed.is_empty());
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn diff_returns_notfound_when_version_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = VersionHandler;
+
+        let result = handler
+            .diff(
+                DiffInput {
+                    entity_id: "e1".into(),
+                    version_a: "nonexistent_a".into(),
+                    version_b: "nonexistent_b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DiffOutput::NotFound { .. }));
+    }
+}

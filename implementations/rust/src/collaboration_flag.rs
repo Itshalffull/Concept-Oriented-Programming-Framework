@@ -183,3 +183,252 @@ impl CollaborationFlagHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- flag ---
+
+    #[tokio::test]
+    async fn flag_creates_new_flag() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        let result = handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "bookmark".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CollaborationFlagFlagOutput::Ok { user_id, entity_id, flag_type } => {
+                assert_eq!(user_id, "u1");
+                assert_eq!(entity_id, "e1");
+                assert_eq!(flag_type, "bookmark");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn flag_duplicate_returns_already_flagged() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, CollaborationFlagFlagOutput::AlreadyFlagged { .. }));
+    }
+
+    // --- unflag ---
+
+    #[tokio::test]
+    async fn unflag_removes_existing_flag() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "star".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .unflag(
+                CollaborationFlagUnflagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "star".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, CollaborationFlagUnflagOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn unflag_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        let result = handler
+            .unflag(
+                CollaborationFlagUnflagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "star".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, CollaborationFlagUnflagOutput::NotFound { .. }));
+    }
+
+    // --- is_flagged ---
+
+    #[tokio::test]
+    async fn is_flagged_returns_true_when_flagged() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .is_flagged(
+                CollaborationFlagIsFlaggedInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CollaborationFlagIsFlaggedOutput::Ok { flagged } => assert!(flagged),
+        }
+    }
+
+    #[tokio::test]
+    async fn is_flagged_returns_false_when_not_flagged() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        let result = handler
+            .is_flagged(
+                CollaborationFlagIsFlaggedInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CollaborationFlagIsFlaggedOutput::Ok { flagged } => assert!(!flagged),
+        }
+    }
+
+    // --- get_count ---
+
+    #[tokio::test]
+    async fn get_count_returns_correct_count() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u1".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .flag(
+                CollaborationFlagFlagInput {
+                    user_id: "u2".into(),
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_count(
+                CollaborationFlagGetCountInput {
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CollaborationFlagGetCountOutput::Ok { count, .. } => assert_eq!(count, 2),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_count_returns_zero_when_no_flags() {
+        let storage = InMemoryStorage::new();
+        let handler = CollaborationFlagHandler;
+
+        let result = handler
+            .get_count(
+                CollaborationFlagGetCountInput {
+                    entity_id: "e1".into(),
+                    flag_type: "like".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CollaborationFlagGetCountOutput::Ok { count, .. } => assert_eq!(count, 0),
+        }
+    }
+}

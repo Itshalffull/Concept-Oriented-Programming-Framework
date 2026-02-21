@@ -124,3 +124,127 @@ impl PathautoHandler {
         Ok(PathautoCleanStringOutput::Ok { cleaned })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn generate_alias_from_title() {
+        let storage = InMemoryStorage::new();
+        let handler = PathautoHandler;
+        let result = handler
+            .generate_alias(
+                PathautoGenerateAliasInput {
+                    node_id: "n1".into(),
+                    title: "Hello World!".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            PathautoGenerateAliasOutput::Ok { node_id, alias } => {
+                assert_eq!(node_id, "n1");
+                assert_eq!(alias, "hello-world");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn generate_alias_special_chars() {
+        let storage = InMemoryStorage::new();
+        let handler = PathautoHandler;
+        let result = handler
+            .generate_alias(
+                PathautoGenerateAliasInput {
+                    node_id: "n2".into(),
+                    title: "My   Post @ #2024!!!".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            PathautoGenerateAliasOutput::Ok { alias, .. } => {
+                assert_eq!(alias, "my-post-2024");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn generate_alias_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = PathautoHandler;
+        handler
+            .generate_alias(
+                PathautoGenerateAliasInput {
+                    node_id: "n1".into(),
+                    title: "Test Title".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("path_alias", "n1").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["alias"].as_str().unwrap(), "test-title");
+    }
+
+    #[tokio::test]
+    async fn bulk_generate_no_patterns() {
+        let storage = InMemoryStorage::new();
+        let handler = PathautoHandler;
+        let result = handler
+            .bulk_generate(
+                PathautoBulkGenerateInput { node_type: "article".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            PathautoBulkGenerateOutput::Ok { count } => {
+                assert_eq!(count, 0);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn clean_string_basic() {
+        let storage = InMemoryStorage::new();
+        let handler = PathautoHandler;
+        let result = handler
+            .clean_string(
+                PathautoCleanStringInput { input: "Hello, World! #2024".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            PathautoCleanStringOutput::Ok { cleaned } => {
+                assert_eq!(cleaned, "hello-world-2024");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn clean_string_already_clean() {
+        let storage = InMemoryStorage::new();
+        let handler = PathautoHandler;
+        let result = handler
+            .clean_string(
+                PathautoCleanStringInput { input: "already-clean".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            PathautoCleanStringOutput::Ok { cleaned } => {
+                assert_eq!(cleaned, "already-clean");
+            }
+        }
+    }
+}

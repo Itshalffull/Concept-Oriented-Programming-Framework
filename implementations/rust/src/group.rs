@@ -188,3 +188,189 @@ impl GroupHandler {
         Ok(GroupCheckGroupAccessOutput::Ok { allowed })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn create_group() {
+        let storage = InMemoryStorage::new();
+        let handler = GroupHandler;
+        let result = handler
+            .create_group(
+                GroupCreateGroupInput { name: "Editors".into(), group_type: "role".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GroupCreateGroupOutput::Ok { group_id } => {
+                assert!(group_id.starts_with("grp_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn add_member_to_existing_group() {
+        let storage = InMemoryStorage::new();
+        let handler = GroupHandler;
+        let create_result = handler
+            .create_group(
+                GroupCreateGroupInput { name: "Team".into(), group_type: "team".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let group_id = match create_result {
+            GroupCreateGroupOutput::Ok { group_id } => group_id,
+        };
+
+        let result = handler
+            .add_member(
+                GroupAddMemberInput {
+                    group_id: group_id.clone(),
+                    user_id: "user1".into(),
+                    role: "member".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GroupAddMemberOutput::Ok { group_id: gid, user_id } => {
+                assert_eq!(gid, group_id);
+                assert_eq!(user_id, "user1");
+            }
+            GroupAddMemberOutput::GroupNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn add_member_group_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = GroupHandler;
+        let result = handler
+            .add_member(
+                GroupAddMemberInput {
+                    group_id: "missing".into(),
+                    user_id: "u1".into(),
+                    role: "member".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, GroupAddMemberOutput::GroupNotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn add_content_to_group() {
+        let storage = InMemoryStorage::new();
+        let handler = GroupHandler;
+        let create_result = handler
+            .create_group(
+                GroupCreateGroupInput { name: "Blog".into(), group_type: "content".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let group_id = match create_result {
+            GroupCreateGroupOutput::Ok { group_id } => group_id,
+        };
+
+        let result = handler
+            .add_content(
+                GroupAddContentInput { group_id: group_id.clone(), node_id: "post1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GroupAddContentOutput::Ok { group_id: gid, node_id } => {
+                assert_eq!(gid, group_id);
+                assert_eq!(node_id, "post1");
+            }
+            GroupAddContentOutput::GroupNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn check_group_access_member() {
+        let storage = InMemoryStorage::new();
+        let handler = GroupHandler;
+        let create_result = handler
+            .create_group(
+                GroupCreateGroupInput { name: "Team".into(), group_type: "team".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let group_id = match create_result {
+            GroupCreateGroupOutput::Ok { group_id } => group_id,
+        };
+
+        handler
+            .add_member(
+                GroupAddMemberInput {
+                    group_id: group_id.clone(),
+                    user_id: "user1".into(),
+                    role: "admin".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .check_group_access(
+                GroupCheckGroupAccessInput {
+                    group_id: group_id.clone(),
+                    entity_id: "e1".into(),
+                    operation: "edit".into(),
+                    user_id: "user1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GroupCheckGroupAccessOutput::Ok { allowed } => assert!(allowed),
+            GroupCheckGroupAccessOutput::GroupNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn check_group_access_non_member() {
+        let storage = InMemoryStorage::new();
+        let handler = GroupHandler;
+        let create_result = handler
+            .create_group(
+                GroupCreateGroupInput { name: "Team".into(), group_type: "team".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        let group_id = match create_result {
+            GroupCreateGroupOutput::Ok { group_id } => group_id,
+        };
+
+        let result = handler
+            .check_group_access(
+                GroupCheckGroupAccessInput {
+                    group_id: group_id.clone(),
+                    entity_id: "e1".into(),
+                    operation: "edit".into(),
+                    user_id: "outsider".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GroupCheckGroupAccessOutput::Ok { allowed } => assert!(!allowed),
+            GroupCheckGroupAccessOutput::GroupNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+}

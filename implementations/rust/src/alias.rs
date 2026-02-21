@@ -152,3 +152,198 @@ impl AliasHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- add_alias ---
+
+    #[tokio::test]
+    async fn add_alias_creates_new_alias() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        let result = handler
+            .add_alias(
+                AddAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "my-alias".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            AddAliasOutput::Ok {
+                entity_id,
+                alias_name,
+            } if entity_id == "ent1" && alias_name == "my-alias"
+        ));
+    }
+
+    #[tokio::test]
+    async fn add_alias_duplicate_returns_already_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        handler
+            .add_alias(
+                AddAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "taken".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .add_alias(
+                AddAliasInput {
+                    entity_id: "ent2".into(),
+                    alias_name: "taken".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AddAliasOutput::AlreadyExists { alias_name } if alias_name == "taken"));
+    }
+
+    // --- remove_alias ---
+
+    #[tokio::test]
+    async fn remove_alias_removes_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        handler
+            .add_alias(
+                AddAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "removable".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_alias(
+                RemoveAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "removable".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveAliasOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_alias_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        let result = handler
+            .remove_alias(
+                RemoveAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveAliasOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_alias_wrong_entity_returns_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        handler
+            .add_alias(
+                AddAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "owned".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_alias(
+                RemoveAliasInput {
+                    entity_id: "ent_other".into(),
+                    alias_name: "owned".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, RemoveAliasOutput::NotFound { .. }));
+    }
+
+    // --- resolve ---
+
+    #[tokio::test]
+    async fn resolve_finds_existing_alias() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        handler
+            .add_alias(
+                AddAliasInput {
+                    entity_id: "ent1".into(),
+                    alias_name: "lookup".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .resolve(
+                ResolveInput {
+                    name: "lookup".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ResolveOutput::Ok { entity_id } if entity_id == "ent1"));
+    }
+
+    #[tokio::test]
+    async fn resolve_not_found_for_missing_alias() {
+        let storage = InMemoryStorage::new();
+        let handler = AliasHandler;
+
+        let result = handler
+            .resolve(
+                ResolveInput {
+                    name: "missing".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ResolveOutput::NotFound { .. }));
+    }
+}

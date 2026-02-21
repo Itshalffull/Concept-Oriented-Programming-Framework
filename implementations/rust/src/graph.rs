@@ -245,3 +245,137 @@ impl GraphHandler {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn add_node() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        let result = handler
+            .add_node(AddNodeInput { entity_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            AddNodeOutput::Ok { entity_id } => assert_eq!(entity_id, "n1"),
+            AddNodeOutput::AlreadyExists { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn add_node_already_exists() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        handler.add_node(AddNodeInput { entity_id: "n1".into() }, &storage).await.unwrap();
+        let result = handler
+            .add_node(AddNodeInput { entity_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, AddNodeOutput::AlreadyExists { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_node() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        handler.add_node(AddNodeInput { entity_id: "n1".into() }, &storage).await.unwrap();
+        let result = handler
+            .remove_node(RemoveNodeInput { entity_id: "n1".into() }, &storage)
+            .await
+            .unwrap();
+        match result {
+            RemoveNodeOutput::Ok { entity_id } => assert_eq!(entity_id, "n1"),
+            RemoveNodeOutput::NotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn remove_node_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        let result = handler
+            .remove_node(RemoveNodeInput { entity_id: "missing".into() }, &storage)
+            .await
+            .unwrap();
+        assert!(matches!(result, RemoveNodeOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn add_and_remove_edge() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        let result = handler
+            .add_edge(
+                AddEdgeInput { source_id: "a".into(), target_id: "b".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            AddEdgeOutput::Ok { source_id, target_id } => {
+                assert_eq!(source_id, "a");
+                assert_eq!(target_id, "b");
+            }
+        }
+
+        let rm_result = handler
+            .remove_edge(
+                RemoveEdgeInput { source_id: "a".into(), target_id: "b".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(rm_result, RemoveEdgeOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_edge_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        let result = handler
+            .remove_edge(
+                RemoveEdgeInput { source_id: "x".into(), target_id: "y".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, RemoveEdgeOutput::NotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn get_neighbors_depth_one() {
+        let storage = InMemoryStorage::new();
+        let handler = GraphHandler;
+        handler.add_node(AddNodeInput { entity_id: "a".into() }, &storage).await.unwrap();
+        handler.add_node(AddNodeInput { entity_id: "b".into() }, &storage).await.unwrap();
+        handler.add_node(AddNodeInput { entity_id: "c".into() }, &storage).await.unwrap();
+        handler
+            .add_edge(AddEdgeInput { source_id: "a".into(), target_id: "b".into() }, &storage)
+            .await
+            .unwrap();
+        handler
+            .add_edge(AddEdgeInput { source_id: "a".into(), target_id: "c".into() }, &storage)
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_neighbors(
+                GetNeighborsInput { entity_id: "a".into(), depth: 1 },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            GetNeighborsOutput::Ok { entity_id, neighbors } => {
+                assert_eq!(entity_id, "a");
+                let parsed: Vec<String> = serde_json::from_str(&neighbors).unwrap();
+                assert_eq!(parsed.len(), 2);
+                assert!(parsed.contains(&"b".to_string()));
+                assert!(parsed.contains(&"c".to_string()));
+            }
+        }
+    }
+}

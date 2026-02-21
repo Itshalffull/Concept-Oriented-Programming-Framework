@@ -168,3 +168,203 @@ impl AutomationRuleHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    async fn define_rule(
+        handler: &AutomationRuleHandler,
+        storage: &InMemoryStorage,
+        enabled: bool,
+    ) -> String {
+        let result = handler
+            .define(
+                AutomationRuleDefineInput {
+                    trigger: "on_create".into(),
+                    conditions: "type == page".into(),
+                    actions: "notify".into(),
+                    enabled,
+                },
+                storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            AutomationRuleDefineOutput::Ok { rule_id } => rule_id,
+        }
+    }
+
+    // --- define ---
+
+    #[tokio::test]
+    async fn define_creates_rule_with_id() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let rule_id = define_rule(&handler, &storage, true).await;
+        assert!(rule_id.starts_with("rule_"));
+    }
+
+    #[tokio::test]
+    async fn define_stores_rule_data() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let rule_id = define_rule(&handler, &storage, false).await;
+        let record = storage.get("automation_rule", &rule_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["enabled"].as_bool().unwrap(), false);
+    }
+
+    // --- enable ---
+
+    #[tokio::test]
+    async fn enable_sets_enabled_true() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let rule_id = define_rule(&handler, &storage, false).await;
+
+        let result = handler
+            .enable(
+                AutomationRuleEnableInput { rule_id: rule_id.clone() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AutomationRuleEnableOutput::Ok { .. }));
+
+        let record = storage.get("automation_rule", &rule_id).await.unwrap().unwrap();
+        assert_eq!(record["enabled"].as_bool().unwrap(), true);
+    }
+
+    #[tokio::test]
+    async fn enable_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let result = handler
+            .enable(
+                AutomationRuleEnableInput { rule_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AutomationRuleEnableOutput::NotFound { .. }));
+    }
+
+    // --- disable ---
+
+    #[tokio::test]
+    async fn disable_sets_enabled_false() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let rule_id = define_rule(&handler, &storage, true).await;
+
+        let result = handler
+            .disable(
+                AutomationRuleDisableInput { rule_id: rule_id.clone() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AutomationRuleDisableOutput::Ok { .. }));
+
+        let record = storage.get("automation_rule", &rule_id).await.unwrap().unwrap();
+        assert_eq!(record["enabled"].as_bool().unwrap(), false);
+    }
+
+    #[tokio::test]
+    async fn disable_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let result = handler
+            .disable(
+                AutomationRuleDisableInput { rule_id: "missing".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AutomationRuleDisableOutput::NotFound { .. }));
+    }
+
+    // --- evaluate ---
+
+    #[tokio::test]
+    async fn evaluate_matches_enabled_rule() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let rule_id = define_rule(&handler, &storage, true).await;
+
+        let result = handler
+            .evaluate(
+                AutomationRuleEvaluateInput {
+                    rule_id: rule_id.clone(),
+                    event: "page_created".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AutomationRuleEvaluateOutput::Ok { matched, .. } => assert!(matched),
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn evaluate_does_not_match_disabled_rule() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let rule_id = define_rule(&handler, &storage, false).await;
+
+        let result = handler
+            .evaluate(
+                AutomationRuleEvaluateInput {
+                    rule_id: rule_id.clone(),
+                    event: "page_created".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AutomationRuleEvaluateOutput::Ok { matched, .. } => assert!(!matched),
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn evaluate_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = AutomationRuleHandler;
+
+        let result = handler
+            .evaluate(
+                AutomationRuleEvaluateInput {
+                    rule_id: "missing".into(),
+                    event: "x".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AutomationRuleEvaluateOutput::NotFound { .. }));
+    }
+}

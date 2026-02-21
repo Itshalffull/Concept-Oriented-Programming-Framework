@@ -166,3 +166,236 @@ impl ComputationTokenHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- replace ---
+
+    #[tokio::test]
+    async fn replace_resolves_known_token_patterns() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        // Register a provider so the replacement logic finds it
+        handler
+            .register_provider(
+                TokenRegisterProviderInput {
+                    token_type: "node".into(),
+                    resolver_config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .replace(
+                TokenReplaceInput {
+                    text: "Title: [node:title]".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenReplaceOutput::Ok { result } => {
+                assert!(result.contains("{resolved:[node:title]}"));
+                assert!(!result.contains("[node:title]"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn replace_leaves_text_unchanged_when_no_providers() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        let result = handler
+            .replace(
+                TokenReplaceInput {
+                    text: "No tokens here".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenReplaceOutput::Ok { result } => {
+                assert_eq!(result, "No tokens here");
+            }
+        }
+    }
+
+    // --- get_available_tokens ---
+
+    #[tokio::test]
+    async fn get_available_tokens_returns_registered_types() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        handler
+            .register_provider(
+                TokenRegisterProviderInput {
+                    token_type: "user".into(),
+                    resolver_config: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .get_available_tokens(
+                TokenGetAvailableTokensInput { context: "{}".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenGetAvailableTokensOutput::Ok { tokens } => {
+                let parsed: Vec<String> = serde_json::from_str(&tokens).unwrap();
+                assert!(parsed.contains(&"user".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn get_available_tokens_empty_when_none_registered() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        let result = handler
+            .get_available_tokens(
+                TokenGetAvailableTokensInput { context: "{}".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenGetAvailableTokensOutput::Ok { tokens } => {
+                let parsed: Vec<String> = serde_json::from_str(&tokens).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    // --- scan ---
+
+    #[tokio::test]
+    async fn scan_finds_token_patterns() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        let result = handler
+            .scan(
+                TokenScanInput {
+                    text: "Hello [user:name], your [node:title] is ready".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenScanOutput::Ok { matches } => {
+                let parsed: Vec<String> = serde_json::from_str(&matches).unwrap();
+                assert_eq!(parsed.len(), 2);
+                assert!(parsed.contains(&"[user:name]".to_string()));
+                assert!(parsed.contains(&"[node:title]".to_string()));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn scan_returns_empty_for_no_tokens() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        let result = handler
+            .scan(
+                TokenScanInput {
+                    text: "Plain text without tokens".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenScanOutput::Ok { matches } => {
+                let parsed: Vec<String> = serde_json::from_str(&matches).unwrap();
+                assert!(parsed.is_empty());
+            }
+        }
+    }
+
+    // --- register_provider ---
+
+    #[tokio::test]
+    async fn register_provider_stores_provider() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        let result = handler
+            .register_provider(
+                TokenRegisterProviderInput {
+                    token_type: "date".into(),
+                    resolver_config: r#"{"format":"iso"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TokenRegisterProviderOutput::Ok { token_type } => {
+                assert_eq!(token_type, "date");
+            }
+        }
+
+        let record = storage.get("token_type", "date").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn register_provider_overwrites_existing() {
+        let storage = InMemoryStorage::new();
+        let handler = ComputationTokenHandler;
+
+        handler
+            .register_provider(
+                TokenRegisterProviderInput {
+                    token_type: "custom".into(),
+                    resolver_config: "v1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .register_provider(
+                TokenRegisterProviderInput {
+                    token_type: "custom".into(),
+                    resolver_config: "v2".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("token_type", "custom").await.unwrap().unwrap();
+        assert_eq!(record["resolver_config"].as_str().unwrap(), "v2");
+    }
+}

@@ -172,3 +172,172 @@ impl FileManagementHandler {
         Ok(FileManagementGarbageCollectOutput::Ok { removed_count })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    #[tokio::test]
+    async fn upload_file() {
+        let storage = InMemoryStorage::new();
+        let handler = FileManagementHandler;
+        let result = handler
+            .upload(
+                FileManagementUploadInput {
+                    file_id: "file1".into(),
+                    destination: "/uploads/file1.png".into(),
+                    metadata: r#"{"size": 1024}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FileManagementUploadOutput::Ok { file_id } => {
+                assert_eq!(file_id, "file1");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn add_usage_existing_file() {
+        let storage = InMemoryStorage::new();
+        let handler = FileManagementHandler;
+        handler
+            .upload(
+                FileManagementUploadInput {
+                    file_id: "f1".into(),
+                    destination: "/uploads/f1.png".into(),
+                    metadata: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .add_usage(
+                FileManagementAddUsageInput { file_id: "f1".into(), entity_id: "node1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FileManagementAddUsageOutput::Ok { file_id } => assert_eq!(file_id, "f1"),
+            FileManagementAddUsageOutput::FileNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn add_usage_missing_file() {
+        let storage = InMemoryStorage::new();
+        let handler = FileManagementHandler;
+        let result = handler
+            .add_usage(
+                FileManagementAddUsageInput { file_id: "missing".into(), entity_id: "e1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        assert!(matches!(result, FileManagementAddUsageOutput::FileNotFound { .. }));
+    }
+
+    #[tokio::test]
+    async fn remove_usage() {
+        let storage = InMemoryStorage::new();
+        let handler = FileManagementHandler;
+        handler
+            .upload(
+                FileManagementUploadInput {
+                    file_id: "f1".into(),
+                    destination: "/uploads/f1.png".into(),
+                    metadata: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        handler
+            .add_usage(
+                FileManagementAddUsageInput { file_id: "f1".into(), entity_id: "node1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .remove_usage(
+                FileManagementRemoveUsageInput { file_id: "f1".into(), entity_id: "node1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+        match result {
+            FileManagementRemoveUsageOutput::Ok { file_id } => assert_eq!(file_id, "f1"),
+            FileManagementRemoveUsageOutput::FileNotFound { .. } => panic!("expected Ok"),
+        }
+    }
+
+    #[tokio::test]
+    async fn garbage_collect_removes_unused_files() {
+        let storage = InMemoryStorage::new();
+        let handler = FileManagementHandler;
+        // Upload two files
+        handler
+            .upload(
+                FileManagementUploadInput {
+                    file_id: "used".into(),
+                    destination: "/uploads/used.png".into(),
+                    metadata: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        handler
+            .upload(
+                FileManagementUploadInput {
+                    file_id: "unused".into(),
+                    destination: "/uploads/unused.png".into(),
+                    metadata: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+        // Add usage only for the first file
+        handler
+            .add_usage(
+                FileManagementAddUsageInput { file_id: "used".into(), entity_id: "e1".into() },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .garbage_collect(FileManagementGarbageCollectInput {}, &storage)
+            .await
+            .unwrap();
+        match result {
+            FileManagementGarbageCollectOutput::Ok { removed_count } => {
+                assert_eq!(removed_count, 1);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn garbage_collect_no_files() {
+        let storage = InMemoryStorage::new();
+        let handler = FileManagementHandler;
+        let result = handler
+            .garbage_collect(FileManagementGarbageCollectInput {}, &storage)
+            .await
+            .unwrap();
+        match result {
+            FileManagementGarbageCollectOutput::Ok { removed_count } => {
+                assert_eq!(removed_count, 0);
+            }
+        }
+    }
+}

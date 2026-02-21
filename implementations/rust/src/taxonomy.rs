@@ -238,3 +238,320 @@ impl TaxonomyHandler {
         })
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── create_vocabulary tests ────────────────────────────
+
+    #[tokio::test]
+    async fn create_vocabulary_returns_deterministic_id() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        let result = handler
+            .create_vocabulary(
+                CreateVocabularyInput {
+                    name: "Colors".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CreateVocabularyOutput::Ok { vocab_id } => {
+                assert_eq!(vocab_id, "vocab_colors");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_vocabulary_stores_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        handler
+            .create_vocabulary(
+                CreateVocabularyInput {
+                    name: "Topics".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("vocabulary", "vocab_topics").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["name"].as_str().unwrap(), "Topics");
+    }
+
+    // ── add_term tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn add_term_returns_term_id() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        handler
+            .create_vocabulary(
+                CreateVocabularyInput {
+                    name: "Tags".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .add_term(
+                AddTermInput {
+                    vocab_id: "vocab_tags".into(),
+                    name: "Important".into(),
+                    parent_term_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            AddTermOutput::Ok { term_id } => {
+                assert!(term_id.contains("vocab_tags"));
+                assert!(term_id.contains("important"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn add_term_returns_vocab_notfound_when_missing() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        let result = handler
+            .add_term(
+                AddTermInput {
+                    vocab_id: "nonexistent".into(),
+                    name: "Term".into(),
+                    parent_term_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, AddTermOutput::VocabNotFound { .. }));
+    }
+
+    // ── set_parent tests ───────────────────────────────────
+
+    #[tokio::test]
+    async fn set_parent_updates_term_parent() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        handler
+            .create_vocabulary(
+                CreateVocabularyInput {
+                    name: "Categories".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let parent_result = handler
+            .add_term(
+                AddTermInput {
+                    vocab_id: "vocab_categories".into(),
+                    name: "Root".into(),
+                    parent_term_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let parent_id = match parent_result {
+            AddTermOutput::Ok { term_id } => term_id,
+            _ => panic!("expected Ok"),
+        };
+
+        let child_result = handler
+            .add_term(
+                AddTermInput {
+                    vocab_id: "vocab_categories".into(),
+                    name: "Child".into(),
+                    parent_term_id: None,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let child_id = match child_result {
+            AddTermOutput::Ok { term_id } => term_id,
+            _ => panic!("expected Ok"),
+        };
+
+        let result = handler
+            .set_parent(
+                SetParentInput {
+                    term_id: child_id.clone(),
+                    parent_term_id: parent_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetParentOutput::Ok { .. }));
+
+        let term_record = storage.get("term", &child_id).await.unwrap().unwrap();
+        assert_eq!(term_record["parent_term_id"].as_str().unwrap(), parent_id);
+    }
+
+    #[tokio::test]
+    async fn set_parent_returns_notfound_for_missing_term() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        let result = handler
+            .set_parent(
+                SetParentInput {
+                    term_id: "nonexistent".into(),
+                    parent_term_id: "parent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetParentOutput::NotFound { .. }));
+    }
+
+    // ── tag_entity tests ───────────────────────────────────
+
+    #[tokio::test]
+    async fn tag_entity_creates_tag_association() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        let result = handler
+            .tag_entity(
+                TagEntityInput {
+                    node_id: "article_1".into(),
+                    term_id: "term_news".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            TagEntityOutput::Ok { node_id, term_id } => {
+                assert_eq!(node_id, "article_1");
+                assert_eq!(term_id, "term_news");
+            }
+        }
+
+        let record = storage
+            .get("term_index", "article_1:term_news")
+            .await
+            .unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn tag_entity_supports_multiple_tags() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        handler
+            .tag_entity(
+                TagEntityInput {
+                    node_id: "doc1".into(),
+                    term_id: "term_a".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        handler
+            .tag_entity(
+                TagEntityInput {
+                    node_id: "doc1".into(),
+                    term_id: "term_b".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let r1 = storage.get("term_index", "doc1:term_a").await.unwrap();
+        let r2 = storage.get("term_index", "doc1:term_b").await.unwrap();
+        assert!(r1.is_some());
+        assert!(r2.is_some());
+    }
+
+    // ── untag_entity tests ─────────────────────────────────
+
+    #[tokio::test]
+    async fn untag_entity_removes_tag() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        handler
+            .tag_entity(
+                TagEntityInput {
+                    node_id: "doc1".into(),
+                    term_id: "term_x".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .untag_entity(
+                UntagEntityInput {
+                    node_id: "doc1".into(),
+                    term_id: "term_x".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, UntagEntityOutput::Ok { .. }));
+
+        let record = storage.get("term_index", "doc1:term_x").await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn untag_entity_returns_notfound_when_not_tagged() {
+        let storage = InMemoryStorage::new();
+        let handler = TaxonomyHandler;
+
+        let result = handler
+            .untag_entity(
+                UntagEntityInput {
+                    node_id: "doc1".into(),
+                    term_id: "untagged".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, UntagEntityOutput::NotFound { .. }));
+    }
+}

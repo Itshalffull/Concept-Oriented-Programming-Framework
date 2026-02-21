@@ -179,3 +179,241 @@ impl QueueHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── enqueue tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn enqueue_returns_item_id() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let result = handler
+            .enqueue(
+                QueueEnqueueInput {
+                    queue_id: "q1".into(),
+                    data: "task data".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            QueueEnqueueOutput::Ok { item_id } => {
+                assert!(item_id.starts_with("qi_"));
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn enqueue_stores_item_as_pending() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let result = handler
+            .enqueue(
+                QueueEnqueueInput {
+                    queue_id: "q1".into(),
+                    data: "job payload".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let item_id = match result {
+            QueueEnqueueOutput::Ok { item_id } => item_id,
+        };
+
+        let record = storage.get("queue_item", &item_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["status"].as_str().unwrap(), "pending");
+        assert_eq!(record["data"].as_str().unwrap(), "job payload");
+    }
+
+    // ── claim tests ────────────────────────────────────────
+
+    #[tokio::test]
+    async fn claim_returns_oldest_pending_item() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        handler
+            .enqueue(
+                QueueEnqueueInput {
+                    queue_id: "q1".into(),
+                    data: "first".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .claim(
+                QueueClaimInput {
+                    queue_id: "q1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            QueueClaimOutput::Ok { data, .. } => {
+                assert_eq!(data, "first");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn claim_returns_empty_when_queue_is_empty() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let result = handler
+            .claim(
+                QueueClaimInput {
+                    queue_id: "q_empty".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, QueueClaimOutput::Empty { .. }));
+    }
+
+    // ── release tests ──────────────────────────────────────
+
+    #[tokio::test]
+    async fn release_sets_item_back_to_pending() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let enqueue_result = handler
+            .enqueue(
+                QueueEnqueueInput {
+                    queue_id: "q1".into(),
+                    data: "work".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let item_id = match enqueue_result {
+            QueueEnqueueOutput::Ok { item_id } => item_id,
+        };
+
+        // Claim the item first
+        handler
+            .claim(
+                QueueClaimInput {
+                    queue_id: "q1".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        // Release it
+        let result = handler
+            .release(
+                QueueReleaseInput {
+                    item_id: item_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, QueueReleaseOutput::Ok { .. }));
+
+        let record = storage.get("queue_item", &item_id).await.unwrap().unwrap();
+        assert_eq!(record["status"].as_str().unwrap(), "pending");
+    }
+
+    #[tokio::test]
+    async fn release_returns_notfound_for_missing_item() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let result = handler
+            .release(
+                QueueReleaseInput {
+                    item_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, QueueReleaseOutput::NotFound { .. }));
+    }
+
+    // ── delete_item tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn delete_item_removes_existing_item() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let enqueue_result = handler
+            .enqueue(
+                QueueEnqueueInput {
+                    queue_id: "q1".into(),
+                    data: "deleteme".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let item_id = match enqueue_result {
+            QueueEnqueueOutput::Ok { item_id } => item_id,
+        };
+
+        let result = handler
+            .delete_item(
+                QueueDeleteItemInput {
+                    item_id: item_id.clone(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, QueueDeleteItemOutput::Ok { .. }));
+
+        let record = storage.get("queue_item", &item_id).await.unwrap();
+        assert!(record.is_none());
+    }
+
+    #[tokio::test]
+    async fn delete_item_returns_notfound_for_missing_item() {
+        let storage = InMemoryStorage::new();
+        let handler = QueueHandler;
+
+        let result = handler
+            .delete_item(
+                QueueDeleteItemInput {
+                    item_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, QueueDeleteItemOutput::NotFound { .. }));
+    }
+}

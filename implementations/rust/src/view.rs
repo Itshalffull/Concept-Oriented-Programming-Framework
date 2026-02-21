@@ -297,3 +297,390 @@ impl ViewHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // ── create tests ───────────────────────────────────────
+
+    #[tokio::test]
+    async fn create_returns_deterministic_view_id() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .create(
+                CreateInput {
+                    name: "Task Board".into(),
+                    data_source: "tasks".into(),
+                    layout: "board".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            CreateOutput::Ok { view_id } => {
+                assert_eq!(view_id, "view_task_board");
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn create_stores_view_in_storage() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Users".into(),
+                    data_source: "user_table".into(),
+                    layout: "table".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("view", "view_users").await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["layout"].as_str().unwrap(), "table");
+    }
+
+    // ── set_filter tests ───────────────────────────────────
+
+    #[tokio::test]
+    async fn set_filter_updates_view_filter_rules() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Filtered".into(),
+                    data_source: "items".into(),
+                    layout: "list".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .set_filter(
+                SetFilterInput {
+                    view_id: "view_filtered".into(),
+                    rules: r#"[{"field":"status","op":"eq","value":"active"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetFilterOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn set_filter_returns_notfound_for_missing_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .set_filter(
+                SetFilterInput {
+                    view_id: "nonexistent".into(),
+                    rules: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetFilterOutput::NotFound { .. }));
+    }
+
+    // ── set_sort tests ─────────────────────────────────────
+
+    #[tokio::test]
+    async fn set_sort_updates_view_sort_rules() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Sorted".into(),
+                    data_source: "items".into(),
+                    layout: "list".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .set_sort(
+                SetSortInput {
+                    view_id: "view_sorted".into(),
+                    rules: r#"[{"field":"name","direction":"asc"}]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetSortOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn set_sort_returns_notfound_for_missing_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .set_sort(
+                SetSortInput {
+                    view_id: "nonexistent".into(),
+                    rules: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetSortOutput::NotFound { .. }));
+    }
+
+    // ── set_group tests ────────────────────────────────────
+
+    #[tokio::test]
+    async fn set_group_updates_group_field() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Grouped".into(),
+                    data_source: "items".into(),
+                    layout: "board".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .set_group(
+                SetGroupInput {
+                    view_id: "view_grouped".into(),
+                    field: "category".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetGroupOutput::Ok { .. }));
+
+        let record = storage.get("view", "view_grouped").await.unwrap().unwrap();
+        assert_eq!(record["group_field"].as_str().unwrap(), "category");
+    }
+
+    #[tokio::test]
+    async fn set_group_returns_notfound_for_missing_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .set_group(
+                SetGroupInput {
+                    view_id: "nonexistent".into(),
+                    field: "status".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetGroupOutput::NotFound { .. }));
+    }
+
+    // ── set_visible_fields tests ───────────────────────────
+
+    #[tokio::test]
+    async fn set_visible_fields_updates_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Columned".into(),
+                    data_source: "items".into(),
+                    layout: "table".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .set_visible_fields(
+                SetVisibleFieldsInput {
+                    view_id: "view_columned".into(),
+                    field_ids: r#"["name","status","date"]"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, SetVisibleFieldsOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn set_visible_fields_returns_notfound_for_missing_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .set_visible_fields(
+                SetVisibleFieldsInput {
+                    view_id: "nonexistent".into(),
+                    field_ids: "[]".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            result,
+            SetVisibleFieldsOutput::NotFound { .. }
+        ));
+    }
+
+    // ── change_layout tests ────────────────────────────────
+
+    #[tokio::test]
+    async fn change_layout_updates_view_layout() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Switchable".into(),
+                    data_source: "items".into(),
+                    layout: "table".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .change_layout(
+                ChangeLayoutInput {
+                    view_id: "view_switchable".into(),
+                    layout: "board".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ChangeLayoutOutput::Ok { .. }));
+
+        let record = storage
+            .get("view", "view_switchable")
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(record["layout"].as_str().unwrap(), "board");
+    }
+
+    #[tokio::test]
+    async fn change_layout_returns_notfound_for_missing_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .change_layout(
+                ChangeLayoutInput {
+                    view_id: "nonexistent".into(),
+                    layout: "grid".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ChangeLayoutOutput::NotFound { .. }));
+    }
+
+    // ── duplicate tests ────────────────────────────────────
+
+    #[tokio::test]
+    async fn duplicate_creates_copy_of_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        handler
+            .create(
+                CreateInput {
+                    name: "Original".into(),
+                    data_source: "items".into(),
+                    layout: "table".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .duplicate(
+                DuplicateInput {
+                    view_id: "view_original".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            DuplicateOutput::Ok { new_view_id } => {
+                assert_eq!(new_view_id, "view_original_copy");
+                let copy = storage.get("view", &new_view_id).await.unwrap().unwrap();
+                assert_eq!(copy["name"].as_str().unwrap(), "Original (copy)");
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn duplicate_returns_notfound_for_missing_view() {
+        let storage = InMemoryStorage::new();
+        let handler = ViewHandler;
+
+        let result = handler
+            .duplicate(
+                DuplicateInput {
+                    view_id: "nonexistent".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, DuplicateOutput::NotFound { .. }));
+    }
+}

@@ -221,3 +221,276 @@ impl ComponentHandler {
         }
     }
 }
+
+// ── Tests ──────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::InMemoryStorage;
+
+    // --- register ---
+
+    #[tokio::test]
+    async fn register_stores_component() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let result = handler
+            .register(
+                ComponentRegisterInput {
+                    component_id: "comp1".into(),
+                    config: r#"{"color":"red"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ComponentRegisterOutput::Ok { component_id } => assert_eq!(component_id, "comp1"),
+        }
+
+        let record = storage.get("component", "comp1").await.unwrap();
+        assert!(record.is_some());
+    }
+
+    #[tokio::test]
+    async fn register_stores_config() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        handler
+            .register(
+                ComponentRegisterInput {
+                    component_id: "widget".into(),
+                    config: r#"{"size":"large"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let record = storage.get("component", "widget").await.unwrap().unwrap();
+        assert_eq!(record["config"].as_str().unwrap(), r#"{"size":"large"}"#);
+    }
+
+    // --- place ---
+
+    #[tokio::test]
+    async fn place_creates_placement() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let result = handler
+            .place(
+                ComponentPlaceInput {
+                    component_id: "comp1".into(),
+                    region: "sidebar".into(),
+                    weight: 10,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ComponentPlaceOutput::Ok { placement_id } => {
+                assert!(placement_id.starts_with("plc_"));
+                let record = storage.get("placement", &placement_id).await.unwrap();
+                assert!(record.is_some());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn place_stores_region_and_weight() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let result = handler
+            .place(
+                ComponentPlaceInput {
+                    component_id: "comp1".into(),
+                    region: "header".into(),
+                    weight: 5,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let placement_id = match result { ComponentPlaceOutput::Ok { placement_id } => placement_id };
+        let record = storage.get("placement", &placement_id).await.unwrap().unwrap();
+        assert_eq!(record["region"].as_str().unwrap(), "header");
+        assert_eq!(record["weight"].as_i64().unwrap(), 5);
+    }
+
+    // --- set_visibility ---
+
+    #[tokio::test]
+    async fn set_visibility_updates_conditions() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let place_result = handler
+            .place(
+                ComponentPlaceInput {
+                    component_id: "comp1".into(),
+                    region: "main".into(),
+                    weight: 1,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let placement_id = match place_result { ComponentPlaceOutput::Ok { placement_id } => placement_id };
+
+        let result = handler
+            .set_visibility(
+                ComponentSetVisibilityInput {
+                    placement_id: placement_id.clone(),
+                    conditions: "role == admin".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ComponentSetVisibilityOutput::Ok { .. }));
+    }
+
+    #[tokio::test]
+    async fn set_visibility_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let result = handler
+            .set_visibility(
+                ComponentSetVisibilityInput {
+                    placement_id: "missing".into(),
+                    conditions: "x".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ComponentSetVisibilityOutput::NotFound { .. }));
+    }
+
+    // --- evaluate_visibility ---
+
+    #[tokio::test]
+    async fn evaluate_visibility_true_when_no_conditions() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let place_result = handler
+            .place(
+                ComponentPlaceInput {
+                    component_id: "comp1".into(),
+                    region: "main".into(),
+                    weight: 1,
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let placement_id = match place_result { ComponentPlaceOutput::Ok { placement_id } => placement_id };
+
+        let result = handler
+            .evaluate_visibility(
+                ComponentEvaluateVisibilityInput {
+                    placement_id: placement_id.clone(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ComponentEvaluateVisibilityOutput::Ok { visible, .. } => assert!(visible),
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn evaluate_visibility_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let result = handler
+            .evaluate_visibility(
+                ComponentEvaluateVisibilityInput {
+                    placement_id: "missing".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ComponentEvaluateVisibilityOutput::NotFound { .. }));
+    }
+
+    // --- render ---
+
+    #[tokio::test]
+    async fn render_returns_component_output() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        handler
+            .register(
+                ComponentRegisterInput {
+                    component_id: "comp1".into(),
+                    config: r#"{"type":"banner"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        let result = handler
+            .render(
+                ComponentRenderInput {
+                    component_id: "comp1".into(),
+                    context: r#"{"page":"home"}"#.into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        match result {
+            ComponentRenderOutput::Ok { component_id, output } => {
+                assert_eq!(component_id, "comp1");
+                assert!(output.contains("comp1"));
+            }
+            _ => panic!("expected Ok variant"),
+        }
+    }
+
+    #[tokio::test]
+    async fn render_not_found() {
+        let storage = InMemoryStorage::new();
+        let handler = ComponentHandler;
+
+        let result = handler
+            .render(
+                ComponentRenderInput {
+                    component_id: "ghost".into(),
+                    context: "{}".into(),
+                },
+                &storage,
+            )
+            .await
+            .unwrap();
+
+        assert!(matches!(result, ComponentRenderOutput::NotFound { .. }));
+    }
+}
