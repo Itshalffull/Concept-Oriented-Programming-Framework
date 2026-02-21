@@ -2,6 +2,32 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const commentHandler: ConceptHandler = {
+  async create(input, storage) {
+    const comment = input.comment as string;
+    const body = input.body as string;
+    const target = input.target as string;
+    const author = input.author as string;
+
+    await storage.put('comment', comment, {
+      comment,
+      body,
+      target,
+      author,
+    });
+
+    return { variant: 'ok', comment };
+  },
+
+  async list(input, storage) {
+    const target = input.target as string | undefined;
+
+    const allComments = target
+      ? await storage.find('comment', { target })
+      : await storage.find('comment');
+
+    return { variant: 'ok', comments: JSON.stringify(allComments) };
+  },
+
   async addComment(input, storage) {
     const comment = input.comment as string;
     const entity = input.entity as string;
@@ -91,6 +117,6 @@ export const commentHandler: ConceptHandler = {
 
     await storage.del('comment', comment);
 
-    return { variant: 'ok' };
+    return { variant: 'ok', comment };
   },
 };
