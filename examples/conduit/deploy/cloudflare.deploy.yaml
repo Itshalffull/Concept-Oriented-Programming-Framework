@@ -1,0 +1,144 @@
+# Conduit — Cloudflare Workers Deployment Manifest
+#
+# Edge-first deployment on Cloudflare Workers with Durable Objects
+# for storage, in-process transport, and environment-variable secrets.
+# Ultra-low latency at the edge with global distribution.
+#
+# Usage:
+#   copf deploy --manifest deploy/cloudflare.deploy.yaml
+
+app:
+  name: conduit
+  version: "0.1.0"
+  uri: urn:conduit
+
+runtimes:
+  cloudflare:
+    type: CloudflareRuntime
+    engine: true
+    transport: in-process
+    storage: durable-objects
+    secrets: env
+    config:
+      accountId: "${CF_ACCOUNT_ID}"
+      workerName: "conduit-${STAGE:-prod}"
+      compatibilityDate: "2025-01-01"
+      routes:
+        - pattern: "${CF_ROUTE:-conduit.example.com/*}"
+          zone: "${CF_ZONE_ID}"
+
+infrastructure:
+  storage:
+    durable-objects:
+      type: durable-objects
+      config:
+        namespace: "conduit-${STAGE:-prod}"
+        className: ConduitStorage
+        migrations:
+          - tag: v1
+            newClasses: [ConduitStorage]
+
+concepts:
+  User:
+    spec: specs/app/user.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/user.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Password:
+    spec: specs/app/password.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/password.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  JWT:
+    spec: specs/app/jwt.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/jwt.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Profile:
+    spec: specs/app/profile.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/profile.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Article:
+    spec: specs/app/article.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/article.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Comment:
+    spec: specs/app/comment.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/comment.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Tag:
+    spec: specs/app/tag.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/tag.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Favorite:
+    spec: specs/app/favorite.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/favorite.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Follow:
+    spec: specs/app/follow.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/follow.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+  Echo:
+    spec: specs/app/echo.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/echo.impl.ts
+        runtime: cloudflare
+        storage: durable-objects
+        queryMode: lite
+
+syncs:
+  - path: syncs/app/registration.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/login.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/articles.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/comments.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/social.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/profile.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/echo.sync
+    engine: engine
+    annotations: [eager]

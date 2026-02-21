@@ -1,0 +1,170 @@
+# Conduit — Kubernetes Deployment Manifest
+#
+# Container orchestration on Kubernetes with Redis-backed storage,
+# HTTP-based transport, and HashiCorp Vault for secrets.
+# Full control over scaling, networking, and infrastructure.
+#
+# Usage:
+#   copf deploy --manifest deploy/k8s.deploy.yaml
+
+app:
+  name: conduit
+  version: "0.1.0"
+  uri: urn:conduit
+
+runtimes:
+  k8s:
+    type: K8sRuntime
+    engine: true
+    transport: http
+    storage: redis
+    secrets: vault
+    config:
+      namespace: "${K8S_NAMESPACE:-conduit}"
+      image: "${CONTAINER_REGISTRY}/conduit-copf:${IMAGE_TAG:-latest}"
+      replicas: 2
+      port: 3000
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: "1"
+          memory: 512Mi
+      healthCheck:
+        path: /health
+        port: 3000
+        initialDelaySeconds: 10
+        periodSeconds: 15
+
+infrastructure:
+  storage:
+    redis:
+      type: redis
+      config:
+        host: "${REDIS_HOST:-redis-master.conduit.svc.cluster.local}"
+        port: "${REDIS_PORT:-6379}"
+        password: "${REDIS_PASSWORD}"
+        keyPrefix: "conduit:"
+        tls: true
+
+  transports:
+    http:
+      type: http
+      config:
+        engineUrl: "http://conduit-engine.${K8S_NAMESPACE:-conduit}.svc.cluster.local:3000"
+        timeout: 10000
+
+  secrets:
+    vault:
+      type: vault
+      config:
+        address: "${VAULT_ADDR:-http://vault.vault.svc.cluster.local:8200}"
+        authMethod: kubernetes
+        role: conduit
+        secretPath: "secret/data/conduit/${STAGE:-prod}"
+
+concepts:
+  User:
+    spec: specs/app/user.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/user.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Password:
+    spec: specs/app/password.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/password.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  JWT:
+    spec: specs/app/jwt.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/jwt.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Profile:
+    spec: specs/app/profile.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/profile.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Article:
+    spec: specs/app/article.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/article.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Comment:
+    spec: specs/app/comment.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/comment.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Tag:
+    spec: specs/app/tag.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/tag.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Favorite:
+    spec: specs/app/favorite.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/favorite.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Follow:
+    spec: specs/app/follow.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/follow.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+  Echo:
+    spec: specs/app/echo.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/echo.impl.ts
+        runtime: k8s
+        storage: redis
+        queryMode: lite
+
+syncs:
+  - path: syncs/app/registration.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/login.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/articles.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/comments.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/social.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/profile.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/echo.sync
+    engine: engine
+    annotations: [eager]

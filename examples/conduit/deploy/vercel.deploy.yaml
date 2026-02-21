@@ -1,0 +1,146 @@
+# Conduit — Vercel Serverless Deployment Manifest
+#
+# Serverless deployment on Vercel with Vercel KV (Redis-compatible)
+# for storage, HTTP-based transport, and environment-variable secrets.
+# Optimized for Next.js-style API routes with edge caching.
+#
+# Usage:
+#   copf deploy --manifest deploy/vercel.deploy.yaml
+
+app:
+  name: conduit
+  version: "0.1.0"
+  uri: urn:conduit
+
+runtimes:
+  vercel:
+    type: VercelRuntime
+    engine: true
+    transport: http
+    storage: vercel-kv
+    secrets: env
+    config:
+      region: "${VERCEL_REGION:-iad1}"
+      maxDuration: 30
+      memory: 1024
+
+infrastructure:
+  storage:
+    vercel-kv:
+      type: vercel-kv
+      config:
+        url: "${KV_REST_API_URL}"
+        token: "${KV_REST_API_TOKEN}"
+        keyPrefix: "conduit:"
+
+  transports:
+    http:
+      type: http
+      config:
+        basePath: /api/copf
+        timeout: 10000
+
+concepts:
+  User:
+    spec: specs/app/user.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/user.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Password:
+    spec: specs/app/password.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/password.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  JWT:
+    spec: specs/app/jwt.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/jwt.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Profile:
+    spec: specs/app/profile.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/profile.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Article:
+    spec: specs/app/article.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/article.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Comment:
+    spec: specs/app/comment.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/comment.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Tag:
+    spec: specs/app/tag.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/tag.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Favorite:
+    spec: specs/app/favorite.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/favorite.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Follow:
+    spec: specs/app/follow.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/follow.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+  Echo:
+    spec: specs/app/echo.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/echo.impl.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+syncs:
+  - path: syncs/app/registration.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/login.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/articles.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/comments.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/social.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/profile.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/echo.sync
+    engine: engine
+    annotations: [eager]

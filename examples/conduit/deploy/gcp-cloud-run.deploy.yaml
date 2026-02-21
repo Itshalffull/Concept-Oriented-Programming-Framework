@@ -1,0 +1,166 @@
+# Conduit — Google Cloud Run Deployment Manifest
+#
+# Managed container deployment on Cloud Run with Firestore storage,
+# HTTP-based transport, GCP Secret Manager for secrets, and
+# Terraform for infrastructure-as-code.
+# Auto-scaling with scale-to-zero capability.
+#
+# Usage:
+#   copf deploy --manifest deploy/gcp-cloud-run.deploy.yaml
+
+app:
+  name: conduit
+  version: "0.1.0"
+  uri: urn:conduit
+
+runtimes:
+  cloud-run:
+    type: CloudRunRuntime
+    engine: true
+    transport: http
+    storage: firestore
+    secrets: gcp-sm
+    iac: terraform
+    config:
+      projectId: "${GCP_PROJECT_ID}"
+      region: "${GCP_REGION:-us-central1}"
+      memory: 512Mi
+      cpu: "1"
+      minInstances: 0
+      maxInstances: 10
+      concurrency: 80
+
+infrastructure:
+  storage:
+    firestore:
+      type: firestore
+      config:
+        projectId: "${GCP_PROJECT_ID}"
+        collectionPrefix: "conduit-${STAGE:-prod}"
+
+  transports:
+    http:
+      type: http
+      config:
+        engineUrl: "${ENGINE_URL}"
+        timeout: 10000
+
+  secrets:
+    gcp-sm:
+      type: gcp-secret-manager
+      config:
+        projectId: "${GCP_PROJECT_ID}"
+        secretPrefix: "conduit-${STAGE:-prod}-"
+
+  iac:
+    terraform:
+      type: terraform
+      config:
+        stateBucket: "${TF_STATE_BUCKET}"
+        statePrefix: "conduit/${STAGE:-prod}"
+        modulePath: deploy/gcp/cloud-run
+
+concepts:
+  User:
+    spec: specs/app/user.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/user.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Password:
+    spec: specs/app/password.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/password.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  JWT:
+    spec: specs/app/jwt.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/jwt.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Profile:
+    spec: specs/app/profile.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/profile.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Article:
+    spec: specs/app/article.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/article.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Comment:
+    spec: specs/app/comment.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/comment.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Tag:
+    spec: specs/app/tag.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/tag.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Favorite:
+    spec: specs/app/favorite.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/favorite.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Follow:
+    spec: specs/app/follow.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/follow.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+  Echo:
+    spec: specs/app/echo.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/echo.impl.ts
+        runtime: cloud-run
+        storage: firestore
+        queryMode: lite
+
+syncs:
+  - path: syncs/app/registration.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/login.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/articles.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/comments.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/social.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/profile.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/echo.sync
+    engine: engine
+    annotations: [eager]

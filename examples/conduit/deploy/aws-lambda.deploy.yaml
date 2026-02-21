@@ -1,0 +1,178 @@
+# Conduit — AWS Lambda Deployment Manifest
+#
+# Fully serverless deployment on AWS Lambda with DynamoDB storage,
+# SQS-based transport, AWS Secrets Manager for secrets, and
+# CloudFormation for infrastructure-as-code.
+# Zero idle cost, auto-scaling. Higher per-sync latency (~50-200ms per hop).
+#
+# Usage:
+#   copf deploy --manifest deploy/aws-lambda.deploy.yaml
+
+app:
+  name: conduit
+  version: "0.1.0"
+  uri: urn:conduit
+
+runtimes:
+  lambda:
+    type: LambdaRuntime
+    engine: true
+    transport: sqs
+    storage: dynamodb
+    secrets: aws-sm
+    iac: cloudformation
+    config:
+      region: "${AWS_REGION:-us-east-1}"
+      memory: 256
+      timeout: 30
+      stage: "${STAGE:-prod}"
+
+  engine:
+    type: LambdaRuntime
+    engine: true
+    transport: sqs
+    storage: dynamodb
+    secrets: aws-sm
+    config:
+      region: "${AWS_REGION:-us-east-1}"
+      memory: 512
+      timeout: 60
+      actionLog: dynamodb
+
+infrastructure:
+  storage:
+    dynamodb:
+      type: dynamodb
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        tablePrefix: "conduit-${STAGE:-prod}-"
+        singleTable: true
+        billingMode: PAY_PER_REQUEST
+
+  transports:
+    sqs:
+      type: sqs
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        queuePrefix: "conduit-${STAGE:-prod}-"
+        visibilityTimeout: 60
+        batchSize: 10
+
+  secrets:
+    aws-sm:
+      type: aws-secrets-manager
+      config:
+        region: "${AWS_REGION:-us-east-1}"
+        secretPrefix: "conduit/${STAGE:-prod}/"
+
+  iac:
+    cloudformation:
+      type: cloudformation
+      config:
+        stackName: "conduit-${STAGE:-prod}"
+        templatePath: deploy/aws/template.yaml
+
+concepts:
+  User:
+    spec: specs/app/user.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/user.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Password:
+    spec: specs/app/password.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/password.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  JWT:
+    spec: specs/app/jwt.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/jwt.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Profile:
+    spec: specs/app/profile.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/profile.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Article:
+    spec: specs/app/article.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/article.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Comment:
+    spec: specs/app/comment.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/comment.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Tag:
+    spec: specs/app/tag.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/tag.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Favorite:
+    spec: specs/app/favorite.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/favorite.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Follow:
+    spec: specs/app/follow.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/follow.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+  Echo:
+    spec: specs/app/echo.concept
+    implementations:
+      - language: typescript
+        path: implementations/typescript/app/echo.impl.ts
+        runtime: lambda
+        storage: dynamodb
+        queryMode: lite
+
+syncs:
+  - path: syncs/app/registration.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/login.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/articles.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/comments.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/social.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/profile.sync
+    engine: engine
+    annotations: [eager]
+  - path: syncs/app/echo.sync
+    engine: engine
+    annotations: [eager]

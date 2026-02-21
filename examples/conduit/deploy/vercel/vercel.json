@@ -1,0 +1,37 @@
+{
+  "name": "conduit-copf",
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": null,
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/copf/:path*",
+      "destination": "/api/copf/index.ts"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/health.ts"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Authorization, Content-Type" }
+      ]
+    }
+  ],
+  "env": {
+    "STORAGE_BACKEND": "vercel-kv",
+    "TRANSPORT_MODE": "http"
+  }
+}

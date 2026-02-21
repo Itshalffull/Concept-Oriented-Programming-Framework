@@ -1,0 +1,33 @@
+# Conduit COPF App — Cloudflare Workers Configuration
+# Deploys the conduit app as a Cloudflare Worker with Durable Objects storage.
+
+name = "conduit-copf"
+main = "dist/examples/conduit/server/server.js"
+compatibility_date = "2025-01-01"
+node_compat = true
+
+[vars]
+STORAGE_BACKEND = "durable-objects"
+TRANSPORT_MODE = "in-process"
+
+# Durable Objects bindings for concept storage
+[[durable_objects.bindings]]
+name = "CONDUIT_STORAGE"
+class_name = "ConduitStorage"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ConduitStorage"]
+
+# Routes (uncomment and configure for production)
+# [[routes]]
+# pattern = "conduit.example.com/*"
+# zone_name = "example.com"
+
+[build]
+command = "npm run build"
+
+# Development settings
+[dev]
+port = 3000
+local_protocol = "http"

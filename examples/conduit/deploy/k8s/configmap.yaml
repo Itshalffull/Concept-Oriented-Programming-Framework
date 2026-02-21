@@ -1,0 +1,19 @@
+# Conduit COPF App — Kubernetes ConfigMap
+# Non-secret environment variables for the conduit app.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conduit-config
+  namespace: conduit
+  labels:
+    app: conduit-copf
+data:
+  NODE_ENV: production
+  PORT: "3000"
+  STORAGE_BACKEND: redis
+  TRANSPORT_MODE: http
+  REDIS_HOST: redis-master.conduit.svc.cluster.local
+  REDIS_PORT: "6379"
+  VAULT_ADDR: http://vault.vault.svc.cluster.local:8200
+  LOG_LEVEL: info
