@@ -1,0 +1,36 @@
+@category("devtools")
+@visibility("public")
+concept ProjectScaffold [P] {
+
+  purpose {
+    Initialize new COPF projects with the standard directory
+    structure, example concept specs, and configuration files.
+  }
+
+  state {
+    projects: set P
+    name: P -> String
+    path: P -> String
+  }
+
+  actions {
+    action scaffold(name: String) {
+      description {
+        Create a new COPF project directory with specs, syncs,
+        implementations, and configuration files. Generates an
+        example concept and sync to get started.
+      }
+      -> ok(project: P, path: String) {
+        Project directory created with standard structure.
+      }
+      -> alreadyExists(name: String) {
+        A directory with this name already exists.
+      }
+    }
+  }
+
+  invariant {
+    after scaffold(name: "my-app") -> ok(project: p, path: "./my-app/")
+    then scaffold(name: "my-app") -> alreadyExists(name: "my-app")
+  }
+}

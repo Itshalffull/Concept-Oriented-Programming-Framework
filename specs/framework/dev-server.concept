@@ -1,0 +1,59 @@
+@category("devtools")
+@visibility("public")
+concept DevServer [D] {
+
+  purpose {
+    Run a local development server that watches concept specs
+    and syncs for changes, re-compiles on save, and serves
+    the generated artifacts.
+  }
+
+  state {
+    sessions: set D
+    port: D -> Int
+    status: D -> String
+  }
+
+  actions {
+    action start(port: Int, specs: String, syncs: String) {
+      description {
+        Start the development server on the specified port.
+        Watch the specs and syncs directories for changes.
+        Auto-recompile when files are modified.
+      }
+      -> ok(session: D, port: Int, url: String) {
+        Development server started and watching for changes.
+      }
+      -> portInUse(port: Int) {
+        The specified port is already in use.
+      }
+    }
+
+    action stop(session: D) {
+      description {
+        Stop a running development server session.
+      }
+      -> ok(session: D) {
+        Server stopped cleanly.
+      }
+    }
+
+    action status(session: D) {
+      description {
+        Check the current status of a development server session.
+      }
+      -> running(port: Int, uptime: Int, lastRecompile: String) {
+        Server is running with current stats.
+      }
+      -> stopped() {
+        Server is not running.
+      }
+    }
+  }
+
+  invariant {
+    after start(port: 3000, specs: "./specs", syncs: "./syncs")
+      -> ok(session: d, port: 3000, url: "http://localhost:3000")
+    then stop(session: d) -> ok(session: d)
+  }
+}

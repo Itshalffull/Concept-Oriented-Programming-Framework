@@ -1,0 +1,39 @@
+@category("devtools")
+@visibility("public")
+concept CacheCompiler [C] {
+
+  purpose {
+    Build pre-compiled artifacts from concept specs, syncs,
+    and implementations into the .copf-cache directory for
+    faster startup and deployment.
+  }
+
+  state {
+    compilations: set C
+    hash: C -> String
+    status: C -> String
+  }
+
+  actions {
+    action compile(specs: String, syncs: String, implementations: String) {
+      description {
+        Parse all specs and syncs, generate manifests, compile
+        sync rules, and write pre-compiled artifacts to the
+        cache directory. Skips unchanged files using content hashing.
+      }
+      -> ok(compilation: C, cached: Int, skipped: Int) {
+        All artifacts compiled and cached successfully.
+      }
+      -> error(message: String, file: String) {
+        Compilation failed for the specified file.
+      }
+    }
+  }
+
+  invariant {
+    after compile(specs: "./specs", syncs: "./syncs", implementations: "./implementations")
+      -> ok(compilation: c, cached: 5, skipped: 0)
+    then compile(specs: "./specs", syncs: "./syncs", implementations: "./implementations")
+      -> ok(compilation: c2, cached: 0, skipped: 5)
+  }
+}
