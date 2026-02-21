@@ -1,0 +1,25 @@
+<!-- Conduit Example App - WinUI Main Window XAML -->
+<!-- NavigationView with Frame-based page navigation. -->
+
+<Window
+    x:Class="ConduitApp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Conduit">
+
+    <NavigationView
+        x:Name="NavView"
+        IsBackButtonVisible="Auto"
+        IsSettingsVisible="False"
+        PaneDisplayMode="LeftCompact"
+        BackRequested="NavView_BackRequested"
+        ItemInvoked="NavView_ItemInvoked">
+
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Home" Tag="Home" Icon="Home" />
+            <NavigationViewItem Content="Sign In" Tag="Login" Icon="Contact" x:Name="LoginNavItem" />
+        </NavigationView.MenuItems>
+
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
+</Window>

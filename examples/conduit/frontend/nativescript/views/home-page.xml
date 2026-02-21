@@ -1,0 +1,44 @@
+<!-- Conduit Example App - NativeScript Home Page XML -->
+<!-- Article feed with ListView and ActionBar navigation. -->
+
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+      navigatingTo="onNavigatingTo" class="page">
+
+    <Page.actionBar>
+        <ActionBar title="Conduit" class="action-bar">
+            <ActionItem text="Sign In" tap="onLoginTap" ios.position="right" android.position="actionBar" />
+        </ActionBar>
+    </Page.actionBar>
+
+    <GridLayout rows="*">
+        <!-- Loading indicator -->
+        <ActivityIndicator busy="{{ isLoading }}" visibility="{{ isLoading ? 'visible' : 'collapsed' }}"
+                           horizontalAlignment="center" verticalAlignment="center" />
+
+        <!-- Error display -->
+        <StackLayout visibility="{{ errorMessage ? 'visible' : 'collapsed' }}"
+                     horizontalAlignment="center" verticalAlignment="center">
+            <Label text="{{ errorMessage }}" class="error-text" textWrap="true" />
+            <Button text="Retry" tap="onRefreshTap" class="btn btn-primary" />
+        </StackLayout>
+
+        <!-- Article list -->
+        <ListView items="{{ articles }}" itemTap="onArticleTap"
+                  visibility="{{ !isLoading &amp;&amp; !errorMessage ? 'visible' : 'collapsed' }}"
+                  separatorColor="#eee">
+            <ListView.itemTemplate>
+                <StackLayout padding="12" class="article-card">
+                    <GridLayout columns="*, auto">
+                        <Label col="0" text="{{ author.username }}" class="author-text" />
+                        <Label col="1" text="{{ createdAt }}" class="date-text" />
+                    </GridLayout>
+                    <Label text="{{ title }}" class="title-text" textWrap="true" maxLines="2" />
+                    <Label text="{{ description }}" class="desc-text" textWrap="true" maxLines="2" />
+                    <StackLayout orientation="horizontal">
+                        <Label text="{{ '\u2665 ' + favoritesCount }}" class="fav-text" />
+                    </StackLayout>
+                </StackLayout>
+            </ListView.itemTemplate>
+        </ListView>
+    </GridLayout>
+</Page>

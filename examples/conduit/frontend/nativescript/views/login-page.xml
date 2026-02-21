@@ -1,0 +1,35 @@
+<!-- Conduit Example App - NativeScript Login Page XML -->
+<!-- Email/password form with Sign In and Register buttons. -->
+
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+      navigatingTo="onNavigatingTo" class="page">
+
+    <Page.actionBar>
+        <ActionBar title="Sign In" class="action-bar">
+            <NavigationButton text="Back" tap="onBackTap" android.systemIcon="ic_menu_back" />
+        </ActionBar>
+    </Page.actionBar>
+
+    <StackLayout class="form" padding="24">
+        <Label text="Sign In" class="h1" horizontalAlignment="center" marginBottom="24" />
+
+        <TextField hint="Email" text="{{ email }}" keyboardType="email"
+                   autocapitalizationType="none" autocorrect="false"
+                   isEnabled="{{ !isLoading }}" class="input" />
+
+        <TextField hint="Password" text="{{ password }}" secure="true"
+                   isEnabled="{{ !isLoading }}" class="input" marginTop="12" />
+
+        <Label text="{{ errorMessage }}" visibility="{{ errorMessage ? 'visible' : 'collapsed' }}"
+               class="error-text" textWrap="true" marginTop="8" />
+
+        <ActivityIndicator busy="{{ isLoading }}" visibility="{{ isLoading ? 'visible' : 'collapsed' }}"
+                           marginTop="16" horizontalAlignment="center" />
+
+        <Button text="Sign In" tap="onLoginTap" class="btn btn-primary"
+                isEnabled="{{ !isLoading }}" marginTop="16" />
+
+        <Button text="Create Account" tap="onRegisterTap" class="btn btn-outline"
+                isEnabled="{{ !isLoading }}" marginTop="8" />
+    </StackLayout>
+</Page>

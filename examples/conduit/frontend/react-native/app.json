@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Conduit",
+    "slug": "conduit-react-native",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#5CB85C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.copf.conduit"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#5CB85C"
+      },
+      "package": "com.copf.conduit"
+    }
+  }
+}

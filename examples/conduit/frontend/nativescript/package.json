@@ -1,0 +1,17 @@
+{
+  "name": "conduit-nativescript",
+  "version": "1.0.0",
+  "main": "app.ts",
+  "scripts": {
+    "android": "ns run android",
+    "ios": "ns run ios",
+    "clean": "ns clean"
+  },
+  "dependencies": {
+    "@nativescript/core": "~8.6.0"
+  },
+  "devDependencies": {
+    "@nativescript/types": "~8.6.0",
+    "typescript": "~5.3.0"
+  }
+}

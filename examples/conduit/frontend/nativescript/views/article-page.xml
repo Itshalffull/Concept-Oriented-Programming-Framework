@@ -1,0 +1,61 @@
+<!-- Conduit Example App - NativeScript Article Detail Page XML -->
+<!-- Full article view with author info, body, and tags. -->
+
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+      navigatingTo="onNavigatingTo" class="page">
+
+    <Page.actionBar>
+        <ActionBar title="Article" class="action-bar">
+            <NavigationButton text="Back" tap="onBackTap" android.systemIcon="ic_menu_back" />
+        </ActionBar>
+    </Page.actionBar>
+
+    <GridLayout rows="*">
+        <!-- Loading indicator -->
+        <ActivityIndicator busy="{{ isLoading }}" visibility="{{ isLoading ? 'visible' : 'collapsed' }}"
+                           horizontalAlignment="center" verticalAlignment="center" />
+
+        <!-- Error display -->
+        <Label text="{{ errorMessage }}" visibility="{{ errorMessage ? 'visible' : 'collapsed' }}"
+               class="error-text" horizontalAlignment="center" verticalAlignment="center" />
+
+        <!-- Article content -->
+        <ScrollView visibility="{{ !isLoading &amp;&amp; !errorMessage &amp;&amp; article ? 'visible' : 'collapsed' }}">
+            <StackLayout padding="16">
+                <!-- Header -->
+                <StackLayout class="article-header" padding="12" backgroundColor="#333333">
+                    <Label text="{{ article.title }}" class="h2" color="white" textWrap="true" />
+                    <GridLayout columns="*, auto" marginTop="8">
+                        <Label col="0" text="{{ article.author.username }}" color="#5CB85C"
+                               fontWeight="bold" fontSize="13" />
+                        <Label col="1" text="{{ displayDate }}" color="#aaaaaa" fontSize="11" />
+                    </GridLayout>
+                </StackLayout>
+
+                <!-- Actions -->
+                <StackLayout orientation="horizontal" marginTop="12" marginBottom="12">
+                    <Button text="{{ article.favorited ? '\u2665' : '\u2661' }} {{ article.favoritesCount }}"
+                            tap="onFavoriteTap" class="btn btn-sm" />
+                    <Button text="{{ article.author.following ? 'Unfollow' : 'Follow' }}"
+                            tap="onFollowTap" class="btn btn-sm" marginLeft="8" />
+                </StackLayout>
+
+                <!-- Body -->
+                <Label text="{{ article.body }}" textWrap="true" class="body-text" />
+
+                <!-- Tags -->
+                <WrapLayout orientation="horizontal" marginTop="12"
+                            visibility="{{ article.tagList.length ? 'visible' : 'collapsed' }}">
+                    <Label text="Tags:" class="tag-label" marginRight="4" />
+                    <Repeater items="{{ article.tagList }}">
+                        <Repeater.itemTemplate>
+                            <Label text="{{ $value }}" class="tag" margin="2" padding="4 8"
+                                   borderRadius="10" borderWidth="1" borderColor="#dddddd"
+                                   fontSize="11" color="#aaaaaa" />
+                        </Repeater.itemTemplate>
+                    </Repeater>
+                </WrapLayout>
+            </StackLayout>
+        </ScrollView>
+    </GridLayout>
+</Page>
