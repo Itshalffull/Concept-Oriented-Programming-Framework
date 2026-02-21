@@ -1,0 +1,48 @@
+@version(1)
+concept Group [G] {
+  purpose {
+    Create isolated content spaces with group-level role-based access control
+    for multi-tenant collaboration.
+  }
+
+  state {
+    groups: set G;
+    memberships: G -> set String;
+    groupRoles: G -> String;
+    groupContent: G -> set String;
+    name: G -> String
+  }
+
+  actions {
+    action createGroup(group: G, name: String) {
+      -> ok() { Group created successfully. }
+      -> exists(message: String) { Group already exists. }
+    }
+
+    action addMember(group: G, user: String, role: String) {
+      -> ok() { Member added to group with assigned role. }
+      -> notfound(message: String) { Group does not exist. }
+    }
+
+    action assignGroupRole(group: G, user: String, role: String) {
+      -> ok() { Role assigned to member within group. }
+      -> notfound(message: String) { Group or member does not exist. }
+    }
+
+    action addContent(group: G, content: String) {
+      -> ok() { Content added to group. }
+      -> notfound(message: String) { Group does not exist. }
+    }
+
+    action checkGroupAccess(group: G, user: String, permission: String) {
+      -> ok(granted: Bool) { Returns whether the user has the permission in this group. }
+      -> notfound(message: String) { Group does not exist. }
+    }
+  }
+
+  invariant {
+    after createGroup(group: g, name: n) -> ok()
+    then addMember(group: g, user: u, role: "member") -> ok()
+    and  checkGroupAccess(group: g, user: u, permission: "read") -> ok(granted: true)
+  }
+}

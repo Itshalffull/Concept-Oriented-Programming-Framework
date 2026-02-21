@@ -1,0 +1,26 @@
+sync RenderView [eager]
+when {
+  View/create: [ view: ?view; dataSource: ?source; layout: ?layout ]
+    => [ view: ?view ]
+}
+then {
+  Renderer/render: [ renderer: ?view; tree: ?layout ]
+}
+
+sync FormFromView [eager]
+when {
+  View/changeLayout: [ view: ?view; layout: ?layout ]
+    => [ view: ?view ]
+}
+then {
+  DisplayMode/renderInMode: [ mode: ?view; entity: ?layout ]
+}
+
+sync BuildFormFromSchema [eager]
+when {
+  DisplayMode/configureFieldForm: [ mode: ?mode; field: ?field; config: ?config ]
+    => [ mode: ?mode ]
+}
+then {
+  FormBuilder/registerWidget: [ form: ?mode; type: ?field; widget: ?config ]
+}

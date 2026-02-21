@@ -1,0 +1,22 @@
+type ComponentState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ComponentEntry {
+  c: ID!
+  config: String!
+  placements: String!
+  conditions: String!
+  visible: Boolean!
+}
+
+extend type Query {
+  component_entry(c: ID!): ComponentEntry
+  component_entries: [ComponentEntry!]!
+}
+
+type ComponentComponents {
+  c: ID!
+  value: ID!
+}

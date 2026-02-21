@@ -1,0 +1,86 @@
+@version(1)
+concept ContentParser [C] {
+
+  purpose {
+    Parse text into structured data by extracting references,
+    tags, properties, and embeds. Supports multiple formats
+    and pluggable extractors for progressive formalization.
+  }
+
+  state {
+    formats: set String
+    extractors: set String
+    astCache: C -> String
+  }
+
+  actions {
+    action registerFormat(name: String, grammar: String) {
+      -> ok(name: String) {
+        Register a text format with its parsing grammar.
+      }
+      -> exists(message: String) {
+        The format is already registered.
+      }
+    }
+
+    action registerExtractor(name: String, pattern: String) {
+      -> ok(name: String) {
+        Register an extractor that identifies patterns in parsed text.
+      }
+      -> exists(message: String) {
+        The extractor is already registered.
+      }
+    }
+
+    action parse(content: C, text: String, format: String) {
+      -> ok(ast: String) {
+        Parse text into an AST using the specified format grammar.
+      }
+      -> error(message: String) {
+        The format is not registered or parsing failed.
+      }
+    }
+
+    action extractRefs(content: C) {
+      -> ok(refs: String) {
+        Extract all references from the cached AST.
+      }
+      -> notfound(message: String) {
+        No AST cached for this content.
+      }
+    }
+
+    action extractTags(content: C) {
+      -> ok(tags: String) {
+        Extract all tags from the cached AST.
+      }
+      -> notfound(message: String) {
+        No AST cached for this content.
+      }
+    }
+
+    action extractProperties(content: C) {
+      -> ok(properties: String) {
+        Extract all inline properties from the cached AST.
+      }
+      -> notfound(message: String) {
+        No AST cached for this content.
+      }
+    }
+
+    action serialize(content: C, format: String) {
+      -> ok(text: String) {
+        Serialize the cached AST back to text in the given format.
+      }
+      -> notfound(message: String) {
+        No AST cached for this content.
+      }
+    }
+  }
+
+  invariant {
+    after registerFormat(name: "markdown", grammar: "{}") -> ok(name: "markdown")
+    and parse(content: c, text: "Hello #tag [[ref]]", format: "markdown") -> ok(ast: a)
+    then extractTags(content: c) -> ok(tags: t)
+  }
+}

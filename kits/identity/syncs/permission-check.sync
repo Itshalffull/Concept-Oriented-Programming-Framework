@@ -1,0 +1,10 @@
+// Authorization and access control coordination
+
+sync CheckAccessViaRoles [eager]
+when {
+  AccessControl/check: [ resource: ?resource; action: ?action; context: ?context ]
+    => [ result: ?result ]
+}
+then {
+  Authorization/checkPermission: [ user: ?context; permission: ?action ]
+}

@@ -1,0 +1,19 @@
+// Schema and property coordination
+
+sync ApplySchemaToPage [eager]
+when {
+  PageAsRecord/create: [ page: ?page; schema: ?schema ]
+    => [ page: ?page ]
+}
+then {
+  TypeSystem/validate: [ type: ?page; value: ?schema ]
+}
+
+sync PropertyTypeCheck [eager]
+when {
+  Property/set: [ entity: ?entity; key: ?key; value: ?value ]
+    => [ entity: ?entity ]
+}
+then {
+  TypeSystem/validate: [ type: ?entity; value: ?value ]
+}

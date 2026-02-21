@@ -1,0 +1,38 @@
+@version(1)
+concept Taxonomy [V] {
+  purpose { Organize classification terms into hierarchical vocabularies with parent-child relationships. }
+  state {
+    vocabularies: set V;
+    terms: V -> set String;
+    termParent: V -> V;
+    termIndex: V -> set String
+  }
+  actions {
+    action createVocabulary(vocab: V, name: String) {
+      -> ok() { Create a new named vocabulary. }
+      -> exists(message: String) { Vocabulary already exists. }
+    }
+    action addTerm(vocab: V, term: String, parent: option String) {
+      -> ok() { Add a term to the vocabulary, optionally under a parent term. }
+      -> notfound(message: String) { Vocabulary or parent term not found. }
+    }
+    action setParent(vocab: V, term: String, parent: String) {
+      -> ok() { Reassign the parent of an existing term. }
+      -> notfound(message: String) { Vocabulary or term not found. }
+    }
+    action tagEntity(entity: String, vocab: V, term: String) {
+      -> ok() { Associate an entity with a term in the vocabulary. }
+      -> notfound(message: String) { Vocabulary or term not found. }
+    }
+    action untagEntity(entity: String, vocab: V, term: String) {
+      -> ok() { Remove the association between an entity and a term. }
+      -> notfound(message: String) { Vocabulary, term, or association not found. }
+    }
+  }
+  invariant {
+    after createVocabulary(vocab: v, name: "topics") -> ok()
+    then addTerm(vocab: v, term: "science", parent: none) -> ok()
+    and tagEntity(entity: "page-1", vocab: v, term: "science") -> ok()
+    and untagEntity(entity: "page-1", vocab: v, term: "science") -> ok()
+  }
+}

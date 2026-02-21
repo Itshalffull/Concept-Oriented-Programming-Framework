@@ -1,0 +1,15 @@
+# Notification Kit Manifest
+name: notification
+version: 0.1.0
+description: "User notifications — delivery, read tracking, and automatic status management for notification channels."
+
+concepts:
+  - name: Notification
+    spec: notification.concept
+
+syncs:
+  - name: notification-delivery
+    file: syncs/notification-delivery.sync
+    tier: recommended
+
+dependencies: []

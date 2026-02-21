@@ -1,0 +1,22 @@
+type ControlState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type ControlEntry {
+  k: ID!
+  type: String!
+  value: String!
+  binding: String!
+  action: String!
+}
+
+extend type Query {
+  control_entry(k: ID!): ControlEntry
+  control_entries: [ControlEntry!]!
+}
+
+type ControlControls {
+  k: ID!
+  value: ID!
+}

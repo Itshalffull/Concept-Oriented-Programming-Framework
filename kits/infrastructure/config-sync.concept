@@ -1,0 +1,64 @@
+@version(1)
+concept ConfigSync [C] {
+
+  purpose {
+    Manage configuration as code with export, import, environment overrides,
+    and diff comparison.
+  }
+
+  state {
+    activeConfig: set C
+    syncDirectory: C -> String
+    overrideLayers: C -> String
+    data: C -> String
+  }
+
+  actions {
+    action export(config: C) {
+      -> ok(data: String) {
+        Export the configuration as serialized data.
+      }
+      -> notfound() {
+        The specified configuration does not exist.
+      }
+    }
+
+    action import(config: C, data: String) {
+      -> ok() {
+        Import serialized data into the configuration.
+      }
+      -> error(message: String) {
+        The import failed due to invalid or incompatible data.
+      }
+    }
+
+    action override(config: C, layer: String, values: String) {
+      -> ok() {
+        Apply environment-specific overrides to the configuration at the given layer.
+      }
+      -> notfound() {
+        The specified configuration does not exist.
+      }
+    }
+
+    action diff(configA: C, configB: C) {
+      -> ok(changes: String) {
+        Return a structured comparison of differences between two configurations.
+      }
+      -> notfound() {
+        One or both of the specified configurations do not exist.
+      }
+    }
+  }
+
+  invariant {
+    after export(config: c) -> ok(data: d)
+    then import(config: c, data: d) -> ok()
+    and export(config: c) -> ok(data: d)
+  }
+
+  invariant {
+    after override(config: c, layer: "production", values: "debug=false") -> ok()
+    then export(config: c) -> ok(data: d)
+  }
+}

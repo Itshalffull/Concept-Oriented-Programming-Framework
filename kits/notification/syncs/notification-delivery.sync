@@ -1,0 +1,8 @@
+sync AutoReadOnView [eager]
+when {
+  Notification/getUnread: [ user: ?user ]
+    => [ notifications: ?notifs ]
+}
+then {
+  Notification/markRead: [ notification: ?user ]
+}

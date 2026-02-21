@@ -1,0 +1,58 @@
+@version(1)
+concept ExpressionLanguage [E] {
+  purpose {
+    Parse and evaluate expressions in pluggable language grammars with typed
+    functions, operators, and autocompletion.
+  }
+
+  state {
+    grammars: set String;
+    functionRegistry: set String;
+    operatorRegistry: set String;
+    typeCoercions: set String;
+    astCache: E -> String
+  }
+
+  actions {
+    action registerLanguage(name: String, grammar: String) {
+      -> ok() { Language grammar registered. }
+      -> exists() { Language with this name already registered. }
+    }
+
+    action registerFunction(name: String, implementation: String) {
+      -> ok() { Function registered in the function registry. }
+      -> exists() { Function with this name already registered. }
+    }
+
+    action registerOperator(name: String, implementation: String) {
+      -> ok() { Operator registered in the operator registry. }
+      -> exists() { Operator with this name already registered. }
+    }
+
+    action parse(expression: E, text: String, language: String) {
+      -> ok(ast: String) { Expression parsed into an abstract syntax tree. }
+      -> error() { Parse failed due to syntax or grammar mismatch. }
+    }
+
+    action evaluate(expression: E) {
+      -> ok(result: String) { Expression evaluated and result returned. }
+      -> notfound() { Expression has not been parsed or does not exist. }
+    }
+
+    action typeCheck(expression: E) {
+      -> ok(valid: Bool, errors: String) { Type checking completed with validity status and any errors. }
+      -> notfound() { Expression has not been parsed or does not exist. }
+    }
+
+    action getCompletions(expression: E, cursor: Int) {
+      -> ok(completions: String) { Returns available completions at the cursor position. }
+      -> notfound() { Expression has not been parsed or does not exist. }
+    }
+  }
+
+  invariant {
+    after registerLanguage(name: "math", grammar: "arithmetic") -> ok()
+    then parse(expression: e, text: "2 + 3", language: "math") -> ok(ast: "add(2, 3)")
+    and evaluate(expression: e) -> ok(result: "5")
+  }
+}

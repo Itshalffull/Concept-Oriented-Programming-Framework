@@ -1,0 +1,21 @@
+type RelationState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RelationEntry {
+  r: ID!
+  links: [String!]!
+  definition: String!
+  rollups: String!
+}
+
+extend type Query {
+  relation_entry(r: ID!): RelationEntry
+  relation_entries: [RelationEntry!]!
+}
+
+type RelationRelations {
+  r: ID!
+  value: ID!
+}

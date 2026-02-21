@@ -1,0 +1,774 @@
+{
+  "uri": "urn:copf/AutomationRule",
+  "name": "AutomationRule",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "trigger",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "conditions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "actions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "enabled",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "rules",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "trigger",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "conditions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "actions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Rule created with the given trigger , conditions , and actions"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A rule with this identity already exists"
+        }
+      ]
+    },
+    {
+      "name": "enable",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Rule is now active and will be evaluated on matching events"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The rule was not found"
+        }
+      ]
+    },
+    {
+      "name": "disable",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Rule is now inactive and will not fire"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The rule was not found"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "event",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matched",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Returns whether the event satisfies the rule trigger and conditions"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The rule was not found"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The rule actions executed successfully with the given context"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The rule was not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, enable, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "trigger",
+              "value": {
+                "kind": "literal",
+                "value": "on_save"
+              }
+            },
+            {
+              "name": "conditions",
+              "value": {
+                "kind": "literal",
+                "value": "status == draft"
+              }
+            },
+            {
+              "name": "actions",
+              "value": {
+                "kind": "literal",
+                "value": "notify_reviewer"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "enable",
+          "inputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "event",
+              "value": {
+                "kind": "literal",
+                "value": "on_save"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "matched",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AutomationRuleState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype AutomationRuleEntry {\n  r: ID!\n  trigger: String!\n  conditions: String!\n  actions: String!\n  enabled: Boolean!\n}\n\nextend type Query {\n  automationrule_entry(r: ID!): AutomationRuleEntry\n  automationrule_entries: [AutomationRuleEntry!]!\n}\n\ntype AutomationRuleRules {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:copf/AutomationRule/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/AutomationRule"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "trigger": {
+                "type": "string"
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "actions": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "trigger",
+              "conditions",
+              "actions"
+            ]
+          }
+        }
+      },
+      "enable": {
+        "$id": "urn:copf/AutomationRule/enable/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/AutomationRule"
+          },
+          "action": {
+            "const": "enable"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          }
+        }
+      },
+      "disable": {
+        "$id": "urn:copf/AutomationRule/disable/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/AutomationRule"
+          },
+          "action": {
+            "const": "disable"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:copf/AutomationRule/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/AutomationRule"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "event"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:copf/AutomationRule/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/AutomationRule"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "context"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:copf/AutomationRule/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/AutomationRule/define/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "enable": {
+        "ok": {
+          "$id": "urn:copf/AutomationRule/enable/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "enable"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/AutomationRule/enable/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "enable"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "disable": {
+        "ok": {
+          "$id": "urn:copf/AutomationRule/disable/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "disable"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/AutomationRule/disable/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "disable"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:copf/AutomationRule/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matched": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "matched"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/AutomationRule/evaluate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:copf/AutomationRule/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/AutomationRule/execute/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/AutomationRule"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define user configurable event condition action rules that fire \n automatically when conditions are met"
+}

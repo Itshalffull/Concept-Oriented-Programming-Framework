@@ -1,0 +1,26 @@
+sync RuleTriggersWorkflow [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+then {
+  Workflow/transition: [ workflow: ?rule; entity: ?context; transition: ?result ]
+}
+
+sync QueueDeferredActions [eager]
+when {
+  AutomationRule/evaluate: [ rule: ?rule; event: ?event ]
+    => [ matched: true ]
+}
+then {
+  Queue/enqueue: [ queue: ?rule; item: ?event; priority: 0 ]
+}
+
+sync ControlTriggersAction [eager]
+when {
+  Control/triggerAction: [ control: ?control ]
+    => [ result: ?result ]
+}
+then {
+  AutomationRule/evaluate: [ rule: ?control; event: ?result ]
+}

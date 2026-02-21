@@ -1,0 +1,91 @@
+@version(1)
+concept Authentication [U] {
+
+  purpose {
+    Verify user identity via pluggable authentication providers.
+    Supports multiple provider backends per user, token-based
+    session authentication, and credential reset flows.
+  }
+
+  state {
+    accounts: set U
+    providers: set String
+    credentials: U -> String
+    activeProvider: U -> String
+  }
+
+  actions {
+    action register(user: U, provider: String, credentials: String) {
+      -> ok(user: U) {
+        Create a new account for the user with the given provider
+        and credentials. Add the user to the accounts set and
+        record the active provider.
+      }
+      -> exists(message: String) {
+        The user already has a registered account.
+      }
+    }
+
+    action login(user: U, credentials: String) {
+      -> ok(token: String) {
+        Validate credentials against the user's active provider.
+        Return an opaque authentication token on success.
+      }
+      -> invalid(message: String) {
+        Credentials do not match the stored value for this user.
+      }
+    }
+
+    action logout(user: U) {
+      -> ok(user: U) {
+        Invalidate the user's current authentication token and
+        end the active session.
+      }
+      -> notfound(message: String) {
+        No active session exists for this user.
+      }
+    }
+
+    action authenticate(token: String) {
+      -> ok(user: U) {
+        Validate the token and return the associated user. Used
+        by downstream concepts to verify identity on each request.
+      }
+      -> invalid(message: String) {
+        Token is expired, malformed, or has been revoked.
+      }
+    }
+
+    action resetPassword(user: U, newCredentials: String) {
+      -> ok(user: U) {
+        Replace the user's stored credentials with the new value.
+        All existing tokens for the user are invalidated.
+      }
+      -> notfound(message: String) {
+        No account exists for this user.
+      }
+    }
+  }
+
+  invariant {
+    after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
+    then login(user: x, credentials: "secret123") -> ok(token: t)
+  }
+
+  invariant {
+    after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
+    and login(user: x, credentials: "secret123") -> ok(token: t)
+    then authenticate(token: t) -> ok(user: x)
+  }
+
+  invariant {
+    after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
+    then register(user: x, provider: "oauth", credentials: "token456") -> exists(message: m)
+  }
+
+  invariant {
+    after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
+    and resetPassword(user: x, newCredentials: "newpass456") -> ok(user: x)
+    then login(user: x, credentials: "secret123") -> invalid(message: m)
+  }
+}

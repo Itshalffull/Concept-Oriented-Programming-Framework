@@ -1,0 +1,21 @@
+type RendererState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RendererEntry {
+  r: ID!
+  renderTree: String!
+  placeholders: String!
+  cacheability: String!
+}
+
+extend type Query {
+  renderer_entry(r: ID!): RendererEntry
+  renderer_entries: [RendererEntry!]!
+}
+
+type RendererRenderers {
+  r: ID!
+  value: ID!
+}

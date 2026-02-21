@@ -1,0 +1,67 @@
+@version(1)
+concept Notification [N] {
+  purpose {
+    Deliver user-facing alerts across multiple channels with subscription
+    management, templating, and inbox tracking.
+  }
+
+  state {
+    channels: set String;
+    templates: N -> String;
+    subscriptions: N -> String;
+    inbox: N -> String;
+    deliveryLog: N -> String;
+    read: N -> Bool
+  }
+
+  actions {
+    action registerChannel(name: String, config: String) {
+      -> ok() { Channel registered successfully. }
+      -> exists(message: String) { Channel already registered. }
+    }
+
+    action defineTemplate(notification: N, template: String) {
+      -> ok() { Template defined successfully. }
+      -> exists(message: String) { Template already exists for this notification type. }
+    }
+
+    action subscribe(user: String, eventType: String, channel: String) {
+      -> ok() { User subscribed to event type on channel. }
+      -> exists(message: String) { Subscription already exists. }
+    }
+
+    action unsubscribe(user: String, eventType: String, channel: String) {
+      -> ok() { User unsubscribed from event type on channel. }
+      -> notfound(message: String) { Subscription does not exist. }
+    }
+
+    action notify(notification: N, user: String, template: String, data: String) {
+      -> ok() { Notification delivered to user inbox. }
+      -> error(message: String) { Delivery failed. }
+    }
+
+    action markRead(notification: N) {
+      -> ok() { Notification marked as read. }
+      -> notfound(message: String) { Notification does not exist. }
+    }
+
+    action getUnread(user: String) {
+      -> ok(notifications: String) { Returns unread notifications for the user. }
+    }
+  }
+
+  invariant {
+    after registerChannel(name: c, config: cfg) -> ok()
+    then defineTemplate(notification: n, template: t) -> ok()
+    and subscribe(user: u, eventType: e, channel: c) -> ok()
+    and notify(notification: n, user: u, template: t, data: d) -> ok()
+    and  getUnread(user: u) -> ok(notifications: n)
+  }
+
+  invariant {
+    after notify(notification: n, user: u, template: t, data: d) -> ok()
+    then  markRead(notification: n) -> ok()
+    and   getUnread(user: u) -> ok(notifications: _)
+    // n is no longer present in the unread notifications
+  }
+}

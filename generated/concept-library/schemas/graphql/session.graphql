@@ -1,0 +1,23 @@
+type SessionState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SessionEntry {
+  s: ID!
+  userId: String!
+  token: String!
+  device: String!
+  expiresAt: String!
+  isValid: Boolean!
+}
+
+extend type Query {
+  session_entry(s: ID!): SessionEntry
+  session_entries: [SessionEntry!]!
+}
+
+type SessionSessions {
+  s: ID!
+  value: ID!
+}

@@ -1,0 +1,24 @@
+type ContentParserState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ContentParserEntry {
+  c: ID!
+  astCache: String!
+}
+
+extend type Query {
+  contentparser_entry(c: ID!): ContentParserEntry
+  contentparser_entries: [ContentParserEntry!]!
+}
+
+type ContentParserFormats {
+  c: ID!
+  value: String!
+}
+
+type ContentParserExtractors {
+  c: ID!
+  value: String!
+}

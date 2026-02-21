@@ -1,0 +1,68 @@
+@version(1)
+concept Authorization [U] {
+
+  purpose {
+    Manage roles, permissions, and permission-checking for users.
+    Roles group permissions into reusable bundles. Users are assigned
+    roles, and permission checks resolve transitively through the
+    role-permission mapping.
+  }
+
+  state {
+    roles: set String
+    permissions: set String
+    userRoles: U -> set String
+    rolePermissions: U -> set String
+  }
+
+  actions {
+    action grantPermission(role: String, permission: String) {
+      -> ok(role: String, permission: String) {
+        Add the permission to the role's permission set. If the
+        permission is already granted, this is a no-op success.
+      }
+      -> notfound(message: String) {
+        The specified role does not exist.
+      }
+    }
+
+    action revokePermission(role: String, permission: String) {
+      -> ok(role: String, permission: String) {
+        Remove the permission from the role's permission set.
+      }
+      -> notfound(message: String) {
+        The specified role or permission does not exist.
+      }
+    }
+
+    action assignRole(user: U, role: String) {
+      -> ok(user: U, role: String) {
+        Add the role to the user's role set. The user inherits
+        all permissions currently granted to this role.
+      }
+      -> notfound(message: String) {
+        The specified role does not exist.
+      }
+    }
+
+    action checkPermission(user: U, permission: String) {
+      -> ok(granted: Bool) {
+        Return true if the user holds at least one role that
+        includes the given permission, false otherwise.
+      }
+    }
+  }
+
+  invariant {
+    after grantPermission(role: "admin", permission: "write") -> ok(role: "admin", permission: "write")
+    and assignRole(user: x, role: "admin") -> ok(user: x, role: "admin")
+    then checkPermission(user: x, permission: "write") -> ok(granted: true)
+  }
+
+  invariant {
+    after grantPermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
+    and assignRole(user: x, role: "editor") -> ok(user: x, role: "editor")
+    and revokePermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
+    then checkPermission(user: x, permission: "publish") -> ok(granted: false)
+  }
+}

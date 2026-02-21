@@ -1,0 +1,22 @@
+type GroupState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GroupEntry {
+  g: ID!
+  memberships: [String!]!
+  groupRoles: String!
+  groupContent: [String!]!
+  name: String!
+}
+
+extend type Query {
+  group_entry(g: ID!): GroupEntry
+  group_entries: [GroupEntry!]!
+}
+
+type GroupGroups {
+  g: ID!
+  value: ID!
+}

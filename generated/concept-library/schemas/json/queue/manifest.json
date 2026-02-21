@@ -1,0 +1,806 @@
+{
+  "uri": "urn:copf/Queue",
+  "name": "Queue",
+  "typeParams": [
+    {
+      "name": "Q",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "items",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "workers",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "queues",
+      "source": "set-valued",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "enqueue",
+      "params": [
+        {
+          "name": "queue",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "item",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "itemId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Item added to the queue and assigned an identifier"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The queue was not found"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "params": [
+        {
+          "name": "queue",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "worker",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "item",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The next available item was assigned to the worker"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No items are available in the queue"
+        }
+      ]
+    },
+    {
+      "name": "process",
+      "params": [
+        {
+          "name": "queue",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "result",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "The item was processed and marked as complete"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The item was not found in the queue"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "params": [
+        {
+          "name": "queue",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "The item was released back into the queue for another worker"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The item was not found in the queue"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "queue",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          }
+        },
+        {
+          "name": "itemId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "The item was permanently removed from the queue"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The item was not found in the queue"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after enqueue, claim, process behaves correctly",
+      "setup": [
+        {
+          "action": "enqueue",
+          "inputs": [
+            {
+              "name": "queue",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "item",
+              "value": {
+                "kind": "literal",
+                "value": "send_email"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "claim",
+          "inputs": [
+            {
+              "name": "queue",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "worker",
+              "value": {
+                "kind": "literal",
+                "value": "worker-a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "item",
+              "value": {
+                "kind": "literal",
+                "value": "send_email"
+              }
+            }
+          ]
+        },
+        {
+          "action": "process",
+          "inputs": [
+            {
+              "name": "queue",
+              "value": {
+                "kind": "variable",
+                "name": "q"
+              }
+            },
+            {
+              "name": "itemId",
+              "value": {
+                "kind": "literal",
+                "value": "item-1"
+              }
+            },
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "sent"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "q",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type QueueState {\n  \"\"\"All qs in this concept\"\"\"\n  qs: [ID!]!\n}\n\ntype QueueEntry {\n  q: ID!\n  items: String!\n  workers: [String!]!\n  backend: String!\n}\n\nextend type Query {\n  queue_entry(q: ID!): QueueEntry\n  queue_entries: [QueueEntry!]!\n}\n\ntype QueueQueues {\n  q: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "enqueue": {
+        "$id": "urn:copf/Queue/enqueue/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Queue"
+          },
+          "action": {
+            "const": "enqueue"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "queue": {
+                "type": "string"
+              },
+              "item": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "queue",
+              "item",
+              "priority"
+            ]
+          }
+        }
+      },
+      "claim": {
+        "$id": "urn:copf/Queue/claim/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Queue"
+          },
+          "action": {
+            "const": "claim"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "queue": {
+                "type": "string"
+              },
+              "worker": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "queue",
+              "worker"
+            ]
+          }
+        }
+      },
+      "process": {
+        "$id": "urn:copf/Queue/process/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Queue"
+          },
+          "action": {
+            "const": "process"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "queue": {
+                "type": "string"
+              },
+              "itemId": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "queue",
+              "itemId",
+              "result"
+            ]
+          }
+        }
+      },
+      "release": {
+        "$id": "urn:copf/Queue/release/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Queue"
+          },
+          "action": {
+            "const": "release"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "queue": {
+                "type": "string"
+              },
+              "itemId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "queue",
+              "itemId"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:copf/Queue/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Queue"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "queue": {
+                "type": "string"
+              },
+              "itemId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "queue",
+              "itemId"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "enqueue": {
+        "ok": {
+          "$id": "urn:copf/Queue/enqueue/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "enqueue"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "itemId"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Queue/enqueue/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "enqueue"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "claim": {
+        "ok": {
+          "$id": "urn:copf/Queue/claim/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "claim"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "item"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:copf/Queue/claim/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "claim"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "process": {
+        "ok": {
+          "$id": "urn:copf/Queue/process/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "process"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Queue/process/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "process"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "release": {
+        "ok": {
+          "$id": "urn:copf/Queue/release/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Queue/release/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "release"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:copf/Queue/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Queue/delete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Queue"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Defer task processing via a managed queue with claim process release \n lifecycle and pluggable backends"
+}

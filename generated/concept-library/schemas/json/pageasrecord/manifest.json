@@ -1,0 +1,1015 @@
+{
+  "uri": "urn:copf/PageAsRecord",
+  "name": "PageAsRecord",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schemaProperties",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "collections",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "pages",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "page",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "page",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Create a page with the given schema definition"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A page with this identifier already exists"
+        }
+      ]
+    },
+    {
+      "name": "setProperty",
+      "params": [
+        {
+          "name": "page",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "page",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Set a structured property value on the page"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The page does not exist"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The key is not defined in the page s schema"
+        }
+      ]
+    },
+    {
+      "name": "getProperty",
+      "params": [
+        {
+          "name": "page",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return a property value from the page"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The page or property does not exist"
+        }
+      ]
+    },
+    {
+      "name": "appendToBody",
+      "params": [
+        {
+          "name": "page",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "page",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Append content to the page s unstructured body"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The page does not exist"
+        }
+      ]
+    },
+    {
+      "name": "attachToSchema",
+      "params": [
+        {
+          "name": "page",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "page",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Attach or update the page s schema definition"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The page does not exist"
+        }
+      ]
+    },
+    {
+      "name": "convertFromFreeform",
+      "params": [
+        {
+          "name": "page",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "page",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Convert a freeform page to a structured record by \n extracting properties from body content matching the schema"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The page does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, setProperty, getProperty behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "page",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "{\"fields\":[\"title\"]}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "page",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "setProperty",
+          "inputs": [
+            {
+              "name": "page",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "My Page"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "page",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getProperty",
+          "inputs": [
+            {
+              "name": "page",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "My Page"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PageAsRecordState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PageAsRecordEntry {\n  p: ID!\n  schema: String!\n  schemaProperties: String!\n  body: String!\n  collections: [String!]!\n}\n\nextend type Query {\n  pageasrecord_entry(p: ID!): PageAsRecordEntry\n  pageasrecord_entries: [PageAsRecordEntry!]!\n}\n\ntype PageAsRecordPages {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:copf/PageAsRecord/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PageAsRecord"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "schema"
+            ]
+          }
+        }
+      },
+      "setProperty": {
+        "$id": "urn:copf/PageAsRecord/setProperty/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PageAsRecord"
+          },
+          "action": {
+            "const": "setProperty"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "key",
+              "value"
+            ]
+          }
+        }
+      },
+      "getProperty": {
+        "$id": "urn:copf/PageAsRecord/getProperty/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PageAsRecord"
+          },
+          "action": {
+            "const": "getProperty"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "key"
+            ]
+          }
+        }
+      },
+      "appendToBody": {
+        "$id": "urn:copf/PageAsRecord/appendToBody/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PageAsRecord"
+          },
+          "action": {
+            "const": "appendToBody"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "content"
+            ]
+          }
+        }
+      },
+      "attachToSchema": {
+        "$id": "urn:copf/PageAsRecord/attachToSchema/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PageAsRecord"
+          },
+          "action": {
+            "const": "attachToSchema"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "schema"
+            ]
+          }
+        }
+      },
+      "convertFromFreeform": {
+        "$id": "urn:copf/PageAsRecord/convertFromFreeform/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PageAsRecord"
+          },
+          "action": {
+            "const": "convertFromFreeform"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "schema"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:copf/PageAsRecord/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/PageAsRecord/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setProperty": {
+        "ok": {
+          "$id": "urn:copf/PageAsRecord/setProperty/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "setProperty"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/PageAsRecord/setProperty/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "setProperty"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:copf/PageAsRecord/setProperty/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "setProperty"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getProperty": {
+        "ok": {
+          "$id": "urn:copf/PageAsRecord/getProperty/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "getProperty"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/PageAsRecord/getProperty/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "getProperty"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "appendToBody": {
+        "ok": {
+          "$id": "urn:copf/PageAsRecord/appendToBody/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "appendToBody"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/PageAsRecord/appendToBody/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "appendToBody"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "attachToSchema": {
+        "ok": {
+          "$id": "urn:copf/PageAsRecord/attachToSchema/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "attachToSchema"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/PageAsRecord/attachToSchema/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "attachToSchema"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "convertFromFreeform": {
+        "ok": {
+          "$id": "urn:copf/PageAsRecord/convertFromFreeform/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "convertFromFreeform"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/PageAsRecord/convertFromFreeform/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PageAsRecord"
+            },
+            "action": {
+              "const": "convertFromFreeform"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Bridge structured properties and unstructured body content \n within a single entity A page has a schema defining typed \n fields plus a free form body for rich content"
+}

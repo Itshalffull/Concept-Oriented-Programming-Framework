@@ -1,0 +1,334 @@
+{
+  "uri": "urn:copf/Backlink",
+  "name": "Backlink",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "backlinks",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "mentions",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "getBacklinks",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sources",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all source entities that link to this entity"
+        }
+      ]
+    },
+    {
+      "name": "getUnlinkedMentions",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "mentions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return mentions of this entity that are not formal links"
+        }
+      ]
+    },
+    {
+      "name": "reindex",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Rebuild the reverse index and return the number of backlinks indexed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after reindex, getBacklinks behaves correctly",
+      "setup": [
+        {
+          "action": "reindex",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "count",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getBacklinks",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "sources",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BacklinkState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BacklinkEntry {\n  b: ID!\n  backlinks: [String!]!\n  mentions: [String!]!\n}\n\nextend type Query {\n  backlink_entry(b: ID!): BacklinkEntry\n  backlink_entries: [BacklinkEntry!]!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "getBacklinks": {
+        "$id": "urn:copf/Backlink/getBacklinks/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Backlink"
+          },
+          "action": {
+            "const": "getBacklinks"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity"
+            ]
+          }
+        }
+      },
+      "getUnlinkedMentions": {
+        "$id": "urn:copf/Backlink/getUnlinkedMentions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Backlink"
+          },
+          "action": {
+            "const": "getUnlinkedMentions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity"
+            ]
+          }
+        }
+      },
+      "reindex": {
+        "$id": "urn:copf/Backlink/reindex/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Backlink"
+          },
+          "action": {
+            "const": "reindex"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "getBacklinks": {
+        "ok": {
+          "$id": "urn:copf/Backlink/getBacklinks/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Backlink"
+            },
+            "action": {
+              "const": "getBacklinks"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sources": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sources"
+              ]
+            }
+          }
+        }
+      },
+      "getUnlinkedMentions": {
+        "ok": {
+          "$id": "urn:copf/Backlink/getUnlinkedMentions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Backlink"
+            },
+            "action": {
+              "const": "getUnlinkedMentions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mentions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mentions"
+              ]
+            }
+          }
+        }
+      },
+      "reindex": {
+        "ok": {
+          "$id": "urn:copf/Backlink/reindex/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Backlink"
+            },
+            "action": {
+              "const": "reindex"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Maintain a reverse index enabling bidirectional association discovery from target back to sources"
+}

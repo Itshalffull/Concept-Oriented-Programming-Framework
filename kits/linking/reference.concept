@@ -1,0 +1,52 @@
+@version(1)
+concept Reference [R] {
+
+  purpose {
+    Track forward associations from source to target entities.
+  }
+
+  state {
+    refs: R -> set String
+    sources: set R
+  }
+
+  actions {
+    action addRef(source: R, target: String) {
+      -> ok(source: R, target: String) {
+        Add a forward reference from source to target.
+      }
+      -> exists(source: R, target: String) {
+        The reference already exists.
+      }
+    }
+
+    action removeRef(source: R, target: String) {
+      -> ok(source: R, target: String) {
+        Remove the forward reference from source to target.
+      }
+      -> notfound(source: R, target: String) {
+        No such reference exists.
+      }
+    }
+
+    action getRefs(source: R) {
+      -> ok(targets: String) {
+        Return all targets referenced by the source.
+      }
+      -> notfound(source: R) {
+        The source entity was not found.
+      }
+    }
+
+    action resolveTarget(target: String) {
+      -> ok(exists: Bool) {
+        Check whether the target entity exists.
+      }
+    }
+  }
+
+  invariant {
+    after addRef(source: x, target: "doc-1") -> ok(source: x, target: "doc-1")
+    then getRefs(source: x) -> ok(targets: "doc-1")
+  }
+}

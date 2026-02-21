@@ -1,0 +1,959 @@
+{
+  "uri": "urn:copf/SearchIndex",
+  "name": "SearchIndex",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "processors",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "backends",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "trackedItems",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "indexes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "createIndex",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Initialize a new search index with the given \n configuration including backend and analyzer settings"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "An index with this identifier already exists"
+        }
+      ]
+    },
+    {
+      "name": "indexItem",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "item",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Process the item through the processor pipeline \n and add it to the index"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "No index registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "removeItem",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "item",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Remove the item from the index and clean up \n associated index entries"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "No index registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execute a search query against the index and \n return ranked results with relevance scores"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "No index registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "addProcessor",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "processor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Append a processor to the index pipeline Processors \n transform items before they enter the index"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "No index registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "reindex",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Re process all tracked items through the current \n processor pipeline and rebuild the index"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "No index registered with this identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after createIndex, indexItem, search behaves correctly",
+      "setup": [
+        {
+          "action": "createIndex",
+          "inputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "indexItem",
+          "inputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "item",
+              "value": {
+                "kind": "literal",
+                "value": "doc-1"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "hello world"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            }
+          ]
+        },
+        {
+          "action": "search",
+          "inputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "query",
+              "value": {
+                "kind": "literal",
+                "value": "hello"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "results",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SearchIndexState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype SearchIndexEntry {\n  i: ID!\n  processors: String!\n  backends: String!\n  trackedItems: [String!]!\n}\n\nextend type Query {\n  searchindex_entry(i: ID!): SearchIndexEntry\n  searchindex_entries: [SearchIndexEntry!]!\n}\n\ntype SearchIndexIndexes {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "createIndex": {
+        "$id": "urn:copf/SearchIndex/createIndex/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SearchIndex"
+          },
+          "action": {
+            "const": "createIndex"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "config"
+            ]
+          }
+        }
+      },
+      "indexItem": {
+        "$id": "urn:copf/SearchIndex/indexItem/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SearchIndex"
+          },
+          "action": {
+            "const": "indexItem"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "item": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "item",
+              "data"
+            ]
+          }
+        }
+      },
+      "removeItem": {
+        "$id": "urn:copf/SearchIndex/removeItem/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SearchIndex"
+          },
+          "action": {
+            "const": "removeItem"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "item": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "item"
+            ]
+          }
+        }
+      },
+      "search": {
+        "$id": "urn:copf/SearchIndex/search/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SearchIndex"
+          },
+          "action": {
+            "const": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "query"
+            ]
+          }
+        }
+      },
+      "addProcessor": {
+        "$id": "urn:copf/SearchIndex/addProcessor/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SearchIndex"
+          },
+          "action": {
+            "const": "addProcessor"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "processor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "processor"
+            ]
+          }
+        }
+      },
+      "reindex": {
+        "$id": "urn:copf/SearchIndex/reindex/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SearchIndex"
+          },
+          "action": {
+            "const": "reindex"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "createIndex": {
+        "ok": {
+          "$id": "urn:copf/SearchIndex/createIndex/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "createIndex"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/SearchIndex/createIndex/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "createIndex"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        }
+      },
+      "indexItem": {
+        "ok": {
+          "$id": "urn:copf/SearchIndex/indexItem/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "indexItem"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/SearchIndex/indexItem/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "indexItem"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        }
+      },
+      "removeItem": {
+        "ok": {
+          "$id": "urn:copf/SearchIndex/removeItem/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "removeItem"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/SearchIndex/removeItem/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "removeItem"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        }
+      },
+      "search": {
+        "ok": {
+          "$id": "urn:copf/SearchIndex/search/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/SearchIndex/search/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        }
+      },
+      "addProcessor": {
+        "ok": {
+          "$id": "urn:copf/SearchIndex/addProcessor/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "addProcessor"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/SearchIndex/addProcessor/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "addProcessor"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        }
+      },
+      "reindex": {
+        "ok": {
+          "$id": "urn:copf/SearchIndex/reindex/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "reindex"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/SearchIndex/reindex/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SearchIndex"
+            },
+            "action": {
+              "const": "reindex"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Build and maintain full text and faceted search indexes \n with a pluggable processor pipeline"
+}

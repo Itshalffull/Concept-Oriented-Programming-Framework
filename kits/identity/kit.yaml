@@ -1,0 +1,24 @@
+# Identity Kit Manifest
+name: identity
+version: 0.1.0
+description: "User identity and permission management — authentication, authorization, access control, and session lifecycle."
+
+concepts:
+  - name: Authentication
+    spec: authentication.concept
+  - name: Authorization
+    spec: authorization.concept
+  - name: AccessControl
+    spec: access-control.concept
+  - name: Session
+    spec: session.concept
+
+syncs:
+  - name: auth-session
+    file: syncs/auth-session.sync
+    tier: required
+  - name: permission-check
+    file: syncs/permission-check.sync
+    tier: recommended
+
+dependencies: []

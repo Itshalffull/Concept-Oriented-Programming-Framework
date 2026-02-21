@@ -1,0 +1,902 @@
+{
+  "uri": "urn:copf/TypeSystem",
+  "name": "TypeSystem",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "typeDefinitions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerType",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "constraints",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "type",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Register a new type definition with its schema and constraints"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A type with this identifier already exists"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "type",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resolve the type to its full schema including inherited fields"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The type does not exist"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Check if a value conforms to the type s schema and constraints"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The type does not exist"
+        }
+      ]
+    },
+    {
+      "name": "navigate",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "type",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Traverse into a nested type via a dot separated path"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The type or path does not exist"
+        }
+      ]
+    },
+    {
+      "name": "serialize",
+      "params": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "serialized",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Serialize a value according to the type s format"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The type does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerType, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "registerType",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "{\"type\":\"string\"}"
+              }
+            },
+            {
+              "name": "constraints",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "{\"type\":\"string\"}"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after registerType, registerType behaves correctly",
+      "setup": [
+        {
+          "action": "registerType",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "{\"type\":\"string\"}"
+              }
+            },
+            {
+              "name": "constraints",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "registerType",
+          "inputs": [
+            {
+              "name": "type",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "{\"type\":\"number\"}"
+              }
+            },
+            {
+              "name": "constraints",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "exists",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "already exists"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TypeSystemState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TypeSystemEntry {\n  t: ID!\n  schema: String!\n  constraints: String!\n  parent: ID!\n}\n\nextend type Query {\n  typesystem_entry(t: ID!): TypeSystemEntry\n  typesystem_entries: [TypeSystemEntry!]!\n}\n\ntype TypeSystemTypeDefinitions {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerType": {
+        "$id": "urn:copf/TypeSystem/registerType/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeSystem"
+          },
+          "action": {
+            "const": "registerType"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              },
+              "constraints": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "schema",
+              "constraints"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:copf/TypeSystem/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeSystem"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:copf/TypeSystem/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeSystem"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ]
+          }
+        }
+      },
+      "navigate": {
+        "$id": "urn:copf/TypeSystem/navigate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeSystem"
+          },
+          "action": {
+            "const": "navigate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "path"
+            ]
+          }
+        }
+      },
+      "serialize": {
+        "$id": "urn:copf/TypeSystem/serialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeSystem"
+          },
+          "action": {
+            "const": "serialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerType": {
+        "ok": {
+          "$id": "urn:copf/TypeSystem/registerType/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "registerType"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/TypeSystem/registerType/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "registerType"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:copf/TypeSystem/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "schema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/TypeSystem/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:copf/TypeSystem/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "valid"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/TypeSystem/validate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "navigate": {
+        "ok": {
+          "$id": "urn:copf/TypeSystem/navigate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "navigate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "schema"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/TypeSystem/navigate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "navigate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "serialize": {
+        "ok": {
+          "$id": "urn:copf/TypeSystem/serialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "serialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "serialized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "serialized"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/TypeSystem/serialize/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeSystem"
+            },
+            "action": {
+              "const": "serialize"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Define self describing type hierarchies with introspection , \n validation , and serialization Types compose into complex \n structures with constraints"
+}

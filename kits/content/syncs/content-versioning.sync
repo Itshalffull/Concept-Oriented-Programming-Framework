@@ -1,0 +1,17 @@
+sync VersionOnEdit [eager]
+when {
+  SyncedContent/editOriginal: [ original: ?original; content: ?content ]
+    => [ original: ?original ]
+}
+then {
+  Version/snapshot: [ version: ?original; entity: ?original; data: ?content; author: "system" ]
+}
+
+sync TemplateInstantiateCreatesVersion [eager]
+when {
+  Template/instantiate: [ template: ?template; values: ?values ]
+    => [ content: ?content ]
+}
+then {
+  Version/snapshot: [ version: ?template; entity: ?template; data: ?content; author: "system" ]
+}

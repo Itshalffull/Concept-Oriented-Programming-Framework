@@ -1,0 +1,59 @@
+@version(1)
+concept Collection [C] {
+  purpose {
+    Organize content into queryable sets that can be concrete (manually curated)
+    or virtual (computed from a query).
+  }
+
+  state {
+    collections: set C;
+    type: C -> String;
+    schema: C -> String;
+    members: C -> set String;
+    query: C -> String;
+    templates: C -> String
+  }
+
+  actions {
+    action create(collection: C, type: String, schema: String) {
+      -> ok() { Collection created successfully. }
+      -> exists() { Collection already exists. }
+    }
+
+    action addMember(collection: C, member: String) {
+      -> ok() { Member added to collection. }
+      -> notfound() { Collection does not exist. }
+    }
+
+    action removeMember(collection: C, member: String) {
+      -> ok() { Member removed from collection. }
+      -> notfound() { Collection does not exist. }
+    }
+
+    action getMembers(collection: C) {
+      -> ok(members: String) { Returns all members of the collection. }
+      -> notfound() { Collection does not exist. }
+    }
+
+    action setSchema(collection: C, schema: String) {
+      -> ok() { Schema updated for the collection. }
+      -> notfound() { Collection does not exist. }
+    }
+
+    action createVirtual(collection: C, query: String) {
+      -> ok() { Virtual collection created with the given query. }
+      -> exists() { Collection already exists. }
+    }
+
+    action materialize(collection: C) {
+      -> ok(members: String) { Virtual collection materialized into concrete members. }
+      -> notfound() { Collection does not exist. }
+    }
+  }
+
+  invariant {
+    after create(collection: c, type: "list", schema: "default") -> ok()
+    then addMember(collection: c, member: "item1") -> ok()
+    and getMembers(collection: c) -> ok(members: "item1")
+  }
+}

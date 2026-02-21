@@ -1,0 +1,21 @@
+type SchemaState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SchemaEntry {
+  s: ID!
+  fields: String!
+  extends: ID!
+  associations: String!
+}
+
+extend type Query {
+  schema_entry(s: ID!): SchemaEntry
+  schema_entries: [SchemaEntry!]!
+}
+
+type SchemaSchemas {
+  s: ID!
+  value: ID!
+}

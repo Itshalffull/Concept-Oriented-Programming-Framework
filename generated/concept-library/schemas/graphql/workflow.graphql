@@ -1,0 +1,22 @@
+type WorkflowState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type WorkflowEntry {
+  w: ID!
+  states: String!
+  transitions: String!
+  currentState: String!
+  guards: String!
+}
+
+extend type Query {
+  workflow_entry(w: ID!): WorkflowEntry
+  workflow_entries: [WorkflowEntry!]!
+}
+
+type WorkflowWorkflows {
+  w: ID!
+  value: ID!
+}

@@ -1,0 +1,21 @@
+type FormBuilderState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FormBuilderEntry {
+  f: ID!
+  widgetRegistry: String!
+  validationState: String!
+  schema: String!
+}
+
+extend type Query {
+  formbuilder_entry(f: ID!): FormBuilderEntry
+  formbuilder_entries: [FormBuilderEntry!]!
+}
+
+type FormBuilderFormDefinitions {
+  f: ID!
+  value: ID!
+}

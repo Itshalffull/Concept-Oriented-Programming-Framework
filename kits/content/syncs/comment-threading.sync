@@ -1,0 +1,8 @@
+sync CommentNotifyOnReply [eager]
+when {
+  Comment/reply: [ comment: ?reply; parent: ?parent; content: ?content; author: ?author ]
+    => [ comment: ?reply ]
+}
+then {
+  Comment/publish: [ comment: ?reply ]
+}

@@ -1,0 +1,69 @@
+@version(1)
+concept FormBuilder [F] {
+
+  purpose {
+    Generate data entry forms from schema definitions by mapping fields
+    to appropriate input widgets with validation.
+  }
+
+  state {
+    formDefinitions: set F
+    widgetRegistry: F -> String
+    validationState: F -> String
+    schema: F -> String
+  }
+
+  actions {
+    action buildForm(form: F, schema: String) {
+      -> ok(definition: String) {
+        A form definition is generated from the schema.
+      }
+      -> error(message: String) {
+        The form could not be built from the given schema.
+      }
+    }
+
+    action validate(form: F, data: String) {
+      -> ok(valid: Bool, errors: String) {
+        The data is validated against the form rules.
+      }
+    }
+
+    action processSubmission(form: F, data: String) {
+      -> ok(result: String) {
+        The submitted data passes validation and is processed.
+      }
+      -> invalid(message: String) {
+        The submitted data fails validation.
+      }
+    }
+
+    action registerWidget(form: F, type: String, widget: String) {
+      -> ok(form: F) {
+        A custom widget is registered for the given field type.
+      }
+      -> exists(message: String) {
+        A widget for this type is already registered.
+      }
+    }
+
+    action getWidget(form: F, type: String) {
+      -> ok(widget: String) {
+        The widget registered for the given type is returned.
+      }
+      -> notfound(message: String) {
+        No widget is registered for this type.
+      }
+    }
+  }
+
+  invariant {
+    after buildForm(form: f, schema: "user-profile") -> ok(definition: _)
+    then registerWidget(form: f, type: "date", widget: "datepicker") -> ok(form: f)
+  }
+
+  invariant {
+    after registerWidget(form: f, type: "date", widget: "datepicker") -> ok(form: f)
+    then validate(form: f, data: "name=Alice&dob=2000-01-01") -> ok(valid: true, errors: "")
+  }
+}

@@ -1,0 +1,17 @@
+# Collaboration Kit Manifest
+name: collaboration
+version: 0.1.0
+description: "Group collaboration — flagging, group membership, and access control for collaborative workflows."
+
+concepts:
+  - name: Flag
+    spec: flag.concept
+  - name: Group
+    spec: group.concept
+
+syncs:
+  - name: group-access
+    file: syncs/group-access.sync
+    tier: recommended
+
+dependencies: []

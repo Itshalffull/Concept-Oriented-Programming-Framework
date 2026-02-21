@@ -1,0 +1,57 @@
+@version(1)
+concept SyncedContent [S] {
+
+  purpose {
+    Maintain single-source-of-truth transclusion where editing the original
+    automatically updates all references.
+  }
+
+  state {
+    originals: set S
+    references: S -> set String
+    content: S -> String
+  }
+
+  actions {
+    action createReference(ref: S, original: S) {
+      -> ok() {
+        Creates a live reference that mirrors the original's content.
+      }
+      -> notfound(message: String) {
+        The original content does not exist.
+      }
+    }
+
+    action editOriginal(original: S, content: String) {
+      -> ok() {
+        Updates the original content, propagating changes to all references.
+      }
+      -> notfound(message: String) {
+        The original content does not exist.
+      }
+    }
+
+    action deleteReference(ref: S) {
+      -> ok() {
+        Removes the reference without affecting the original.
+      }
+      -> notfound(message: String) {
+        The reference does not exist.
+      }
+    }
+
+    action convertToIndependent(ref: S) {
+      -> ok() {
+        Detaches the reference from the original, turning it into standalone content.
+      }
+      -> notfound(message: String) {
+        The reference does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after createReference(ref: r, original: o) -> ok()
+    then editOriginal(original: o, content: "updated") -> ok()
+  }
+}

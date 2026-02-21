@@ -1,0 +1,25 @@
+# Infrastructure Kit Manifest
+name: infrastructure
+version: 0.1.0
+description: "System infrastructure — caching, configuration sync, path aliases, plugin discovery, event dispatching, and validation."
+
+concepts:
+  - name: Cache
+    spec: cache.concept
+  - name: ConfigSync
+    spec: config-sync.concept
+  - name: Pathauto
+    spec: pathauto.concept
+  - name: PluginRegistry
+    spec: plugin-registry.concept
+  - name: EventBus
+    spec: event-bus.concept
+  - name: Validator
+    spec: validator.concept
+
+syncs:
+  - name: event-validation
+    file: syncs/event-validation.sync
+    tier: required
+
+dependencies: []

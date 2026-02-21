@@ -1,0 +1,69 @@
+@version(1)
+concept Component [C] {
+
+  purpose {
+    Define discoverable, configurable UI units with conditional placement
+    rules for composing page layouts.
+  }
+
+  state {
+    components: set C
+    config: C -> String
+    placements: C -> String
+    conditions: C -> String
+    visible: C -> Bool
+  }
+
+  actions {
+    action register(component: C, config: String) {
+      -> ok() {
+        Component registered with the given configuration.
+      }
+      -> exists(message: String) {
+        A component with this identity already exists.
+      }
+    }
+
+    action render(component: C, context: String) {
+      -> ok(output: String) {
+        Component rendered successfully and output returned.
+      }
+      -> notfound(message: String) {
+        The component was not found.
+      }
+    }
+
+    action place(component: C, region: String) {
+      -> ok() {
+        Component assigned to the specified layout region.
+      }
+      -> notfound(message: String) {
+        The component was not found.
+      }
+    }
+
+    action setVisibility(component: C, visible: Bool) {
+      -> ok() {
+        Component visibility updated.
+      }
+      -> notfound(message: String) {
+        The component was not found.
+      }
+    }
+
+    action evaluateVisibility(component: C, context: String) {
+      -> ok(visible: Bool) {
+        Returns whether the component is visible given the context.
+      }
+      -> notfound(message: String) {
+        The component was not found.
+      }
+    }
+  }
+
+  invariant {
+    after register(component: c, config: "hero-banner")          -> ok()
+    then  place(component: c, region: "header")                  -> ok()
+    and   render(component: c, context: "homepage")              -> ok(output: "hero-banner:header:homepage")
+  }
+}

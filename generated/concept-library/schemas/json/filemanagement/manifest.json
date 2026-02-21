@@ -1,0 +1,764 @@
+{
+  "uri": "urn:copf/FileManagement",
+  "name": "FileManagement",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "usageRecords",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "streamWrappers",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mimeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "files",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "upload",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "mimeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "file",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "File uploaded successfully"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Upload failed or file already exists"
+        }
+      ]
+    },
+    {
+      "name": "addUsage",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Usage reference added to file"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeUsage",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "entity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Usage reference removed from file"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File does not exist"
+        }
+      ]
+    },
+    {
+      "name": "garbageCollect",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "removed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Unreferenced files removed successfully"
+        }
+      ]
+    },
+    {
+      "name": "getFile",
+      "params": [
+        {
+          "name": "file",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "mimeType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File data retrieved"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "File does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after upload, addUsage, removeUsage, garbageCollect behaves correctly",
+      "setup": [
+        {
+          "action": "upload",
+          "inputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "mimeType",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addUsage",
+          "inputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "removeUsage",
+          "inputs": [
+            {
+              "name": "file",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "garbageCollect",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "removed",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FileManagementState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FileManagementEntry {\n  f: ID!\n  usageRecords: [String!]!\n  streamWrappers: String!\n  data: String!\n  mimeType: String!\n}\n\nextend type Query {\n  filemanagement_entry(f: ID!): FileManagementEntry\n  filemanagement_entries: [FileManagementEntry!]!\n}\n\ntype FileManagementFiles {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "upload": {
+        "$id": "urn:copf/FileManagement/upload/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FileManagement"
+          },
+          "action": {
+            "const": "upload"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              },
+              "mimeType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "data",
+              "mimeType"
+            ]
+          }
+        }
+      },
+      "addUsage": {
+        "$id": "urn:copf/FileManagement/addUsage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FileManagement"
+          },
+          "action": {
+            "const": "addUsage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "entity"
+            ]
+          }
+        }
+      },
+      "removeUsage": {
+        "$id": "urn:copf/FileManagement/removeUsage/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FileManagement"
+          },
+          "action": {
+            "const": "removeUsage"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file",
+              "entity"
+            ]
+          }
+        }
+      },
+      "garbageCollect": {
+        "$id": "urn:copf/FileManagement/garbageCollect/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FileManagement"
+          },
+          "action": {
+            "const": "garbageCollect"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "getFile": {
+        "$id": "urn:copf/FileManagement/getFile/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FileManagement"
+          },
+          "action": {
+            "const": "getFile"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "file"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "upload": {
+        "ok": {
+          "$id": "urn:copf/FileManagement/upload/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "upload"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "file"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:copf/FileManagement/upload/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "upload"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addUsage": {
+        "ok": {
+          "$id": "urn:copf/FileManagement/addUsage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "addUsage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/FileManagement/addUsage/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "addUsage"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeUsage": {
+        "ok": {
+          "$id": "urn:copf/FileManagement/removeUsage/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "removeUsage"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/FileManagement/removeUsage/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "removeUsage"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "garbageCollect": {
+        "ok": {
+          "$id": "urn:copf/FileManagement/garbageCollect/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "garbageCollect"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "removed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "removed"
+              ]
+            }
+          }
+        }
+      },
+      "getFile": {
+        "ok": {
+          "$id": "urn:copf/FileManagement/getFile/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "getFile"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                },
+                "mimeType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "data",
+                "mimeType"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/FileManagement/getFile/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FileManagement"
+            },
+            "action": {
+              "const": "getFile"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage file lifecycle with reference counting and garbage collection \n to prevent orphaned files"
+}

@@ -1,0 +1,64 @@
+@version(1)
+concept Comment [C] {
+
+  purpose {
+    Enable threaded discussion attached polymorphically to any content entity
+    using materialized path threading.
+  }
+
+  state {
+    comments: set C
+    content: C -> String
+    author: C -> String
+    parent: C -> C
+    threadPath: C -> String
+    published: C -> Bool
+  }
+
+  actions {
+    action addComment(comment: C, entity: String, content: String, author: String) {
+      -> ok(comment: C) {
+        Attaches a new top-level comment to the specified entity.
+      }
+    }
+
+    action reply(comment: C, parent: C, content: String, author: String) {
+      -> ok(comment: C) {
+        Creates a threaded reply under the given parent comment,
+        extending the materialized thread path.
+      }
+    }
+
+    action publish(comment: C) {
+      -> ok() {
+        Makes the comment visible.
+      }
+      -> notfound(message: String) {
+        The comment does not exist.
+      }
+    }
+
+    action unpublish(comment: C) {
+      -> ok() {
+        Hides the comment from public view.
+      }
+      -> notfound(message: String) {
+        The comment does not exist.
+      }
+    }
+
+    action delete(comment: C) {
+      -> ok() {
+        Removes the comment permanently.
+      }
+      -> notfound(message: String) {
+        The comment does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
+    then reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok(comment: r)
+  }
+}

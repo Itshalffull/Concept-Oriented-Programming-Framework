@@ -1,0 +1,46 @@
+@version(1)
+concept Flag [F] {
+  purpose {
+    Provide generalized user-entity toggle interactions (bookmarks, likes,
+    follows, spam reports) with counts.
+  }
+
+  state {
+    flagTypes: set String;
+    flaggings: F -> String;
+    counts: F -> Int;
+    entityRef: F -> String;
+    userRef: F -> String
+  }
+
+  actions {
+    action flag(flagging: F, flagType: String, entity: String, user: String) {
+      -> ok() { Flagging created successfully. }
+      -> exists(message: String) { User has already flagged this entity with this type. }
+    }
+
+    action unflag(flagging: F) {
+      -> ok() { Flagging removed successfully. }
+      -> notfound(message: String) { Flagging does not exist. }
+    }
+
+    action isFlagged(flagType: String, entity: String, user: String) {
+      -> ok(flagged: Bool) { Returns whether the entity is flagged by the user. }
+    }
+
+    action getCount(flagType: String, entity: String) {
+      -> ok(count: Int) { Returns the total flag count for the entity. }
+    }
+  }
+
+  invariant {
+    after flag(flagging: f, flagType: t, entity: e, user: u) -> ok()
+    then isFlagged(flagType: t, entity: e, user: u) -> ok(flagged: true)
+  }
+
+  invariant {
+    after flag(flagging: f, flagType: t, entity: e, user: u) -> ok()
+    then unflag(flagging: f) -> ok()
+    and isFlagged(flagType: t, entity: e, user: u) -> ok(flagged: false)
+  }
+}

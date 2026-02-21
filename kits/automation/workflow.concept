@@ -1,0 +1,66 @@
+@version(1)
+concept Workflow [W] {
+
+  purpose {
+    Model finite state machines with named states and guarded transitions
+    for content lifecycle management.
+  }
+
+  state {
+    workflows: set W
+    states: W -> String
+    transitions: W -> String
+    currentState: W -> String
+    guards: W -> String
+  }
+
+  actions {
+    action defineState(workflow: W, name: String, flags: String) {
+      -> ok() {
+        State registered in the workflow.
+      }
+      -> exists(message: String) {
+        A state with this name already exists in the workflow.
+      }
+    }
+
+    action defineTransition(workflow: W, from: String, to: String, label: String, guard: String) {
+      -> ok() {
+        Transition registered between the two states.
+      }
+      -> error(message: String) {
+        One or both states do not exist, or the transition is invalid.
+      }
+    }
+
+    action transition(workflow: W, entity: String, transition: String) {
+      -> ok(newState: String) {
+        Entity moved to the new state.
+      }
+      -> notfound(message: String) {
+        The workflow or entity was not found.
+      }
+      -> forbidden(message: String) {
+        The guard condition prevented the transition.
+      }
+    }
+
+    action getCurrentState(workflow: W, entity: String) {
+      -> ok(state: String) {
+        Returns the current state of the entity.
+      }
+      -> notfound(message: String) {
+        The workflow or entity was not found.
+      }
+    }
+  }
+
+  invariant {
+    after defineState(workflow: w, name: "draft", flags: "initial")       -> ok()
+    then  defineState(workflow: w, name: "published", flags: "")          -> ok()
+    and   defineTransition(workflow: w, from: "draft", to: "published",
+            label: "publish", guard: "approved")                          -> ok()
+    and   transition(workflow: w, entity: "doc1", transition: "publish")  -> ok(newState: "published")
+    and   getCurrentState(workflow: w, entity: "doc1")                    -> ok(state: "published")
+  }
+}

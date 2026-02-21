@@ -1,0 +1,21 @@
+type ContentStorageState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ContentStorageEntry {
+  r: ID!
+  data: String!
+  backend: String!
+  schemaMap: String!
+}
+
+extend type Query {
+  contentstorage_entry(r: ID!): ContentStorageEntry
+  contentstorage_entries: [ContentStorageEntry!]!
+}
+
+type ContentStorageRecords {
+  r: ID!
+  value: ID!
+}

@@ -1,0 +1,21 @@
+# Automation Kit Manifest
+name: automation
+version: 0.1.0
+description: "Automated workflows — rules, state transitions, queued actions, and UI controls for event-driven automation."
+
+concepts:
+  - name: Workflow
+    spec: workflow.concept
+  - name: AutomationRule
+    spec: automation-rule.concept
+  - name: Queue
+    spec: queue.concept
+  - name: Control
+    spec: control.concept
+
+syncs:
+  - name: workflow-automation
+    file: syncs/workflow-automation.sync
+    tier: required
+
+dependencies: []

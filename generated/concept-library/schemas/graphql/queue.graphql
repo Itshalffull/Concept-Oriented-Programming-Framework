@@ -1,0 +1,21 @@
+type QueueState {
+  """All qs in this concept"""
+  qs: [ID!]!
+}
+
+type QueueEntry {
+  q: ID!
+  items: String!
+  workers: [String!]!
+  backend: String!
+}
+
+extend type Query {
+  queue_entry(q: ID!): QueueEntry
+  queue_entries: [QueueEntry!]!
+}
+
+type QueueQueues {
+  q: ID!
+  value: ID!
+}

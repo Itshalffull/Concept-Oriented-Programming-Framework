@@ -1,0 +1,22 @@
+type PageAsRecordState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PageAsRecordEntry {
+  p: ID!
+  schema: String!
+  schemaProperties: String!
+  body: String!
+  collections: [String!]!
+}
+
+extend type Query {
+  pageasrecord_entry(p: ID!): PageAsRecordEntry
+  pageasrecord_entries: [PageAsRecordEntry!]!
+}
+
+type PageAsRecordPages {
+  p: ID!
+  value: ID!
+}

@@ -1,0 +1,22 @@
+type DailyNoteState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DailyNoteEntry {
+  d: ID!
+  dateFormat: String!
+  templateId: String!
+  targetFolder: String!
+  date: String!
+}
+
+extend type Query {
+  dailynote_entry(d: ID!): DailyNoteEntry
+  dailynote_entries: [DailyNoteEntry!]!
+}
+
+type DailyNoteNotes {
+  d: ID!
+  value: ID!
+}

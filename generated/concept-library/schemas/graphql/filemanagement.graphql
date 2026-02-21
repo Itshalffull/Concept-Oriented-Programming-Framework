@@ -1,0 +1,22 @@
+type FileManagementState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FileManagementEntry {
+  f: ID!
+  usageRecords: [String!]!
+  streamWrappers: String!
+  data: String!
+  mimeType: String!
+}
+
+extend type Query {
+  filemanagement_entry(f: ID!): FileManagementEntry
+  filemanagement_entries: [FileManagementEntry!]!
+}
+
+type FileManagementFiles {
+  f: ID!
+  value: ID!
+}

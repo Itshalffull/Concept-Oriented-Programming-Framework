@@ -1,0 +1,82 @@
+@version(1)
+concept Query [Q] {
+
+  purpose {
+    Execute structured retrieval over content with filtering,
+    sorting, grouping, and aggregation. Supports live
+    subscriptions for reactive updates.
+  }
+
+  state {
+    queries: set Q
+    expression: Q -> String
+    resultSet: Q -> String
+    isLive: Q -> Bool
+    scope: Q -> String
+  }
+
+  actions {
+    action parse(query: Q, expression: String) {
+      -> ok(query: Q) {
+        Parse the expression into a structured query
+        representation ready for execution.
+      }
+      -> error(message: String) {
+        The expression contains invalid syntax or
+        references unknown fields.
+      }
+    }
+
+    action execute(query: Q) {
+      -> ok(results: String) {
+        Run the parsed query against the scoped content
+        and return the matching result set.
+      }
+      -> notfound(query: Q) {
+        No query registered with this identifier.
+      }
+    }
+
+    action subscribe(query: Q) {
+      -> ok(subscriptionId: String) {
+        Activate a live subscription so that future
+        changes matching the query push updated results.
+      }
+      -> notfound(query: Q) {
+        No query registered with this identifier.
+      }
+    }
+
+    action addFilter(query: Q, filter: String) {
+      -> ok(query: Q) {
+        Append a filter clause to the query expression.
+      }
+      -> notfound(query: Q) {
+        No query registered with this identifier.
+      }
+    }
+
+    action addSort(query: Q, sort: String) {
+      -> ok(query: Q) {
+        Append a sort clause to the query expression.
+      }
+      -> notfound(query: Q) {
+        No query registered with this identifier.
+      }
+    }
+
+    action setScope(query: Q, scope: String) {
+      -> ok(query: Q) {
+        Restrict the query to a named content scope.
+      }
+      -> notfound(query: Q) {
+        No query registered with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after parse(query: q, expression: "status = 'active'") -> ok(query: q)
+    then execute(query: q) -> ok(results: r)
+  }
+}

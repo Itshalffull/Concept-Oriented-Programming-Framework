@@ -1,0 +1,770 @@
+{
+  "uri": "urn:copf/Control",
+  "name": "Control",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "binding",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "action",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "controls",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "control",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "binding",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Control created and bound to the specified data source"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A control with this identity already exists"
+        }
+      ]
+    },
+    {
+      "name": "interact",
+      "params": [
+        {
+          "name": "control",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The interaction was processed and a result returned"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The control was not found"
+        }
+      ]
+    },
+    {
+      "name": "getValue",
+      "params": [
+        {
+          "name": "control",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the current value of the control"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The control was not found"
+        }
+      ]
+    },
+    {
+      "name": "setValue",
+      "params": [
+        {
+          "name": "control",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "The control value was updated"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The control was not found"
+        }
+      ]
+    },
+    {
+      "name": "triggerAction",
+      "params": [
+        {
+          "name": "control",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The bound action was executed and a result returned"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The control was not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, setValue, getValue behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "control",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "slider"
+              }
+            },
+            {
+              "name": "binding",
+              "value": {
+                "kind": "literal",
+                "value": "volume"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "setValue",
+          "inputs": [
+            {
+              "name": "control",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "75"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "getValue",
+          "inputs": [
+            {
+              "name": "control",
+              "value": {
+                "kind": "variable",
+                "name": "k"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "75"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "k",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ControlState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype ControlEntry {\n  k: ID!\n  type: String!\n  value: String!\n  binding: String!\n  action: String!\n}\n\nextend type Query {\n  control_entry(k: ID!): ControlEntry\n  control_entries: [ControlEntry!]!\n}\n\ntype ControlControls {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:copf/Control/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Control"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "control": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "binding": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "control",
+              "type",
+              "binding"
+            ]
+          }
+        }
+      },
+      "interact": {
+        "$id": "urn:copf/Control/interact/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Control"
+          },
+          "action": {
+            "const": "interact"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "control": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "control",
+              "input"
+            ]
+          }
+        }
+      },
+      "getValue": {
+        "$id": "urn:copf/Control/getValue/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Control"
+          },
+          "action": {
+            "const": "getValue"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "control": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "control"
+            ]
+          }
+        }
+      },
+      "setValue": {
+        "$id": "urn:copf/Control/setValue/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Control"
+          },
+          "action": {
+            "const": "setValue"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "control": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "control",
+              "value"
+            ]
+          }
+        }
+      },
+      "triggerAction": {
+        "$id": "urn:copf/Control/triggerAction/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Control"
+          },
+          "action": {
+            "const": "triggerAction"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "control": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "control"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:copf/Control/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/Control/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "interact": {
+        "ok": {
+          "$id": "urn:copf/Control/interact/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "interact"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Control/interact/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "interact"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getValue": {
+        "ok": {
+          "$id": "urn:copf/Control/getValue/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "getValue"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Control/getValue/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "getValue"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setValue": {
+        "ok": {
+          "$id": "urn:copf/Control/setValue/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "setValue"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Control/setValue/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "setValue"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "triggerAction": {
+        "ok": {
+          "$id": "urn:copf/Control/triggerAction/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "triggerAction"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Control/triggerAction/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Control"
+            },
+            "action": {
+              "const": "triggerAction"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Bind interactive elements ( buttons , sliders , toggles ) to data values \n and actions , enabling direct manipulation in content"
+}

@@ -1,0 +1,863 @@
+{
+  "uri": "urn:copf/Authorization",
+  "name": "Authorization",
+  "typeParams": [
+    {
+      "name": "U",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "userRoles",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "rolePermissions",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "source": "set-valued",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "permissions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "u",
+        "paramRef": "U"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "grantPermission",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "permission",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Add the permission to the role s permission set If the \n permission is already granted , this is a no op success"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The specified role does not exist"
+        }
+      ]
+    },
+    {
+      "name": "revokePermission",
+      "params": [
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "role",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "permission",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Remove the permission from the role s permission set"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The specified role or permission does not exist"
+        }
+      ]
+    },
+    {
+      "name": "assignRole",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "param",
+                "paramRef": "U"
+              }
+            },
+            {
+              "name": "role",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Add the role to the user s role set The user inherits \n all permissions currently granted to this role"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The specified role does not exist"
+        }
+      ]
+    },
+    {
+      "name": "checkPermission",
+      "params": [
+        {
+          "name": "user",
+          "type": {
+            "kind": "param",
+            "paramRef": "U"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "granted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Return true if the user holds at least one role that \n includes the given permission , false otherwise"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after grantPermission, assignRole, checkPermission behaves correctly",
+      "setup": [
+        {
+          "action": "grantPermission",
+          "inputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "admin"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "write"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "admin"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "write"
+              }
+            }
+          ]
+        },
+        {
+          "action": "assignRole",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "admin"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "admin"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkPermission",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "write"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "granted",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after grantPermission, assignRole, revokePermission, checkPermission behaves correctly",
+      "setup": [
+        {
+          "action": "grantPermission",
+          "inputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "editor"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "editor"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            }
+          ]
+        },
+        {
+          "action": "assignRole",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "editor"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "editor"
+              }
+            }
+          ]
+        },
+        {
+          "action": "revokePermission",
+          "inputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "editor"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "editor"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkPermission",
+          "inputs": [
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "publish"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "granted",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AuthorizationState {\n  \"\"\"All us in this concept\"\"\"\n  us: [ID!]!\n}\n\ntype AuthorizationEntry {\n  u: ID!\n  userRoles: [String!]!\n  rolePermissions: [String!]!\n}\n\nextend type Query {\n  authorization_entry(u: ID!): AuthorizationEntry\n  authorization_entries: [AuthorizationEntry!]!\n}\n\ntype AuthorizationRoles {\n  u: ID!\n  value: String!\n}\n\ntype AuthorizationPermissions {\n  u: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "grantPermission": {
+        "$id": "urn:copf/Authorization/grantPermission/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Authorization"
+          },
+          "action": {
+            "const": "grantPermission"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "permission"
+            ]
+          }
+        }
+      },
+      "revokePermission": {
+        "$id": "urn:copf/Authorization/revokePermission/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Authorization"
+          },
+          "action": {
+            "const": "revokePermission"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "permission"
+            ]
+          }
+        }
+      },
+      "assignRole": {
+        "$id": "urn:copf/Authorization/assignRole/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Authorization"
+          },
+          "action": {
+            "const": "assignRole"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "role"
+            ]
+          }
+        }
+      },
+      "checkPermission": {
+        "$id": "urn:copf/Authorization/checkPermission/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Authorization"
+          },
+          "action": {
+            "const": "checkPermission"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "permission"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "grantPermission": {
+        "ok": {
+          "$id": "urn:copf/Authorization/grantPermission/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "grantPermission"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role",
+                "permission"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Authorization/grantPermission/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "grantPermission"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "revokePermission": {
+        "ok": {
+          "$id": "urn:copf/Authorization/revokePermission/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "revokePermission"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "permission": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role",
+                "permission"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Authorization/revokePermission/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "revokePermission"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "assignRole": {
+        "ok": {
+          "$id": "urn:copf/Authorization/assignRole/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "assignRole"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user",
+                "role"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Authorization/assignRole/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "assignRole"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "checkPermission": {
+        "ok": {
+          "$id": "urn:copf/Authorization/checkPermission/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Authorization"
+            },
+            "action": {
+              "const": "checkPermission"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "granted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "granted"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage roles , permissions , and permission checking for users \n Roles group permissions into reusable bundles Users are assigned \n roles , and permission checks resolve transitively through the \n role permission mapping"
+}

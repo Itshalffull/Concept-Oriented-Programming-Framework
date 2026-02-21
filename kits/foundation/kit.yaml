@@ -1,0 +1,35 @@
+# Foundation Kit Manifest
+name: foundation
+version: 0.1.0
+description: "Universal primitives for all content systems — typed nodes, storage, outlines, properties, types, pages, parsing, and semantic intent."
+
+concepts:
+  - name: ContentNode
+    spec: content-node.concept
+  - name: ContentStorage
+    spec: content-storage.concept
+  - name: Outline
+    spec: outline.concept
+  - name: Property
+    spec: property.concept
+  - name: TypeSystem
+    spec: type-system.concept
+  - name: PageAsRecord
+    spec: page-as-record.concept
+  - name: ContentParser
+    spec: content-parser.concept
+  - name: Intent
+    spec: intent.concept
+
+syncs:
+  - name: content-lifecycle
+    file: syncs/content-lifecycle.sync
+    tier: required
+  - name: schema-property
+    file: syncs/schema-property.sync
+    tier: recommended
+  - name: intent-discovery
+    file: syncs/intent-discovery.sync
+    tier: recommended
+
+dependencies: []

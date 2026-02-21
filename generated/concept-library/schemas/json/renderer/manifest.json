@@ -1,0 +1,657 @@
+{
+  "uri": "urn:copf/Renderer",
+  "name": "Renderer",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "renderTree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "placeholders",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "cacheability",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "renderers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "render",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The render tree is processed into final output"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The render tree could not be processed"
+        }
+      ]
+    },
+    {
+      "name": "autoPlaceholder",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "placeholder",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A named placeholder is registered for lazy resolution during rendering"
+        }
+      ]
+    },
+    {
+      "name": "stream",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "tree",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "streamId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A streaming render session is started for the given tree"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The streaming render could not be started"
+        }
+      ]
+    },
+    {
+      "name": "mergeCacheability",
+      "params": [
+        {
+          "name": "renderer",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "merged",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cache tags are merged to compute the effective cacheability of the output"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after render, render behaves correctly",
+      "setup": [
+        {
+          "action": "render",
+          "inputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "tree",
+              "value": {
+                "kind": "literal",
+                "value": "<page><header/><body/></page>"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "render",
+          "inputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "tree",
+              "value": {
+                "kind": "literal",
+                "value": "<page><header/><body/></page>"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after autoPlaceholder, render behaves correctly",
+      "setup": [
+        {
+          "action": "autoPlaceholder",
+          "inputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "sidebar"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "placeholder",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "render",
+          "inputs": [
+            {
+              "name": "renderer",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "tree",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RendererState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RendererEntry {\n  r: ID!\n  renderTree: String!\n  placeholders: String!\n  cacheability: String!\n}\n\nextend type Query {\n  renderer_entry(r: ID!): RendererEntry\n  renderer_entries: [RendererEntry!]!\n}\n\ntype RendererRenderers {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "render": {
+        "$id": "urn:copf/Renderer/render/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Renderer"
+          },
+          "action": {
+            "const": "render"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "tree": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "tree"
+            ]
+          }
+        }
+      },
+      "autoPlaceholder": {
+        "$id": "urn:copf/Renderer/autoPlaceholder/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Renderer"
+          },
+          "action": {
+            "const": "autoPlaceholder"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "name"
+            ]
+          }
+        }
+      },
+      "stream": {
+        "$id": "urn:copf/Renderer/stream/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Renderer"
+          },
+          "action": {
+            "const": "stream"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "tree": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "tree"
+            ]
+          }
+        }
+      },
+      "mergeCacheability": {
+        "$id": "urn:copf/Renderer/mergeCacheability/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Renderer"
+          },
+          "action": {
+            "const": "mergeCacheability"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "renderer": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "renderer",
+              "tags"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "render": {
+        "ok": {
+          "$id": "urn:copf/Renderer/render/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Renderer"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:copf/Renderer/render/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Renderer"
+            },
+            "action": {
+              "const": "render"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "autoPlaceholder": {
+        "ok": {
+          "$id": "urn:copf/Renderer/autoPlaceholder/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Renderer"
+            },
+            "action": {
+              "const": "autoPlaceholder"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "placeholder": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "placeholder"
+              ]
+            }
+          }
+        }
+      },
+      "stream": {
+        "ok": {
+          "$id": "urn:copf/Renderer/stream/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Renderer"
+            },
+            "action": {
+              "const": "stream"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "streamId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "streamId"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:copf/Renderer/stream/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Renderer"
+            },
+            "action": {
+              "const": "stream"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mergeCacheability": {
+        "ok": {
+          "$id": "urn:copf/Renderer/mergeCacheability/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Renderer"
+            },
+            "action": {
+              "const": "mergeCacheability"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "merged": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "merged"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compose nested content into final output through a cache aware rendering \n pipeline with placeholder support and streaming"
+}

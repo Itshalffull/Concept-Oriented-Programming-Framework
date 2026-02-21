@@ -1,0 +1,46 @@
+@version(1)
+concept Formula [F] {
+  purpose {
+    Evaluate reactive computed values derived from properties and relations,
+    with dependency tracking and automatic invalidation.
+  }
+
+  state {
+    formulas: set F;
+    expression: F -> String;
+    dependencies: F -> set String;
+    cachedResult: F -> String
+  }
+
+  actions {
+    action create(formula: F, expression: String) {
+      -> ok() { Formula created with the given expression. }
+      -> exists() { Formula already exists. }
+    }
+
+    action evaluate(formula: F) {
+      -> ok(result: String) { Returns the computed result of the formula. }
+      -> notfound() { Formula does not exist. }
+    }
+
+    action getDependencies(formula: F) {
+      -> ok(deps: String) { Returns the set of dependencies for the formula. }
+      -> notfound() { Formula does not exist. }
+    }
+
+    action invalidate(formula: F) {
+      -> ok() { Cached result cleared; formula will recompute on next evaluation. }
+      -> notfound() { Formula does not exist. }
+    }
+
+    action setExpression(formula: F, expression: String) {
+      -> ok() { Expression updated and cached result invalidated. }
+      -> notfound() { Formula does not exist. }
+    }
+  }
+
+  invariant {
+    after create(formula: f, expression: "price * quantity") -> ok()
+    then evaluate(formula: f) -> ok(result: "computed")
+  }
+}

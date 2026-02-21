@@ -1,0 +1,22 @@
+type VersionState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type VersionEntry {
+  h: ID!
+  entity: String!
+  snapshot: String!
+  timestamp: String!
+  author: String!
+}
+
+extend type Query {
+  version_entry(h: ID!): VersionEntry
+  version_entries: [VersionEntry!]!
+}
+
+type VersionHistory {
+  h: ID!
+  value: ID!
+}

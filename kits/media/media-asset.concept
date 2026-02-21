@@ -1,0 +1,43 @@
+@version(1)
+concept MediaAsset [M] {
+  purpose {
+    Provide a source-abstracted asset facade wrapping heterogeneous file types
+    with metadata extraction and thumbnail generation.
+  }
+
+  state {
+    mediaEntities: set M;
+    sourcePlugin: M -> String;
+    metadata: M -> String;
+    thumbnail: M -> String;
+    originalFile: M -> String
+  }
+
+  actions {
+    action createMedia(asset: M, source: String, file: String) {
+      -> ok(asset: M) { Media asset created successfully. }
+      -> error(message: String) { Creation failed or asset already exists. }
+    }
+
+    action extractMetadata(asset: M) {
+      -> ok(metadata: String) { Metadata extracted from asset. }
+      -> notfound(message: String) { Asset does not exist. }
+    }
+
+    action generateThumbnail(asset: M) {
+      -> ok(thumbnail: String) { Thumbnail generated for asset. }
+      -> notfound(message: String) { Asset does not exist. }
+    }
+
+    action getMedia(asset: M) {
+      -> ok(asset: M, metadata: String, thumbnail: String) { Asset retrieved with metadata and thumbnail. }
+      -> notfound(message: String) { Asset does not exist. }
+    }
+  }
+
+  invariant {
+    after createMedia(asset: a, source: s, file: f) -> ok(asset: a)
+    then extractMetadata(asset: a) -> ok(metadata: m)
+    and getMedia(asset: a) -> ok(asset: a, metadata: m, thumbnail: _)
+  }
+}

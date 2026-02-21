@@ -1,0 +1,69 @@
+@version(1)
+concept Control [K] {
+
+  purpose {
+    Bind interactive elements (buttons, sliders, toggles) to data values
+    and actions, enabling direct manipulation in content.
+  }
+
+  state {
+    controls: set K
+    type: K -> String
+    value: K -> String
+    binding: K -> String
+    action: K -> String
+  }
+
+  actions {
+    action create(control: K, type: String, binding: String) {
+      -> ok() {
+        Control created and bound to the specified data source.
+      }
+      -> exists(message: String) {
+        A control with this identity already exists.
+      }
+    }
+
+    action interact(control: K, input: String) {
+      -> ok(result: String) {
+        The interaction was processed and a result returned.
+      }
+      -> notfound(message: String) {
+        The control was not found.
+      }
+    }
+
+    action getValue(control: K) {
+      -> ok(value: String) {
+        Returns the current value of the control.
+      }
+      -> notfound(message: String) {
+        The control was not found.
+      }
+    }
+
+    action setValue(control: K, value: String) {
+      -> ok() {
+        The control value was updated.
+      }
+      -> notfound(message: String) {
+        The control was not found.
+      }
+    }
+
+    action triggerAction(control: K) {
+      -> ok(result: String) {
+        The bound action was executed and a result returned.
+      }
+      -> notfound(message: String) {
+        The control was not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(control: k, type: "slider", binding: "volume")  -> ok()
+    then  setValue(control: k, value: "75")                       -> ok()
+    and   getValue(control: k)                                    -> ok(value: "75")
+  }
+}

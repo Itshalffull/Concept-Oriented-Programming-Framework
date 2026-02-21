@@ -1,0 +1,71 @@
+@version(1)
+concept EventBus [E] {
+
+  purpose {
+    Dispatch events to priority-ordered subscribers with async support,
+    history tracking, and dead-letter handling.
+  }
+
+  state {
+    eventTypes: set String
+    listeners: E -> String
+    history: E -> String
+    deadLetterQueue: E -> String
+  }
+
+  actions {
+    action registerEventType(name: String, schema: String) {
+      -> ok() {
+        Register a new event type with the given schema definition.
+      }
+      -> exists() {
+        An event type with this name is already registered.
+      }
+    }
+
+    action subscribe(event: String, handler: String, priority: Int) {
+      -> ok(subscriptionId: String) {
+        Subscribe a handler to the specified event type at the given priority level.
+      }
+    }
+
+    action unsubscribe(subscriptionId: String) {
+      -> ok() {
+        Remove the subscription identified by the given ID.
+      }
+      -> notfound() {
+        No subscription exists with the given ID.
+      }
+    }
+
+    action dispatch(event: E, data: String) {
+      -> ok(results: String) {
+        Synchronously dispatch the event to all subscribers in priority order and return results.
+      }
+      -> error(message: String) {
+        The dispatch failed; undeliverable events are sent to the dead-letter queue.
+      }
+    }
+
+    action dispatchAsync(event: E, data: String) {
+      -> ok(jobId: String) {
+        Asynchronously dispatch the event and return a job ID for tracking.
+      }
+      -> error(message: String) {
+        The async dispatch could not be enqueued.
+      }
+    }
+
+    action getHistory(event: String, limit: Int) {
+      -> ok(entries: String) {
+        Return the most recent dispatch history entries for the specified event type.
+      }
+    }
+  }
+
+  invariant {
+    after registerEventType(name: "user.login", schema: "{}") -> ok()
+    then subscribe(event: "user.login", handler: "logHandler", priority: 10) -> ok(subscriptionId: sid)
+    and  dispatch(event: e, data: "{\"user\":\"alice\"}") -> ok(results: r)
+  }
+}

@@ -1,0 +1,25 @@
+type AuthorizationState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type AuthorizationEntry {
+  u: ID!
+  userRoles: [String!]!
+  rolePermissions: [String!]!
+}
+
+extend type Query {
+  authorization_entry(u: ID!): AuthorizationEntry
+  authorization_entries: [AuthorizationEntry!]!
+}
+
+type AuthorizationRoles {
+  u: ID!
+  value: String!
+}
+
+type AuthorizationPermissions {
+  u: ID!
+  value: String!
+}

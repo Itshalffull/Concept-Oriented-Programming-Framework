@@ -1,0 +1,28 @@
+# Content Kit Manifest
+name: content
+version: 0.1.0
+description: "Rich content authoring — daily notes, comments, synced content, templates, canvases, and version tracking."
+
+concepts:
+  - name: DailyNote
+    spec: daily-note.concept
+  - name: Comment
+    spec: comment.concept
+  - name: SyncedContent
+    spec: synced-content.concept
+  - name: Template
+    spec: template.concept
+  - name: Canvas
+    spec: canvas.concept
+  - name: Version
+    spec: version.concept
+
+syncs:
+  - name: content-versioning
+    file: syncs/content-versioning.sync
+    tier: required
+  - name: comment-threading
+    file: syncs/comment-threading.sync
+    tier: recommended
+
+dependencies: []

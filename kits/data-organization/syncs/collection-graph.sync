@@ -1,0 +1,17 @@
+sync GraphFromCollection [eager]
+when {
+  Collection/addMember: [ collection: ?coll; member: ?member ]
+    => [ collection: ?coll ]
+}
+then {
+  Graph/addNode: [ graph: ?coll; node: ?member ]
+}
+
+sync RemoveFromGraph [eager]
+when {
+  Collection/removeMember: [ collection: ?coll; member: ?member ]
+    => [ collection: ?coll ]
+}
+then {
+  Graph/removeNode: [ graph: ?coll; node: ?member ]
+}

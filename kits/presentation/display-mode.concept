@@ -1,0 +1,63 @@
+@version(1)
+concept DisplayMode [D] {
+
+  purpose {
+    Define named presentation profiles that control how each field renders
+    in different contexts (view mode, edit mode, teaser mode).
+  }
+
+  state {
+    modes: set D
+    fieldDisplayConfigs: D -> String
+    fieldFormConfigs: D -> String
+    name: D -> String
+  }
+
+  actions {
+    action defineMode(mode: D, name: String) {
+      -> ok(mode: D) {
+        A new display mode is registered with the given name.
+      }
+      -> exists(message: String) {
+        A mode with this name already exists.
+      }
+    }
+
+    action configureFieldDisplay(mode: D, field: String, config: String) {
+      -> ok(mode: D) {
+        The field display configuration is set for the mode.
+      }
+      -> notfound(message: String) {
+        The mode does not exist.
+      }
+    }
+
+    action configureFieldForm(mode: D, field: String, config: String) {
+      -> ok(mode: D) {
+        The field form configuration is set for the mode.
+      }
+      -> notfound(message: String) {
+        The mode does not exist.
+      }
+    }
+
+    action renderInMode(mode: D, entity: String) {
+      -> ok(output: String) {
+        The entity is rendered using the display configurations of the mode.
+      }
+      -> notfound(message: String) {
+        The mode does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after defineMode(mode: d, name: "teaser") -> ok(mode: d)
+    then configureFieldDisplay(mode: d, field: "title", config: "truncated") -> ok(mode: d)
+  }
+
+  invariant {
+    after configureFieldDisplay(mode: d, field: "title", config: "truncated") -> ok(mode: d)
+    then renderInMode(mode: d, entity: "article-1") -> ok(output: _)
+  }
+}

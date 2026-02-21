@@ -1,0 +1,716 @@
+{
+  "uri": "urn:copf/MediaAsset",
+  "name": "MediaAsset",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "sourcePlugin",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "thumbnail",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "originalFile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "mediaEntities",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "createMedia",
+      "params": [
+        {
+          "name": "asset",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "file",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "asset",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Media asset created successfully"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creation failed or asset already exists"
+        }
+      ]
+    },
+    {
+      "name": "extractMetadata",
+      "params": [
+        {
+          "name": "asset",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "metadata",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Metadata extracted from asset"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Asset does not exist"
+        }
+      ]
+    },
+    {
+      "name": "generateThumbnail",
+      "params": [
+        {
+          "name": "asset",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "thumbnail",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Thumbnail generated for asset"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Asset does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getMedia",
+      "params": [
+        {
+          "name": "asset",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "asset",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "thumbnail",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Asset retrieved with metadata and thumbnail"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Asset does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after createMedia, extractMetadata, getMedia behaves correctly",
+      "setup": [
+        {
+          "action": "createMedia",
+          "inputs": [
+            {
+              "name": "asset",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "file",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "asset",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "extractMetadata",
+          "inputs": [
+            {
+              "name": "asset",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        },
+        {
+          "action": "getMedia",
+          "inputs": [
+            {
+              "name": "asset",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "asset",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "thumbnail",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type MediaAssetState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype MediaAssetEntry {\n  m: ID!\n  sourcePlugin: String!\n  metadata: String!\n  thumbnail: String!\n  originalFile: String!\n}\n\nextend type Query {\n  mediaasset_entry(m: ID!): MediaAssetEntry\n  mediaasset_entries: [MediaAssetEntry!]!\n}\n\ntype MediaAssetMediaEntities {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "createMedia": {
+        "$id": "urn:copf/MediaAsset/createMedia/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/MediaAsset"
+          },
+          "action": {
+            "const": "createMedia"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "asset",
+              "source",
+              "file"
+            ]
+          }
+        }
+      },
+      "extractMetadata": {
+        "$id": "urn:copf/MediaAsset/extractMetadata/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/MediaAsset"
+          },
+          "action": {
+            "const": "extractMetadata"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "asset": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "asset"
+            ]
+          }
+        }
+      },
+      "generateThumbnail": {
+        "$id": "urn:copf/MediaAsset/generateThumbnail/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/MediaAsset"
+          },
+          "action": {
+            "const": "generateThumbnail"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "asset": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "asset"
+            ]
+          }
+        }
+      },
+      "getMedia": {
+        "$id": "urn:copf/MediaAsset/getMedia/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/MediaAsset"
+          },
+          "action": {
+            "const": "getMedia"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "asset": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "asset"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "createMedia": {
+        "ok": {
+          "$id": "urn:copf/MediaAsset/createMedia/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "createMedia"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "asset": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "asset"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:copf/MediaAsset/createMedia/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "createMedia"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "extractMetadata": {
+        "ok": {
+          "$id": "urn:copf/MediaAsset/extractMetadata/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "extractMetadata"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metadata": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metadata"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/MediaAsset/extractMetadata/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "extractMetadata"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "generateThumbnail": {
+        "ok": {
+          "$id": "urn:copf/MediaAsset/generateThumbnail/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "generateThumbnail"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "thumbnail": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "thumbnail"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/MediaAsset/generateThumbnail/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "generateThumbnail"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getMedia": {
+        "ok": {
+          "$id": "urn:copf/MediaAsset/getMedia/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "getMedia"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "asset": {
+                  "type": "string"
+                },
+                "metadata": {
+                  "type": "string"
+                },
+                "thumbnail": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "asset",
+                "metadata",
+                "thumbnail"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/MediaAsset/getMedia/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/MediaAsset"
+            },
+            "action": {
+              "const": "getMedia"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Provide a source abstracted asset facade wrapping heterogeneous file types \n with metadata extraction and thumbnail generation"
+}

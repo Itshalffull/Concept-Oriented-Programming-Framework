@@ -1,0 +1,19 @@
+// Bidirectional link maintenance
+
+sync UpdateBacklinksOnRef [eager]
+when {
+  Reference/addRef: [ source: ?source; target: ?target ]
+    => [ source: ?source ]
+}
+then {
+  Backlink/reindex: []
+}
+
+sync RemoveBacklinksOnUnref [eager]
+when {
+  Reference/removeRef: [ source: ?source; target: ?target ]
+    => [ source: ?source ]
+}
+then {
+  Backlink/reindex: []
+}

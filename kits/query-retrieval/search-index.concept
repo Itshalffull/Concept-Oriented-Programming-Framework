@@ -1,0 +1,83 @@
+@version(1)
+concept SearchIndex [I] {
+
+  purpose {
+    Build and maintain full-text and faceted search indexes
+    with a pluggable processor pipeline.
+  }
+
+  state {
+    indexes: set I
+    processors: I -> String
+    backends: I -> String
+    trackedItems: I -> set String
+  }
+
+  actions {
+    action createIndex(index: I, config: String) {
+      -> ok(index: I) {
+        Initialize a new search index with the given
+        configuration including backend and analyzer settings.
+      }
+      -> exists(index: I) {
+        An index with this identifier already exists.
+      }
+    }
+
+    action indexItem(index: I, item: String, data: String) {
+      -> ok(index: I) {
+        Process the item through the processor pipeline
+        and add it to the index.
+      }
+      -> notfound(index: I) {
+        No index registered with this identifier.
+      }
+    }
+
+    action removeItem(index: I, item: String) {
+      -> ok(index: I) {
+        Remove the item from the index and clean up
+        associated index entries.
+      }
+      -> notfound(index: I) {
+        No index registered with this identifier.
+      }
+    }
+
+    action search(index: I, query: String) {
+      -> ok(results: String) {
+        Execute a search query against the index and
+        return ranked results with relevance scores.
+      }
+      -> notfound(index: I) {
+        No index registered with this identifier.
+      }
+    }
+
+    action addProcessor(index: I, processor: String) {
+      -> ok(index: I) {
+        Append a processor to the index pipeline. Processors
+        transform items before they enter the index.
+      }
+      -> notfound(index: I) {
+        No index registered with this identifier.
+      }
+    }
+
+    action reindex(index: I) {
+      -> ok(count: Int) {
+        Re-process all tracked items through the current
+        processor pipeline and rebuild the index.
+      }
+      -> notfound(index: I) {
+        No index registered with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after createIndex(index: i, config: "{}") -> ok(index: i)
+    then indexItem(index: i, item: "doc-1", data: "hello world") -> ok(index: i)
+    and search(index: i, query: "hello") -> ok(results: r)
+  }
+}

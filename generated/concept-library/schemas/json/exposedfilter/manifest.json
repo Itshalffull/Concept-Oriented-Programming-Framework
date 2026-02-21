@@ -1,0 +1,700 @@
+{
+  "uri": "urn:copf/ExposedFilter",
+  "name": "ExposedFilter",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "userInputs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "defaultValues",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "boundQuery",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "exposedFilters",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "expose",
+      "params": [
+        {
+          "name": "filter",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "fieldName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "operator",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "defaultValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Register a new exposed filter bound to the given \n field , operator , and default value for UI presentation"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "A filter with this identifier is already exposed"
+        }
+      ]
+    },
+    {
+      "name": "collectInput",
+      "params": [
+        {
+          "name": "filter",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Capture a user supplied value for this filter , \n replacing any previous input"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "No exposed filter registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "applyToQuery",
+      "params": [
+        {
+          "name": "filter",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "queryMod",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Produce a query modification clause from the \n current user input and operator , ready to merge \n into the bound query"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "No exposed filter registered with this identifier"
+        }
+      ]
+    },
+    {
+      "name": "resetToDefaults",
+      "params": [
+        {
+          "name": "filter",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Clear the user input and restore the default \n value for this filter"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "filter",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "No exposed filter registered with this identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after expose, collectInput, applyToQuery behaves correctly",
+      "setup": [
+        {
+          "action": "expose",
+          "inputs": [
+            {
+              "name": "filter",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "fieldName",
+              "value": {
+                "kind": "literal",
+                "value": "status"
+              }
+            },
+            {
+              "name": "operator",
+              "value": {
+                "kind": "literal",
+                "value": "eq"
+              }
+            },
+            {
+              "name": "defaultValue",
+              "value": {
+                "kind": "literal",
+                "value": "active"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "filter",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "collectInput",
+          "inputs": [
+            {
+              "name": "filter",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "archived"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "filter",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        },
+        {
+          "action": "applyToQuery",
+          "inputs": [
+            {
+              "name": "filter",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "queryMod",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ExposedFilterState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype ExposedFilterEntry {\n  f: ID!\n  userInputs: String!\n  defaultValues: String!\n  boundQuery: String!\n}\n\nextend type Query {\n  exposedfilter_entry(f: ID!): ExposedFilterEntry\n  exposedfilter_entries: [ExposedFilterEntry!]!\n}\n\ntype ExposedFilterExposedFilters {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "expose": {
+        "$id": "urn:copf/ExposedFilter/expose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ExposedFilter"
+          },
+          "action": {
+            "const": "expose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "type": "string"
+              },
+              "fieldName": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string"
+              },
+              "defaultValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "filter",
+              "fieldName",
+              "operator",
+              "defaultValue"
+            ]
+          }
+        }
+      },
+      "collectInput": {
+        "$id": "urn:copf/ExposedFilter/collectInput/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ExposedFilter"
+          },
+          "action": {
+            "const": "collectInput"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "filter",
+              "value"
+            ]
+          }
+        }
+      },
+      "applyToQuery": {
+        "$id": "urn:copf/ExposedFilter/applyToQuery/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ExposedFilter"
+          },
+          "action": {
+            "const": "applyToQuery"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "filter"
+            ]
+          }
+        }
+      },
+      "resetToDefaults": {
+        "$id": "urn:copf/ExposedFilter/resetToDefaults/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ExposedFilter"
+          },
+          "action": {
+            "const": "resetToDefaults"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "filter"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "expose": {
+        "ok": {
+          "$id": "urn:copf/ExposedFilter/expose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "expose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/ExposedFilter/expose/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "expose"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        }
+      },
+      "collectInput": {
+        "ok": {
+          "$id": "urn:copf/ExposedFilter/collectInput/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "collectInput"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ExposedFilter/collectInput/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "collectInput"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        }
+      },
+      "applyToQuery": {
+        "ok": {
+          "$id": "urn:copf/ExposedFilter/applyToQuery/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "applyToQuery"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "queryMod": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "queryMod"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ExposedFilter/applyToQuery/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "applyToQuery"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        }
+      },
+      "resetToDefaults": {
+        "ok": {
+          "$id": "urn:copf/ExposedFilter/resetToDefaults/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "resetToDefaults"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ExposedFilter/resetToDefaults/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ExposedFilter"
+            },
+            "action": {
+              "const": "resetToDefaults"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Expose interactive filter and sort controls to end users , \n allowing them to modify query parameters through the UI"
+}
