@@ -1,0 +1,11 @@
+# Generator dispatches to Spec for each configured format
+# Architecture doc: Interface Kit, Sync Section 3.5
+
+sync DispatchToSpec [eager]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+then {
+  Spec/emit: [ projections: ?projections; format: ?format; config: ?config ]
+}

@@ -1,0 +1,72 @@
+@version(1)
+concept Emitter [E] {
+
+  purpose {
+    Manage generated file output. Content-addressed: if the
+    generated content has not changed, the file is not rewritten
+    (preserves timestamps for build tools). Handles formatting
+    (prettier, black, gofmt, rustfmt), directory structure,
+    and cleanup of orphaned files from previous runs.
+  }
+
+  state {
+    files: set E
+    metadata {
+      path: E -> String
+      hash: E -> String
+      target: E -> String
+      concept: E -> String
+      generatedAt: E -> DateTime
+      sizeBytes: E -> Int
+      formatted: E -> Bool
+    }
+    manifest {
+      outputDir: E -> String
+      totalFiles: E -> Int
+      totalBytes: E -> Int
+    }
+  }
+
+  actions {
+    action write(path: String, content: String, target: String, concept: String) {
+      -> ok(file: E, hash: String, written: Bool) {
+        If hash matches existing file, skip write (written: false).
+        Otherwise write and update manifest.
+      }
+      -> directoryError(path: String, reason: String) {
+        Cannot create output directory.
+      }
+    }
+
+    action format(file: E, formatter: String) {
+      -> ok(file: E) {
+        File formatted in place. Hash updated.
+      }
+      -> formatterUnavailable(formatter: String) {
+        Formatter binary not found (prettier, black, etc.).
+        File left unformatted, non-fatal.
+      }
+      -> formatError(file: E, reason: String) {
+        Formatter failed. File left as-is.
+      }
+    }
+
+    action clean(outputDir: String, currentFiles: list String) {
+      -> ok(removed: list String) {
+        Remove files in outputDir that are not in currentFiles.
+        Cleans up orphans from previous generation runs.
+      }
+    }
+
+    action manifest(outputDir: String) {
+      -> ok(files: list String, totalBytes: Int) {
+        Return the complete manifest of generated files.
+      }
+    }
+  }
+
+  invariant {
+    after write(path: "out/test.ts", content: "export const x = 1;", target: "rest", concept: "Todo") -> ok(file: e, hash: h, written: true)
+    then write(path: "out/test.ts", content: "export const x = 1;", target: "rest", concept: "Todo") -> ok(file: e2, hash: h2, written: false)
+  }
+}

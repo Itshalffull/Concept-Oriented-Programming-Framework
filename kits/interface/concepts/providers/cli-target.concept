@@ -1,0 +1,65 @@
+@version(1)
+concept CliTarget [C] {
+
+  purpose {
+    Generate CLI command trees from concept projections. Owns
+    command/subcommand structure, flag derivation, argument
+    mapping, output formatting (JSON/table/YAML), shell
+    completion generation, and interactive mode for streaming.
+  }
+
+  state {
+    commands: set C
+    config {
+      binaryName: C -> String
+      shell: C -> String
+      outputFormats: C -> list String
+    }
+    mapping {
+      concept: C -> String
+      action: C -> String
+      command: C -> String
+      args: C -> list { name: String, kind: String, required: Bool }
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(commands: list String, files: list String) {
+        CLI command tree generated from projection. Flags
+        derived from action parameters. Shell completion
+        scripts produced for configured shells. Output
+        formatters attached per command.
+      }
+      -> tooManyPositional(action: String, count: Int) {
+        Action has more positional arguments than CLI
+        conventions allow. Excess arguments should be
+        converted to flags via annotation.
+      }
+    }
+
+    action validate(command: C) {
+      -> ok(command: C) {
+        Command tree is well-formed. No flag name collisions.
+        All required arguments have consistent types. Shell
+        completion scripts are syntactically valid.
+      }
+      -> flagCollision(command: C, flag: String, actions: list String) {
+        Two actions in the same command subtree define flags
+        with the same name but different types.
+      }
+    }
+
+    action listCommands(concept: String) {
+      -> ok(commands: list String, subcommands: list String) {
+        Return all generated commands and subcommands for
+        a concept.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "task-projection", config: "{}") -> ok(commands: c, files: f)
+    then listCommands(concept: "Task") -> ok(commands: cmds, subcommands: subs)
+  }
+}

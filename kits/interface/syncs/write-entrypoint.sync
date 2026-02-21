@@ -1,0 +1,11 @@
+# Surface composed triggers entrypoint file writing
+# Architecture doc: Interface Kit, Sync Section 3.8
+
+sync WriteEntrypoint [eager]
+when {
+  Surface/compose: [ kit: ?kit; target: ?target ]
+    => [ surface: ?s; entrypoint: ?entry ]
+}
+then {
+  Emitter/write: [ path: ?entryPath; content: ?entry; target: ?target; concept: "surface" ]
+}

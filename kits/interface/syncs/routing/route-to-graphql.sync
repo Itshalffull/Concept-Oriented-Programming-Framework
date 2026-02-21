@@ -1,0 +1,10 @@
+# Route Target/generate to GraphqlTarget — Architecture doc: Interface Kit, Sync Section 3.3
+
+sync RouteToGraphql [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "graphql"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  GraphqlTarget/generate: [ projection: ?p; config: ?c ]
+}

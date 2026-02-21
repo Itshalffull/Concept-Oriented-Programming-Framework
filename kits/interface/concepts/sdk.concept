@@ -1,0 +1,61 @@
+@version(1)
+concept Sdk [S] {
+
+  purpose {
+    Coordinate SDK client library generation across programming
+    languages. Owns the cross-language configuration (package
+    naming, version strategy, transport configuration, auth
+    setup), output file manifest per language, and compatibility
+    tracking. Generator talks to Sdk, never to language
+    providers directly.
+  }
+
+  state {
+    packages: set S
+    config {
+      language: S -> String
+      packageName: S -> String
+      version: S -> String
+      transport: S -> String
+      authStrategy: S -> option String
+    }
+    output {
+      files: S -> list { path: String, hash: String }
+      generatedAt: S -> DateTime
+    }
+  }
+
+  actions {
+    action generate(projection: String, language: String, config: String) {
+      -> ok(package: S, files: list String, packageJson: String) {
+        SDK generated. Package manifest (package.json, pyproject.toml,
+        go.mod, Cargo.toml) included. Types are idiomatic to the
+        target language.
+      }
+      -> unsupportedType(typeName: String, language: String) {
+        A concept type cannot be expressed idiomatically in this
+        language. Fallback type used (e.g. Any or interface{}).
+      }
+      -> languageError(language: String, reason: String) {
+        Provider-specific generation failure.
+      }
+    }
+
+    action publish(package: S, registry: String) {
+      -> ok(package: S, publishedVersion: String) {
+        Package published to language registry (npm, PyPI, etc.).
+      }
+      -> versionExists(package: S, version: String) {
+        This version already published. Bump version first.
+      }
+      -> registryUnavailable(registry: String) {
+        Cannot reach the package registry.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", language: "typescript", config: "{}") -> ok(package: s, files: f, packageJson: p)
+    then publish(package: s, registry: "npm") -> ok(package: s, publishedVersion: "1.0.0")
+  }
+}

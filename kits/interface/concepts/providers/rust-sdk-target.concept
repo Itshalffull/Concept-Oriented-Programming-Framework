@@ -1,0 +1,33 @@
+@version(1)
+concept RustSdkTarget [S] {
+
+  purpose {
+    Generate idiomatic Rust SDK crates. Produces Result enum
+    types, async/tokio patterns, builder pattern for complex
+    inputs, and Cargo.toml with dependencies.
+  }
+
+  state {
+    crates: set S
+    config {
+      crateName: S -> String
+      edition: S -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(crate: S, files: list String) {
+        Map concept types to Rust structs with serde derives.
+        Map actions to async methods returning Result. Map
+        return variants to enum variants. Generate lib.rs,
+        client module, types module, and Cargo.toml.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(crate: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(crate: s2, files: f2)
+  }
+}

@@ -1,0 +1,15 @@
+# Pipeline integration — ConceptManifest generated triggers projection
+# Architecture doc: Interface Kit, Sync Section 3.1
+
+sync ProjectOnManifest [eager]
+when {
+  SchemaGen/generate: [ spec: ?spec ]
+    => [ manifest: ?manifest ]
+}
+where {
+  Generator: { ?plan targets: ?targets }
+  filter(length(?targets) > 0)
+}
+then {
+  Projection/project: [ manifest: ?manifest; annotations: ?annotations ]
+}

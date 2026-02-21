@@ -1,0 +1,10 @@
+# Route Sdk/generate to TsSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+
+sync RouteToTsSdk [eager]
+when {
+  Sdk/generate: [ projection: ?p; language: "typescript"; config: ?c ]
+    => [ package: ?pkg ]
+}
+then {
+  TsSdkTarget/generate: [ projection: ?p; config: ?c ]
+}

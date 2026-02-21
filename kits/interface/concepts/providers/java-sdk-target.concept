@@ -1,0 +1,34 @@
+@version(1)
+concept JavaSdkTarget [S] {
+
+  purpose {
+    Generate idiomatic Java SDK artifacts. Produces sealed
+    interfaces (Java 17+), CompletableFuture patterns, builder
+    pattern for complex inputs, and pom.xml with dependencies.
+  }
+
+  state {
+    artifacts: set S
+    config {
+      groupId: S -> String
+      artifactId: S -> String
+      javaVersion: S -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(artifact: S, files: list String) {
+        Map concept types to Java records and sealed interfaces.
+        Map actions to CompletableFuture methods. Map return
+        variants to sealed interface cases. Generate client
+        class, model classes, and pom.xml.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(artifact: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(artifact: s2, files: f2)
+  }
+}

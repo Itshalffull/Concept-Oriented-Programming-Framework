@@ -1,0 +1,56 @@
+@version(1)
+concept Target [T] {
+
+  purpose {
+    Coordinate code generation across interface targets (REST,
+    GraphQL, gRPC, CLI, MCP). Owns the target registry, output
+    file manifest per target, and generation history. Generator
+    talks to Target, never to providers directly. Integration
+    syncs route to the active provider based on targetType.
+  }
+
+  state {
+    outputs: set T
+    registry {
+      targetType: T -> String
+      concept: T -> String
+      projection: T -> String
+      generatedAt: T -> DateTime
+      fileCount: T -> Int
+    }
+    files: T -> list { path: String, hash: String, sizeBytes: Int }
+    previous: T -> option { generatedAt: DateTime, fileCount: Int, hash: String }
+  }
+
+  actions {
+    action generate(projection: String, targetType: String, config: String) {
+      -> ok(output: T, files: list String) {
+        Generation complete. Files registered in manifest.
+        Routes to provider via integration sync.
+      }
+      -> unsupportedAction(action: String, targetType: String, reason: String) {
+        Concept action cannot be expressed in this target
+        (e.g. bidirectional streaming in REST). Non-fatal,
+        action is skipped with a warning.
+      }
+      -> targetError(targetType: String, reason: String) {
+        Provider-specific generation failure.
+      }
+    }
+
+    action diff(output: T) {
+      -> ok(output: T, added: list String, removed: list String, changed: list String) {
+        Compare current generation against previous run.
+        Content-addressed, unchanged files have matching hashes.
+      }
+      -> noPrevious(output: T) {
+        First generation run for this concept and target.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", targetType: "rest", config: "{}") -> ok(output: t, files: f)
+    then diff(output: t) -> noPrevious(output: t)
+  }
+}

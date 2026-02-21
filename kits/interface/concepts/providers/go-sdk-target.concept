@@ -1,0 +1,32 @@
+@version(1)
+concept GoSdkTarget [S] {
+
+  purpose {
+    Generate idiomatic Go SDK client modules. Produces struct
+    types, error returns following Go conventions, context.Context
+    parameters, and go.mod with dependencies.
+  }
+
+  state {
+    modules: set S
+    config {
+      modulePath: S -> String
+      goVersion: S -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(module: S, files: list String) {
+        Map concept types to Go structs. Map actions to methods
+        returning (T, error). Map return variants to typed error
+        values. Generate client, models, go.mod, and go.sum.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(module: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(module: s2, files: f2)
+  }
+}

@@ -1,0 +1,11 @@
+# Generator dispatches to Sdk for each configured language
+# Architecture doc: Interface Kit, Sync Section 3.4
+
+sync DispatchToSdk [eager]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+then {
+  Sdk/generate: [ projection: ?projection; language: ?lang; config: ?config ]
+}

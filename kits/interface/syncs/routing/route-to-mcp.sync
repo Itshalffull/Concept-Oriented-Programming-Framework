@@ -1,0 +1,10 @@
+# Route Target/generate to McpTarget — Architecture doc: Interface Kit, Sync Section 3.3
+
+sync RouteToMcp [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "mcp"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  McpTarget/generate: [ projection: ?p; config: ?c ]
+}

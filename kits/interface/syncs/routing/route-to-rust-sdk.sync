@@ -1,0 +1,10 @@
+# Route Sdk/generate to RustSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+
+sync RouteToRustSdk [eager]
+when {
+  Sdk/generate: [ projection: ?p; language: "rust"; config: ?c ]
+    => [ package: ?pkg ]
+}
+then {
+  RustSdkTarget/generate: [ projection: ?p; config: ?c ]
+}

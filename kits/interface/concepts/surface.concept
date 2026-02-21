@@ -1,0 +1,54 @@
+@version(1)
+concept Surface [S] {
+
+  purpose {
+    Compose generated interfaces from multiple concepts into
+    a cohesive, unified API surface per target. For REST: a
+    single router with concept-namespaced routes. For GraphQL:
+    a merged schema with shared types. For CLI: a command tree
+    with concept subcommands. For MCP: a combined tool set.
+    For SDKs: a single client with concept-namespaced methods.
+  }
+
+  state {
+    surfaces: set S
+    config {
+      kit: S -> String
+      target: S -> String
+      concepts: S -> list String
+    }
+    composed {
+      entrypoint: S -> String
+      routes: S -> option list { path: String, concept: String, action: String }
+      sharedTypes: S -> option list { name: String, usedBy: list String }
+    }
+  }
+
+  actions {
+    action compose(kit: String, target: String, outputs: list String) {
+      -> ok(surface: S, entrypoint: String, conceptCount: Int) {
+        Merge per-concept generated outputs into a unified surface.
+        Create shared entrypoint (router, schema, command root, etc.).
+        Deduplicate shared types. Apply kit-level middleware.
+      }
+      -> conflictingRoutes(target: String, conflicts: list String) {
+        Two concepts generate the same route, command, or tool name.
+        Requires explicit disambiguation in interface manifest.
+      }
+      -> cyclicDependency(target: String, cycle: list String) {
+        Shared type resolution found a cycle.
+      }
+    }
+
+    action entrypoint(surface: S) {
+      -> ok(content: String) {
+        Return the composed entrypoint file content.
+      }
+    }
+  }
+
+  invariant {
+    after compose(kit: "test-kit", target: "rest", outputs: ["todo-output", "user-output"]) -> ok(surface: s, entrypoint: e, conceptCount: 2)
+    then entrypoint(surface: s) -> ok(content: c)
+  }
+}

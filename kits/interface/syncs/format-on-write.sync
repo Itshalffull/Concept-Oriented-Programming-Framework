@@ -1,0 +1,11 @@
+# File written (new content) triggers formatting
+# Architecture doc: Interface Kit, Sync Section 3.7
+
+sync FormatOnWrite [eager]
+when {
+  Emitter/write: [ path: ?path ]
+    => [ file: ?f; hash: ?h; written: true ]
+}
+then {
+  Emitter/format: [ file: ?f; formatter: ?formatter ]
+}

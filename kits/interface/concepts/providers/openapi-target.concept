@@ -1,0 +1,36 @@
+@version(1)
+concept OpenApiTarget [O] {
+
+  purpose {
+    Generate OpenAPI 3.1 specification documents from concept
+    projections. Produces a single document per kit covering
+    all concepts. Includes paths, schemas, security schemes,
+    and examples derived from concept invariants.
+  }
+
+  state {
+    specs: set O
+    document {
+      version: O -> String
+      paths: O -> Int
+      schemas: O -> Int
+    }
+  }
+
+  actions {
+    action generate(projections: list String, config: String) {
+      -> ok(spec: O, content: String) {
+        Merge all concept projections into one OpenAPI document.
+        Action params become request schemas. Return variants
+        become response schemas per status code. Invariants
+        become example request/response pairs. Traits become
+        security schemes and pagination parameters.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projections: ["proj-1", "proj-2"], config: "{}") -> ok(spec: o, content: c)
+    then generate(projections: ["proj-1"], config: "{}") -> ok(spec: o2, content: c2)
+  }
+}

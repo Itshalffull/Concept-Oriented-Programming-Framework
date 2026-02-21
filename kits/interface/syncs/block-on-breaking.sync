@@ -1,0 +1,11 @@
+# Breaking change detected — still plan but Generator checks --breaking flag
+# Architecture doc: Interface Kit, Sync Section 3.2
+
+sync BlockOnBreaking [eager]
+when {
+  Projection/validate: [ projection: ?p ]
+    => [ projection: ?p; changes: ?changes ]
+}
+then {
+  Generator/plan: [ kit: ?kit; interfaceManifest: ?manifest ]
+}

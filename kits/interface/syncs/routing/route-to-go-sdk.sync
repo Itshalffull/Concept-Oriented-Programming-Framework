@@ -1,0 +1,10 @@
+# Route Sdk/generate to GoSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+
+sync RouteToGoSdk [eager]
+when {
+  Sdk/generate: [ projection: ?p; language: "go"; config: ?c ]
+    => [ package: ?pkg ]
+}
+then {
+  GoSdkTarget/generate: [ projection: ?p; config: ?c ]
+}

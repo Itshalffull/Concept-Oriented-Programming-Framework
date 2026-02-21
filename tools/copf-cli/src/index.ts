@@ -14,6 +14,7 @@
 //   copf dev
 //   copf deploy --manifest <file>
 //   copf kit <subcommand> [args...]
+//   copf interface <subcommand> [args...]
 // ============================================================
 
 import { initCommand } from './commands/init.js';
@@ -27,6 +28,7 @@ import { devCommand } from './commands/dev.js';
 import { traceCommand } from './commands/trace.js';
 import { migrateCommand } from './commands/migrate.js';
 import { compileCacheCommand } from './commands/compile-cache.js';
+import { interfaceCommand } from './commands/interface.js';
 
 const VERSION = '0.1.0';
 
@@ -93,6 +95,12 @@ Commands:
     test <path>                    Run kit conformance + integration tests
     list                           Show kits used by the current app
     check-overrides                Verify app overrides reference valid syncs
+  interface <subcommand>          Interface generation
+    generate                       Generate all configured interfaces
+    plan                           Show generation plan without executing
+    validate                       Validate interface manifest and projections
+    files                          List generated output files
+    clean                          Remove orphaned generated files
 
 Options:
   --help                         Show this help message
@@ -153,6 +161,9 @@ export async function main(argv: string[] = process.argv): Promise<void> {
         break;
       case 'kit':
         await kitCommand(parsed.positional, parsed.flags);
+        break;
+      case 'interface':
+        await interfaceCommand(parsed.positional, parsed.flags);
         break;
       default:
         console.error(`Unknown command: ${parsed.command}`);

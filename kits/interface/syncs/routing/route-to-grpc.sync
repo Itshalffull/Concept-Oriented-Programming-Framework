@@ -1,0 +1,10 @@
+# Route Target/generate to GrpcTarget — Architecture doc: Interface Kit, Sync Section 3.3
+
+sync RouteToGrpc [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "grpc"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  GrpcTarget/generate: [ projection: ?p; config: ?c ]
+}

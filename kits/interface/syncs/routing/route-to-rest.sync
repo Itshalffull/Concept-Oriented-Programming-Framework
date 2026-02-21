@@ -1,0 +1,10 @@
+# Route Target/generate to RestTarget — Architecture doc: Interface Kit, Sync Section 3.3
+
+sync RouteToRest [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "rest"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  RestTarget/generate: [ projection: ?p; config: ?c ]
+}

@@ -1,0 +1,11 @@
+# All targets for a kit complete triggers surface composition
+# Architecture doc: Interface Kit, Sync Section 3.8
+
+sync ComposeOnComplete [eager]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan; filesGenerated: ?count ]
+}
+then {
+  Surface/compose: [ kit: ?kit; target: ?target; outputs: ?outputs ]
+}

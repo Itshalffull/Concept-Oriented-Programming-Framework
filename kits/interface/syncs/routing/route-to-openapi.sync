@@ -1,0 +1,10 @@
+# Route Spec/emit to OpenApiTarget — Architecture doc: Interface Kit, Sync Section 3.5
+
+sync RouteToOpenApi [eager]
+when {
+  Spec/emit: [ projections: ?ps; format: "openapi"; config: ?c ]
+    => [ document: ?d ]
+}
+then {
+  OpenApiTarget/generate: [ projections: ?ps; config: ?c ]
+}

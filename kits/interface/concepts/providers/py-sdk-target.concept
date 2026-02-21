@@ -1,0 +1,33 @@
+@version(1)
+concept PySdkTarget [S] {
+
+  purpose {
+    Generate idiomatic Python SDK client libraries. Produces
+    typed methods with dataclass return types, async support,
+    and pyproject.toml. Follows Stripe and OpenAI SDK patterns.
+  }
+
+  state {
+    packages: set S
+    config {
+      packageName: S -> String
+      asyncSupport: S -> Bool
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(package: S, files: list String) {
+        Map concept types to Python types with type hints.
+        Map actions to methods. Map return variants to
+        dataclasses with discriminator field. Generate client
+        class, models module, pyproject.toml, py.typed marker.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+  }
+}

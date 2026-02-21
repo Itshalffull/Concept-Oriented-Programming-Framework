@@ -1,0 +1,35 @@
+@version(1)
+concept AsyncApiTarget [A] {
+
+  purpose {
+    Generate AsyncAPI 3.0 specification documents for event-
+    driven concept interfaces. Covers sync-triggered events,
+    streaming actions, and pub/sub patterns. Complements
+    OpenAPI for request/response.
+  }
+
+  state {
+    specs: set A
+    document {
+      version: A -> String
+      channels: A -> Int
+      operations: A -> Int
+    }
+  }
+
+  actions {
+    action generate(projections: list String, syncSpecs: list String, config: String) {
+      -> ok(spec: A, content: String) {
+        Map sync completions to channels. Map streaming actions
+        to operations. Derive message schemas from completion
+        variant types. Include protocol bindings (WebSocket,
+        Kafka, AMQP) based on configured transport.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projections: ["proj-1"], syncSpecs: ["sync-1"], config: "{}") -> ok(spec: a, content: c)
+    then generate(projections: ["proj-2"], syncSpecs: ["sync-2"], config: "{}") -> ok(spec: a2, content: c2)
+  }
+}

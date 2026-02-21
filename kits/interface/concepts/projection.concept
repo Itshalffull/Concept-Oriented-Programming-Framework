@@ -1,0 +1,96 @@
+@version(1)
+concept Projection [P] {
+
+  purpose {
+    Enrich ConceptManifests with interface generation metadata.
+    Reads concept specs (via ConceptManifest from SchemaGen) and
+    interface annotations (from app.interface.yaml), produces
+    generation-ready projections with resource mappings, trait
+    bindings, and cross-concept type graphs. One projection per
+    concept per generation run.
+  }
+
+  state {
+    projections: set P
+    manifest {
+      concept: P -> String
+      kitName: P -> String
+      kitVersion: P -> String
+      conceptManifest: P -> String
+    }
+    annotations {
+      traits: P -> list { name: String, scope: String, config: String }
+      resourceMapping: P -> option { path: String, idField: String, actions: list String }
+      targetOverrides: P -> list { target: String, config: String }
+    }
+    types {
+      shapes: P -> list { name: String, kind: String, resolved: String }
+      crossReferences: P -> list { from: String, to: String, relation: String }
+    }
+  }
+
+  actions {
+    action project(manifest: String, annotations: String) {
+      -> ok(projection: P, shapes: Int, actions: Int, traits: Int) {
+        Parse interface annotations. Merge with ConceptManifest.
+        Compute resource mappings from state relations and action
+        signatures. Bind traits to actions. Resolve cross-concept
+        type references within the kit.
+      }
+      -> annotationError(concept: String, errors: list String) {
+        Interface manifest has invalid annotations for this concept.
+      }
+      -> unresolvedReference(concept: String, missing: list String) {
+        Annotations reference actions or types that don't exist
+        in the ConceptManifest.
+      }
+      -> traitConflict(concept: String, trait1: String, trait2: String, reason: String) {
+        Two traits are incompatible on the same action
+        (e.g. @paginated and @streaming on the same action).
+      }
+    }
+
+    action validate(projection: P) {
+      -> ok(projection: P, warnings: list String) {
+        All annotations resolve. Resource mappings are consistent.
+        No breaking changes from previous generation (if history exists).
+      }
+      -> breakingChange(projection: P, changes: list String) {
+        Generated interface would break consumers. Lists the
+        specific incompatibilities. Generation proceeds only
+        with explicit --breaking flag.
+      }
+      -> incompleteAnnotation(projection: P, missing: list String) {
+        Required annotations are missing for configured targets
+        (e.g. REST target configured but no resource path for
+        a concept with non-CRUD actions).
+      }
+    }
+
+    action diff(projection: P, previous: P) {
+      -> ok(added: list String, removed: list String, changed: list String) {
+        Compare two projections. Used for breaking change detection
+        and changelog generation.
+      }
+      -> incompatible(reason: String) {
+        Projections are from different concepts — can't compare.
+      }
+    }
+
+    action inferResources(projection: P) {
+      -> ok(projection: P, resources: list String) {
+        Auto-derive REST resource mappings from state relations
+        and action signatures. Actions named create/add produce POST,
+        delete/remove produce DELETE, list/find produce GET,
+        update/edit produce PUT. Non-CRUD actions produce POST
+        to /resource/{id}/action-name.
+      }
+    }
+  }
+
+  invariant {
+    after project(manifest: "valid-manifest", annotations: "valid-annotations") -> ok(projection: p, shapes: 3, actions: 4, traits: 2)
+    then validate(projection: p) -> ok(projection: p, warnings: w)
+    and inferResources(projection: p) -> ok(projection: p, resources: r)
+  }
+}

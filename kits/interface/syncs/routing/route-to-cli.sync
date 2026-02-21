@@ -1,0 +1,10 @@
+# Route Target/generate to CliTarget — Architecture doc: Interface Kit, Sync Section 3.3
+
+sync RouteToCli [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "cli"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  CliTarget/generate: [ projection: ?p; config: ?c ]
+}

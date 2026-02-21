@@ -1,0 +1,33 @@
+@version(1)
+concept SwiftSdkTarget [S] {
+
+  purpose {
+    Generate idiomatic Swift SDK packages. Produces Result
+    types, Codable conformance, async/await patterns, and
+    Package.swift with SPM configuration.
+  }
+
+  state {
+    packages: set S
+    config {
+      packageName: S -> String
+      platforms: S -> list String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(package: S, files: list String) {
+        Map concept types to Swift structs with Codable.
+        Map actions to async methods returning Result. Map
+        return variants to enum cases. Generate client,
+        models, and Package.swift.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+  }
+}

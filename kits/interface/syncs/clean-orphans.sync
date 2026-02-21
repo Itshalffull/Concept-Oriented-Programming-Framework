@@ -1,0 +1,11 @@
+# All writing complete triggers orphan cleanup
+# Architecture doc: Interface Kit, Sync Section 3.8
+
+sync CleanOrphans [eventual]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+then {
+  Emitter/clean: [ outputDir: ?dir; currentFiles: ?files ]
+}

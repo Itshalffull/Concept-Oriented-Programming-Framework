@@ -1,0 +1,10 @@
+# Route Sdk/generate to SwiftSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+
+sync RouteToSwiftSdk [eager]
+when {
+  Sdk/generate: [ projection: ?p; language: "swift"; config: ?c ]
+    => [ package: ?pkg ]
+}
+then {
+  SwiftSdkTarget/generate: [ projection: ?p; config: ?c ]
+}

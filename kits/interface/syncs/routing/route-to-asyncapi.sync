@@ -1,0 +1,10 @@
+# Route Spec/emit to AsyncApiTarget — Architecture doc: Interface Kit, Sync Section 3.5
+
+sync RouteToAsyncApi [eager]
+when {
+  Spec/emit: [ projections: ?ps; format: "asyncapi"; config: ?c ]
+    => [ document: ?d ]
+}
+then {
+  AsyncApiTarget/generate: [ projections: ?ps; syncSpecs: ?syncs; config: ?c ]
+}

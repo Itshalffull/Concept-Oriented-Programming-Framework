@@ -1,0 +1,65 @@
+@version(1)
+concept GrpcTarget [G] {
+
+  purpose {
+    Generate Protocol Buffer definitions and gRPC service stubs
+    from concept projections. Owns proto message derivation,
+    service definition, streaming mode selection, and
+    multi-language stub generation.
+  }
+
+  state {
+    services: set G
+    config {
+      protoPackage: G -> String
+      goPackage: G -> option String
+      javaPackage: G -> option String
+    }
+    mapping {
+      concept: G -> String
+      action: G -> String
+      rpcName: G -> String
+      streamingMode: G -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(services: list String, files: list String) {
+        Proto3 definitions and gRPC service stubs generated
+        from projection. Streaming mode derived from action
+        annotations. Multi-language stubs produced based on
+        configured packages.
+      }
+      -> protoIncompatible(type: String, reason: String) {
+        Concept type cannot be represented in Protocol Buffers.
+        Typical causes include recursive types without
+        indirection or unsupported collection nesting.
+      }
+    }
+
+    action validate(service: G) {
+      -> ok(service: G) {
+        Proto definition compiles. Service methods match concept
+        action signatures. Streaming modes are consistent with
+        action semantics.
+      }
+      -> fieldNumberConflict(service: G, message: String, field: String) {
+        Proto field number assignment conflicts with a
+        previously generated version.
+      }
+    }
+
+    action listRpcs(concept: String) {
+      -> ok(rpcs: list String, streamingModes: list String) {
+        Return all generated RPC methods for a concept with
+        their streaming modes.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "payment-projection", config: "{}") -> ok(services: s, files: f)
+    then listRpcs(concept: "Payment") -> ok(rpcs: r, streamingModes: m)
+  }
+}

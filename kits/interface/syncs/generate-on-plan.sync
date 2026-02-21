@@ -1,0 +1,11 @@
+# Plan ready triggers generation
+# Architecture doc: Interface Kit, Sync Section 3.2
+
+sync GenerateOnPlan [eager]
+when {
+  Generator/plan: [ kit: ?kit ]
+    => [ plan: ?plan; targets: ?targets ]
+}
+then {
+  Generator/generate: [ plan: ?plan ]
+}

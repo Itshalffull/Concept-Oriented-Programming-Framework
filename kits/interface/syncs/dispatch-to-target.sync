@@ -1,0 +1,11 @@
+# Generator dispatches to Target for each configured target type
+# Architecture doc: Interface Kit, Sync Section 3.3
+
+sync DispatchToTarget [eager]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+then {
+  Target/generate: [ projection: ?projection; targetType: ?targetType; config: ?config ]
+}

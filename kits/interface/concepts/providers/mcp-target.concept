@@ -1,0 +1,69 @@
+@version(1)
+concept McpTarget [M] {
+
+  purpose {
+    Generate MCP (Model Context Protocol) server implementations
+    from concept projections. Owns tool/resource/template
+    classification, input schema derivation, description
+    generation for LLM comprehension, and transport setup
+    (stdio, SSE, HTTP).
+  }
+
+  state {
+    tools: set M
+    config {
+      serverName: M -> String
+      transport: M -> String
+      version: M -> String
+    }
+    mapping {
+      concept: M -> String
+      action: M -> String
+      mcpType: M -> String
+      toolName: M -> String
+      description: M -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(tools: list String, files: list String) {
+        MCP server implementation generated from projection.
+        Actions classified as tools, resources, or templates
+        based on action semantics and annotations. Input
+        schemas derived from action parameters. Descriptions
+        optimized for LLM comprehension.
+      }
+      -> tooManyTools(count: Int, limit: Int) {
+        Generated tool count exceeds the configured limit.
+        Consider grouping related actions or using resource
+        types to reduce tool count.
+      }
+    }
+
+    action validate(tool: M) {
+      -> ok(tool: M) {
+        MCP server schema is valid. Tool input schemas match
+        action parameter types. Descriptions are present and
+        within length limits. Transport configuration is
+        consistent.
+      }
+      -> missingDescription(tool: M, toolName: String) {
+        Tool lacks a description. MCP tools require
+        descriptions for LLM discoverability.
+      }
+    }
+
+    action listTools(concept: String) {
+      -> ok(tools: list String, resources: list String, templates: list String) {
+        Return all generated MCP primitives for a concept
+        grouped by MCP type.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "agent-projection", config: "{}") -> ok(tools: t, files: f)
+    then listTools(concept: "Agent") -> ok(tools: tl, resources: r, templates: tp)
+  }
+}

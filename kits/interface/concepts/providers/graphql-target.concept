@@ -1,0 +1,64 @@
+@version(1)
+concept GraphqlTarget [Q] {
+
+  purpose {
+    Generate GraphQL schema and resolvers from concept projections.
+    Owns query/mutation/subscription classification, connection
+    type generation (Relay spec), input/output type mapping, and
+    DataLoader integration.
+  }
+
+  state {
+    types: set Q
+    config {
+      relay: Q -> Bool
+      federation: Q -> Bool
+      subscriptions: Q -> Bool
+    }
+    mapping {
+      concept: Q -> String
+      action: Q -> String
+      operationType: Q -> String
+      typeName: Q -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(types: list String, files: list String) {
+        GraphQL schema and resolver stubs generated from
+        projection. Actions classified as queries, mutations,
+        or subscriptions based on action semantics and
+        annotation overrides.
+      }
+      -> federationConflict(type: String, reason: String) {
+        Type cannot be federated due to conflicting key
+        directives or ownership boundaries across subgraphs.
+      }
+    }
+
+    action validate(type: Q) {
+      -> ok(type: Q) {
+        Generated schema is valid GraphQL. Resolver signatures
+        match schema field types. Relay connection types conform
+        to the Relay spec if enabled.
+      }
+      -> cyclicType(type: Q, cycle: list String) {
+        Type graph contains a cycle that would cause infinite
+        nesting in the schema.
+      }
+    }
+
+    action listOperations(concept: String) {
+      -> ok(queries: list String, mutations: list String, subscriptions: list String) {
+        Return all generated operations for a concept grouped
+        by operation type.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "order-projection", config: "{}") -> ok(types: t, files: f)
+    then listOperations(concept: "Order") -> ok(queries: q, mutations: m, subscriptions: s)
+  }
+}

@@ -1,0 +1,11 @@
+# Middleware resolved triggers injection into output
+# Architecture doc: Interface Kit, Sync Section 3.6
+
+sync ApplyMiddleware [eager]
+when {
+  Middleware/resolve: [ traits: ?traits; target: ?target ]
+    => [ middlewares: ?middlewares; order: ?order ]
+}
+then {
+  Middleware/inject: [ output: ?output; middlewares: ?middlewares; target: ?target ]
+}

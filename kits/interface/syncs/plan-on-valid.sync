@@ -1,0 +1,11 @@
+# Validated projection triggers generation planning
+# Architecture doc: Interface Kit, Sync Section 3.2
+
+sync PlanOnValid [eager]
+when {
+  Projection/validate: [ projection: ?p ]
+    => [ projection: ?p ]
+}
+then {
+  Generator/plan: [ kit: ?kit; interfaceManifest: ?manifest ]
+}

@@ -1,0 +1,63 @@
+@version(1)
+concept RestTarget [R] {
+
+  purpose {
+    Generate REST API code from concept projections. Owns HTTP
+    method mappings, URL pattern derivation, status code tables,
+    request/response serialization, and middleware integration.
+    Produces route handlers and types.
+  }
+
+  state {
+    routes: set R
+    config {
+      basePath: R -> String
+      framework: R -> String
+      versioning: R -> option String
+    }
+    mapping {
+      concept: R -> String
+      action: R -> String
+      method: R -> String
+      path: R -> String
+      statusCodes: R -> list { code: Int, meaning: String }
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(routes: list String, files: list String) {
+        REST routes and type definitions generated from
+        projection. HTTP methods derived from action semantics.
+        Status code tables attached per route.
+      }
+      -> ambiguousMapping(action: String, reason: String) {
+        Action cannot be unambiguously mapped to an HTTP method
+        and path. Manual annotation required in the interface
+        manifest.
+      }
+    }
+
+    action validate(route: R) {
+      -> ok(route: R) {
+        Route handler compiles. Request and response types
+        are consistent with concept state and action signatures.
+      }
+      -> pathConflict(route: R, conflicting: String, reason: String) {
+        Two actions map to the same HTTP method and path.
+      }
+    }
+
+    action listRoutes(concept: String) {
+      -> ok(routes: list String, methods: list String) {
+        Return all generated routes for a concept with their
+        HTTP methods.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "user-projection", config: "{}") -> ok(routes: r, files: f)
+    then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+  }
+}

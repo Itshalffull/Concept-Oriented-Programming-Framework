@@ -1,0 +1,10 @@
+# Route Sdk/generate to JavaSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+
+sync RouteToJavaSdk [eager]
+when {
+  Sdk/generate: [ projection: ?p; language: "java"; config: ?c ]
+    => [ package: ?pkg ]
+}
+then {
+  JavaSdkTarget/generate: [ projection: ?p; config: ?c ]
+}

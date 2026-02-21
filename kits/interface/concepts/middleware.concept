@@ -1,0 +1,76 @@
+@version(1)
+concept Middleware [M] {
+
+  purpose {
+    Map abstract interface traits to concrete middleware
+    implementations per target. @auth(bearer) produces
+    Bearer token validation in REST, metadata interceptor
+    in gRPC, env var check in CLI, OAuth flow in MCP.
+    Owns trait definitions, per-target implementations,
+    composition ordering, and compatibility rules.
+  }
+
+  state {
+    definitions: set M
+    trait {
+      name: M -> String
+      scope: M -> String
+      config: M -> String
+    }
+    implementations: M -> list {
+      target: String
+      code: String
+      position: String
+    }
+    composition {
+      order: M -> Int
+      dependsOn: M -> list String
+      incompatibleWith: M -> list String
+    }
+  }
+
+  actions {
+    action resolve(traits: list String, target: String) {
+      -> ok(middlewares: list String, order: list Int) {
+        For each trait, find the per-target implementation.
+        Order by declared position (before-auth, auth,
+        after-auth, validation, business-logic, serialization).
+        Return ordered middleware chain.
+      }
+      -> missingImplementation(trait: String, target: String) {
+        No implementation registered for this trait and target pair.
+        Non-fatal, trait is skipped with warning.
+      }
+      -> incompatibleTraits(trait1: String, trait2: String, reason: String) {
+        Two requested traits conflict (e.g. @streaming and
+        @paginated on the same action).
+      }
+    }
+
+    action inject(output: String, middlewares: list String, target: String) {
+      -> ok(output: String, injectedCount: Int) {
+        Inject middleware code into the generated output.
+        For REST: wrap route handlers in middleware chain.
+        For gRPC: add interceptors to service definition.
+        For CLI: add pre-command hooks.
+        For MCP: add tool middleware.
+      }
+    }
+
+    action register(trait: String, target: String, implementation: String, position: String) {
+      -> ok(middleware: M) {
+        Register a new trait-to-target implementation.
+        Used by custom kits to extend middleware for their domains.
+      }
+      -> duplicateRegistration(trait: String, target: String) {
+        Implementation already registered. Use replace instead.
+      }
+    }
+  }
+
+  invariant {
+    after register(trait: "auth", target: "rest", implementation: "bearer-check", position: "auth") -> ok(middleware: m)
+    then resolve(traits: ["auth"], target: "rest") -> ok(middlewares: mw, order: o)
+    and inject(output: "route-code", middlewares: ["bearer-check"], target: "rest") -> ok(output: out, injectedCount: 1)
+  }
+}

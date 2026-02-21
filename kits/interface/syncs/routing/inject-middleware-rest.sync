@@ -1,0 +1,11 @@
+# REST target complete triggers middleware resolution
+# Architecture doc: Interface Kit, Sync Section 3.6
+
+sync InjectMiddlewareRest [eager]
+when {
+  RestTarget/generate: [ projection: ?p ]
+    => [ routes: ?routes; files: ?files ]
+}
+then {
+  Middleware/resolve: [ traits: ?traits; target: "rest" ]
+}

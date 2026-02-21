@@ -1,0 +1,36 @@
+@version(1)
+concept TsSdkTarget [S] {
+
+  purpose {
+    Generate idiomatic TypeScript/JavaScript SDK client libraries.
+    Produces typed methods, discriminated union return types,
+    async/await patterns, and package.json with dependencies.
+    Runtime layer handles fetch, auth, retries, serialization.
+  }
+
+  state {
+    packages: set S
+    config {
+      packageName: S -> String
+      runtime: S -> String
+      moduleSystem: S -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(package: S, files: list String) {
+        Map concept types to TypeScript types. Map actions to
+        async methods on client class. Map tagged union completions
+        to discriminated unions. Generate client class with
+        concept-namespaced method groups. Generate package.json,
+        tsconfig.json, and README.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+  }
+}

@@ -1,0 +1,48 @@
+@version(1)
+concept Spec [D] {
+
+  purpose {
+    Coordinate specification document generation. Owns the
+    spec registry, versioning, and cross-concept composition
+    (a single OpenAPI document covers all concepts in a kit).
+    Generator talks to Spec, never to format providers directly.
+  }
+
+  state {
+    documents: set D
+    registry {
+      format: D -> String
+      kitName: D -> String
+      version: D -> String
+      generatedAt: D -> DateTime
+    }
+    content: D -> String
+  }
+
+  actions {
+    action emit(projections: list String, format: String, config: String) {
+      -> ok(document: D, content: String) {
+        Specification document generated covering all concepts
+        in the projections list. Single document per kit per format.
+      }
+      -> formatError(format: String, reason: String) {
+        Provider-specific spec generation failure.
+      }
+    }
+
+    action validate(document: D) {
+      -> ok(document: D) {
+        Generated spec passes format-specific validation
+        (OpenAPI linter, AsyncAPI parser, JSON Schema validator).
+      }
+      -> invalid(document: D, errors: list String) {
+        Spec has structural errors.
+      }
+    }
+  }
+
+  invariant {
+    after emit(projections: ["proj-1"], format: "openapi", config: "{}") -> ok(document: d, content: c)
+    then validate(document: d) -> ok(document: d)
+  }
+}

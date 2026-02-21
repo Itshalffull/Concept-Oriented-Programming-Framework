@@ -1,0 +1,11 @@
+# Middleware injected triggers file writing
+# Architecture doc: Interface Kit, Sync Section 3.7
+
+sync WriteOnInject [eager]
+when {
+  Middleware/inject: [ output: ?output; target: ?target ]
+    => [ output: ?output; injectedCount: ?count ]
+}
+then {
+  Emitter/write: [ path: ?path; content: ?content; target: ?target; concept: ?concept ]
+}

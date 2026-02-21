@@ -1,0 +1,89 @@
+@version(1)
+concept Generator [G] {
+
+  purpose {
+    Orchestrate multi-target interface generation from concept
+    projections. Plans which targets and SDK languages to generate,
+    coordinates the generation pipeline, tracks output files,
+    and manages generation history for incremental regeneration.
+  }
+
+  state {
+    plans: set G
+    config {
+      targets: G -> list String
+      sdkLanguages: G -> list String
+      specFormats: G -> list String
+      outputDir: G -> String
+      formatting: G -> String
+    }
+    execution {
+      status: G -> String
+      startedAt: G -> option DateTime
+      completedAt: G -> option DateTime
+      filesGenerated: G -> Int
+      filesUnchanged: G -> Int
+    }
+    history: G -> list {
+      generatedAt: DateTime
+      kitVersion: String
+      targets: list String
+      filesGenerated: Int
+      breaking: Bool
+    }
+  }
+
+  actions {
+    action plan(kit: String, interfaceManifest: String) {
+      -> ok(plan: G, targets: list String, concepts: list String, estimatedFiles: Int) {
+        Parse the interface manifest. Resolve which targets,
+        SDK languages, and spec formats are configured.
+        Validate that required provider concepts are loaded.
+        Estimate output file count.
+      }
+      -> noTargetsConfigured(kit: String) {
+        Interface manifest does not configure any generation targets.
+      }
+      -> missingProvider(target: String) {
+        A configured target requires a provider concept that
+        is not loaded (e.g. rest target but RestTarget not in kit).
+      }
+      -> projectionFailed(concept: String, reason: String) {
+        One or more concept projections failed.
+      }
+    }
+
+    action generate(plan: G) {
+      -> ok(plan: G, filesGenerated: Int, filesUnchanged: Int, duration: Int) {
+        All configured targets generated successfully.
+        Unchanged files (content-addressed) were skipped.
+      }
+      -> partial(plan: G, generated: list String, failed: list String) {
+        Some targets generated, some failed.
+      }
+      -> blocked(plan: G, breakingChanges: list String) {
+        Breaking changes detected. Use --breaking flag to proceed.
+        Lists the specific changes for review.
+      }
+    }
+
+    action status(plan: G) {
+      -> ok(plan: G, phase: String, progress: Float, activeTargets: list String) {
+        Current execution status.
+      }
+    }
+
+    action regenerate(plan: G, targets: list String) {
+      -> ok(plan: G, filesRegenerated: Int) {
+        Regenerate only the specified targets. Uses cached
+        projections if concept specs have not changed.
+      }
+    }
+  }
+
+  invariant {
+    after plan(kit: "test-kit", interfaceManifest: "valid-manifest") -> ok(plan: g, targets: t, concepts: c, estimatedFiles: 10)
+    then generate(plan: g) -> ok(plan: g, filesGenerated: 10, filesUnchanged: 0, duration: 500)
+    and status(plan: g) -> ok(plan: g, phase: "complete", progress: 1.0, activeTargets: a)
+  }
+}
