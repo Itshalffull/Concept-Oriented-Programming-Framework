@@ -341,6 +341,9 @@ mod tests {
             .await
             .unwrap();
 
+        // Ensure different millisecond timestamp for distinct version_id keys
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+
         handler
             .snapshot(
                 SnapshotInput {
@@ -471,7 +474,9 @@ mod tests {
             SnapshotOutput::Ok { version_id, .. } => version_id,
         };
 
-        // Small delay to ensure different timestamp
+        // Ensure different millisecond timestamp for distinct version_id keys
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+
         let snap_b = handler
             .snapshot(
                 SnapshotInput {
