@@ -1,0 +1,339 @@
+# COPF DevTools — Interface Generation Manifest
+#
+# Generates Claude Skills and CLI commands from
+# framework concept specs. Uses workflow and annotation
+# metadata to produce rich, step-based skills that
+# match the hand-written originals.
+#
+# Usage:
+#   copf interface generate --manifest examples/devtools/devtools.interface.yaml
+
+interface:
+  name: copf-devtools
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  claude-skills:
+    name: copf-devtools
+    grouping: per-concept
+
+  cli:
+    name: copf
+
+# ─── CONCEPT SPECS ───────────────────────────────────
+# Framework concepts that map to CLI commands and skills.
+# Each concept has corresponding actions in its .concept spec.
+concepts:
+  - specs/framework/spec-parser.concept
+  - specs/framework/schema-gen.concept
+  - specs/framework/sync-parser.concept
+  - specs/framework/sync-compiler.concept
+  - specs/framework/flow-trace.concept
+  - specs/framework/deployment-validator.concept
+  - specs/framework/migration.concept
+  - specs/framework/project-scaffold.concept
+  - specs/framework/dev-server.concept
+  - specs/framework/cache-compiler.concept
+  - specs/framework/kit-manager.concept
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/devtools
+  formatting:
+    typescript: prettier
+  clean: true
+
+# ─── WORKFLOWS ───────────────────────────────────────
+# Define ordered, annotated workflows for skill targets.
+# Each workflow maps a concept to a step-by-step guide.
+
+workflows:
+  concept-validator:
+    concept: SpecParser
+    steps:
+      - action: parse
+        title: "Parse and Validate"
+        prose: "Parse all .concept specs in the project and report syntax or structural errors."
+    checklists:
+      parse:
+        - "Has purpose block?"
+        - "Actions have at least one variant?"
+        - "Invariants reference valid actions?"
+        - "Type parameters declared and used?"
+    references:
+      - path: references/concept-grammar.md
+        label: "Concept grammar reference"
+      - path: references/jackson-methodology.md
+        label: "Jackson's concept design methodology"
+
+  concept-designer:
+    concept: SpecParser
+    steps:
+      - action: parse
+        title: "Articulate the Purpose"
+        prose: "The purpose answers: What is this concept for? Write 1-3 sentences in imperative present tense."
+    checklists:
+      parse:
+        - "Single purpose — no 'and also'?"
+        - "Describes why, not what?"
+        - "A user would understand it without seeing the implementation?"
+    references:
+      - path: references/jackson-methodology.md
+        label: "Jackson's full methodology"
+      - path: references/concept-catalog.md
+        label: "Reusable concept catalog"
+    anti-patterns:
+      - title: "Kitchen-sink concept"
+        description: "Concept has multiple unrelated purposes — split into separate concepts."
+      - title: "Leaky independence"
+        description: "Concept references another concept's types or calls another concept's actions — use type parameters instead."
+    related-workflows: [sync-designer, implementation-builder]
+
+  sync-designer:
+    concept: SyncCompiler
+    steps:
+      - action: compile
+        title: "Compile Sync Rules"
+        prose: "Compile .sync files that wire concepts together through pattern matching on completions."
+    checklists:
+      compile:
+        - "Sync references valid concept actions?"
+        - "Variable bindings are consistent?"
+        - "Where-clause queries are well-formed?"
+    references:
+      - path: references/sync-design.md
+        label: "Sync language and patterns"
+      - path: references/sync-patterns.md
+        label: "Reusable sync templates"
+
+  implementation-builder:
+    concept: SchemaGen
+    steps:
+      - action: generate
+        title: "Generate Schema from Spec"
+        prose: "Generate ConceptManifest from parsed AST. The manifest provides typed action signatures for implementation."
+    references:
+      - path: references/implementation-patterns.md
+        label: "Implementation patterns and storage"
+
+  trace-debugger:
+    concept: FlowTrace
+    steps:
+      - action: build
+        title: "Build Execution Trace"
+        prose: "Build a trace from a flow ID showing which concepts were invoked, what syncs fired, and data flow between them."
+    references:
+      - path: references/debugging.md
+        label: "Debugging with FlowTrace"
+
+  deployment-config:
+    concept: DeploymentValidator
+    steps:
+      - action: validate
+        title: "Validate Deployment Manifest"
+        prose: "Validate that deployment manifests correctly map concepts to runtimes, assign syncs to engines, and satisfy capability requirements."
+    references:
+      - path: references/deployment-guide.md
+        label: "Deployment configuration guide"
+
+  migration-runner:
+    concept: Migration
+    steps:
+      - action: plan
+        title: "Plan Migration"
+        prose: "Analyze schema changes and plan migration steps for concept state transitions."
+      - action: apply
+        title: "Apply Migration"
+        prose: "Execute the planned migration, transforming stored state to match the new schema."
+
+  project-initializer:
+    concept: ProjectScaffold
+    steps:
+      - action: scaffold
+        title: "Scaffold New Project"
+        prose: "Create a new COPF project directory with specs, syncs, implementations, and configuration files."
+
+  kit-lifecycle:
+    concept: KitManager
+    steps:
+      - action: init
+        title: "Create Kit"
+        prose: "Scaffold a new kit directory with kit.yaml, concept and sync subdirectories, and example files."
+      - action: validate
+        title: "Validate Kit"
+        prose: "Validate a kit manifest, its concept specs, sync definitions, and cross-kit references."
+      - action: test
+        title: "Test Kit"
+        prose: "Run conformance and integration tests for the kit."
+      - action: list
+        title: "List Active Kits"
+        prose: "List all kits used by the current application."
+      - action: checkOverrides
+        title: "Check Overrides"
+        prose: "Verify that application sync overrides reference valid syncs in the target kit."
+
+  dev-workflow:
+    concept: DevServer
+    steps:
+      - action: start
+        title: "Start Dev Server"
+        prose: "Start a local development server that watches for changes and auto-recompiles."
+      - action: status
+        title: "Check Status"
+        prose: "Check whether the dev server is running and view uptime stats."
+      - action: stop
+        title: "Stop Server"
+        prose: "Stop the running development server."
+
+  cache-build:
+    concept: CacheCompiler
+    steps:
+      - action: compile
+        title: "Build Cache"
+        prose: "Parse specs and syncs, generate manifests, compile sync rules, and write pre-compiled artifacts to the cache directory."
+
+# ─── ANNOTATIONS ─────────────────────────────────────
+# Rich metadata for skills and CLI: tool permissions,
+# argument templates, code examples, references.
+
+annotations:
+  SpecParser:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+    parse:
+      examples:
+        - label: "Parse a concept file"
+          language: typescript
+          code: |
+            import { parseConceptFile } from './parser';
+            const ast = parseConceptFile(source);
+
+  SchemaGen:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+    generate:
+      examples:
+        - label: "Generate manifest from AST"
+          language: typescript
+          code: |
+            import { schemaGenHandler } from './schema-gen.impl';
+            const result = await schemaGenHandler.generate(
+              { conceptAst: JSON.stringify(ast) }, storage
+            );
+
+  SyncCompiler:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+    compile:
+      examples:
+        - label: "Compile sync rules"
+          language: bash
+          code: "copf compile-syncs --dir ./syncs"
+
+  FlowTrace:
+    concept:
+      tool-permissions: [Read, Bash]
+    build:
+      examples:
+        - label: "Build trace from flow ID"
+          language: bash
+          code: "copf trace <flow-id>"
+
+  DeploymentValidator:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+
+  Migration:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+
+  ProjectScaffold:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "$ARGUMENTS"
+    scaffold:
+      examples:
+        - label: "Scaffold a new project"
+          language: bash
+          code: "copf init my-app"
+
+  DevServer:
+    concept:
+      tool-permissions: [Read, Bash]
+    start:
+      examples:
+        - label: "Start dev server"
+          language: bash
+          code: "copf dev --port 3000"
+    stop:
+      examples:
+        - label: "Stop dev server"
+          language: bash
+          code: "copf dev stop"
+
+  CacheCompiler:
+    concept:
+      tool-permissions: [Read, Bash]
+    compile:
+      examples:
+        - label: "Build cache"
+          language: bash
+          code: "copf compile --cache"
+
+  KitManager:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+    init:
+      examples:
+        - label: "Create a new kit"
+          language: bash
+          code: "copf kit init my-kit"
+    validate:
+      examples:
+        - label: "Validate a kit"
+          language: bash
+          code: "copf kit validate ./kits/my-kit"
+
+# ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
+# CLI-specific: positional args, custom command names.
+
+concept-overrides:
+  SpecParser:
+    cli:
+      actions:
+        parse:
+          command: check
+          params:
+            specs:
+              positional: true
+
+  ProjectScaffold:
+    cli:
+      actions:
+        scaffold:
+          command: init
+          params:
+            name:
+              positional: true
+
+  KitManager:
+    cli:
+      actions:
+        init:
+          params:
+            name:
+              positional: true
+        validate:
+          params:
+            path:
+              positional: true
+        test:
+          params:
+            path:
+              positional: true
