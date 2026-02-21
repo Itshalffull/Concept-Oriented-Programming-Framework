@@ -38,7 +38,7 @@ contract Intent {
     /// @param purpose The stated purpose
     /// @param principles The guiding principles
     /// @param description A human-readable description
-    function define(
+    function defineIntent(
         bytes32 targetId,
         string calldata purpose,
         string calldata principles,

@@ -20,7 +20,7 @@ contract Template {
     /// @param templateId Unique identifier for the template.
     /// @param blockTree Serialised block tree structure.
     /// @param variables Serialised variable definitions.
-    function define(bytes32 templateId, string calldata blockTree, string calldata variables) external {
+    function defineTemplate(bytes32 templateId, string calldata blockTree, string calldata variables) external {
         require(!_templates[templateId].exists, "Template already exists");
 
         _templates[templateId] = TemplateData({

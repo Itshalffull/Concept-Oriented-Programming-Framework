@@ -1,6 +1,6 @@
-# Compiler output
-cache/
-out/
-
-# Foundry lock
-foundry.lock
+node_modules/
+*.bin
+cache-hardhat/
+artifacts/
+package.json
+package-lock.json

@@ -35,7 +35,7 @@ contract AutomationRule {
     /// @param trigger The trigger event or condition
     /// @param conditions Additional conditions that must be met
     /// @param actions The actions to execute when triggered
-    function define(
+    function defineRule(
         bytes32 ruleId,
         string calldata trigger,
         string calldata conditions,
