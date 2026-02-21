@@ -130,7 +130,7 @@ impl ValidatorHandler {
 
     pub async fn validate(
         &self,
-        input: ValidatorValidateInput,
+        _input: ValidatorValidateInput,
         storage: &dyn ConceptStorage,
     ) -> StorageResult<ValidatorValidateOutput> {
         // Get all validation rules
