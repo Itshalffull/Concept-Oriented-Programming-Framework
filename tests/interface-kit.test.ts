@@ -110,6 +110,54 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[2].variants).toHaveLength(2);
     expect(ast.invariants).toHaveLength(1);
   });
+
+  it('parses Grouping', () => {
+    const ast = readConcept('grouping.concept');
+    expect(ast.name).toBe('Grouping');
+    expect(ast.typeParams).toEqual(['G']);
+    expect(ast.version).toBe(1);
+    expect(ast.actions).toHaveLength(2);
+    expect(ast.actions.map(a => a.name)).toEqual(['group', 'classify']);
+    // group has 3 variants: ok, invalidStrategy, emptyInput
+    expect(ast.actions[0].variants).toHaveLength(3);
+    // classify has 1 variant: ok
+    expect(ast.actions[1].variants).toHaveLength(1);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses Workflow', () => {
+    const ast = readConcept('workflow.concept');
+    expect(ast.name).toBe('Workflow');
+    expect(ast.typeParams).toEqual(['W']);
+    expect(ast.version).toBe(1);
+    expect(ast.actions).toHaveLength(2);
+    expect(ast.actions.map(a => a.name)).toEqual(['define', 'render']);
+    // define has 3 variants: ok, invalidAction, emptySteps
+    expect(ast.actions[0].variants).toHaveLength(3);
+    // render has 2 variants: ok, unknownFormat
+    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+    // Both actions have description blocks
+    expect(ast.actions[0].description).toContain('ordered');
+    expect(ast.actions[1].description).toContain('Render');
+  });
+
+  it('parses Annotation', () => {
+    const ast = readConcept('annotation.concept');
+    expect(ast.name).toBe('Annotation');
+    expect(ast.typeParams).toEqual(['N']);
+    expect(ast.version).toBe(1);
+    expect(ast.actions).toHaveLength(2);
+    expect(ast.actions.map(a => a.name)).toEqual(['annotate', 'resolve']);
+    // annotate has 2 variants: ok, invalidScope
+    expect(ast.actions[0].variants).toHaveLength(2);
+    // resolve has 2 variants: ok, notFound
+    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+    // Both actions have description blocks
+    expect(ast.actions[0].description).toContain('metadata');
+    expect(ast.actions[1].description).toContain('annotations');
+  });
 });
 
 // ============================================================
@@ -317,7 +365,8 @@ describe('Bulk Concept Validation', () => {
 
   const allConcepts = [
     'projection.concept', 'generator.concept', 'emitter.concept',
-    'surface.concept', 'middleware.concept',
+    'surface.concept', 'middleware.concept', 'grouping.concept',
+    'workflow.concept', 'annotation.concept',
     'target.concept', 'sdk.concept', 'spec.concept',
   ];
 
@@ -330,7 +379,7 @@ describe('Bulk Concept Validation', () => {
     'java-sdk-target.concept', 'swift-sdk-target.concept',
   ];
 
-  it('all 21 concepts parse without error and have required fields', () => {
+  it('all orchestration and provider concepts parse without error and have required fields', () => {
     for (const file of allConcepts) {
       const ast = readConcept(file);
       expect(ast.name, `${file} should have a name`).toBeTruthy();
@@ -350,7 +399,7 @@ describe('Bulk Concept Validation', () => {
     }
   });
 
-  it('all 21 concepts have at least one invariant', () => {
+  it('all orchestration and provider concepts have at least one invariant', () => {
     for (const file of allConcepts) {
       const ast = readConcept(file);
       expect(ast.invariants.length, `${file} should have invariants`).toBeGreaterThan(0);
@@ -468,6 +517,30 @@ describe('Core Syncs', () => {
     expect(syncs[0].name).toBe('CleanOrphans');
     expect(syncs[0].annotations).toContain('eventual');
     expect(syncs[0].then[0].concept).toContain('Emitter');
+  });
+
+  it('parses GroupBeforeDispatch', () => {
+    const syncs = readSync('group-before-dispatch.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('GroupBeforeDispatch');
+    expect(syncs[0].annotations).toContain('eager');
+    expect(syncs[0].then[0].concept).toContain('Grouping');
+  });
+
+  it('parses WorkflowBeforeRender', () => {
+    const syncs = readSync('workflow-before-render.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('WorkflowBeforeRender');
+    expect(syncs[0].annotations).toContain('eager');
+    expect(syncs[0].then[0].concept).toContain('Workflow');
+  });
+
+  it('parses AnnotateBeforeGenerate', () => {
+    const syncs = readSync('annotate-before-generate.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('AnnotateBeforeGenerate');
+    expect(syncs[0].annotations).toContain('eager');
+    expect(syncs[0].then[0].concept).toContain('Annotation');
   });
 });
 
@@ -635,6 +708,9 @@ describe('Bulk Sync Validation', () => {
     'compose-on-complete.sync',
     'write-entrypoint.sync',
     'clean-orphans.sync',
+    'group-before-dispatch.sync',
+    'workflow-before-render.sync',
+    'annotate-before-generate.sync',
   ];
 
   const routingSyncs = [
@@ -649,7 +725,7 @@ describe('Bulk Sync Validation', () => {
     'inject-middleware-mcp.sync',
   ];
 
-  it('all 32 sync files parse without error', () => {
+  it('all sync files parse without error', () => {
     for (const file of coreSyncs) {
       const syncs = readSync(file);
       expect(syncs.length, `${file} should produce at least one sync`).toBeGreaterThan(0);
@@ -683,7 +759,7 @@ describe('Kit YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(21);
+    expect(specPaths.length).toBe(24);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);
@@ -692,7 +768,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(32);
+    expect(syncPaths.length).toBe(35);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);

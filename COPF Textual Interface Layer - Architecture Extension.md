@@ -19,6 +19,8 @@ SpecParser/parse → SchemaGen/generate → ConceptManifest
                     │                        │
               Projection/project    ──▶  Generator/generate
                                              │
+                                      Grouping/group
+                                             │
                               ┌──────────────┼──────────────┐
                               ▼              ▼              ▼
                     Target/generate   Sdk/generate   Spec/emit
@@ -66,14 +68,18 @@ COIF generates **visual** interfaces (forms, tables, dashboards) from concept sp
 │  │    Spec    │──[route syncs]──▶│OpenApiTarget│ │AsyncApiTarget│ …          │
 │  └────────────┘                  └────────────┘ └────────────┘              │
 │                                                                              │
-│  Cross-Cutting Concept:                                                      │
+│  Cross-Cutting Concepts:                                                     │
 │  ┌────────────┐                                                              │
 │  │ Middleware  │ (trait → per-target middleware projection)                   │
+│  └────────────┘                                                              │
+│  ┌────────────┐                                                              │
+│  │  Grouping  │ (organize concepts into named groups by strategy)            │
 │  └────────────┘                                                              │
 │                                                                              │
 │  Syncs:                                                                      │
 │  SchemaGen/generate → ok → Projection/project (entry point)                 │
 │  Projection/project → ok → Generator/plan                                   │
+│  Generator/generate → ok → Grouping/group (organize before dispatch)        │
 │  Generator/generate → ok → Target/generate (per configured target)          │
 │  Target/generate → [route] → RestTarget/generate (integration)              │
 │  RestTarget/generate → ok → Middleware/inject                               │
@@ -721,6 +727,91 @@ concept Middleware [M] {
 | `@streaming(bidi)` | WebSocket upgrade | Subscription + mutation | Bidirectional RPC | Interactive mode | Not supported (skip) |
 | `@cached(ttl)` | `Cache-Control` headers | `@cacheControl` directive | N/A (skip) | Local file cache | N/A (skip) |
 
+### 1.9 Grouping
+
+Organizes concepts into named groups using structural or behavioral classification strategies. All interface targets can use grouping to organize their output (e.g., Claude Skills groups concepts into skill files, REST could group routes by domain, MCP could group tools vs resources). Each target has its own default grouping mode, but all 8 modes are available to all targets.
+
+The Grouping concept was identified as independent through Jackson's decomposition methodology: adding grouping to Projection ("enrich AND organize") or Surface ("compose AND organize") would violate the singularity principle. Grouping doesn't reference other concepts' types, and they function without it.
+
+```
+@version(1)
+concept Grouping [G] {
+
+  purpose {
+    Organize concepts into named groups using structural or
+    behavioral classification strategies for interface generation
+    targets. Structural strategies group by concept identity or
+    kit membership. Behavioral strategies group by dominant action
+    classification (CRUD role, read/write intent, event-producing
+    status, or MCP resource type).
+  }
+
+  state {
+    groupings: set G
+    config {
+      strategy: G -> String
+      itemCount: G -> Int
+    }
+    result {
+      entries: G -> list { name: String, description: String, members: list String }
+    }
+  }
+
+  actions {
+    action group(items: list String, config: String) {
+      -> ok(grouping: G, groups: list String, groupCount: Int) {
+        Apply the configured strategy to produce named groups.
+        Each input item appears in exactly one group.
+        Structural: per-concept, per-kit, single, custom.
+        Behavioral: by-crud, by-intent, by-event, by-mcp-type.
+      }
+      -> invalidStrategy(strategy: String) {
+        The config references an unknown grouping strategy.
+      }
+      -> emptyInput() {
+        No items were provided to group.
+      }
+    }
+
+    action classify(actionName: String) {
+      -> ok(crudRole: String, intent: String, eventProducing: Bool, eventVerb: String, mcpType: String) {
+        Classify a single action name by its operational properties.
+        Pure computation, no state change.
+        crudRole: create | read | update | delete | other.
+        intent: read | write.
+        eventProducing: true if side-effecting.
+        mcpType: tool | resource | resource-template.
+      }
+    }
+  }
+}
+```
+
+#### Grouping Modes
+
+| Mode | Type | Description | Example Use |
+|------|------|-------------|-------------|
+| `per-concept` | Structural | One group per concept (1:1) | Default for Claude Skills, CLI |
+| `per-kit` | Structural | Group by kit membership | Kit-scoped API namespaces |
+| `single` | Structural | All concepts in one group | Single OpenAPI spec, single MCP server |
+| `custom` | Structural | Explicit user-defined groups | Manual domain grouping in manifest |
+| `by-crud` | Behavioral | Group by dominant CRUD role | Separate read vs write API gateways |
+| `by-intent` | Behavioral | Group by read vs write intent | Read replicas vs write endpoints |
+| `by-event` | Behavioral | Event-producing vs read-only | AsyncAPI channel organization |
+| `by-mcp-type` | Behavioral | Tool vs resource vs resource-template | MCP server capability grouping |
+
+#### Action Classification
+
+The `classify` action consolidates action classification heuristics previously scattered across handler implementations:
+
+| Property | Source Logic | Values |
+|----------|------------|--------|
+| `crudRole` | Extracted from `inferHttpRoute` | create, read, update, delete, other |
+| `intent` | Extracted from `inferGraphqlOp` | read, write |
+| `eventProducing` | Moved from AsyncAPI target | true (side-effecting), false (read-only) |
+| `eventVerb` | Moved from AsyncAPI target | created, updated, deleted, {name}Completed |
+| `mcpType` | Extracted from `inferMcpType` | tool, resource, resource-template |
+
 ---
 
 ## Part 2: Target Provider Concepts
@@ -1254,7 +1345,25 @@ sync GenerateOnPlan [eager] {
 ```
 
 
-### 3.3 Target Routing
+### 3.3 Concept Grouping
+
+```
+# Generator triggers concept grouping before dispatching to targets.
+# Grouping organizes concepts into named groups using the configured
+# strategy (per-concept, per-kit, single, custom, or behavioral modes).
+sync GroupBeforeDispatch [eager] {
+  when {
+    Generator/generate: [ plan: ?plan ]
+      => ok[ plan: ?plan ]
+  }
+  then {
+    Grouping/group: [ items: ?items; config: ?config ]
+  }
+}
+```
+
+
+### 3.4 Target Routing
 
 ```
 # Generator dispatches to Target for each configured target type
@@ -1323,7 +1432,7 @@ sync RouteToMcp [eager] {
 ```
 
 
-### 3.4 SDK Routing
+### 3.5 SDK Routing
 
 ```
 # Generator dispatches to Sdk for each configured language
@@ -1362,7 +1471,7 @@ sync RouteToPySdk [eager] {
 ```
 
 
-### 3.5 Spec Document Routing
+### 3.6 Spec Document Routing
 
 ```
 # Generator dispatches to Spec for each configured format
@@ -1400,7 +1509,7 @@ sync RouteToAsyncApi [eager] {
 ```
 
 
-### 3.6 Middleware Injection
+### 3.7 Middleware Injection
 
 ```
 # Any target provider complete → inject middleware
@@ -1440,7 +1549,7 @@ sync ApplyMiddleware [eager] {
 ```
 
 
-### 3.7 Output Chain
+### 3.8 Output Chain
 
 ```
 # Middleware injected → write files
@@ -1471,7 +1580,7 @@ sync FormatOnWrite [eager] {
 ```
 
 
-### 3.8 Surface Composition
+### 3.9 Surface Composition
 
 ```
 # All targets for a kit complete → compose surface
