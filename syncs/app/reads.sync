@@ -1,0 +1,129 @@
+// Read operations: list/get endpoints for articles, tags, profiles, comments
+// All reads flow through kernel syncs: Web/request → concept action → Web/respond
+
+// --- List Articles ---
+
+sync HandleListArticles [eager]
+when {
+  Web/request: [ method: "list_articles" ]
+    => [ request: ?request ]
+}
+then {
+  Article/list: []
+}
+
+sync ListArticlesResponse [eager]
+when {
+  Web/request: [ method: "list_articles" ]
+    => [ request: ?request ]
+  Article/list: []
+    => [ articles: ?articles ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ articles: ?articles ] ]
+}
+
+// --- Get Article by Slug ---
+
+sync HandleGetArticle [eager]
+when {
+  Web/request: [ method: "get_article"; slug: ?slug ]
+    => [ request: ?request ]
+}
+then {
+  Article/list: []
+}
+
+sync GetArticleResponse [eager]
+when {
+  Web/request: [ method: "get_article"; slug: ?slug ]
+    => [ request: ?request ]
+  Article/list: []
+    => [ articles: ?articles ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ articles: ?articles; slug: ?slug ] ]
+}
+
+// --- List Tags ---
+
+sync HandleListTags [eager]
+when {
+  Web/request: [ method: "list_tags" ]
+    => [ request: ?request ]
+}
+then {
+  Tag/list: []
+}
+
+sync ListTagsResponse [eager]
+when {
+  Web/request: [ method: "list_tags" ]
+    => [ request: ?request ]
+  Tag/list: []
+    => [ tags: ?tags ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ tags: ?tags ] ]
+}
+
+// --- Get Profile by Username ---
+
+sync HandleGetProfile [eager]
+when {
+  Web/request: [ method: "get_profile"; username: ?username ]
+    => [ request: ?request ]
+}
+where {
+  User: { ?user name: ?username }
+}
+then {
+  Profile/get: [ user: ?user ]
+}
+
+sync GetProfileResponse [eager]
+when {
+  Web/request: [ method: "get_profile" ]
+    => [ request: ?request ]
+  Profile/get: []
+    => [ user: ?user; bio: ?bio; image: ?image ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [
+      profile: [
+        user: ?user;
+        bio: ?bio;
+        image: ?image ] ] ]
+}
+
+// --- List Comments for Article ---
+
+sync HandleListComments [eager]
+when {
+  Web/request: [ method: "list_comments"; article: ?article ]
+    => [ request: ?request ]
+}
+then {
+  Comment/list: [ target: ?article ]
+}
+
+sync ListCommentsResponse [eager]
+when {
+  Web/request: [ method: "list_comments" ]
+    => [ request: ?request ]
+  Comment/list: []
+    => [ comments: ?comments ]
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [ comments: ?comments ] ]
+}

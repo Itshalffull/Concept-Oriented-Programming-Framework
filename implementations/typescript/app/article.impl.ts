@@ -71,6 +71,19 @@ export const articleHandler: ConceptHandler = {
     return { variant: 'ok', article };
   },
 
+  async list(_input, storage) {
+    const allArticles = await storage.find('article');
+    const articles = allArticles.map(r => ({
+      slug: r.slug,
+      title: r.title,
+      description: r.description,
+      body: r.body,
+      author: r.author,
+      createdAt: r.createdAt,
+    }));
+    return { variant: 'ok', articles: JSON.stringify(articles) };
+  },
+
   async get(input, storage) {
     const article = input.article as string;
 

@@ -50,6 +50,12 @@ concept Article [A] {
         If article does not exist.
       }
     }
+
+    action list() {
+      -> ok(articles: String) {
+        Return all articles as a JSON-encoded list.
+      }
+    }
   }
 
   invariant {
