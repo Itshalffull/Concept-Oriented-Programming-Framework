@@ -1,0 +1,17 @@
+sync ExtractMetadataOnUpload [eager]
+when {
+  FileManagement/upload: [ file: ?file; data: ?data; mimeType: ?mime ]
+    => [ file: ?file ]
+}
+then {
+  MediaAsset/createMedia: [ asset: ?file; source: ?mime; file: ?file ]
+}
+
+sync TrackUsageOnCreate [eager]
+when {
+  MediaAsset/createMedia: [ asset: ?asset; source: ?source; file: ?file ]
+    => [ asset: ?asset ]
+}
+then {
+  FileManagement/addUsage: [ file: ?file; entity: ?asset ]
+}

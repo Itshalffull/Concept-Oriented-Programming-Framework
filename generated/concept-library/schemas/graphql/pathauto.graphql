@@ -1,0 +1,21 @@
+type PathautoState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PathautoEntry {
+  p: ID!
+  aliases: String!
+  template: String!
+  cleanRules: String!
+}
+
+extend type Query {
+  pathauto_entry(p: ID!): PathautoEntry
+  pathauto_entries: [PathautoEntry!]!
+}
+
+type PathautoPatterns {
+  p: ID!
+  value: ID!
+}

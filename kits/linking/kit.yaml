@@ -1,0 +1,24 @@
+# Linking Kit Manifest
+name: linking
+version: 0.1.0
+description: "Content connection patterns — forward references, reverse backlinks, typed relations, and entity aliases."
+
+concepts:
+  - name: Reference
+    spec: reference.concept
+  - name: Backlink
+    spec: backlink.concept
+  - name: Relation
+    spec: relation.concept
+  - name: Alias
+    spec: alias.concept
+
+syncs:
+  - name: bidirectional-links
+    file: syncs/bidirectional-links.sync
+    tier: required
+  - name: alias-resolution
+    file: syncs/alias-resolution.sync
+    tier: recommended
+
+dependencies: []

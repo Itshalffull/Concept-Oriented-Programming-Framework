@@ -1,0 +1,440 @@
+{
+  "uri": "urn:copf/DailyNote",
+  "name": "DailyNote",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "dateFormat",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "templateId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetFolder",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "date",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "notes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "getOrCreateToday",
+      "params": [
+        {
+          "name": "note",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "note",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Returns today s note , creating it from the configured template if it does not yet exist"
+        }
+      ]
+    },
+    {
+      "name": "navigateToDate",
+      "params": [
+        {
+          "name": "date",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "note",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Locates and returns the note matching the given date"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No note exists for the requested date"
+        }
+      ]
+    },
+    {
+      "name": "listRecent",
+      "params": [
+        {
+          "name": "count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "notes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the most recent daily notes up to the specified count"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after getOrCreateToday, getOrCreateToday behaves correctly",
+      "setup": [
+        {
+          "action": "getOrCreateToday",
+          "inputs": [
+            {
+              "name": "note",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "note",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "created",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getOrCreateToday",
+          "inputs": [
+            {
+              "name": "note",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "note",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "created",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type DailyNoteState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DailyNoteEntry {\n  d: ID!\n  dateFormat: String!\n  templateId: String!\n  targetFolder: String!\n  date: String!\n}\n\nextend type Query {\n  dailynote_entry(d: ID!): DailyNoteEntry\n  dailynote_entries: [DailyNoteEntry!]!\n}\n\ntype DailyNoteNotes {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "getOrCreateToday": {
+        "$id": "urn:copf/DailyNote/getOrCreateToday/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/DailyNote"
+          },
+          "action": {
+            "const": "getOrCreateToday"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "note"
+            ]
+          }
+        }
+      },
+      "navigateToDate": {
+        "$id": "urn:copf/DailyNote/navigateToDate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/DailyNote"
+          },
+          "action": {
+            "const": "navigateToDate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "date": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "date"
+            ]
+          }
+        }
+      },
+      "listRecent": {
+        "$id": "urn:copf/DailyNote/listRecent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/DailyNote"
+          },
+          "action": {
+            "const": "listRecent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "getOrCreateToday": {
+        "ok": {
+          "$id": "urn:copf/DailyNote/getOrCreateToday/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/DailyNote"
+            },
+            "action": {
+              "const": "getOrCreateToday"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "note": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "note",
+                "created"
+              ]
+            }
+          }
+        }
+      },
+      "navigateToDate": {
+        "ok": {
+          "$id": "urn:copf/DailyNote/navigateToDate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/DailyNote"
+            },
+            "action": {
+              "const": "navigateToDate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "note"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/DailyNote/navigateToDate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/DailyNote"
+            },
+            "action": {
+              "const": "navigateToDate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listRecent": {
+        "ok": {
+          "$id": "urn:copf/DailyNote/listRecent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/DailyNote"
+            },
+            "action": {
+              "const": "listRecent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "notes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "notes"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Provide time indexed , frictionless capture by auto creating a note for today s date"
+}

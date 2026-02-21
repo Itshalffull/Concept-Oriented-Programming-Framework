@@ -1,0 +1,37 @@
+@version(1)
+concept Token [T] {
+  purpose {
+    Replace typed placeholders in text using chain-traversal patterns
+    like [node:author:mail] for dynamic content substitution.
+  }
+
+  state {
+    tokenTypes: set T;
+    patterns: T -> String;
+    providers: T -> String
+  }
+
+  actions {
+    action replace(text: String, context: String) {
+      -> ok(result: String) { Text returned with all recognized tokens substituted. }
+    }
+
+    action getAvailableTokens(context: String) {
+      -> ok(tokens: String) { Returns all tokens available in the given context. }
+    }
+
+    action scan(text: String) {
+      -> ok(found: String) { Returns all token placeholders found in the text. }
+    }
+
+    action registerProvider(token: T, provider: String) {
+      -> ok() { Provider registered for the token type. }
+      -> exists() { Provider already registered for this token type. }
+    }
+  }
+
+  invariant {
+    after registerProvider(token: t, provider: "userMailProvider") -> ok()
+    then replace(text: "Contact [user:mail]", context: "user") -> ok(result: "Contact user@example.com")
+  }
+}

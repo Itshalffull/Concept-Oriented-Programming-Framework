@@ -1,0 +1,863 @@
+{
+  "uri": "urn:copf/FormBuilder",
+  "name": "FormBuilder",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "widgetRegistry",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "validationState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "formDefinitions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "buildForm",
+      "params": [
+        {
+          "name": "form",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "definition",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A form definition is generated from the schema"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The form could not be built from the given schema"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "form",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The data is validated against the form rules"
+        }
+      ]
+    },
+    {
+      "name": "processSubmission",
+      "params": [
+        {
+          "name": "form",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The submitted data passes validation and is processed"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The submitted data fails validation"
+        }
+      ]
+    },
+    {
+      "name": "registerWidget",
+      "params": [
+        {
+          "name": "form",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "widget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "form",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "A custom widget is registered for the given field type"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A widget for this type is already registered"
+        }
+      ]
+    },
+    {
+      "name": "getWidget",
+      "params": [
+        {
+          "name": "form",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "widget",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The widget registered for the given type is returned"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No widget is registered for this type"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after buildForm, registerWidget behaves correctly",
+      "setup": [
+        {
+          "action": "buildForm",
+          "inputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "literal",
+                "value": "user-profile"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "definition",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "registerWidget",
+          "inputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "date"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "datepicker"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after registerWidget, validate behaves correctly",
+      "setup": [
+        {
+          "action": "registerWidget",
+          "inputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "date"
+              }
+            },
+            {
+              "name": "widget",
+              "value": {
+                "kind": "literal",
+                "value": "datepicker"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "form",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "literal",
+                "value": "name=Alice&dob=2000-01-01"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "errors",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FormBuilderState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype FormBuilderEntry {\n  f: ID!\n  widgetRegistry: String!\n  validationState: String!\n  schema: String!\n}\n\nextend type Query {\n  formbuilder_entry(f: ID!): FormBuilderEntry\n  formbuilder_entries: [FormBuilderEntry!]!\n}\n\ntype FormBuilderFormDefinitions {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "buildForm": {
+        "$id": "urn:copf/FormBuilder/buildForm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FormBuilder"
+          },
+          "action": {
+            "const": "buildForm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "form",
+              "schema"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:copf/FormBuilder/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FormBuilder"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "form",
+              "data"
+            ]
+          }
+        }
+      },
+      "processSubmission": {
+        "$id": "urn:copf/FormBuilder/processSubmission/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FormBuilder"
+          },
+          "action": {
+            "const": "processSubmission"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "form",
+              "data"
+            ]
+          }
+        }
+      },
+      "registerWidget": {
+        "$id": "urn:copf/FormBuilder/registerWidget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FormBuilder"
+          },
+          "action": {
+            "const": "registerWidget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "widget": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "form",
+              "type",
+              "widget"
+            ]
+          }
+        }
+      },
+      "getWidget": {
+        "$id": "urn:copf/FormBuilder/getWidget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/FormBuilder"
+          },
+          "action": {
+            "const": "getWidget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "form",
+              "type"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "buildForm": {
+        "ok": {
+          "$id": "urn:copf/FormBuilder/buildForm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "buildForm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "definition"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:copf/FormBuilder/buildForm/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "buildForm"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:copf/FormBuilder/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "errors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "processSubmission": {
+        "ok": {
+          "$id": "urn:copf/FormBuilder/processSubmission/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "processSubmission"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:copf/FormBuilder/processSubmission/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "processSubmission"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "registerWidget": {
+        "ok": {
+          "$id": "urn:copf/FormBuilder/registerWidget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "registerWidget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "form": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "form"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/FormBuilder/registerWidget/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "registerWidget"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getWidget": {
+        "ok": {
+          "$id": "urn:copf/FormBuilder/getWidget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "getWidget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "widget"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/FormBuilder/getWidget/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/FormBuilder"
+            },
+            "action": {
+              "const": "getWidget"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate data entry forms from schema definitions by mapping fields \n to appropriate input widgets with validation"
+}

@@ -1,0 +1,64 @@
+@version(1)
+concept ExposedFilter [F] {
+
+  purpose {
+    Expose interactive filter and sort controls to end users,
+    allowing them to modify query parameters through the UI.
+  }
+
+  state {
+    exposedFilters: set F
+    userInputs: F -> String
+    defaultValues: F -> String
+    boundQuery: F -> String
+  }
+
+  actions {
+    action expose(filter: F, fieldName: String, operator: String, defaultValue: String) {
+      -> ok(filter: F) {
+        Register a new exposed filter bound to the given
+        field, operator, and default value for UI presentation.
+      }
+      -> exists(filter: F) {
+        A filter with this identifier is already exposed.
+      }
+    }
+
+    action collectInput(filter: F, value: String) {
+      -> ok(filter: F) {
+        Capture a user-supplied value for this filter,
+        replacing any previous input.
+      }
+      -> notfound(filter: F) {
+        No exposed filter registered with this identifier.
+      }
+    }
+
+    action applyToQuery(filter: F) {
+      -> ok(queryMod: String) {
+        Produce a query modification clause from the
+        current user input and operator, ready to merge
+        into the bound query.
+      }
+      -> notfound(filter: F) {
+        No exposed filter registered with this identifier.
+      }
+    }
+
+    action resetToDefaults(filter: F) {
+      -> ok(filter: F) {
+        Clear the user input and restore the default
+        value for this filter.
+      }
+      -> notfound(filter: F) {
+        No exposed filter registered with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after expose(filter: f, fieldName: "status", operator: "eq", defaultValue: "active") -> ok(filter: f)
+    then collectInput(filter: f, value: "archived") -> ok(filter: f)
+    and applyToQuery(filter: f) -> ok(queryMod: m)
+  }
+}

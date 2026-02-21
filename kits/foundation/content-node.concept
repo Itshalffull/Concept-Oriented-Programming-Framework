@@ -1,0 +1,90 @@
+@version(1)
+concept ContentNode [N] {
+
+  purpose {
+    Provide a universal typed, addressable unit of content.
+    Every piece of data in the system is a ContentNode with a
+    type, body, metadata, and timestamps.
+  }
+
+  state {
+    nodes: set N
+    type: N -> String
+    content: N -> String
+    metadata: N -> String
+    createdAt: N -> String
+    updatedAt: N -> String
+    createdBy: N -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(node: N, type: String, content: String, createdBy: String) {
+      -> ok(node: N) {
+        Add node to nodes set. Store type, content, createdBy,
+        and set createdAt and updatedAt to current time.
+      }
+      -> exists(message: String) {
+        The node already exists.
+      }
+    }
+
+    action update(node: N, content: String) {
+      -> ok(node: N) {
+        Update node content and set updatedAt to current time.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action delete(node: N) {
+      -> ok(node: N) {
+        Remove node from nodes set.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action get(node: N) {
+      -> ok(node: N, type: String, content: String, metadata: String) {
+        Return the node's type, content, and metadata.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action setMetadata(node: N, metadata: String) {
+      -> ok(node: N) {
+        Store metadata JSON on the node.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action changeType(node: N, type: String) {
+      -> ok(node: N) {
+        Change the node's content type.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
+    then get(node: x) -> ok(node: x, type: "page", content: "Hello", metadata: "")
+  }
+
+  invariant {
+    after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
+    then create(node: x, type: "page", content: "Again", createdBy: "user2") -> exists(message: "already exists")
+  }
+}

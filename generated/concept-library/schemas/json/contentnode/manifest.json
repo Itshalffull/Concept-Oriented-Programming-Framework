@@ -1,0 +1,1102 @@
+{
+  "uri": "urn:copf/ContentNode",
+  "name": "ContentNode",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "updatedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "createdBy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "nodes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "createdBy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Add node to nodes set Store type , content , createdBy , \n and set createdAt and updatedAt to current time"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node already exists"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Update node content and set updatedAt to current time"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Remove node from nodes set"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "type",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "content",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "metadata",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the node s type , content , and metadata"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "setMetadata",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Store metadata JSON on the node"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "changeType",
+      "params": [
+        {
+          "name": "node",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "node",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Change the node s content type"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The node does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, get behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "page"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Hello"
+              }
+            },
+            {
+              "name": "createdBy",
+              "value": {
+                "kind": "literal",
+                "value": "user1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "page"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Hello"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "literal",
+                "value": ""
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after create, create behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "page"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Hello"
+              }
+            },
+            {
+              "name": "createdBy",
+              "value": {
+                "kind": "literal",
+                "value": "user1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "node",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "type",
+              "value": {
+                "kind": "literal",
+                "value": "page"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "Again"
+              }
+            },
+            {
+              "name": "createdBy",
+              "value": {
+                "kind": "literal",
+                "value": "user2"
+              }
+            }
+          ],
+          "expectedVariant": "exists",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "already exists"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentNodeState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype ContentNodeEntry {\n  n: ID!\n  type: String!\n  content: String!\n  metadata: String!\n  createdAt: String!\n  updatedAt: String!\n  createdBy: String!\n}\n\nextend type Query {\n  contentnode_entry(n: ID!): ContentNodeEntry\n  contentnode_entries: [ContentNodeEntry!]!\n}\n\ntype ContentNodeNodes {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:copf/ContentNode/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentNode"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "createdBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "type",
+              "content",
+              "createdBy"
+            ]
+          }
+        }
+      },
+      "update": {
+        "$id": "urn:copf/ContentNode/update/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentNode"
+          },
+          "action": {
+            "const": "update"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "content"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:copf/ContentNode/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentNode"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:copf/ContentNode/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentNode"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node"
+            ]
+          }
+        }
+      },
+      "setMetadata": {
+        "$id": "urn:copf/ContentNode/setMetadata/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentNode"
+          },
+          "action": {
+            "const": "setMetadata"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "changeType": {
+        "$id": "urn:copf/ContentNode/changeType/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentNode"
+          },
+          "action": {
+            "const": "changeType"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "node",
+              "type"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:copf/ContentNode/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/ContentNode/create/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "update": {
+        "ok": {
+          "$id": "urn:copf/ContentNode/update/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentNode/update/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "update"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:copf/ContentNode/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentNode/delete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:copf/ContentNode/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                },
+                "metadata": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node",
+                "type",
+                "content",
+                "metadata"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentNode/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setMetadata": {
+        "ok": {
+          "$id": "urn:copf/ContentNode/setMetadata/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "setMetadata"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentNode/setMetadata/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "setMetadata"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "changeType": {
+        "ok": {
+          "$id": "urn:copf/ContentNode/changeType/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "changeType"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "node"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentNode/changeType/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentNode"
+            },
+            "action": {
+              "const": "changeType"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Provide a universal typed , addressable unit of content \n Every piece of data in the system is a ContentNode with a \n type , body , metadata , and timestamps"
+}

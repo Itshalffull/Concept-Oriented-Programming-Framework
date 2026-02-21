@@ -1,0 +1,32 @@
+@version(1)
+concept Namespace [N] {
+  purpose { Organize entities into hierarchical overlays via path separators, enabling scoped naming and navigation. }
+  state {
+    nodes: set N;
+    separator: N -> String;
+    parent: N -> N;
+    path: N -> String
+  }
+  actions {
+    action createNamespacedPage(node: N, path: String) {
+      -> ok() { Create a new node at the given hierarchical path. }
+      -> exists(message: String) { A node already exists at this path. }
+    }
+    action getChildren(node: N) {
+      -> ok(children: String) { Return the direct children of the node. }
+      -> notfound(message: String) { Node does not exist. }
+    }
+    action getHierarchy(node: N) {
+      -> ok(hierarchy: String) { Return the full hierarchy rooted at the node. }
+      -> notfound(message: String) { Node does not exist. }
+    }
+    action move(node: N, newPath: String) {
+      -> ok() { Move the node to a new path in the hierarchy. }
+      -> notfound(message: String) { Node does not exist. }
+    }
+  }
+  invariant {
+    after createNamespacedPage(node: n, path: "projects/alpha") -> ok()
+    then getChildren(node: n) -> ok(children: "")
+  }
+}

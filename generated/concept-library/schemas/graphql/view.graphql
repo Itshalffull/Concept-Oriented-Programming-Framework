@@ -1,0 +1,25 @@
+type ViewState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type ViewEntry {
+  v: ID!
+  dataSource: String!
+  layout: String!
+  filters: String!
+  sorts: String!
+  groups: String!
+  visibleFields: String!
+  formatting: String!
+}
+
+extend type Query {
+  view_entry(v: ID!): ViewEntry
+  view_entries: [ViewEntry!]!
+}
+
+type ViewViews {
+  v: ID!
+  value: ID!
+}

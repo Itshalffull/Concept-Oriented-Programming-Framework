@@ -1,0 +1,21 @@
+# Presentation Kit Manifest
+name: presentation
+version: 0.1.0
+description: "View rendering and display — views, display modes, form building, and renderers for presenting content to users."
+
+concepts:
+  - name: View
+    spec: view.concept
+  - name: DisplayMode
+    spec: display-mode.concept
+  - name: FormBuilder
+    spec: form-builder.concept
+  - name: Renderer
+    spec: renderer.concept
+
+syncs:
+  - name: view-rendering
+    file: syncs/view-rendering.sync
+    tier: required
+
+dependencies: []

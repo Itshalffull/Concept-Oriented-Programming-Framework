@@ -1,0 +1,112 @@
+@version(1)
+concept Outline [O] {
+
+  purpose {
+    Organize content into hierarchical trees with indentation,
+    collapsing, and zooming. Enables outliner-style navigation
+    where any node can become the root of a focused view.
+  }
+
+  state {
+    nodes: set O
+    parentOf: O -> O
+    childrenOf: O -> set String
+    isCollapsed: O -> Bool
+    order: O -> Int
+  }
+
+  actions {
+    action create(node: O, parent: option O) {
+      -> ok(node: O) {
+        Add node to the outline. If parent given, set as child.
+      }
+      -> exists(message: String) {
+        The node already exists.
+      }
+    }
+
+    action indent(node: O) {
+      -> ok(node: O) {
+        Make node a child of its previous sibling.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+      -> invalid(message: String) {
+        No previous sibling to indent under.
+      }
+    }
+
+    action outdent(node: O) {
+      -> ok(node: O) {
+        Move node up one level in the hierarchy.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+      -> invalid(message: String) {
+        Node is already at root level.
+      }
+    }
+
+    action moveUp(node: O) {
+      -> ok(node: O) {
+        Swap node with its previous sibling.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action moveDown(node: O) {
+      -> ok(node: O) {
+        Swap node with its next sibling.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action collapse(node: O) {
+      -> ok(node: O) {
+        Hide children of this node.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action expand(node: O) {
+      -> ok(node: O) {
+        Show children of this node.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+
+    action reparent(node: O, newParent: O) {
+      -> ok(node: O) {
+        Move node under a new parent.
+      }
+      -> notfound(message: String) {
+        Node or parent does not exist.
+      }
+    }
+
+    action getChildren(node: O) {
+      -> ok(children: String) {
+        Return ordered list of children as JSON.
+      }
+      -> notfound(message: String) {
+        The node does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(node: x) -> ok(node: x)
+    and collapse(node: x) -> ok(node: x)
+    then expand(node: x) -> ok(node: x)
+  }
+}

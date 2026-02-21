@@ -1,0 +1,21 @@
+type AccessControlState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AccessControlEntry {
+  a: ID!
+  result: String!
+  tags: String!
+  maxAge: Int!
+}
+
+extend type Query {
+  accesscontrol_entry(a: ID!): AccessControlEntry
+  accesscontrol_entries: [AccessControlEntry!]!
+}
+
+type AccessControlPolicies {
+  a: ID!
+  value: ID!
+}

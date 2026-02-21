@@ -1,0 +1,21 @@
+type ExposedFilterState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type ExposedFilterEntry {
+  f: ID!
+  userInputs: String!
+  defaultValues: String!
+  boundQuery: String!
+}
+
+extend type Query {
+  exposedfilter_entry(f: ID!): ExposedFilterEntry
+  exposedfilter_entries: [ExposedFilterEntry!]!
+}
+
+type ExposedFilterExposedFilters {
+  f: ID!
+  value: ID!
+}

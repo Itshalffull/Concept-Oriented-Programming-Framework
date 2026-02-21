@@ -1,0 +1,76 @@
+@version(1)
+concept Relation [R] {
+
+  purpose {
+    Define typed, labeled, bidirectional connections between entities with cardinality constraints and rollup aggregation.
+  }
+
+  state {
+    relations: set R
+    links: R -> set String
+    definition: R -> String
+    rollups: R -> String
+  }
+
+  actions {
+    action defineRelation(relation: R, schema: String) {
+      -> ok(relation: R) {
+        Define a new relation with the given schema.
+      }
+      -> exists(relation: R) {
+        A relation with this identity already exists.
+      }
+    }
+
+    action link(relation: R, source: String, target: String) {
+      -> ok(relation: R, source: String, target: String) {
+        Create a link between source and target within the relation.
+      }
+      -> invalid(relation: R, message: String) {
+        The link violates the relation schema or cardinality constraints.
+      }
+    }
+
+    action unlink(relation: R, source: String, target: String) {
+      -> ok(relation: R, source: String, target: String) {
+        Remove the link between source and target within the relation.
+      }
+      -> notfound(relation: R, source: String, target: String) {
+        No such link exists in the relation.
+      }
+    }
+
+    action getRelated(relation: R, entity: String) {
+      -> ok(related: String) {
+        Return all entities related to the given entity within the relation.
+      }
+      -> notfound(relation: R, entity: String) {
+        The relation or entity was not found.
+      }
+    }
+
+    action defineRollup(relation: R, formula: String) {
+      -> ok(relation: R, formula: String) {
+        Define an aggregation rollup formula for the relation.
+      }
+      -> notfound(relation: R) {
+        The relation was not found.
+      }
+    }
+
+    action computeRollup(relation: R, entity: String) {
+      -> ok(value: String) {
+        Compute and return the rollup aggregation value for the entity.
+      }
+      -> notfound(relation: R, entity: String) {
+        The relation or entity was not found.
+      }
+    }
+  }
+
+  invariant {
+    after defineRelation(relation: r, schema: "parent-child") -> ok(relation: r)
+    then link(relation: r, source: "alice", target: "bob") -> ok(relation: r, source: "alice", target: "bob")
+    and getRelated(relation: r, entity: "alice") -> ok(related: "bob")
+  }
+}

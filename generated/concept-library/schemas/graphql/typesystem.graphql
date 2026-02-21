@@ -1,0 +1,21 @@
+type TypeSystemState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TypeSystemEntry {
+  t: ID!
+  schema: String!
+  constraints: String!
+  parent: ID!
+}
+
+extend type Query {
+  typesystem_entry(t: ID!): TypeSystemEntry
+  typesystem_entries: [TypeSystemEntry!]!
+}
+
+type TypeSystemTypeDefinitions {
+  t: ID!
+  value: ID!
+}

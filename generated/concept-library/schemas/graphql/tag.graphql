@@ -1,0 +1,21 @@
+type TagState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TagEntry {
+  t: ID!
+  tagIndex: [String!]!
+  hierarchy: ID!
+  name: String!
+}
+
+extend type Query {
+  tag_entry(t: ID!): TagEntry
+  tag_entries: [TagEntry!]!
+}
+
+type TagTags {
+  t: ID!
+  value: ID!
+}

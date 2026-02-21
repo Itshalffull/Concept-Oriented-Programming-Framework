@@ -1,0 +1,20 @@
+type TokenState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TokenEntry {
+  t: ID!
+  patterns: String!
+  providers: String!
+}
+
+extend type Query {
+  token_entry(t: ID!): TokenEntry
+  token_entries: [TokenEntry!]!
+}
+
+type TokenTokenTypes {
+  t: ID!
+  value: ID!
+}

@@ -1,0 +1,37 @@
+@version(1)
+concept Backlink [B] {
+
+  purpose {
+    Maintain a reverse index enabling bidirectional association discovery from target back to sources.
+  }
+
+  state {
+    backlinks: B -> set String
+    mentions: B -> set String
+  }
+
+  actions {
+    action getBacklinks(entity: B) {
+      -> ok(sources: String) {
+        Return all source entities that link to this entity.
+      }
+    }
+
+    action getUnlinkedMentions(entity: B) {
+      -> ok(mentions: String) {
+        Return mentions of this entity that are not formal links.
+      }
+    }
+
+    action reindex() {
+      -> ok(count: Int) {
+        Rebuild the reverse index and return the number of backlinks indexed.
+      }
+    }
+  }
+
+  invariant {
+    after reindex() -> ok(count: n)
+    then getBacklinks(entity: x) -> ok(sources: s)
+  }
+}

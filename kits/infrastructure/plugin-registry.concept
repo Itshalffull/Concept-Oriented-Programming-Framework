@@ -1,0 +1,59 @@
+@version(1)
+concept PluginRegistry [P] {
+
+  purpose {
+    Discover, register, and manage extensible functionality units with
+    attribute-based discovery and plugin derivatives.
+  }
+
+  state {
+    pluginTypes: set String
+    definitions: set P
+    cache: P -> String
+    metadata: P -> String
+  }
+
+  actions {
+    action discover(type: String) {
+      -> ok(plugins: String) {
+        Discover all available plugins of the specified type via attribute-based scanning.
+      }
+    }
+
+    action createInstance(plugin: P, config: String) {
+      -> ok(instance: String) {
+        Create a configured instance of the specified plugin definition.
+      }
+      -> notfound() {
+        The specified plugin definition does not exist.
+      }
+    }
+
+    action getDefinitions(type: String) {
+      -> ok(definitions: String) {
+        Return all registered plugin definitions for the specified type.
+      }
+    }
+
+    action alterDefinitions(type: String, alterations: String) {
+      -> ok() {
+        Apply alterations to the plugin definitions of the specified type.
+      }
+    }
+
+    action derivePlugins(plugin: P, config: String) {
+      -> ok(derived: String) {
+        Create derivative plugin definitions from an existing plugin with modified configuration.
+      }
+      -> notfound() {
+        The base plugin definition does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after discover(type: "formatter") -> ok(plugins: ps)
+    then createInstance(plugin: p, config: "{}") -> ok(instance: i)
+    and  getDefinitions(type: "formatter") -> ok(definitions: ds)
+  }
+}

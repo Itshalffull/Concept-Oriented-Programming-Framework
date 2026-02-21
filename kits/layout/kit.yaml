@@ -1,0 +1,15 @@
+# Layout Kit Manifest
+name: layout
+version: 0.1.0
+description: "Page layout and composition — component placement, region management, and visibility evaluation."
+
+concepts:
+  - name: Component
+    spec: component.concept
+
+syncs:
+  - name: component-placement
+    file: syncs/component-placement.sync
+    tier: recommended
+
+dependencies: []

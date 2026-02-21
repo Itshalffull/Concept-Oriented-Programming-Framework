@@ -1,0 +1,19 @@
+type ReferenceState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type ReferenceEntry {
+  r: ID!
+  refs: [String!]!
+}
+
+extend type Query {
+  reference_entry(r: ID!): ReferenceEntry
+  reference_entries: [ReferenceEntry!]!
+}
+
+type ReferenceSources {
+  r: ID!
+  value: ID!
+}

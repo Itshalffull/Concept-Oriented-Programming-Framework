@@ -1,0 +1,57 @@
+@version(1)
+concept Renderer [R] {
+
+  purpose {
+    Compose nested content into final output through a cache-aware rendering
+    pipeline with placeholder support and streaming.
+  }
+
+  state {
+    renderers: set R
+    renderTree: R -> String
+    placeholders: R -> String
+    cacheability: R -> String
+  }
+
+  actions {
+    action render(renderer: R, tree: String) {
+      -> ok(output: String) {
+        The render tree is processed into final output.
+      }
+      -> error(message: String) {
+        The render tree could not be processed.
+      }
+    }
+
+    action autoPlaceholder(renderer: R, name: String) {
+      -> ok(placeholder: String) {
+        A named placeholder is registered for lazy resolution during rendering.
+      }
+    }
+
+    action stream(renderer: R, tree: String) {
+      -> ok(streamId: String) {
+        A streaming render session is started for the given tree.
+      }
+      -> error(message: String) {
+        The streaming render could not be started.
+      }
+    }
+
+    action mergeCacheability(renderer: R, tags: String) {
+      -> ok(merged: String) {
+        Cache tags are merged to compute the effective cacheability of the output.
+      }
+    }
+  }
+
+  invariant {
+    after render(renderer: r, tree: "<page><header/><body/></page>") -> ok(output: _)
+    then render(renderer: r, tree: "<page><header/><body/></page>") -> ok(output: _)
+  }
+
+  invariant {
+    after autoPlaceholder(renderer: r, name: "sidebar") -> ok(placeholder: p)
+    then render(renderer: r, tree: p) -> ok(output: _)
+  }
+}

@@ -1,0 +1,35 @@
+@version(1)
+concept Tag [T] {
+  purpose { Apply lightweight, flat or optionally hierarchical labels to content for cross-cutting classification. }
+  state {
+    tags: set T;
+    tagIndex: T -> set String;
+    hierarchy: T -> T;
+    name: T -> String
+  }
+  actions {
+    action addTag(entity: String, tag: T) {
+      -> ok() { Associate the tag with the entity. }
+      -> notfound(message: String) { Tag does not exist. }
+    }
+    action removeTag(entity: String, tag: T) {
+      -> ok() { Dissociate the tag from the entity. }
+      -> notfound(message: String) { Tag or entity not found. }
+    }
+    action getByTag(tag: T) {
+      -> ok(entities: String) { Return all entities associated with the tag. }
+    }
+    action getChildren(tag: T) {
+      -> ok(children: String) { Return child tags in the hierarchy. }
+      -> notfound(message: String) { Tag does not exist. }
+    }
+    action rename(tag: T, name: String) {
+      -> ok() { Rename the tag. }
+      -> notfound(message: String) { Tag does not exist. }
+    }
+  }
+  invariant {
+    after addTag(entity: "page-1", tag: t) -> ok()
+    then getByTag(tag: t) -> ok(entities: "page-1")
+  }
+}

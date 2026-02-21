@@ -1,0 +1,22 @@
+type FlagState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FlagEntry {
+  f: ID!
+  flaggings: String!
+  counts: Int!
+  entityRef: String!
+  userRef: String!
+}
+
+extend type Query {
+  flag_entry(f: ID!): FlagEntry
+  flag_entries: [FlagEntry!]!
+}
+
+type FlagFlagTypes {
+  f: ID!
+  value: String!
+}

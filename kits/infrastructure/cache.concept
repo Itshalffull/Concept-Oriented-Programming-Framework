@@ -1,0 +1,59 @@
+@version(1)
+concept Cache [C] {
+
+  purpose {
+    Provide tag-based cache invalidation with 3D metadata (contexts, tags, max-age)
+    enabling precise, efficient cache busting.
+  }
+
+  state {
+    bins: set C
+    tags: C -> set String
+    data: C -> String
+    maxAge: C -> Int
+    contexts: C -> String
+  }
+
+  actions {
+    action set(bin: C, key: String, data: String, tags: String, maxAge: Int) {
+      -> ok() {
+        Store data in the cache bin under the given key with associated tags and max-age.
+      }
+    }
+
+    action get(bin: C, key: String) {
+      -> ok(data: String) {
+        Return cached data for the given key.
+      }
+      -> miss() {
+        No valid cache entry exists for the given key.
+      }
+    }
+
+    action invalidate(bin: C, key: String) {
+      -> ok() {
+        Remove the cache entry for the given key.
+      }
+      -> notfound() {
+        No cache entry exists for the given key.
+      }
+    }
+
+    action invalidateByTags(tags: String) {
+      -> ok(count: Int) {
+        Invalidate all cache entries matching the specified tags and return the count removed.
+      }
+    }
+  }
+
+  invariant {
+    after set(bin: b, key: "k", data: "v", tags: "t1", maxAge: 300) -> ok()
+    then get(bin: b, key: "k") -> ok(data: "v")
+  }
+
+  invariant {
+    after set(bin: b, key: "k", data: "v", tags: "t1", maxAge: 300) -> ok()
+    then invalidateByTags(tags: "t1") -> ok(count: 1)
+    and get(bin: b, key: "k") -> miss()
+  }
+}

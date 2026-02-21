@@ -1,0 +1,21 @@
+type DisplayModeState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DisplayModeEntry {
+  d: ID!
+  fieldDisplayConfigs: String!
+  fieldFormConfigs: String!
+  name: String!
+}
+
+extend type Query {
+  displaymode_entry(d: ID!): DisplayModeEntry
+  displaymode_entries: [DisplayModeEntry!]!
+}
+
+type DisplayModeModes {
+  d: ID!
+  value: ID!
+}

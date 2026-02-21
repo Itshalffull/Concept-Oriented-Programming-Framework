@@ -1,0 +1,10 @@
+// Schema and namespace coordination
+
+sync NamespaceFromSchema [eager]
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => [ schema: ?schema ]
+}
+then {
+  Namespace/createNamespacedPage: [ node: ?schema; path: ?schema ]
+}

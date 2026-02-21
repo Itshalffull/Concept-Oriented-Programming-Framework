@@ -1,0 +1,46 @@
+@version(1)
+concept Pathauto [P] {
+
+  purpose {
+    Generate URL-friendly slugs from content using configurable template patterns
+    with token substitution.
+  }
+
+  state {
+    patterns: set P
+    aliases: P -> String
+    template: P -> String
+    cleanRules: P -> String
+  }
+
+  actions {
+    action generateAlias(pattern: P, entity: String) {
+      -> ok(alias: String) {
+        Generate a URL-friendly slug for the entity using the specified pattern template.
+      }
+      -> notfound() {
+        The specified pattern does not exist.
+      }
+    }
+
+    action bulkGenerate(pattern: P, entities: String) {
+      -> ok(aliases: String) {
+        Generate URL-friendly slugs for multiple entities using the specified pattern.
+      }
+      -> notfound() {
+        The specified pattern does not exist.
+      }
+    }
+
+    action cleanString(input: String) {
+      -> ok(cleaned: String) {
+        Sanitize the input string into a URL-safe slug by applying clean rules.
+      }
+    }
+  }
+
+  invariant {
+    after generateAlias(pattern: p, entity: "My Example Page") -> ok(alias: a)
+    then cleanString(input: "My Example Page") -> ok(cleaned: a)
+  }
+}

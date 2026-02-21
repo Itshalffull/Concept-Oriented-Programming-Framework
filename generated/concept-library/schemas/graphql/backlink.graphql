@@ -1,0 +1,15 @@
+type BacklinkState {
+  """All bs in this concept"""
+  bs: [ID!]!
+}
+
+type BacklinkEntry {
+  b: ID!
+  backlinks: [String!]!
+  mentions: [String!]!
+}
+
+extend type Query {
+  backlink_entry(b: ID!): BacklinkEntry
+  backlink_entries: [BacklinkEntry!]!
+}

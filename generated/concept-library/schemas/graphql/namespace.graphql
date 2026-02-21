@@ -1,0 +1,21 @@
+type NamespaceState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type NamespaceEntry {
+  n: ID!
+  separator: String!
+  parent: ID!
+  path: String!
+}
+
+extend type Query {
+  namespace_entry(n: ID!): NamespaceEntry
+  namespace_entries: [NamespaceEntry!]!
+}
+
+type NamespaceNodes {
+  n: ID!
+  value: ID!
+}

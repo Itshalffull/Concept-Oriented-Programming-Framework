@@ -1,0 +1,25 @@
+type PluginRegistryState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PluginRegistryEntry {
+  p: ID!
+  cache: String!
+  metadata: String!
+}
+
+extend type Query {
+  pluginregistry_entry(p: ID!): PluginRegistryEntry
+  pluginregistry_entries: [PluginRegistryEntry!]!
+}
+
+type PluginRegistryPluginTypes {
+  p: ID!
+  value: String!
+}
+
+type PluginRegistryDefinitions {
+  p: ID!
+  value: ID!
+}

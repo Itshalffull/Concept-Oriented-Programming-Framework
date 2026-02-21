@@ -1,0 +1,20 @@
+type SyncedContentState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SyncedContentEntry {
+  s: ID!
+  references: [String!]!
+  content: String!
+}
+
+extend type Query {
+  syncedcontent_entry(s: ID!): SyncedContentEntry
+  syncedcontent_entries: [SyncedContentEntry!]!
+}
+
+type SyncedContentOriginals {
+  s: ID!
+  value: ID!
+}

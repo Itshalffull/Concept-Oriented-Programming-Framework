@@ -1,0 +1,19 @@
+# Computation Kit Manifest
+name: computation
+version: 0.1.0
+description: "Dynamic computation — formulas, token replacement, and expression language parsing for evaluated content."
+
+concepts:
+  - name: Formula
+    spec: formula.concept
+  - name: Token
+    spec: token.concept
+  - name: ExpressionLanguage
+    spec: expression-language.concept
+
+syncs:
+  - name: expression-eval
+    file: syncs/expression-eval.sync
+    tier: required
+
+dependencies: []

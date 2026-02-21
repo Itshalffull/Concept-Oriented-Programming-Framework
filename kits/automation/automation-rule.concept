@@ -1,0 +1,70 @@
+@version(1)
+concept AutomationRule [R] {
+
+  purpose {
+    Define user-configurable event-condition-action rules that fire
+    automatically when conditions are met.
+  }
+
+  state {
+    rules: set R
+    trigger: R -> String
+    conditions: R -> String
+    actions: R -> String
+    enabled: R -> Bool
+  }
+
+  actions {
+    action define(rule: R, trigger: String, conditions: String, actions: String) {
+      -> ok() {
+        Rule created with the given trigger, conditions, and actions.
+      }
+      -> exists(message: String) {
+        A rule with this identity already exists.
+      }
+    }
+
+    action enable(rule: R) {
+      -> ok() {
+        Rule is now active and will be evaluated on matching events.
+      }
+      -> notfound(message: String) {
+        The rule was not found.
+      }
+    }
+
+    action disable(rule: R) {
+      -> ok() {
+        Rule is now inactive and will not fire.
+      }
+      -> notfound(message: String) {
+        The rule was not found.
+      }
+    }
+
+    action evaluate(rule: R, event: String) {
+      -> ok(matched: Bool) {
+        Returns whether the event satisfies the rule trigger and conditions.
+      }
+      -> notfound(message: String) {
+        The rule was not found.
+      }
+    }
+
+    action execute(rule: R, context: String) {
+      -> ok(result: String) {
+        The rule actions executed successfully with the given context.
+      }
+      -> notfound(message: String) {
+        The rule was not found.
+      }
+    }
+  }
+
+  invariant {
+    after define(rule: r, trigger: "on_save", conditions: "status == draft",
+           actions: "notify_reviewer")                                     -> ok()
+    then  enable(rule: r)                                                  -> ok()
+    and   evaluate(rule: r, event: "on_save")                              -> ok(matched: true)
+  }
+}

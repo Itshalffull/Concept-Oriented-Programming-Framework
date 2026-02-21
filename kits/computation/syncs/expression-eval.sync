@@ -1,0 +1,17 @@
+sync FormulaUsesExpressionLanguage [eager]
+when {
+  Formula/create: [ formula: ?formula; expression: ?expr ]
+    => [ formula: ?formula ]
+}
+then {
+  ExpressionLanguage/parse: [ expression: ?formula; text: ?expr; language: "default" ]
+}
+
+sync TokenUsesExpressionLanguage [eager]
+when {
+  Token/replace: [ text: ?text; context: ?context ]
+    => [ result: ?result ]
+}
+then {
+  ExpressionLanguage/parse: [ expression: ?text; text: ?text; language: "token" ]
+}

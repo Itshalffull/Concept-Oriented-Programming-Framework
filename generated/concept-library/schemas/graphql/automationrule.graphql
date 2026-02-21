@@ -1,0 +1,22 @@
+type AutomationRuleState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type AutomationRuleEntry {
+  r: ID!
+  trigger: String!
+  conditions: String!
+  actions: String!
+  enabled: Boolean!
+}
+
+extend type Query {
+  automationrule_entry(r: ID!): AutomationRuleEntry
+  automationrule_entries: [AutomationRuleEntry!]!
+}
+
+type AutomationRuleRules {
+  r: ID!
+  value: ID!
+}

@@ -1,0 +1,630 @@
+{
+  "uri": "urn:copf/Reference",
+  "name": "Reference",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "refs",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "addRef",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "source",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Add a forward reference from source to target"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "source",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The reference already exists"
+        }
+      ]
+    },
+    {
+      "name": "removeRef",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "source",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Remove the forward reference from source to target"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "source",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "target",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No such reference exists"
+        }
+      ]
+    },
+    {
+      "name": "getRefs",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "targets",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all targets referenced by the source"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "source",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "The source entity was not found"
+        }
+      ]
+    },
+    {
+      "name": "resolveTarget",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "exists",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Check whether the target entity exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after addRef, getRefs behaves correctly",
+      "setup": [
+        {
+          "action": "addRef",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "doc-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "doc-1"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getRefs",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "targets",
+              "value": {
+                "kind": "literal",
+                "value": "doc-1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ReferenceState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype ReferenceEntry {\n  r: ID!\n  refs: [String!]!\n}\n\nextend type Query {\n  reference_entry(r: ID!): ReferenceEntry\n  reference_entries: [ReferenceEntry!]!\n}\n\ntype ReferenceSources {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "addRef": {
+        "$id": "urn:copf/Reference/addRef/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Reference"
+          },
+          "action": {
+            "const": "addRef"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "removeRef": {
+        "$id": "urn:copf/Reference/removeRef/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Reference"
+          },
+          "action": {
+            "const": "removeRef"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "getRefs": {
+        "$id": "urn:copf/Reference/getRefs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Reference"
+          },
+          "action": {
+            "const": "getRefs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          }
+        }
+      },
+      "resolveTarget": {
+        "$id": "urn:copf/Reference/resolveTarget/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Reference"
+          },
+          "action": {
+            "const": "resolveTarget"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "target"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "addRef": {
+        "ok": {
+          "$id": "urn:copf/Reference/addRef/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "addRef"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "target"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/Reference/addRef/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "addRef"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "target"
+              ]
+            }
+          }
+        }
+      },
+      "removeRef": {
+        "ok": {
+          "$id": "urn:copf/Reference/removeRef/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "removeRef"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "target"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Reference/removeRef/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "removeRef"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "target"
+              ]
+            }
+          }
+        }
+      },
+      "getRefs": {
+        "ok": {
+          "$id": "urn:copf/Reference/getRefs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "getRefs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "targets": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "targets"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Reference/getRefs/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "getRefs"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source"
+              ]
+            }
+          }
+        }
+      },
+      "resolveTarget": {
+        "ok": {
+          "$id": "urn:copf/Reference/resolveTarget/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Reference"
+            },
+            "action": {
+              "const": "resolveTarget"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "exists": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "exists"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Track forward associations from source to target entities"
+}

@@ -1,0 +1,48 @@
+@version(1)
+concept FileManagement [F] {
+  purpose {
+    Manage file lifecycle with reference counting and garbage collection
+    to prevent orphaned files.
+  }
+
+  state {
+    files: set F;
+    usageRecords: F -> set String;
+    streamWrappers: F -> String;
+    data: F -> String;
+    mimeType: F -> String
+  }
+
+  actions {
+    action upload(file: F, data: String, mimeType: String) {
+      -> ok(file: F) { File uploaded successfully. }
+      -> error(message: String) { Upload failed or file already exists. }
+    }
+
+    action addUsage(file: F, entity: String) {
+      -> ok() { Usage reference added to file. }
+      -> notfound(message: String) { File does not exist. }
+    }
+
+    action removeUsage(file: F, entity: String) {
+      -> ok() { Usage reference removed from file. }
+      -> notfound(message: String) { File does not exist. }
+    }
+
+    action garbageCollect() {
+      -> ok(removed: Int) { Unreferenced files removed successfully. }
+    }
+
+    action getFile(file: F) {
+      -> ok(data: String, mimeType: String) { File data retrieved. }
+      -> notfound(message: String) { File does not exist. }
+    }
+  }
+
+  invariant {
+    after upload(file: f, data: d, mimeType: m) -> ok(file: f)
+    then addUsage(file: f, entity: e) -> ok()
+    and removeUsage(file: f, entity: e) -> ok()
+    and  garbageCollect() -> ok(removed: 1)
+  }
+}

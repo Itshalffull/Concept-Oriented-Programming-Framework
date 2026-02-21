@@ -1,0 +1,22 @@
+type QueryState {
+  """All qs in this concept"""
+  qs: [ID!]!
+}
+
+type QueryEntry {
+  q: ID!
+  expression: String!
+  resultSet: String!
+  isLive: Boolean!
+  scope: String!
+}
+
+extend type Query {
+  query_entry(q: ID!): QueryEntry
+  query_entries: [QueryEntry!]!
+}
+
+type QueryQueries {
+  q: ID!
+  value: ID!
+}

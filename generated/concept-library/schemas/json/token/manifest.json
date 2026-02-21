@@ -1,0 +1,477 @@
+{
+  "uri": "urn:copf/Token",
+  "name": "Token",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "patterns",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "providers",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tokenTypes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "replace",
+      "params": [
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Text returned with all recognized tokens substituted"
+        }
+      ]
+    },
+    {
+      "name": "getAvailableTokens",
+      "params": [
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all tokens available in the given context"
+        }
+      ]
+    },
+    {
+      "name": "scan",
+      "params": [
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "found",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all token placeholders found in the text"
+        }
+      ]
+    },
+    {
+      "name": "registerProvider",
+      "params": [
+        {
+          "name": "token",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Provider registered for the token type"
+        },
+        {
+          "tag": "exists",
+          "fields": [],
+          "prose": "Provider already registered for this token type"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerProvider, replace behaves correctly",
+      "setup": [
+        {
+          "action": "registerProvider",
+          "inputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "userMailProvider"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "replace",
+          "inputs": [
+            {
+              "name": "text",
+              "value": {
+                "kind": "literal",
+                "value": "Contact [user:mail]"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "literal",
+                "value": "user"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "literal",
+                "value": "Contact user@example.com"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TokenState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TokenEntry {\n  t: ID!\n  patterns: String!\n  providers: String!\n}\n\nextend type Query {\n  token_entry(t: ID!): TokenEntry\n  token_entries: [TokenEntry!]!\n}\n\ntype TokenTokenTypes {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "replace": {
+        "$id": "urn:copf/Token/replace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Token"
+          },
+          "action": {
+            "const": "replace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "context"
+            ]
+          }
+        }
+      },
+      "getAvailableTokens": {
+        "$id": "urn:copf/Token/getAvailableTokens/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Token"
+          },
+          "action": {
+            "const": "getAvailableTokens"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "context"
+            ]
+          }
+        }
+      },
+      "scan": {
+        "$id": "urn:copf/Token/scan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Token"
+          },
+          "action": {
+            "const": "scan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        }
+      },
+      "registerProvider": {
+        "$id": "urn:copf/Token/registerProvider/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Token"
+          },
+          "action": {
+            "const": "registerProvider"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token",
+              "provider"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "replace": {
+        "ok": {
+          "$id": "urn:copf/Token/replace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Token"
+            },
+            "action": {
+              "const": "replace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      },
+      "getAvailableTokens": {
+        "ok": {
+          "$id": "urn:copf/Token/getAvailableTokens/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Token"
+            },
+            "action": {
+              "const": "getAvailableTokens"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tokens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tokens"
+              ]
+            }
+          }
+        }
+      },
+      "scan": {
+        "ok": {
+          "$id": "urn:copf/Token/scan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Token"
+            },
+            "action": {
+              "const": "scan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "found": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "found"
+              ]
+            }
+          }
+        }
+      },
+      "registerProvider": {
+        "ok": {
+          "$id": "urn:copf/Token/registerProvider/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Token"
+            },
+            "action": {
+              "const": "registerProvider"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/Token/registerProvider/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Token"
+            },
+            "action": {
+              "const": "registerProvider"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Replace typed placeholders in text using chain traversal patterns \n like [ node : author : mail ] for dynamic content substitution"
+}

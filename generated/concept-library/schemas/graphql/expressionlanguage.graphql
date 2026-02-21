@@ -1,0 +1,34 @@
+type ExpressionLanguageState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ExpressionLanguageEntry {
+  e: ID!
+  astCache: String!
+}
+
+extend type Query {
+  expressionlanguage_entry(e: ID!): ExpressionLanguageEntry
+  expressionlanguage_entries: [ExpressionLanguageEntry!]!
+}
+
+type ExpressionLanguageGrammars {
+  e: ID!
+  value: String!
+}
+
+type ExpressionLanguageFunctionRegistry {
+  e: ID!
+  value: String!
+}
+
+type ExpressionLanguageOperatorRegistry {
+  e: ID!
+  value: String!
+}
+
+type ExpressionLanguageTypeCoercions {
+  e: ID!
+  value: String!
+}

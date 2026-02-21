@@ -1,0 +1,814 @@
+{
+  "uri": "urn:copf/Group",
+  "name": "Group",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "memberships",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "groupRoles",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "groupContent",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "groups",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "createGroup",
+      "params": [
+        {
+          "name": "group",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Group created successfully"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Group already exists"
+        }
+      ]
+    },
+    {
+      "name": "addMember",
+      "params": [
+        {
+          "name": "group",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Member added to group with assigned role"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Group does not exist"
+        }
+      ]
+    },
+    {
+      "name": "assignGroupRole",
+      "params": [
+        {
+          "name": "group",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Role assigned to member within group"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Group or member does not exist"
+        }
+      ]
+    },
+    {
+      "name": "addContent",
+      "params": [
+        {
+          "name": "group",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Content added to group"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Group does not exist"
+        }
+      ]
+    },
+    {
+      "name": "checkGroupAccess",
+      "params": [
+        {
+          "name": "group",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "user",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "granted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Returns whether the user has the permission in this group"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Group does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after createGroup, addMember, checkGroupAccess behaves correctly",
+      "setup": [
+        {
+          "action": "createGroup",
+          "inputs": [
+            {
+              "name": "group",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addMember",
+          "inputs": [
+            {
+              "name": "group",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "member"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "checkGroupAccess",
+          "inputs": [
+            {
+              "name": "group",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "user",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "permission",
+              "value": {
+                "kind": "literal",
+                "value": "read"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "granted",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GroupState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GroupEntry {\n  g: ID!\n  memberships: [String!]!\n  groupRoles: String!\n  groupContent: [String!]!\n  name: String!\n}\n\nextend type Query {\n  group_entry(g: ID!): GroupEntry\n  group_entries: [GroupEntry!]!\n}\n\ntype GroupGroups {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "createGroup": {
+        "$id": "urn:copf/Group/createGroup/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Group"
+          },
+          "action": {
+            "const": "createGroup"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "name"
+            ]
+          }
+        }
+      },
+      "addMember": {
+        "$id": "urn:copf/Group/addMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Group"
+          },
+          "action": {
+            "const": "addMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "user",
+              "role"
+            ]
+          }
+        }
+      },
+      "assignGroupRole": {
+        "$id": "urn:copf/Group/assignGroupRole/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Group"
+          },
+          "action": {
+            "const": "assignGroupRole"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "user",
+              "role"
+            ]
+          }
+        }
+      },
+      "addContent": {
+        "$id": "urn:copf/Group/addContent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Group"
+          },
+          "action": {
+            "const": "addContent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "content"
+            ]
+          }
+        }
+      },
+      "checkGroupAccess": {
+        "$id": "urn:copf/Group/checkGroupAccess/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Group"
+          },
+          "action": {
+            "const": "checkGroupAccess"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "permission": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "user",
+              "permission"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "createGroup": {
+        "ok": {
+          "$id": "urn:copf/Group/createGroup/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "createGroup"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/Group/createGroup/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "createGroup"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addMember": {
+        "ok": {
+          "$id": "urn:copf/Group/addMember/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "addMember"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Group/addMember/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "addMember"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "assignGroupRole": {
+        "ok": {
+          "$id": "urn:copf/Group/assignGroupRole/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "assignGroupRole"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Group/assignGroupRole/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "assignGroupRole"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addContent": {
+        "ok": {
+          "$id": "urn:copf/Group/addContent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "addContent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Group/addContent/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "addContent"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "checkGroupAccess": {
+        "ok": {
+          "$id": "urn:copf/Group/checkGroupAccess/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "checkGroupAccess"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "granted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "granted"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Group/checkGroupAccess/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Group"
+            },
+            "action": {
+              "const": "checkGroupAccess"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Create isolated content spaces with group level role based access control \n for multi tenant collaboration"
+}

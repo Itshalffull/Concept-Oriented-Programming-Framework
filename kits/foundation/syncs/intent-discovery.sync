@@ -1,0 +1,10 @@
+// Intent-driven concept discovery
+
+sync IntentFromSchema [eager]
+when {
+  TypeSystem/registerType: [ type: ?type; schema: ?schema ]
+    => [ type: ?type ]
+}
+then {
+  Intent/define: [ intent: ?type; target: ?type; purpose: ?schema; operationalPrinciple: "" ]
+}

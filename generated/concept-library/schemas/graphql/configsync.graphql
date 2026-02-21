@@ -1,0 +1,21 @@
+type ConfigSyncState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ConfigSyncEntry {
+  c: ID!
+  syncDirectory: String!
+  overrideLayers: String!
+  data: String!
+}
+
+extend type Query {
+  configsync_entry(c: ID!): ConfigSyncEntry
+  configsync_entries: [ConfigSyncEntry!]!
+}
+
+type ConfigSyncActiveConfig {
+  c: ID!
+  value: ID!
+}

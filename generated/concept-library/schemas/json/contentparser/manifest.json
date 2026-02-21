@@ -1,0 +1,1061 @@
+{
+  "uri": "urn:copf/ContentParser",
+  "name": "ContentParser",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "astCache",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "formats",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "extractors",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "registerFormat",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "grammar",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Register a text format with its parsing grammar"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The format is already registered"
+        }
+      ]
+    },
+    {
+      "name": "registerExtractor",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Register an extractor that identifies patterns in parsed text"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The extractor is already registered"
+        }
+      ]
+    },
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "ast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Parse text into an AST using the specified format grammar"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The format is not registered or parsing failed"
+        }
+      ]
+    },
+    {
+      "name": "extractRefs",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "refs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Extract all references from the cached AST"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No AST cached for this content"
+        }
+      ]
+    },
+    {
+      "name": "extractTags",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tags",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Extract all tags from the cached AST"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No AST cached for this content"
+        }
+      ]
+    },
+    {
+      "name": "extractProperties",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "properties",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Extract all inline properties from the cached AST"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No AST cached for this content"
+        }
+      ]
+    },
+    {
+      "name": "serialize",
+      "params": [
+        {
+          "name": "content",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "text",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Serialize the cached AST back to text in the given format"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No AST cached for this content"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after registerFormat, parse, extractTags behaves correctly",
+      "setup": [
+        {
+          "action": "registerFormat",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "markdown"
+              }
+            },
+            {
+              "name": "grammar",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "markdown"
+              }
+            }
+          ]
+        },
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "text",
+              "value": {
+                "kind": "literal",
+                "value": "Hello #tag [[ref]]"
+              }
+            },
+            {
+              "name": "format",
+              "value": {
+                "kind": "literal",
+                "value": "markdown"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "ast",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "extractTags",
+          "inputs": [
+            {
+              "name": "content",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tags",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContentParserState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ContentParserEntry {\n  c: ID!\n  astCache: String!\n}\n\nextend type Query {\n  contentparser_entry(c: ID!): ContentParserEntry\n  contentparser_entries: [ContentParserEntry!]!\n}\n\ntype ContentParserFormats {\n  c: ID!\n  value: String!\n}\n\ntype ContentParserExtractors {\n  c: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "registerFormat": {
+        "$id": "urn:copf/ContentParser/registerFormat/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "registerFormat"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "grammar": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "grammar"
+            ]
+          }
+        }
+      },
+      "registerExtractor": {
+        "$id": "urn:copf/ContentParser/registerExtractor/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "registerExtractor"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "pattern"
+            ]
+          }
+        }
+      },
+      "parse": {
+        "$id": "urn:copf/ContentParser/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content",
+              "text",
+              "format"
+            ]
+          }
+        }
+      },
+      "extractRefs": {
+        "$id": "urn:copf/ContentParser/extractRefs/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "extractRefs"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        }
+      },
+      "extractTags": {
+        "$id": "urn:copf/ContentParser/extractTags/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "extractTags"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        }
+      },
+      "extractProperties": {
+        "$id": "urn:copf/ContentParser/extractProperties/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "extractProperties"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        }
+      },
+      "serialize": {
+        "$id": "urn:copf/ContentParser/serialize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/ContentParser"
+          },
+          "action": {
+            "const": "serialize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content",
+              "format"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "registerFormat": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/registerFormat/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "registerFormat"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/ContentParser/registerFormat/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "registerFormat"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "registerExtractor": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/registerExtractor/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "registerExtractor"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/ContentParser/registerExtractor/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "registerExtractor"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "parse": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/parse/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "ast": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ast"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:copf/ContentParser/parse/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "extractRefs": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/extractRefs/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "extractRefs"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "refs": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "refs"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentParser/extractRefs/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "extractRefs"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "extractTags": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/extractTags/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "extractTags"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tags": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tags"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentParser/extractTags/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "extractTags"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "extractProperties": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/extractProperties/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "extractProperties"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "properties": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "properties"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentParser/extractProperties/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "extractProperties"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "serialize": {
+        "ok": {
+          "$id": "urn:copf/ContentParser/serialize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "serialize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/ContentParser/serialize/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/ContentParser"
+            },
+            "action": {
+              "const": "serialize"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Parse text into structured data by extracting references , \n tags , properties , and embeds Supports multiple formats \n and pluggable extractors for progressive formalization"
+}

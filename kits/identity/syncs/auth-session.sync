@@ -1,0 +1,28 @@
+// Authentication and session lifecycle
+
+sync CreateSessionOnLogin [eager]
+when {
+  Authentication/login: [ user: ?user ]
+    => [ token: ?token ]
+}
+then {
+  Session/create: [ session: ?user; userId: ?user; device: "default" ]
+}
+
+sync DestroySessionOnLogout [eager]
+when {
+  Authentication/logout: [ user: ?user ]
+    => [ user: ?user ]
+}
+then {
+  Session/destroyAll: [ userId: ?user ]
+}
+
+sync ValidateSessionOnAuth [eager]
+when {
+  Authentication/authenticate: [ token: ?token ]
+    => [ user: ?user ]
+}
+then {
+  Session/validate: [ session: ?user ]
+}

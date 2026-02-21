@@ -1,0 +1,25 @@
+type AuthenticationState {
+  """All us in this concept"""
+  us: [ID!]!
+}
+
+type AuthenticationEntry {
+  u: ID!
+  credentials: String!
+  activeProvider: String!
+}
+
+extend type Query {
+  authentication_entry(u: ID!): AuthenticationEntry
+  authentication_entries: [AuthenticationEntry!]!
+}
+
+type AuthenticationAccounts {
+  u: ID!
+  value: ID!
+}
+
+type AuthenticationProviders {
+  u: ID!
+  value: String!
+}

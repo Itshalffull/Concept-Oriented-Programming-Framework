@@ -1,0 +1,43 @@
+@version(1)
+concept DailyNote [D] {
+
+  purpose {
+    Provide time-indexed, frictionless capture by auto-creating a note for today's date.
+  }
+
+  state {
+    notes: set D
+    dateFormat: D -> String
+    templateId: D -> String
+    targetFolder: D -> String
+    date: D -> String
+  }
+
+  actions {
+    action getOrCreateToday(note: D) {
+      -> ok(note: D, created: Bool) {
+        Returns today's note, creating it from the configured template if it does not yet exist.
+      }
+    }
+
+    action navigateToDate(date: String) {
+      -> ok(note: D) {
+        Locates and returns the note matching the given date.
+      }
+      -> notfound(message: String) {
+        No note exists for the requested date.
+      }
+    }
+
+    action listRecent(count: Int) {
+      -> ok(notes: String) {
+        Returns the most recent daily notes up to the specified count.
+      }
+    }
+  }
+
+  invariant {
+    after getOrCreateToday(note: n) -> ok(note: n, created: true)
+    then getOrCreateToday(note: n) -> ok(note: n, created: false)
+  }
+}

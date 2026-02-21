@@ -1,0 +1,21 @@
+type CanvasState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type CanvasEntry {
+  v: ID!
+  nodes: String!
+  edges: String!
+  positions: String!
+}
+
+extend type Query {
+  canvas_entry(v: ID!): CanvasEntry
+  canvas_entries: [CanvasEntry!]!
+}
+
+type CanvasCanvases {
+  v: ID!
+  value: ID!
+}

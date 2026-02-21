@@ -1,0 +1,8 @@
+sync EvaluateOnPlace [eager]
+when {
+  Component/place: [ component: ?comp; region: ?region ]
+    => [ component: ?comp ]
+}
+then {
+  Component/evaluateVisibility: [ component: ?comp; context: ?region ]
+}

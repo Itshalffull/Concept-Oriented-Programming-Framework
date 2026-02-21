@@ -1,0 +1,35 @@
+sync ValidateOnDispatch [eager]
+when {
+  EventBus/dispatch: [ event: ?event; data: ?data ]
+    => [ results: ?results ]
+}
+then {
+  Validator/validate: [ validator: ?event; data: ?data ]
+}
+
+sync CacheInvalidateOnConfig [eager]
+when {
+  ConfigSync/import: [ config: ?config; data: ?data ]
+    => [ config: ?config ]
+}
+then {
+  Cache/invalidateByTags: [ tags: ?config ]
+}
+
+sync PluginDiscovery [eager]
+when {
+  PluginRegistry/discover: [ type: ?type ]
+    => [ plugins: ?plugins ]
+}
+then {
+  EventBus/dispatch: [ event: ?type; data: ?plugins ]
+}
+
+sync PathautoOnCreate [eager]
+when {
+  Pathauto/generateAlias: [ pattern: ?pattern; entity: ?entity ]
+    => [ alias: ?alias ]
+}
+then {
+  Cache/set: [ bin: ?pattern; key: ?entity; data: ?alias; tags: ?pattern; maxAge: 3600 ]
+}

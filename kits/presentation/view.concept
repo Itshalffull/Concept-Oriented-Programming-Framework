@@ -1,0 +1,103 @@
+@version(1)
+concept View [V] {
+
+  purpose {
+    Provide multiple visual representations (table, board, calendar, gallery, list)
+    of the same underlying dataset with independent filter/sort/group configuration.
+  }
+
+  state {
+    views: set V
+    dataSource: V -> String
+    layout: V -> String
+    filters: V -> String
+    sorts: V -> String
+    groups: V -> String
+    visibleFields: V -> String
+    formatting: V -> String
+  }
+
+  actions {
+    action create(view: V, dataSource: String, layout: String) {
+      -> ok(view: V) {
+        A new view is created over the given data source with the specified layout.
+      }
+      -> error(message: String) {
+        The view could not be created.
+      }
+    }
+
+    action setFilter(view: V, filter: String) {
+      -> ok(view: V) {
+        The filter is applied to the view.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action setSort(view: V, sort: String) {
+      -> ok(view: V) {
+        The sort order is applied to the view.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action setGroup(view: V, group: String) {
+      -> ok(view: V) {
+        The grouping is applied to the view.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action setVisibleFields(view: V, fields: String) {
+      -> ok(view: V) {
+        The visible fields are updated for the view.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action changeLayout(view: V, layout: String) {
+      -> ok(view: V) {
+        The view switches to a different layout representation.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action duplicate(view: V) {
+      -> ok(newView: V) {
+        A copy of the view is created with the same configuration.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+
+    action embed(view: V) {
+      -> ok(embedCode: String) {
+        An embeddable representation of the view is generated.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(view: v, dataSource: "tasks", layout: "table") -> ok(view: v)
+    then setFilter(view: v, filter: "status=active") -> ok(view: v)
+  }
+
+  invariant {
+    after setFilter(view: v, filter: "status=active") -> ok(view: v)
+    then changeLayout(view: v, layout: "board") -> ok(view: v)
+  }
+}

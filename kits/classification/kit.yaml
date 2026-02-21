@@ -1,0 +1,24 @@
+# Classification Kit Manifest
+name: classification
+version: 0.1.0
+description: "Organization and classification — tags, taxonomies, schemas, and namespaces for content structure."
+
+concepts:
+  - name: Tag
+    spec: tag.concept
+  - name: Taxonomy
+    spec: taxonomy.concept
+  - name: Schema
+    spec: schema.concept
+  - name: Namespace
+    spec: namespace.concept
+
+syncs:
+  - name: taxonomy-tags
+    file: syncs/taxonomy-tags.sync
+    tier: recommended
+  - name: schema-namespace
+    file: syncs/schema-namespace.sync
+    tier: recommended
+
+dependencies: []

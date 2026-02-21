@@ -1,0 +1,22 @@
+type MediaAssetState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type MediaAssetEntry {
+  m: ID!
+  sourcePlugin: String!
+  metadata: String!
+  thumbnail: String!
+  originalFile: String!
+}
+
+extend type Query {
+  mediaasset_entry(m: ID!): MediaAssetEntry
+  mediaasset_entries: [MediaAssetEntry!]!
+}
+
+type MediaAssetMediaEntities {
+  m: ID!
+  value: ID!
+}

@@ -1,0 +1,58 @@
+@version(1)
+concept Graph [G] {
+  purpose {
+    Visualize entity networks with force-directed layouts, filtering,
+    and depth-limited neighborhood exploration.
+  }
+
+  state {
+    graphs: set G;
+    nodes: G -> set String;
+    edges: G -> set String;
+    layout: G -> String
+  }
+
+  actions {
+    action addNode(graph: G, node: String) {
+      -> ok() { Node added to the graph. }
+      -> notfound() { Graph does not exist. }
+    }
+
+    action removeNode(graph: G, node: String) {
+      -> ok() { Node removed from the graph. }
+      -> notfound() { Graph does not exist. }
+    }
+
+    action addEdge(graph: G, source: String, target: String) {
+      -> ok() { Edge added between source and target nodes. }
+      -> notfound() { Graph or referenced node does not exist. }
+    }
+
+    action removeEdge(graph: G, source: String, target: String) {
+      -> ok() { Edge removed between source and target nodes. }
+      -> notfound() { Graph or referenced edge does not exist. }
+    }
+
+    action computeLayout(graph: G) {
+      -> ok(layout: String) { Force-directed layout computed for the graph. }
+      -> notfound() { Graph does not exist. }
+    }
+
+    action getNeighbors(graph: G, node: String, depth: Int) {
+      -> ok(neighbors: String) { Returns neighbors within the specified depth. }
+      -> notfound() { Graph or node does not exist. }
+    }
+
+    action filterNodes(graph: G, filter: String) {
+      -> ok(filtered: String) { Returns nodes matching the filter criteria. }
+      -> notfound() { Graph does not exist. }
+    }
+  }
+
+  invariant {
+    after addNode(graph: g, node: "A") -> ok()
+    then addNode(graph: g, node: "B") -> ok()
+    and addEdge(graph: g, source: "A", target: "B") -> ok()
+    and getNeighbors(graph: g, node: "A", depth: 1) -> ok(neighbors: "B")
+  }
+}

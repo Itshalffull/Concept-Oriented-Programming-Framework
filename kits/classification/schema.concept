@@ -1,0 +1,45 @@
+@version(1)
+concept Schema [S] {
+  purpose { Define named field sets that can be applied as type mixins to content entities, serving as a coordination hub for runtime concept definitions. }
+  state {
+    schemas: set S;
+    fields: S -> String;
+    extends: S -> S;
+    associations: S -> String
+  }
+  actions {
+    action defineSchema(schema: S, fields: String) {
+      -> ok() { Create a new schema with the given fields. }
+      -> exists(message: String) { Schema already exists. }
+    }
+    action addField(schema: S, field: String) {
+      -> ok() { Add a field to an existing schema. }
+      -> notfound(message: String) { Schema does not exist. }
+    }
+    action extendSchema(schema: S, parent: S) {
+      -> ok() { Set a schema to extend another schema, inheriting its fields. }
+      -> notfound(message: String) { Schema or parent schema does not exist. }
+    }
+    action applyTo(entity: String, schema: S) {
+      -> ok() { Apply the schema to an entity as a type mixin. }
+      -> notfound(message: String) { Schema does not exist. }
+    }
+    action removeFrom(entity: String, schema: S) {
+      -> ok() { Remove the schema from an entity. }
+      -> notfound(message: String) { Schema or association does not exist. }
+    }
+    action getAssociations(schema: S) {
+      -> ok(associations: String) { Return all entities associated with the schema. }
+      -> notfound(message: String) { Schema does not exist. }
+    }
+    action export(schema: S) {
+      -> ok(data: String) { Export the schema definition as serialized data. }
+      -> notfound(message: String) { Schema does not exist. }
+    }
+  }
+  invariant {
+    after defineSchema(schema: s, fields: "title,body") -> ok()
+    then addField(schema: s, field: "author") -> ok()
+    and applyTo(entity: "page-1", schema: s) -> ok()
+  }
+}

@@ -1,0 +1,65 @@
+@version(1)
+concept Intent [I] {
+
+  purpose {
+    Capture the semantic purpose, operational principles, and
+    testable assertions for runtime-defined concepts. Enables
+    AI-assisted concept discovery and documentation.
+  }
+
+  state {
+    intents: set I
+    purpose: I -> String
+    operationalPrinciple: I -> String
+    assertions: I -> String
+    target: I -> String
+  }
+
+  actions {
+    action define(intent: I, target: String, purpose: String,
+                  operationalPrinciple: String) {
+      -> ok(intent: I) {
+        Define the semantic intent for a target entity.
+      }
+      -> exists(message: String) {
+        An intent for this target already exists.
+      }
+    }
+
+    action update(intent: I, purpose: String, operationalPrinciple: String) {
+      -> ok(intent: I) {
+        Update the intent's purpose and operational principle.
+      }
+      -> notfound(message: String) {
+        The intent does not exist.
+      }
+    }
+
+    action verify(intent: I) {
+      -> ok(valid: Bool, failures: String) {
+        Run all assertions and report pass/fail status.
+      }
+      -> notfound(message: String) {
+        The intent does not exist.
+      }
+    }
+
+    action discover(query: String) {
+      -> ok(matches: String) {
+        Search intents by purpose text or target name.
+      }
+    }
+
+    action suggestFromDescription(description: String) {
+      -> ok(suggested: String) {
+        Suggest concept structure from a natural language description.
+      }
+    }
+  }
+
+  invariant {
+    after define(intent: i, target: "UserAuth", purpose: "Authenticate users",
+                 operationalPrinciple: "After login, session is valid") -> ok(intent: i)
+    then verify(intent: i) -> ok(valid: v, failures: f)
+  }
+}

@@ -1,0 +1,19 @@
+// Taxonomy and tag coordination
+
+sync TaxonomyTermAsTag [eager]
+when {
+  Taxonomy/tagEntity: [ entity: ?entity; vocab: ?vocab; term: ?term ]
+    => [ entity: ?entity ]
+}
+then {
+  Tag/addTag: [ entity: ?entity; tag: ?vocab ]
+}
+
+sync UntagRemovesFromTaxonomy [eager]
+when {
+  Tag/removeTag: [ entity: ?entity; tag: ?tag ]
+    => [ entity: ?entity ]
+}
+then {
+  Taxonomy/untagEntity: [ entity: ?entity; vocab: ?tag; term: "" ]
+}

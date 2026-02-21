@@ -1,0 +1,21 @@
+type ValidatorState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type ValidatorEntry {
+  v: ID!
+  schemaRules: String!
+  fieldRules: String!
+  customValidators: String!
+}
+
+extend type Query {
+  validator_entry(v: ID!): ValidatorEntry
+  validator_entries: [ValidatorEntry!]!
+}
+
+type ValidatorConstraints {
+  v: ID!
+  value: ID!
+}

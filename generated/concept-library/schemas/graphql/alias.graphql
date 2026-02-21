@@ -1,0 +1,19 @@
+type AliasState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AliasEntry {
+  a: ID!
+  aliases: [String!]!
+}
+
+extend type Query {
+  alias_entry(a: ID!): AliasEntry
+  alias_entries: [AliasEntry!]!
+}
+
+type AliasEntities {
+  a: ID!
+  value: ID!
+}

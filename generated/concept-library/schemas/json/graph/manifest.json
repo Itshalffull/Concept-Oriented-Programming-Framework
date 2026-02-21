@@ -1,0 +1,966 @@
+{
+  "uri": "urn:copf/Graph",
+  "name": "Graph",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "nodes",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "edges",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "layout",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "graphs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "addNode",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Node added to the graph"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeNode",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Node removed from the graph"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph does not exist"
+        }
+      ]
+    },
+    {
+      "name": "addEdge",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Edge added between source and target nodes"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph or referenced node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "removeEdge",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Edge removed between source and target nodes"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph or referenced edge does not exist"
+        }
+      ]
+    },
+    {
+      "name": "computeLayout",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "layout",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Force directed layout computed for the graph"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph does not exist"
+        }
+      ]
+    },
+    {
+      "name": "getNeighbors",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "depth",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "neighbors",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns neighbors within the specified depth"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph or node does not exist"
+        }
+      ]
+    },
+    {
+      "name": "filterNodes",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "filter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "filtered",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns nodes matching the filter criteria"
+        },
+        {
+          "tag": "notfound",
+          "fields": [],
+          "prose": "Graph does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after addNode, addNode, addEdge, getNeighbors behaves correctly",
+      "setup": [
+        {
+          "action": "addNode",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "A"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addNode",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "B"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "addEdge",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "A"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "B"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        },
+        {
+          "action": "getNeighbors",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "node",
+              "value": {
+                "kind": "literal",
+                "value": "A"
+              }
+            },
+            {
+              "name": "depth",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "neighbors",
+              "value": {
+                "kind": "literal",
+                "value": "B"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type GraphState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype GraphEntry {\n  g: ID!\n  nodes: [String!]!\n  edges: [String!]!\n  layout: String!\n}\n\nextend type Query {\n  graph_entry(g: ID!): GraphEntry\n  graph_entries: [GraphEntry!]!\n}\n\ntype GraphGraphs {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "addNode": {
+        "$id": "urn:copf/Graph/addNode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "addNode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "node"
+            ]
+          }
+        }
+      },
+      "removeNode": {
+        "$id": "urn:copf/Graph/removeNode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "removeNode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "node": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "node"
+            ]
+          }
+        }
+      },
+      "addEdge": {
+        "$id": "urn:copf/Graph/addEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "addEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "removeEdge": {
+        "$id": "urn:copf/Graph/removeEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "removeEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "computeLayout": {
+        "$id": "urn:copf/Graph/computeLayout/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "computeLayout"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      },
+      "getNeighbors": {
+        "$id": "urn:copf/Graph/getNeighbors/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "getNeighbors"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "node": {
+                "type": "string"
+              },
+              "depth": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "graph",
+              "node",
+              "depth"
+            ]
+          }
+        }
+      },
+      "filterNodes": {
+        "$id": "urn:copf/Graph/filterNodes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Graph"
+          },
+          "action": {
+            "const": "filterNodes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "filter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "filter"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "addNode": {
+        "ok": {
+          "$id": "urn:copf/Graph/addNode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "addNode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/addNode/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "addNode"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "removeNode": {
+        "ok": {
+          "$id": "urn:copf/Graph/removeNode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "removeNode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/removeNode/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "removeNode"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "addEdge": {
+        "ok": {
+          "$id": "urn:copf/Graph/addEdge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "addEdge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/addEdge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "addEdge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "removeEdge": {
+        "ok": {
+          "$id": "urn:copf/Graph/removeEdge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "removeEdge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/removeEdge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "removeEdge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "computeLayout": {
+        "ok": {
+          "$id": "urn:copf/Graph/computeLayout/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "computeLayout"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "layout": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "layout"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/computeLayout/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "computeLayout"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getNeighbors": {
+        "ok": {
+          "$id": "urn:copf/Graph/getNeighbors/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "getNeighbors"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "neighbors": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "neighbors"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/getNeighbors/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "getNeighbors"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "filterNodes": {
+        "ok": {
+          "$id": "urn:copf/Graph/filterNodes/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "filterNodes"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "filtered": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "filtered"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Graph/filterNodes/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Graph"
+            },
+            "action": {
+              "const": "filterNodes"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Visualize entity networks with force directed layouts , filtering , \n and depth limited neighborhood exploration"
+}

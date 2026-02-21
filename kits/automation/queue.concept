@@ -1,0 +1,68 @@
+@version(1)
+concept Queue [Q] {
+
+  purpose {
+    Defer task processing via a managed queue with claim-process-release
+    lifecycle and pluggable backends.
+  }
+
+  state {
+    queues: set Q
+    items: Q -> String
+    workers: Q -> set String
+    backend: Q -> String
+  }
+
+  actions {
+    action enqueue(queue: Q, item: String, priority: Int) {
+      -> ok(itemId: String) {
+        Item added to the queue and assigned an identifier.
+      }
+      -> notfound(message: String) {
+        The queue was not found.
+      }
+    }
+
+    action claim(queue: Q, worker: String) {
+      -> ok(item: String) {
+        The next available item was assigned to the worker.
+      }
+      -> empty(message: String) {
+        No items are available in the queue.
+      }
+    }
+
+    action process(queue: Q, itemId: String, result: String) {
+      -> ok() {
+        The item was processed and marked as complete.
+      }
+      -> notfound(message: String) {
+        The item was not found in the queue.
+      }
+    }
+
+    action release(queue: Q, itemId: String) {
+      -> ok() {
+        The item was released back into the queue for another worker.
+      }
+      -> notfound(message: String) {
+        The item was not found in the queue.
+      }
+    }
+
+    action delete(queue: Q, itemId: String) {
+      -> ok() {
+        The item was permanently removed from the queue.
+      }
+      -> notfound(message: String) {
+        The item was not found in the queue.
+      }
+    }
+  }
+
+  invariant {
+    after enqueue(queue: q, item: "send_email", priority: 1)  -> ok(itemId: "item-1")
+    then  claim(queue: q, worker: "worker-a")                  -> ok(item: "send_email")
+    and   process(queue: q, itemId: "item-1", result: "sent")  -> ok()
+  }
+}

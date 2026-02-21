@@ -1,0 +1,17 @@
+sync IndexOnQuery [eager]
+when {
+  Query/execute: [ query: ?query ]
+    => [ results: ?results ]
+}
+then {
+  SearchIndex/search: [ index: ?query; query: ?results ]
+}
+
+sync FilterModifiesQuery [eager]
+when {
+  ExposedFilter/applyToQuery: [ exposedFilter: ?ef ]
+    => [ queryMod: ?mod ]
+}
+then {
+  Query/addFilter: [ query: ?ef; addedFilter: ?mod ]
+}

@@ -1,0 +1,70 @@
+@version(1)
+concept Property [P] {
+
+  purpose {
+    Attach typed key-value metadata to content entities.
+    Each property has a registered type that determines its
+    widget, formatter, and validation rules.
+  }
+
+  state {
+    properties: P -> String
+    typeRegistry: set String
+    closedValues: P -> String
+  }
+
+  actions {
+    action set(entity: P, key: String, value: String) {
+      -> ok(entity: P) {
+        Store a property value on the entity.
+      }
+      -> invalid(message: String) {
+        The value does not match the registered type.
+      }
+    }
+
+    action get(entity: P, key: String) {
+      -> ok(value: String) {
+        Return the property value.
+      }
+      -> notfound(message: String) {
+        The property does not exist on this entity.
+      }
+    }
+
+    action delete(entity: P, key: String) {
+      -> ok(entity: P) {
+        Remove the property from the entity.
+      }
+      -> notfound(message: String) {
+        The property does not exist on this entity.
+      }
+    }
+
+    action defineType(name: String, schema: String) {
+      -> ok(name: String) {
+        Register a property type with its schema definition.
+      }
+      -> exists(message: String) {
+        The type is already registered.
+      }
+    }
+
+    action listAll(entity: P) {
+      -> ok(properties: String) {
+        Return all properties on the entity as JSON.
+      }
+    }
+  }
+
+  invariant {
+    after set(entity: e, key: "title", value: "Hello World") -> ok(entity: e)
+    then get(entity: e, key: "title") -> ok(value: "Hello World")
+  }
+
+  invariant {
+    after set(entity: e, key: "title", value: "Hello") -> ok(entity: e)
+    and delete(entity: e, key: "title") -> ok(entity: e)
+    then get(entity: e, key: "title") -> notfound(message: "not found")
+  }
+}

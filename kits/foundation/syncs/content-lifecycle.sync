@@ -1,0 +1,37 @@
+// Content lifecycle: storage and parsing coordination
+
+sync PersistContentNode [eager]
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content ]
+    => [ node: ?node ]
+}
+then {
+  ContentStorage/save: [ record: ?node; data: ?content ]
+}
+
+sync ParseOnCreate [eager]
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content ]
+    => [ node: ?node ]
+}
+then {
+  ContentParser/parse: [ content: ?node; text: ?content; format: ?type ]
+}
+
+sync UpdateStorage [eager]
+when {
+  ContentNode/update: [ node: ?node; content: ?content ]
+    => [ node: ?node ]
+}
+then {
+  ContentStorage/save: [ record: ?node; data: ?content ]
+}
+
+sync DeleteFromStorage [eager]
+when {
+  ContentNode/delete: [ node: ?node ]
+    => [ node: ?node ]
+}
+then {
+  ContentStorage/delete: [ record: ?node ]
+}

@@ -1,0 +1,73 @@
+@version(1)
+concept TypeSystem [T] {
+
+  purpose {
+    Define self-describing type hierarchies with introspection,
+    validation, and serialization. Types compose into complex
+    structures with constraints.
+  }
+
+  state {
+    typeDefinitions: set T
+    schema: T -> String
+    constraints: T -> String
+    parent: T -> T
+  }
+
+  actions {
+    action registerType(type: T, schema: String, constraints: String) {
+      -> ok(type: T) {
+        Register a new type definition with its schema and constraints.
+      }
+      -> exists(message: String) {
+        A type with this identifier already exists.
+      }
+    }
+
+    action resolve(type: T) {
+      -> ok(type: T, schema: String) {
+        Resolve the type to its full schema including inherited fields.
+      }
+      -> notfound(message: String) {
+        The type does not exist.
+      }
+    }
+
+    action validate(type: T, value: String) {
+      -> ok(valid: Bool) {
+        Check if a value conforms to the type's schema and constraints.
+      }
+      -> notfound(message: String) {
+        The type does not exist.
+      }
+    }
+
+    action navigate(type: T, path: String) {
+      -> ok(type: T, schema: String) {
+        Traverse into a nested type via a dot-separated path.
+      }
+      -> notfound(message: String) {
+        The type or path does not exist.
+      }
+    }
+
+    action serialize(type: T, value: String) {
+      -> ok(serialized: String) {
+        Serialize a value according to the type's format.
+      }
+      -> notfound(message: String) {
+        The type does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
+    then resolve(type: t) -> ok(type: t, schema: "{\"type\":\"string\"}")
+  }
+
+  invariant {
+    after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
+    then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> exists(message: "already exists")
+  }
+}

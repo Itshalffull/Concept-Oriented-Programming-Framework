@@ -1,0 +1,19 @@
+# Query-Retrieval Kit Manifest
+name: query-retrieval
+version: 0.1.0
+description: "Structured data retrieval — queries, search indexes, and exposed filters for building search pipelines."
+
+concepts:
+  - name: Query
+    spec: query.concept
+  - name: SearchIndex
+    spec: search-index.concept
+  - name: ExposedFilter
+    spec: exposed-filter.concept
+
+syncs:
+  - name: search-pipeline
+    file: syncs/search-pipeline.sync
+    tier: required
+
+dependencies: []

@@ -1,0 +1,58 @@
+@version(1)
+concept Template [T] {
+
+  purpose {
+    Define reusable content structures with dynamic variable substitution
+    and conditional triggers for instantiation.
+  }
+
+  state {
+    templates: set T
+    variables: T -> String
+    triggers: T -> String
+    body: T -> String
+  }
+
+  actions {
+    action define(template: T, body: String, variables: String) {
+      -> ok() {
+        Registers a new template with its body and variable declarations.
+      }
+      -> exists(message: String) {
+        A template with this identity already exists.
+      }
+    }
+
+    action instantiate(template: T, values: String) {
+      -> ok(content: String) {
+        Produces concrete content by substituting variables into the template body.
+      }
+      -> notfound(message: String) {
+        The template does not exist.
+      }
+    }
+
+    action registerTrigger(template: T, trigger: String) {
+      -> ok() {
+        Attaches a conditional trigger that auto-instantiates the template.
+      }
+      -> notfound(message: String) {
+        The template does not exist.
+      }
+    }
+
+    action mergeProperties(template: T, properties: String) {
+      -> ok() {
+        Merges additional properties into an existing template definition.
+      }
+      -> notfound(message: String) {
+        The template does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after define(template: t, body: "Hello {{name}}", variables: "name") -> ok()
+    then instantiate(template: t, values: "name=World") -> ok(content: "Hello World")
+  }
+}

@@ -1,0 +1,21 @@
+type FormulaState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FormulaEntry {
+  f: ID!
+  expression: String!
+  dependencies: [String!]!
+  cachedResult: String!
+}
+
+extend type Query {
+  formula_entry(f: ID!): FormulaEntry
+  formula_entries: [FormulaEntry!]!
+}
+
+type FormulaFormulas {
+  f: ID!
+  value: ID!
+}

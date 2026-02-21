@@ -1,0 +1,22 @@
+type CacheState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CacheEntry {
+  c: ID!
+  tags: [String!]!
+  data: String!
+  maxAge: Int!
+  contexts: String!
+}
+
+extend type Query {
+  cache_entry(c: ID!): CacheEntry
+  cache_entries: [CacheEntry!]!
+}
+
+type CacheBins {
+  c: ID!
+  value: ID!
+}

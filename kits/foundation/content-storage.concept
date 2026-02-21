@@ -1,0 +1,75 @@
+@version(1)
+concept ContentStorage [R] {
+
+  purpose {
+    Persist and retrieve content records via a pluggable backend.
+    Abstracts storage from the content model, enabling backend
+    portability across SQLite, PostgreSQL, file system, etc.
+  }
+
+  state {
+    records: set R
+    data: R -> String
+    backend: R -> String
+    schemaMap: R -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action save(record: R, data: String) {
+      -> ok(record: R) {
+        Persist the record data to the backend.
+      }
+      -> error(message: String) {
+        Backend write failed.
+      }
+    }
+
+    action load(record: R) {
+      -> ok(record: R, data: String) {
+        Load record data from the backend.
+      }
+      -> notfound(message: String) {
+        The record does not exist.
+      }
+    }
+
+    action delete(record: R) {
+      -> ok(record: R) {
+        Remove the record from the backend.
+      }
+      -> notfound(message: String) {
+        The record does not exist.
+      }
+    }
+
+    action query(filter: String) {
+      -> ok(results: String) {
+        Return matching records as serialized JSON.
+      }
+    }
+
+    action generateSchema(record: R) {
+      -> ok(schema: String) {
+        Generate a storage schema from the record structure.
+      }
+      -> notfound(message: String) {
+        The record does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after save(record: r, data: "{\"title\":\"Test\"}") -> ok(record: r)
+    then load(record: r) -> ok(record: r, data: "{\"title\":\"Test\"}")
+  }
+
+  invariant {
+    after save(record: r, data: "{\"title\":\"Test\"}") -> ok(record: r)
+    and delete(record: r) -> ok(record: r)
+    then load(record: r) -> notfound(message: "not found")
+  }
+}

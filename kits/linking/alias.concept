@@ -1,0 +1,46 @@
+@version(1)
+concept Alias [A] {
+
+  purpose {
+    Allow multiple names for the same entity, enabling name polymorphism and flexible referencing.
+  }
+
+  state {
+    aliases: A -> set String
+    entities: set A
+  }
+
+  actions {
+    action addAlias(entity: A, name: String) {
+      -> ok(entity: A, name: String) {
+        Add an alias name for the entity.
+      }
+      -> exists(entity: A, name: String) {
+        This alias already exists for the entity.
+      }
+    }
+
+    action removeAlias(entity: A, name: String) {
+      -> ok(entity: A, name: String) {
+        Remove the alias name from the entity.
+      }
+      -> notfound(entity: A, name: String) {
+        No such alias exists for the entity.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(entity: A) {
+        Resolve the alias name to its associated entity.
+      }
+      -> notfound(name: String) {
+        No entity is associated with this alias name.
+      }
+    }
+  }
+
+  invariant {
+    after addAlias(entity: x, name: "homepage") -> ok(entity: x, name: "homepage")
+    then resolve(name: "homepage") -> ok(entity: x)
+  }
+}

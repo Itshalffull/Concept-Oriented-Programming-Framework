@@ -1,0 +1,106 @@
+@version(1)
+concept Session [S] {
+
+  purpose {
+    Manage authenticated session lifecycle including creation,
+    validation, refresh, and device tracking. Each session binds
+    a user identity to a specific device and carries an opaque
+    token with a bounded lifetime.
+  }
+
+  state {
+    sessions: set S
+    userId: S -> String
+    token: S -> String
+    device: S -> String
+    expiresAt: S -> String
+    isValid: S -> Bool
+  }
+
+  actions {
+    action create(session: S, userId: String, device: String) {
+      -> ok(token: String) {
+        Create a new session for the given user and device. Generate
+        an opaque token and set the expiration timestamp. Mark the
+        session as valid.
+      }
+      -> error(message: String) {
+        Session creation failed, for example due to exceeding the
+        maximum number of concurrent sessions for the user.
+      }
+    }
+
+    action validate(session: S) {
+      -> ok(valid: Bool) {
+        Check whether the session exists and has not expired. Return
+        true if the session is still valid, false if it has expired.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+    }
+
+    action refresh(session: S) {
+      -> ok(token: String) {
+        Extend the session lifetime and issue a new token. The
+        previous token is invalidated.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+      -> expired(message: String) {
+        The session has already expired and cannot be refreshed.
+        The user must re-authenticate.
+      }
+    }
+
+    action destroy(session: S) {
+      -> ok(session: S) {
+        Invalidate the session and remove it from the active set.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+    }
+
+    action destroyAll(userId: String) {
+      -> ok(userId: String) {
+        Invalidate and remove all sessions belonging to the given
+        user across all devices.
+      }
+    }
+
+    action getContext(session: S) {
+      -> ok(userId: String, device: String) {
+        Return the user identity and device information associated
+        with the session.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
+    then validate(session: s) -> ok(valid: true)
+  }
+
+  invariant {
+    after create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
+    then getContext(session: s) -> ok(userId: "alice", device: "mobile")
+  }
+
+  invariant {
+    after create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
+    and destroy(session: s) -> ok(session: s)
+    then validate(session: s) -> notfound(message: m)
+  }
+
+  invariant {
+    after create(session: s1, userId: "alice", device: "mobile") -> ok(token: t1)
+    and create(session: s2, userId: "alice", device: "desktop") -> ok(token: t2)
+    and destroyAll(userId: "alice") -> ok(userId: "alice")
+    then validate(session: s1) -> notfound(message: m1)
+  }
+}

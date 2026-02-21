@@ -1,0 +1,67 @@
+@version(1)
+concept Canvas [V] {
+
+  purpose {
+    Arrange content cards in a free-form 2D spatial layout with connections and grouping.
+  }
+
+  state {
+    canvases: set V
+    nodes: V -> String
+    edges: V -> String
+    positions: V -> String
+  }
+
+  actions {
+    action addNode(canvas: V, node: String, x: Int, y: Int) {
+      -> ok() {
+        Places a new content node on the canvas at the specified coordinates.
+      }
+      -> notfound(message: String) {
+        The canvas does not exist.
+      }
+    }
+
+    action moveNode(canvas: V, node: String, x: Int, y: Int) {
+      -> ok() {
+        Repositions an existing node to the given coordinates.
+      }
+      -> notfound(message: String) {
+        The canvas or node does not exist.
+      }
+    }
+
+    action connectNodes(canvas: V, from: String, to: String) {
+      -> ok() {
+        Creates a directional edge between two nodes on the canvas.
+      }
+      -> notfound(message: String) {
+        The canvas or one of the nodes does not exist.
+      }
+    }
+
+    action groupNodes(canvas: V, nodes: String, group: String) {
+      -> ok() {
+        Combines the specified nodes into a named group.
+      }
+      -> notfound(message: String) {
+        The canvas or one of the nodes does not exist.
+      }
+    }
+
+    action embedFile(canvas: V, node: String, file: String) {
+      -> ok() {
+        Embeds an external file into the specified node on the canvas.
+      }
+      -> notfound(message: String) {
+        The canvas or node does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after addNode(canvas: v, node: "a", x: 0, y: 0) -> ok()
+    then moveNode(canvas: v, node: "a", x: 100, y: 200) -> ok()
+    and connectNodes(canvas: v, from: "a", to: "b") -> ok()
+  }
+}

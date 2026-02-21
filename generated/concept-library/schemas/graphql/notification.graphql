@@ -1,0 +1,23 @@
+type NotificationState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type NotificationEntry {
+  n: ID!
+  templates: String!
+  subscriptions: String!
+  inbox: String!
+  deliveryLog: String!
+  read: Boolean!
+}
+
+extend type Query {
+  notification_entry(n: ID!): NotificationEntry
+  notification_entries: [NotificationEntry!]!
+}
+
+type NotificationChannels {
+  n: ID!
+  value: String!
+}

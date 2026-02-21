@@ -1,0 +1,10 @@
+// Alias resolution for references
+
+sync ResolveAliasOnRef [eager]
+when {
+  Reference/addRef: [ source: ?source; target: ?target ]
+    => [ source: ?source ]
+}
+then {
+  Alias/resolve: [ name: ?target ]
+}

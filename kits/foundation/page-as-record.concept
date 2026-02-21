@@ -1,0 +1,87 @@
+@version(1)
+concept PageAsRecord [P] {
+
+  purpose {
+    Bridge structured properties and unstructured body content
+    within a single entity. A page has a schema defining typed
+    fields plus a free-form body for rich content.
+  }
+
+  state {
+    pages: set P
+    schema: P -> String
+    schemaProperties: P -> String
+    body: P -> String
+    collections: P -> set String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(page: P, schema: String) {
+      -> ok(page: P) {
+        Create a page with the given schema definition.
+      }
+      -> exists(message: String) {
+        A page with this identifier already exists.
+      }
+    }
+
+    action setProperty(page: P, key: String, value: String) {
+      -> ok(page: P) {
+        Set a structured property value on the page.
+      }
+      -> notfound(message: String) {
+        The page does not exist.
+      }
+      -> invalid(message: String) {
+        The key is not defined in the page's schema.
+      }
+    }
+
+    action getProperty(page: P, key: String) {
+      -> ok(value: String) {
+        Return a property value from the page.
+      }
+      -> notfound(message: String) {
+        The page or property does not exist.
+      }
+    }
+
+    action appendToBody(page: P, content: String) {
+      -> ok(page: P) {
+        Append content to the page's unstructured body.
+      }
+      -> notfound(message: String) {
+        The page does not exist.
+      }
+    }
+
+    action attachToSchema(page: P, schema: String) {
+      -> ok(page: P) {
+        Attach or update the page's schema definition.
+      }
+      -> notfound(message: String) {
+        The page does not exist.
+      }
+    }
+
+    action convertFromFreeform(page: P, schema: String) {
+      -> ok(page: P) {
+        Convert a freeform page to a structured record by
+        extracting properties from body content matching the schema.
+      }
+      -> notfound(message: String) {
+        The page does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(page: p, schema: "{\"fields\":[\"title\"]}") -> ok(page: p)
+    and setProperty(page: p, key: "title", value: "My Page") -> ok(page: p)
+    then getProperty(page: p, key: "title") -> ok(value: "My Page")
+  }
+}

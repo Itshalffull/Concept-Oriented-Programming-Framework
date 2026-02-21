@@ -1,0 +1,54 @@
+@version(1)
+concept Version [H] {
+
+  purpose {
+    Track content change history with snapshots enabling rollback,
+    diff comparison, and audit trails.
+  }
+
+  state {
+    history: set H
+    entity: H -> String
+    snapshot: H -> String
+    timestamp: H -> String
+    author: H -> String
+  }
+
+  actions {
+    action snapshot(version: H, entity: String, data: String, author: String) {
+      -> ok(version: H) {
+        Captures a point-in-time snapshot of the entity's content.
+      }
+    }
+
+    action listVersions(entity: String) {
+      -> ok(versions: String) {
+        Returns all recorded snapshots for the given entity in chronological order.
+      }
+    }
+
+    action rollback(version: H) {
+      -> ok(data: String) {
+        Restores the entity to the state captured in the specified snapshot.
+      }
+      -> notfound(message: String) {
+        The version does not exist.
+      }
+    }
+
+    action diff(versionA: H, versionB: H) {
+      -> ok(changes: String) {
+        Computes the differences between two snapshots.
+      }
+      -> notfound(message: String) {
+        One or both versions do not exist.
+      }
+    }
+  }
+
+  invariant {
+    after snapshot(version: v1, entity: "doc", data: "original", author: "alice") -> ok(version: v1)
+    then listVersions(entity: "doc") -> ok(versions: "v1")
+    and rollback(version: v1) -> ok(data: "original")
+  }
+}

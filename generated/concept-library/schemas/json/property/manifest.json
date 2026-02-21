@@ -1,0 +1,855 @@
+{
+  "uri": "urn:copf/Property",
+  "name": "Property",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "properties",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "closedValues",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "typeRegistry",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "set",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Store a property value on the entity"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The value does not match the registered type"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return the property value"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The property does not exist on this entity"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entity",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Remove the property from the entity"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The property does not exist on this entity"
+        }
+      ]
+    },
+    {
+      "name": "defineType",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Register a property type with its schema definition"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The type is already registered"
+        }
+      ]
+    },
+    {
+      "name": "listAll",
+      "params": [
+        {
+          "name": "entity",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "properties",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Return all properties on the entity as JSON"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after set, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "Hello World"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "Hello World"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    },
+    {
+      "description": "invariant 2: after set, delete, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "literal",
+                "value": "Hello"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        },
+        {
+          "action": "delete",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "entity",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            },
+            {
+              "name": "key",
+              "value": {
+                "kind": "literal",
+                "value": "title"
+              }
+            }
+          ],
+          "expectedVariant": "notfound",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "literal",
+                "value": "not found"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PropertyState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PropertyEntry {\n  p: ID!\n  properties: String!\n  closedValues: String!\n}\n\nextend type Query {\n  property_entry(p: ID!): PropertyEntry\n  property_entries: [PropertyEntry!]!\n}\n\ntype PropertyTypeRegistry {\n  p: ID!\n  value: String!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "set": {
+        "$id": "urn:copf/Property/set/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Property"
+          },
+          "action": {
+            "const": "set"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "key",
+              "value"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:copf/Property/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Property"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "key"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:copf/Property/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Property"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "key"
+            ]
+          }
+        }
+      },
+      "defineType": {
+        "$id": "urn:copf/Property/defineType/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Property"
+          },
+          "action": {
+            "const": "defineType"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "schema"
+            ]
+          }
+        }
+      },
+      "listAll": {
+        "$id": "urn:copf/Property/listAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Property"
+          },
+          "action": {
+            "const": "listAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "set": {
+        "ok": {
+          "$id": "urn:copf/Property/set/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:copf/Property/set/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:copf/Property/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Property/get/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:copf/Property/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entity"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Property/delete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "defineType": {
+        "ok": {
+          "$id": "urn:copf/Property/defineType/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "defineType"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:copf/Property/defineType/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "defineType"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listAll": {
+        "ok": {
+          "$id": "urn:copf/Property/listAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Property"
+            },
+            "action": {
+              "const": "listAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "properties": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "properties"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Attach typed key value metadata to content entities \n Each property has a registered type that determines its \n widget , formatter , and validation rules"
+}

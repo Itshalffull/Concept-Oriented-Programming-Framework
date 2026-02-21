@@ -1,0 +1,64 @@
+@version(1)
+concept AccessControl [A] {
+
+  purpose {
+    Evaluate three-valued access decisions (allowed/forbidden/neutral)
+    with cacheable results. Forbidden overrides all allowed. Policies
+    are composable via logical OR and AND combinators, enabling
+    layered access evaluation across multiple policy sources.
+  }
+
+  state {
+    policies: set A
+    result: A -> String
+    tags: A -> String
+    maxAge: A -> Int
+  }
+
+  actions {
+    action check(resource: String, action: String, context: String) {
+      -> ok(result: String, tags: String, maxAge: Int) {
+        Evaluate all applicable policies for the given resource and
+        action within the provided context. Return a three-valued
+        result: "allowed", "forbidden", or "neutral". Tags identify
+        which policies contributed. maxAge indicates how long the
+        result may be cached in seconds.
+      }
+    }
+
+    action orIf(left: String, right: String) {
+      -> ok(result: String) {
+        Logical OR of two access results. Returns "allowed" if
+        either input is "allowed", "forbidden" if either is
+        "forbidden" (forbidden takes precedence), and "neutral"
+        only if both are "neutral".
+      }
+    }
+
+    action andIf(left: String, right: String) {
+      -> ok(result: String) {
+        Logical AND of two access results where forbidden wins.
+        Returns "allowed" only if both inputs are "allowed".
+        Returns "forbidden" if either input is "forbidden".
+        Returns "neutral" if neither is "forbidden" and at
+        least one is "neutral".
+      }
+    }
+  }
+
+  invariant {
+    after check(resource: "document:123", action: "read", context: "user:alice") -> ok(result: "allowed", tags: t, maxAge: 300)
+    and check(resource: "document:123", action: "delete", context: "user:alice") -> ok(result: "forbidden", tags: t2, maxAge: 60)
+    then andIf(left: "allowed", right: "forbidden") -> ok(result: "forbidden")
+  }
+
+  invariant {
+    after orIf(left: "neutral", right: "allowed") -> ok(result: "allowed")
+    then andIf(left: "allowed", right: "allowed") -> ok(result: "allowed")
+  }
+
+  invariant {
+    after orIf(left: "neutral", right: "neutral") -> ok(result: "neutral")
+    then andIf(left: "neutral", right: "neutral") -> ok(result: "neutral")
+  }
+}
