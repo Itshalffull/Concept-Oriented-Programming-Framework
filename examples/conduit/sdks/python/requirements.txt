@@ -1,0 +1,5 @@
+# Conduit Python SDK Client — Dependencies
+# The client uses only Python stdlib (urllib), so no external deps needed.
+# These are optional for enhanced usage:
+# requests>=2.31.0
+# httpx>=0.25.0
