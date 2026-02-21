@@ -1,0 +1,68 @@
+@version(1)
+concept TerraformProvider [T] {
+
+  purpose {
+    Generate and apply Terraform HCL modules from COPF deploy
+    plans. Owns Terraform state file management, lock handling,
+    and workspace configuration.
+  }
+
+  state {
+    workspaces: set T
+    config {
+      stateBackend: T -> String
+      lockTable: T -> option String
+      workspace: T -> String
+    }
+    tracking {
+      lockId: T -> option String
+      serial: T -> Int
+      lastAppliedAt: T -> option DateTime
+    }
+  }
+
+  actions {
+    action generate(plan: String) {
+      -> ok(workspace: T, files: list String) {
+        HCL modules generated. Produces main, variables, and
+        outputs files per resource group.
+      }
+    }
+
+    action preview(workspace: T) {
+      -> ok(workspace: T, toCreate: Int, toUpdate: Int, toDelete: Int) {
+        Terraform plan executed.
+      }
+      -> stateLocked(workspace: T, lockId: String, lockedBy: String) {
+        State file is locked by another process.
+      }
+      -> backendInitRequired(workspace: T) {
+        Terraform init has not been run for this backend.
+      }
+    }
+
+    action apply(workspace: T) {
+      -> ok(workspace: T, created: list String, updated: list String) {
+        Terraform apply completed.
+      }
+      -> stateLocked(workspace: T, lockId: String) {
+        Cannot acquire state lock.
+      }
+      -> partial(workspace: T, created: list String, failed: list String) {
+        Apply failed midway. State partially updated.
+        Manual terraform state inspection may be needed.
+      }
+    }
+
+    action teardown(workspace: T) {
+      -> ok(workspace: T, destroyed: list String) {
+        Terraform destroy completed.
+      }
+    }
+  }
+
+  invariant {
+    after generate(plan: "dp-001") -> ok(workspace: w, files: f)
+    then apply(workspace: w) -> ok(workspace: w, created: c, updated: u)
+  }
+}

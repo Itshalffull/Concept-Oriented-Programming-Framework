@@ -1,0 +1,14 @@
+# Deploy start marker — Architecture doc Section 2.4
+# Emit a telemetry marker when deployment begins. Eventual because
+# marker emission is non-blocking.
+
+sync MarkerOnDeployStart [eventual]
+when {
+  DeployPlan/execute: [ plan: ?plan ]
+    => [ plan: ?plan; duration: ?dur; nodesDeployed: ?count ]
+}
+then {
+  Telemetry/deployMarker: [
+    kit: ?kit; version: ?version;
+    environment: ?env; status: "started" ]
+}

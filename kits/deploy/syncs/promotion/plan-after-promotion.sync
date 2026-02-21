@@ -1,0 +1,11 @@
+# Create deploy plan after environment resolved — Architecture doc Section 2.5
+# Once the target environment is resolved, create a deploy plan for it.
+
+sync PlanAfterPromotion [eager]
+when {
+  Env/resolve: [ environment: ?env ]
+    => [ environment: ?env; resolved: ?manifest ]
+}
+then {
+  DeployPlan/plan: [ manifest: ?manifest; environment: ?envName ]
+}

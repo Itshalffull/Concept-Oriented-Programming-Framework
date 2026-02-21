@@ -1,0 +1,63 @@
+@version(1)
+concept Artifact [A] {
+
+  purpose {
+    Manage immutable, content-addressed build artifacts for
+    concept deployments. Each compiled concept produces an
+    artifact with a hash derived from its inputs. Same inputs
+    always produce the same artifact. Rollback redeploys a
+    previous artifact rather than rebuilding.
+  }
+
+  state {
+    artifacts: set A
+    metadata {
+      hash: A -> String
+      kitName: A -> String
+      kitVersion: A -> String
+      conceptName: A -> String
+      builtAt: A -> DateTime
+      inputs: A -> list { name: String, hash: String }
+    }
+    storage {
+      location: A -> String
+      sizeBytes: A -> Int
+    }
+  }
+
+  actions {
+    action build(concept: String, spec: String, implementation: String, deps: list String) {
+      -> ok(artifact: A, hash: String, sizeBytes: Int) {
+        Compile concept spec plus implementation into a deployable
+        artifact. Hash computed from all inputs. If artifact with
+        same hash already exists, return it without rebuilding.
+      }
+      -> compilationError(concept: String, errors: list String) {
+        Spec or implementation has errors.
+      }
+    }
+
+    action resolve(hash: String) {
+      -> ok(artifact: A, location: String) {
+        Look up artifact by content hash. For rollback the
+        previous deployment hash resolves to the exact
+        artifact that was deployed.
+      }
+      -> notfound(hash: String) {
+        No artifact with this hash.
+      }
+    }
+
+    action gc(olderThan: DateTime, keepVersions: Int) {
+      -> ok(removed: Int, freedBytes: Int) {
+        Garbage collect old artifacts, keeping at least
+        keepVersions recent artifacts per concept for rollback.
+      }
+    }
+  }
+
+  invariant {
+    after build(concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: d) -> ok(artifact: a, hash: h, sizeBytes: 1024)
+    then resolve(hash: h) -> ok(artifact: a, location: loc)
+  }
+}

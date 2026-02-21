@@ -1,0 +1,1122 @@
+{
+  "uri": "urn:copf/Health",
+  "name": "Health",
+  "typeParams": [
+    {
+      "name": "H",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "latencyMs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "checkedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "details",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "checks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "h",
+        "paramRef": "H"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "H"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "checkConcept",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "runtime",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "check",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "latencyMs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Concept runtime responds to health probe \n Transport is reachable Storage is accessible"
+        },
+        {
+          "tag": "unreachable",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "transport",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transport probe failed Concept may not be deployed \n or runtime is down"
+        },
+        {
+          "tag": "storageFailed",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "storage",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Concept reachable but storage backend inaccessible"
+        },
+        {
+          "tag": "degraded",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "latencyMs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "threshold",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Concept responds but latency exceeds threshold"
+        }
+      ]
+    },
+    {
+      "name": "checkSync",
+      "params": [
+        {
+          "name": "sync",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "concepts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "check",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "roundTripMs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Synthetic test message delivered through sync path \n All referenced concepts received and responded"
+        },
+        {
+          "tag": "partialFailure",
+          "fields": [
+            {
+              "name": "sync",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some concepts in the sync chain are unreachable"
+        },
+        {
+          "tag": "timeout",
+          "fields": [
+            {
+              "name": "sync",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "timeoutMs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Sync path did not complete within timeout"
+        }
+      ]
+    },
+    {
+      "name": "checkKit",
+      "params": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "environment",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "check",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "conceptResults",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "syncResults",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "All concepts healthy , all syncs connected"
+        },
+        {
+          "tag": "degraded",
+          "fields": [
+            {
+              "name": "check",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "healthy",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "degraded",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Kit functional but some components below threshold"
+        },
+        {
+          "tag": "failed",
+          "fields": [
+            {
+              "name": "check",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            },
+            {
+              "name": "healthy",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Kit non functional Critical components unreachable"
+        }
+      ]
+    },
+    {
+      "name": "checkInvariant",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "invariant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "check",
+              "type": {
+                "kind": "param",
+                "paramRef": "H"
+              }
+            }
+          ],
+          "prose": "Ran the concept invariant test against the live \n deployment Action sequence produced expected variants"
+        },
+        {
+          "tag": "violated",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "invariant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "expected",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "actual",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invariant test failed Deployment may be corrupted"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after checkConcept, checkKit behaves correctly",
+      "setup": [
+        {
+          "action": "checkConcept",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "runtime",
+              "value": {
+                "kind": "literal",
+                "value": "server"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "check",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "latencyMs",
+              "value": {
+                "kind": "literal",
+                "value": 15
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "checkKit",
+          "inputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "literal",
+                "value": "auth"
+              }
+            },
+            {
+              "name": "environment",
+              "value": {
+                "kind": "literal",
+                "value": "staging"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "check",
+              "value": {
+                "kind": "variable",
+                "name": "h2"
+              }
+            },
+            {
+              "name": "conceptResults",
+              "value": {
+                "kind": "variable",
+                "name": "cr"
+              }
+            },
+            {
+              "name": "syncResults",
+              "value": {
+                "kind": "variable",
+                "name": "sr"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h2",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "cr",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "sr",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type HealthState {\n  \"\"\"All hs in this concept\"\"\"\n  hs: [ID!]!\n}\n\ntype HealthEntry {\n  h: ID!\n  target: String!\n  kind: String!\n  status: String!\n  latencyMs: Int!\n  checkedAt: String!\n  details: String!\n}\n\nextend type Query {\n  health_entry(h: ID!): HealthEntry\n  health_entries: [HealthEntry!]!\n}\n\ntype HealthChecks {\n  h: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "checkConcept": {
+        "$id": "urn:copf/Health/checkConcept/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Health"
+          },
+          "action": {
+            "const": "checkConcept"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "runtime": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "runtime"
+            ]
+          }
+        }
+      },
+      "checkSync": {
+        "$id": "urn:copf/Health/checkSync/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Health"
+          },
+          "action": {
+            "const": "checkSync"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "string"
+              },
+              "concepts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "sync",
+              "concepts"
+            ]
+          }
+        }
+      },
+      "checkKit": {
+        "$id": "urn:copf/Health/checkKit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Health"
+          },
+          "action": {
+            "const": "checkKit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kit": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kit",
+              "environment"
+            ]
+          }
+        }
+      },
+      "checkInvariant": {
+        "$id": "urn:copf/Health/checkInvariant/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Health"
+          },
+          "action": {
+            "const": "checkInvariant"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "invariant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "invariant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "checkConcept": {
+        "ok": {
+          "$id": "urn:copf/Health/checkConcept/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkConcept"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string"
+                },
+                "latencyMs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "check",
+                "latencyMs"
+              ]
+            }
+          }
+        },
+        "unreachable": {
+          "$id": "urn:copf/Health/checkConcept/completion/unreachable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkConcept"
+            },
+            "variant": {
+              "const": "unreachable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "transport": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "transport"
+              ]
+            }
+          }
+        },
+        "storageFailed": {
+          "$id": "urn:copf/Health/checkConcept/completion/storageFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkConcept"
+            },
+            "variant": {
+              "const": "storageFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "storage": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "storage",
+                "reason"
+              ]
+            }
+          }
+        },
+        "degraded": {
+          "$id": "urn:copf/Health/checkConcept/completion/degraded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkConcept"
+            },
+            "variant": {
+              "const": "degraded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "latencyMs": {
+                  "type": "integer"
+                },
+                "threshold": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "concept",
+                "latencyMs",
+                "threshold"
+              ]
+            }
+          }
+        }
+      },
+      "checkSync": {
+        "ok": {
+          "$id": "urn:copf/Health/checkSync/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkSync"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string"
+                },
+                "roundTripMs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "check",
+                "roundTripMs"
+              ]
+            }
+          }
+        },
+        "partialFailure": {
+          "$id": "urn:copf/Health/checkSync/completion/partialFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkSync"
+            },
+            "variant": {
+              "const": "partialFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync": {
+                  "type": "string"
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "sync",
+                "failed"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:copf/Health/checkSync/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkSync"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sync": {
+                  "type": "string"
+                },
+                "timeoutMs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sync",
+                "timeoutMs"
+              ]
+            }
+          }
+        }
+      },
+      "checkKit": {
+        "ok": {
+          "$id": "urn:copf/Health/checkKit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkKit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string"
+                },
+                "conceptResults": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "syncResults": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "check",
+                "conceptResults",
+                "syncResults"
+              ]
+            }
+          }
+        },
+        "degraded": {
+          "$id": "urn:copf/Health/checkKit/completion/degraded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkKit"
+            },
+            "variant": {
+              "const": "degraded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string"
+                },
+                "healthy": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "degraded": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "check",
+                "healthy",
+                "degraded"
+              ]
+            }
+          }
+        },
+        "failed": {
+          "$id": "urn:copf/Health/checkKit/completion/failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkKit"
+            },
+            "variant": {
+              "const": "failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string"
+                },
+                "healthy": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "check",
+                "healthy",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      "checkInvariant": {
+        "ok": {
+          "$id": "urn:copf/Health/checkInvariant/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkInvariant"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "check": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "check"
+              ]
+            }
+          }
+        },
+        "violated": {
+          "$id": "urn:copf/Health/checkInvariant/completion/violated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Health"
+            },
+            "action": {
+              "const": "checkInvariant"
+            },
+            "variant": {
+              "const": "violated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "invariant": {
+                  "type": "string"
+                },
+                "expected": {
+                  "type": "string"
+                },
+                "actual": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "invariant",
+                "expected",
+                "actual"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Verify deployment health at concept , sync , and kit levels \n Used as a gate in progressive delivery so rollout advances \n only when health checks pass Also provides ongoing \n monitoring after deployment completes"
+}

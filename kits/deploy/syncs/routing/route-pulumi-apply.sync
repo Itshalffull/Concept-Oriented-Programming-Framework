@@ -1,0 +1,10 @@
+# Route IaC/apply to PulumiProvider/apply — Architecture doc Section 3.8
+
+sync RoutePulumiApply [eager]
+when {
+  IaC/apply: [ plan: ?plan; provider: "pulumi" ]
+    => [ created: ?created; updated: ?updated; deleted: ?deleted ]
+}
+then {
+  PulumiProvider/apply: [ stack: ?stack ]
+}

@@ -1,0 +1,79 @@
+@version(1)
+concept LambdaRuntime [F] {
+
+  purpose {
+    Manage AWS Lambda function deployments. Owns function
+    configurations, IAM roles, API Gateway routes, layer
+    versions, and cold start metrics.
+  }
+
+  state {
+    functions: set F
+    config {
+      functionArn: F -> String
+      roleArn: F -> String
+      memory: F -> Int
+      timeout: F -> Int
+      runtime: F -> String
+      layers: F -> list String
+      apiGatewayRoute: F -> option String
+    }
+    metrics {
+      coldStartMs: F -> option Int
+      lastInvokedAt: F -> option DateTime
+    }
+  }
+
+  actions {
+    action provision(concept: String, memory: Int, timeout: Int, region: String) {
+      -> ok(function: F, functionArn: String, endpoint: String) {
+        Lambda function created. IAM role attached.
+        API Gateway route configured if HTTP transport.
+      }
+      -> quotaExceeded(region: String, limit: String) {
+        AWS Lambda quota hit in this region.
+      }
+      -> iamError(policy: String, reason: String) {
+        IAM role creation or policy attachment failed.
+      }
+    }
+
+    action deploy(function: F, artifactLocation: String) {
+      -> ok(function: F, version: String) {
+        Function code updated from artifact. New version published.
+      }
+      -> packageTooLarge(function: F, sizeBytes: Int, limitBytes: Int) {
+        Deployment package exceeds Lambda limits.
+      }
+      -> runtimeUnsupported(function: F, runtime: String) {
+        Requested runtime version not available.
+      }
+    }
+
+    action setTrafficWeight(function: F, aliasWeight: Int) {
+      -> ok(function: F) {
+        Lambda alias weighted routing updated for canary.
+      }
+    }
+
+    action rollback(function: F, targetVersion: String) {
+      -> ok(function: F, restoredVersion: String) {
+        Alias pointed to previous function version.
+      }
+    }
+
+    action destroy(function: F) {
+      -> ok(function: F) {
+        Function, role, and API Gateway route deleted.
+      }
+      -> resourceInUse(function: F, dependents: list String) {
+        Other resources reference this function.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", memory: 256, timeout: 30, region: "us-east-1") -> ok(function: f, functionArn: arn, endpoint: ep)
+    then deploy(function: f, artifactLocation: "s3://bucket/user.zip") -> ok(function: f, version: "1")
+  }
+}

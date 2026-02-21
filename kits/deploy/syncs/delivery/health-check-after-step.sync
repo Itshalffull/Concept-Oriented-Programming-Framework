@@ -1,0 +1,11 @@
+# Health check after rollout advance — Architecture doc Section 2.3
+# Each rollout step triggers a kit-level health check.
+
+sync HealthCheckAfterStep [eager]
+when {
+  Rollout/advance: [ rollout: ?r ]
+    => [ rollout: ?r; newWeight: ?w; step: ?step ]
+}
+then {
+  Health/checkKit: [ kit: ?kit; environment: ?env ]
+}

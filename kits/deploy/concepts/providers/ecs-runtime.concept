@@ -1,0 +1,82 @@
+@version(1)
+concept EcsRuntime [S] {
+
+  purpose {
+    Manage AWS ECS Fargate service deployments. Owns service
+    configurations, task definitions, ALB target groups,
+    auto-scaling policies, and service mesh settings.
+  }
+
+  state {
+    services: set S
+    config {
+      serviceArn: S -> String
+      clusterArn: S -> String
+      taskDefinition: S -> String
+      desiredCount: S -> Int
+      cpu: S -> Int
+      memory: S -> Int
+      targetGroupArn: S -> option String
+    }
+    scaling {
+      minInstances: S -> Int
+      maxInstances: S -> Int
+      targetCpu: S -> Int
+    }
+  }
+
+  actions {
+    action provision(concept: String, cpu: Int, memory: Int, cluster: String) {
+      -> ok(service: S, serviceArn: String, endpoint: String) {
+        ECS service created. Task definition registered.
+        ALB target group configured.
+      }
+      -> capacityUnavailable(cluster: String, requested: String) {
+        Cluster lacks capacity for the requested CPU and memory.
+      }
+      -> clusterNotFound(cluster: String) {
+        Named cluster does not exist.
+      }
+    }
+
+    action deploy(service: S, imageUri: String) {
+      -> ok(service: S, taskDefinition: String) {
+        New task definition registered. Service updated.
+        Rolling deployment initiated.
+      }
+      -> imageNotFound(imageUri: String) {
+        Container image not found in registry.
+      }
+      -> healthCheckFailed(service: S, failedTasks: Int) {
+        New tasks failed health checks. ECS rolled back
+        to previous task definition automatically.
+      }
+    }
+
+    action setTrafficWeight(service: S, weight: Int) {
+      -> ok(service: S) {
+        ALB target group weight updated for canary.
+      }
+    }
+
+    action rollback(service: S, targetTaskDefinition: String) {
+      -> ok(service: S) {
+        Service updated to previous task definition.
+      }
+    }
+
+    action destroy(service: S) {
+      -> ok(service: S) {
+        Service scaled to zero then deleted. Target group removed.
+      }
+      -> drainTimeout(service: S, activeConnections: Int) {
+        Connections still draining after timeout.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", cpu: 256, memory: 512, cluster: "prod-cluster") -> ok(service: s, serviceArn: arn, endpoint: ep)
+    then deploy(service: s, imageUri: "ecr.aws/user:latest") -> ok(service: s, taskDefinition: td)
+  }
+}

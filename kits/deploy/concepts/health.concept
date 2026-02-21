@@ -1,0 +1,81 @@
+@version(1)
+concept Health [H] {
+
+  purpose {
+    Verify deployment health at concept, sync, and kit levels.
+    Used as a gate in progressive delivery so rollout advances
+    only when health checks pass. Also provides ongoing
+    monitoring after deployment completes.
+  }
+
+  state {
+    checks: set H
+    results {
+      target: H -> String
+      kind: H -> String
+      status: H -> String
+      latencyMs: H -> Int
+      checkedAt: H -> DateTime
+      details: H -> option String
+    }
+  }
+
+  actions {
+    action checkConcept(concept: String, runtime: String) {
+      -> ok(check: H, latencyMs: Int) {
+        Concept runtime responds to health probe.
+        Transport is reachable. Storage is accessible.
+      }
+      -> unreachable(concept: String, transport: String) {
+        Transport probe failed. Concept may not be deployed
+        or runtime is down.
+      }
+      -> storageFailed(concept: String, storage: String, reason: String) {
+        Concept reachable but storage backend inaccessible.
+      }
+      -> degraded(concept: String, latencyMs: Int, threshold: Int) {
+        Concept responds but latency exceeds threshold.
+      }
+    }
+
+    action checkSync(sync: String, concepts: list String) {
+      -> ok(check: H, roundTripMs: Int) {
+        Synthetic test message delivered through sync path.
+        All referenced concepts received and responded.
+      }
+      -> partialFailure(sync: String, failed: list String) {
+        Some concepts in the sync chain are unreachable.
+      }
+      -> timeout(sync: String, timeoutMs: Int) {
+        Sync path did not complete within timeout.
+      }
+    }
+
+    action checkKit(kit: String, environment: String) {
+      -> ok(check: H, conceptResults: list String, syncResults: list String) {
+        All concepts healthy, all syncs connected.
+      }
+      -> degraded(check: H, healthy: list String, degraded: list String) {
+        Kit functional but some components below threshold.
+      }
+      -> failed(check: H, healthy: list String, failed: list String) {
+        Kit non-functional. Critical components unreachable.
+      }
+    }
+
+    action checkInvariant(concept: String, invariant: String) {
+      -> ok(check: H) {
+        Ran the concept invariant test against the live
+        deployment. Action sequence produced expected variants.
+      }
+      -> violated(concept: String, invariant: String, expected: String, actual: String) {
+        Invariant test failed. Deployment may be corrupted.
+      }
+    }
+  }
+
+  invariant {
+    after checkConcept(concept: "User", runtime: "server") -> ok(check: h, latencyMs: 15)
+    then checkKit(kit: "auth", environment: "staging") -> ok(check: h2, conceptResults: cr, syncResults: sr)
+  }
+}

@@ -1,0 +1,243 @@
+# kits/deploy/kit.yaml
+kit:
+  name: deploy
+  version: 0.1.0
+  description: >
+    Deployment orchestration for COPF applications. Provides
+    deploy planning, progressive delivery, schema migrations,
+    health verification, environment management, observability
+    injection, and immutable artifact management. Uses the
+    coordination + provider pattern for runtimes, secrets, and
+    infrastructure-as-code.
+
+concepts:
+  # --- Orchestration Concepts ---
+  DeployPlan:
+    spec: ./concepts/deploy-plan.concept
+    params:
+      D: { as: deploy-plan-ref, description: "Reference to a deployment plan" }
+
+  Rollout:
+    spec: ./concepts/rollout.concept
+    params:
+      R: { as: rollout-ref, description: "Reference to a progressive rollout" }
+
+  Migration:
+    spec: ./concepts/migration.concept
+    params:
+      M: { as: migration-ref, description: "Reference to a schema migration" }
+
+  Health:
+    spec: ./concepts/health.concept
+    params:
+      H: { as: health-check-ref, description: "Reference to a health check result" }
+
+  Env:
+    spec: ./concepts/env.concept
+    params:
+      E: { as: environment-ref, description: "Reference to a deployment environment" }
+
+  Telemetry:
+    spec: ./concepts/telemetry.concept
+    params:
+      T: { as: telemetry-config-ref, description: "Reference to a telemetry configuration" }
+
+  Artifact:
+    spec: ./concepts/artifact.concept
+    params:
+      A: { as: artifact-ref, description: "Reference to an immutable build artifact" }
+
+  # --- Coordination Concepts ---
+  Runtime:
+    spec: ./concepts/runtime.concept
+    params:
+      I: { as: runtime-instance-ref, description: "Reference to a deployed runtime instance" }
+
+  Secret:
+    spec: ./concepts/secret.concept
+    params:
+      S: { as: secret-ref, description: "Reference to a resolved secret" }
+
+  IaC:
+    spec: ./concepts/iac.concept
+    params:
+      R: { as: iac-resource-ref, description: "Reference to an infrastructure resource" }
+
+  GitOps:
+    spec: ./concepts/gitops.concept
+    params:
+      G: { as: gitops-manifest-ref, description: "Reference to a GitOps manifest" }
+
+  # --- Runtime Provider Concepts ---
+  LambdaRuntime:
+    spec: ./concepts/providers/lambda-runtime.concept
+    params:
+      F: { as: lambda-function-ref, description: "Reference to an AWS Lambda function" }
+    optional: true
+
+  EcsRuntime:
+    spec: ./concepts/providers/ecs-runtime.concept
+    params:
+      S: { as: ecs-service-ref, description: "Reference to an ECS Fargate service" }
+    optional: true
+
+  # --- Secret Provider Concepts ---
+  VaultProvider:
+    spec: ./concepts/providers/vault-provider.concept
+    params:
+      V: { as: vault-connection-ref, description: "Reference to a Vault connection" }
+    optional: true
+
+  AwsSmProvider:
+    spec: ./concepts/providers/aws-sm-provider.concept
+    params:
+      A: { as: aws-sm-secret-ref, description: "Reference to an AWS Secrets Manager secret" }
+    optional: true
+
+  # --- IaC Provider Concepts ---
+  PulumiProvider:
+    spec: ./concepts/providers/pulumi-provider.concept
+    params:
+      P: { as: pulumi-stack-ref, description: "Reference to a Pulumi stack" }
+    optional: true
+
+  TerraformProvider:
+    spec: ./concepts/providers/terraform-provider.concept
+    params:
+      T: { as: terraform-workspace-ref, description: "Reference to a Terraform workspace" }
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/core/validate-before-execute.sync
+      name: ValidateBeforeExecute
+      description: >
+        After a deploy plan is created, automatically validate
+        before execution proceeds.
+
+    - path: ./syncs/delivery/rollback-on-failure.sync
+      name: RollbackOnFailure
+      description: >
+        When kit health check fails, abort the rollout.
+
+    - path: ./syncs/delivery/rollback-plan-on-abort.sync
+      name: RollbackPlanOnAbort
+      description: >
+        When rollout is aborted, trigger full deployment rollback.
+
+  recommended:
+    - path: ./syncs/core/execute-after-validation.sync
+      name: ExecuteAfterValidation
+      description: >
+        When validation passes with no migration needed,
+        build artifacts and proceed with execution.
+
+    - path: ./syncs/core/migrate-before-execute.sync
+      name: MigrateBeforeExecute
+      description: >
+        When validation detects migration needed, run
+        migration before execution.
+
+    - path: ./syncs/migration/expand-after-plan.sync
+      name: ExpandAfterPlan
+      description: >
+        Expand schema after migration is planned.
+
+    - path: ./syncs/migration/migrate-after-expand.sync
+      name: MigrateAfterExpand
+      description: >
+        Migrate data after schema expansion completes.
+
+    - path: ./syncs/migration/contract-after-migrate.sync
+      name: ContractAfterMigrate
+      description: >
+        Contract old schema after data migration. Eventual
+        because contraction can be deferred.
+
+    - path: ./syncs/migration/deploy-after-migrate.sync
+      name: DeployAfterMigrate
+      description: >
+        Proceed with deployment after data migration completes.
+
+    - path: ./syncs/delivery/begin-rollout.sync
+      name: BeginRollout
+      description: >
+        Begin progressive rollout after execution if strategy
+        is not immediate.
+
+    - path: ./syncs/delivery/health-check-after-step.sync
+      name: HealthCheckAfterStep
+      description: >
+        Run health check after each rollout step.
+
+    - path: ./syncs/delivery/advance-on-healthy.sync
+      name: AdvanceOnHealthy
+      description: >
+        When health and rollout pass, run telemetry analysis.
+
+    - path: ./syncs/delivery/advance-on-metrics.sync
+      name: AdvanceOnMetrics
+      description: >
+        When telemetry analysis is healthy, advance rollout.
+
+    - path: ./syncs/delivery/pause-on-bad-metrics.sync
+      name: PauseOnBadMetrics
+      description: >
+        When telemetry analysis is unhealthy, pause rollout.
+
+    - path: ./syncs/observability/marker-on-deploy-start.sync
+      name: MarkerOnDeployStart
+      description: >
+        Emit telemetry marker when deployment starts.
+
+    - path: ./syncs/observability/marker-on-deploy-complete.sync
+      name: MarkerOnDeployComplete
+      description: >
+        Emit telemetry marker when rollout completes.
+
+    - path: ./syncs/observability/marker-on-rollback.sync
+      name: MarkerOnRollback
+      description: >
+        Emit telemetry marker when deployment rolls back.
+
+    - path: ./syncs/promotion/resolve-before-promote.sync
+      name: ResolveBeforePromote
+      description: >
+        Resolve target environment after promotion.
+
+    - path: ./syncs/promotion/plan-after-promotion.sync
+      name: PlanAfterPromotion
+      description: >
+        Create deploy plan after environment resolved.
+
+  # --- Routing Syncs (activate per loaded provider) ---
+  integration:
+    # Runtime routing
+    - path: ./syncs/routing/route-to-lambda.sync
+      name: RouteLambda
+    - path: ./syncs/routing/route-lambda-deploy.sync
+      name: RouteLambdaDeploy
+    - path: ./syncs/routing/lambda-provision-complete.sync
+      name: LambdaProvisionComplete
+    - path: ./syncs/routing/route-to-ecs.sync
+      name: RouteEcs
+
+    # Secret routing
+    - path: ./syncs/routing/route-to-vault.sync
+      name: RouteVault
+    - path: ./syncs/routing/route-to-aws-sm.sync
+      name: RouteAwsSm
+    - path: ./syncs/routing/vault-resolved.sync
+      name: VaultResolved
+
+    # IaC routing
+    - path: ./syncs/routing/route-to-pulumi.sync
+      name: RoutePulumi
+    - path: ./syncs/routing/route-to-terraform.sync
+      name: RouteTerraform
+    - path: ./syncs/routing/route-pulumi-apply.sync
+      name: RoutePulumiApply
+    - path: ./syncs/routing/pulumi-apply-complete.sync
+      name: PulumiApplyComplete
+
+dependencies: []

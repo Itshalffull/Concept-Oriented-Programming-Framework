@@ -1,0 +1,11 @@
+# Route Runtime/provision to LambdaRuntime — Architecture doc Section 3.8
+
+sync RouteToLambda [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "aws-lambda"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  LambdaRuntime/provision: [ concept: ?concept; memory: ?mem;
+    timeout: ?timeout; region: ?region ]
+}

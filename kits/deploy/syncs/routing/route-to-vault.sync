@@ -1,0 +1,10 @@
+# Route Secret/resolve to VaultProvider — Architecture doc Section 3.8
+
+sync RouteToVault [eager]
+when {
+  Secret/resolve: [ name: ?name; provider: "vault" ]
+    => [ secret: ?s; version: ?ver ]
+}
+then {
+  VaultProvider/fetch: [ path: ?name ]
+}

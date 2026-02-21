@@ -1,0 +1,11 @@
+# Lambda provision completion propagates back — Architecture doc Section 3.8
+
+sync LambdaProvisionComplete [eager]
+when {
+  LambdaRuntime/provision: [ concept: ?concept ]
+    => [ function: ?f; functionArn: ?arn; endpoint: ?endpoint ]
+}
+then {
+  Runtime/provision: [ concept: ?concept; runtimeType: "aws-lambda";
+    config: ?config ]
+}

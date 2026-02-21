@@ -1,0 +1,15 @@
+# Begin progressive rollout after execution — Architecture doc Section 2.3
+# Only triggers if strategy is not immediate.
+
+sync BeginRollout [eager]
+when {
+  DeployPlan/execute: [ plan: ?plan ]
+    => [ plan: ?plan; duration: ?dur; nodesDeployed: ?count ]
+}
+where {
+  Rollout: { ?config plan: ?plan }
+  filter(?config . strategy != "immediate")
+}
+then {
+  Rollout/begin: [ plan: ?plan; strategy: ?strategy; steps: ?steps ]
+}

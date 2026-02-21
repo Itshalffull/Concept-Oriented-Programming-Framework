@@ -1,0 +1,672 @@
+{
+  "uri": "urn:copf/Artifact",
+  "name": "Artifact",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kitName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "kitVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "conceptName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "builtAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "inputs",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "hash",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "location",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sizeBytes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "artifacts",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "spec",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "implementation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "deps",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "hash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "sizeBytes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Compile concept spec plus implementation into a deployable \n artifact Hash computed from all inputs If artifact with \n same hash already exists , return it without rebuilding"
+        },
+        {
+          "tag": "compilationError",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Spec or implementation has errors"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "location",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Look up artifact by content hash For rollback the \n previous deployment hash resolves to the exact \n artifact that was deployed"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "hash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No artifact with this hash"
+        }
+      ]
+    },
+    {
+      "name": "gc",
+      "params": [
+        {
+          "name": "olderThan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          }
+        },
+        {
+          "name": "keepVersions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "removed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "freedBytes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Garbage collect old artifacts , keeping at least \n keepVersions recent artifacts per concept for rollback"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, resolve behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "spec",
+              "value": {
+                "kind": "literal",
+                "value": "user.concept"
+              }
+            },
+            {
+              "name": "implementation",
+              "value": {
+                "kind": "literal",
+                "value": "user.impl.ts"
+              }
+            },
+            {
+              "name": "deps",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "sizeBytes",
+              "value": {
+                "kind": "literal",
+                "value": 1024
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "hash",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "location",
+              "value": {
+                "kind": "variable",
+                "name": "loc"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "loc",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ArtifactState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ArtifactEntry {\n  a: ID!\n  hash: String!\n  kitName: String!\n  kitVersion: String!\n  conceptName: String!\n  builtAt: String!\n  inputs: [JSON!]!\n  location: String!\n  sizeBytes: Int!\n}\n\nextend type Query {\n  artifact_entry(a: ID!): ArtifactEntry\n  artifact_entries: [ArtifactEntry!]!\n}\n\ntype ArtifactArtifacts {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:copf/Artifact/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Artifact"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "spec": {
+                "type": "string"
+              },
+              "implementation": {
+                "type": "string"
+              },
+              "deps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "concept",
+              "spec",
+              "implementation",
+              "deps"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:copf/Artifact/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Artifact"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "hash"
+            ]
+          }
+        }
+      },
+      "gc": {
+        "$id": "urn:copf/Artifact/gc/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Artifact"
+          },
+          "action": {
+            "const": "gc"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "olderThan": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "keepVersions": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "olderThan",
+              "keepVersions"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:copf/Artifact/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                },
+                "hash": {
+                  "type": "string"
+                },
+                "sizeBytes": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "artifact",
+                "hash",
+                "sizeBytes"
+              ]
+            }
+          }
+        },
+        "compilationError": {
+          "$id": "urn:copf/Artifact/build/completion/compilationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "compilationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "concept",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:copf/Artifact/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifact",
+                "location"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:copf/Artifact/resolve/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "hash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "hash"
+              ]
+            }
+          }
+        }
+      },
+      "gc": {
+        "ok": {
+          "$id": "urn:copf/Artifact/gc/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "gc"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "removed": {
+                  "type": "integer"
+                },
+                "freedBytes": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "removed",
+                "freedBytes"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage immutable , content addressed build artifacts for \n concept deployments Each compiled concept produces an \n artifact with a hash derived from its inputs Same inputs \n always produce the same artifact Rollback redeploys a \n previous artifact rather than rebuilding"
+}

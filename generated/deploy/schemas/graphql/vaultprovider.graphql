@@ -1,0 +1,26 @@
+type VaultProviderState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type VaultProviderEntry {
+  v: ID!
+  address: String!
+  authMethod: String!
+  mountPath: String!
+  leaseId: String!
+  leaseDuration: Int!
+  renewable: Boolean!
+  sealed: Boolean!
+  lastCheckedAt: String!
+}
+
+extend type Query {
+  vaultprovider_entry(v: ID!): VaultProviderEntry
+  vaultprovider_entries: [VaultProviderEntry!]!
+}
+
+type VaultProviderConnections {
+  v: ID!
+  value: ID!
+}

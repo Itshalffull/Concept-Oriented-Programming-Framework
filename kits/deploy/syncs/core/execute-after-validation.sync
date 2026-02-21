@@ -1,0 +1,12 @@
+# Execute after validation passes — Architecture doc Section 2.1
+# Validation passed with no migration needed, build artifacts and execute.
+
+sync ExecuteAfterValidation [eager]
+when {
+  DeployPlan/validate: [ plan: ?plan ]
+    => [ plan: ?plan; warnings: ?warnings ]
+}
+then {
+  Artifact/build: [ concept: ?concept; spec: ?spec;
+    implementation: ?impl; deps: ?deps ]
+}

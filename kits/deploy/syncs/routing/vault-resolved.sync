@@ -1,0 +1,10 @@
+# Vault fetch completion propagates back to Secret — Architecture doc Section 3.8
+
+sync VaultResolved [eager]
+when {
+  VaultProvider/fetch: [ path: ?path ]
+    => [ value: ?value; leaseId: ?lease; leaseDuration: ?duration ]
+}
+then {
+  Secret/resolve: [ name: ?path; provider: "vault" ]
+}

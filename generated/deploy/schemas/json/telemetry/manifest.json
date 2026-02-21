@@ -1,0 +1,708 @@
+{
+  "uri": "urn:copf/Telemetry",
+  "name": "Telemetry",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "endpoint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "samplingRate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "serviceName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "serviceNamespace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "serviceVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "markers",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "deployId",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "kitVersion",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "endpoint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "samplingRate",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Register telemetry config for a concept At deploy time \n the Runtime concept injects OTEL instrumentation with \n these settings"
+        }
+      ]
+    },
+    {
+      "name": "deployMarker",
+      "params": [
+        {
+          "name": "kit",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "environment",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "marker",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Emit a deployment event to the observability backend \n Includes kit name , version , environment , start and end \n time , changed concepts , and deployment strategy"
+        },
+        {
+          "tag": "backendUnavailable",
+          "fields": [
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Observability backend unreachable Non fatal so \n deployment continues and marker is queued for retry"
+        }
+      ]
+    },
+    {
+      "name": "analyze",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "window",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "criteria",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "healthy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "errorRate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "latencyP99",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "sampleSize",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Query the observability backend for concept health metrics \n over the specified time window Used by Rollout to decide \n whether to advance , pause , or abort"
+        },
+        {
+          "tag": "insufficientData",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "samplesFound",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "samplesNeeded",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Not enough data points in the window to make a decision \n Rollout should wait and retry"
+        },
+        {
+          "tag": "backendUnavailable",
+          "fields": [
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot query metrics Conservative action is pause rollout"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, deployMarker behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "literal",
+                "value": "http://otel:4317"
+              }
+            },
+            {
+              "name": "samplingRate",
+              "value": {
+                "kind": "literal",
+                "value": 0.5
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deployMarker",
+          "inputs": [
+            {
+              "name": "kit",
+              "value": {
+                "kind": "literal",
+                "value": "auth"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "1.0.0"
+              }
+            },
+            {
+              "name": "environment",
+              "value": {
+                "kind": "literal",
+                "value": "staging"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "started"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "marker",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TelemetryState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TelemetryEntry {\n  t: ID!\n  endpoint: String!\n  samplingRate: Float!\n  serviceName: String!\n  serviceNamespace: String!\n  serviceVersion: String!\n  markers: [JSON!]!\n}\n\nextend type Query {\n  telemetry_entry(t: ID!): TelemetryEntry\n  telemetry_entries: [TelemetryEntry!]!\n}\n\ntype TelemetryConfigs {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:copf/Telemetry/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Telemetry"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "samplingRate": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "concept",
+              "endpoint",
+              "samplingRate"
+            ]
+          }
+        }
+      },
+      "deployMarker": {
+        "$id": "urn:copf/Telemetry/deployMarker/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Telemetry"
+          },
+          "action": {
+            "const": "deployMarker"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kit": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kit",
+              "version",
+              "environment",
+              "status"
+            ]
+          }
+        }
+      },
+      "analyze": {
+        "$id": "urn:copf/Telemetry/analyze/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Telemetry"
+          },
+          "action": {
+            "const": "analyze"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "window": {
+                "type": "integer"
+              },
+              "criteria": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "window",
+              "criteria"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "ok": {
+          "$id": "urn:copf/Telemetry/configure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Telemetry"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "deployMarker": {
+        "ok": {
+          "$id": "urn:copf/Telemetry/deployMarker/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Telemetry"
+            },
+            "action": {
+              "const": "deployMarker"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "marker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "marker"
+              ]
+            }
+          }
+        },
+        "backendUnavailable": {
+          "$id": "urn:copf/Telemetry/deployMarker/completion/backendUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Telemetry"
+            },
+            "action": {
+              "const": "deployMarker"
+            },
+            "variant": {
+              "const": "backendUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "endpoint"
+              ]
+            }
+          }
+        }
+      },
+      "analyze": {
+        "ok": {
+          "$id": "urn:copf/Telemetry/analyze/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Telemetry"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "healthy": {
+                  "type": "boolean"
+                },
+                "errorRate": {
+                  "type": "number"
+                },
+                "latencyP99": {
+                  "type": "integer"
+                },
+                "sampleSize": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "healthy",
+                "errorRate",
+                "latencyP99",
+                "sampleSize"
+              ]
+            }
+          }
+        },
+        "insufficientData": {
+          "$id": "urn:copf/Telemetry/analyze/completion/insufficientData",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Telemetry"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "insufficientData"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "samplesFound": {
+                  "type": "integer"
+                },
+                "samplesNeeded": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "concept",
+                "samplesFound",
+                "samplesNeeded"
+              ]
+            }
+          }
+        },
+        "backendUnavailable": {
+          "$id": "urn:copf/Telemetry/analyze/completion/backendUnavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Telemetry"
+            },
+            "action": {
+              "const": "analyze"
+            },
+            "variant": {
+              "const": "backendUnavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "endpoint"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage observability configuration for deployed concepts \n Injects OpenTelemetry instrumentation at deploy time , \n emits deployment markers to observability backends , and \n provides metric analysis for progressive delivery gates"
+}

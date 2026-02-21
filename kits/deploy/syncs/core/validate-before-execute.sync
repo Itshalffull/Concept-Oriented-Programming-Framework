@@ -1,0 +1,11 @@
+# Plan validation gate — Architecture doc Section 2.1
+# After a deploy plan is created, validate before execution.
+
+sync ValidateBeforeExecute [eager]
+when {
+  DeployPlan/plan: [ manifest: ?manifest; environment: ?env ]
+    => [ plan: ?plan; graph: ?graph; estimatedDuration: ?duration ]
+}
+then {
+  DeployPlan/validate: [ plan: ?plan ]
+}

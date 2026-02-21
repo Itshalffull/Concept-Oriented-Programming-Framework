@@ -1,0 +1,28 @@
+type EcsRuntimeState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type EcsRuntimeEntry {
+  s: ID!
+  serviceArn: String!
+  clusterArn: String!
+  taskDefinition: String!
+  desiredCount: Int!
+  cpu: Int!
+  memory: Int!
+  targetGroupArn: String!
+  minInstances: Int!
+  maxInstances: Int!
+  targetCpu: Int!
+}
+
+extend type Query {
+  ecsruntime_entry(s: ID!): EcsRuntimeEntry
+  ecsruntime_entries: [EcsRuntimeEntry!]!
+}
+
+type EcsRuntimeServices {
+  s: ID!
+  value: ID!
+}

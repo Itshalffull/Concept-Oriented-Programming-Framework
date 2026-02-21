@@ -1,0 +1,27 @@
+type LambdaRuntimeState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type LambdaRuntimeEntry {
+  f: ID!
+  functionArn: String!
+  roleArn: String!
+  memory: Int!
+  timeout: Int!
+  runtime: String!
+  layers: [String!]!
+  apiGatewayRoute: String!
+  coldStartMs: Int!
+  lastInvokedAt: String!
+}
+
+extend type Query {
+  lambdaruntime_entry(f: ID!): LambdaRuntimeEntry
+  lambdaruntime_entries: [LambdaRuntimeEntry!]!
+}
+
+type LambdaRuntimeFunctions {
+  f: ID!
+  value: ID!
+}

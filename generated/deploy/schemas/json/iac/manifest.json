@@ -1,0 +1,1084 @@
+{
+  "uri": "urn:copf/IaC",
+  "name": "IaC",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "resourceId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "resourceType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastSyncedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "driftDetected",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "estimatedMonthlyCost",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "resources",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "emit",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "fileCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "IaC code generated from deploy plan Output is \n a reference to the generated files , not the files \n themselves Provider concept handles file content"
+        },
+        {
+          "tag": "unsupportedResource",
+          "fields": [
+            {
+              "name": "resource",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "provider",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Deploy plan requires a resource type the provider \n cannot express"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "toCreate",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "toUpdate",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "toDelete",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "estimatedMonthlyCost",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Dry run showing what would change"
+        },
+        {
+          "tag": "stateCorrupted",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider state file is corrupted or inaccessible"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "deleted",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Resources provisioned Inventory updated"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Some resources created , some failed Provider \n state may be inconsistent"
+        },
+        {
+          "tag": "applyFailed",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Apply failed entirely No changes made"
+        }
+      ]
+    },
+    {
+      "name": "detectDrift",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "drifted",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "clean",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Compared actual cloud state to expected state \n Drifted resources flagged in inventory"
+        },
+        {
+          "tag": "noDrift",
+          "fields": [],
+          "prose": "All resources match expected state"
+        }
+      ]
+    },
+    {
+      "name": "teardown",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "destroyed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "All resources for this plan destroyed \n Inventory cleared"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "destroyed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "stuck",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some resources could not be destroyed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after emit, apply behaves correctly",
+      "setup": [
+        {
+          "action": "emit",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "pulumi"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "output",
+              "value": {
+                "kind": "literal",
+                "value": "stack-ref"
+              }
+            },
+            {
+              "name": "fileCount",
+              "value": {
+                "kind": "literal",
+                "value": 3
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            },
+            {
+              "name": "provider",
+              "value": {
+                "kind": "literal",
+                "value": "pulumi"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "created",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "updated",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            },
+            {
+              "name": "deleted",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type IaCState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype IaCEntry {\n  r: ID!\n  resourceId: String!\n  provider: String!\n  resourceType: String!\n  concept: String!\n  createdAt: String!\n  lastSyncedAt: String!\n  driftDetected: Boolean!\n  estimatedMonthlyCost: Float!\n}\n\nextend type Query {\n  iac_entry(r: ID!): IaCEntry\n  iac_entries: [IaCEntry!]!\n}\n\ntype IaCResources {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "emit": {
+        "$id": "urn:copf/IaC/emit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/IaC"
+          },
+          "action": {
+            "const": "emit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "provider"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:copf/IaC/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/IaC"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "provider"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:copf/IaC/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/IaC"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "provider"
+            ]
+          }
+        }
+      },
+      "detectDrift": {
+        "$id": "urn:copf/IaC/detectDrift/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/IaC"
+          },
+          "action": {
+            "const": "detectDrift"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      },
+      "teardown": {
+        "$id": "urn:copf/IaC/teardown/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/IaC"
+          },
+          "action": {
+            "const": "teardown"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "provider"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "emit": {
+        "ok": {
+          "$id": "urn:copf/IaC/emit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                },
+                "fileCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "output",
+                "fileCount"
+              ]
+            }
+          }
+        },
+        "unsupportedResource": {
+          "$id": "urn:copf/IaC/emit/completion/unsupportedResource",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "unsupportedResource"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "string"
+                },
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resource",
+                "provider"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:copf/IaC/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "toCreate": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "toUpdate": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "toDelete": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "estimatedMonthlyCost": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "toCreate",
+                "toUpdate",
+                "toDelete",
+                "estimatedMonthlyCost"
+              ]
+            }
+          }
+        },
+        "stateCorrupted": {
+          "$id": "urn:copf/IaC/preview/completion/stateCorrupted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "stateCorrupted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:copf/IaC/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "updated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "deleted": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "created",
+                "updated",
+                "deleted"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:copf/IaC/apply/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "created",
+                "failed",
+                "reason"
+              ]
+            }
+          }
+        },
+        "applyFailed": {
+          "$id": "urn:copf/IaC/apply/completion/applyFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "applyFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "detectDrift": {
+        "ok": {
+          "$id": "urn:copf/IaC/detectDrift/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "detectDrift"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "drifted": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "clean": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "drifted",
+                "clean"
+              ]
+            }
+          }
+        },
+        "noDrift": {
+          "$id": "urn:copf/IaC/detectDrift/completion/noDrift",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "detectDrift"
+            },
+            "variant": {
+              "const": "noDrift"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "teardown": {
+        "ok": {
+          "$id": "urn:copf/IaC/teardown/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "destroyed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "destroyed"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:copf/IaC/teardown/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/IaC"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "destroyed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "stuck": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "destroyed",
+                "stuck"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate infrastructure as code generation and application \n across IaC providers Owns the resource inventory tracking \n what cloud resources exist for this app , drift detection \n state , and cost tracking DeployPlan talks to IaC and never \n to providers directly"
+}

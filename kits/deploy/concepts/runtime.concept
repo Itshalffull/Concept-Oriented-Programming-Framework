@@ -1,0 +1,104 @@
+@version(1)
+concept Runtime [I] {
+
+  purpose {
+    Coordinate compute provisioning across cloud providers.
+    Owns the deployed-instance registry, endpoint mappings,
+    version history, and traffic weight state. Provider-agnostic
+    so DeployPlan invokes Runtime actions and integration syncs
+    route to the active provider concept.
+  }
+
+  state {
+    instances: set I
+    registry {
+      concept: I -> String
+      runtimeType: I -> String
+      endpoint: I -> String
+      version: I -> String
+      artifactHash: I -> String
+      deployedAt: I -> DateTime
+      status: I -> String
+    }
+    traffic {
+      activeWeight: I -> Int
+      canaryWeight: I -> Int
+      canaryEndpoint: I -> option String
+    }
+    history: I -> list { version: String, artifactHash: String, deployedAt: DateTime }
+  }
+
+  actions {
+    action provision(concept: String, runtimeType: String, config: String) {
+      -> ok(instance: I, endpoint: String) {
+        Registers the provisioning intent. Completion arrives
+        after the provider concept finishes actual provisioning.
+        Runtime records the instance in its registry.
+      }
+      -> alreadyProvisioned(instance: I, endpoint: String) {
+        Instance exists and is healthy. No action needed.
+      }
+      -> provisionFailed(concept: String, runtimeType: String, reason: String) {
+        Provider reported failure propagated via sync.
+      }
+    }
+
+    action deploy(instance: I, artifact: String, version: String) {
+      -> ok(instance: I, endpoint: String) {
+        Artifact deployed to the instance runtime. Endpoint
+        updated if changed. Version and hash recorded in history.
+      }
+      -> deployFailed(instance: I, reason: String) {
+        Provider reported deployment failure.
+      }
+    }
+
+    action setTrafficWeight(instance: I, weight: Int) {
+      -> ok(instance: I, newWeight: Int) {
+        Traffic weight updated. For canary splits between
+        current and canary endpoint.
+      }
+    }
+
+    action rollback(instance: I) {
+      -> ok(instance: I, previousVersion: String) {
+        Rolled back to previous version from history.
+        Provider handles the actual redeployment.
+      }
+      -> noHistory(instance: I) {
+        No previous version to roll back to.
+      }
+      -> rollbackFailed(instance: I, reason: String) {
+        Provider could not roll back.
+      }
+    }
+
+    action destroy(instance: I) {
+      -> ok(instance: I) {
+        Instance removed from registry. Provider tears down
+        the actual resources.
+      }
+      -> destroyFailed(instance: I, reason: String) {
+        Provider could not destroy. Instance marked for
+        manual cleanup.
+      }
+    }
+
+    action healthCheck(instance: I) {
+      -> ok(instance: I, latencyMs: Int) {
+        Instance healthy and reachable.
+      }
+      -> unreachable(instance: I) {
+        Transport probe failed.
+      }
+      -> degraded(instance: I, latencyMs: Int) {
+        Responding but above latency threshold.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", runtimeType: "ecs-fargate", config: "{}") -> ok(instance: i, endpoint: "http://svc:8080")
+    then deploy(instance: i, artifact: "s3://artifacts/user-v1", version: "1.0.0") -> ok(instance: i, endpoint: "http://svc:8080")
+  }
+}

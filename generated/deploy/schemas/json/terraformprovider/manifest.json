@@ -1,0 +1,836 @@
+{
+  "uri": "urn:copf/TerraformProvider",
+  "name": "TerraformProvider",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "stateBackend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lockTable",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "workspace",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lockId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "serial",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastAppliedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "workspaces",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "HCL modules generated Produces main , variables , and \n outputs files per resource group"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "workspace",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "toCreate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toUpdate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toDelete",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Terraform plan executed"
+        },
+        {
+          "tag": "stateLocked",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "lockId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "lockedBy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "State file is locked by another process"
+        },
+        {
+          "tag": "backendInitRequired",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Terraform init has not been run for this backend"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "workspace",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Terraform apply completed"
+        },
+        {
+          "tag": "stateLocked",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "lockId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot acquire state lock"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Apply failed midway State partially updated \n Manual terraform state inspection may be needed"
+        }
+      ]
+    },
+    {
+      "name": "teardown",
+      "params": [
+        {
+          "name": "workspace",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "workspace",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "destroyed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Terraform destroy completed"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, apply behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "workspace",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "workspace",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "workspace",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "created",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "updated",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TerraformProviderState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype TerraformProviderEntry {\n  t: ID!\n  stateBackend: String!\n  lockTable: String!\n  workspace: String!\n  lockId: String!\n  serial: Int!\n  lastAppliedAt: String!\n}\n\nextend type Query {\n  terraformprovider_entry(t: ID!): TerraformProviderEntry\n  terraformprovider_entries: [TerraformProviderEntry!]!\n}\n\ntype TerraformProviderWorkspaces {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:copf/TerraformProvider/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TerraformProvider"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:copf/TerraformProvider/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TerraformProvider"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workspace": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workspace"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:copf/TerraformProvider/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TerraformProvider"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workspace": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workspace"
+            ]
+          }
+        }
+      },
+      "teardown": {
+        "$id": "urn:copf/TerraformProvider/teardown/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TerraformProvider"
+          },
+          "action": {
+            "const": "teardown"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "workspace": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "workspace"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:copf/TerraformProvider/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "workspace",
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:copf/TerraformProvider/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "toCreate": {
+                  "type": "integer"
+                },
+                "toUpdate": {
+                  "type": "integer"
+                },
+                "toDelete": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "workspace",
+                "toCreate",
+                "toUpdate",
+                "toDelete"
+              ]
+            }
+          }
+        },
+        "stateLocked": {
+          "$id": "urn:copf/TerraformProvider/preview/completion/stateLocked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "stateLocked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "lockId": {
+                  "type": "string"
+                },
+                "lockedBy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "workspace",
+                "lockId",
+                "lockedBy"
+              ]
+            }
+          }
+        },
+        "backendInitRequired": {
+          "$id": "urn:copf/TerraformProvider/preview/completion/backendInitRequired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "backendInitRequired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "workspace"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:copf/TerraformProvider/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "updated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "workspace",
+                "created",
+                "updated"
+              ]
+            }
+          }
+        },
+        "stateLocked": {
+          "$id": "urn:copf/TerraformProvider/apply/completion/stateLocked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "stateLocked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "lockId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "workspace",
+                "lockId"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:copf/TerraformProvider/apply/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "workspace",
+                "created",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      "teardown": {
+        "ok": {
+          "$id": "urn:copf/TerraformProvider/teardown/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TerraformProvider"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "workspace": {
+                  "type": "string"
+                },
+                "destroyed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "workspace",
+                "destroyed"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate and apply Terraform HCL modules from COPF deploy \n plans Owns Terraform state file management , lock handling , \n and workspace configuration"
+}

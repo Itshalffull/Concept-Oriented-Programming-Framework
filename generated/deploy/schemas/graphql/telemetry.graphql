@@ -1,0 +1,24 @@
+type TelemetryState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TelemetryEntry {
+  t: ID!
+  endpoint: String!
+  samplingRate: Float!
+  serviceName: String!
+  serviceNamespace: String!
+  serviceVersion: String!
+  markers: [JSON!]!
+}
+
+extend type Query {
+  telemetry_entry(t: ID!): TelemetryEntry
+  telemetry_entries: [TelemetryEntry!]!
+}
+
+type TelemetryConfigs {
+  t: ID!
+  value: ID!
+}

@@ -1,0 +1,10 @@
+# Expand schema after migration planned — Architecture doc Section 2.2
+
+sync ExpandAfterPlan [eager]
+when {
+  Migration/plan: [ concept: ?concept ]
+    => [ migration: ?m; steps: ?steps; estimatedRecords: ?count ]
+}
+then {
+  Migration/expand: [ migration: ?m ]
+}

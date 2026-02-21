@@ -1,0 +1,85 @@
+@version(1)
+concept Migration [M] {
+
+  purpose {
+    Orchestrate storage schema migrations for concepts whose
+    version has changed. Uses the expand/contract pattern:
+    expand adds new schema alongside old, migrate copies data
+    with dual-write, contract removes old schema. Each phase
+    is a gate blocking deployment until it passes.
+  }
+
+  state {
+    migrations: set M
+    config {
+      concept: M -> String
+      fromVersion: M -> Int
+      toVersion: M -> Int
+      phase: M -> String
+    }
+    progress {
+      recordsMigrated: M -> Int
+      recordsTotal: M -> Int
+      startedAt: M -> DateTime
+      errors: M -> list String
+    }
+  }
+
+  actions {
+    action plan(concept: String, fromVersion: Int, toVersion: Int) {
+      -> ok(migration: M, steps: list String, estimatedRecords: Int) {
+        Analyze schema diff. Determine migration steps.
+        Estimate record count for progress tracking.
+      }
+      -> noMigrationNeeded(concept: String) {
+        Versions are compatible with additive changes only.
+      }
+      -> incompatible(concept: String, reason: String) {
+        Breaking change with no declared migration path.
+      }
+    }
+
+    action expand(migration: M) {
+      -> ok(migration: M) {
+        New schema elements added alongside old. Both
+        versions can read and write. Dual-write enabled.
+      }
+      -> failed(migration: M, reason: String) {
+        Storage backend rejected schema expansion.
+      }
+    }
+
+    action migrate(migration: M) {
+      -> ok(migration: M, recordsMigrated: Int) {
+        All existing data transformed to new schema.
+        Dual-write continues for safety.
+      }
+      -> partial(migration: M, migrated: Int, failed: Int, errors: list String) {
+        Some records failed migration. Manual review needed.
+      }
+    }
+
+    action contract(migration: M) {
+      -> ok(migration: M) {
+        Old schema elements removed. Migration complete.
+        Dual-write disabled.
+      }
+      -> rollback(migration: M) {
+        Contraction failed. Reverted to expanded state.
+        Both schemas still present.
+      }
+    }
+
+    action status(migration: M) {
+      -> ok(migration: M, phase: String, progress: Float) {
+        Current migration state.
+      }
+    }
+  }
+
+  invariant {
+    after plan(concept: "Entity", fromVersion: 1, toVersion: 2) -> ok(migration: m, steps: s, estimatedRecords: 1000)
+    then expand(migration: m) -> ok(migration: m)
+    and migrate(migration: m) -> ok(migration: m, recordsMigrated: 1000)
+  }
+}

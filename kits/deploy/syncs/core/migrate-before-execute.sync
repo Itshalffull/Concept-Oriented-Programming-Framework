@@ -1,0 +1,13 @@
+# Migration gate — Architecture doc Section 2.1
+# Validation found migration needed, run migration before execution.
+
+sync MigrateBeforeExecute [eager]
+when {
+  DeployPlan/validate: [ plan: ?plan ]
+    => [ plan: ?plan; concepts: ?concepts;
+         fromVersions: ?from; toVersions: ?to ]
+}
+then {
+  Migration/plan: [ concept: ?concept;
+    fromVersion: ?from; toVersion: ?to ]
+}

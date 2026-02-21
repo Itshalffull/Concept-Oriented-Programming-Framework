@@ -1,0 +1,25 @@
+type PulumiProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PulumiProviderEntry {
+  p: ID!
+  backend: String!
+  stackName: String!
+  project: String!
+  plugins: [JSON!]!
+  lastUpdatedAt: String!
+  resourceCount: Int!
+  pendingOperations: [String!]!
+}
+
+extend type Query {
+  pulumiprovider_entry(p: ID!): PulumiProviderEntry
+  pulumiprovider_entries: [PulumiProviderEntry!]!
+}
+
+type PulumiProviderStacks {
+  p: ID!
+  value: ID!
+}

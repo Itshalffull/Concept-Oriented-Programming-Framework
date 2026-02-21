@@ -1,0 +1,11 @@
+# Proceed with deployment after data migrated — Architecture doc Section 2.2
+# Does not wait for contraction to complete.
+
+sync DeployAfterMigrate [eager]
+when {
+  Migration/migrate: [ migration: ?m ]
+    => [ migration: ?m; recordsMigrated: ?count ]
+}
+then {
+  DeployPlan/execute: [ plan: ?plan ]
+}

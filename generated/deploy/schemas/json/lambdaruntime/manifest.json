@@ -1,0 +1,1018 @@
+{
+  "uri": "urn:copf/LambdaRuntime",
+  "name": "LambdaRuntime",
+  "typeParams": [
+    {
+      "name": "F",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "functionArn",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "roleArn",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "timeout",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "runtime",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "layers",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "apiGatewayRoute",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "coldStartMs",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastInvokedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "functions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "f",
+        "paramRef": "F"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "memory",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "timeout",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "region",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "functionArn",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lambda function created IAM role attached \n API Gateway route configured if HTTP transport"
+        },
+        {
+          "tag": "quotaExceeded",
+          "fields": [
+            {
+              "name": "region",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "AWS Lambda quota hit in this region"
+        },
+        {
+          "tag": "iamError",
+          "fields": [
+            {
+              "name": "policy",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "IAM role creation or policy attachment failed"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "artifactLocation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Function code updated from artifact New version published"
+        },
+        {
+          "tag": "packageTooLarge",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "sizeBytes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "limitBytes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Deployment package exceeds Lambda limits"
+        },
+        {
+          "tag": "runtimeUnsupported",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "runtime",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested runtime version not available"
+        }
+      ]
+    },
+    {
+      "name": "setTrafficWeight",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "aliasWeight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Lambda alias weighted routing updated for canary"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        },
+        {
+          "name": "targetVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "restoredVersion",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Alias pointed to previous function version"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "function",
+          "type": {
+            "kind": "param",
+            "paramRef": "F"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            }
+          ],
+          "prose": "Function , role , and API Gateway route deleted"
+        },
+        {
+          "tag": "resourceInUse",
+          "fields": [
+            {
+              "name": "function",
+              "type": {
+                "kind": "param",
+                "paramRef": "F"
+              }
+            },
+            {
+              "name": "dependents",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Other resources reference this function"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, deploy behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "memory",
+              "value": {
+                "kind": "literal",
+                "value": 256
+              }
+            },
+            {
+              "name": "timeout",
+              "value": {
+                "kind": "literal",
+                "value": 30
+              }
+            },
+            {
+              "name": "region",
+              "value": {
+                "kind": "literal",
+                "value": "us-east-1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "function",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "functionArn",
+              "value": {
+                "kind": "variable",
+                "name": "arn"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "variable",
+                "name": "ep"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deploy",
+          "inputs": [
+            {
+              "name": "function",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "artifactLocation",
+              "value": {
+                "kind": "literal",
+                "value": "s3://bucket/user.zip"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "function",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "arn",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "ep",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LambdaRuntimeState {\n  \"\"\"All fs in this concept\"\"\"\n  fs: [ID!]!\n}\n\ntype LambdaRuntimeEntry {\n  f: ID!\n  functionArn: String!\n  roleArn: String!\n  memory: Int!\n  timeout: Int!\n  runtime: String!\n  layers: [String!]!\n  apiGatewayRoute: String!\n  coldStartMs: Int!\n  lastInvokedAt: String!\n}\n\nextend type Query {\n  lambdaruntime_entry(f: ID!): LambdaRuntimeEntry\n  lambdaruntime_entries: [LambdaRuntimeEntry!]!\n}\n\ntype LambdaRuntimeFunctions {\n  f: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:copf/LambdaRuntime/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/LambdaRuntime"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "memory": {
+                "type": "integer"
+              },
+              "timeout": {
+                "type": "integer"
+              },
+              "region": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "memory",
+              "timeout",
+              "region"
+            ]
+          }
+        }
+      },
+      "deploy": {
+        "$id": "urn:copf/LambdaRuntime/deploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/LambdaRuntime"
+          },
+          "action": {
+            "const": "deploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              },
+              "artifactLocation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function",
+              "artifactLocation"
+            ]
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "$id": "urn:copf/LambdaRuntime/setTrafficWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/LambdaRuntime"
+          },
+          "action": {
+            "const": "setTrafficWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              },
+              "aliasWeight": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "function",
+              "aliasWeight"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:copf/LambdaRuntime/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/LambdaRuntime"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              },
+              "targetVersion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function",
+              "targetVersion"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:copf/LambdaRuntime/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/LambdaRuntime"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "function"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:copf/LambdaRuntime/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "functionArn": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "functionArn",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "quotaExceeded": {
+          "$id": "urn:copf/LambdaRuntime/provision/completion/quotaExceeded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "quotaExceeded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "region": {
+                  "type": "string"
+                },
+                "limit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "region",
+                "limit"
+              ]
+            }
+          }
+        },
+        "iamError": {
+          "$id": "urn:copf/LambdaRuntime/provision/completion/iamError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "iamError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "policy",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "deploy": {
+        "ok": {
+          "$id": "urn:copf/LambdaRuntime/deploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "version"
+              ]
+            }
+          }
+        },
+        "packageTooLarge": {
+          "$id": "urn:copf/LambdaRuntime/deploy/completion/packageTooLarge",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "packageTooLarge"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "sizeBytes": {
+                  "type": "integer"
+                },
+                "limitBytes": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "function",
+                "sizeBytes",
+                "limitBytes"
+              ]
+            }
+          }
+        },
+        "runtimeUnsupported": {
+          "$id": "urn:copf/LambdaRuntime/deploy/completion/runtimeUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "runtimeUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "runtime": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "runtime"
+              ]
+            }
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "ok": {
+          "$id": "urn:copf/LambdaRuntime/setTrafficWeight/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "setTrafficWeight"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:copf/LambdaRuntime/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "restoredVersion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function",
+                "restoredVersion"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:copf/LambdaRuntime/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "function"
+              ]
+            }
+          }
+        },
+        "resourceInUse": {
+          "$id": "urn:copf/LambdaRuntime/destroy/completion/resourceInUse",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/LambdaRuntime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "resourceInUse"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "function": {
+                  "type": "string"
+                },
+                "dependents": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "function",
+                "dependents"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage AWS Lambda function deployments Owns function \n configurations , IAM roles , API Gateway routes , layer \n versions , and cold start metrics"
+}

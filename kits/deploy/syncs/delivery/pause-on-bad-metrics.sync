@@ -1,0 +1,11 @@
+# Pause rollout on unhealthy metrics — Architecture doc Section 2.3
+# Telemetry analysis reports unhealthy, pause rollout.
+
+sync PauseOnBadMetrics [eager]
+when {
+  Telemetry/analyze: [ concept: ?concept ]
+    => [ healthy: false; errorRate: ?rate; latencyP99: ?lat; sampleSize: ?samples ]
+}
+then {
+  Rollout/pause: [ rollout: ?r; reason: "Error rate exceeded threshold" ]
+}

@@ -1,0 +1,10 @@
+# Route IaC/emit to TerraformProvider — Architecture doc Section 3.8
+
+sync RouteToTerraform [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "terraform" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  TerraformProvider/generate: [ plan: ?plan ]
+}

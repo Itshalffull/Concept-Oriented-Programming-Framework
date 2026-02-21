@@ -1,0 +1,24 @@
+type HealthState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type HealthEntry {
+  h: ID!
+  target: String!
+  kind: String!
+  status: String!
+  latencyMs: Int!
+  checkedAt: String!
+  details: String!
+}
+
+extend type Query {
+  health_entry(h: ID!): HealthEntry
+  health_entries: [HealthEntry!]!
+}
+
+type HealthChecks {
+  h: ID!
+  value: ID!
+}

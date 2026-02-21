@@ -1,0 +1,23 @@
+type AwsSmProviderState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AwsSmProviderEntry {
+  a: ID!
+  region: String!
+  kmsKeyId: String!
+  scheduleEnabled: Boolean!
+  lastRotatedAt: String!
+  nextRotationAt: String!
+}
+
+extend type Query {
+  awssmprovider_entry(a: ID!): AwsSmProviderEntry
+  awssmprovider_entries: [AwsSmProviderEntry!]!
+}
+
+type AwsSmProviderSecrets {
+  a: ID!
+  value: ID!
+}

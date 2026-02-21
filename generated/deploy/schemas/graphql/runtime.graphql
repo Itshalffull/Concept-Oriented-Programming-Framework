@@ -1,0 +1,29 @@
+type RuntimeState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type RuntimeEntry {
+  i: ID!
+  concept: String!
+  runtimeType: String!
+  endpoint: String!
+  version: String!
+  artifactHash: String!
+  deployedAt: String!
+  status: String!
+  activeWeight: Int!
+  canaryWeight: Int!
+  canaryEndpoint: String!
+  history: [JSON!]!
+}
+
+extend type Query {
+  runtime_entry(i: ID!): RuntimeEntry
+  runtime_entries: [RuntimeEntry!]!
+}
+
+type RuntimeInstances {
+  i: ID!
+  value: ID!
+}

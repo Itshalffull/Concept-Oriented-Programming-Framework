@@ -1,0 +1,24 @@
+type TerraformProviderState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type TerraformProviderEntry {
+  t: ID!
+  stateBackend: String!
+  lockTable: String!
+  workspace: String!
+  lockId: String!
+  serial: Int!
+  lastAppliedAt: String!
+}
+
+extend type Query {
+  terraformprovider_entry(t: ID!): TerraformProviderEntry
+  terraformprovider_entries: [TerraformProviderEntry!]!
+}
+
+type TerraformProviderWorkspaces {
+  t: ID!
+  value: ID!
+}

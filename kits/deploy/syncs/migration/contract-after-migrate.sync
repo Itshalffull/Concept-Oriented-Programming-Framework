@@ -1,0 +1,12 @@
+# Contract old schema after data migrated — Architecture doc Section 2.2
+# Eventual because contraction can be deferred until after deployment
+# completes and is verified.
+
+sync ContractAfterMigrate [eventual]
+when {
+  Migration/migrate: [ migration: ?m ]
+    => [ migration: ?m; recordsMigrated: ?count ]
+}
+then {
+  Migration/contract: [ migration: ?m ]
+}

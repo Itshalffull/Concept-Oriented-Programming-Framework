@@ -1,0 +1,26 @@
+type IaCState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type IaCEntry {
+  r: ID!
+  resourceId: String!
+  provider: String!
+  resourceType: String!
+  concept: String!
+  createdAt: String!
+  lastSyncedAt: String!
+  driftDetected: Boolean!
+  estimatedMonthlyCost: Float!
+}
+
+extend type Query {
+  iac_entry(r: ID!): IaCEntry
+  iac_entries: [IaCEntry!]!
+}
+
+type IaCResources {
+  r: ID!
+  value: ID!
+}

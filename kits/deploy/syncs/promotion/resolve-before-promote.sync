@@ -1,0 +1,12 @@
+# Resolve target environment after promotion — Architecture doc Section 2.5
+# After a kit version is promoted to a target environment, resolve
+# the target environment configuration.
+
+sync ResolveBeforePromote [eager]
+when {
+  Env/promote: [ fromEnv: ?from; toEnv: ?to; kitName: ?kit ]
+    => [ toEnv: ?to; version: ?version ]
+}
+then {
+  Env/resolve: [ environment: ?to ]
+}

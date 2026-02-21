@@ -1,0 +1,54 @@
+@version(1)
+concept AwsSmProvider [A] {
+
+  purpose {
+    Manage secret resolution from AWS Secrets Manager. Owns
+    IAM session state, KMS key accessibility, and rotation
+    schedule tracking.
+  }
+
+  state {
+    secrets: set A
+    config {
+      region: A -> String
+      kmsKeyId: A -> option String
+    }
+    rotation {
+      scheduleEnabled: A -> Bool
+      lastRotatedAt: A -> option DateTime
+      nextRotationAt: A -> option DateTime
+    }
+  }
+
+  actions {
+    action fetch(secretId: String, versionStage: String) {
+      -> ok(value: String, versionId: String, arn: String) {
+        Secret retrieved from AWS Secrets Manager.
+      }
+      -> kmsKeyInaccessible(secretId: String, kmsKeyId: String) {
+        KMS key used to encrypt this secret is not accessible.
+        IAM or key policy issue.
+      }
+      -> resourceNotFound(secretId: String) {
+        Secret does not exist in Secrets Manager.
+      }
+      -> decryptionFailed(secretId: String, reason: String) {
+        Secret exists but decryption failed.
+      }
+    }
+
+    action rotate(secretId: String) {
+      -> ok(secretId: String, newVersionId: String) {
+        Rotation Lambda triggered. New version staged.
+      }
+      -> rotationInProgress(secretId: String) {
+        Rotation already running.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(secretId: "prod/db-password", versionStage: "AWSCURRENT") -> ok(value: v, versionId: vid, arn: a)
+    then rotate(secretId: "prod/db-password") -> ok(secretId: "prod/db-password", newVersionId: nv)
+  }
+}

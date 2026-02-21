@@ -1,0 +1,11 @@
+# Rollback deploy plan after rollout aborted — Architecture doc Section 2.3
+# When rollout is aborted, trigger full deployment rollback.
+
+sync RollbackPlanOnAbort [eager]
+when {
+  Rollout/abort: [ rollout: ?r ]
+    => [ rollout: ?r ]
+}
+then {
+  DeployPlan/rollback: [ plan: ?plan ]
+}

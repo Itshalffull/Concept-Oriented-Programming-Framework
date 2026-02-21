@@ -1,0 +1,11 @@
+# Route Runtime/provision to EcsRuntime — Architecture doc Section 3.8
+
+sync RouteToEcs [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "ecs-fargate"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  EcsRuntime/provision: [ concept: ?concept; cpu: ?cpu;
+    memory: ?mem; cluster: ?cluster ]
+}

@@ -1,0 +1,10 @@
+# Migrate data after schema expanded — Architecture doc Section 2.2
+
+sync MigrateAfterExpand [eager]
+when {
+  Migration/expand: [ migration: ?m ]
+    => [ migration: ?m ]
+}
+then {
+  Migration/migrate: [ migration: ?m ]
+}

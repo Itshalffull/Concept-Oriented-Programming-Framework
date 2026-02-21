@@ -1,0 +1,628 @@
+{
+  "uri": "urn:copf/VaultProvider",
+  "name": "VaultProvider",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "address",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "authMethod",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "mountPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "leaseId",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "leaseDuration",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "renewable",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "sealed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastCheckedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "connections",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "fetch",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "leaseId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "leaseDuration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Secret retrieved from Vault KV v2 \n Lease tracked for renewal"
+        },
+        {
+          "tag": "sealed",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Vault is sealed Manual unseal required"
+        },
+        {
+          "tag": "tokenExpired",
+          "fields": [
+            {
+              "name": "address",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Auth token expired Re authentication needed"
+        },
+        {
+          "tag": "pathNotFound",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Secret path does not exist in Vault"
+        }
+      ]
+    },
+    {
+      "name": "renewLease",
+      "params": [
+        {
+          "name": "leaseId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "leaseId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "newDuration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Lease renewed"
+        },
+        {
+          "tag": "leaseExpired",
+          "fields": [
+            {
+              "name": "leaseId",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lease already expired Must re fetch"
+        }
+      ]
+    },
+    {
+      "name": "rotate",
+      "params": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "newVersion",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "New secret version written to Vault"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after fetch, renewLease behaves correctly",
+      "setup": [
+        {
+          "action": "fetch",
+          "inputs": [
+            {
+              "name": "path",
+              "value": {
+                "kind": "literal",
+                "value": "secret/data/db-password"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "leaseId",
+              "value": {
+                "kind": "variable",
+                "name": "lid"
+              }
+            },
+            {
+              "name": "leaseDuration",
+              "value": {
+                "kind": "literal",
+                "value": 3600
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "renewLease",
+          "inputs": [
+            {
+              "name": "leaseId",
+              "value": {
+                "kind": "variable",
+                "name": "lid"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "leaseId",
+              "value": {
+                "kind": "variable",
+                "name": "lid"
+              }
+            },
+            {
+              "name": "newDuration",
+              "value": {
+                "kind": "literal",
+                "value": 3600
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "lid",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VaultProviderState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype VaultProviderEntry {\n  v: ID!\n  address: String!\n  authMethod: String!\n  mountPath: String!\n  leaseId: String!\n  leaseDuration: Int!\n  renewable: Boolean!\n  sealed: Boolean!\n  lastCheckedAt: String!\n}\n\nextend type Query {\n  vaultprovider_entry(v: ID!): VaultProviderEntry\n  vaultprovider_entries: [VaultProviderEntry!]!\n}\n\ntype VaultProviderConnections {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "fetch": {
+        "$id": "urn:copf/VaultProvider/fetch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/VaultProvider"
+          },
+          "action": {
+            "const": "fetch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      },
+      "renewLease": {
+        "$id": "urn:copf/VaultProvider/renewLease/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/VaultProvider"
+          },
+          "action": {
+            "const": "renewLease"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "leaseId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "leaseId"
+            ]
+          }
+        }
+      },
+      "rotate": {
+        "$id": "urn:copf/VaultProvider/rotate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/VaultProvider"
+          },
+          "action": {
+            "const": "rotate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "fetch": {
+        "ok": {
+          "$id": "urn:copf/VaultProvider/fetch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "leaseId": {
+                  "type": "string"
+                },
+                "leaseDuration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "value",
+                "leaseId",
+                "leaseDuration"
+              ]
+            }
+          }
+        },
+        "sealed": {
+          "$id": "urn:copf/VaultProvider/fetch/completion/sealed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "sealed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address"
+              ]
+            }
+          }
+        },
+        "tokenExpired": {
+          "$id": "urn:copf/VaultProvider/fetch/completion/tokenExpired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "tokenExpired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "address"
+              ]
+            }
+          }
+        },
+        "pathNotFound": {
+          "$id": "urn:copf/VaultProvider/fetch/completion/pathNotFound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "fetch"
+            },
+            "variant": {
+              "const": "pathNotFound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        }
+      },
+      "renewLease": {
+        "ok": {
+          "$id": "urn:copf/VaultProvider/renewLease/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "renewLease"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "leaseId": {
+                  "type": "string"
+                },
+                "newDuration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "leaseId",
+                "newDuration"
+              ]
+            }
+          }
+        },
+        "leaseExpired": {
+          "$id": "urn:copf/VaultProvider/renewLease/completion/leaseExpired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "renewLease"
+            },
+            "variant": {
+              "const": "leaseExpired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "leaseId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "leaseId"
+              ]
+            }
+          }
+        }
+      },
+      "rotate": {
+        "ok": {
+          "$id": "urn:copf/VaultProvider/rotate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/VaultProvider"
+            },
+            "action": {
+              "const": "rotate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "newVersion": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "newVersion"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Manage secret resolution from HashiCorp Vault Owns Vault \n connection state , lease tracking , token renewal , and seal \n status monitoring"
+}

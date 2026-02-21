@@ -1,0 +1,24 @@
+type GitOpsState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GitOpsEntry {
+  g: ID!
+  plan: String!
+  controller: String!
+  repoPath: String!
+  committedAt: String!
+  reconciledAt: String!
+  status: String!
+}
+
+extend type Query {
+  gitops_entry(g: ID!): GitOpsEntry
+  gitops_entries: [GitOpsEntry!]!
+}
+
+type GitOpsManifests {
+  g: ID!
+  value: ID!
+}

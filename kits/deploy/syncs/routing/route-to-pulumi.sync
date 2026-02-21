@@ -1,0 +1,10 @@
+# Route IaC/emit to PulumiProvider — Architecture doc Section 3.8
+
+sync RouteToPulumi [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "pulumi" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  PulumiProvider/generate: [ plan: ?plan ]
+}

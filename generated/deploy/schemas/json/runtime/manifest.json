@@ -1,0 +1,1238 @@
+{
+  "uri": "urn:copf/Runtime",
+  "name": "Runtime",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "runtimeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "endpoint",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "artifactHash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "deployedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "activeWeight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "canaryWeight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "canaryEndpoint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "version",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "artifactHash",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "deployedAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "instances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "provision",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "runtimeType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Registers the provisioning intent Completion arrives \n after the provider concept finishes actual provisioning \n Runtime records the instance in its registry"
+        },
+        {
+          "tag": "alreadyProvisioned",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Instance exists and is healthy No action needed"
+        },
+        {
+          "tag": "provisionFailed",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "runtimeType",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider reported failure propagated via sync"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "params": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "artifact",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "endpoint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Artifact deployed to the instance runtime Endpoint \n updated if changed Version and hash recorded in history"
+        },
+        {
+          "tag": "deployFailed",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider reported deployment failure"
+        }
+      ]
+    },
+    {
+      "name": "setTrafficWeight",
+      "params": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "newWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Traffic weight updated For canary splits between \n current and canary endpoint"
+        }
+      ]
+    },
+    {
+      "name": "rollback",
+      "params": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "previousVersion",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Rolled back to previous version from history \n Provider handles the actual redeployment"
+        },
+        {
+          "tag": "noHistory",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "No previous version to roll back to"
+        },
+        {
+          "tag": "rollbackFailed",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider could not roll back"
+        }
+      ]
+    },
+    {
+      "name": "destroy",
+      "params": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Instance removed from registry Provider tears down \n the actual resources"
+        },
+        {
+          "tag": "destroyFailed",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider could not destroy Instance marked for \n manual cleanup"
+        }
+      ]
+    },
+    {
+      "name": "healthCheck",
+      "params": [
+        {
+          "name": "instance",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "latencyMs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Instance healthy and reachable"
+        },
+        {
+          "tag": "unreachable",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Transport probe failed"
+        },
+        {
+          "tag": "degraded",
+          "fields": [
+            {
+              "name": "instance",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "latencyMs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Responding but above latency threshold"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after provision, deploy behaves correctly",
+      "setup": [
+        {
+          "action": "provision",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "User"
+              }
+            },
+            {
+              "name": "runtimeType",
+              "value": {
+                "kind": "literal",
+                "value": "ecs-fargate"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "instance",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "literal",
+                "value": "http://svc:8080"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deploy",
+          "inputs": [
+            {
+              "name": "instance",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "artifact",
+              "value": {
+                "kind": "literal",
+                "value": "s3://artifacts/user-v1"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "1.0.0"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "instance",
+              "value": {
+                "kind": "variable",
+                "name": "i"
+              }
+            },
+            {
+              "name": "endpoint",
+              "value": {
+                "kind": "literal",
+                "value": "http://svc:8080"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "i",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RuntimeState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype RuntimeEntry {\n  i: ID!\n  concept: String!\n  runtimeType: String!\n  endpoint: String!\n  version: String!\n  artifactHash: String!\n  deployedAt: String!\n  status: String!\n  activeWeight: Int!\n  canaryWeight: Int!\n  canaryEndpoint: String!\n  history: [JSON!]!\n}\n\nextend type Query {\n  runtime_entry(i: ID!): RuntimeEntry\n  runtime_entries: [RuntimeEntry!]!\n}\n\ntype RuntimeInstances {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "provision": {
+        "$id": "urn:copf/Runtime/provision/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Runtime"
+          },
+          "action": {
+            "const": "provision"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "runtimeType": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "runtimeType",
+              "config"
+            ]
+          }
+        }
+      },
+      "deploy": {
+        "$id": "urn:copf/Runtime/deploy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Runtime"
+          },
+          "action": {
+            "const": "deploy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string"
+              },
+              "artifact": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instance",
+              "artifact",
+              "version"
+            ]
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "$id": "urn:copf/Runtime/setTrafficWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Runtime"
+          },
+          "action": {
+            "const": "setTrafficWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "instance",
+              "weight"
+            ]
+          }
+        }
+      },
+      "rollback": {
+        "$id": "urn:copf/Runtime/rollback/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Runtime"
+          },
+          "action": {
+            "const": "rollback"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instance"
+            ]
+          }
+        }
+      },
+      "destroy": {
+        "$id": "urn:copf/Runtime/destroy/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Runtime"
+          },
+          "action": {
+            "const": "destroy"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instance"
+            ]
+          }
+        }
+      },
+      "healthCheck": {
+        "$id": "urn:copf/Runtime/healthCheck/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Runtime"
+          },
+          "action": {
+            "const": "healthCheck"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "instance": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instance"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "provision": {
+        "ok": {
+          "$id": "urn:copf/Runtime/provision/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "alreadyProvisioned": {
+          "$id": "urn:copf/Runtime/provision/completion/alreadyProvisioned",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "alreadyProvisioned"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "provisionFailed": {
+          "$id": "urn:copf/Runtime/provision/completion/provisionFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "provision"
+            },
+            "variant": {
+              "const": "provisionFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "runtimeType": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "runtimeType",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "deploy": {
+        "ok": {
+          "$id": "urn:copf/Runtime/deploy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "endpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "endpoint"
+              ]
+            }
+          }
+        },
+        "deployFailed": {
+          "$id": "urn:copf/Runtime/deploy/completion/deployFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "deploy"
+            },
+            "variant": {
+              "const": "deployFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "setTrafficWeight": {
+        "ok": {
+          "$id": "urn:copf/Runtime/setTrafficWeight/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "setTrafficWeight"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "newWeight": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "instance",
+                "newWeight"
+              ]
+            }
+          }
+        }
+      },
+      "rollback": {
+        "ok": {
+          "$id": "urn:copf/Runtime/rollback/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "previousVersion": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "previousVersion"
+              ]
+            }
+          }
+        },
+        "noHistory": {
+          "$id": "urn:copf/Runtime/rollback/completion/noHistory",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "noHistory"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "rollbackFailed": {
+          "$id": "urn:copf/Runtime/rollback/completion/rollbackFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "rollback"
+            },
+            "variant": {
+              "const": "rollbackFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "destroy": {
+        "ok": {
+          "$id": "urn:copf/Runtime/destroy/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "destroyFailed": {
+          "$id": "urn:copf/Runtime/destroy/completion/destroyFailed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "destroy"
+            },
+            "variant": {
+              "const": "destroyFailed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "healthCheck": {
+        "ok": {
+          "$id": "urn:copf/Runtime/healthCheck/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "latencyMs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "instance",
+                "latencyMs"
+              ]
+            }
+          }
+        },
+        "unreachable": {
+          "$id": "urn:copf/Runtime/healthCheck/completion/unreachable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "unreachable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "instance"
+              ]
+            }
+          }
+        },
+        "degraded": {
+          "$id": "urn:copf/Runtime/healthCheck/completion/degraded",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Runtime"
+            },
+            "action": {
+              "const": "healthCheck"
+            },
+            "variant": {
+              "const": "degraded"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "instance": {
+                  "type": "string"
+                },
+                "latencyMs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "instance",
+                "latencyMs"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate compute provisioning across cloud providers \n Owns the deployed instance registry , endpoint mappings , \n version history , and traffic weight state Provider agnostic \n so DeployPlan invokes Runtime actions and integration syncs \n route to the active provider concept"
+}

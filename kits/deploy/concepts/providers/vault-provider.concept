@@ -1,0 +1,65 @@
+@version(1)
+concept VaultProvider [V] {
+
+  purpose {
+    Manage secret resolution from HashiCorp Vault. Owns Vault
+    connection state, lease tracking, token renewal, and seal
+    status monitoring.
+  }
+
+  state {
+    connections: set V
+    config {
+      address: V -> String
+      authMethod: V -> String
+      mountPath: V -> String
+    }
+    leases {
+      leaseId: V -> option String
+      leaseDuration: V -> option Int
+      renewable: V -> Bool
+    }
+    health {
+      sealed: V -> Bool
+      lastCheckedAt: V -> DateTime
+    }
+  }
+
+  actions {
+    action fetch(path: String) {
+      -> ok(value: String, leaseId: String, leaseDuration: Int) {
+        Secret retrieved from Vault KV v2.
+        Lease tracked for renewal.
+      }
+      -> sealed(address: String) {
+        Vault is sealed. Manual unseal required.
+      }
+      -> tokenExpired(address: String) {
+        Auth token expired. Re-authentication needed.
+      }
+      -> pathNotFound(path: String) {
+        Secret path does not exist in Vault.
+      }
+    }
+
+    action renewLease(leaseId: String) {
+      -> ok(leaseId: String, newDuration: Int) {
+        Lease renewed.
+      }
+      -> leaseExpired(leaseId: String) {
+        Lease already expired. Must re-fetch.
+      }
+    }
+
+    action rotate(path: String) {
+      -> ok(newVersion: Int) {
+        New secret version written to Vault.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(path: "secret/data/db-password") -> ok(value: v, leaseId: lid, leaseDuration: 3600)
+    then renewLease(leaseId: lid) -> ok(leaseId: lid, newDuration: 3600)
+  }
+}

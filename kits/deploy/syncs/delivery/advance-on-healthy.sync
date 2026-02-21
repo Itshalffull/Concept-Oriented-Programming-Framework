@@ -1,0 +1,13 @@
+# Advance rollout when health and rollout both pass — Architecture doc Section 2.3
+# Both health check and rollout advance must succeed.
+
+sync AdvanceOnHealthy [eager]
+when {
+  Health/checkKit: [ kit: ?kit ]
+    => [ check: ?h; conceptResults: ?cr; syncResults: ?sr ]
+  Rollout/advance: [ rollout: ?r ]
+    => [ rollout: ?r; newWeight: ?w; step: ?step ]
+}
+then {
+  Telemetry/analyze: [ concept: ?concept; window: 300; criteria: ?criteria ]
+}

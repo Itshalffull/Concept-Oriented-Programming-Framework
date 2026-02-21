@@ -1,0 +1,51 @@
+@version(1)
+concept GitOps [G] {
+
+  purpose {
+    Coordinate manifest generation for GitOps controllers.
+    Owns the manifest registry tracking what has been pushed
+    to the deploy repo, reconciliation status tracking, and
+    drift detection from the controller perspective.
+  }
+
+  state {
+    manifests: set G
+    registry {
+      plan: G -> String
+      controller: G -> String
+      repoPath: G -> String
+      committedAt: G -> option DateTime
+      reconciledAt: G -> option DateTime
+      status: G -> String
+    }
+  }
+
+  actions {
+    action emit(plan: String, controller: String, repo: String, path: String) {
+      -> ok(manifest: G, files: list String) {
+        Manifests generated and committed to deploy repo.
+        Controller will detect and reconcile.
+      }
+      -> controllerUnsupported(controller: String) {
+        Unknown GitOps controller type.
+      }
+    }
+
+    action reconciliationStatus(manifest: G) {
+      -> ok(manifest: G, status: String, reconciledAt: DateTime) {
+        Controller has reconciled the manifests.
+      }
+      -> pending(manifest: G, waitingOn: list String) {
+        Controller has not finished reconciling.
+      }
+      -> failed(manifest: G, reason: String) {
+        Controller reported reconciliation failure.
+      }
+    }
+  }
+
+  invariant {
+    after emit(plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod") -> ok(manifest: g, files: f)
+    then reconciliationStatus(manifest: g) -> ok(manifest: g, status: "synced", reconciledAt: t)
+  }
+}

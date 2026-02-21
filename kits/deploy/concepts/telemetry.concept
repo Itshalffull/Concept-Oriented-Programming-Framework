@@ -1,0 +1,64 @@
+@version(1)
+concept Telemetry [T] {
+
+  purpose {
+    Manage observability configuration for deployed concepts.
+    Injects OpenTelemetry instrumentation at deploy time,
+    emits deployment markers to observability backends, and
+    provides metric analysis for progressive delivery gates.
+  }
+
+  state {
+    configs: set T
+    settings {
+      endpoint: T -> String
+      samplingRate: T -> Float
+      serviceName: T -> String
+      serviceNamespace: T -> String
+      serviceVersion: T -> String
+    }
+    markers: T -> list { deployId: String, timestamp: DateTime, kitVersion: String }
+  }
+
+  actions {
+    action configure(concept: String, endpoint: String, samplingRate: Float) {
+      -> ok(config: T) {
+        Register telemetry config for a concept. At deploy time
+        the Runtime concept injects OTEL instrumentation with
+        these settings.
+      }
+    }
+
+    action deployMarker(kit: String, version: String, environment: String, status: String) {
+      -> ok(marker: T) {
+        Emit a deployment event to the observability backend.
+        Includes kit name, version, environment, start and end
+        time, changed concepts, and deployment strategy.
+      }
+      -> backendUnavailable(endpoint: String) {
+        Observability backend unreachable. Non-fatal so
+        deployment continues and marker is queued for retry.
+      }
+    }
+
+    action analyze(concept: String, window: Int, criteria: String) {
+      -> ok(healthy: Bool, errorRate: Float, latencyP99: Int, sampleSize: Int) {
+        Query the observability backend for concept health metrics
+        over the specified time window. Used by Rollout to decide
+        whether to advance, pause, or abort.
+      }
+      -> insufficientData(concept: String, samplesFound: Int, samplesNeeded: Int) {
+        Not enough data points in the window to make a decision.
+        Rollout should wait and retry.
+      }
+      -> backendUnavailable(endpoint: String) {
+        Cannot query metrics. Conservative action is pause rollout.
+      }
+    }
+  }
+
+  invariant {
+    after configure(concept: "User", endpoint: "http://otel:4317", samplingRate: 0.5) -> ok(config: t)
+    then deployMarker(kit: "auth", version: "1.0.0", environment: "staging", status: "started") -> ok(marker: m)
+  }
+}

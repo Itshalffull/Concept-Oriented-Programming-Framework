@@ -1,0 +1,13 @@
+# Rollback marker — Architecture doc Section 2.4
+# Emit a telemetry marker when deployment rolls back.
+
+sync MarkerOnRollback [eventual]
+when {
+  DeployPlan/rollback: [ plan: ?plan ]
+    => [ plan: ?plan; rolledBack: ?concepts ]
+}
+then {
+  Telemetry/deployMarker: [
+    kit: ?kit; version: ?version;
+    environment: ?env; status: "rolledback" ]
+}

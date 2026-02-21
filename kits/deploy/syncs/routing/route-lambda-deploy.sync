@@ -1,0 +1,14 @@
+# Route Runtime/deploy to LambdaRuntime/deploy — Architecture doc Section 3.8
+
+sync RouteLambdaDeploy [eager]
+when {
+  Runtime/deploy: [ instance: ?i; artifact: ?artifact; version: ?ver ]
+    => [ instance: ?i; endpoint: ?endpoint ]
+}
+where {
+  Runtime: { ?i runtimeType: ?rt }
+  filter(?rt == "aws-lambda")
+}
+then {
+  LambdaRuntime/deploy: [ function: ?f; artifactLocation: ?artifact ]
+}

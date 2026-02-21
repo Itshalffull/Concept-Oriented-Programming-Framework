@@ -1,0 +1,73 @@
+@version(1)
+concept PulumiProvider [P] {
+
+  purpose {
+    Generate and apply Pulumi TypeScript programs from COPF
+    deploy plans. Owns Pulumi stack state, backend configuration,
+    and plugin versioning.
+  }
+
+  state {
+    stacks: set P
+    config {
+      backend: P -> String
+      stackName: P -> String
+      project: P -> String
+      plugins: P -> list { name: String, version: String }
+    }
+    tracking {
+      lastUpdatedAt: P -> option DateTime
+      resourceCount: P -> Int
+      pendingOperations: P -> list String
+    }
+  }
+
+  actions {
+    action generate(plan: String) {
+      -> ok(stack: P, files: list String) {
+        Pulumi TypeScript program generated from deploy plan.
+        One file per resource group for compute, storage, and
+        transport.
+      }
+    }
+
+    action preview(stack: P) {
+      -> ok(stack: P, toCreate: Int, toUpdate: Int, toDelete: Int, estimatedCost: Float) {
+        Pulumi preview executed against stack.
+      }
+      -> backendUnreachable(backend: String) {
+        State backend such as S3 or Pulumi Cloud is inaccessible.
+      }
+    }
+
+    action apply(stack: P) {
+      -> ok(stack: P, created: list String, updated: list String) {
+        Pulumi up completed successfully.
+      }
+      -> pluginMissing(plugin: String, version: String) {
+        Required Pulumi provider plugin not installed.
+      }
+      -> conflictingUpdate(stack: P, pendingOps: list String) {
+        Another update is in progress on this stack.
+      }
+      -> partial(stack: P, created: list String, failed: list String) {
+        Apply partially succeeded. Stack state may have
+        pending operations.
+      }
+    }
+
+    action teardown(stack: P) {
+      -> ok(stack: P, destroyed: list String) {
+        Pulumi destroy completed.
+      }
+      -> protectedResource(stack: P, resource: String) {
+        Resource has protect true. Must be unprotected first.
+      }
+    }
+  }
+
+  invariant {
+    after generate(plan: "dp-001") -> ok(stack: p, files: f)
+    then apply(stack: p) -> ok(stack: p, created: c, updated: u)
+  }
+}

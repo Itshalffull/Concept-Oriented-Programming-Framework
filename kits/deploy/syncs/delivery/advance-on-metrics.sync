@@ -1,0 +1,11 @@
+# Advance rollout on healthy metrics — Architecture doc Section 2.3
+# Telemetry analysis reports healthy, advance to next step.
+
+sync AdvanceOnMetrics [eager]
+when {
+  Telemetry/analyze: [ concept: ?concept ]
+    => [ healthy: true; errorRate: ?rate; latencyP99: ?lat; sampleSize: ?samples ]
+}
+then {
+  Rollout/advance: [ rollout: ?r ]
+}

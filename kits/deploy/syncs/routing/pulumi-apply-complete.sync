@@ -1,0 +1,10 @@
+# Pulumi apply completion propagates back to IaC — Architecture doc Section 3.8
+
+sync PulumiApplyComplete [eager]
+when {
+  PulumiProvider/apply: [ stack: ?stack ]
+    => [ stack: ?stack; created: ?created; updated: ?updated ]
+}
+then {
+  IaC/apply: [ plan: ?plan; provider: "pulumi" ]
+}

@@ -1,0 +1,26 @@
+type MigrationState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type MigrationEntry {
+  m: ID!
+  concept: String!
+  fromVersion: Int!
+  toVersion: Int!
+  phase: String!
+  recordsMigrated: Int!
+  recordsTotal: Int!
+  startedAt: String!
+  errors: [String!]!
+}
+
+extend type Query {
+  migration_entry(m: ID!): MigrationEntry
+  migration_entries: [MigrationEntry!]!
+}
+
+type MigrationMigrations {
+  m: ID!
+  value: ID!
+}

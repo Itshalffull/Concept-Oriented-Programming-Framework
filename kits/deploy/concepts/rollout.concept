@@ -1,0 +1,89 @@
+@version(1)
+concept Rollout [R] {
+
+  purpose {
+    Manage progressive delivery of concept deployments.
+    Controls traffic splitting between old and new versions,
+    monitors health between steps, and triggers rollback on
+    failure. Strategies: canary, blue-green, rolling.
+  }
+
+  state {
+    rollouts: set R
+    config {
+      strategy: R -> String
+      steps: R -> list { weight: Int, pauseSeconds: Int }
+      successCriteria: R -> { maxErrorRate: Float, maxLatencyP99: Int }
+      autoRollback: R -> Bool
+    }
+    progress {
+      currentStep: R -> Int
+      currentWeight: R -> Int
+      startedAt: R -> DateTime
+      status: R -> String
+    }
+    versions {
+      oldVersion: R -> String
+      newVersion: R -> String
+      plan: R -> String
+    }
+  }
+
+  actions {
+    action begin(plan: String, strategy: String, steps: list String) {
+      -> ok(rollout: R) {
+        Initialize progressive rollout. First step begins
+        with minimal traffic weight.
+      }
+      -> invalidStrategy(message: String) {
+        Unknown strategy or malformed step configuration.
+      }
+    }
+
+    action advance(rollout: R) {
+      -> ok(rollout: R, newWeight: Int, step: Int) {
+        Move to next traffic weight step.
+      }
+      -> complete(rollout: R) {
+        All steps completed. New version receives full traffic.
+      }
+      -> paused(rollout: R, reason: String) {
+        Rollout paused due to analysis results. Waiting for
+        manual intervention or auto-resume timer.
+      }
+    }
+
+    action pause(rollout: R, reason: String) {
+      -> ok(rollout: R) {
+        Freeze at current traffic weight.
+      }
+    }
+
+    action resume(rollout: R) {
+      -> ok(rollout: R, currentWeight: Int) {
+        Continue from pause.
+      }
+    }
+
+    action abort(rollout: R) {
+      -> ok(rollout: R) {
+        Immediately shift all traffic back to old version.
+        Triggers compensating deploy actions.
+      }
+      -> alreadyComplete(rollout: R) {
+        Rollout already finished.
+      }
+    }
+
+    action status(rollout: R) {
+      -> ok(rollout: R, step: Int, weight: Int, status: String, elapsed: Int) {
+        Current state of the rollout.
+      }
+    }
+  }
+
+  invariant {
+    after begin(plan: "dp-001", strategy: "canary", steps: s) -> ok(rollout: r)
+    then advance(rollout: r) -> ok(rollout: r, newWeight: 25, step: 2)
+  }
+}

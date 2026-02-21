@@ -1,0 +1,917 @@
+{
+  "uri": "urn:copf/PulumiProvider",
+  "name": "PulumiProvider",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "stackName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "project",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "plugins",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "version",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastUpdatedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "resourceCount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "pendingOperations",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "stacks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Pulumi TypeScript program generated from deploy plan \n One file per resource group for compute , storage , and \n transport"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "stack",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "toCreate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toUpdate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "toDelete",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "estimatedCost",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Pulumi preview executed against stack"
+        },
+        {
+          "tag": "backendUnreachable",
+          "fields": [
+            {
+              "name": "backend",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "State backend such as S3 or Pulumi Cloud is inaccessible"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "params": [
+        {
+          "name": "stack",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Pulumi up completed successfully"
+        },
+        {
+          "tag": "pluginMissing",
+          "fields": [
+            {
+              "name": "plugin",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Required Pulumi provider plugin not installed"
+        },
+        {
+          "tag": "conflictingUpdate",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "pendingOps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Another update is in progress on this stack"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Apply partially succeeded Stack state may have \n pending operations"
+        }
+      ]
+    },
+    {
+      "name": "teardown",
+      "params": [
+        {
+          "name": "stack",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "destroyed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Pulumi destroy completed"
+        },
+        {
+          "tag": "protectedResource",
+          "fields": [
+            {
+              "name": "stack",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            },
+            {
+              "name": "resource",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resource has protect true Must be unprotected first"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, apply behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "plan",
+              "value": {
+                "kind": "literal",
+                "value": "dp-001"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "stack",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "apply",
+          "inputs": [
+            {
+              "name": "stack",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "stack",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "created",
+              "value": {
+                "kind": "variable",
+                "name": "c"
+              }
+            },
+            {
+              "name": "updated",
+              "value": {
+                "kind": "variable",
+                "name": "u"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "c",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "u",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PulumiProviderState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PulumiProviderEntry {\n  p: ID!\n  backend: String!\n  stackName: String!\n  project: String!\n  plugins: [JSON!]!\n  lastUpdatedAt: String!\n  resourceCount: Int!\n  pendingOperations: [String!]!\n}\n\nextend type Query {\n  pulumiprovider_entry(p: ID!): PulumiProviderEntry\n  pulumiprovider_entries: [PulumiProviderEntry!]!\n}\n\ntype PulumiProviderStacks {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:copf/PulumiProvider/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PulumiProvider"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:copf/PulumiProvider/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PulumiProvider"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stack": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stack"
+            ]
+          }
+        }
+      },
+      "apply": {
+        "$id": "urn:copf/PulumiProvider/apply/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PulumiProvider"
+          },
+          "action": {
+            "const": "apply"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stack": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stack"
+            ]
+          }
+        }
+      },
+      "teardown": {
+        "$id": "urn:copf/PulumiProvider/teardown/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/PulumiProvider"
+          },
+          "action": {
+            "const": "teardown"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "stack": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stack"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:copf/PulumiProvider/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "files"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:copf/PulumiProvider/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "toCreate": {
+                  "type": "integer"
+                },
+                "toUpdate": {
+                  "type": "integer"
+                },
+                "toDelete": {
+                  "type": "integer"
+                },
+                "estimatedCost": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "stack",
+                "toCreate",
+                "toUpdate",
+                "toDelete",
+                "estimatedCost"
+              ]
+            }
+          }
+        },
+        "backendUnreachable": {
+          "$id": "urn:copf/PulumiProvider/preview/completion/backendUnreachable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "backendUnreachable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "backend": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "backend"
+              ]
+            }
+          }
+        }
+      },
+      "apply": {
+        "ok": {
+          "$id": "urn:copf/PulumiProvider/apply/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "updated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "created",
+                "updated"
+              ]
+            }
+          }
+        },
+        "pluginMissing": {
+          "$id": "urn:copf/PulumiProvider/apply/completion/pluginMissing",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "pluginMissing"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plugin": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plugin",
+                "version"
+              ]
+            }
+          }
+        },
+        "conflictingUpdate": {
+          "$id": "urn:copf/PulumiProvider/apply/completion/conflictingUpdate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "conflictingUpdate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "pendingOps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "pendingOps"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:copf/PulumiProvider/apply/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "apply"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "created",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      "teardown": {
+        "ok": {
+          "$id": "urn:copf/PulumiProvider/teardown/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "destroyed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "stack",
+                "destroyed"
+              ]
+            }
+          }
+        },
+        "protectedResource": {
+          "$id": "urn:copf/PulumiProvider/teardown/completion/protectedResource",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/PulumiProvider"
+            },
+            "action": {
+              "const": "teardown"
+            },
+            "variant": {
+              "const": "protectedResource"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stack": {
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "stack",
+                "resource"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate and apply Pulumi TypeScript programs from COPF \n deploy plans Owns Pulumi stack state , backend configuration , \n and plugin versioning"
+}
