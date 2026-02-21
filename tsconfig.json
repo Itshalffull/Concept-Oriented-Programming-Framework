@@ -29,7 +29,11 @@
     "tests/**/*.ts",
     "tools/**/*.ts",
     "generated/concept-interface/**/*.ts",
+    "generated/deploy/**/*.ts",
     "framework-widgets/**/*.ts",
-    "framework-widgets/**/*.tsx"
+    "framework-widgets/**/*.tsx",
+    "examples/**/*.ts",
+    "examples/**/*.tsx",
+    "kits/**/*.ts"
   ]
 }
