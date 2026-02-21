@@ -1,0 +1,17 @@
+syntax = "proto3";
+package conduit.v1;
+
+service EchoService {
+  rpc Send(SendEchoRequest) returns (SendEchoResponse);
+}
+
+message SendEchoRequest {
+  string id = 1;
+  string text = 2;
+}
+
+message SendEchoResponse {
+  string variant = 1;
+  string id = 2;
+  string echo = 3;
+}

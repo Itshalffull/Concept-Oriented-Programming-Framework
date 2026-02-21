@@ -1,0 +1,50 @@
+syntax = "proto3";
+package conduit.v1;
+
+service FavoriteService {
+  rpc Favorite(FavoriteFavoriteRequest) returns (FavoriteFavoriteResponse);
+  rpc Unfavorite(UnfavoriteFavoriteRequest) returns (UnfavoriteFavoriteResponse);
+  rpc IsFavorited(IsFavoritedFavoriteRequest) returns (IsFavoritedFavoriteResponse);
+  rpc Count(CountFavoriteRequest) returns (CountFavoriteResponse);
+}
+
+message FavoriteFavoriteRequest {
+  string user = 1;
+  string article = 2;
+}
+
+message FavoriteFavoriteResponse {
+  string variant = 1;
+  string user = 2;
+  string article = 3;
+}
+
+message UnfavoriteFavoriteRequest {
+  string user = 1;
+  string article = 2;
+}
+
+message UnfavoriteFavoriteResponse {
+  string variant = 1;
+  string user = 2;
+  string article = 3;
+}
+
+message IsFavoritedFavoriteRequest {
+  string user = 1;
+  string article = 2;
+}
+
+message IsFavoritedFavoriteResponse {
+  string variant = 1;
+  bool favorited = 2;
+}
+
+message CountFavoriteRequest {
+  string article = 1;
+}
+
+message CountFavoriteResponse {
+  string variant = 1;
+  int64 count = 2;
+}

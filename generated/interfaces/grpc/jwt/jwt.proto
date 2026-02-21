@@ -1,0 +1,26 @@
+syntax = "proto3";
+package conduit.v1;
+
+service JWTService {
+  rpc Generate(GenerateJWTRequest) returns (GenerateJWTResponse);
+  rpc Verify(VerifyJWTRequest) returns (VerifyJWTResponse);
+}
+
+message GenerateJWTRequest {
+  string user = 1;
+}
+
+message GenerateJWTResponse {
+  string variant = 1;
+  string token = 2;
+}
+
+message VerifyJWTRequest {
+  string token = 1;
+}
+
+message VerifyJWTResponse {
+  string variant = 1;
+  string user = 2;
+  string message = 3;
+}

@@ -1,0 +1,32 @@
+syntax = "proto3";
+package conduit.v1;
+
+service ProfileService {
+  rpc Update(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc Get(GetProfileRequest) returns (GetProfileResponse);
+}
+
+message UpdateProfileRequest {
+  string user = 1;
+  string bio = 2;
+  string image = 3;
+}
+
+message UpdateProfileResponse {
+  string variant = 1;
+  string user = 2;
+  string bio = 3;
+  string image = 4;
+}
+
+message GetProfileRequest {
+  string user = 1;
+}
+
+message GetProfileResponse {
+  string variant = 1;
+  string user = 2;
+  string bio = 3;
+  string image = 4;
+  string message = 5;
+}

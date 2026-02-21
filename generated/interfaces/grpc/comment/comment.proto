@@ -1,0 +1,39 @@
+syntax = "proto3";
+package conduit.v1;
+
+service CommentService {
+  rpc Create(CreateCommentRequest) returns (CreateCommentResponse);
+  rpc Delete(DeleteCommentRequest) returns (DeleteCommentResponse);
+  rpc List(ListCommentRequest) returns (ListCommentResponse);
+}
+
+message CreateCommentRequest {
+  string comment = 1;
+  string body = 2;
+  string target = 3;
+  string author = 4;
+}
+
+message CreateCommentResponse {
+  string variant = 1;
+  string comment = 2;
+}
+
+message DeleteCommentRequest {
+  string comment = 1;
+}
+
+message DeleteCommentResponse {
+  string variant = 1;
+  string comment = 2;
+  string message = 3;
+}
+
+message ListCommentRequest {
+  string target = 1;
+}
+
+message ListCommentResponse {
+  string variant = 1;
+  string comments = 2;
+}

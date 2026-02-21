@@ -1,0 +1,36 @@
+syntax = "proto3";
+package conduit.v1;
+
+service TagService {
+  rpc Add(AddTagRequest) returns (AddTagResponse);
+  rpc Remove(RemoveTagRequest) returns (RemoveTagResponse);
+  rpc List(ListTagRequest) returns (ListTagResponse);
+}
+
+message AddTagRequest {
+  string tag = 1;
+  string article = 2;
+}
+
+message AddTagResponse {
+  string variant = 1;
+  string tag = 2;
+}
+
+message RemoveTagRequest {
+  string tag = 1;
+  string article = 2;
+}
+
+message RemoveTagResponse {
+  string variant = 1;
+  string tag = 2;
+}
+
+message ListTagRequest {
+}
+
+message ListTagResponse {
+  string variant = 1;
+  string tags = 2;
+}

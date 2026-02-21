@@ -1,0 +1,69 @@
+syntax = "proto3";
+package conduit.v1;
+
+service ArticleService {
+  rpc Create(CreateArticleRequest) returns (CreateArticleResponse);
+  rpc Update(UpdateArticleRequest) returns (UpdateArticleResponse);
+  rpc Delete(DeleteArticleRequest) returns (DeleteArticleResponse);
+  rpc Get(GetArticleRequest) returns (GetArticleResponse);
+  rpc List(ListArticleRequest) returns (ListArticleResponse);
+}
+
+message CreateArticleRequest {
+  string article = 1;
+  string title = 2;
+  string description = 3;
+  string body = 4;
+  string author = 5;
+}
+
+message CreateArticleResponse {
+  string variant = 1;
+  string article = 2;
+}
+
+message UpdateArticleRequest {
+  string article = 1;
+  string title = 2;
+  string description = 3;
+  string body = 4;
+}
+
+message UpdateArticleResponse {
+  string variant = 1;
+  string article = 2;
+  string message = 3;
+}
+
+message DeleteArticleRequest {
+  string article = 1;
+}
+
+message DeleteArticleResponse {
+  string variant = 1;
+  string article = 2;
+  string message = 3;
+}
+
+message GetArticleRequest {
+  string article = 1;
+}
+
+message GetArticleResponse {
+  string variant = 1;
+  string article = 2;
+  string slug = 3;
+  string title = 4;
+  string description = 5;
+  string body = 6;
+  string author = 7;
+  string message = 8;
+}
+
+message ListArticleRequest {
+}
+
+message ListArticleResponse {
+  string variant = 1;
+  string articles = 2;
+}

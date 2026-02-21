@@ -1,0 +1,305 @@
+# Conduit — Interface Generation Manifest
+#
+# Generates all 6 interface targets, 6 SDK languages,
+# and 2 spec documents from the 10 Conduit app concepts.
+#
+# Usage:
+#   copf interface generate --manifest examples/conduit/app.interface.yaml
+
+interface:
+  name: conduit
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  rest:
+    basePath: /api
+    framework: hono
+    versioning: none
+
+  graphql:
+    path: /graphql
+    relay: true
+    subscriptions: false
+    federation: false
+
+  grpc:
+    package: conduit.v1
+    goPackage: github.com/conduit/proto
+
+  cli:
+    name: conduit
+    shell: bash,zsh,fish
+
+  mcp:
+    name: conduit-mcp
+    transport: stdio
+
+  claude-skills:
+    name: conduit
+    progressive: true
+
+# ─── SDK LANGUAGES ────────────────────────────────────
+sdk:
+  typescript:
+    packageName: "@conduit/client"
+    moduleSystem: esm
+  python:
+    packageName: conduit-client
+    asyncSupport: true
+  go:
+    modulePath: github.com/conduit/client-go
+  rust:
+    crateName: conduit-client
+  java:
+    groupId: com.conduit
+    artifactId: conduit-client
+  swift:
+    packageName: ConduitClient
+
+# ─── SPECIFICATION DOCUMENTS ─────────────────────────
+specs:
+  openapi: true
+  asyncapi: true
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/interfaces
+  formatting:
+    typescript: prettier
+    python: black
+    go: gofmt
+    proto: buf
+  clean: true
+
+# ─── GLOBAL TRAITS ────────────────────────────────────
+traits:
+  - name: auth
+    config:
+      scheme: bearer
+    scope: kit
+
+  - name: validated
+    scope: kit
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+concepts:
+  User:
+    rest:
+      path: /users
+      actions:
+        register:
+          method: POST
+          path: /users
+    graphql:
+      actions:
+        register: mutation
+    cli:
+      actions:
+        register:
+          command: register
+          args:
+            name: { positional: true }
+            email: { positional: true }
+    mcp:
+      actions:
+        register:
+          type: tool
+          description: "Register a new user account"
+
+  Password:
+    traits:
+      - name: auth
+        actions: [set, check]
+    rest:
+      path: /users/password
+      actions:
+        set:
+          method: PUT
+          path: /users/password
+        check:
+          method: POST
+          path: /users/password/check
+        validate:
+          method: POST
+          path: /users/password/validate
+
+  JWT:
+    rest:
+      path: /auth
+      actions:
+        generate:
+          method: POST
+          path: /auth/token
+        verify:
+          method: POST
+          path: /auth/verify
+
+  Profile:
+    rest:
+      path: /profiles
+      actions:
+        update:
+          method: PUT
+          path: /user
+        get:
+          method: GET
+          path: /profiles/{user}
+    graphql:
+      actions:
+        update: mutation
+        get: query
+    mcp:
+      actions:
+        get:
+          type: resource
+          uriTemplate: "conduit://profiles/{user}"
+
+  Article:
+    traits:
+      - name: paginated
+        config: { style: offset }
+        actions: [list]
+    rest:
+      path: /articles
+      actions:
+        create:
+          method: POST
+          path: /articles
+        update:
+          method: PUT
+          path: /articles/{article}
+        delete:
+          method: DELETE
+          path: /articles/{article}
+        get:
+          method: GET
+          path: /articles/{article}
+        list:
+          method: GET
+          path: /articles
+          paginated: true
+    graphql:
+      actions:
+        create: mutation
+        update: mutation
+        delete: mutation
+        get: query
+        list: query
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            title: { positional: true }
+        list:
+          command: list
+          flags:
+            limit: { type: number, default: 20 }
+            offset: { type: number, default: 0 }
+    mcp:
+      actions:
+        get:
+          type: resource
+          uriTemplate: "conduit://articles/{article}"
+        list:
+          type: resource-template
+          uriTemplate: "conduit://articles"
+
+  Comment:
+    rest:
+      path: /articles/{target}/comments
+      actions:
+        create:
+          method: POST
+          path: /articles/{target}/comments
+        delete:
+          method: DELETE
+          path: /articles/{target}/comments/{comment}
+        list:
+          method: GET
+          path: /articles/{target}/comments
+    graphql:
+      actions:
+        create: mutation
+        delete: mutation
+        list: query
+
+  Follow:
+    rest:
+      path: /profiles/{target}/follow
+      actions:
+        follow:
+          method: POST
+          path: /profiles/{target}/follow
+        unfollow:
+          method: DELETE
+          path: /profiles/{target}/follow
+        isFollowing:
+          method: GET
+          path: /profiles/{target}/follow
+    graphql:
+      actions:
+        follow: mutation
+        unfollow: mutation
+        isFollowing: query
+
+  Favorite:
+    rest:
+      path: /articles/{article}/favorite
+      actions:
+        favorite:
+          method: POST
+          path: /articles/{article}/favorite
+        unfavorite:
+          method: DELETE
+          path: /articles/{article}/favorite
+        isFavorited:
+          method: GET
+          path: /articles/{article}/favorite
+        count:
+          method: GET
+          path: /articles/{article}/favorite/count
+    graphql:
+      actions:
+        favorite: mutation
+        unfavorite: mutation
+        isFavorited: query
+        count: query
+
+  Tag:
+    rest:
+      path: /tags
+      actions:
+        add:
+          method: POST
+          path: /tags
+        remove:
+          method: DELETE
+          path: /tags/{tag}
+        list:
+          method: GET
+          path: /tags
+    graphql:
+      actions:
+        add: mutation
+        remove: mutation
+        list: query
+    mcp:
+      actions:
+        list:
+          type: resource
+          uriTemplate: "conduit://tags"
+
+  Echo:
+    rest:
+      path: /echo
+      actions:
+        send:
+          method: POST
+          path: /echo
+    mcp:
+      actions:
+        send:
+          type: tool
+          description: "Echo a message back (health check)"
