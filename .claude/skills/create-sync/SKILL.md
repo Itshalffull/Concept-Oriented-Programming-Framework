@@ -56,6 +56,7 @@ Most syncs follow one of these patterns:
 | **Auth gate** | Web/request with token | — | JWT/verify | `CreateArticleAuth` |
 | **Perform action** | Web/request + auth completion | bind(uuid()) | Concept/create | `PerformCreateArticle` |
 | **Success response** | Web/request + action completion | Query for display data | Web/respond with body | `CreateArticleResponse` |
+| **Projection response** | Web/request + action completion | Where-clause enrichment | Web/respond with shaped body | `LoginResponse` |
 | **Error response** | Web/request + action error output | — | Web/respond with error | `LoginFailure` |
 | **Cascade** | Parent/delete completion | Query children | Child/delete | `CascadeDeleteComments` |
 | **Side effect** | Any completion | — | Another concept action | `GenerateToken` |

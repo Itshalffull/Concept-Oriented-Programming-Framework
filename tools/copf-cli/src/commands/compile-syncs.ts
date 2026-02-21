@@ -16,7 +16,7 @@ import { parseSyncFile } from '../../../../implementations/typescript/framework/
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { syncCompilerHandler } from '../../../../implementations/typescript/framework/sync-compiler.impl.js';
-import type { ConceptAST, CompiledSync } from '../../../../kernel/src/types.js';
+import type { ConceptAST, CompiledSync, ActionDecl } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
 interface SyncCheckResult {
@@ -100,6 +100,10 @@ export async function compileSyncsCommand(
         // Cross-reference validation: check concept/action refs
         const warnings = validateSyncReferences(sync, conceptASTs);
         result.warnings.push(...warnings);
+
+        // Field-level validation: check field names against specs
+        const fieldWarnings = validateSyncFields(sync, conceptASTs);
+        result.warnings.push(...fieldWarnings);
       }
     } catch (err: unknown) {
       result.ok = false;
@@ -181,6 +185,106 @@ function validateSyncReferences(
       if (!actionNames.has(action.action)) {
         warnings.push(
           `Sync "${sync.name}": then-clause references unknown action "${conceptName}/${action.action}"`,
+        );
+      }
+    }
+  }
+
+  return warnings;
+}
+
+// ============================================================
+// Field-level validation: check that field names used in sync
+// patterns match the fields declared in concept specs.
+// Produces warnings (not errors) for mismatches.
+// ============================================================
+
+function findAction(ast: ConceptAST, actionName: string): ActionDecl | undefined {
+  return ast.actions.find(a => a.name === actionName);
+}
+
+export function validateSyncFields(
+  sync: CompiledSync,
+  conceptASTs: Map<string, ConceptAST>,
+): string[] {
+  const warnings: string[] = [];
+
+  if (conceptASTs.size === 0) return warnings;
+
+  // --- Validate when-clause fields ---
+  for (const pattern of sync.when) {
+    const conceptName = pattern.concept.split('/').pop() || pattern.concept;
+    if (conceptName === 'Web') continue;
+
+    const ast = conceptASTs.get(conceptName);
+    if (!ast) continue; // Already warned by validateSyncReferences
+
+    const actionDecl = findAction(ast, pattern.action);
+    if (!actionDecl) continue; // Already warned by validateSyncReferences
+
+    // Check input fields against declared params
+    const declaredInputNames = new Set(actionDecl.params.map(p => p.name));
+    for (const field of pattern.inputFields) {
+      if (!declaredInputNames.has(field.name)) {
+        warnings.push(
+          `Sync "${sync.name}": when-clause input field "${field.name}" ` +
+          `is not a declared parameter of ${conceptName}/${pattern.action} ` +
+          `(declared: ${[...declaredInputNames].join(', ') || 'none'})`,
+        );
+      }
+    }
+
+    // Check output fields against declared variant output params.
+    // A field is valid if it appears in ANY variant's output.
+    const declaredOutputNames = new Set<string>();
+    for (const variant of actionDecl.variants) {
+      for (const param of variant.params) {
+        declaredOutputNames.add(param.name);
+      }
+    }
+
+    for (const field of pattern.outputFields) {
+      if (!declaredOutputNames.has(field.name)) {
+        warnings.push(
+          `Sync "${sync.name}": when-clause output field "${field.name}" ` +
+          `is not a declared output of ${conceptName}/${pattern.action} ` +
+          `(declared: ${[...declaredOutputNames].join(', ') || 'none'})`,
+        );
+      }
+    }
+  }
+
+  // --- Validate then-clause fields ---
+  for (const action of sync.then) {
+    const conceptName = action.concept.split('/').pop() || action.concept;
+    if (conceptName === 'Web') continue;
+
+    const ast = conceptASTs.get(conceptName);
+    if (!ast) continue;
+
+    const actionDecl = findAction(ast, action.action);
+    if (!actionDecl) continue;
+
+    const declaredInputNames = new Set(actionDecl.params.map(p => p.name));
+
+    // Check that provided fields match declared params
+    for (const field of action.fields) {
+      if (!declaredInputNames.has(field.name)) {
+        warnings.push(
+          `Sync "${sync.name}": then-clause field "${field.name}" ` +
+          `is not a declared parameter of ${conceptName}/${action.action} ` +
+          `(declared: ${[...declaredInputNames].join(', ') || 'none'})`,
+        );
+      }
+    }
+
+    // Check that required input params are provided
+    const providedFieldNames = new Set(action.fields.map(f => f.name));
+    for (const param of actionDecl.params) {
+      if (!providedFieldNames.has(param.name)) {
+        warnings.push(
+          `Sync "${sync.name}": then-clause for ${conceptName}/${action.action} ` +
+          `is missing required parameter "${param.name}"`,
         );
       }
     }

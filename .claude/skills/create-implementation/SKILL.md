@@ -314,6 +314,60 @@ For versioned concepts (with schema migration support):
 await kernel.registerVersionedConcept('urn:copf/My', myHandler, 2);
 ```
 
+## Projection Sync Pattern — How Implementations Shape API Responses
+
+When a concept action returns raw data (e.g., a user ID string for `author`), the **response sync** is responsible for enriching it before building the `Web/respond` body. This is called a **projection sync** — a response sync that uses `where`-clauses to resolve raw concept output into a richer shape.
+
+**Why this matters for implementations:** If your action returns a foreign key (like `author: userId`), don't try to resolve it inside the handler — that would couple concepts. Instead, return the raw ID. The sync layer handles the enrichment.
+
+**Bad — coupling concepts in the implementation:**
+```typescript
+async list(_input, storage) {
+  const articles = await storage.find('article');
+  // DON'T: resolve author profile inside the article handler
+  for (const a of articles) { a.author = await getProfile(a.author); }
+  return { variant: 'ok', articles: JSON.stringify(articles) };
+}
+```
+
+**Good — return raw data, let syncs enrich it:**
+```typescript
+async list(_input, storage) {
+  const articles = await storage.find('article');
+  return { variant: 'ok', articles: JSON.stringify(articles) };
+}
+```
+
+The projection sync then enriches the response using `where`-clause queries:
+
+```
+sync LoginResponse [eager]
+when {
+  Web/request: [ method: "login"; email: ?email ]
+    => [ request: ?request ]
+  JWT/generate: [ user: ?user ]
+    => [ token: ?token ]
+}
+where {
+  User: { ?u email: ?email; name: ?username }
+}
+then {
+  Web/respond: [
+    request: ?request;
+    body: [
+      user: [
+        username: ?username;
+        email: ?email;
+        token: ?token ] ] ]
+}
+```
+
+This `LoginResponse` sync is a projection — it combines JWT output (`?token`) with User state queries (`?username`) into a shaped response body. The concept handlers stay independent; the sync layer composes them.
+
+**The sync compiler validates field names** (Section 7.2): if a sync references `Article/list: [] => [ tagList: ?tags ]` but `Article/list` only outputs `articles`, the compiler warns at compile time. This catches mismatches between what your implementation returns and what syncs expect.
+
+See the `/create-sync` skill for the full projection sync pattern and examples.
+
 ## Checklist
 
 Before considering the implementation complete:

@@ -14,9 +14,12 @@ import {
 import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
 import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
 import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
-import type { CompiledSync } from '../kernel/src/types.js';
+import { validateSyncFields } from '../tools/copf-cli/src/commands/compile-syncs.js';
+import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
+import type { CompiledSync, ConceptAST } from '../kernel/src/types.js';
 
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
+const SPECS_DIR = resolve(__dirname, '..', 'specs', 'app');
 
 // ============================================================
 // 1. SyncParser Concept
@@ -126,5 +129,155 @@ describe('SyncCompiler Concept', () => {
 
     expect(result.variant).toBe('error');
     expect(result.message).toContain('when clause is required');
+  });
+});
+
+// ============================================================
+// 3. Sync Field Validation
+//
+// Validates that field names in sync patterns match the fields
+// declared in concept specs. See Section 7.2.
+// ============================================================
+
+function loadSpec(name: string): ConceptAST {
+  return parseConceptFile(readFileSync(resolve(SPECS_DIR, `${name}.concept`), 'utf-8'));
+}
+
+describe('Sync Field Validation', () => {
+  it('produces no warnings for valid echo sync', () => {
+    const echoAST = loadSpec('echo');
+    const syncs = parseSyncFile(readFileSync(resolve(SYNCS_DIR, 'app', 'echo.sync'), 'utf-8'));
+    const conceptMap = new Map<string, ConceptAST>([['Echo', echoAST]]);
+
+    // HandleEcho then-clause: Echo/send: [ id: ?id; text: ?text ]
+    // Echo/send params: id(M), text(String) — match
+    // EchoResponse when-clause: Echo/send => [ echo: ?echo ]
+    // Echo/send ok variant: id, echo — match
+    const allWarnings = syncs.flatMap(s => validateSyncFields(s, conceptMap));
+    expect(allWarnings).toEqual([]);
+  });
+
+  it('warns on unknown when-clause output field', () => {
+    const articleAST = loadSpec('article');
+    const conceptMap = new Map<string, ConceptAST>([['Article', articleAST]]);
+
+    // Article/list ok variant outputs: articles
+    // Sync references "tagList" which doesn't exist
+    const badSync: CompiledSync = {
+      name: 'BadListSync',
+      when: [{
+        concept: 'urn:copf/Article',
+        action: 'list',
+        inputFields: [],
+        outputFields: [{ name: 'tagList', match: { type: 'variable', name: 'tags' } }],
+      }],
+      where: [],
+      then: [{ concept: 'urn:copf/Web', action: 'respond', fields: [] }],
+    };
+
+    const warnings = validateSyncFields(badSync, conceptMap);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('tagList');
+    expect(warnings[0]).toContain('not a declared output');
+    expect(warnings[0]).toContain('articles');
+  });
+
+  it('warns on unknown when-clause input field', () => {
+    const articleAST = loadSpec('article');
+    const conceptMap = new Map<string, ConceptAST>([['Article', articleAST]]);
+
+    // Article/get params: article(A) — not "slug"
+    const badSync: CompiledSync = {
+      name: 'BadGetSync',
+      when: [{
+        concept: 'urn:copf/Article',
+        action: 'get',
+        inputFields: [{ name: 'slug', match: { type: 'variable', name: 's' } }],
+        outputFields: [],
+      }],
+      where: [],
+      then: [{ concept: 'urn:copf/Web', action: 'respond', fields: [] }],
+    };
+
+    const warnings = validateSyncFields(badSync, conceptMap);
+    expect(warnings.some(w => w.includes('slug') && w.includes('not a declared parameter'))).toBe(true);
+    expect(warnings.some(w => w.includes('article'))).toBe(true); // shows the expected param
+  });
+
+  it('warns on missing required then-clause parameter', () => {
+    const articleAST = loadSpec('article');
+    const conceptMap = new Map<string, ConceptAST>([['Article', articleAST]]);
+
+    // Article/create params: article, title, description, body, author
+    // Sync only provides: article, title — missing 3
+    const badSync: CompiledSync = {
+      name: 'IncompleteCreate',
+      when: [{ concept: 'urn:copf/Web', action: 'request', inputFields: [], outputFields: [] }],
+      where: [],
+      then: [{
+        concept: 'urn:copf/Article',
+        action: 'create',
+        fields: [
+          { name: 'article', value: { type: 'variable', name: 'a' } },
+          { name: 'title', value: { type: 'variable', name: 't' } },
+        ],
+      }],
+    };
+
+    const warnings = validateSyncFields(badSync, conceptMap);
+    expect(warnings.some(w => w.includes('missing required parameter "description"'))).toBe(true);
+    expect(warnings.some(w => w.includes('missing required parameter "body"'))).toBe(true);
+    expect(warnings.some(w => w.includes('missing required parameter "author"'))).toBe(true);
+  });
+
+  it('produces no warnings for login sync', () => {
+    const passwordAST = loadSpec('password');
+    const jwtAST = loadSpec('jwt');
+    const conceptMap = new Map<string, ConceptAST>([
+      ['Password', passwordAST],
+      ['JWT', jwtAST],
+    ]);
+
+    const syncs = parseSyncFile(readFileSync(resolve(SYNCS_DIR, 'app', 'login.sync'), 'utf-8'));
+    const allWarnings = syncs.flatMap(s => validateSyncFields(s, conceptMap));
+    expect(allWarnings).toEqual([]);
+  });
+
+  it('skips Web concept references without warnings', () => {
+    const badSync: CompiledSync = {
+      name: 'WebOnly',
+      when: [{
+        concept: 'urn:copf/Web',
+        action: 'request',
+        inputFields: [{ name: 'anything', match: { type: 'variable', name: 'x' } }],
+        outputFields: [{ name: 'whatever', match: { type: 'variable', name: 'y' } }],
+      }],
+      where: [],
+      then: [{
+        concept: 'urn:copf/Web',
+        action: 'respond',
+        fields: [{ name: 'body', value: { type: 'variable', name: 'y' } }],
+      }],
+    };
+
+    const warnings = validateSyncFields(badSync, new Map());
+    expect(warnings).toEqual([]);
+  });
+
+  it('validates Article/list output fields in reads sync', () => {
+    const articleAST = loadSpec('article');
+    const tagAST = loadSpec('tag');
+    const profileAST = loadSpec('profile');
+    const commentAST = loadSpec('comment');
+    const conceptMap = new Map<string, ConceptAST>([
+      ['Article', articleAST],
+      ['Tag', tagAST],
+      ['Profile', profileAST],
+      ['Comment', commentAST],
+    ]);
+
+    const syncs = parseSyncFile(readFileSync(resolve(SYNCS_DIR, 'app', 'reads.sync'), 'utf-8'));
+    const allWarnings = syncs.flatMap(s => validateSyncFields(s, conceptMap));
+    expect(allWarnings).toEqual([]);
   });
 });
