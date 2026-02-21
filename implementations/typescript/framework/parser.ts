@@ -305,7 +305,7 @@ class Parser {
 
     // Handle top-level annotations before 'concept' keyword (e.g. @version(1), @gate)
     let version: number | undefined;
-    const topAnnotations: { gate?: boolean } = {};
+    const topAnnotations: { gate?: boolean; category?: string; visibility?: string } = {};
     while (this.peek().type === 'AT') {
       this.expect('AT');
       const tok = this.peek();
@@ -318,6 +318,18 @@ class Parser {
       } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'gate') {
         this.advance();
         topAnnotations.gate = true;
+      } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'category') {
+        this.advance();
+        this.expect('LPAREN');
+        const catTok = this.expect('STRING_LIT');
+        topAnnotations.category = catTok.value;
+        this.expect('RPAREN');
+      } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'visibility') {
+        this.advance();
+        this.expect('LPAREN');
+        const visTok = this.expect('STRING_LIT');
+        topAnnotations.visibility = visTok.value;
+        this.expect('RPAREN');
       } else {
         throw new Error(
           `Parse error at line ${tok.line}:${tok.col}: unknown top-level annotation @${tok.value}`,
@@ -344,6 +356,12 @@ class Parser {
     // Apply top-level annotations
     if (topAnnotations.gate) {
       ast.annotations = { ...ast.annotations, gate: true };
+    }
+    if (topAnnotations.category) {
+      ast.annotations = { ...ast.annotations, category: topAnnotations.category };
+    }
+    if (topAnnotations.visibility) {
+      ast.annotations = { ...ast.annotations, visibility: topAnnotations.visibility };
     }
 
     while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
@@ -387,8 +405,11 @@ class Parser {
   }
 
   /**
-   * Parse an @annotation. Currently supports:
+   * Parse an @annotation. Supports:
    * - @version(N) — sets the schema version integer
+   * - @gate — marks async gate convention
+   * - @category("name") — concept category for grouping
+   * - @visibility("level") — concept visibility (public/internal/framework)
    */
   private parseAnnotation(ast: ConceptAST): void {
     this.expect('AT');
@@ -398,6 +419,21 @@ class Parser {
       this.expect('LPAREN');
       const versionTok = this.expect('INT_LIT');
       ast.version = parseInt(versionTok.value, 10);
+      this.expect('RPAREN');
+    } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'gate') {
+      this.advance();
+      ast.annotations = { ...ast.annotations, gate: true };
+    } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'category') {
+      this.advance();
+      this.expect('LPAREN');
+      const catTok = this.expect('STRING_LIT');
+      ast.annotations = { ...ast.annotations, category: catTok.value };
+      this.expect('RPAREN');
+    } else if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'visibility') {
+      this.advance();
+      this.expect('LPAREN');
+      const visTok = this.expect('STRING_LIT');
+      ast.annotations = { ...ast.annotations, visibility: visTok.value };
       this.expect('RPAREN');
     } else {
       throw new Error(
@@ -567,6 +603,30 @@ class Parser {
       this.expect('RPAREN');
       this.expect('LBRACE');
 
+      // Check for optional description { ... } block before variants
+      let actionDescription: string | undefined;
+      this.skipSeps();
+      if (this.peek().type === 'IDENT' && this.peek().value === 'description') {
+        this.advance(); // consume 'description'
+        this.expect('LBRACE');
+        let prose = '';
+        let depth = 1;
+        while (depth > 0 && this.peek().type !== 'EOF') {
+          const t = this.peek();
+          if (t.type === 'LBRACE') depth++;
+          if (t.type === 'RBRACE') {
+            depth--;
+            if (depth === 0) break;
+          }
+          if (prose.length > 0 || t.type !== 'SEP') {
+            prose += t.value + ' ';
+          }
+          this.advance();
+        }
+        this.expect('RBRACE');
+        actionDescription = prose.trim();
+      }
+
       const variants: ReturnVariant[] = [];
 
       while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
@@ -604,7 +664,11 @@ class Parser {
       }
 
       this.expect('RBRACE');
-      actions.push({ name, params, variants });
+      const actionDecl: ActionDecl = { name, params, variants };
+      if (actionDescription) {
+        actionDecl.description = actionDescription;
+      }
+      actions.push(actionDecl);
       this.skipSeps();
     }
 

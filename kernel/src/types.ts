@@ -190,8 +190,8 @@ export interface ConceptAST {
   purpose?: string;
   /** Schema version declared via @version(N). Undefined means unversioned. */
   version?: number;
-  /** Annotations parsed from @-prefixed decorators (e.g. @gate). */
-  annotations?: { gate?: boolean };
+  /** Annotations parsed from @-prefixed decorators (e.g. @gate, @category, @visibility). */
+  annotations?: { gate?: boolean; category?: string; visibility?: string };
   state: StateEntry[];
   actions: ActionDecl[];
   invariants: InvariantDecl[];
@@ -215,6 +215,8 @@ export type TypeExpr =
 
 export interface ActionDecl {
   name: string;
+  /** Action-level description from `description { ... }` block. */
+  description?: string;
   params: ParamDecl[];
   variants: ReturnVariant[];
 }
@@ -338,6 +340,8 @@ export type ResolvedType =
 
 export interface ActionSchema {
   name: string;
+  /** Action-level description propagated from concept spec. */
+  description?: string;
   params: ActionParamSchema[];
   variants: VariantSchema[];
 }
@@ -389,6 +393,10 @@ export interface ConceptManifest {
   purpose: string;
   /** True if concept has @gate annotation (async gate convention). */
   gate?: boolean;
+  /** Concept category from @category annotation (e.g. "devtools"). */
+  category?: string;
+  /** Visibility level from @visibility annotation (e.g. "framework", "public", "internal"). */
+  visibility?: string;
 }
 
 // --- Kit Manifest (Section 9) ---

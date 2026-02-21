@@ -122,21 +122,27 @@ function buildRelationSchemas(ast: ConceptAST): RelationSchema[] {
 // --- Actions → ActionSchema conversion ---
 
 function buildActionSchemas(ast: ConceptAST): ActionSchema[] {
-  return ast.actions.map(action => ({
-    name: action.name,
-    params: action.params.map(p => ({
-      name: p.name,
-      type: typeExprToResolvedType(p.type),
-    })),
-    variants: action.variants.map(v => ({
-      tag: v.name,
-      fields: v.params.map(p => ({
+  return ast.actions.map(action => {
+    const schema: ActionSchema = {
+      name: action.name,
+      params: action.params.map(p => ({
         name: p.name,
         type: typeExprToResolvedType(p.type),
       })),
-      prose: v.description,
-    })),
-  }));
+      variants: action.variants.map(v => ({
+        tag: v.name,
+        fields: v.params.map(p => ({
+          name: p.name,
+          type: typeExprToResolvedType(p.type),
+        })),
+        prose: v.description,
+      })),
+    };
+    if (action.description) {
+      schema.description = action.description;
+    }
+    return schema;
+  });
 }
 
 // --- Invariants → InvariantSchema conversion ---
@@ -455,6 +461,14 @@ function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
   // Propagate @gate annotation to manifest
   if (ast.annotations?.gate) {
     manifest.gate = true;
+  }
+
+  // Propagate @category and @visibility annotations to manifest
+  if (ast.annotations?.category) {
+    manifest.category = ast.annotations.category;
+  }
+  if (ast.annotations?.visibility) {
+    manifest.visibility = ast.annotations.visibility;
   }
 
   return manifest;
