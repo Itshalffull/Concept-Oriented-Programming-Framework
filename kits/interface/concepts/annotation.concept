@@ -1,0 +1,64 @@
+@version(1)
+concept Annotation [N] {
+
+  purpose {
+    Attach rich metadata to concepts and actions for interface
+    generation — examples, documentation references, tool permissions,
+    argument templates, and related-item links. Each target reads
+    annotations it understands and ignores the rest.
+  }
+
+  state {
+    annotations: set N
+    concept {
+      targetConcept: N -> String
+      scope: N -> String
+    }
+    metadata {
+      examples: N -> list { label: String, language: String, code: String }
+      references: N -> list { path: String, label: String }
+      toolPermissions: N -> list String
+      argumentTemplate: N -> option String
+      relatedItems: N -> list { name: String, relation: String }
+    }
+  }
+
+  actions {
+    action annotate(concept: String, scope: String, metadata: String) {
+      description {
+        Attach metadata to a concept-level or action-level scope.
+        The metadata JSON can include examples, references, tool
+        permissions, argument templates, and related item links.
+        Scope is either "concept" for concept-level or the action
+        name for action-level annotations.
+      }
+      -> ok(annotation: N, fieldCount: Int) {
+        Metadata attached to the specified scope.
+      }
+      -> invalidScope(scope: String) {
+        The scope references an action not found in the concept.
+      }
+    }
+
+    action resolve(concept: String) {
+      description {
+        Return all annotations for a concept and its actions.
+        Merges concept-level and action-level annotations into
+        a single result set ordered by scope.
+      }
+      -> ok(annotations: list String) {
+        All annotations for the concept, serialized as JSON.
+      }
+      -> notFound(concept: String) {
+        No annotations exist for the specified concept.
+      }
+    }
+  }
+
+  invariant {
+    after annotate(concept: "SpecParser", scope: "concept",
+      metadata: "{\"toolPermissions\":[\"Read\",\"Bash\"]}")
+      -> ok(annotation: n, fieldCount: 1)
+    then resolve(concept: "SpecParser") -> ok(annotations: a)
+  }
+}

@@ -1,0 +1,58 @@
+@version(1)
+concept Grouping [G] {
+
+  purpose {
+    Organize concepts into named groups using structural or
+    behavioral classification strategies for interface generation
+    targets. Structural strategies group by concept identity or
+    kit membership. Behavioral strategies group by dominant action
+    classification (CRUD role, read/write intent, event-producing
+    status, or MCP resource type).
+  }
+
+  state {
+    groupings: set G
+    config {
+      strategy: G -> String
+      itemCount: G -> Int
+    }
+    result {
+      entries: G -> list { name: String, description: String, members: list String }
+    }
+  }
+
+  actions {
+    action group(items: list String, config: String) {
+      -> ok(grouping: G, groups: list String, groupCount: Int) {
+        Apply the configured strategy to produce named groups.
+        Each input item appears in exactly one group.
+        Structural: per-concept, per-kit, single, custom.
+        Behavioral: by-crud, by-intent, by-event, by-mcp-type.
+      }
+      -> invalidStrategy(strategy: String) {
+        The config references an unknown grouping strategy.
+      }
+      -> emptyInput() {
+        No items were provided to group.
+      }
+    }
+
+    action classify(actionName: String) {
+      -> ok(crudRole: String, intent: String, eventProducing: Bool, eventVerb: String, mcpType: String) {
+        Classify a single action name by its operational properties.
+        Pure computation, no state change.
+        crudRole: create | read | update | delete | other.
+        intent: read | write.
+        eventProducing: true if side-effecting.
+        mcpType: tool | resource | resource-template.
+      }
+    }
+  }
+
+  invariant {
+    after group(items: ["A", "B", "C"], config: "per-concept")
+      -> ok(grouping: g, groups: gs, groupCount: 3)
+    then classify(actionName: "create")
+      -> ok(crudRole: "create", intent: "write", eventProducing: true, eventVerb: "created", mcpType: "tool")
+  }
+}

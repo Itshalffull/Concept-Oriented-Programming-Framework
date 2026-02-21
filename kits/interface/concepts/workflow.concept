@@ -1,0 +1,65 @@
+@version(1)
+concept Workflow [W] {
+
+  purpose {
+    Organize concept actions into ordered, annotated workflow
+    sequences for interface targets. Each target renders workflows
+    in its natural format — skills as numbered steps, CLI as
+    help pages, REST as getting-started guides, SDKs as tutorials.
+  }
+
+  state {
+    workflows: set W
+    config {
+      concept: W -> String
+      steps: W -> list { action: String, title: String, prose: String, order: Int }
+    }
+    decoration {
+      checklists: W -> list { step: String, items: list String }
+      references: W -> list { step: String, path: String, label: String }
+      examples: W -> list { step: String, language: String, code: String }
+      antiPatterns: W -> list { title: String, description: String }
+      relatedWorkflows: W -> list String
+    }
+  }
+
+  actions {
+    action define(concept: String, steps: list String, config: String) {
+      description {
+        Create a workflow from a concept's actions. Steps are ordered
+        action names with optional titles and prose. The config JSON
+        can include checklists, references, examples, anti-patterns,
+        and related workflow links.
+      }
+      -> ok(workflow: W, stepCount: Int) {
+        Workflow created with ordered steps and optional decorations.
+      }
+      -> invalidAction(action: String) {
+        A step references an action not found in the concept.
+      }
+      -> emptySteps() {
+        No steps were provided.
+      }
+    }
+
+    action render(workflow: W, format: String) {
+      description {
+        Render a workflow in the requested format. Supported formats
+        include skill-md, cli-help, rest-guide, and generic. Each
+        format produces output suited to its target audience.
+      }
+      -> ok(content: String) {
+        Rendered workflow content in the requested format.
+      }
+      -> unknownFormat(format: String) {
+        The requested format is not recognized.
+      }
+    }
+  }
+
+  invariant {
+    after define(concept: "SpecParser", steps: ["parse"], config: "{}")
+      -> ok(workflow: w, stepCount: 1)
+    then render(workflow: w, format: "generic") -> ok(content: c)
+  }
+}

@@ -1,0 +1,13 @@
+# Generator triggers concept grouping before dispatching to targets.
+# Grouping organizes concepts into named groups using the configured
+# strategy (per-concept, per-kit, single, custom, or behavioral modes).
+# Architecture doc: Interface Kit
+
+sync GroupBeforeDispatch [eager]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+then {
+  Grouping/group: [ items: ?items; config: ?config ]
+}

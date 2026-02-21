@@ -35,6 +35,21 @@ concepts:
     params:
       M: { as: middleware-ref, description: "Reference to a middleware definition" }
 
+  Grouping:
+    spec: ./concepts/grouping.concept
+    params:
+      G: { as: grouping-ref, description: "Reference to a concept grouping result" }
+
+  Workflow:
+    spec: ./concepts/workflow.concept
+    params:
+      W: { as: workflow-ref, description: "Reference to an ordered action sequence" }
+
+  Annotation:
+    spec: ./concepts/annotation.concept
+    params:
+      N: { as: annotation-ref, description: "Reference to concept/action metadata" }
+
   # --- Coordination Concepts ---
   Target:
     spec: ./concepts/target.concept
@@ -140,6 +155,9 @@ syncs:
     - path: ./syncs/generate-on-plan.sync
     - path: ./syncs/write-on-inject.sync
     - path: ./syncs/format-on-write.sync
+    - path: ./syncs/group-before-dispatch.sync
+    - path: ./syncs/workflow-before-render.sync
+    - path: ./syncs/annotate-before-generate.sync
 
   recommended:
     - path: ./syncs/compose-on-complete.sync

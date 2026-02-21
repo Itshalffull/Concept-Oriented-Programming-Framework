@@ -1,0 +1,13 @@
+# Generator resolves annotations before target rendering.
+# Annotations provide rich metadata (examples, references,
+# tool permissions) that targets consume during output generation.
+# Architecture doc: Interface Kit
+
+sync AnnotateBeforeGenerate [eager]
+when {
+  Generator/generate: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+then {
+  Annotation/resolve: [ concept: ?concept ]
+}
