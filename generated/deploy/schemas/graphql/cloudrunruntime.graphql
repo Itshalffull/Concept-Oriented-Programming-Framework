@@ -1,0 +1,27 @@
+type CloudRunRuntimeState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CloudRunRuntimeEntry {
+  c: ID!
+  serviceUrl: String!
+  projectId: String!
+  region: String!
+  cpu: Int!
+  memory: Int!
+  maxConcurrency: Int!
+  currentRevision: String!
+  previousRevision: String!
+  revisionHistory: [String!]!
+}
+
+extend type Query {
+  cloudrunruntime_entry(c: ID!): CloudRunRuntimeEntry
+  cloudrunruntime_entries: [CloudRunRuntimeEntry!]!
+}
+
+type CloudRunRuntimeServices {
+  c: ID!
+  value: ID!
+}

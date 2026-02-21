@@ -1,0 +1,10 @@
+# Route IaC/emit to CloudFormationProvider — Architecture doc Section 3.8
+
+sync RouteToCloudFormation [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "cloudformation" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  CloudFormationProvider/generate: [ plan: ?plan ]
+}

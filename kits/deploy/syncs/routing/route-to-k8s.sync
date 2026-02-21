@@ -1,0 +1,11 @@
+# Route Runtime/provision to K8sRuntime — Architecture doc Section 3.8
+
+sync RouteToK8s [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "kubernetes"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  K8sRuntime/provision: [ concept: ?concept; namespace: ?namespace;
+    cluster: ?cluster; replicas: ?replicas ]
+}

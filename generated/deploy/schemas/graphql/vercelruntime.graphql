@@ -1,0 +1,26 @@
+type VercelRuntimeState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type VercelRuntimeEntry {
+  v: ID!
+  projectId: String!
+  teamId: String!
+  framework: String!
+  regions: [String!]!
+  deploymentUrl: String!
+  currentDeploymentId: String!
+  previousDeploymentId: String!
+  productionUrl: String!
+}
+
+extend type Query {
+  vercelruntime_entry(v: ID!): VercelRuntimeEntry
+  vercelruntime_entries: [VercelRuntimeEntry!]!
+}
+
+type VercelRuntimeProjects {
+  v: ID!
+  value: ID!
+}

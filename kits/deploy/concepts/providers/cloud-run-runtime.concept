@@ -1,0 +1,76 @@
+@version(1)
+concept CloudRunRuntime [C] {
+
+  purpose {
+    Manage Google Cloud Run service deployments. Owns service
+    URLs, revision history, IAM bindings, traffic splitting,
+    and concurrency settings.
+  }
+
+  state {
+    services: set C
+    config {
+      serviceUrl: C -> String
+      projectId: C -> String
+      region: C -> String
+      cpu: C -> Int
+      memory: C -> Int
+      maxConcurrency: C -> Int
+      minInstances: C -> Int
+      maxInstances: C -> Int
+    }
+    revisions {
+      currentRevision: C -> String
+      previousRevision: C -> option String
+      revisionHistory: C -> list String
+    }
+  }
+
+  actions {
+    action provision(concept: String, projectId: String, region: String, cpu: Int, memory: Int) {
+      -> ok(service: C, serviceUrl: String, endpoint: String) {
+        Cloud Run service created in specified project and region.
+        IAM bindings configured for ingress.
+      }
+      -> billingDisabled(projectId: String) {
+        Billing is not enabled for this GCP project.
+      }
+      -> regionUnavailable(region: String) {
+        Cloud Run is not available in the requested region.
+      }
+    }
+
+    action deploy(service: C, imageUri: String) {
+      -> ok(service: C, revision: String) {
+        New revision deployed with container image.
+        Traffic shifted to new revision.
+      }
+      -> imageNotFound(imageUri: String) {
+        Container image not found in registry.
+      }
+    }
+
+    action setTrafficWeight(service: C, weight: Int) {
+      -> ok(service: C) {
+        Traffic split updated between current and previous revisions.
+      }
+    }
+
+    action rollback(service: C, targetRevision: String) {
+      -> ok(service: C, restoredRevision: String) {
+        Traffic routed to specified previous revision.
+      }
+    }
+
+    action destroy(service: C) {
+      -> ok(service: C) {
+        Service and all revisions deleted.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", projectId: "my-project", region: "us-central1", cpu: 1, memory: 512) -> ok(service: s, serviceUrl: url, endpoint: ep)
+    then deploy(service: s, imageUri: "gcr.io/my-project/user:latest") -> ok(service: s, revision: r)
+  }
+}

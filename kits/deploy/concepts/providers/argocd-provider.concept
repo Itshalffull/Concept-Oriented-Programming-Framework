@@ -1,0 +1,61 @@
+@version(1)
+concept ArgoCDProvider [A] {
+
+  purpose {
+    Generate ArgoCD Application CRDs from COPF deploy plans.
+    Owns Application resources, sync wave ordering, health
+    assessments, and auto-sync configuration.
+  }
+
+  state {
+    applications: set A
+    config {
+      appName: A -> String
+      project: A -> String
+      repoUrl: A -> String
+      targetRevision: A -> String
+      path: A -> String
+      namespace: A -> String
+    }
+    tracking {
+      syncStatus: A -> String
+      healthStatus: A -> String
+      syncWave: A -> option Int
+      lastSyncedAt: A -> option DateTime
+    }
+  }
+
+  actions {
+    action emit(plan: String, repo: String, path: String) {
+      -> ok(application: A, files: list String) {
+        ArgoCD Application CRD generated and committed.
+      }
+    }
+
+    action reconciliationStatus(application: A) {
+      -> ok(application: A, syncStatus: String, healthStatus: String, reconciledAt: DateTime) {
+        ArgoCD has synced and reports healthy.
+      }
+      -> pending(application: A, waitingOn: list String) {
+        ArgoCD sync is in progress.
+      }
+      -> degraded(application: A, unhealthyResources: list String) {
+        Application synced but some resources are degraded.
+      }
+      -> failed(application: A, reason: String) {
+        ArgoCD sync failed.
+      }
+    }
+
+    action syncWave(application: A, wave: Int) {
+      -> ok(application: A) {
+        Sync wave ordering set for this application.
+      }
+    }
+  }
+
+  invariant {
+    after emit(plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod") -> ok(application: a, files: f)
+    then reconciliationStatus(application: a) -> ok(application: a, syncStatus: "Synced", healthStatus: "Healthy", reconciledAt: t)
+  }
+}

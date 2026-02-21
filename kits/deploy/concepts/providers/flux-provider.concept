@@ -1,0 +1,65 @@
+@version(1)
+concept FluxProvider [F] {
+
+  purpose {
+    Generate Flux CRDs from COPF deploy plans. Owns Kustomization
+    CRDs, HelmRelease objects, source controller references,
+    and reconciliation status tracking.
+  }
+
+  state {
+    kustomizations: set F
+    config {
+      name: F -> String
+      namespace: F -> String
+      sourceRef: F -> String
+      path: F -> String
+      interval: F -> String
+    }
+    tracking {
+      readyStatus: F -> String
+      lastAppliedRevision: F -> option String
+      lastAttemptedRevision: F -> option String
+      lastHandledReconcileAt: F -> option DateTime
+    }
+    helm {
+      releaseName: F -> option String
+      chartRef: F -> option String
+      valuesFrom: F -> list String
+    }
+  }
+
+  actions {
+    action emit(plan: String, repo: String, path: String) {
+      -> ok(kustomization: F, files: list String) {
+        Flux Kustomization and source CRDs generated and committed.
+      }
+    }
+
+    action reconciliationStatus(kustomization: F) {
+      -> ok(kustomization: F, readyStatus: String, appliedRevision: String, reconciledAt: DateTime) {
+        Flux has reconciled the kustomization.
+      }
+      -> pending(kustomization: F, waitingOn: list String) {
+        Flux reconciliation is in progress.
+      }
+      -> failed(kustomization: F, reason: String) {
+        Flux reconciliation failed.
+      }
+    }
+
+    action helmRelease(kustomization: F, chart: String, values: String) {
+      -> ok(kustomization: F, releaseName: String) {
+        HelmRelease object created within the kustomization.
+      }
+      -> chartNotFound(chart: String, sourceRef: String) {
+        Helm chart not found in the configured source.
+      }
+    }
+  }
+
+  invariant {
+    after emit(plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod") -> ok(kustomization: k, files: f)
+    then reconciliationStatus(kustomization: k) -> ok(kustomization: k, readyStatus: "True", appliedRevision: rev, reconciledAt: t)
+  }
+}

@@ -1,0 +1,10 @@
+# Route Secret/resolve to EnvProvider — Architecture doc Section 3.8
+
+sync RouteToEnv [eager]
+when {
+  Secret/resolve: [ name: ?name; provider: "env" ]
+    => [ secret: ?s; version: ?ver ]
+}
+then {
+  EnvProvider/fetch: [ name: ?name ]
+}

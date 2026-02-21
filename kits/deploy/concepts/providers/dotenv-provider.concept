@@ -1,0 +1,43 @@
+@version(1)
+concept DotenvProvider [D] {
+
+  purpose {
+    Manage secret resolution from .env files. Owns the file
+    path, parsed key-value pairs, and file load state.
+    Used for local development secret management.
+  }
+
+  state {
+    files: set D
+    config {
+      filePath: D -> String
+      loadedAt: D -> option DateTime
+    }
+    loaded {
+      keys: D -> list String
+      values: D -> list String
+    }
+  }
+
+  actions {
+    action fetch(name: String, filePath: String) {
+      -> ok(value: String) {
+        Variable retrieved from parsed .env file.
+      }
+      -> fileNotFound(filePath: String) {
+        The specified .env file does not exist.
+      }
+      -> parseError(filePath: String, line: Int, reason: String) {
+        The .env file contains a syntax error.
+      }
+      -> variableNotSet(name: String, filePath: String) {
+        Variable not found in the loaded .env file.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
+    then fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
+  }
+}

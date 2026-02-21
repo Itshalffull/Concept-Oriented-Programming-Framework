@@ -1,0 +1,71 @@
+@version(1)
+concept CloudFormationProvider [C] {
+
+  purpose {
+    Generate and apply AWS CloudFormation templates from COPF
+    deploy plans. Owns stack IDs, change set management,
+    rollback configurations, and stack event tracking.
+  }
+
+  state {
+    stacks: set C
+    config {
+      stackName: C -> String
+      region: C -> String
+      templateUrl: C -> option String
+      capabilities: C -> list String
+    }
+    tracking {
+      stackId: C -> option String
+      changeSetId: C -> option String
+      lastEventAt: C -> option DateTime
+      stackStatus: C -> String
+    }
+  }
+
+  actions {
+    action generate(plan: String) {
+      -> ok(stack: C, files: list String) {
+        CloudFormation YAML template generated from deploy plan.
+      }
+    }
+
+    action preview(stack: C) {
+      -> ok(stack: C, changeSetId: String, toCreate: Int, toUpdate: Int, toDelete: Int) {
+        Change set created for review.
+      }
+      -> changeSetEmpty(stack: C) {
+        No changes detected between template and current stack.
+      }
+    }
+
+    action apply(stack: C) {
+      -> ok(stack: C, stackId: String, created: list String, updated: list String) {
+        Stack create or update completed successfully.
+      }
+      -> rollbackComplete(stack: C, reason: String) {
+        Stack update failed and rolled back to previous state.
+      }
+      -> partial(stack: C, created: list String, failed: list String) {
+        Stack update failed midway. Stack in UPDATE_ROLLBACK_COMPLETE.
+      }
+      -> insufficientCapabilities(stack: C, required: list String) {
+        Stack requires IAM capabilities not specified in the request.
+      }
+    }
+
+    action teardown(stack: C) {
+      -> ok(stack: C, destroyed: list String) {
+        Stack deleted and all resources cleaned up.
+      }
+      -> deletionFailed(stack: C, resource: String, reason: String) {
+        Stack deletion failed on a specific resource.
+      }
+    }
+  }
+
+  invariant {
+    after generate(plan: "dp-001") -> ok(stack: s, files: f)
+    then apply(stack: s) -> ok(stack: s, stackId: sid, created: c, updated: u)
+  }
+}

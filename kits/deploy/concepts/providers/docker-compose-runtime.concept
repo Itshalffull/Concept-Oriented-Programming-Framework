@@ -1,0 +1,64 @@
+@version(1)
+concept DockerComposeRuntime [D] {
+
+  purpose {
+    Manage Docker Compose service deployments for local and
+    development environments. Owns service definitions,
+    port mappings, and container lifecycle.
+  }
+
+  state {
+    services: set D
+    config {
+      composePath: D -> String
+      serviceName: D -> String
+      image: D -> String
+      ports: D -> list String
+      environment: D -> list String
+    }
+    tracking {
+      containerId: D -> option String
+      status: D -> String
+    }
+  }
+
+  actions {
+    action provision(concept: String, composePath: String, ports: list String) {
+      -> ok(service: D, serviceName: String, endpoint: String) {
+        Docker Compose service defined and started.
+      }
+      -> portConflict(port: Int, existingService: String) {
+        Port already in use by another container.
+      }
+    }
+
+    action deploy(service: D, imageUri: String) {
+      -> ok(service: D, containerId: String) {
+        Service image updated and container recreated.
+      }
+    }
+
+    action setTrafficWeight(service: D, weight: Int) {
+      -> ok(service: D) {
+        Traffic weight has no effect in Compose. Always 100.
+      }
+    }
+
+    action rollback(service: D, targetImage: String) {
+      -> ok(service: D, restoredImage: String) {
+        Service reverted to previous image.
+      }
+    }
+
+    action destroy(service: D) {
+      -> ok(service: D) {
+        Container stopped and removed.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", composePath: "./docker-compose.yml", ports: p) -> ok(service: s, serviceName: sn, endpoint: ep)
+    then deploy(service: s, imageUri: "user:latest") -> ok(service: s, containerId: cid)
+  }
+}

@@ -1,0 +1,56 @@
+@version(1)
+concept DockerComposeIacProvider [I] {
+
+  purpose {
+    Generate and apply Docker Compose files from COPF deploy
+    plans. Owns the compose file path, service definitions,
+    and running container state for local IaC management.
+  }
+
+  state {
+    composeFiles: set I
+    config {
+      composePath: I -> String
+      projectName: I -> String
+    }
+    tracking {
+      services: I -> list String
+      runningContainers: I -> list String
+      lastAppliedAt: I -> option DateTime
+    }
+  }
+
+  actions {
+    action generate(plan: String) {
+      -> ok(composeFile: I, files: list String) {
+        Docker Compose YAML generated from deploy plan.
+      }
+    }
+
+    action preview(composeFile: I) {
+      -> ok(composeFile: I, toCreate: Int, toUpdate: Int, toDelete: Int) {
+        Dry-run showing what containers would change.
+      }
+    }
+
+    action apply(composeFile: I) {
+      -> ok(composeFile: I, created: list String, updated: list String) {
+        Docker Compose up completed successfully.
+      }
+      -> portConflict(port: Int, existingService: String) {
+        A port required by the compose file is already in use.
+      }
+    }
+
+    action teardown(composeFile: I) {
+      -> ok(composeFile: I, destroyed: list String) {
+        Docker Compose down completed. All containers removed.
+      }
+    }
+  }
+
+  invariant {
+    after generate(plan: "dp-001") -> ok(composeFile: cf, files: f)
+    then apply(composeFile: cf) -> ok(composeFile: cf, created: c, updated: u)
+  }
+}

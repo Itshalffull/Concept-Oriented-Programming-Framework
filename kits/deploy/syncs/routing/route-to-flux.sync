@@ -1,0 +1,10 @@
+# Route GitOps/emit to FluxProvider — Architecture doc Section 3.8
+
+sync RouteToFlux [eager]
+when {
+  GitOps/emit: [ plan: ?plan; controller: "flux"; repo: ?repo; path: ?path ]
+    => [ manifest: ?m; files: ?files ]
+}
+then {
+  FluxProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+}

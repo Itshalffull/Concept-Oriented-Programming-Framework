@@ -1,0 +1,10 @@
+# Route Secret/resolve to DotenvProvider — Architecture doc Section 3.8
+
+sync RouteToDotenv [eager]
+when {
+  Secret/resolve: [ name: ?name; provider: "dotenv" ]
+    => [ secret: ?s; version: ?ver ]
+}
+then {
+  DotenvProvider/fetch: [ name: ?name; filePath: ".env" ]
+}

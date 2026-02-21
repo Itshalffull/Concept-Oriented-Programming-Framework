@@ -1,0 +1,34 @@
+@version(1)
+concept EnvProvider [E] {
+
+  purpose {
+    Manage secret resolution from process environment variables.
+    Owns the environment variable cache, tracks which variables
+    have been accessed, and validates variable existence.
+  }
+
+  state {
+    variables: set E
+    cache {
+      name: E -> String
+      value: E -> option String
+      cachedAt: E -> option DateTime
+    }
+  }
+
+  actions {
+    action fetch(name: String) {
+      -> ok(value: String) {
+        Environment variable retrieved from process env.
+      }
+      -> variableNotSet(name: String) {
+        Environment variable is not set in the current process.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(name: "DATABASE_URL") -> ok(value: v)
+    then fetch(name: "DATABASE_URL") -> ok(value: v)
+  }
+}

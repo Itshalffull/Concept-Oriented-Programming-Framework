@@ -1,0 +1,81 @@
+@version(1)
+concept K8sRuntime [K] {
+
+  purpose {
+    Manage Kubernetes deployments. Owns Deployment, Service,
+    ConfigMap, and Ingress resources. Handles pod scheduling,
+    rolling updates, and resource quota management.
+  }
+
+  state {
+    deployments: set K
+    config {
+      namespace: K -> String
+      cluster: K -> String
+      replicas: K -> Int
+      cpu: K -> String
+      memory: K -> String
+      image: K -> String
+    }
+    resources {
+      serviceName: K -> String
+      ingressHost: K -> option String
+      configMapName: K -> option String
+    }
+  }
+
+  actions {
+    action provision(concept: String, namespace: String, cluster: String, replicas: Int) {
+      -> ok(deployment: K, serviceName: String, endpoint: String) {
+        Kubernetes Deployment and Service created.
+      }
+      -> resourceQuotaExceeded(namespace: String, resource: String, requested: String, limit: String) {
+        Namespace resource quota would be exceeded.
+      }
+      -> namespaceNotFound(namespace: String) {
+        Specified namespace does not exist.
+      }
+    }
+
+    action deploy(deployment: K, imageUri: String) {
+      -> ok(deployment: K, revision: String) {
+        Rolling update initiated with new image.
+      }
+      -> podCrashLoop(deployment: K, podName: String, restartCount: Int) {
+        New pods are crash-looping after deployment.
+      }
+      -> imageNotFound(imageUri: String) {
+        Container image not found in registry.
+      }
+      -> imagePullBackOff(deployment: K, imageUri: String, reason: String) {
+        Image exists but cannot be pulled due to auth or network issues.
+      }
+      -> oomKilled(deployment: K, podName: String, memoryLimit: String) {
+        Container exceeded memory limit and was killed (exit code 137).
+      }
+    }
+
+    action setTrafficWeight(deployment: K, weight: Int) {
+      -> ok(deployment: K) {
+        Service traffic weight updated for canary.
+      }
+    }
+
+    action rollback(deployment: K, targetRevision: String) {
+      -> ok(deployment: K, restoredRevision: String) {
+        Deployment rolled back to specified revision.
+      }
+    }
+
+    action destroy(deployment: K) {
+      -> ok(deployment: K) {
+        Deployment, Service, ConfigMap, and Ingress deleted.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", namespace: "default", cluster: "prod", replicas: 2) -> ok(deployment: d, serviceName: sn, endpoint: ep)
+    then deploy(deployment: d, imageUri: "myregistry/user:latest") -> ok(deployment: d, revision: "1")
+  }
+}

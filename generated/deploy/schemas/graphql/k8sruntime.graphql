@@ -1,0 +1,27 @@
+type K8sRuntimeState {
+  """All ks in this concept"""
+  ks: [ID!]!
+}
+
+type K8sRuntimeEntry {
+  k: ID!
+  namespace: String!
+  cluster: String!
+  replicas: Int!
+  cpu: String!
+  memory: String!
+  image: String!
+  serviceName: String!
+  ingressHost: String!
+  configMapName: String!
+}
+
+extend type Query {
+  k8sruntime_entry(k: ID!): K8sRuntimeEntry
+  k8sruntime_entries: [K8sRuntimeEntry!]!
+}
+
+type K8sRuntimeDeployments {
+  k: ID!
+  value: ID!
+}

@@ -1,0 +1,10 @@
+# Route GitOps/emit to ArgoCDProvider — Architecture doc Section 3.8
+
+sync RouteToArgoCD [eager]
+when {
+  GitOps/emit: [ plan: ?plan; controller: "argocd"; repo: ?repo; path: ?path ]
+    => [ manifest: ?m; files: ?files ]
+}
+then {
+  ArgoCDProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+}

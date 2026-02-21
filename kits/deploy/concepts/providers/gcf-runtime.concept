@@ -1,0 +1,72 @@
+@version(1)
+concept GcfRuntime [G] {
+
+  purpose {
+    Manage Google Cloud Functions deployments. Owns function
+    names, trigger configurations, gen1 and gen2 distinctions,
+    and invocation metrics.
+  }
+
+  state {
+    functions: set G
+    config {
+      functionName: G -> String
+      projectId: G -> String
+      region: G -> String
+      runtime: G -> String
+      entryPoint: G -> String
+      triggerType: G -> String
+      environment: G -> String
+    }
+    metrics {
+      lastInvokedAt: G -> option DateTime
+      invocationCount: G -> Int
+    }
+  }
+
+  actions {
+    action provision(concept: String, projectId: String, region: String, runtime: String, triggerType: String) {
+      -> ok(function: G, endpoint: String) {
+        Cloud Function created with specified trigger type.
+      }
+      -> gen2Required(concept: String, reason: String) {
+        Feature requires Cloud Functions gen2.
+      }
+      -> triggerConflict(triggerType: String, existing: String) {
+        Trigger type conflicts with existing function.
+      }
+    }
+
+    action deploy(function: G, sourceArchive: String) {
+      -> ok(function: G, version: String) {
+        Function source updated. New version deployed.
+      }
+      -> buildFailed(function: G, errors: list String) {
+        Cloud Build failed during function build.
+      }
+    }
+
+    action setTrafficWeight(function: G, weight: Int) {
+      -> ok(function: G) {
+        Traffic split updated between function versions.
+      }
+    }
+
+    action rollback(function: G, targetVersion: String) {
+      -> ok(function: G, restoredVersion: String) {
+        Traffic routed to specified previous version.
+      }
+    }
+
+    action destroy(function: G) {
+      -> ok(function: G) {
+        Function and triggers deleted.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", projectId: "my-project", region: "us-central1", runtime: "nodejs20", triggerType: "http") -> ok(function: f, endpoint: ep)
+    then deploy(function: f, sourceArchive: "gs://bucket/user.zip") -> ok(function: f, version: "1")
+  }
+}

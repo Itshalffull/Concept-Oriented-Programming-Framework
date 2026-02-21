@@ -27,6 +27,22 @@ import { awsSmProviderHandler } from '../implementations/typescript/deploy/aws-s
 import { pulumiProviderHandler } from '../implementations/typescript/deploy/pulumi-provider.impl.js';
 import { terraformProviderHandler } from '../implementations/typescript/deploy/terraform-provider.impl.js';
 
+// --- Additional Provider handlers ---
+import { cloudRunRuntimeHandler } from '../implementations/typescript/deploy/cloud-run-runtime.impl.js';
+import { gcfRuntimeHandler } from '../implementations/typescript/deploy/gcf-runtime.impl.js';
+import { cloudflareRuntimeHandler } from '../implementations/typescript/deploy/cloudflare-runtime.impl.js';
+import { vercelRuntimeHandler } from '../implementations/typescript/deploy/vercel-runtime.impl.js';
+import { k8sRuntimeHandler } from '../implementations/typescript/deploy/k8s-runtime.impl.js';
+import { dockerComposeRuntimeHandler } from '../implementations/typescript/deploy/docker-compose-runtime.impl.js';
+import { localRuntimeHandler } from '../implementations/typescript/deploy/local-runtime.impl.js';
+import { gcpSmProviderHandler } from '../implementations/typescript/deploy/gcp-sm-provider.impl.js';
+import { envProviderHandler } from '../implementations/typescript/deploy/env-provider.impl.js';
+import { dotenvProviderHandler } from '../implementations/typescript/deploy/dotenv-provider.impl.js';
+import { cloudFormationProviderHandler } from '../implementations/typescript/deploy/cloudformation-provider.impl.js';
+import { dockerComposeIacProviderHandler } from '../implementations/typescript/deploy/docker-compose-iac-provider.impl.js';
+import { argoCDProviderHandler } from '../implementations/typescript/deploy/argocd-provider.impl.js';
+import { fluxProviderHandler } from '../implementations/typescript/deploy/flux-provider.impl.js';
+
 // ============================================================
 // Orchestration Concept Implementations
 // ============================================================
@@ -930,5 +946,620 @@ describe('TerraformProvider Implementation', () => {
     });
     expect(result.variant).toBe('ok');
     expect(result.destroyed).toContain(gen.workspace);
+  });
+});
+
+// ============================================================
+// Additional Provider Implementations
+// ============================================================
+
+describe('CloudRunRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/CloudRunRuntime', cloudRunRuntimeHandler);
+  });
+
+  it('provision -> ok creates Cloud Run service', async () => {
+    const result = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1', cpu: 1, memory: 512,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.serviceUrl).toContain('.run.app');
+  });
+
+  it('deploy -> ok deploys new revision', async () => {
+    const svc = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1', cpu: 1, memory: 512,
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'deploy', {
+      service: svc.service, imageUri: 'gcr.io/my-project/user:latest',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.revision).toBeDefined();
+  });
+
+  it('rollback -> ok restores revision', async () => {
+    const svc = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1', cpu: 1, memory: 512,
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'rollback', {
+      service: svc.service, targetRevision: 'rev-1',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.restoredRevision).toBe('rev-1');
+  });
+
+  it('destroy -> ok removes service', async () => {
+    const svc = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1', cpu: 1, memory: 512,
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudRunRuntime', 'destroy', {
+      service: svc.service,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('GcfRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/GcfRuntime', gcfRuntimeHandler);
+  });
+
+  it('provision -> ok creates function', async () => {
+    const result = await kernel.invokeConcept('urn:copf/GcfRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1',
+      runtime: 'nodejs20', triggerType: 'http',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.endpoint).toContain('cloudfunctions.net');
+  });
+
+  it('deploy -> ok deploys source', async () => {
+    const fn = await kernel.invokeConcept('urn:copf/GcfRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1',
+      runtime: 'nodejs20', triggerType: 'http',
+    });
+    const result = await kernel.invokeConcept('urn:copf/GcfRuntime', 'deploy', {
+      function: fn.function, sourceArchive: 'gs://bucket/source.zip',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.version).toBeDefined();
+  });
+
+  it('destroy -> ok removes function', async () => {
+    const fn = await kernel.invokeConcept('urn:copf/GcfRuntime', 'provision', {
+      concept: 'User', projectId: 'my-project', region: 'us-central1',
+      runtime: 'nodejs20', triggerType: 'http',
+    });
+    const result = await kernel.invokeConcept('urn:copf/GcfRuntime', 'destroy', {
+      function: fn.function,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('CloudflareRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/CloudflareRuntime', cloudflareRuntimeHandler);
+  });
+
+  it('provision -> ok creates worker', async () => {
+    const result = await kernel.invokeConcept('urn:copf/CloudflareRuntime', 'provision', {
+      concept: 'User', accountId: 'abc123', routes: ['example.com/*'],
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.scriptName).toContain('worker');
+    expect(result.endpoint).toContain('workers.dev');
+  });
+
+  it('deploy -> ok deploys script', async () => {
+    const wkr = await kernel.invokeConcept('urn:copf/CloudflareRuntime', 'provision', {
+      concept: 'User', accountId: 'abc123', routes: ['example.com/*'],
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudflareRuntime', 'deploy', {
+      worker: wkr.worker, scriptContent: 'export default { fetch() {} }',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.version).toBeDefined();
+  });
+
+  it('destroy -> ok removes worker', async () => {
+    const wkr = await kernel.invokeConcept('urn:copf/CloudflareRuntime', 'provision', {
+      concept: 'User', accountId: 'abc123', routes: ['example.com/*'],
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudflareRuntime', 'destroy', {
+      worker: wkr.worker,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('VercelRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/VercelRuntime', vercelRuntimeHandler);
+  });
+
+  it('provision -> ok creates project', async () => {
+    const result = await kernel.invokeConcept('urn:copf/VercelRuntime', 'provision', {
+      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.endpoint).toContain('vercel.app');
+  });
+
+  it('deploy -> ok creates deployment', async () => {
+    const prj = await kernel.invokeConcept('urn:copf/VercelRuntime', 'provision', {
+      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+    });
+    const result = await kernel.invokeConcept('urn:copf/VercelRuntime', 'deploy', {
+      project: prj.project, sourceDirectory: './dist',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.deploymentUrl).toContain('vercel.app');
+  });
+
+  it('rollback -> ok restores deployment', async () => {
+    const prj = await kernel.invokeConcept('urn:copf/VercelRuntime', 'provision', {
+      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+    });
+    const result = await kernel.invokeConcept('urn:copf/VercelRuntime', 'rollback', {
+      project: prj.project, targetDeploymentId: 'dpl-prev',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.restoredDeploymentId).toBe('dpl-prev');
+  });
+
+  it('destroy -> ok removes project', async () => {
+    const prj = await kernel.invokeConcept('urn:copf/VercelRuntime', 'provision', {
+      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+    });
+    const result = await kernel.invokeConcept('urn:copf/VercelRuntime', 'destroy', {
+      project: prj.project,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('K8sRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/K8sRuntime', k8sRuntimeHandler);
+  });
+
+  it('provision -> ok creates deployment', async () => {
+    const result = await kernel.invokeConcept('urn:copf/K8sRuntime', 'provision', {
+      concept: 'User', namespace: 'default', cluster: 'prod', replicas: 2,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.serviceName).toContain('-svc');
+    expect(result.endpoint).toContain('svc.cluster.local');
+  });
+
+  it('deploy -> ok creates new revision', async () => {
+    const dep = await kernel.invokeConcept('urn:copf/K8sRuntime', 'provision', {
+      concept: 'User', namespace: 'default', cluster: 'prod', replicas: 2,
+    });
+    const result = await kernel.invokeConcept('urn:copf/K8sRuntime', 'deploy', {
+      deployment: dep.deployment, imageUri: 'myregistry/user:latest',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.revision).toBeDefined();
+  });
+
+  it('rollback -> ok restores revision', async () => {
+    const dep = await kernel.invokeConcept('urn:copf/K8sRuntime', 'provision', {
+      concept: 'User', namespace: 'default', cluster: 'prod', replicas: 2,
+    });
+    const result = await kernel.invokeConcept('urn:copf/K8sRuntime', 'rollback', {
+      deployment: dep.deployment, targetRevision: 'rev-1',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.restoredRevision).toBe('rev-1');
+  });
+
+  it('deploy -> imagePullBackOff for auth issues', async () => {
+    const dep = await kernel.invokeConcept('urn:copf/K8sRuntime', 'provision', {
+      concept: 'User', namespace: 'default', cluster: 'prod', replicas: 2,
+    });
+    const result = await kernel.invokeConcept('urn:copf/K8sRuntime', 'deploy', {
+      deployment: dep.deployment, imageUri: 'private.registry/user:latest', simulatePullBackOff: true,
+    });
+    expect(result.variant).toBe('imagePullBackOff');
+    expect(result.reason).toContain('authentication');
+  });
+
+  it('deploy -> oomKilled when memory limit exceeded', async () => {
+    const dep = await kernel.invokeConcept('urn:copf/K8sRuntime', 'provision', {
+      concept: 'User', namespace: 'default', cluster: 'prod', replicas: 2,
+    });
+    const result = await kernel.invokeConcept('urn:copf/K8sRuntime', 'deploy', {
+      deployment: dep.deployment, imageUri: 'myregistry/user:latest', simulateOomKill: true,
+    });
+    expect(result.variant).toBe('oomKilled');
+    expect(result.podName).toBeDefined();
+    expect(result.memoryLimit).toBeDefined();
+  });
+
+  it('destroy -> ok removes deployment', async () => {
+    const dep = await kernel.invokeConcept('urn:copf/K8sRuntime', 'provision', {
+      concept: 'User', namespace: 'default', cluster: 'prod', replicas: 2,
+    });
+    const result = await kernel.invokeConcept('urn:copf/K8sRuntime', 'destroy', {
+      deployment: dep.deployment,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('DockerComposeRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/DockerComposeRuntime', dockerComposeRuntimeHandler);
+  });
+
+  it('provision -> ok creates service', async () => {
+    const result = await kernel.invokeConcept('urn:copf/DockerComposeRuntime', 'provision', {
+      concept: 'User', composePath: './docker-compose.yml', ports: ['8080:80'],
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.serviceName).toBeDefined();
+  });
+
+  it('deploy -> ok deploys image', async () => {
+    const svc = await kernel.invokeConcept('urn:copf/DockerComposeRuntime', 'provision', {
+      concept: 'User', composePath: './docker-compose.yml', ports: ['8080:80'],
+    });
+    const result = await kernel.invokeConcept('urn:copf/DockerComposeRuntime', 'deploy', {
+      service: svc.service, imageUri: 'user:latest',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.containerId).toBeDefined();
+  });
+
+  it('destroy -> ok removes service', async () => {
+    const svc = await kernel.invokeConcept('urn:copf/DockerComposeRuntime', 'provision', {
+      concept: 'User', composePath: './docker-compose.yml', ports: ['8080:80'],
+    });
+    const result = await kernel.invokeConcept('urn:copf/DockerComposeRuntime', 'destroy', {
+      service: svc.service,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('LocalRuntime Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/LocalRuntime', localRuntimeHandler);
+  });
+
+  it('provision -> ok starts local process', async () => {
+    const result = await kernel.invokeConcept('urn:copf/LocalRuntime', 'provision', {
+      concept: 'User', command: 'node server.js', port: 3000,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.pid).toBeGreaterThan(0);
+    expect(result.endpoint).toBe('http://localhost:3000');
+  });
+
+  it('deploy -> ok restarts with new command', async () => {
+    const proc = await kernel.invokeConcept('urn:copf/LocalRuntime', 'provision', {
+      concept: 'User', command: 'node server.js', port: 3000,
+    });
+    const result = await kernel.invokeConcept('urn:copf/LocalRuntime', 'deploy', {
+      process: proc.process, command: 'node server-v2.js',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.pid).toBeGreaterThan(0);
+  });
+
+  it('rollback -> ok restarts with previous command', async () => {
+    const proc = await kernel.invokeConcept('urn:copf/LocalRuntime', 'provision', {
+      concept: 'User', command: 'node server.js', port: 3000,
+    });
+    const result = await kernel.invokeConcept('urn:copf/LocalRuntime', 'rollback', {
+      process: proc.process, previousCommand: 'node server.js',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.pid).toBeGreaterThan(0);
+  });
+
+  it('destroy -> ok kills process', async () => {
+    const proc = await kernel.invokeConcept('urn:copf/LocalRuntime', 'provision', {
+      concept: 'User', command: 'node server.js', port: 3000,
+    });
+    const result = await kernel.invokeConcept('urn:copf/LocalRuntime', 'destroy', {
+      process: proc.process,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('GcpSmProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/GcpSmProvider', gcpSmProviderHandler);
+  });
+
+  it('fetch -> ok returns secret', async () => {
+    const result = await kernel.invokeConcept('urn:copf/GcpSmProvider', 'fetch', {
+      secretId: 'db-password', version: 'latest',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.projectId).toBeDefined();
+  });
+
+  it('fetch -> secretNotFound for empty secretId', async () => {
+    const result = await kernel.invokeConcept('urn:copf/GcpSmProvider', 'fetch', {
+      secretId: '', version: 'latest',
+    });
+    expect(result.variant).toBe('secretNotFound');
+  });
+
+  it('rotate -> ok creates new version', async () => {
+    const result = await kernel.invokeConcept('urn:copf/GcpSmProvider', 'rotate', {
+      secretId: 'db-password',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.newVersionId).toBeDefined();
+  });
+});
+
+describe('EnvProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/EnvProvider', envProviderHandler);
+  });
+
+  it('fetch -> ok returns env value', async () => {
+    const result = await kernel.invokeConcept('urn:copf/EnvProvider', 'fetch', {
+      name: 'DATABASE_URL',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.value).toBeDefined();
+  });
+
+  it('fetch -> variableNotSet for empty name', async () => {
+    const result = await kernel.invokeConcept('urn:copf/EnvProvider', 'fetch', {
+      name: '',
+    });
+    expect(result.variant).toBe('variableNotSet');
+  });
+});
+
+describe('DotenvProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/DotenvProvider', dotenvProviderHandler);
+  });
+
+  it('fetch -> ok returns dotenv value', async () => {
+    const result = await kernel.invokeConcept('urn:copf/DotenvProvider', 'fetch', {
+      name: 'DB_HOST', filePath: '.env',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.value).toBeDefined();
+  });
+
+  it('fetch -> fileNotFound for empty path', async () => {
+    const result = await kernel.invokeConcept('urn:copf/DotenvProvider', 'fetch', {
+      name: 'DB_HOST', filePath: '',
+    });
+    expect(result.variant).toBe('fileNotFound');
+  });
+
+  it('fetch -> variableNotSet for empty name', async () => {
+    const result = await kernel.invokeConcept('urn:copf/DotenvProvider', 'fetch', {
+      name: '', filePath: '.env',
+    });
+    expect(result.variant).toBe('variableNotSet');
+  });
+});
+
+describe('CloudFormationProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/CloudFormationProvider', cloudFormationProviderHandler);
+  });
+
+  it('generate -> ok creates template files', async () => {
+    const result = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.files).toContain('template.yaml');
+  });
+
+  it('preview -> ok shows change set', async () => {
+    const gen = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'preview', {
+      stack: gen.stack,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.changeSetId).toBeDefined();
+  });
+
+  it('preview -> changeSetEmpty for unknown stack', async () => {
+    const result = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'preview', {
+      stack: 'nonexistent',
+    });
+    expect(result.variant).toBe('changeSetEmpty');
+  });
+
+  it('apply -> ok creates stack', async () => {
+    const gen = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'apply', {
+      stack: gen.stack,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.stackId).toContain('arn:aws:cloudformation');
+  });
+
+  it('apply -> insufficientCapabilities when IAM capabilities missing', async () => {
+    const gen = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'generate', {
+      plan: 'plan-iam',
+      requiredCapabilities: ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'apply', {
+      stack: gen.stack,
+    });
+    expect(result.variant).toBe('insufficientCapabilities');
+    expect(result.required).toContain('CAPABILITY_IAM');
+  });
+
+  it('teardown -> ok destroys stack', async () => {
+    const gen = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    const result = await kernel.invokeConcept('urn:copf/CloudFormationProvider', 'teardown', {
+      stack: gen.stack,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.destroyed).toContain(gen.stack);
+  });
+});
+
+describe('DockerComposeIacProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/DockerComposeIacProvider', dockerComposeIacProviderHandler);
+  });
+
+  it('generate -> ok creates compose file', async () => {
+    const result = await kernel.invokeConcept('urn:copf/DockerComposeIacProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.files).toContain('docker-compose.yml');
+  });
+
+  it('apply -> ok applies compose', async () => {
+    const gen = await kernel.invokeConcept('urn:copf/DockerComposeIacProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    const result = await kernel.invokeConcept('urn:copf/DockerComposeIacProvider', 'apply', {
+      composeFile: gen.composeFile,
+    });
+    expect(result.variant).toBe('ok');
+  });
+
+  it('teardown -> ok destroys compose', async () => {
+    const gen = await kernel.invokeConcept('urn:copf/DockerComposeIacProvider', 'generate', {
+      plan: 'plan-1',
+    });
+    const result = await kernel.invokeConcept('urn:copf/DockerComposeIacProvider', 'teardown', {
+      composeFile: gen.composeFile,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.destroyed).toContain(gen.composeFile);
+  });
+});
+
+describe('ArgoCDProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/ArgoCDProvider', argoCDProviderHandler);
+  });
+
+  it('emit -> ok generates application CRD', async () => {
+    const result = await kernel.invokeConcept('urn:copf/ArgoCDProvider', 'emit', {
+      plan: 'plan-1', repo: 'git@github.com:org/deploy.git', path: 'envs/prod',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.files).toContain('application.yaml');
+  });
+
+  it('reconciliationStatus -> ok after emit', async () => {
+    const emit = await kernel.invokeConcept('urn:copf/ArgoCDProvider', 'emit', {
+      plan: 'plan-1', repo: 'git@github.com:org/deploy.git', path: 'envs/prod',
+    });
+    const result = await kernel.invokeConcept('urn:copf/ArgoCDProvider', 'reconciliationStatus', {
+      application: emit.application,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.syncStatus).toBe('Synced');
+    expect(result.healthStatus).toBe('Healthy');
+  });
+
+  it('reconciliationStatus -> failed for unknown app', async () => {
+    const result = await kernel.invokeConcept('urn:copf/ArgoCDProvider', 'reconciliationStatus', {
+      application: 'nonexistent',
+    });
+    expect(result.variant).toBe('failed');
+  });
+
+  it('syncWave -> ok sets wave ordering', async () => {
+    const emit = await kernel.invokeConcept('urn:copf/ArgoCDProvider', 'emit', {
+      plan: 'plan-1', repo: 'git@github.com:org/deploy.git', path: 'envs/prod',
+    });
+    const result = await kernel.invokeConcept('urn:copf/ArgoCDProvider', 'syncWave', {
+      application: emit.application, wave: 1,
+    });
+    expect(result.variant).toBe('ok');
+  });
+});
+
+describe('FluxProvider Implementation', () => {
+  let kernel: ReturnType<typeof createKernel>;
+  beforeEach(() => {
+    kernel = createKernel();
+    kernel.registerConcept('urn:copf/FluxProvider', fluxProviderHandler);
+  });
+
+  it('emit -> ok generates kustomization CRDs', async () => {
+    const result = await kernel.invokeConcept('urn:copf/FluxProvider', 'emit', {
+      plan: 'plan-1', repo: 'git@github.com:org/deploy.git', path: 'envs/prod',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.files).toContain('kustomization.yaml');
+  });
+
+  it('reconciliationStatus -> ok after emit', async () => {
+    const emit = await kernel.invokeConcept('urn:copf/FluxProvider', 'emit', {
+      plan: 'plan-1', repo: 'git@github.com:org/deploy.git', path: 'envs/prod',
+    });
+    const result = await kernel.invokeConcept('urn:copf/FluxProvider', 'reconciliationStatus', {
+      kustomization: emit.kustomization,
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.readyStatus).toBe('True');
+  });
+
+  it('reconciliationStatus -> failed for unknown kustomization', async () => {
+    const result = await kernel.invokeConcept('urn:copf/FluxProvider', 'reconciliationStatus', {
+      kustomization: 'nonexistent',
+    });
+    expect(result.variant).toBe('failed');
+  });
+
+  it('helmRelease -> ok creates helm release', async () => {
+    const emit = await kernel.invokeConcept('urn:copf/FluxProvider', 'emit', {
+      plan: 'plan-1', repo: 'git@github.com:org/deploy.git', path: 'envs/prod',
+    });
+    const result = await kernel.invokeConcept('urn:copf/FluxProvider', 'helmRelease', {
+      kustomization: emit.kustomization, chart: 'nginx', values: 'replicas: 2',
+    });
+    expect(result.variant).toBe('ok');
+    expect(result.releaseName).toContain('nginx');
   });
 });

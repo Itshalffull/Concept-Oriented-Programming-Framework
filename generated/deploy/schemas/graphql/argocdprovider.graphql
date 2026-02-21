@@ -1,0 +1,28 @@
+type ArgoCDProviderState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ArgoCDProviderEntry {
+  a: ID!
+  appName: String!
+  project: String!
+  repoUrl: String!
+  targetRevision: String!
+  path: String!
+  namespace: String!
+  syncStatus: String!
+  healthStatus: String!
+  syncWave: Int!
+  lastSyncedAt: String!
+}
+
+extend type Query {
+  argocdprovider_entry(a: ID!): ArgoCDProviderEntry
+  argocdprovider_entries: [ArgoCDProviderEntry!]!
+}
+
+type ArgoCDProviderApplications {
+  a: ID!
+  value: ID!
+}

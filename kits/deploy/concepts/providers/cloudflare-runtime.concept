@@ -1,0 +1,67 @@
+@version(1)
+concept CloudflareRuntime [W] {
+
+  purpose {
+    Manage Cloudflare Workers deployments. Owns worker scripts,
+    routes, KV namespace bindings, and Durable Object
+    configurations.
+  }
+
+  state {
+    workers: set W
+    config {
+      scriptName: W -> String
+      accountId: W -> String
+      routes: W -> list String
+      kvNamespaces: W -> list String
+      compatibilityDate: W -> String
+    }
+    metrics {
+      requestCount: W -> Int
+      cpuTimeMs: W -> Int
+    }
+  }
+
+  actions {
+    action provision(concept: String, accountId: String, routes: list String) {
+      -> ok(worker: W, scriptName: String, endpoint: String) {
+        Worker script created and routes configured.
+      }
+      -> routeConflict(route: String, existingWorker: String) {
+        Route already claimed by another worker.
+      }
+    }
+
+    action deploy(worker: W, scriptContent: String) {
+      -> ok(worker: W, version: String) {
+        Worker script updated and deployed globally.
+      }
+      -> scriptTooLarge(worker: W, sizeBytes: Int, limitBytes: Int) {
+        Worker script exceeds Cloudflare size limits.
+      }
+    }
+
+    action setTrafficWeight(worker: W, weight: Int) {
+      -> ok(worker: W) {
+        Traffic split configured via worker version.
+      }
+    }
+
+    action rollback(worker: W, targetVersion: String) {
+      -> ok(worker: W, restoredVersion: String) {
+        Worker reverted to previous version.
+      }
+    }
+
+    action destroy(worker: W) {
+      -> ok(worker: W) {
+        Worker script, routes, and bindings deleted.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", accountId: "abc123", routes: r) -> ok(worker: w, scriptName: sn, endpoint: ep)
+    then deploy(worker: w, scriptContent: "export default { fetch() {} }") -> ok(worker: w, version: "1")
+  }
+}

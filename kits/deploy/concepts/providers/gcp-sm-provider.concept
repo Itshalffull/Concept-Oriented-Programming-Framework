@@ -1,0 +1,55 @@
+@version(1)
+concept GcpSmProvider [G] {
+
+  purpose {
+    Manage secret resolution from Google Cloud Secret Manager.
+    Owns project and secret IDs, IAM binding state, version
+    tracking, and access configuration.
+  }
+
+  state {
+    secrets: set G
+    config {
+      projectId: G -> String
+      secretId: G -> String
+      region: G -> option String
+    }
+    versions {
+      latestVersion: G -> option String
+      enabledVersions: G -> list String
+      disabledVersions: G -> list String
+    }
+    access {
+      iamBindings: G -> list String
+      lastAccessedAt: G -> option DateTime
+    }
+  }
+
+  actions {
+    action fetch(secretId: String, version: String) {
+      -> ok(value: String, versionId: String, projectId: String) {
+        Secret version retrieved from GCP Secret Manager.
+      }
+      -> iamBindingMissing(secretId: String, principal: String) {
+        Service account lacks secretAccessor role on this secret.
+      }
+      -> versionDisabled(secretId: String, version: String) {
+        Requested secret version is disabled.
+      }
+      -> secretNotFound(secretId: String, projectId: String) {
+        Secret does not exist in the specified project.
+      }
+    }
+
+    action rotate(secretId: String) {
+      -> ok(secretId: String, newVersionId: String) {
+        New secret version added to GCP Secret Manager.
+      }
+    }
+  }
+
+  invariant {
+    after fetch(secretId: "db-password", version: "latest") -> ok(value: v, versionId: vid, projectId: pid)
+    then rotate(secretId: "db-password") -> ok(secretId: "db-password", newVersionId: nv)
+  }
+}

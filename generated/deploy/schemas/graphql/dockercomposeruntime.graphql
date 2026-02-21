@@ -1,0 +1,25 @@
+type DockerComposeRuntimeState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type DockerComposeRuntimeEntry {
+  d: ID!
+  composePath: String!
+  serviceName: String!
+  image: String!
+  ports: [String!]!
+  environment: [String!]!
+  containerId: String!
+  status: String!
+}
+
+extend type Query {
+  dockercomposeruntime_entry(d: ID!): DockerComposeRuntimeEntry
+  dockercomposeruntime_entries: [DockerComposeRuntimeEntry!]!
+}
+
+type DockerComposeRuntimeServices {
+  d: ID!
+  value: ID!
+}

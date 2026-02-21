@@ -267,6 +267,147 @@ describe('Provider Concepts', () => {
     expect(ast.actions[1].variants).toHaveLength(3);
     expect(ast.invariants).toHaveLength(1);
   });
+
+  // --- Additional Runtime Providers ---
+
+  it('parses CloudRunRuntime', () => {
+    const ast = readProvider('cloud-run-runtime.concept');
+    expect(ast.name).toBe('CloudRunRuntime');
+    expect(ast.typeParams).toEqual(['C']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions.map(a => a.name)).toEqual(['provision', 'deploy', 'setTrafficWeight', 'rollback', 'destroy']);
+    expect(ast.actions[0].variants).toHaveLength(3);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses GcfRuntime', () => {
+    const ast = readProvider('gcf-runtime.concept');
+    expect(ast.name).toBe('GcfRuntime');
+    expect(ast.typeParams).toEqual(['G']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions[0].variants).toHaveLength(3);
+    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses CloudflareRuntime', () => {
+    const ast = readProvider('cloudflare-runtime.concept');
+    expect(ast.name).toBe('CloudflareRuntime');
+    expect(ast.typeParams).toEqual(['W']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions[0].variants).toHaveLength(2);
+    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses VercelRuntime', () => {
+    const ast = readProvider('vercel-runtime.concept');
+    expect(ast.name).toBe('VercelRuntime');
+    expect(ast.typeParams).toEqual(['V']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions[0].variants).toHaveLength(2);
+    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses K8sRuntime', () => {
+    const ast = readProvider('k8s-runtime.concept');
+    expect(ast.name).toBe('K8sRuntime');
+    expect(ast.typeParams).toEqual(['K']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions[0].variants).toHaveLength(3);
+    expect(ast.actions[1].variants).toHaveLength(5);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses DockerComposeRuntime', () => {
+    const ast = readProvider('docker-compose-runtime.concept');
+    expect(ast.name).toBe('DockerComposeRuntime');
+    expect(ast.typeParams).toEqual(['D']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions[0].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses LocalRuntime', () => {
+    const ast = readProvider('local-runtime.concept');
+    expect(ast.name).toBe('LocalRuntime');
+    expect(ast.typeParams).toEqual(['L']);
+    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions[0].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  // --- Additional Secret Providers ---
+
+  it('parses GcpSmProvider', () => {
+    const ast = readProvider('gcp-sm-provider.concept');
+    expect(ast.name).toBe('GcpSmProvider');
+    expect(ast.typeParams).toEqual(['G']);
+    expect(ast.actions).toHaveLength(2);
+    expect(ast.actions[0].variants).toHaveLength(4);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses EnvProvider', () => {
+    const ast = readProvider('env-provider.concept');
+    expect(ast.name).toBe('EnvProvider');
+    expect(ast.typeParams).toEqual(['E']);
+    expect(ast.actions).toHaveLength(1);
+    expect(ast.actions[0].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses DotenvProvider', () => {
+    const ast = readProvider('dotenv-provider.concept');
+    expect(ast.name).toBe('DotenvProvider');
+    expect(ast.typeParams).toEqual(['D']);
+    expect(ast.actions).toHaveLength(1);
+    expect(ast.actions[0].variants).toHaveLength(4);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  // --- Additional IaC Providers ---
+
+  it('parses CloudFormationProvider', () => {
+    const ast = readProvider('cloudformation-provider.concept');
+    expect(ast.name).toBe('CloudFormationProvider');
+    expect(ast.typeParams).toEqual(['C']);
+    expect(ast.actions).toHaveLength(4);
+    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.actions[2].variants).toHaveLength(4);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses DockerComposeIacProvider', () => {
+    const ast = readProvider('docker-compose-iac-provider.concept');
+    expect(ast.name).toBe('DockerComposeIacProvider');
+    expect(ast.typeParams).toEqual(['I']);
+    expect(ast.actions).toHaveLength(4);
+    expect(ast.actions[2].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  // --- GitOps Providers ---
+
+  it('parses ArgoCDProvider', () => {
+    const ast = readProvider('argocd-provider.concept');
+    expect(ast.name).toBe('ArgoCDProvider');
+    expect(ast.typeParams).toEqual(['A']);
+    expect(ast.actions).toHaveLength(3);
+    expect(ast.actions[1].variants).toHaveLength(4);
+    expect(ast.invariants).toHaveLength(1);
+  });
+
+  it('parses FluxProvider', () => {
+    const ast = readProvider('flux-provider.concept');
+    expect(ast.name).toBe('FluxProvider');
+    expect(ast.typeParams).toEqual(['F']);
+    expect(ast.actions).toHaveLength(3);
+    expect(ast.actions[1].variants).toHaveLength(3);
+    expect(ast.actions[2].variants).toHaveLength(2);
+    expect(ast.invariants).toHaveLength(1);
+  });
 });
 
 // ============================================================
@@ -283,11 +424,19 @@ describe('Bulk Concept Validation', () => {
 
   const allProviders = [
     'lambda-runtime.concept', 'ecs-runtime.concept',
+    'cloud-run-runtime.concept', 'gcf-runtime.concept',
+    'cloudflare-runtime.concept', 'vercel-runtime.concept',
+    'k8s-runtime.concept', 'docker-compose-runtime.concept',
+    'local-runtime.concept',
     'vault-provider.concept', 'aws-sm-provider.concept',
+    'gcp-sm-provider.concept', 'env-provider.concept',
+    'dotenv-provider.concept',
     'pulumi-provider.concept', 'terraform-provider.concept',
+    'cloudformation-provider.concept', 'docker-compose-iac-provider.concept',
+    'argocd-provider.concept', 'flux-provider.concept',
   ];
 
-  it('all 17 concepts parse without error and have required fields', () => {
+  it('all 31 concepts parse without error and have required fields', () => {
     for (const file of allConcepts) {
       const ast = readConcept(file);
       expect(ast.name, `${file} should have a name`).toBeTruthy();
@@ -307,7 +456,7 @@ describe('Bulk Concept Validation', () => {
     }
   });
 
-  it('all 17 concepts have at least one invariant', () => {
+  it('all 31 concepts have at least one invariant', () => {
     for (const file of allConcepts) {
       const ast = readConcept(file);
       expect(ast.invariants.length, `${file} should have invariants`).toBeGreaterThan(0);
@@ -572,6 +721,116 @@ describe('Routing Syncs', () => {
     expect(syncs[0].when[0].concept).toContain('PulumiProvider');
     expect(syncs[0].then[0].concept).toContain('IaC');
   });
+
+  // --- Additional Runtime Routing ---
+
+  it('parses RouteToCloudRun', () => {
+    const syncs = readSync('routing', 'route-to-cloud-run.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToCloudRun');
+    expect(syncs[0].when[0].concept).toContain('Runtime');
+    expect(syncs[0].then[0].concept).toContain('CloudRunRuntime');
+  });
+
+  it('parses RouteToGcf', () => {
+    const syncs = readSync('routing', 'route-to-gcf.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToGcf');
+    expect(syncs[0].then[0].concept).toContain('GcfRuntime');
+  });
+
+  it('parses RouteToCloudflare', () => {
+    const syncs = readSync('routing', 'route-to-cloudflare.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToCloudflare');
+    expect(syncs[0].then[0].concept).toContain('CloudflareRuntime');
+  });
+
+  it('parses RouteToVercel', () => {
+    const syncs = readSync('routing', 'route-to-vercel.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToVercel');
+    expect(syncs[0].then[0].concept).toContain('VercelRuntime');
+  });
+
+  it('parses RouteToK8s', () => {
+    const syncs = readSync('routing', 'route-to-k8s.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToK8s');
+    expect(syncs[0].then[0].concept).toContain('K8sRuntime');
+  });
+
+  it('parses RouteToDockerCompose', () => {
+    const syncs = readSync('routing', 'route-to-docker-compose.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToDockerCompose');
+    expect(syncs[0].then[0].concept).toContain('DockerComposeRuntime');
+  });
+
+  it('parses RouteToLocal', () => {
+    const syncs = readSync('routing', 'route-to-local.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToLocal');
+    expect(syncs[0].then[0].concept).toContain('LocalRuntime');
+  });
+
+  // --- Additional Secret Routing ---
+
+  it('parses RouteToGcpSm', () => {
+    const syncs = readSync('routing', 'route-to-gcp-sm.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToGcpSm');
+    expect(syncs[0].when[0].concept).toContain('Secret');
+    expect(syncs[0].then[0].concept).toContain('GcpSmProvider');
+  });
+
+  it('parses RouteToEnv', () => {
+    const syncs = readSync('routing', 'route-to-env.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToEnv');
+    expect(syncs[0].then[0].concept).toContain('EnvProvider');
+  });
+
+  it('parses RouteToDotenv', () => {
+    const syncs = readSync('routing', 'route-to-dotenv.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToDotenv');
+    expect(syncs[0].then[0].concept).toContain('DotenvProvider');
+  });
+
+  // --- Additional IaC Routing ---
+
+  it('parses RouteToCloudFormation', () => {
+    const syncs = readSync('routing', 'route-to-cloudformation.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToCloudFormation');
+    expect(syncs[0].when[0].concept).toContain('IaC');
+    expect(syncs[0].then[0].concept).toContain('CloudFormationProvider');
+  });
+
+  it('parses RouteToDockerComposeIac', () => {
+    const syncs = readSync('routing', 'route-to-docker-compose-iac.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToDockerComposeIac');
+    expect(syncs[0].then[0].concept).toContain('DockerComposeIacProvider');
+  });
+
+  // --- GitOps Routing ---
+
+  it('parses RouteToArgoCD', () => {
+    const syncs = readSync('routing', 'route-to-argocd.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToArgoCD');
+    expect(syncs[0].when[0].concept).toContain('GitOps');
+    expect(syncs[0].then[0].concept).toContain('ArgoCDProvider');
+  });
+
+  it('parses RouteToFlux', () => {
+    const syncs = readSync('routing', 'route-to-flux.sync');
+    expect(syncs).toHaveLength(1);
+    expect(syncs[0].name).toBe('RouteToFlux');
+    expect(syncs[0].then[0].concept).toContain('FluxProvider');
+  });
 });
 
 // ============================================================
@@ -611,9 +870,23 @@ describe('Bulk Sync Validation', () => {
     ['routing', 'route-to-terraform.sync'],
     ['routing', 'route-pulumi-apply.sync'],
     ['routing', 'pulumi-apply-complete.sync'],
+    ['routing', 'route-to-cloud-run.sync'],
+    ['routing', 'route-to-gcf.sync'],
+    ['routing', 'route-to-cloudflare.sync'],
+    ['routing', 'route-to-vercel.sync'],
+    ['routing', 'route-to-k8s.sync'],
+    ['routing', 'route-to-docker-compose.sync'],
+    ['routing', 'route-to-local.sync'],
+    ['routing', 'route-to-gcp-sm.sync'],
+    ['routing', 'route-to-env.sync'],
+    ['routing', 'route-to-dotenv.sync'],
+    ['routing', 'route-to-cloudformation.sync'],
+    ['routing', 'route-to-docker-compose-iac.sync'],
+    ['routing', 'route-to-argocd.sync'],
+    ['routing', 'route-to-flux.sync'],
   ];
 
-  it('all 30 sync files parse without error', () => {
+  it('all 44 sync files parse without error', () => {
     for (const [category, file] of allSyncs) {
       const syncs = readSync(category, file);
       expect(syncs.length, `${category}/${file} should produce at least one sync`).toBeGreaterThan(0);
@@ -640,7 +913,7 @@ describe('Kit YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(17);
+    expect(specPaths.length).toBe(31);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);
@@ -649,7 +922,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(30);
+    expect(syncPaths.length).toBe(44);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);

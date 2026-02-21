@@ -1,0 +1,11 @@
+# Route Runtime/provision to CloudflareRuntime — Architecture doc Section 3.8
+
+sync RouteToCloudflare [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "cloudflare-workers"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  CloudflareRuntime/provision: [ concept: ?concept; accountId: ?accountId;
+    routes: ?routes ]
+}

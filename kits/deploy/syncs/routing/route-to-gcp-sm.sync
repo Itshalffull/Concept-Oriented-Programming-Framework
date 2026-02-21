@@ -1,0 +1,10 @@
+# Route Secret/resolve to GcpSmProvider — Architecture doc Section 3.8
+
+sync RouteToGcpSm [eager]
+when {
+  Secret/resolve: [ name: ?name; provider: "gcp-sm" ]
+    => [ secret: ?s; version: ?ver ]
+}
+then {
+  GcpSmProvider/fetch: [ secretId: ?name; version: "latest" ]
+}

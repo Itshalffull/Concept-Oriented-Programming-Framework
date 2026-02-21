@@ -1,0 +1,25 @@
+type CloudflareRuntimeState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type CloudflareRuntimeEntry {
+  w: ID!
+  scriptName: String!
+  accountId: String!
+  routes: [String!]!
+  kvNamespaces: [String!]!
+  compatibilityDate: String!
+  requestCount: Int!
+  cpuTimeMs: Int!
+}
+
+extend type Query {
+  cloudflareruntime_entry(w: ID!): CloudflareRuntimeEntry
+  cloudflareruntime_entries: [CloudflareRuntimeEntry!]!
+}
+
+type CloudflareRuntimeWorkers {
+  w: ID!
+  value: ID!
+}

@@ -1,0 +1,68 @@
+@version(1)
+concept VercelRuntime [V] {
+
+  purpose {
+    Manage Vercel project deployments. Owns project
+    configurations, deployment URLs, edge regions,
+    and serverless function settings.
+  }
+
+  state {
+    projects: set V
+    config {
+      projectId: V -> String
+      teamId: V -> String
+      framework: V -> String
+      regions: V -> list String
+      deploymentUrl: V -> option String
+    }
+    tracking {
+      currentDeploymentId: V -> option String
+      previousDeploymentId: V -> option String
+      productionUrl: V -> option String
+    }
+  }
+
+  actions {
+    action provision(concept: String, teamId: String, framework: String) {
+      -> ok(project: V, projectId: String, endpoint: String) {
+        Vercel project created with specified framework.
+      }
+      -> domainConflict(domain: String, existingProject: String) {
+        Domain already assigned to another project.
+      }
+    }
+
+    action deploy(project: V, sourceDirectory: String) {
+      -> ok(project: V, deploymentId: String, deploymentUrl: String) {
+        Build completed and deployment created.
+      }
+      -> buildFailed(project: V, errors: list String) {
+        Vercel build step failed.
+      }
+    }
+
+    action setTrafficWeight(project: V, weight: Int) {
+      -> ok(project: V) {
+        Traffic split between current and previous deployments.
+      }
+    }
+
+    action rollback(project: V, targetDeploymentId: String) {
+      -> ok(project: V, restoredDeploymentId: String) {
+        Production alias pointed to previous deployment.
+      }
+    }
+
+    action destroy(project: V) {
+      -> ok(project: V) {
+        Project and all deployments deleted.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", teamId: "team-1", framework: "nextjs") -> ok(project: p, projectId: pid, endpoint: ep)
+    then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+  }
+}

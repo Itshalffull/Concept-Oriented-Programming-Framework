@@ -1,0 +1,10 @@
+# Route IaC/emit to DockerComposeIacProvider — Architecture doc Section 3.8
+
+sync RouteToDockerComposeIac [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "docker-compose" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  DockerComposeIacProvider/generate: [ plan: ?plan ]
+}

@@ -1,0 +1,11 @@
+# Route Runtime/provision to DockerComposeRuntime — Architecture doc Section 3.8
+
+sync RouteToDockerCompose [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "docker-compose"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  DockerComposeRuntime/provision: [ concept: ?concept; composePath: ?composePath;
+    ports: ?ports ]
+}

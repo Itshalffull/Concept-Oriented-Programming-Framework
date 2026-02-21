@@ -1,0 +1,11 @@
+# Route Runtime/provision to GcfRuntime — Architecture doc Section 3.8
+
+sync RouteToGcf [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "gcf"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  GcfRuntime/provision: [ concept: ?concept; projectId: ?projectId;
+    runtime: ?runtime; region: ?region ]
+}

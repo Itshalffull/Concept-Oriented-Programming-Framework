@@ -81,6 +81,48 @@ concepts:
       S: { as: ecs-service-ref, description: "Reference to an ECS Fargate service" }
     optional: true
 
+  CloudRunRuntime:
+    spec: ./concepts/providers/cloud-run-runtime.concept
+    params:
+      C: { as: cloud-run-service-ref, description: "Reference to a Cloud Run service" }
+    optional: true
+
+  GcfRuntime:
+    spec: ./concepts/providers/gcf-runtime.concept
+    params:
+      G: { as: gcf-function-ref, description: "Reference to a Google Cloud Function" }
+    optional: true
+
+  CloudflareRuntime:
+    spec: ./concepts/providers/cloudflare-runtime.concept
+    params:
+      W: { as: cloudflare-worker-ref, description: "Reference to a Cloudflare Worker" }
+    optional: true
+
+  VercelRuntime:
+    spec: ./concepts/providers/vercel-runtime.concept
+    params:
+      V: { as: vercel-project-ref, description: "Reference to a Vercel project" }
+    optional: true
+
+  K8sRuntime:
+    spec: ./concepts/providers/k8s-runtime.concept
+    params:
+      K: { as: k8s-deployment-ref, description: "Reference to a Kubernetes deployment" }
+    optional: true
+
+  DockerComposeRuntime:
+    spec: ./concepts/providers/docker-compose-runtime.concept
+    params:
+      D: { as: docker-compose-service-ref, description: "Reference to a Docker Compose service" }
+    optional: true
+
+  LocalRuntime:
+    spec: ./concepts/providers/local-runtime.concept
+    params:
+      L: { as: local-process-ref, description: "Reference to a local process" }
+    optional: true
+
   # --- Secret Provider Concepts ---
   VaultProvider:
     spec: ./concepts/providers/vault-provider.concept
@@ -94,6 +136,24 @@ concepts:
       A: { as: aws-sm-secret-ref, description: "Reference to an AWS Secrets Manager secret" }
     optional: true
 
+  GcpSmProvider:
+    spec: ./concepts/providers/gcp-sm-provider.concept
+    params:
+      G: { as: gcp-sm-secret-ref, description: "Reference to a GCP Secret Manager secret" }
+    optional: true
+
+  EnvProvider:
+    spec: ./concepts/providers/env-provider.concept
+    params:
+      E: { as: env-variable-ref, description: "Reference to an environment variable" }
+    optional: true
+
+  DotenvProvider:
+    spec: ./concepts/providers/dotenv-provider.concept
+    params:
+      D: { as: dotenv-file-ref, description: "Reference to a .env file entry" }
+    optional: true
+
   # --- IaC Provider Concepts ---
   PulumiProvider:
     spec: ./concepts/providers/pulumi-provider.concept
@@ -105,6 +165,31 @@ concepts:
     spec: ./concepts/providers/terraform-provider.concept
     params:
       T: { as: terraform-workspace-ref, description: "Reference to a Terraform workspace" }
+    optional: true
+
+  CloudFormationProvider:
+    spec: ./concepts/providers/cloudformation-provider.concept
+    params:
+      C: { as: cfn-stack-ref, description: "Reference to a CloudFormation stack" }
+    optional: true
+
+  DockerComposeIacProvider:
+    spec: ./concepts/providers/docker-compose-iac-provider.concept
+    params:
+      I: { as: compose-iac-ref, description: "Reference to a Docker Compose IaC file" }
+    optional: true
+
+  # --- GitOps Provider Concepts ---
+  ArgoCDProvider:
+    spec: ./concepts/providers/argocd-provider.concept
+    params:
+      A: { as: argocd-app-ref, description: "Reference to an ArgoCD application" }
+    optional: true
+
+  FluxProvider:
+    spec: ./concepts/providers/flux-provider.concept
+    params:
+      F: { as: flux-kustomization-ref, description: "Reference to a Flux kustomization" }
     optional: true
 
 syncs:
@@ -221,6 +306,20 @@ syncs:
       name: LambdaProvisionComplete
     - path: ./syncs/routing/route-to-ecs.sync
       name: RouteEcs
+    - path: ./syncs/routing/route-to-cloud-run.sync
+      name: RouteCloudRun
+    - path: ./syncs/routing/route-to-gcf.sync
+      name: RouteGcf
+    - path: ./syncs/routing/route-to-cloudflare.sync
+      name: RouteCloudflare
+    - path: ./syncs/routing/route-to-vercel.sync
+      name: RouteVercel
+    - path: ./syncs/routing/route-to-k8s.sync
+      name: RouteK8s
+    - path: ./syncs/routing/route-to-docker-compose.sync
+      name: RouteDockerCompose
+    - path: ./syncs/routing/route-to-local.sync
+      name: RouteLocal
 
     # Secret routing
     - path: ./syncs/routing/route-to-vault.sync
@@ -229,6 +328,12 @@ syncs:
       name: RouteAwsSm
     - path: ./syncs/routing/vault-resolved.sync
       name: VaultResolved
+    - path: ./syncs/routing/route-to-gcp-sm.sync
+      name: RouteGcpSm
+    - path: ./syncs/routing/route-to-env.sync
+      name: RouteEnv
+    - path: ./syncs/routing/route-to-dotenv.sync
+      name: RouteDotenv
 
     # IaC routing
     - path: ./syncs/routing/route-to-pulumi.sync
@@ -239,5 +344,15 @@ syncs:
       name: RoutePulumiApply
     - path: ./syncs/routing/pulumi-apply-complete.sync
       name: PulumiApplyComplete
+    - path: ./syncs/routing/route-to-cloudformation.sync
+      name: RouteCloudFormation
+    - path: ./syncs/routing/route-to-docker-compose-iac.sync
+      name: RouteDockerComposeIac
+
+    # GitOps routing
+    - path: ./syncs/routing/route-to-argocd.sync
+      name: RouteArgoCD
+    - path: ./syncs/routing/route-to-flux.sync
+      name: RouteFlux
 
 dependencies: []

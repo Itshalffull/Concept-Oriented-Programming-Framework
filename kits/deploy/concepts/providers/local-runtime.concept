@@ -1,0 +1,64 @@
+@version(1)
+concept LocalRuntime [L] {
+
+  purpose {
+    Manage local process deployments for development. Owns
+    child process PIDs, port assignments, log file paths,
+    and restart policies.
+  }
+
+  state {
+    processes: set L
+    config {
+      command: L -> String
+      workingDirectory: L -> String
+      port: L -> Int
+      envVars: L -> list String
+    }
+    tracking {
+      pid: L -> option Int
+      status: L -> String
+      logPath: L -> option String
+    }
+  }
+
+  actions {
+    action provision(concept: String, command: String, port: Int) {
+      -> ok(process: L, pid: Int, endpoint: String) {
+        Local process started on specified port.
+      }
+      -> portInUse(port: Int, existingPid: Int) {
+        Requested port is already in use.
+      }
+    }
+
+    action deploy(process: L, command: String) {
+      -> ok(process: L, pid: Int) {
+        Process restarted with new command.
+      }
+    }
+
+    action setTrafficWeight(process: L, weight: Int) {
+      -> ok(process: L) {
+        Traffic weight has no effect locally. Always 100.
+      }
+    }
+
+    action rollback(process: L, previousCommand: String) {
+      -> ok(process: L, pid: Int) {
+        Process restarted with previous command.
+      }
+    }
+
+    action destroy(process: L) {
+      -> ok(process: L) {
+        Process killed and port released.
+      }
+    }
+  }
+
+  invariant {
+    after provision(concept: "User", command: "node server.js", port: 3000) -> ok(process: p, pid: pid, endpoint: ep)
+    then deploy(process: p, command: "node server.js") -> ok(process: p, pid: newPid)
+  }
+}

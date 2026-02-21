@@ -1,0 +1,11 @@
+# Route Runtime/provision to LocalRuntime — Architecture doc Section 3.8
+
+sync RouteToLocal [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "local"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  LocalRuntime/provision: [ concept: ?concept; command: ?command;
+    port: ?port ]
+}

@@ -1,0 +1,11 @@
+# Route Runtime/provision to VercelRuntime — Architecture doc Section 3.8
+
+sync RouteToVercel [eager]
+when {
+  Runtime/provision: [ concept: ?concept; runtimeType: "vercel"; config: ?config ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  VercelRuntime/provision: [ concept: ?concept; teamId: ?teamId;
+    framework: ?framework ]
+}
