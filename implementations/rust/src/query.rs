@@ -250,12 +250,11 @@ mod tests {
             .await
             .unwrap();
 
-        if let CreateOutput::Ok { query_id } = result {
-            let record = storage.get("query_def", &query_id).await.unwrap();
-            assert!(record.is_some());
-            let record = record.unwrap();
-            assert_eq!(record["scope"].as_str().unwrap(), "users");
-        }
+        let CreateOutput::Ok { query_id } = result;
+        let record = storage.get("query_def", &query_id).await.unwrap();
+        assert!(record.is_some());
+        let record = record.unwrap();
+        assert_eq!(record["scope"].as_str().unwrap(), "users");
     }
 
     // ── execute tests ──────────────────────────────────────
