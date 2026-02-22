@@ -1,60 +1,40 @@
-@version(2)
+@version(3)
 concept Annotation [N] {
 
   purpose {
-    Attach rich metadata to concepts and actions for interface
-    generation — design principles, content sections, examples,
-    documentation references, scaffold templates, tool permissions,
-    argument templates, trigger descriptions, and related-item
-    links. Each target reads annotations it understands and
-    ignores the rest. See Architecture doc Section 1.8.
+    Attach arbitrary metadata to concepts and actions for
+    interface generation. The concept owns identity (which
+    concept, which scope) and opaque content passthrough.
+    Each target reads the keys it understands and ignores
+    the rest. New enrichment kinds require only a new YAML
+    key and a renderer in the target provider — zero concept
+    changes. See Architecture doc Section 1.8.
   }
 
   state {
     annotations: set N
-    concept {
+    identity {
       targetConcept: N -> String
       scope: N -> String
     }
-    metadata {
-      examples: N -> list { label: String, language: String, code: String }
-      references: N -> list { path: String, label: String }
-      toolPermissions: N -> list String
-      argumentTemplate: N -> option String
-      relatedItems: N -> list { name: String, relation: String, description: String }
-    }
-    designPrinciples {
-      principles: N -> list { title: String, rule: String }
-    }
-    contentSections {
-      sections: N -> list { heading: String, body: String, order: Int }
-    }
-    scaffolds {
-      templates: N -> list { name: String, path: String, description: String }
-    }
-    triggers {
-      description: N -> option String
-      patterns: N -> list String
-      excludePatterns: N -> list String
-    }
-    validation {
-      commands: N -> list { label: String, command: String }
-    }
+    content: N -> String
   }
 
   actions {
-    action annotate(concept: String, scope: String, metadata: String) {
+    action annotate(concept: String, scope: String, content: String) {
       description {
-        Attach metadata to a concept-level or action-level scope.
-        The metadata JSON can include examples, references, tool
-        permissions, argument templates, related item links,
-        design principles, content sections, scaffold templates,
-        trigger descriptions, and validation commands.
-        Scope is either "concept" for concept-level or the action
-        name for action-level annotations.
+        Attach opaque metadata to a concept-level or action-level
+        scope. The content string is JSON from the interface
+        manifest — its internal structure is not constrained by
+        this concept. Targets interpret keys they recognize
+        (e.g. tool-permissions, examples, design-principles,
+        scaffolds, trigger-description, validation-commands)
+        and pass through the rest. Scope is either "concept"
+        for concept-level or the action name for action-level.
       }
-      -> ok(annotation: N, fieldCount: Int) {
-        Metadata attached to the specified scope.
+      -> ok(annotation: N, keyCount: Int) {
+        Metadata attached. keyCount is the number of top-level
+        keys in the content JSON.
       }
       -> invalidScope(scope: String) {
         The scope references an action not found in the concept.
@@ -64,11 +44,12 @@ concept Annotation [N] {
     action resolve(concept: String) {
       description {
         Return all annotations for a concept and its actions.
-        Merges concept-level and action-level annotations into
-        a single result set ordered by scope.
+        Merges concept-level and action-level content into a
+        single result keyed by scope.
       }
       -> ok(annotations: list String) {
-        All annotations for the concept, serialized as JSON.
+        All annotations for the concept, serialized as JSON
+        with scope keys preserved.
       }
       -> notFound(concept: String) {
         No annotations exist for the specified concept.
@@ -78,8 +59,8 @@ concept Annotation [N] {
 
   invariant {
     after annotate(concept: "SpecParser", scope: "concept",
-      metadata: "{\"toolPermissions\":[\"Read\",\"Bash\"],\"designPrinciples\":[{\"title\":\"Independence\",\"rule\":\"Never reference another concept\"}]}")
-      -> ok(annotation: n, fieldCount: 2)
+      content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}")
+      -> ok(annotation: n, keyCount: 2)
     then resolve(concept: "SpecParser") -> ok(annotations: a)
   }
 }

@@ -1,4 +1,4 @@
-@version(2)
+@version(3)
 concept Projection [P] {
 
   purpose {
@@ -6,10 +6,11 @@ concept Projection [P] {
     Reads concept specs (via ConceptManifest from SchemaGen) and
     interface annotations (from app.interface.yaml), produces
     generation-ready projections with resource mappings, trait
-    bindings, cross-concept type graphs, and target-specific
-    enrichment (workflows, design principles, scaffolds, trigger
-    descriptions) for parity between handcrafted and generated
-    interfaces. One projection per concept per generation run.
+    bindings, cross-concept type graphs, and opaque enrichment
+    content. Enrichment is stored as a single JSON string —
+    targets interpret keys they recognize (workflows,
+    annotations, command-tree, action-mappings) and ignore the
+    rest. One projection per concept per generation run.
   }
 
   state {
@@ -29,12 +30,7 @@ concept Projection [P] {
       shapes: P -> list { name: String, kind: String, resolved: String }
       crossReferences: P -> list { from: String, to: String, relation: String }
     }
-    enrichment {
-      workflow: P -> option String
-      annotations: P -> option String
-      commandTree: P -> option String
-      actionMappings: P -> option String
-    }
+    content: P -> String
   }
 
   actions {
@@ -43,7 +39,9 @@ concept Projection [P] {
         Parse interface annotations. Merge with ConceptManifest.
         Compute resource mappings from state relations and action
         signatures. Bind traits to actions. Resolve cross-concept
-        type references within the kit.
+        type references within the kit. Enrichment data from
+        workflows, annotations, and target configs is serialized
+        as opaque JSON into the content field.
       }
       -> annotationError(concept: String, errors: list String) {
         Interface manifest has invalid annotations for this concept.

@@ -36,6 +36,12 @@ function typeLabel(type: ResolvedType): string {
 }
 
 // --- Workflow/Annotation Metadata Types ---
+//
+// Concepts store enrichment as opaque content (JSON passthrough).
+// These types define only the structural fields the concept owns;
+// everything else is Record<string, unknown> — targets interpret
+// keys they recognize and ignore the rest. Adding new enrichment
+// kinds requires only a new YAML key and renderer code here.
 
 /** Workflow step from manifest YAML workflows section. */
 interface WorkflowStep {
@@ -44,32 +50,34 @@ interface WorkflowStep {
   prose?: string;
 }
 
-/** Workflow config from manifest YAML. */
-interface WorkflowConfig {
+/**
+ * Workflow config from manifest YAML.
+ * Structural fields: concept, steps (the concept owns ordering).
+ * All decoration keys (checklists, design-principles, anti-patterns,
+ * content-sections, validation-commands, quick-reference, references,
+ * related-workflows, etc.) are opaque — accessed via bracket notation
+ * and cast at point of use.
+ */
+type WorkflowConfig = {
   concept: string;
   steps: WorkflowStep[];
-  checklists?: Record<string, string[]>;
-  references?: Array<{ path: string; label: string }>;
-  'anti-patterns'?: Array<{ title: string; description: string; bad?: string; good?: string }>;
-  'related-workflows'?: Array<string | { name: string; description: string }>;
-  'design-principles'?: Array<{ title: string; rule: string }>;
-  'content-sections'?: Array<{ heading: string; body: string; afterStep?: number }>;
-  'validation-commands'?: Array<{ label: string; command: string; afterStep?: number }>;
-  'quick-reference'?: { heading: string; body: string };
-}
+} & Record<string, unknown>;
 
-/** Annotation config from manifest YAML. */
-interface AnnotationConfig {
-  'tool-permissions'?: string[];
-  'argument-template'?: string;
-  examples?: Array<{ label: string; language: string; code: string }>;
-  references?: Array<{ path: string; label: string }>;
-  scaffolds?: Array<{ name: string; path: string; description: string }>;
-  'trigger-description'?: string;
-  'trigger-patterns'?: string[];
-  'trigger-exclude'?: string[];
-  'validation-commands'?: Array<{ label: string; command: string }>;
-  'design-principles'?: Array<{ title: string; rule: string }>;
+/**
+ * Annotation config from manifest YAML.
+ * Entirely opaque — each target reads keys it understands
+ * (tool-permissions, argument-template, examples, scaffolds,
+ * trigger-description, etc.) and ignores the rest.
+ */
+type AnnotationConfig = Record<string, unknown>;
+
+/**
+ * Read a key from opaque content, cast to T.
+ * Returns undefined if the key is absent or the object is undefined.
+ */
+function contentKey<T>(obj: Record<string, unknown> | undefined, key: string): T | undefined {
+  if (!obj || !(key in obj)) return undefined;
+  return obj[key] as T;
 }
 
 /** Extract workflow config for a concept from manifest YAML. */
@@ -138,8 +146,9 @@ function generateSkillMd(
   lines.push(`description: ${group.description}`);
 
   // Argument hint: use annotation template if available
-  if (annot?.concept?.['argument-template']) {
-    lines.push(`argument-hint: ${annot.concept['argument-template']}`);
+  const argTemplate = contentKey<string>(annot?.concept, 'argument-template');
+  if (argTemplate) {
+    lines.push(`argument-hint: ${argTemplate}`);
   } else {
     const firstAction = group.concepts[0]?.actions?.[0];
     if (group.concepts.length === 1 && firstAction) {
@@ -151,8 +160,9 @@ function generateSkillMd(
   }
 
   // Tool permissions from annotation
-  if (annot?.concept?.['tool-permissions'] && annot.concept['tool-permissions'].length > 0) {
-    lines.push(`allowed-tools: ${annot.concept['tool-permissions'].join(', ')}`);
+  const toolPerms = contentKey<string[]>(annot?.concept, 'tool-permissions');
+  if (toolPerms && toolPerms.length > 0) {
+    lines.push(`allowed-tools: ${toolPerms.join(', ')}`);
   }
 
   lines.push('---');
@@ -187,7 +197,8 @@ function renderWorkflowSkill(
   lines.push('');
 
   // Design principles — rendered before workflow steps
-  const designPrinciples = workflow['design-principles'] || annot?.concept?.['design-principles'];
+  const designPrinciples = contentKey<Array<{ title: string; rule: string }>>(workflow, 'design-principles')
+    || contentKey<Array<{ title: string; rule: string }>>(annot?.concept, 'design-principles');
   if (designPrinciples && designPrinciples.length > 0) {
     lines.push('## Design Principles');
     lines.push('');
@@ -198,13 +209,16 @@ function renderWorkflowSkill(
   }
 
   // Trigger description — how to invoke this skill
-  const triggerDesc = annot?.concept?.['trigger-description'];
+  const triggerDesc = contentKey<string>(annot?.concept, 'trigger-description');
   if (triggerDesc) {
     lines.push(`> **When to use:** ${triggerDesc}`);
     lines.push('');
   }
 
   // Render workflow steps as numbered sections
+  const allContentSections = contentKey<Array<{ heading: string; body: string; afterStep?: number }>>(workflow, 'content-sections');
+  const allValidationCmds = contentKey<Array<{ label: string; command: string; afterStep?: number }>>(workflow, 'validation-commands');
+
   for (let i = 0; i < workflow.steps.length; i++) {
     const step = workflow.steps[i];
     const title = step.title || toPascalCase(step.action);
@@ -225,7 +239,8 @@ function renderWorkflowSkill(
     }
 
     // Checklist for this step
-    const checklist = workflow.checklists?.[step.action];
+    const checklists = contentKey<Record<string, string[]>>(workflow, 'checklists');
+    const checklist = checklists?.[step.action];
     if (checklist && checklist.length > 0) {
       lines.push('**Checklist:**');
       for (const item of checklist) {
@@ -236,9 +251,10 @@ function renderWorkflowSkill(
 
     // Per-action examples from annotations
     const actionAnnot = annot?.actions?.[step.action];
-    if (actionAnnot?.examples && actionAnnot.examples.length > 0) {
+    const actionExamples = contentKey<Array<{ label: string; language: string; code: string }>>(actionAnnot, 'examples');
+    if (actionExamples && actionExamples.length > 0) {
       lines.push('**Examples:**');
-      for (const ex of actionAnnot.examples) {
+      for (const ex of actionExamples) {
         lines.push(`*${ex.label}*`);
         lines.push('```' + ex.language);
         lines.push(ex.code);
@@ -248,16 +264,17 @@ function renderWorkflowSkill(
     }
 
     // Per-action references from annotations
-    if (actionAnnot?.references && actionAnnot.references.length > 0) {
+    const actionRefs = contentKey<Array<{ path: string; label: string }>>(actionAnnot, 'references');
+    if (actionRefs && actionRefs.length > 0) {
       lines.push('**References:**');
-      for (const ref of actionAnnot.references) {
+      for (const ref of actionRefs) {
         lines.push(`- [${ref.label}](${ref.path})`);
       }
       lines.push('');
     }
 
     // Content sections inserted after this step
-    const contentSections = workflow['content-sections']?.filter(s => s.afterStep === i + 1);
+    const contentSections = allContentSections?.filter(s => s.afterStep === i + 1);
     if (contentSections && contentSections.length > 0) {
       for (const section of contentSections) {
         lines.push(`### ${section.heading}`);
@@ -268,7 +285,7 @@ function renderWorkflowSkill(
     }
 
     // Validation commands inserted after this step
-    const validationCmds = workflow['validation-commands']?.filter(v => v.afterStep === i + 1);
+    const validationCmds = allValidationCmds?.filter(v => v.afterStep === i + 1);
     if (validationCmds && validationCmds.length > 0) {
       lines.push('**Validation:**');
       for (const vc of validationCmds) {
@@ -282,7 +299,7 @@ function renderWorkflowSkill(
   }
 
   // Scaffolds section
-  const scaffolds = annot?.concept?.scaffolds;
+  const scaffolds = contentKey<Array<{ name: string; path: string; description: string }>>(annot?.concept, 'scaffolds');
   if (scaffolds && scaffolds.length > 0) {
     lines.push('## Scaffold Templates');
     lines.push('');
@@ -295,7 +312,8 @@ function renderWorkflowSkill(
   }
 
   // References section
-  const refs = workflow.references || annot?.concept?.references;
+  const refs = contentKey<Array<{ path: string; label: string }>>(workflow, 'references')
+    || contentKey<Array<{ path: string; label: string }>>(annot?.concept, 'references');
   if (refs && refs.length > 0) {
     lines.push('## References');
     lines.push('');
@@ -306,7 +324,7 @@ function renderWorkflowSkill(
   }
 
   // Quick reference section
-  const quickRef = workflow['quick-reference'];
+  const quickRef = contentKey<{ heading: string; body: string }>(workflow, 'quick-reference');
   if (quickRef) {
     lines.push(`## ${quickRef.heading}`);
     lines.push('');
@@ -315,7 +333,7 @@ function renderWorkflowSkill(
   }
 
   // Anti-patterns section
-  const antiPatterns = workflow['anti-patterns'];
+  const antiPatterns = contentKey<Array<{ title: string; description: string; bad?: string; good?: string }>>(workflow, 'anti-patterns');
   if (antiPatterns && antiPatterns.length > 0) {
     lines.push('## Anti-Patterns');
     lines.push('');
@@ -341,8 +359,8 @@ function renderWorkflowSkill(
   }
 
   // Validation commands (global, not step-specific)
-  const globalValidation = annot?.concept?.['validation-commands']
-    || workflow['validation-commands']?.filter(v => !v.afterStep);
+  const globalValidation = contentKey<Array<{ label: string; command: string }>>(annot?.concept, 'validation-commands')
+    || allValidationCmds?.filter(v => !v.afterStep);
   if (globalValidation && globalValidation.length > 0) {
     lines.push('## Validation');
     lines.push('');
@@ -356,7 +374,7 @@ function renderWorkflowSkill(
   }
 
   // Related workflows
-  const related = workflow['related-workflows'];
+  const related = contentKey<Array<string | { name: string; description: string }>>(workflow, 'related-workflows');
   if (related && related.length > 0) {
     lines.push('## Related Skills');
     lines.push('');
@@ -401,8 +419,9 @@ function renderFlatSkill(
 
     // Per-action examples from annotations
     const actionAnnot = annot?.actions?.[action.name];
-    if (actionAnnot?.examples && actionAnnot.examples.length > 0) {
-      for (const ex of actionAnnot.examples) {
+    const actionExamples = contentKey<Array<{ label: string; language: string; code: string }>>(actionAnnot, 'examples');
+    if (actionExamples && actionExamples.length > 0) {
+      for (const ex of actionExamples) {
         lines.push(`*${ex.label}*`);
         lines.push('```' + ex.language);
         lines.push(ex.code);
@@ -453,8 +472,9 @@ function renderMultiConceptSkill(
 
       // Per-action examples
       const actionAnnot = annot.actions?.[action.name];
-      if (actionAnnot?.examples && actionAnnot.examples.length > 0) {
-        for (const ex of actionAnnot.examples) {
+      const actionExamples = contentKey<Array<{ label: string; language: string; code: string }>>(actionAnnot, 'examples');
+      if (actionExamples && actionExamples.length > 0) {
+        for (const ex of actionExamples) {
           lines.push(`*${ex.label}*`);
           lines.push('```' + ex.language);
           lines.push(ex.code);

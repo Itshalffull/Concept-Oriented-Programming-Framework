@@ -1,15 +1,17 @@
-@version(1)
+@version(2)
 concept ClaudeSkillsTarget [K] {
 
   purpose {
-    Generate Claude Code skill files from concept projections
-    enriched with workflow, annotation, and scaffold metadata.
-    Produces SKILL.md files with YAML frontmatter, numbered
-    step-by-step workflows, design principles, checklists,
-    reference links, example walkthroughs, scaffold templates,
-    anti-patterns, related skill links, trigger descriptions,
-    and validation commands. Produces TypeScript command runners
-    for programmatic dispatch. See Architecture doc Section 2.7.
+    Generate Claude Code skill files from concept projections.
+    The concept owns identity (name, concept, grouping),
+    structure (frontmatter, body, action mappings), and opaque
+    content passthrough for enrichment. Each renderer reads the
+    enrichment keys it understands (design-principles, workflow,
+    checklists, references, examples, scaffolds, anti-patterns,
+    trigger-description, validation-commands, etc.) and ignores
+    the rest. New enrichment kinds require only a new YAML key
+    and a renderer update — zero concept changes.
+    See Architecture doc Section 2.7.
   }
 
   state {
@@ -24,22 +26,7 @@ concept ClaudeSkillsTarget [K] {
       frontmatter: K -> String
       body: K -> String
     }
-    enrichment {
-      designPrinciples: K -> list { title: String, rule: String }
-      workflow: K -> list { action: String, title: String, prose: String, order: Int }
-      checklists: K -> list { step: String, items: list String }
-      references: K -> list { path: String, label: String }
-      examples: K -> list { label: String, language: String, code: String }
-      scaffolds: K -> list { name: String, path: String, description: String }
-      antiPatterns: K -> list { title: String, description: String, bad: String, good: String }
-      relatedSkills: K -> list { name: String, description: String }
-      triggerDescription: K -> option String
-      triggerPatterns: K -> list String
-      triggerExclude: K -> list String
-      validationCommands: K -> list { label: String, command: String }
-      quickReference: K -> option { heading: String, body: String }
-      contentSections: K -> list { heading: String, body: String, afterStep: Int }
-    }
+    content: K -> String
     mapping {
       concept: K -> String
       actionToCommand: K -> list { action: String, command: String }
@@ -50,26 +37,23 @@ concept ClaudeSkillsTarget [K] {
     action generate(projection: String, config: String) {
       description {
         Generate a Claude Code SKILL.md and TypeScript command
-        runner from a concept projection. When the projection
-        includes workflow and annotation enrichment data, produces
-        rich skills matching the quality of handcrafted skills
-        with numbered steps, design principles, checklists,
-        references, examples, scaffolds, anti-patterns, related
-        skills, trigger descriptions, and validation commands.
-        When enrichment data is absent, falls back to flat
-        command listing.
+        runner from a concept projection. The projection's
+        enrichment data is deserialized as JSON and keys are
+        interpreted by the renderer. When enrichment includes
+        workflow steps, design principles, checklists, etc.,
+        produces rich skills matching handcrafted quality. When
+        enrichment is absent, falls back to flat command listing.
+        Content is opaque — the concept does not constrain which
+        keys exist.
       }
       -> ok(skills: list K, files: list String) {
         Skill files generated. SKILL.md contains YAML frontmatter
         with name, description, allowed-tools, and argument-hint.
         Body contains either rich workflow-based content or flat
         command listing depending on available enrichment data.
-        TypeScript command runner dispatches commands to the kernel.
       }
-      -> missingEnrichment(concept: String, fields: list String) {
-        Concept has workflow defined but key enrichment fields
-        are missing. Generates with available data and lists
-        missing fields as warnings.
+      -> missingProjection(concept: String) {
+        No projection found for the specified concept.
       }
     }
 
@@ -77,7 +61,6 @@ concept ClaudeSkillsTarget [K] {
       -> ok(skill: K) {
         SKILL.md has valid YAML frontmatter. All referenced
         scaffold files exist. All related skill names resolve.
-        Trigger patterns are syntactically valid.
       }
       -> invalidFrontmatter(skill: K, errors: list String) {
         YAML frontmatter is malformed or missing required fields.
