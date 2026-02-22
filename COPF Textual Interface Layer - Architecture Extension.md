@@ -1,4 +1,21 @@
-# COPF Interface Kit — Architecture Extension
+# COPF Interface Kit — Architecture Extension (v2)
+
+> **Changelog**
+>
+> **v2 (2026-02-22):**
+> - Added Annotation concept (§1.9) — opaque metadata attachment for concepts and actions
+> - Added Renderer concept (§1.10) — template-driven enrichment rendering with 13 built-in patterns
+> - Added Workflow concept (§1.11) — ordered action sequences with opaque decorations
+> - Added ClaudeSkillsTarget provider (§2.6) — Claude Code skill file generation
+> - Updated Projection to v3 (§1.1) — added opaque `content` field for enrichment passthrough
+> - Updated CliTarget to v2 (§2.4) — added `commandTree` state, `validate` and `listCommands` actions
+> - Added enrichment pipeline syncs (§3.3) — AnnotateBeforeGenerate, WorkflowBeforeRender, RenderEnrichment
+> - Added Claude Skills routing and middleware syncs (§3.5, §3.8)
+> - Added Opaque Content Model architectural decision (Part 8)
+> - Updated concept count table, kit.yaml, and integration diagrams
+>
+> **v1 (initial):**
+> - Original architecture with 21 concepts across 5 categories
 
 ## Design Principle
 
@@ -19,19 +36,28 @@ SpecParser/parse → SchemaGen/generate → ConceptManifest
                     │                        │
               Projection/project    ──▶  Generator/generate
                                              │
-                                      Grouping/group
-                                             │
-                              ┌──────────────┼──────────────┐
-                              ▼              ▼              ▼
-                    Target/generate   Sdk/generate   Spec/emit
-                         │                │              │
+                              ┌──────────────┤
+                              │              │
+                     Annotation/resolve   Workflow/define
+                              │              │
+                              └──────┬───────┘
+                                     │
+                              Renderer/render (enrichment)
+                                     │
+                              Grouping/group
+                                     │
+                              ┌──────┼──────────────┐
+                              ▼      ▼              ▼
+                    Target/generate  Sdk/generate  Spec/emit
+                         │               │              │
                     [routing]        [routing]       [routing]
-                         │                │              │
+                         │               │              │
                     RestTarget       TsSdkTarget    OpenApiTarget
                     GraphqlTarget    PySdkTarget    AsyncApiTarget
                     GrpcTarget       GoSdkTarget    ...
                     CliTarget        ...
                     McpTarget
+                    ClaudeSkillsTarget
 ```
 
 ### Relationship to COIF
@@ -57,6 +83,12 @@ COIF generates **visual** interfaces (forms, tables, dashboards) from concept sp
 │  │ Projection │ │ Generator  │ │  Emitter   │ │  Surface   │               │
 │  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘ └─────┬──────┘               │
 │        │               │              │              │                       │
+│  Enrichment Concepts:                                                        │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐                               │
+│  │ Annotation │ │  Workflow  │ │  Renderer  │                               │
+│  └────────────┘ └────────────┘ └────────────┘                               │
+│  (opaque metadata) (step ordering) (patterns + templates)                    │
+│                                                                              │
 │  Coordination Concepts:          Provider Concepts:                          │
 │  ┌────────────┐                  ┌────────────┐ ┌────────────┐              │
 │  │   Target   │──[route syncs]──▶│ RestTarget │ │GraphqlTarget│ …           │
@@ -79,9 +111,13 @@ COIF generates **visual** interfaces (forms, tables, dashboards) from concept sp
 │  Syncs:                                                                      │
 │  SchemaGen/generate → ok → Projection/project (entry point)                 │
 │  Projection/project → ok → Generator/plan                                   │
+│  Generator/generate → ok → Annotation/resolve (enrichment)                  │
+│  Generator/generate → ok → Workflow/define (enrichment)                     │
+│  Workflow/define → ok → Renderer/render (format enrichment)                 │
 │  Generator/generate → ok → Grouping/group (organize before dispatch)        │
 │  Generator/generate → ok → Target/generate (per configured target)          │
 │  Target/generate → [route] → RestTarget/generate (integration)              │
+│  Target/generate → [route] → ClaudeSkillsTarget/generate (integration)      │
 │  RestTarget/generate → ok → Middleware/inject                               │
 │  Middleware/inject → ok → Emitter/write                                     │
 │  [all targets complete] → Surface/compose                                   │
@@ -95,12 +131,14 @@ COIF generates **visual** interfaces (forms, tables, dashboards) from concept sp
 
 ### 1.1 Projection
 
-Takes ConceptManifests from SchemaGen and interface annotations from the interface manifest, produces enriched projections with resource mappings, trait bindings, and cross-concept type graphs. This is not a new IR — it's ConceptManifest + generation-specific metadata.
+Takes ConceptManifests from SchemaGen and interface annotations from the interface manifest, produces enriched projections with resource mappings, trait bindings, cross-concept type graphs, and opaque enrichment content. This is not a new IR — it's ConceptManifest + generation-specific metadata.
 
 The academic term "projection" comes from multiparty session types (Honda, Yoshida, Carbone 2008): a global protocol projected into local endpoint interfaces. Here, a concept spec is the "global protocol" and each generated interface is a "local endpoint."
 
+The `content` field stores enrichment data (workflows, annotations, target configs) as opaque JSON — targets interpret keys they recognize and ignore the rest. See §8 for the opaque content model rationale.
+
 ```
-@version(1)
+@version(3)
 concept Projection [P] {
 
   purpose {
@@ -108,8 +146,11 @@ concept Projection [P] {
     Reads concept specs (via ConceptManifest from SchemaGen) and
     interface annotations (from app.interface.yaml), produces
     generation-ready projections with resource mappings, trait
-    bindings, and cross-concept type graphs. One projection per
-    concept per generation run.
+    bindings, cross-concept type graphs, and opaque enrichment
+    content. Enrichment is stored as a single JSON string —
+    targets interpret keys they recognize (workflows,
+    annotations, command-tree, action-mappings) and ignore the
+    rest. One projection per concept per generation run.
   }
 
   state {
@@ -129,6 +170,7 @@ concept Projection [P] {
       shapes: P -> list { name: String, kind: String, resolved: String }
       crossReferences: P -> list { from: String, to: String, relation: String }
     }
+    content: P -> String
   }
 
   actions {
@@ -137,7 +179,9 @@ concept Projection [P] {
         Parse interface annotations. Merge with ConceptManifest.
         Compute resource mappings from state relations and action
         signatures. Bind traits to actions. Resolve cross-concept
-        type references within the kit.
+        type references within the kit. Enrichment data from
+        workflows, annotations, and target configs is serialized
+        as opaque JSON into the content field.
       }
       -> annotationError(concept: String, errors: list String) {
         Interface manifest has invalid annotations for this concept.
@@ -182,9 +226,10 @@ concept Projection [P] {
     action inferResources(projection: P) {
       -> ok(projection: P, resources: list String) {
         Auto-derive REST resource mappings from state relations
-        and action signatures. Actions named create/add → POST,
-        delete/remove → DELETE, list/find → GET, update/edit → PUT.
-        Non-CRUD actions → POST to /resource/{id}/action-name.
+        and action signatures. Actions named create/add produce POST,
+        delete/remove produce DELETE, list/find produce GET,
+        update/edit produce PUT. Non-CRUD actions produce POST
+        to /resource/{id}/action-name.
       }
     }
   }
@@ -631,6 +676,7 @@ concept Surface [S] {
 | gRPC | Multi-service proto package, shared message types | `service.proto` + `server.ts` |
 | CLI | Root command, concept subcommands (`app todo add`, `app user list`) | `main.ts` / `main.go` |
 | MCP | Combined tool set, concept-namespaced tool names | `mcp-server.ts` |
+| Claude Skills | Configurable grouping (per-concept, by-crud, custom, etc.) | Per-skill `SKILL.md` + `.commands.ts` |
 | SDK | Single client class, concept-namespaced method groups | `client.ts` / `client.py` |
 
 
@@ -713,21 +759,377 @@ concept Middleware [M] {
 
 #### Built-in Trait Projections
 
-| Trait | REST | GraphQL | gRPC | CLI | MCP |
-|-------|------|---------|------|-----|-----|
-| `@auth(bearer)` | `Authorization` header validation | Context auth check | Metadata interceptor | `--token` flag or env var | OAuth 2.1 token flow |
-| `@auth(apiKey)` | `X-API-Key` header | Context auth check | Metadata interceptor | `--api-key` flag or env var | API key in config |
-| `@paginated(cursor)` | `?cursor=X&limit=N` query params | Connection type (Relay spec) | Repeated field + page_token | `--page-token`, `--limit` flags | Paginated tool result |
-| `@paginated(offset)` | `?offset=N&limit=N` query params | `offset`/`limit` args | Offset + limit fields | `--offset`, `--limit` flags | Offset in input schema |
-| `@idempotent` | `Idempotency-Key` header | `idempotencyKey` arg | Metadata entry | Auto-retry safe | Tool retry hint |
-| `@rateLimit(N)` | `429` response + `Retry-After` | Error extension | `RESOURCE_EXHAUSTED` status | Backoff + retry | Backoff + retry |
-| `@validated` | Request body JSON Schema validation | Input type validation | Proto field validation | Flag/arg validation | `inputSchema` constraints |
-| `@deprecated(msg)` | `Deprecated` header + OpenAPI flag | `@deprecated` directive | Proto option | `[DEPRECATED]` in help | Tool description note |
-| `@streaming(server)` | SSE / `Transfer-Encoding: chunked` | Subscription | Server-streaming RPC | `--follow` / streaming stdout | Notification stream |
-| `@streaming(bidi)` | WebSocket upgrade | Subscription + mutation | Bidirectional RPC | Interactive mode | Not supported (skip) |
-| `@cached(ttl)` | `Cache-Control` headers | `@cacheControl` directive | N/A (skip) | Local file cache | N/A (skip) |
+| Trait | REST | GraphQL | gRPC | CLI | MCP | Claude Skills |
+|-------|------|---------|------|-----|-----|--------------|
+| `@auth(bearer)` | `Authorization` header validation | Context auth check | Metadata interceptor | `--token` flag or env var | OAuth 2.1 token flow | `allowed-tools` frontmatter |
+| `@auth(apiKey)` | `X-API-Key` header | Context auth check | Metadata interceptor | `--api-key` flag or env var | API key in config | `allowed-tools` frontmatter |
+| `@paginated(cursor)` | `?cursor=X&limit=N` query params | Connection type (Relay spec) | Repeated field + page_token | `--page-token`, `--limit` flags | Paginated tool result | Argument hint note |
+| `@paginated(offset)` | `?offset=N&limit=N` query params | `offset`/`limit` args | Offset + limit fields | `--offset`, `--limit` flags | Offset in input schema | Argument hint note |
+| `@idempotent` | `Idempotency-Key` header | `idempotencyKey` arg | Metadata entry | Auto-retry safe | Tool retry hint | N/A (skip) |
+| `@rateLimit(N)` | `429` response + `Retry-After` | Error extension | `RESOURCE_EXHAUSTED` status | Backoff + retry | Backoff + retry | N/A (skip) |
+| `@validated` | Request body JSON Schema validation | Input type validation | Proto field validation | Flag/arg validation | `inputSchema` constraints | Checklist items |
+| `@deprecated(msg)` | `Deprecated` header + OpenAPI flag | `@deprecated` directive | Proto option | `[DEPRECATED]` in help | Tool description note | Skill description note |
+| `@streaming(server)` | SSE / `Transfer-Encoding: chunked` | Subscription | Server-streaming RPC | `--follow` / streaming stdout | Notification stream | N/A (skip) |
+| `@streaming(bidi)` | WebSocket upgrade | Subscription + mutation | Bidirectional RPC | Interactive mode | Not supported (skip) | N/A (skip) |
+| `@cached(ttl)` | `Cache-Control` headers | `@cacheControl` directive | N/A (skip) | Local file cache | N/A (skip) | N/A (skip) |
 
-### 1.9 Grouping
+### 1.9 Annotation
+
+Attaches arbitrary metadata to concepts and actions for interface generation. The concept owns identity (which concept, which scope) and opaque content passthrough — targets read the keys they understand and ignore the rest. This is the input side of the enrichment pipeline (see §8).
+
+Annotation was identified as independent through Jackson's decomposition: enrichment metadata is a distinct concern from projection (which produces structural mappings), workflow (which orders steps), and rendering (which formats output). Annotation functions without those concepts, and they function without it.
+
+```
+@version(3)
+concept Annotation [N] {
+
+  purpose {
+    Attach arbitrary metadata to concepts and actions for
+    interface generation. The concept owns identity (which
+    concept, which scope) and opaque content passthrough.
+    Each target reads the keys it understands and ignores
+    the rest. New enrichment kinds require only a new YAML
+    key and a renderer in the target provider — zero concept
+    changes. See Architecture doc Section 1.9.
+  }
+
+  state {
+    annotations: set N
+    identity {
+      targetConcept: N -> String
+      scope: N -> String
+    }
+    content: N -> String
+  }
+
+  actions {
+    action annotate(concept: String, scope: String, content: String) {
+      description {
+        Attach opaque metadata to a concept-level or action-level
+        scope. The content string is JSON from the interface
+        manifest — its internal structure is not constrained by
+        this concept. Targets interpret keys they recognize
+        (e.g. tool-permissions, examples, design-principles,
+        scaffolds, trigger-description, validation-commands)
+        and pass through the rest. Scope is either "concept"
+        for concept-level or the action name for action-level.
+      }
+      -> ok(annotation: N, keyCount: Int) {
+        Metadata attached. keyCount is the number of top-level
+        keys in the content JSON.
+      }
+      -> invalidScope(scope: String) {
+        The scope references an action not found in the concept.
+      }
+    }
+
+    action resolve(concept: String) {
+      description {
+        Return all annotations for a concept and its actions.
+        Merges concept-level and action-level content into a
+        single result keyed by scope.
+      }
+      -> ok(annotations: list String) {
+        All annotations for the concept, serialized as JSON
+        with scope keys preserved.
+      }
+      -> notFound(concept: String) {
+        No annotations exist for the specified concept.
+      }
+    }
+  }
+}
+```
+
+#### Annotation Scoping
+
+Annotations attach at two levels, both stored as opaque JSON:
+
+| Scope | Description | Example Keys |
+|-------|-------------|-------------|
+| `concept` | Concept-level metadata applied to the whole skill/CLI/API | `tool-permissions`, `trigger-description`, `design-principles`, `scaffolds` |
+| `{actionName}` | Action-level metadata for a specific action | `examples`, `references`, `checklists` |
+
+The interface manifest drives annotation content:
+
+```yaml
+concepts:
+  Article:
+    annotations:
+      concept:
+        tool-permissions: [Read, Bash, Grep, Glob]
+        trigger-description: "When a user asks to create or manage articles"
+        design-principles:
+          - title: Slug Immutability
+            rule: Once assigned, article slugs never change
+      createArticle:
+        examples:
+          - label: "Create a draft"
+            language: bash
+            code: "copf article create --title 'My Post' --draft"
+```
+
+
+### 1.10 Renderer
+
+Renders opaque enrichment JSON into formatted output strings using data-driven templates. The key architectural insight: **patterns are code (shipped once), handlers are data (YAML-shippable).** Adding a new enrichment kind requires only a data entry mapping it to a built-in pattern — zero code changes.
+
+The Renderer sits between enrichment sources (Annotation, Workflow) and output consumers (target providers). It decouples _what_ to render from _how_ to render it, allowing the same enrichment data to produce different output for different formats (skill-md, cli-help, rest-guide, etc.).
+
+```
+@version(2)
+concept Renderer [R] {
+
+  purpose {
+    Render opaque enrichment JSON into formatted output strings
+    using data-driven templates. Handlers are declarative — each
+    maps an enrichment key to a built-in render pattern (list,
+    checklist, code-list, callout, heading-body, bad-good, etc.)
+    plus a template config with {{field}} interpolation. Patterns
+    are the small code surface shipped once; handlers are pure
+    data that can live in YAML manifests. New enrichment kinds
+    need only a YAML entry — zero code changes.
+    See Architecture doc Section 1.10.
+  }
+
+  state {
+    handlers: set R
+    registry {
+      key: R -> String
+      format: R -> String
+      order: R -> Int
+      pattern: R -> String
+      template: R -> String
+    }
+  }
+
+  actions {
+    action register(key: String, format: String, order: Int, pattern: String, template: String) {
+      description {
+        Register a handler for an enrichment key in a given format.
+        Order determines rendering position — lower numbers render
+        first. Pattern names a built-in render pattern (list,
+        checklist, code-list, link-list, callout, heading-body,
+        bad-good, scaffold-list, slash-list, keyed-checklist,
+        inline-list). Template is a JSON config for the pattern
+        with {{field}} interpolation placeholders. If a handler
+        already exists for the (key, format) pair, it is replaced.
+      }
+      -> ok(handler: R) {
+        Handler registered.
+      }
+      -> unknownPattern(pattern: String) {
+        The named pattern does not exist.
+      }
+      -> invalidTemplate(template: String, reason: String) {
+        Template config is malformed JSON.
+      }
+    }
+
+    action render(content: String, format: String) {
+      description {
+        Render enrichment content in the given format. Parses the
+        content JSON, walks top-level keys, dispatches each to the
+        registered handler's pattern with its template config. Keys
+        without a handler are collected in unhandledKeys for
+        transparency. Output sections are ordered by handler order.
+      }
+      -> ok(output: String, sectionCount: Int, unhandledKeys: list String) {
+        Rendered output with sections assembled in order.
+        unhandledKeys lists content keys that had no registered
+        handler for this format — not an error, just transparency.
+      }
+      -> invalidContent(reason: String) {
+        Content string is not valid JSON.
+      }
+      -> unknownFormat(format: String) {
+        No handlers registered for this format.
+      }
+    }
+
+    action listHandlers(format: String) {
+      -> ok(handlers: list String, count: Int) {
+        Handler keys for the format, in render order.
+      }
+    }
+
+    action listPatterns() {
+      -> ok(patterns: list String) {
+        Names of built-in patterns available for handler templates.
+      }
+    }
+  }
+}
+```
+
+#### Built-in Render Patterns
+
+Patterns are small code functions shipped with the framework. Each accepts data (from enrichment JSON) and a template config (from handler registration):
+
+| Pattern | Input Type | Output | Template Config |
+|---------|-----------|--------|-----------------|
+| `list` | `Array<object>` | Heading + bullet items | `heading?`, `prefix?`, `item` (with `{{field}}` interpolation) |
+| `checklist` | `string[]` | Markdown checkboxes | `heading?` |
+| `keyed-checklist` | `Record<string, string[]>` | Per-key checkbox groups | `keyHeading?` (with `{{key}}` interpolation) |
+| `link-list` | `{path, label}[]` | Markdown reference links | `heading?` |
+| `example-list` | `{label, language, code}[]` | Fenced code blocks | `heading?` |
+| `code-list` | `{label, command}[]` | Labeled code blocks | `heading?`, `language?` |
+| `heading-body` | `string` or `{heading?, body?}` | Single section | `heading?` |
+| `heading-body-list` | `{heading, body}[]` | Multiple sections | `headingLevel?` |
+| `callout` | `string` | Blockquote callout | `label` |
+| `inline-list` | `string[]` | Comma-separated with prefix | `prefix?` |
+| `bad-good` | `{title, description, bad?, good?}[]` | Comparison blocks | `heading?` |
+| `scaffold-list` | `{name, path, description}[]` | Sections with links | `heading?` |
+| `slash-list` | `(string \| {name, description})[]` | Skill references (`/name`) | `heading?` |
+
+#### Built-in Handlers
+
+Default handlers registered for `skill-md` and `cli-help` formats:
+
+| Enrichment Key | Order | Pattern | Purpose |
+|---------------|-------|---------|---------|
+| `tool-permissions` | 5 | `inline-list` | Allowed tools |
+| `trigger-description` | 10 | `callout` | "When to use" callout |
+| `design-principles` | 20 | `list` | Design principles with `**{{title}}:** {{rule}}` |
+| `checklists` | 40 | `keyed-checklist` | Step-specific or global checklists |
+| `examples` | 50 | `example-list` | Code examples |
+| `references` | 60 | `link-list` | Reference links |
+| `scaffolds` | 70 | `scaffold-list` | Scaffold templates |
+| `content-sections` | 80 | `heading-body-list` | Multi-section content |
+| `quick-reference` | 85 | `heading-body` | Single quick-reference section |
+| `anti-patterns` | 90 | `bad-good` | Anti-patterns with bad/good examples |
+| `validation-commands` | 95 | `code-list` | Bash validation commands |
+| `related-workflows` | 100 | `slash-list` | Related skills |
+
+#### Adding a Custom Enrichment Kind
+
+To render a new enrichment key (e.g. `migration-guide`), register a handler — no code needed:
+
+```yaml
+# In a YAML manifest or runtime registration
+renderer:
+  handlers:
+    - key: migration-guide
+      format: skill-md
+      order: 75
+      pattern: heading-body
+      template: { heading: "Migration Guide" }
+```
+
+Or at runtime:
+```typescript
+registerCustomHandler('migration-guide', 'skill-md', 75, 'heading-body', { heading: 'Migration Guide' });
+```
+
+
+### 1.11 Workflow
+
+Organizes concept actions into ordered, annotated workflow sequences for interface targets. The concept owns step ordering (structural) and opaque content passthrough for decorations. This is the structural enrichment companion to Annotation's metadata — Annotation says _what_ to enrich, Workflow says _in what order_.
+
+Workflow was identified as independent through Jackson's decomposition: step ordering is a distinct concern from annotation (metadata), rendering (formatting), and projection (structural mappings). Each functions without the others.
+
+```
+@version(3)
+concept Workflow [W] {
+
+  purpose {
+    Organize concept actions into ordered, annotated workflow
+    sequences for interface targets. The concept owns step
+    ordering (structural) and opaque content passthrough for
+    decorations. Each target reads the content keys it
+    understands (checklists, design-principles, anti-patterns,
+    validation-commands, etc.) and ignores the rest. New
+    decoration kinds require only a new YAML key and a
+    renderer in the target provider — zero concept changes.
+    See Architecture doc Section 1.11.
+  }
+
+  state {
+    workflows: set W
+    config {
+      concept: W -> String
+      steps: W -> list { action: String, title: String, prose: String, order: Int }
+    }
+    content: W -> String
+  }
+
+  actions {
+    action define(concept: String, steps: list String, content: String) {
+      -> ok(workflow: W, stepCount: Int) {
+        Workflow created with ordered steps. Content JSON
+        attached as opaque decoration.
+      }
+      -> invalidAction(action: String) {
+        A step references an action not found in the concept.
+      }
+      -> emptySteps() {
+        No steps were provided.
+      }
+    }
+
+    action render(workflow: W, format: String) {
+      -> ok(content: String) {
+        Rendered workflow content in the requested format.
+      }
+      -> unknownFormat(format: String) {
+        The requested format is not recognized.
+      }
+    }
+  }
+}
+```
+
+#### Workflow in the Interface Manifest
+
+```yaml
+concepts:
+  Article:
+    workflows:
+      steps:
+        - action: createArticle
+          title: Create the article
+          prose: Draft a new article with title, description, and body content
+        - action: addTag
+          title: Tag it
+          prose: Add relevant tags for categorization
+        - action: publishArticle
+          title: Publish
+          prose: Publish the article to make it visible to readers
+      checklists:
+        createArticle:
+          - Provide title, description, body, and tags
+          - Use markdown formatting for body content
+      design-principles:
+        - title: Slug Immutability
+          rule: Once assigned, article slugs never change
+      validation-commands:
+        - label: Verify article created
+          command: copf article list --limit 1
+```
+
+#### Step-Interleaved Content
+
+Some enrichment keys support `afterStep` markers for step-specific placement:
+
+```yaml
+content-sections:
+  - heading: "Important Note"
+    body: "Check permissions before proceeding"
+    afterStep: 1    # Rendered after step 1
+
+validation-commands:
+  - label: "Verify creation"
+    command: "copf article list"
+    afterStep: 1    # Rendered inline after step 1
+  - label: "Verify full workflow"
+    command: "copf article get --slug my-article"
+    # No afterStep → rendered in global validation section
+```
+
+Targets that render workflows (e.g. ClaudeSkillsTarget) interleave step-specific content inline and collect global content into dedicated sections.
+
+
+### 1.12 Grouping
 
 Organizes concepts into named groups using structural or behavioral classification strategies. All interface targets can use grouping to organize their output (e.g., Claude Skills groups concepts into skill files, REST could group routes by domain, MCP could group tools vs resources). Each target has its own default grouping mode, but all 8 modes are available to all targets.
 
@@ -962,7 +1364,7 @@ concept GrpcTarget [G] {
 ### 2.4 CliTarget
 
 ```
-@version(1)
+@version(2)
 concept CliTarget [C] {
 
   purpose {
@@ -970,38 +1372,71 @@ concept CliTarget [C] {
     command/subcommand structure, flag derivation, argument
     mapping, output formatting (JSON/table/YAML), shell
     completion generation, and interactive mode for streaming.
+    See Architecture doc Section 2.4.
   }
 
   state {
     commands: set C
     config {
       binaryName: C -> String
-      shell: C -> option String
+      shell: C -> String
       outputFormats: C -> list String
+    }
+    commandTree {
+      parent: C -> option C
+      name: C -> String
+      description: C -> String
+      children: C -> list C
+      depth: C -> Int
     }
     mapping {
       concept: C -> String
       action: C -> String
       command: C -> String
-      args: C -> list { name: String, kind: String, required: Bool }
+      args: C -> list { name: String, kind: String, required: Bool, positional: Bool, choices: list String, default: String }
+      flags: C -> list { name: String, type: String, required: Bool, description: String, short: String }
+    }
+    help {
+      synopsis: C -> String
+      longDescription: C -> option String
+      examples: C -> list { description: String, command: String }
+      seeAlso: C -> list String
     }
   }
 
   actions {
     action generate(projection: String, config: String) {
-      -> ok(commands: list C, files: list String) {
-        Concept name → command group. Action name → subcommand.
-        Required scalar params → positional arguments.
-        Optional params → flags (--flag value).
-        Enum params → flag with choices (--status active|archived).
-        Bool params → boolean flags (--verbose/--no-verbose).
-        Complex params → JSON string or --from-file flag.
-        Return variants → formatted stdout + exit codes.
-        Generate command tree, completions, man pages.
+      -> ok(commands: list String, files: list String) {
+        CLI command tree generated from projection. Concept
+        names become top-level command groups. Action names
+        become subcommands. Flags derived from action parameters.
+        Shell completion scripts produced for configured shells.
+        Output formatters attached per command. Help text
+        generated from concept purpose and action prose.
       }
       -> tooManyPositional(action: String, count: Int) {
-        More than 3 required params — CLI ergonomics suffer.
-        Generates all as flags with warning.
+        Action has more positional arguments than CLI
+        conventions allow. Excess arguments should be
+        converted to flags via annotation.
+      }
+    }
+
+    action validate(command: C) {
+      -> ok(command: C) {
+        Command tree is well-formed. No flag name collisions.
+        All required arguments have consistent types. Shell
+        completion scripts are syntactically valid.
+      }
+      -> flagCollision(command: C, flag: String, actions: list String) {
+        Two actions in the same command subtree define flags
+        with the same name but different types.
+      }
+    }
+
+    action listCommands(concept: String) {
+      -> ok(commands: list String, subcommands: list String) {
+        Return all generated commands and subcommands for
+        a concept, including the full command tree hierarchy.
       }
     }
   }
@@ -1114,7 +1549,156 @@ Tool naming: "{concept}_{action}" in snake_case
 ```
 
 
-### 2.6 Spec Document Targets
+### 2.6 ClaudeSkillsTarget
+
+```
+@version(2)
+concept ClaudeSkillsTarget [K] {
+
+  purpose {
+    Generate Claude Code skill files from concept projections.
+    The concept owns identity (name, concept, grouping),
+    structure (frontmatter, body, action mappings), and opaque
+    content passthrough for enrichment. Each renderer reads the
+    enrichment keys it understands (design-principles, workflow,
+    checklists, references, examples, scaffolds, anti-patterns,
+    trigger-description, validation-commands, etc.) and ignores
+    the rest. New enrichment kinds require only a new YAML key
+    and a renderer update — zero concept changes.
+    See Architecture doc Section 2.6.
+  }
+
+  state {
+    skills: set K
+    config {
+      name: K -> String
+      progressive: K -> Bool
+      grouping: K -> String
+    }
+    skillContent {
+      concept: K -> String
+      frontmatter: K -> String
+      body: K -> String
+    }
+    content: K -> String
+    mapping {
+      concept: K -> String
+      actionToCommand: K -> list { action: String, command: String }
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(skills: list K, files: list String) {
+        Skill files generated. SKILL.md contains YAML frontmatter
+        with name, description, allowed-tools, and argument-hint.
+        Body contains either rich workflow-based content or flat
+        command listing depending on available enrichment data.
+      }
+      -> missingProjection(concept: String) {
+        No projection found for the specified concept.
+      }
+    }
+
+    action validate(skill: K) {
+      -> ok(skill: K) {
+        SKILL.md has valid YAML frontmatter. All referenced
+        scaffold files exist. All related skill names resolve.
+      }
+      -> invalidFrontmatter(skill: K, errors: list String) {
+        YAML frontmatter is malformed or missing required fields.
+      }
+      -> brokenReferences(skill: K, missing: list String) {
+        Referenced scaffold files or related skills do not exist.
+      }
+    }
+
+    action listSkills(kit: String) {
+      -> ok(skills: list String, enriched: list String, flat: list String) {
+        Return all generated skills grouped by whether they
+        have rich workflow-based content or flat command listings.
+      }
+    }
+  }
+}
+```
+
+#### Output Structure
+
+Each concept produces two files:
+
+```
+generated/interfaces/claude-skills/{concept}/
+├── SKILL.md           # Markdown skill file with YAML frontmatter
+└── {concept}.commands.ts   # TypeScript command runner
+```
+
+**SKILL.md structure:**
+```markdown
+---
+name: {concept-name}
+description: {description from manifest}
+argument-hint: {argument template or per-action hints}
+allowed-tools: Read, Bash, Grep, Glob
+---
+
+> **When to use:** {trigger description}
+
+## Design Principles
+
+- **Slug Immutability:** Once assigned, article slugs never change
+
+## Steps
+
+### Step 1: Create the article
+{prose description}
+
+**Arguments:**
+- `--title` (required): Article title
+- `--body` (required): Article body
+
+- [ ] Provide title, description, body, and tags
+
+*Verify creation:*
+```bash
+copf article list --limit 1
+\```
+
+### Step 2: Tag it
+...
+
+## Anti-Patterns
+...
+
+## Validation
+...
+
+## Related Skills
+- /create-concept
+- /create-sync
+```
+
+#### Three Rendering Modes
+
+| Mode | When | Content |
+|------|------|---------|
+| **Workflow-based** | `workflows[concept]` exists in manifest | Numbered steps with interleaved enrichment |
+| **Flat** | Single concept, no workflow | Commands section with per-action subsections |
+| **Multi-concept** | Grouping groups multiple concepts | Single SKILL.md per group with concept subsections |
+
+#### Enrichment Merge Priority
+
+When both Workflow and Annotation provide content for the same concept, workflow keys override annotation keys:
+
+```
+1. Annotation content (lower priority)
+2. Workflow content (overrides annotation)
+3. Structural keys excluded from merge: concept, steps, trigger-patterns,
+   tool-permissions, argument-template, trigger-exclude
+```
+
+
+### 2.7 Spec Document Targets
 
 #### OpenApiTarget
 
@@ -1188,7 +1772,7 @@ concept AsyncApiTarget [A] {
 ```
 
 
-### 2.7 SDK Language Targets
+### 2.8 SDK Language Targets
 
 Each follows the same pattern. Two-layer architecture: generated outer layer (types, method signatures, serialization) + hand-maintained runtime (HTTP client, auth, retries, pagination helpers).
 
@@ -1345,7 +1929,56 @@ sync GenerateOnPlan [eager] {
 ```
 
 
-### 3.3 Concept Grouping
+### 3.3 Enrichment Pipeline
+
+Before target dispatch, the Generator triggers the enrichment pipeline: annotations are resolved, workflows are defined, and the Renderer processes opaque enrichment JSON into format-specific output.
+
+```
+# Generator resolves annotations before target rendering.
+# Annotations provide rich metadata (examples, references,
+# tool permissions) that targets consume during output generation.
+sync AnnotateBeforeGenerate [eager] {
+  when {
+    Generator/generate: [ plan: ?plan ]
+      => [ plan: ?plan ]
+  }
+  then {
+    Annotation/resolve: [ concept: ?concept ]
+  }
+}
+
+# Generator triggers workflow definition before rendering target output.
+# Workflow organizes actions into ordered, annotated sequences that
+# each target renders in its natural format.
+sync WorkflowBeforeRender [eager] {
+  when {
+    Generator/generate: [ plan: ?plan ]
+      => [ plan: ?plan ]
+  }
+  then {
+    Workflow/define: [ concept: ?concept; steps: ?steps; config: ?config ]
+  }
+}
+
+# Render enrichment content before target output assembly.
+# After workflow and annotation resolution, the Renderer
+# processes opaque JSON into format-specific output that
+# targets embed in their generated files.
+sync RenderEnrichment [eager] {
+  when {
+    Workflow/define: [ concept: ?concept; steps: ?steps; content: ?content ]
+      => [ workflow: ?w; stepCount: ?sc ]
+  }
+  then {
+    Renderer/render: [ content: ?content; format: ?format ]
+  }
+}
+```
+
+The enrichment pipeline flows: `Generator/generate` → `Annotation/resolve` + `Workflow/define` → `Renderer/render` → target dispatch.
+
+
+### 3.4 Concept Grouping
 
 ```
 # Generator triggers concept grouping before dispatching to targets.
@@ -1363,7 +1996,7 @@ sync GroupBeforeDispatch [eager] {
 ```
 
 
-### 3.4 Target Routing
+### 3.5 Target Routing
 
 ```
 # Generator dispatches to Target for each configured target type
@@ -1429,10 +2062,20 @@ sync RouteToMcp [eager] {
     McpTarget/generate: [ projection: ?p; config: ?c ]
   }
 }
+
+sync RouteToClaudeSkills [eager] {
+  when {
+    Target/generate: [ projection: ?p; targetType: "claude-skills"; config: ?c ]
+      => ok[ output: ?o ]
+  }
+  then {
+    ClaudeSkillsTarget/generate: [ projection: ?p; config: ?c ]
+  }
+}
 ```
 
 
-### 3.5 SDK Routing
+### 3.6 SDK Routing
 
 ```
 # Generator dispatches to Sdk for each configured language
@@ -1471,7 +2114,7 @@ sync RouteToPySdk [eager] {
 ```
 
 
-### 3.6 Spec Document Routing
+### 3.7 Spec Document Routing
 
 ```
 # Generator dispatches to Spec for each configured format
@@ -1509,7 +2152,7 @@ sync RouteToAsyncApi [eager] {
 ```
 
 
-### 3.7 Middleware Injection
+### 3.8 Middleware Injection
 
 ```
 # Any target provider complete → inject middleware
@@ -1535,6 +2178,16 @@ sync InjectMiddlewareGraphql [eager] {
 
 # Same pattern for gRPC, CLI, MCP...
 
+sync InjectMiddlewareClaudeSkills [eager] {
+  when {
+    ClaudeSkillsTarget/generate: [ projection: ?p ]
+      => ok[ skills: ?skills; files: ?files ]
+  }
+  then {
+    Middleware/resolve: [ traits: ?traits; target: "claude-skills" ]
+  }
+}
+
 # Middleware resolved → inject into output
 sync ApplyMiddleware [eager] {
   when {
@@ -1549,7 +2202,7 @@ sync ApplyMiddleware [eager] {
 ```
 
 
-### 3.8 Output Chain
+### 3.9 Output Chain
 
 ```
 # Middleware injected → write files
@@ -1580,7 +2233,7 @@ sync FormatOnWrite [eager] {
 ```
 
 
-### 3.9 Surface Composition
+### 3.10 Surface Composition
 
 ```
 # All targets for a kit complete → compose surface
@@ -1656,6 +2309,10 @@ targets:
     name: my-app-mcp
     transport: stdio          # stdio | sse | http
 
+  claude-skills:
+    progressive: true         # Level 0/1/2 progressive output
+    grouping: per-concept     # per-concept | per-kit | single | custom | by-crud | ...
+
 # ─── SDK LANGUAGES ────────────────────────────────────
 sdk:
   typescript:
@@ -1706,6 +2363,34 @@ concepts:
         config: { style: cursor }
         actions: [listTodos, searchTodos]
 
+    # ─── ENRICHMENT (opaque content) ───────────────────
+    annotations:
+      concept:
+        tool-permissions: [Read, Bash, Grep, Glob]
+        trigger-description: "When a user asks to create or manage todos"
+        design-principles:
+          - title: Single Responsibility
+            rule: Each todo owns its own completion state
+      addTodo:
+        examples:
+          - label: "Create a simple todo"
+            language: bash
+            code: "copf todo add 'Buy groceries'"
+
+    workflows:
+      steps:
+        - action: addTodo
+          title: Create the todo
+          prose: Add a new todo item to the list
+        - action: markComplete
+          title: Complete it
+          prose: Mark the todo as done
+      checklists:
+        addTodo:
+          - Provide descriptive todo text
+          - Set priority if needed
+
+    # ─── TARGET OVERRIDES ──────────────────────────────
     rest:
       path: /todos
       actions:
@@ -1784,97 +2469,149 @@ concepts:
   Projection:
     spec: ./concepts/projection.concept
     params:
-      P: { as: projection-ref }
+      P: { as: projection-ref, description: "Reference to an enriched concept projection" }
 
   Generator:
     spec: ./concepts/generator.concept
     params:
-      G: { as: generator-plan-ref }
+      G: { as: generator-plan-ref, description: "Reference to a generation plan" }
 
   Emitter:
     spec: ./concepts/emitter.concept
     params:
-      E: { as: emitter-file-ref }
+      E: { as: emitter-file-ref, description: "Reference to a generated file" }
 
   Surface:
     spec: ./concepts/surface.concept
     params:
-      S: { as: surface-ref }
+      S: { as: surface-ref, description: "Reference to a composed API surface" }
 
   Middleware:
     spec: ./concepts/middleware.concept
     params:
-      M: { as: middleware-ref }
+      M: { as: middleware-ref, description: "Reference to a middleware definition" }
+
+  Grouping:
+    spec: ./concepts/grouping.concept
+    params:
+      G: { as: grouping-ref, description: "Reference to a concept grouping result" }
+
+  Workflow:
+    spec: ./concepts/workflow.concept
+    params:
+      W: { as: workflow-ref, description: "Reference to an ordered action sequence" }
+
+  Annotation:
+    spec: ./concepts/annotation.concept
+    params:
+      N: { as: annotation-ref, description: "Reference to concept/action metadata" }
+
+  Renderer:
+    spec: ./concepts/renderer.concept
+    params:
+      R: { as: renderer-handler-ref, description: "Reference to a registered render handler" }
 
   # ─── Coordination Concepts ──────────────────────────
   Target:
     spec: ./concepts/target.concept
     params:
-      T: { as: target-output-ref }
+      T: { as: target-output-ref, description: "Reference to a target generation output" }
 
   Sdk:
     spec: ./concepts/sdk.concept
     params:
-      S: { as: sdk-package-ref }
+      S: { as: sdk-package-ref, description: "Reference to a generated SDK package" }
 
   Spec:
     spec: ./concepts/spec.concept
     params:
-      D: { as: spec-document-ref }
+      D: { as: spec-document-ref, description: "Reference to a generated spec document" }
 
   # ─── Target Provider Concepts (load what you need) ──
   RestTarget:
     spec: ./concepts/providers/rest-target.concept
+    params:
+      R: { as: rest-route-ref, description: "Reference to a generated REST route" }
     optional: true
 
   GraphqlTarget:
     spec: ./concepts/providers/graphql-target.concept
+    params:
+      Q: { as: graphql-type-ref, description: "Reference to a generated GraphQL type" }
     optional: true
 
   GrpcTarget:
     spec: ./concepts/providers/grpc-target.concept
+    params:
+      G: { as: grpc-service-ref, description: "Reference to a generated gRPC service" }
     optional: true
 
   CliTarget:
     spec: ./concepts/providers/cli-target.concept
+    params:
+      C: { as: cli-command-ref, description: "Reference to a generated CLI command" }
     optional: true
 
   McpTarget:
     spec: ./concepts/providers/mcp-target.concept
+    params:
+      M: { as: mcp-tool-ref, description: "Reference to a generated MCP tool" }
+    optional: true
+
+  ClaudeSkillsTarget:
+    spec: ./concepts/providers/claude-skills-target.concept
+    params:
+      K: { as: claude-skill-ref, description: "Reference to a generated Claude Code skill" }
     optional: true
 
   # ─── Spec Document Providers ────────────────────────
   OpenApiTarget:
     spec: ./concepts/providers/openapi-target.concept
+    params:
+      O: { as: openapi-spec-ref, description: "Reference to a generated OpenAPI spec" }
     optional: true
 
   AsyncApiTarget:
     spec: ./concepts/providers/asyncapi-target.concept
+    params:
+      A: { as: asyncapi-spec-ref, description: "Reference to a generated AsyncAPI spec" }
     optional: true
 
   # ─── SDK Language Providers (load what you need) ────
   TsSdkTarget:
     spec: ./concepts/providers/ts-sdk-target.concept
+    params:
+      S: { as: ts-sdk-package-ref, description: "Reference to a generated TypeScript SDK" }
     optional: true
 
   PySdkTarget:
     spec: ./concepts/providers/py-sdk-target.concept
+    params:
+      S: { as: py-sdk-package-ref, description: "Reference to a generated Python SDK" }
     optional: true
 
   GoSdkTarget:
     spec: ./concepts/providers/go-sdk-target.concept
+    params:
+      S: { as: go-sdk-module-ref, description: "Reference to a generated Go SDK module" }
     optional: true
 
   RustSdkTarget:
     spec: ./concepts/providers/rust-sdk-target.concept
+    params:
+      S: { as: rust-sdk-crate-ref, description: "Reference to a generated Rust SDK crate" }
     optional: true
 
   JavaSdkTarget:
     spec: ./concepts/providers/java-sdk-target.concept
+    params:
+      S: { as: java-sdk-artifact-ref, description: "Reference to a generated Java SDK artifact" }
     optional: true
 
   SwiftSdkTarget:
     spec: ./concepts/providers/swift-sdk-target.concept
+    params:
+      S: { as: swift-sdk-package-ref, description: "Reference to a generated Swift SDK package" }
     optional: true
 
 syncs:
@@ -1885,6 +2622,10 @@ syncs:
     - path: ./syncs/generate-on-plan.sync
     - path: ./syncs/write-on-inject.sync
     - path: ./syncs/format-on-write.sync
+    - path: ./syncs/group-before-dispatch.sync
+    - path: ./syncs/workflow-before-render.sync
+    - path: ./syncs/annotate-before-generate.sync
+    - path: ./syncs/render-enrichment.sync
 
   recommended:
     - path: ./syncs/compose-on-complete.sync
@@ -1894,14 +2635,21 @@ syncs:
     - path: ./syncs/block-on-breaking.sync
       name: BreakingChangeGuard
 
-  # ─── Target Routing Syncs ──────────────────────────
   integration:
+    # Target dispatch and routing
+    - path: ./syncs/dispatch-to-target.sync
+    - path: ./syncs/dispatch-to-sdk.sync
+    - path: ./syncs/dispatch-to-spec.sync
+    - path: ./syncs/apply-middleware.sync
+    - path: ./syncs/write-entrypoint.sync
+
     # Target routing
     - path: ./syncs/routing/route-to-rest.sync
     - path: ./syncs/routing/route-to-graphql.sync
     - path: ./syncs/routing/route-to-grpc.sync
     - path: ./syncs/routing/route-to-cli.sync
     - path: ./syncs/routing/route-to-mcp.sync
+    - path: ./syncs/routing/route-to-claude-skills.sync
 
     # Spec routing
     - path: ./syncs/routing/route-to-openapi.sync
@@ -1921,6 +2669,7 @@ syncs:
     - path: ./syncs/routing/inject-middleware-grpc.sync
     - path: ./syncs/routing/inject-middleware-cli.sync
     - path: ./syncs/routing/inject-middleware-mcp.sync
+    - path: ./syncs/routing/inject-middleware-claude-skills.sync
 ```
 
 ---
@@ -1982,6 +2731,7 @@ cat app.interface.yaml
 #   rest: { basePath: /api/v1 }
 #   cli: { name: myapp }
 #   mcp: { name: myapp-mcp }
+#   claude-skills: { progressive: true }
 # sdk:
 #   typescript: { packageName: "@myapp/client" }
 # specs:
@@ -1994,14 +2744,16 @@ copf interface generate
 # Interface Generation Plan
 # ├─ Kit: todo-app v1.0.0 (3 concepts: Todo, User, Session)
 # ├─ Projection: 3 concepts, 12 actions, 8 traits
+# ├─ Enrichment: 3 workflows, 9 annotations, 12 render handlers
 # ├─ Targets:
 # │  ├─ REST: 12 routes (4 inferred, 8 annotated)
 # │  ├─ CLI: 12 commands under 3 groups
-# │  └─ MCP: 8 tools, 3 resources, 1 resource template
+# │  ├─ MCP: 8 tools, 3 resources, 1 resource template
+# │  └─ Claude Skills: 3 skills (3 workflow-enriched, 0 flat)
 # ├─ SDK: TypeScript (@myapp/client)
 # ├─ Specs: OpenAPI 3.1
 # ├─ Middleware: auth(bearer), rateLimit(100/60s), validated
-# └─ Estimated: 47 files
+# └─ Estimated: 53 files
 #
 # Pre-generation validation:
 #   ✅ All annotations resolve
@@ -2009,38 +2761,47 @@ copf interface generate
 #   ✅ Resource mappings consistent
 #   ⚠  Todo.archiveCompleted: no @http annotation, inferred POST /todos/archive-completed
 #
-# Generated 47 files (12 unchanged, 35 written) in 2.3s
+# Generated 53 files (12 unchanged, 41 written) in 2.3s
 ```
 
 ### What happens under the hood
 
 1. `SchemaGen/generate` produces ConceptManifests for Todo, User, Session
-2. `Projection/project` enriches each manifest with interface annotations
+2. `Projection/project` enriches each manifest with interface annotations + opaque content
 3. `Projection/validate` checks for breaking changes against previous run
 4. `Generator/plan` computes target list, concept list, estimated files
-5. `Generator/generate` dispatches to Target, Sdk, and Spec coordination concepts
-6. Target routing: `Target/generate(targetType: "rest")` → `RestTarget/generate` (integration sync)
-7. `RestTarget/generate` produces route handlers + types per concept
-8. `Middleware/resolve(traits: [auth, rateLimit, validated], target: "rest")` → ordered middleware chain
-9. `Middleware/inject` wraps route handlers in middleware
-10. `Emitter/write` writes files (content-addressed — skips unchanged)
-11. `Emitter/format` runs prettier on written TypeScript files
-12. `Surface/compose` merges per-concept REST routes into unified router
-13. `Emitter/write` writes composed entrypoint (router.ts)
-14. `Emitter/clean` removes orphaned files from previous runs
-15. Parallel: same flow for CLI, MCP, TypeScript SDK, OpenAPI spec
-16. `Spec/validate` runs OpenAPI linter on generated spec document
+5. `Generator/generate` triggers the enrichment pipeline:
+   - `Annotation/resolve` resolves per-concept and per-action metadata
+   - `Workflow/define` creates ordered step sequences from manifest
+   - `Renderer/render` processes enrichment JSON into format-specific output
+6. `Grouping/group` organizes concepts into named groups (per-concept, by-crud, etc.)
+7. `Generator/generate` dispatches to Target, Sdk, and Spec coordination concepts
+8. Target routing: `Target/generate(targetType: "rest")` → `RestTarget/generate` (integration sync)
+9. Target routing: `Target/generate(targetType: "claude-skills")` → `ClaudeSkillsTarget/generate`
+10. `RestTarget/generate` produces route handlers + types per concept
+11. `ClaudeSkillsTarget/generate` produces SKILL.md + .commands.ts with enrichment rendering
+12. `Middleware/resolve(traits: [auth, rateLimit, validated], target: "rest")` → ordered middleware chain
+13. `Middleware/inject` wraps route handlers in middleware
+14. `Emitter/write` writes files (content-addressed — skips unchanged)
+15. `Emitter/format` runs prettier on written TypeScript files
+16. `Surface/compose` merges per-concept REST routes into unified router
+17. `Emitter/write` writes composed entrypoint (router.ts)
+18. `Emitter/clean` removes orphaned files from previous runs
+19. Parallel: same flow for CLI, MCP, TypeScript SDK, OpenAPI spec
+20. `Spec/validate` runs OpenAPI linter on generated spec document
 
 ### Concept count
 
 | Category | Concepts | Notes |
 |----------|----------|-------|
 | Orchestration | 5 | Projection, Generator, Emitter, Surface, Middleware |
+| Enrichment | 3 | Annotation, Renderer, Workflow |
+| Cross-cutting | 1 | Grouping |
 | Coordination | 3 | Target, Sdk, Spec |
-| Target providers | 5 | RestTarget, GraphqlTarget, GrpcTarget, CliTarget, McpTarget |
+| Target providers | 6 | RestTarget, GraphqlTarget, GrpcTarget, CliTarget, McpTarget, ClaudeSkillsTarget |
 | Spec providers | 2 | OpenApiTarget, AsyncApiTarget |
 | SDK providers | 6 | TypeScript, Python, Go, Rust, Java, Swift |
-| **Total** | **21** | 8 required + 13 optional providers |
+| **Total** | **26** | 12 required + 14 optional providers |
 
 ### Integration with deploy kit
 
@@ -2055,6 +2816,9 @@ runtimes:
   mcp:
     type: aws-lambda
     entrypoint: ./generated/mcp/server.ts     # from interface kit
+
+# Claude Skills are deployed to .claude/skills/ (local, not remote)
+# copf interface generate --target claude-skills copies to .claude/skills/
 ```
 
 The deploy kit deploys what the interface kit generates. The interface kit generates what concept specs declare. Concept specs are the single source of truth.
@@ -2093,6 +2857,43 @@ Traits on Projection declare _intent_ (`@auth(bearer)`). Middleware owns the _im
 ### Why Surface exists
 
 Without Surface, generating a kit with 5 concepts produces 5 independent REST APIs, 5 separate CLI binaries, 5 MCP servers. Surface composes them into cohesive interfaces — one API, one CLI, one MCP server. This is the interface kit analogue of COIF's Composition kit (Dashboard, Workflow, App).
+
+### Why Annotation, Workflow, and Renderer are separate concepts
+
+These three enrichment concepts could appear to be one concept ("enrichment") but are genuinely independent through Jackson's decomposition:
+
+- **Annotation** owns _what_ metadata exists for a concept (opaque key-value content). It functions without Workflow and Renderer.
+- **Workflow** owns _step ordering_ — how actions sequence into a guided process. It functions without Annotation (steps can exist without metadata) and without Renderer (workflows can be consumed directly by targets).
+- **Renderer** owns _formatting_ — how enrichment data produces output strings. It functions without Annotation (it renders any JSON) and without Workflow (it renders non-workflow content too).
+
+This decomposition enables several composition patterns:
+1. Annotation alone → flat skill with per-action metadata (examples, references)
+2. Annotation + Workflow → workflow skill with step-interleaved metadata
+3. Annotation + Renderer → auto-formatted enrichment for any target
+4. All three → full enrichment pipeline with ordered, rendered output
+
+
+### Why the opaque content model
+
+The enrichment concepts (Annotation, Workflow, Projection) store metadata as `content: X -> String` — an opaque JSON string rather than typed fields. This design was chosen over hardcoded enrichment fields for extensibility:
+
+1. **Zero concept changes for new enrichment kinds.** Adding a `migration-guide` enrichment key requires only a YAML entry and a Renderer handler — no concept spec updates.
+2. **Targets interpret what they understand.** ClaudeSkillsTarget reads `tool-permissions` and `trigger-description`; a future RestTarget reads `rate-limit-config`. Each ignores the other's keys.
+3. **YAML-shippable handlers.** The Renderer's pattern + template model means handler definitions are pure data. They can ship in kit YAML manifests, not code.
+4. **Decoupled evolution.** New targets can introduce new enrichment keys without coordination with existing targets or concept specs.
+
+The trade-off is weaker static guarantees — enrichment keys are strings, not typed fields. This is mitigated by the Renderer's `unhandledKeys` transparency: if a key has no handler, it appears in the render result for the target to decide how to handle.
+
+
+### Why ClaudeSkillsTarget exists alongside CliTarget
+
+Claude Code skills and CLIs serve different audiences and have different constraints:
+
+- **CliTarget** produces command-line binaries with shell completion, man pages, and exit codes. Its audience is human developers running terminal commands.
+- **ClaudeSkillsTarget** produces SKILL.md files with YAML frontmatter, guided workflows, and design principles. Its audience is an LLM (Claude) interpreting natural-language instructions.
+
+The output formats are fundamentally different: CLIs need argument parsing, flag derivation, and exit code mapping. Skills need trigger descriptions, step-by-step prose, checklists, and anti-patterns. Conflating them would violate the singularity principle.
+
 
 ### What remains pre-conceptual
 
