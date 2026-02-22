@@ -1,0 +1,102 @@
+@version(1)
+concept ClaudeSkillsTarget [K] {
+
+  purpose {
+    Generate Claude Code skill files from concept projections
+    enriched with workflow, annotation, and scaffold metadata.
+    Produces SKILL.md files with YAML frontmatter, numbered
+    step-by-step workflows, design principles, checklists,
+    reference links, example walkthroughs, scaffold templates,
+    anti-patterns, related skill links, trigger descriptions,
+    and validation commands. Produces TypeScript command runners
+    for programmatic dispatch. See Architecture doc Section 2.7.
+  }
+
+  state {
+    skills: set K
+    config {
+      name: K -> String
+      progressive: K -> Bool
+      grouping: K -> String
+    }
+    skillContent {
+      concept: K -> String
+      frontmatter: K -> String
+      body: K -> String
+    }
+    enrichment {
+      designPrinciples: K -> list { title: String, rule: String }
+      workflow: K -> list { action: String, title: String, prose: String, order: Int }
+      checklists: K -> list { step: String, items: list String }
+      references: K -> list { path: String, label: String }
+      examples: K -> list { label: String, language: String, code: String }
+      scaffolds: K -> list { name: String, path: String, description: String }
+      antiPatterns: K -> list { title: String, description: String, bad: String, good: String }
+      relatedSkills: K -> list { name: String, description: String }
+      triggerDescription: K -> option String
+      triggerPatterns: K -> list String
+      triggerExclude: K -> list String
+      validationCommands: K -> list { label: String, command: String }
+      quickReference: K -> option { heading: String, body: String }
+      contentSections: K -> list { heading: String, body: String, afterStep: Int }
+    }
+    mapping {
+      concept: K -> String
+      actionToCommand: K -> list { action: String, command: String }
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      description {
+        Generate a Claude Code SKILL.md and TypeScript command
+        runner from a concept projection. When the projection
+        includes workflow and annotation enrichment data, produces
+        rich skills matching the quality of handcrafted skills
+        with numbered steps, design principles, checklists,
+        references, examples, scaffolds, anti-patterns, related
+        skills, trigger descriptions, and validation commands.
+        When enrichment data is absent, falls back to flat
+        command listing.
+      }
+      -> ok(skills: list K, files: list String) {
+        Skill files generated. SKILL.md contains YAML frontmatter
+        with name, description, allowed-tools, and argument-hint.
+        Body contains either rich workflow-based content or flat
+        command listing depending on available enrichment data.
+        TypeScript command runner dispatches commands to the kernel.
+      }
+      -> missingEnrichment(concept: String, fields: list String) {
+        Concept has workflow defined but key enrichment fields
+        are missing. Generates with available data and lists
+        missing fields as warnings.
+      }
+    }
+
+    action validate(skill: K) {
+      -> ok(skill: K) {
+        SKILL.md has valid YAML frontmatter. All referenced
+        scaffold files exist. All related skill names resolve.
+        Trigger patterns are syntactically valid.
+      }
+      -> invalidFrontmatter(skill: K, errors: list String) {
+        YAML frontmatter is malformed or missing required fields.
+      }
+      -> brokenReferences(skill: K, missing: list String) {
+        Referenced scaffold files or related skills do not exist.
+      }
+    }
+
+    action listSkills(kit: String) {
+      -> ok(skills: list String, enriched: list String, flat: list String) {
+        Return all generated skills grouped by whether they
+        have rich workflow-based content or flat command listings.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "spec-parser-projection", config: "{\"progressive\":true}") -> ok(skills: s, files: f)
+    then listSkills(kit: "test-kit") -> ok(skills: all, enriched: e, flat: fl)
+  }
+}

@@ -1,0 +1,10 @@
+# Route Target/generate to ClaudeSkillsTarget — Architecture doc: Interface Kit, Sync Section 3.3
+
+sync RouteToClaudeSkills [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "claude-skills"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  ClaudeSkillsTarget/generate: [ projection: ?p; config: ?c ]
+}

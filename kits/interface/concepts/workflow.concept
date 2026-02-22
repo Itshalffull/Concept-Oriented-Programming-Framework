@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Workflow [W] {
 
   purpose {
@@ -6,6 +6,7 @@ concept Workflow [W] {
     sequences for interface targets. Each target renders workflows
     in its natural format — skills as numbered steps, CLI as
     help pages, REST as getting-started guides, SDKs as tutorials.
+    See Architecture doc Section 1.8.
   }
 
   state {
@@ -17,9 +18,15 @@ concept Workflow [W] {
     decoration {
       checklists: W -> list { step: String, items: list String }
       references: W -> list { step: String, path: String, label: String }
-      examples: W -> list { step: String, language: String, code: String }
-      antiPatterns: W -> list { title: String, description: String }
-      relatedWorkflows: W -> list String
+      examples: W -> list { step: String, label: String, language: String, code: String }
+      antiPatterns: W -> list { title: String, description: String, bad: String, good: String }
+      relatedWorkflows: W -> list { name: String, description: String }
+      quickReference: W -> option { heading: String, body: String }
+    }
+    rendering {
+      designPrinciples: W -> list { title: String, rule: String }
+      contentSections: W -> list { heading: String, body: String, afterStep: Int }
+      validationCommands: W -> list { label: String, command: String, afterStep: Int }
     }
   }
 
@@ -29,7 +36,9 @@ concept Workflow [W] {
         Create a workflow from a concept's actions. Steps are ordered
         action names with optional titles and prose. The config JSON
         can include checklists, references, examples, anti-patterns,
-        and related workflow links.
+        related workflow links, design principles, content sections
+        inserted after specific steps, validation commands, and a
+        quick reference block.
       }
       -> ok(workflow: W, stepCount: Int) {
         Workflow created with ordered steps and optional decorations.
@@ -47,6 +56,11 @@ concept Workflow [W] {
         Render a workflow in the requested format. Supported formats
         include skill-md, cli-help, rest-guide, and generic. Each
         format produces output suited to its target audience.
+        skill-md: Numbered steps with checklists, references,
+        examples, anti-patterns, design principles, and related
+        workflows. cli-help: Subcommand help text with argument
+        docs. rest-guide: Getting-started tutorial with cURL
+        examples. generic: Plain markdown.
       }
       -> ok(content: String) {
         Rendered workflow content in the requested format.
@@ -58,8 +72,8 @@ concept Workflow [W] {
   }
 
   invariant {
-    after define(concept: "SpecParser", steps: ["parse"], config: "{}")
+    after define(concept: "SpecParser", steps: ["parse"], config: "{\"designPrinciples\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}")
       -> ok(workflow: w, stepCount: 1)
-    then render(workflow: w, format: "generic") -> ok(content: c)
+    then render(workflow: w, format: "skill-md") -> ok(content: c)
   }
 }

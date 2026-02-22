@@ -1,0 +1,11 @@
+# Claude Skills target complete triggers middleware resolution
+# Architecture doc: Interface Kit, Sync Section 3.6
+
+sync InjectMiddlewareClaudeSkills [eager]
+when {
+  ClaudeSkillsTarget/generate: [ projection: ?p ]
+    => [ skills: ?skills; files: ?files ]
+}
+then {
+  Middleware/resolve: [ traits: ?traits; target: "claude-skills" ]
+}

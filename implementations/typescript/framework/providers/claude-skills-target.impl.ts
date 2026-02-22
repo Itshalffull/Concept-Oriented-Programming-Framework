@@ -50,8 +50,12 @@ interface WorkflowConfig {
   steps: WorkflowStep[];
   checklists?: Record<string, string[]>;
   references?: Array<{ path: string; label: string }>;
-  'anti-patterns'?: Array<{ title: string; description: string }>;
-  'related-workflows'?: string[];
+  'anti-patterns'?: Array<{ title: string; description: string; bad?: string; good?: string }>;
+  'related-workflows'?: Array<string | { name: string; description: string }>;
+  'design-principles'?: Array<{ title: string; rule: string }>;
+  'content-sections'?: Array<{ heading: string; body: string; afterStep?: number }>;
+  'validation-commands'?: Array<{ label: string; command: string; afterStep?: number }>;
+  'quick-reference'?: { heading: string; body: string };
 }
 
 /** Annotation config from manifest YAML. */
@@ -60,6 +64,12 @@ interface AnnotationConfig {
   'argument-template'?: string;
   examples?: Array<{ label: string; language: string; code: string }>;
   references?: Array<{ path: string; label: string }>;
+  scaffolds?: Array<{ name: string; path: string; description: string }>;
+  'trigger-description'?: string;
+  'trigger-patterns'?: string[];
+  'trigger-exclude'?: string[];
+  'validation-commands'?: Array<{ label: string; command: string }>;
+  'design-principles'?: Array<{ title: string; rule: string }>;
 }
 
 /** Extract workflow config for a concept from manifest YAML. */
@@ -176,6 +186,24 @@ function renderWorkflowSkill(
   lines.push(manifest.purpose || `Manage ${manifest.name} resources.`);
   lines.push('');
 
+  // Design principles — rendered before workflow steps
+  const designPrinciples = workflow['design-principles'] || annot?.concept?.['design-principles'];
+  if (designPrinciples && designPrinciples.length > 0) {
+    lines.push('## Design Principles');
+    lines.push('');
+    for (const dp of designPrinciples) {
+      lines.push(`- **${dp.title}:** ${dp.rule}`);
+    }
+    lines.push('');
+  }
+
+  // Trigger description — how to invoke this skill
+  const triggerDesc = annot?.concept?.['trigger-description'];
+  if (triggerDesc) {
+    lines.push(`> **When to use:** ${triggerDesc}`);
+    lines.push('');
+  }
+
   // Render workflow steps as numbered sections
   for (let i = 0; i < workflow.steps.length; i++) {
     const step = workflow.steps[i];
@@ -218,6 +246,52 @@ function renderWorkflowSkill(
       }
       lines.push('');
     }
+
+    // Per-action references from annotations
+    if (actionAnnot?.references && actionAnnot.references.length > 0) {
+      lines.push('**References:**');
+      for (const ref of actionAnnot.references) {
+        lines.push(`- [${ref.label}](${ref.path})`);
+      }
+      lines.push('');
+    }
+
+    // Content sections inserted after this step
+    const contentSections = workflow['content-sections']?.filter(s => s.afterStep === i + 1);
+    if (contentSections && contentSections.length > 0) {
+      for (const section of contentSections) {
+        lines.push(`### ${section.heading}`);
+        lines.push('');
+        lines.push(section.body);
+        lines.push('');
+      }
+    }
+
+    // Validation commands inserted after this step
+    const validationCmds = workflow['validation-commands']?.filter(v => v.afterStep === i + 1);
+    if (validationCmds && validationCmds.length > 0) {
+      lines.push('**Validation:**');
+      for (const vc of validationCmds) {
+        lines.push(`*${vc.label}:*`);
+        lines.push('```bash');
+        lines.push(vc.command);
+        lines.push('```');
+      }
+      lines.push('');
+    }
+  }
+
+  // Scaffolds section
+  const scaffolds = annot?.concept?.scaffolds;
+  if (scaffolds && scaffolds.length > 0) {
+    lines.push('## Scaffold Templates');
+    lines.push('');
+    for (const sc of scaffolds) {
+      lines.push(`### ${sc.name}`);
+      lines.push(sc.description);
+      lines.push(`See [${sc.name}](${sc.path})`);
+      lines.push('');
+    }
   }
 
   // References section
@@ -231,6 +305,15 @@ function renderWorkflowSkill(
     lines.push('');
   }
 
+  // Quick reference section
+  const quickRef = workflow['quick-reference'];
+  if (quickRef) {
+    lines.push(`## ${quickRef.heading}`);
+    lines.push('');
+    lines.push(quickRef.body);
+    lines.push('');
+  }
+
   // Anti-patterns section
   const antiPatterns = workflow['anti-patterns'];
   if (antiPatterns && antiPatterns.length > 0) {
@@ -239,8 +322,37 @@ function renderWorkflowSkill(
     for (const ap of antiPatterns) {
       lines.push(`### ${ap.title}`);
       lines.push(ap.description);
+      if (ap.bad) {
+        lines.push('');
+        lines.push('**Bad:**');
+        lines.push('```');
+        lines.push(ap.bad);
+        lines.push('```');
+      }
+      if (ap.good) {
+        lines.push('');
+        lines.push('**Good:**');
+        lines.push('```');
+        lines.push(ap.good);
+        lines.push('```');
+      }
       lines.push('');
     }
+  }
+
+  // Validation commands (global, not step-specific)
+  const globalValidation = annot?.concept?.['validation-commands']
+    || workflow['validation-commands']?.filter(v => !v.afterStep);
+  if (globalValidation && globalValidation.length > 0) {
+    lines.push('## Validation');
+    lines.push('');
+    for (const vc of globalValidation) {
+      lines.push(`*${vc.label}:*`);
+      lines.push('```bash');
+      lines.push(vc.command);
+      lines.push('```');
+    }
+    lines.push('');
   }
 
   // Related workflows
@@ -249,7 +361,11 @@ function renderWorkflowSkill(
     lines.push('## Related Skills');
     lines.push('');
     for (const r of related) {
-      lines.push(`- /${r}`);
+      if (typeof r === 'string') {
+        lines.push(`- /${r}`);
+      } else {
+        lines.push(`- /${r.name} — ${r.description}`);
+      }
     }
     lines.push('');
   }

@@ -1,11 +1,13 @@
-@version(1)
+@version(2)
 concept Annotation [N] {
 
   purpose {
     Attach rich metadata to concepts and actions for interface
-    generation — examples, documentation references, tool permissions,
-    argument templates, and related-item links. Each target reads
-    annotations it understands and ignores the rest.
+    generation — design principles, content sections, examples,
+    documentation references, scaffold templates, tool permissions,
+    argument templates, trigger descriptions, and related-item
+    links. Each target reads annotations it understands and
+    ignores the rest. See Architecture doc Section 1.8.
   }
 
   state {
@@ -19,7 +21,24 @@ concept Annotation [N] {
       references: N -> list { path: String, label: String }
       toolPermissions: N -> list String
       argumentTemplate: N -> option String
-      relatedItems: N -> list { name: String, relation: String }
+      relatedItems: N -> list { name: String, relation: String, description: String }
+    }
+    designPrinciples {
+      principles: N -> list { title: String, rule: String }
+    }
+    contentSections {
+      sections: N -> list { heading: String, body: String, order: Int }
+    }
+    scaffolds {
+      templates: N -> list { name: String, path: String, description: String }
+    }
+    triggers {
+      description: N -> option String
+      patterns: N -> list String
+      excludePatterns: N -> list String
+    }
+    validation {
+      commands: N -> list { label: String, command: String }
     }
   }
 
@@ -28,7 +47,9 @@ concept Annotation [N] {
       description {
         Attach metadata to a concept-level or action-level scope.
         The metadata JSON can include examples, references, tool
-        permissions, argument templates, and related item links.
+        permissions, argument templates, related item links,
+        design principles, content sections, scaffold templates,
+        trigger descriptions, and validation commands.
         Scope is either "concept" for concept-level or the action
         name for action-level annotations.
       }
@@ -57,8 +78,8 @@ concept Annotation [N] {
 
   invariant {
     after annotate(concept: "SpecParser", scope: "concept",
-      metadata: "{\"toolPermissions\":[\"Read\",\"Bash\"]}")
-      -> ok(annotation: n, fieldCount: 1)
+      metadata: "{\"toolPermissions\":[\"Read\",\"Bash\"],\"designPrinciples\":[{\"title\":\"Independence\",\"rule\":\"Never reference another concept\"}]}")
+      -> ok(annotation: n, fieldCount: 2)
     then resolve(concept: "SpecParser") -> ok(annotations: a)
   }
 }
