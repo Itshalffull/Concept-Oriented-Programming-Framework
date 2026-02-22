@@ -233,7 +233,13 @@ function generateCommandFile(
   }
 
   for (const action of manifest.actions) {
-    lines.push(buildSubcommand(action, conceptCamel, overrides, cliConfig));
+    lines.push(buildSubcommand(action, conceptCamel, overrides, cliConfig, hierConfig));
+    lines.push('');
+  }
+
+  // @hierarchical: auto-generated tree subcommand
+  if (hierConfig) {
+    lines.push(buildTreeSubcommand(conceptCamel));
     lines.push('');
   }
 
@@ -317,7 +323,8 @@ export const cliTargetHandler: ConceptHandler = {
     const name = conceptName || manifest.name;
     const kebab = toKebabCase(name);
     const cliConfig = getCliConfig(parsedManifestYaml, name);
-    const content = generateCommandFile(manifest, name, overrides, cliConfig);
+    const hierConfig = getHierarchicalTrait(parsedManifestYaml, name);
+    const content = generateCommandFile(manifest, name, overrides, cliConfig, hierConfig);
 
     const files = [
       {
