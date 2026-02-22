@@ -25,7 +25,11 @@ import {
   toKebabCase,
   generateFileHeader,
   getActionOverrides,
+  getHierarchicalTrait,
+  getEnrichmentContent,
 } from './codegen-utils.js';
+
+import type { HierarchicalConfig } from './codegen-utils.js';
 
 // --- Internal Types ---
 
@@ -83,6 +87,19 @@ function buildObjectType(conceptName: string, relations: RelationSchema[]): stri
   }
 
   return `  type ${conceptName} {\n${lines.join('\n')}\n  }`;
+}
+
+/**
+ * Augment an object type with self-referential hierarchy fields
+ * when @hierarchical trait is present.
+ */
+function buildHierarchicalFields(conceptName: string): string {
+  return [
+    `    children: [${conceptName}!]!`,
+    `    parent: ${conceptName}`,
+    `    ancestors: [${conceptName}!]!`,
+    `    depth: Int!`,
+  ].join('\n');
 }
 
 /**
@@ -201,6 +218,7 @@ function buildResolverBody(
 function generateSchemaFile(
   manifest: ConceptManifest,
   overrides: Record<string, Record<string, unknown>>,
+  hierConfig?: HierarchicalConfig,
 ): string {
   const name = manifest.name;
   const camelName = name.charAt(0).toLowerCase() + name.slice(1);
@@ -215,6 +233,20 @@ function generateSchemaFile(
 
   // Object type from relations
   sdlParts.push(buildObjectType(name, manifest.relations));
+
+  // Add hierarchical fields if @hierarchical trait is present
+  if (hierConfig) {
+    const hierFields = buildHierarchicalFields(name);
+    // Inject hierarchical fields into object type by appending before closing brace
+    const lastPart = sdlParts[sdlParts.length - 1];
+    sdlParts[sdlParts.length - 1] = lastPart.replace(/\n  \}$/, '\n' + hierFields + '\n  }');
+
+    // Add hierarchy query operations
+    queryFields.push(`    ${name.toLowerCase()}Children(id: ID!, depth: Int): [${name}!]!`);
+    queryFields.push(`    ${name.toLowerCase()}Ancestors(id: ID!): [${name}!]!`);
+    queryResolvers.push(`    ${name.toLowerCase()}Children: (_: unknown, args: { id: string, depth?: number }, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: 'listChildren', id: args.id, depth: args.depth }),`);
+    queryResolvers.push(`    ${name.toLowerCase()}Ancestors: (_: unknown, args: { id: string }, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: 'getAncestors', id: args.id }),`);
+  }
 
   // Process each action
   for (const action of manifest.actions) {
@@ -367,10 +399,19 @@ export const graphqlTargetHandler: ConceptHandler = {
       }
     }
 
+    // --- Parse manifest YAML for trait detection ---
+    let parsedManifestYaml: Record<string, unknown> | undefined;
+    if (input.manifestYaml && typeof input.manifestYaml === 'string') {
+      try {
+        parsedManifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>;
+      } catch { /* ignore */ }
+    }
+    const hierConfig = getHierarchicalTrait(parsedManifestYaml, manifest.name);
+
     // --- Generate schema file ---
     const kebabName = toKebabCase(manifest.name);
     const filePath = `${kebabName}/schema.graphql.ts`;
-    const fileContent = generateSchemaFile(manifest, overrides);
+    const fileContent = generateSchemaFile(manifest, overrides, hierConfig);
 
     const files: OutputFile[] = [{ path: filePath, content: fileContent }];
 

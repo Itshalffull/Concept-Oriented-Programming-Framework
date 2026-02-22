@@ -21,9 +21,12 @@ import {
   generateFileHeader,
   getActionOverrides,
   getRestBasePath,
+  getHierarchicalTrait,
+  inferHierarchicalRoutes,
+  getEnrichmentContent,
 } from './codegen-utils.js';
 
-import type { HttpRoute } from './codegen-utils.js';
+import type { HttpRoute, HierarchicalConfig } from './codegen-utils.js';
 
 // --- Internal Types ---
 
@@ -116,12 +119,49 @@ function generateRouteHandler(
 }
 
 /**
+ * Generate a Hono route handler for a @hierarchical trait endpoint.
+ * Produces children, ancestors, and descendants sub-resource routes.
+ */
+function generateHierarchicalHandler(route: HttpRoute, conceptName: string, action: string): string {
+  const honoPath = toHonoPath(route.path);
+  const methodFn = honoMethodCall(route.method);
+  const lines: string[] = [];
+
+  lines.push(`// ${route.method} ${route.path} — @hierarchical:${action}`);
+  lines.push(`app.${methodFn}('${honoPath}', async (c: Context) => {`);
+
+  if (route.method === 'GET') {
+    lines.push(`  const id = c.req.param('id');`);
+    if (action === 'descendants') {
+      lines.push(`  const depth = c.req.query('depth');`);
+      lines.push(`  const result = await c.var.kernel.handleRequest({ method: 'getDescendants', id, depth: depth ? parseInt(depth) : undefined });`);
+    } else {
+      lines.push(`  const result = await c.var.kernel.handleRequest({ method: '${action === 'children' ? 'listChildren' : 'getAncestors'}', id });`);
+    }
+  } else {
+    lines.push(`  const id = c.req.param('id');`);
+    lines.push(`  const body = await c.req.json();`);
+    lines.push(`  const result = await c.var.kernel.handleRequest({ method: 'createChild', parentId: id, ...body });`);
+  }
+
+  if (route.statusCodes.notFound) {
+    lines.push(`  if (result.variant === 'notFound') return c.json({ errors: { body: ['not found'] } }, ${route.statusCodes.notFound});`);
+  }
+  lines.push(`  if (result.error) return c.json({ errors: { body: [result.error] } }, 422);`);
+  lines.push(`  return c.json(result.body, ${route.statusCodes.ok});`);
+  lines.push(`});`);
+
+  return lines.join('\n');
+}
+
+/**
  * Generate the full routes.ts file content for a single concept.
  */
 function generateRoutesFile(
   manifest: ConceptManifest,
   overrides: Record<string, Record<string, unknown>>,
   basePath: string,
+  hierConfig?: HierarchicalConfig,
 ): { content: string; routes: RouteSummary[] } {
   const header = generateFileHeader('rest', manifest.name);
   const routerName = `${toPascalCase(manifest.name).charAt(0).toLowerCase()}${toPascalCase(manifest.name).slice(1)}Router`;
@@ -156,6 +196,21 @@ function generateRoutesFile(
       path: route.path,
       statusCodes: route.statusCodes,
     });
+  }
+
+  // Hierarchical routes (when @hierarchical trait is present)
+  if (hierConfig) {
+    const hierRoutes = inferHierarchicalRoutes(basePath);
+    for (const hierRoute of hierRoutes) {
+      const hierAction = hierRoute.path.split('/').pop() || 'children';
+      routeBlocks.push(generateHierarchicalHandler(hierRoute, manifest.name, hierAction));
+      routeSummaries.push({
+        action: `@hierarchical:${hierAction}`,
+        method: hierRoute.method,
+        path: hierRoute.path,
+        statusCodes: hierRoute.statusCodes,
+      });
+    }
   }
 
   const exportName = `${routerName}`;
@@ -248,6 +303,15 @@ export const restTargetHandler: ConceptHandler = {
     const defaultBasePath = `/${kebabName}s`;
     const basePath = (config.path as string) || defaultBasePath;
 
+    // Detect @hierarchical trait
+    let parsedManifestYaml: Record<string, unknown> | undefined;
+    if (input.manifestYaml && typeof input.manifestYaml === 'string') {
+      try {
+        parsedManifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>;
+      } catch { /* ignore */ }
+    }
+    const hierConfig = getHierarchicalTrait(parsedManifestYaml, manifest.name);
+
     // --- Validate manifest has actions ---
 
     if (!manifest.actions || manifest.actions.length === 0) {
@@ -260,7 +324,7 @@ export const restTargetHandler: ConceptHandler = {
 
     // --- Generate route file ---
 
-    const { content, routes } = generateRoutesFile(manifest, overrides, basePath);
+    const { content, routes } = generateRoutesFile(manifest, overrides, basePath, hierConfig);
 
     const files: GeneratedFile[] = [
       {

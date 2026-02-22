@@ -1,11 +1,15 @@
-@version(1)
+@version(2)
 concept RestTarget [R] {
 
   purpose {
     Generate REST API code from concept projections. Owns HTTP
     method mappings, URL pattern derivation, status code tables,
-    request/response serialization, and middleware integration.
-    Produces route handlers and types.
+    request/response serialization, middleware integration, and
+    hierarchical resource nesting. When @hierarchical trait is
+    present, generates children/ancestors/descendants endpoints.
+    Enrichment content from Projection is passed through as
+    opaque JSON for middleware and documentation generation.
+    See Architecture doc Section 2.1.
   }
 
   state {
@@ -22,6 +26,13 @@ concept RestTarget [R] {
       path: R -> String
       statusCodes: R -> list { code: Int, meaning: String }
     }
+    hierarchical {
+      parentRoute: R -> option String
+      childrenRoute: R -> option String
+      ancestorsRoute: R -> option String
+      descendantsRoute: R -> option String
+    }
+    content: R -> String
   }
 
   actions {
@@ -29,7 +40,14 @@ concept RestTarget [R] {
       -> ok(routes: list String, files: list String) {
         REST routes and type definitions generated from
         projection. HTTP methods derived from action semantics.
-        Status code tables attached per route.
+        Status code tables attached per route. When @hierarchical
+        trait is detected, additional routes are generated:
+        GET /{resource}/{id}/children (list direct children),
+        POST /{resource}/{id}/children (create child under parent),
+        GET /{resource}/{id}/ancestors (path to root),
+        GET /{resource}/{id}/descendants?depth=N (subtree query).
+        Enrichment content is read from projection for API
+        documentation generation.
       }
       -> ambiguousMapping(action: String, reason: String) {
         Action cannot be unambiguously mapped to an HTTP method
@@ -42,6 +60,7 @@ concept RestTarget [R] {
       -> ok(route: R) {
         Route handler compiles. Request and response types
         are consistent with concept state and action signatures.
+        Hierarchical routes have no path conflicts.
       }
       -> pathConflict(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
@@ -51,7 +70,7 @@ concept RestTarget [R] {
     action listRoutes(concept: String) {
       -> ok(routes: list String, methods: list String) {
         Return all generated routes for a concept with their
-        HTTP methods.
+        HTTP methods, including hierarchical routes if present.
       }
     }
   }

@@ -1,12 +1,17 @@
-@version(1)
+@version(2)
 concept McpTarget [M] {
 
   purpose {
     Generate MCP (Model Context Protocol) server implementations
     from concept projections. Owns tool/resource/template
     classification, input schema derivation, description
-    generation for LLM comprehension, and transport setup
-    (stdio, SSE, HTTP).
+    generation for LLM comprehension, transport setup
+    (stdio, SSE, HTTP), and hierarchical tool grouping. When
+    @hierarchical trait is present, generates path-based resource
+    URIs and list-children/get-ancestors tool variants.
+    Enrichment content from Projection is passed through for
+    tool description enhancement.
+    See Architecture doc Section 2.5.
   }
 
   state {
@@ -23,6 +28,12 @@ concept McpTarget [M] {
       toolName: M -> String
       description: M -> String
     }
+    hierarchical {
+      parentPath: M -> option String
+      childrenTool: M -> option String
+      ancestorsTool: M -> option String
+    }
+    content: M -> String
   }
 
   actions {
@@ -32,7 +43,10 @@ concept McpTarget [M] {
         Actions classified as tools, resources, or templates
         based on action semantics and annotations. Input
         schemas derived from action parameters. Descriptions
-        optimized for LLM comprehension.
+        optimized for LLM comprehension. When @hierarchical
+        trait is detected, resource URIs encode parent path
+        (e.g. "concept://root/sub1/sub2") and list_children
+        / get_ancestors tools are generated.
       }
       -> tooManyTools(count: Int, limit: Int) {
         Generated tool count exceeds the configured limit.
@@ -46,7 +60,7 @@ concept McpTarget [M] {
         MCP server schema is valid. Tool input schemas match
         action parameter types. Descriptions are present and
         within length limits. Transport configuration is
-        consistent.
+        consistent. Hierarchical resource URIs are well-formed.
       }
       -> missingDescription(tool: M, toolName: String) {
         Tool lacks a description. MCP tools require
@@ -57,7 +71,7 @@ concept McpTarget [M] {
     action listTools(concept: String) {
       -> ok(tools: list String, resources: list String, templates: list String) {
         Return all generated MCP primitives for a concept
-        grouped by MCP type.
+        grouped by MCP type, including hierarchy tools.
       }
     }
   }

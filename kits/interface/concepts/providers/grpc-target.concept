@@ -1,11 +1,16 @@
-@version(1)
+@version(2)
 concept GrpcTarget [G] {
 
   purpose {
     Generate Protocol Buffer definitions and gRPC service stubs
     from concept projections. Owns proto message derivation,
-    service definition, streaming mode selection, and
-    multi-language stub generation.
+    service definition, streaming mode selection, multi-language
+    stub generation, and hierarchical resource naming. When
+    @hierarchical trait is present, generates scoped RPCs with
+    hierarchical resource names following Google AIP-122.
+    Enrichment content from Projection is passed through for
+    service documentation generation.
+    See Architecture doc Section 2.3.
   }
 
   state {
@@ -21,6 +26,12 @@ concept GrpcTarget [G] {
       rpcName: G -> String
       streamingMode: G -> String
     }
+    hierarchical {
+      resourcePattern: G -> option String
+      listChildrenRpc: G -> option String
+      getAncestorsRpc: G -> option String
+    }
+    content: G -> String
   }
 
   actions {
@@ -29,7 +40,10 @@ concept GrpcTarget [G] {
         Proto3 definitions and gRPC service stubs generated
         from projection. Streaming mode derived from action
         annotations. Multi-language stubs produced based on
-        configured packages.
+        configured packages. When @hierarchical trait is
+        detected, generates ListChildren and GetAncestors RPCs
+        with hierarchical resource name patterns
+        (e.g. "categories/{id}").
       }
       -> protoIncompatible(type: String, reason: String) {
         Concept type cannot be represented in Protocol Buffers.
@@ -42,7 +56,8 @@ concept GrpcTarget [G] {
       -> ok(service: G) {
         Proto definition compiles. Service methods match concept
         action signatures. Streaming modes are consistent with
-        action semantics.
+        action semantics. Hierarchical resource names conform
+        to AIP-122.
       }
       -> fieldNumberConflict(service: G, message: String, field: String) {
         Proto field number assignment conflicts with a
@@ -53,7 +68,7 @@ concept GrpcTarget [G] {
     action listRpcs(concept: String) {
       -> ok(rpcs: list String, streamingModes: list String) {
         Return all generated RPC methods for a concept with
-        their streaming modes.
+        their streaming modes, including hierarchy RPCs.
       }
     }
   }

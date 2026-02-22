@@ -1,4 +1,4 @@
-@version(2)
+@version(3)
 concept CliTarget [C] {
 
   purpose {
@@ -6,6 +6,11 @@ concept CliTarget [C] {
     command/subcommand structure, flag derivation, argument
     mapping, output formatting (JSON/table/YAML), shell
     completion generation, and interactive mode for streaming.
+    When @hierarchical trait is present, generates multi-level
+    subcommand trees with auto-generated tree subcommand,
+    --parent/--depth/--path flags, and breadcrumb display.
+    Enrichment content from Projection is passed through for
+    help text and example generation.
     See Architecture doc Section 2.4.
   }
 
@@ -36,6 +41,7 @@ concept CliTarget [C] {
       examples: C -> list { description: String, command: String }
       seeAlso: C -> list String
     }
+    content: C -> String
   }
 
   actions {

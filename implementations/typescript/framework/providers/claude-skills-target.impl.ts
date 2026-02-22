@@ -22,9 +22,11 @@ import {
   toPascalCase,
   generateFileHeader,
   buildConceptGroups,
+  getHierarchicalTrait,
   type ConceptGroup,
   type GroupingConfig,
   type GroupingMode,
+  type HierarchicalConfig,
 } from './codegen-utils.js';
 import { renderContent, renderKey } from './renderer.impl.js';
 
@@ -169,6 +171,7 @@ function generateSkillMd(
   // Lookup workflow and annotation data
   const workflow = conceptName ? getWorkflowForConcept(manifestYaml, conceptName) : undefined;
   const annot = conceptName ? getAnnotationsForConcept(manifestYaml, conceptName) : undefined;
+  const hierConfig = conceptName ? getHierarchicalTrait(manifestYaml, conceptName) : undefined;
 
   // --- YAML Frontmatter ---
   lines.push('---');
@@ -200,11 +203,11 @@ function generateSkillMd(
 
   // --- Markdown Body ---
   if (group.concepts.length === 1 && workflow) {
-    renderWorkflowSkill(lines, manifest, workflow, annot);
+    renderWorkflowSkill(lines, manifest, workflow, annot, hierConfig);
   } else if (group.concepts.length === 1) {
-    renderFlatSkill(lines, manifest, annot);
+    renderFlatSkill(lines, manifest, annot, hierConfig);
   } else {
-    renderMultiConceptSkill(lines, group, manifestYaml);
+    renderMultiConceptSkill(lines, group, manifestYaml, hierConfig);
   }
 
   return lines.join('\n');
@@ -227,6 +230,7 @@ function renderWorkflowSkill(
   manifest: ConceptManifest,
   workflow: WorkflowConfig,
   annot?: { concept?: AnnotationConfig; actions: Record<string, AnnotationConfig> },
+  hierConfig?: HierarchicalConfig,
 ): void {
   const pascal = toPascalCase(manifest.name);
   const enrichment = mergeEnrichment(workflow, annot?.concept);

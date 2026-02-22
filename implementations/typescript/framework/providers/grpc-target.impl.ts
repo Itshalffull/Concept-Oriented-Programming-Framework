@@ -8,7 +8,8 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toPascalCase, typeToProtobuf, generateFileHeader } from './codegen-utils.js';
+import { toKebabCase, toPascalCase, typeToProtobuf, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
+import type { HierarchicalConfig } from './codegen-utils.js';
 
 // --- Proto Field Type Resolution ---
 
@@ -52,6 +53,7 @@ function buildMessage(name: string, params: ActionParamSchema[]): string {
 function generateProtoFile(
   manifest: ConceptManifest,
   packageName: string,
+  hierConfig?: HierarchicalConfig,
 ): string {
   const conceptPascal = toPascalCase(manifest.name);
   const lines: string[] = [];
@@ -65,6 +67,11 @@ function generateProtoFile(
   for (const action of manifest.actions) {
     const actionPascal = toPascalCase(action.name);
     lines.push(`  rpc ${actionPascal}(${actionPascal}${conceptPascal}Request) returns (${actionPascal}${conceptPascal}Response);`);
+  }
+  if (hierConfig) {
+    lines.push(`  // @hierarchical — tree traversal RPCs`);
+    lines.push(`  rpc ListChildren(ListChildren${conceptPascal}Request) returns (ListChildren${conceptPascal}Response);`);
+    lines.push(`  rpc GetAncestors(GetAncestors${conceptPascal}Request) returns (GetAncestors${conceptPascal}Response);`);
   }
   lines.push('}');
   lines.push('');
@@ -95,6 +102,31 @@ function generateProtoFile(
     }
 
     lines.push(buildMessage(`${actionPascal}${conceptPascal}Response`, responseParams));
+    lines.push('');
+  }
+
+  // Hierarchical messages when @hierarchical trait is present
+  if (hierConfig) {
+    // ListChildren RPC
+    lines.push(`// @hierarchical — tree traversal RPCs`);
+    lines.push(`message ListChildren${conceptPascal}Request {`);
+    lines.push(`  string parent = 1;`);
+    lines.push(`  optional int32 depth = 2;`);
+    lines.push(`}`);
+    lines.push('');
+    lines.push(`message ListChildren${conceptPascal}Response {`);
+    lines.push(`  repeated ${conceptPascal}Response children = 1;`);
+    lines.push(`}`);
+    lines.push('');
+
+    // GetAncestors RPC
+    lines.push(`message GetAncestors${conceptPascal}Request {`);
+    lines.push(`  string id = 1;`);
+    lines.push(`}`);
+    lines.push('');
+    lines.push(`message GetAncestors${conceptPascal}Response {`);
+    lines.push(`  repeated ${conceptPascal}Response ancestors = 1;`);
+    lines.push(`}`);
     lines.push('');
   }
 
@@ -157,8 +189,16 @@ export const grpcTargetHandler: ConceptHandler = {
       }
     }
 
+    let parsedManifestYaml: Record<string, unknown> | undefined;
+    if (input.manifestYaml && typeof input.manifestYaml === 'string') {
+      try {
+        parsedManifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>;
+      } catch { /* ignore */ }
+    }
+    const hierConfig = getHierarchicalTrait(parsedManifestYaml, conceptName || manifest.name);
+
     const kebab = toKebabCase(conceptName || manifest.name);
-    const protoContent = generateProtoFile(manifest, packageName);
+    const protoContent = generateProtoFile(manifest, packageName, hierConfig);
 
     const files = [
       {

@@ -9,7 +9,8 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toCamelCase, generateFileHeader } from './codegen-utils.js';
+import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
+import type { HierarchicalConfig } from './codegen-utils.js';
 
 // --- CLI Command Tree Metadata Types ---
 
@@ -63,6 +64,48 @@ function getCliConfig(
   return concepts[conceptName].cli as CliConceptConfig | undefined;
 }
 
+// --- Hierarchical Support ---
+
+/**
+ * Generate a `tree` subcommand that displays the full hierarchy
+ * with optional --depth flag to limit levels.
+ */
+function buildTreeSubcommand(conceptCamel: string): string {
+  const lines: string[] = [];
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('tree')`);
+  lines.push(`  .description('Display the full hierarchy as an indented tree')`);
+  lines.push(`  .option('--depth <depth>', 'Maximum depth to display', parseInt)`);
+  lines.push(`  .option('--root <id>', 'Start from a specific node instead of root')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'getDescendants', ...opts });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  return lines.join('\n');
+}
+
+/**
+ * Add @hierarchical flags to a subcommand based on action classification.
+ * - create/add actions get --parent flag
+ * - list actions get --parent and --depth flags
+ * - get/update/delete actions get --path flag as alternative ID
+ */
+function addHierarchicalFlags(lines: string[], actionName: string): void {
+  const name = actionName.toLowerCase();
+  if (name.startsWith('create') || name.startsWith('add') || name.startsWith('new')) {
+    lines.push(`  .option('--parent <parentId>', 'Create under a specific parent node')`);
+  }
+  if (name.startsWith('list') || name.startsWith('all') || name.startsWith('search')) {
+    lines.push(`  .option('--parent <parentId>', 'List children of a specific node')`);
+    lines.push(`  .option('--depth <depth>', 'Maximum depth to recurse (default: 1)', parseInt)`);
+  }
+  if (name.startsWith('get') || name.startsWith('find') || name.startsWith('read') ||
+      name.startsWith('update') || name.startsWith('edit') || name.startsWith('delete') || name.startsWith('remove')) {
+    lines.push(`  .option('--path <path>', 'Dot-separated ancestor path as alternative to ID')`);
+  }
+}
+
 // --- Command Builder ---
 
 function buildSubcommand(
@@ -70,6 +113,7 @@ function buildSubcommand(
   conceptCamel: string,
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
+  hierConfig?: HierarchicalConfig,
 ): string {
   const lines: string[] = [];
   const actionOverride = overrides[action.name] as Record<string, unknown> | undefined;
@@ -122,6 +166,11 @@ function buildSubcommand(
     }
   }
 
+  // @hierarchical flags
+  if (hierConfig) {
+    addHierarchicalFlags(lines, action.name);
+  }
+
   // Always add --json output flag
   lines.push(`  .option('--json', 'Output as JSON')`);
 
@@ -156,6 +205,7 @@ function generateCommandFile(
   conceptName: string,
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
+  hierConfig?: HierarchicalConfig,
 ): string {
   const conceptCamel = toCamelCase(conceptName);
   const kebab = toKebabCase(conceptName);

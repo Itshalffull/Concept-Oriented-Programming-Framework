@@ -1,11 +1,16 @@
-@version(1)
+@version(2)
 concept OpenApiTarget [O] {
 
   purpose {
     Generate OpenAPI 3.1 specification documents from concept
     projections. Produces a single document per kit covering
     all concepts. Includes paths, schemas, security schemes,
-    and examples derived from concept invariants.
+    and examples derived from concept invariants. When
+    @hierarchical trait is present, generates nested path items
+    with children/ancestors/descendants endpoints and
+    discriminated tree response schemas. Enrichment content
+    from Projection provides additional schema documentation.
+    See Architecture doc Section 2.7.
   }
 
   state {
@@ -15,6 +20,7 @@ concept OpenApiTarget [O] {
       paths: O -> Int
       schemas: O -> Int
     }
+    content: O -> String
   }
 
   actions {
@@ -24,7 +30,10 @@ concept OpenApiTarget [O] {
         Action params become request schemas. Return variants
         become response schemas per status code. Invariants
         become example request/response pairs. Traits become
-        security schemes and pagination parameters.
+        security schemes and pagination parameters. When
+        @hierarchical trait is detected, nested path items
+        are generated for tree-structured resources with
+        shared $ref schemas and tree query parameters.
       }
     }
   }
