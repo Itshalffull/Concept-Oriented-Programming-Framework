@@ -1,6 +1,13 @@
-# COPF Interface Kit — Architecture Extension (v2)
+# COPF Interface Kit — Architecture Extension (v3)
 
 > **Changelog**
+>
+> **v3 (2026-02-22):**
+> - Added `@hierarchical` structural trait (§1.8) — general-purpose hierarchy support across all targets
+> - Added per-target `@hierarchical` projection rules: nested REST routes, recursive GraphQL types, multi-level CLI subcommand trees, namespaced MCP tools, hierarchical skill groups
+> - Added hierarchical inference rules to Projection (§1.1) — auto-derives children/ancestors/descendants endpoints
+> - Added architectural decision: why trait-based hierarchy, not a Tree concept (Part 8)
+> - Added interface manifest example with `@hierarchical` on Category concept (Part 4)
 >
 > **v2 (2026-02-22):**
 > - Added Annotation concept (§1.9) — opaque metadata attachment for concepts and actions
@@ -265,6 +272,44 @@ For each action:
 ```
 
 Similar heuristics exist for GraphQL (query vs mutation vs subscription), CLI (positional args vs flags), and MCP (tool vs resource vs resource-template).
+
+#### Hierarchical Inference Rules
+
+When `@hierarchical(relation: R)` is declared, Projection augments the base inference with hierarchy-aware mappings:
+
+```
+If concept has @hierarchical trait with relation R:
+
+  1. Detect hierarchy relation:
+     Look for state relation matching R (e.g. parentOf: T -> option T).
+     Derive childrenOf from inverse of parentOf, or from explicit
+     children state relation (e.g. childrenOf: T -> list T).
+
+  2. Augment REST resource mappings:
+     Add: GET    /{resource}/{id}/children          → list direct children
+     Add: POST   /{resource}/{id}/children          → create child under parent
+     Add: GET    /{resource}/{id}/ancestors          → list path to root
+     Add: GET    /{resource}/{id}/descendants        → list full subtree
+     Modify: POST /{resource}/{id}/move             → reparent (if move/reparent action exists)
+
+  3. Augment GraphQL type:
+     Add: children field (with Connection type if @paginated)
+     Add: parent field (nullable, root nodes have null parent)
+     Add: ancestors field (ordered list from self to root)
+     Add: depth field (Int, computed from relation)
+
+  4. Augment CLI command tree:
+     Add: `tree` subcommand (display hierarchy, --depth flag)
+     Add: `--parent` flag to create/list actions
+     Add: `--depth` flag to list action
+     Add: `--path` flag as alternative to --id (dot-separated ancestor path)
+
+  5. Augment MCP:
+     Modify: resource URI template to include parent path
+       e.g. "{concept}://{parentPath}/{id}" instead of "{concept}://{id}"
+     Add: list-children tool variant
+     Add: get-ancestors tool variant
+```
 
 
 ### 1.2 Generator
@@ -772,6 +817,108 @@ concept Middleware [M] {
 | `@streaming(server)` | SSE / `Transfer-Encoding: chunked` | Subscription | Server-streaming RPC | `--follow` / streaming stdout | Notification stream | N/A (skip) |
 | `@streaming(bidi)` | WebSocket upgrade | Subscription + mutation | Bidirectional RPC | Interactive mode | Not supported (skip) | N/A (skip) |
 | `@cached(ttl)` | `Cache-Control` headers | `@cacheControl` directive | N/A (skip) | Local file cache | N/A (skip) | N/A (skip) |
+| `@hierarchical` | Nested resource routes | Recursive types + nested queries | Nested messages + scoped RPCs | Multi-level subcommand tree | Namespaced tool groups | Hierarchical skill groups |
+
+#### `@hierarchical` Trait — Detailed Projection
+
+The `@hierarchical` trait is a structural trait (unlike middleware traits which inject code, it reshapes the generated output structure). It tells each target that a concept's instances form a tree and the generated interface should reflect that nesting. Without it, targets produce flat structures (one level of concept → action). With it, targets produce nested structures that mirror the concept's parent-child state relation.
+
+**Trait configuration:**
+
+```yaml
+traits:
+  - name: hierarchical
+    config:
+      relation: parentOf       # state relation encoding parent → child
+      maxDepth: 4              # optional depth limit (default: unlimited)
+      labelField: name         # state field used for display name at each level
+      style: nested            # nested | prefixed (see below)
+    actions: [all]             # applies to all actions (default), or list specific ones
+```
+
+**Style modes:**
+
+| Style | Behavior | Example (CLI) | Example (REST) |
+|-------|----------|---------------|----------------|
+| `nested` | Full tree structure — each level is a distinct routing node | `app region us-east cluster prod node web-1 status` | `GET /regions/{regionId}/clusters/{clusterId}/nodes/{nodeId}/status` |
+| `prefixed` | Flat structure with path-prefix arguments — simpler but less discoverable | `app node status --path region/us-east/cluster/prod/node/web-1` | `GET /nodes/{nodeId}/status?path=regions.us-east.clusters.prod` |
+
+**Per-target projection rules:**
+
+| Target | `@hierarchical` Projection | Structural Mechanism |
+|--------|---------------------------|---------------------|
+| **REST** | Nested resource routes: `/{parent}/{parentId}/{child}/{childId}`. Parent ID propagated in path. Collection endpoints at each level. | Route nesting up to `maxDepth`. `GET /categories/{id}/children` returns direct children. `GET /categories/{id}/descendants?depth=N` for subtree queries. |
+| **GraphQL** | Recursive object types: `type Category { children: [Category!]!, parent: Category }`. Connection types at each nesting level when combined with `@paginated`. | Self-referential types. `children` field resolver loads direct children. `ancestors` field resolver walks up the tree. |
+| **gRPC** | Scoped service RPCs with hierarchical resource names: `ListChildren(parent: "categories/123")`. Google AIP-122 resource name pattern. | Hierarchical resource names in request messages. Repeated nested messages for tree responses. |
+| **CLI** | Multi-level subcommand tree. Each tree level becomes a command group. Actions at each level become subcommands of that group. `--depth` flag for tree display. | `commandTree` state populated from concept's parent-child relation. Root nodes at depth 0, children at depth 1+. Shell completion walks the tree. `app category list --tree` for visual tree output. |
+| **MCP** | Hierarchical tool grouping: `category_create`, `category_list_children`, `category_move`. Resource URIs encode path: `category://root/sub1/sub2`. | Tool names use hierarchy-aware naming. Resource templates include parent path. Tool descriptions include "operates on subtree" semantics. |
+| **Claude Skills** | Skill instructions include tree navigation workflow: "First identify the parent, then list children at the target level." Checklist items for each tree level. | Workflow steps include tree-awareness. Enrichment content includes `tree-navigation` section rendered by Renderer. |
+| **OpenAPI** | Nested path items with `$ref` to shared schemas. Discriminated tree response schemas. | `paths: /categories/{catId}/children` with shared `Category` schema. Tree query params documented. |
+| **AsyncAPI** | Hierarchical channel names: `categories.{categoryId}.children.created`. Parent context in message headers. | Channel name segments mirror tree path. Messages include `parentPath` header. |
+
+**CLI command tree generation in detail:**
+
+Without `@hierarchical`, CliTarget generates a flat two-level tree:
+
+```
+app                          # root
+├── category create          # concept → action
+├── category list
+├── category move
+└── category delete
+```
+
+With `@hierarchical(relation: parentOf, style: nested)`, CliTarget reads the concept's parent-child state relation and generates a dynamic multi-level tree where intermediate levels come from actual data:
+
+```
+app                          # root (depth 0)
+├── category                 # concept group
+│   ├── create               # create at root level
+│   ├── list                 # list root categories
+│   ├── tree                 # auto-generated: show full tree
+│   ├── move                 # move a category
+│   └── delete               # delete a category
+│
+│   # Hierarchical navigation (when --parent is provided):
+│   ├── list --parent {path} # list children of a specific node
+│   └── create --parent {p}  # create under a specific parent
+```
+
+The key additions `@hierarchical` triggers in CLI generation:
+
+1. **`--parent` flag** on `create` and `list` actions — positions the operation within the tree
+2. **`tree` subcommand** — auto-generated, displays the full hierarchy as an indented tree with `--depth` flag to limit levels
+3. **`--depth` flag** on `list` — controls how many levels deep to recurse (default 1 = direct children only)
+4. **`--path` flag** on `get`/`update`/`delete` — alternative to ID, accepts dot-separated ancestor path for human-readable addressing (e.g. `--path "electronics/computers/laptops"`)
+5. **Breadcrumb display** — when operating within a subtree, output shows the path context: `[electronics > computers >] Created: laptops`
+6. **Shell completion** — tab-completion walks the live tree, offering children of the current parent as completions
+
+**REST nested resource generation in detail:**
+
+Without `@hierarchical`:
+```
+GET    /categories            # list all
+POST   /categories            # create
+GET    /categories/{id}       # get by id
+PUT    /categories/{id}       # update
+DELETE /categories/{id}       # delete
+POST   /categories/{id}/move  # custom action
+```
+
+With `@hierarchical(relation: parentOf, style: nested)`:
+```
+GET    /categories                              # list root categories
+POST   /categories                              # create root category
+GET    /categories/{id}                         # get by id
+PUT    /categories/{id}                         # update
+DELETE /categories/{id}                         # delete
+GET    /categories/{id}/children                # list direct children
+POST   /categories/{id}/children                # create child under parent
+GET    /categories/{id}/ancestors               # list ancestors to root
+GET    /categories/{id}/descendants             # list full subtree
+GET    /categories/{id}/descendants?depth=2     # subtree limited to 2 levels
+POST   /categories/{id}/move                    # move within tree
+```
 
 ### 1.9 Annotation
 
@@ -2437,6 +2584,23 @@ concepts:
     rest:
       path: /users
     # Other targets use inference defaults
+
+  Category:
+    traits:
+      - name: hierarchical
+        config:
+          relation: parentOf          # state relation encoding hierarchy
+          labelField: name            # used for display/path resolution
+          maxDepth: 5                 # optional depth limit
+          style: nested               # nested | prefixed
+        actions: [all]                # applies to all actions
+
+    # Hierarchical concepts auto-generate additional routes/commands:
+    # - REST: /categories/{id}/children, /categories/{id}/ancestors,
+    #         /categories/{id}/descendants?depth=N
+    # - CLI: `category tree`, --parent/--depth/--path flags
+    # - GraphQL: children/parent/ancestors fields on Category type
+    # - MCP: category://root/sub1/sub2 resource URIs
 ```
 
 ### Progressive Customization
@@ -2883,6 +3047,22 @@ The enrichment concepts (Annotation, Workflow, Projection) store metadata as `co
 4. **Decoupled evolution.** New targets can introduce new enrichment keys without coordination with existing targets or concept specs.
 
 The trade-off is weaker static guarantees — enrichment keys are strings, not typed fields. This is mitigated by the Renderer's `unhandledKeys` transparency: if a key has no handler, it appears in the render result for the target to decide how to handle.
+
+
+### Why `@hierarchical` is a trait, not a Tree concept
+
+The parent/children/depth pattern appears in at least 6 concepts across the COPF codebase (CliTarget, Outline, Namespace, Taxonomy, COIF Element, COIF Navigator). A general `Tree [T]` concept was considered — it would own reparent, getSubtree, cycle detection, and tree traversal as a reusable concept that domain concepts sync with.
+
+The trait approach was chosen instead because:
+
+1. **No shared state.** The tree structure _is_ the domain concept's state — a Category's parent-child relation is Category state, not Tree state. A Tree concept would either duplicate state or own state that belongs to Category. This violates concept independence.
+2. **No shared actions.** "Reparent" means different things in different domains. Moving a CLI command is a generation-time restructuring. Moving an Outline node is a user action. Moving a Category is a domain operation with business rules. A generic `reparent` action would need domain-specific variants, defeating the purpose of generalization.
+3. **The interface kit only needs the _shape_, not the _behavior_.** When Projection sees `@hierarchical(relation: parentOf)`, it reads the concept's state relation to derive nesting structure. It doesn't need tree traversal or cycle detection — those are implementation concerns handled by the concept's own handler.
+4. **The trait composes with other traits.** `@hierarchical` + `@paginated` produces paginated children endpoints. `@hierarchical` + `@cached` produces cached subtree queries. A Tree concept would need explicit syncs to coordinate with each of these.
+
+The trade-off is that concepts with hierarchical state must each implement their own tree operations (cycle detection, subtree queries, etc.). This is acceptable because those operations have domain-specific semantics — and existing concepts (Outline, Namespace, Taxonomy) already implement them independently.
+
+The framework concept library _does_ provide tree-shaped concepts (Outline for content trees, Taxonomy for classification trees, Namespace for naming hierarchies) — but these are domain concepts, not structural abstractions. They pass the concept test independently.
 
 
 ### Why ClaudeSkillsTarget exists alongside CliTarget
