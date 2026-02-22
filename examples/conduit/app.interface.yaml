@@ -303,3 +303,212 @@ concepts:
         send:
           type: tool
           description: "Echo a message back (health check)"
+
+# ─── WORKFLOWS ──────────────────────────────────────
+# Define ordered action sequences for skill and CLI
+# help generation. Each workflow maps a concept to a
+# step-by-step process with checklists, references,
+# anti-patterns, design principles, validation, and
+# related workflows.
+workflows:
+  article-management:
+    concept: Article
+    steps:
+      - action: create
+        title: Create Article
+        prose: >
+          Create a new article with title, description, and body.
+          Tags can be attached during creation. The article slug
+          is auto-derived from the title.
+      - action: get
+        title: Retrieve Article
+        prose: >
+          Fetch a single article by its slug. Returns the full
+          article with author profile, tag list, favorite count,
+          and timestamps.
+      - action: list
+        title: List Articles
+        prose: >
+          List articles with pagination support. Filter by tag,
+          author, or favorited-by. Results include article
+          previews with truncated bodies.
+      - action: update
+        title: Update Article
+        prose: >
+          Update an existing article's title, description, body,
+          or tags. Only the article author can update. The slug
+          is regenerated if the title changes.
+      - action: delete
+        title: Delete Article
+        prose: >
+          Permanently remove an article. Cascades to remove
+          associated comments and favorites. Only the article
+          author can delete.
+    checklists:
+      create:
+        - Title is non-empty and unique
+        - Body content is present
+        - Tags exist in the tag registry
+      update:
+        - Caller is the article author
+        - At least one field is being changed
+      delete:
+        - Caller is the article author
+        - Confirm cascade of comments and favorites
+    references:
+      - path: references/article-api.md
+        label: Article API Reference
+      - path: references/pagination-patterns.md
+        label: Pagination Patterns
+    design-principles:
+      - title: Author Ownership
+        rule: Only the article author can update or delete their articles
+      - title: Slug Derivation
+        rule: Article slugs are deterministically derived from titles
+      - title: Cascade Deletes
+        rule: Deleting an article removes all associated comments and favorites
+    anti-patterns:
+      - title: Orphaned Comments
+        description: >
+          Deleting an article without cascading to comments
+          leaves orphaned records that reference a non-existent
+          article.
+        bad: "DELETE /articles/{slug} without cascade"
+        good: "DELETE /articles/{slug} with cascade: comments, favorites"
+      - title: Mutable Slugs Without Redirects
+        description: >
+          Changing an article title changes its slug, breaking
+          existing links. Always provide redirect support.
+    content-sections:
+      - heading: Pagination Notes
+        body: >
+          The list action uses offset-based pagination with
+          `limit` and `offset` query parameters. Default limit
+          is 20, maximum is 100.
+        afterStep: 3
+    validation-commands:
+      - label: Run article tests
+        command: copf test Article
+        afterStep: 5
+      - label: Validate article spec
+        command: copf check --pattern crud Article
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | create | POST | /articles | Required |
+        | get | GET | /articles/{slug} | Optional |
+        | list | GET | /articles | Optional |
+        | update | PUT | /articles/{slug} | Required |
+        | delete | DELETE | /articles/{slug} | Required |
+    related-workflows:
+      - name: comment-management
+        description: Manage article comments
+      - name: favorite-management
+        description: Favorite/unfavorite articles
+
+  user-registration:
+    concept: User
+    steps:
+      - action: register
+        title: Register User
+        prose: >
+          Create a new user account with username, email, and
+          password. Returns the user profile and auth token.
+    design-principles:
+      - title: Unique Identity
+        rule: Email addresses and usernames must be globally unique
+    references:
+      - path: references/auth-flow.md
+        label: Authentication Flow
+
+# ─── ANNOTATIONS ─────────────────────────────────────
+# Concept-level and action-level metadata for skill and
+# CLI generation. Includes tool permissions, argument
+# templates, examples, scaffolds, trigger descriptions,
+# and design principles.
+annotations:
+  Article:
+    concept:
+      tool-permissions:
+        - Read
+        - Grep
+        - Glob
+        - Edit
+        - Write
+        - Bash
+      argument-template: "<article-slug> [--tag <tag>] [--author <author>]"
+      trigger-description: >
+        Use when creating, reading, updating, or deleting articles
+        in the Conduit application. Covers CRUD operations, tag
+        management, and article listing with pagination.
+      trigger-patterns:
+        - "article"
+        - "blog post"
+        - "content management"
+      trigger-exclude:
+        - "comment"
+        - "favorite"
+      scaffolds:
+        - name: Article Scaffold
+          path: templates/article-scaffold.md
+          description: >
+            Starter template for a new article concept with
+            CRUD actions, tag association, and pagination.
+      references:
+        - path: references/article-api.md
+          label: Full API Reference
+        - path: references/conduit-spec.md
+          label: Conduit Specification
+      validation-commands:
+        - label: Run all article tests
+          command: copf test Article --integration
+        - label: Validate generated interfaces
+          command: copf interface validate
+    create:
+      examples:
+        - label: Create a simple article
+          language: bash
+          code: |
+            conduit article create \
+              --title "Hello World" \
+              --description "My first article" \
+              --body "Article content here" \
+              --tag javascript --tag tutorial
+      references:
+        - path: references/article-api.md#create
+          label: Create API Details
+    list:
+      examples:
+        - label: List articles by tag
+          language: bash
+          code: |
+            conduit article list --tag javascript --limit 10
+        - label: List articles by author
+          language: bash
+          code: |
+            conduit article list --author johndoe --offset 20
+    update:
+      examples:
+        - label: Update article title
+          language: bash
+          code: |
+            conduit article update hello-world --title "Hello World v2"
+
+  User:
+    concept:
+      tool-permissions:
+        - Read
+        - Edit
+        - Write
+        - Bash
+      argument-template: "<username> [--email <email>]"
+      trigger-description: >
+        Use when managing user registration and account operations.
+    register:
+      examples:
+        - label: Register a new user
+          language: bash
+          code: |
+            conduit user register johndoe johndoe@example.com

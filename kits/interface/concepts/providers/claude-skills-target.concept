@@ -1,0 +1,85 @@
+@version(2)
+concept ClaudeSkillsTarget [K] {
+
+  purpose {
+    Generate Claude Code skill files from concept projections.
+    The concept owns identity (name, concept, grouping),
+    structure (frontmatter, body, action mappings), and opaque
+    content passthrough for enrichment. Each renderer reads the
+    enrichment keys it understands (design-principles, workflow,
+    checklists, references, examples, scaffolds, anti-patterns,
+    trigger-description, validation-commands, etc.) and ignores
+    the rest. New enrichment kinds require only a new YAML key
+    and a renderer update — zero concept changes.
+    See Architecture doc Section 2.7.
+  }
+
+  state {
+    skills: set K
+    config {
+      name: K -> String
+      progressive: K -> Bool
+      grouping: K -> String
+    }
+    skillContent {
+      concept: K -> String
+      frontmatter: K -> String
+      body: K -> String
+    }
+    content: K -> String
+    mapping {
+      concept: K -> String
+      actionToCommand: K -> list { action: String, command: String }
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      description {
+        Generate a Claude Code SKILL.md and TypeScript command
+        runner from a concept projection. The projection's
+        enrichment data is deserialized as JSON and keys are
+        interpreted by the renderer. When enrichment includes
+        workflow steps, design principles, checklists, etc.,
+        produces rich skills matching handcrafted quality. When
+        enrichment is absent, falls back to flat command listing.
+        Content is opaque — the concept does not constrain which
+        keys exist.
+      }
+      -> ok(skills: list K, files: list String) {
+        Skill files generated. SKILL.md contains YAML frontmatter
+        with name, description, allowed-tools, and argument-hint.
+        Body contains either rich workflow-based content or flat
+        command listing depending on available enrichment data.
+      }
+      -> missingProjection(concept: String) {
+        No projection found for the specified concept.
+      }
+    }
+
+    action validate(skill: K) {
+      -> ok(skill: K) {
+        SKILL.md has valid YAML frontmatter. All referenced
+        scaffold files exist. All related skill names resolve.
+      }
+      -> invalidFrontmatter(skill: K, errors: list String) {
+        YAML frontmatter is malformed or missing required fields.
+      }
+      -> brokenReferences(skill: K, missing: list String) {
+        Referenced scaffold files or related skills do not exist.
+      }
+    }
+
+    action listSkills(kit: String) {
+      -> ok(skills: list String, enriched: list String, flat: list String) {
+        Return all generated skills grouped by whether they
+        have rich workflow-based content or flat command listings.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "spec-parser-projection", config: "{\"progressive\":true}") -> ok(skills: s, files: f)
+    then listSkills(kit: "test-kit") -> ok(skills: all, enriched: e, flat: fl)
+  }
+}

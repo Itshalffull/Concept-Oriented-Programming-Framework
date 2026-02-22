@@ -5,6 +5,13 @@
 // markdown body) and TypeScript command runners for each
 // concept. Uses the shared Grouping concept abstraction from
 // codegen-utils for all grouping modes (per-concept default).
+//
+// Enrichment rendering is delegated to the Renderer concept.
+// The target owns structural rendering (frontmatter, workflow
+// step numbering, action arguments) and calls renderContent()
+// / renderKey() for enrichment blocks. New enrichment keys
+// only need a handler registered in the Renderer — no changes
+// to this file.
 // Architecture doc: Interface Kit
 // ============================================================
 
@@ -19,6 +26,7 @@ import {
   type GroupingConfig,
   type GroupingMode,
 } from './codegen-utils.js';
+import { renderContent, renderKey } from './renderer.impl.js';
 
 // --- Type Display ---
 
@@ -36,6 +44,11 @@ function typeLabel(type: ResolvedType): string {
 }
 
 // --- Workflow/Annotation Metadata Types ---
+//
+// Concepts store enrichment as opaque content (JSON passthrough).
+// The Renderer concept handles rendering of enrichment keys.
+// These types define only the structural fields needed for
+// workflow step rendering and annotation lookup.
 
 /** Workflow step from manifest YAML workflows section. */
 interface WorkflowStep {
@@ -44,22 +57,30 @@ interface WorkflowStep {
   prose?: string;
 }
 
-/** Workflow config from manifest YAML. */
-interface WorkflowConfig {
+/**
+ * Workflow config from manifest YAML.
+ * Structural fields: concept, steps (the concept owns ordering).
+ * All decoration keys are opaque — rendered by the Renderer.
+ */
+type WorkflowConfig = {
   concept: string;
   steps: WorkflowStep[];
-  checklists?: Record<string, string[]>;
-  references?: Array<{ path: string; label: string }>;
-  'anti-patterns'?: Array<{ title: string; description: string }>;
-  'related-workflows'?: string[];
-}
+} & Record<string, unknown>;
 
-/** Annotation config from manifest YAML. */
-interface AnnotationConfig {
-  'tool-permissions'?: string[];
-  'argument-template'?: string;
-  examples?: Array<{ label: string; language: string; code: string }>;
-  references?: Array<{ path: string; label: string }>;
+/**
+ * Annotation config from manifest YAML.
+ * Entirely opaque — rendered by the Renderer.
+ */
+type AnnotationConfig = Record<string, unknown>;
+
+/**
+ * Read a key from opaque content, cast to T.
+ * Used for structural fields the target needs directly
+ * (e.g. step-specific checklists, per-action examples).
+ */
+function contentKey<T>(obj: Record<string, unknown> | undefined, key: string): T | undefined {
+  if (!obj || !(key in obj)) return undefined;
+  return obj[key] as T;
 }
 
 /** Extract workflow config for a concept from manifest YAML. */
@@ -97,18 +118,45 @@ function getAnnotationsForConcept(
   return result;
 }
 
+/**
+ * Merge workflow and annotation content into a single enrichment
+ * object for rendering. Workflow keys take precedence; annotation
+ * keys fill in gaps. Structural keys (concept, steps) are excluded.
+ */
+function mergeEnrichment(
+  workflow?: WorkflowConfig,
+  annot?: AnnotationConfig,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+
+  // Annotation keys first (lower priority)
+  if (annot) {
+    for (const [key, value] of Object.entries(annot)) {
+      // Skip structural keys that aren't enrichment
+      if (key === 'tool-permissions' || key === 'argument-template') continue;
+      if (key === 'trigger-patterns' || key === 'trigger-exclude') continue;
+      merged[key] = value;
+    }
+  }
+
+  // Workflow keys override (higher priority)
+  if (workflow) {
+    for (const [key, value] of Object.entries(workflow)) {
+      if (key === 'concept' || key === 'steps') continue;
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+}
+
 // --- SKILL.md Builder ---
 
 /**
  * Build SKILL.md content with YAML frontmatter and markdown body.
- * The frontmatter follows Claude Code's skill format.
  *
- * When workflow/annotation data is present in manifestYaml, renders
- * rich skills with numbered steps, tool permissions, examples,
- * references, checklists, and anti-patterns.
- *
- * When absent, falls back to flat command listing (preserves
- * existing Conduit output).
+ * Structural rendering (frontmatter, step numbering, action arguments)
+ * is handled here. Enrichment blocks are delegated to the Renderer.
  */
 function generateSkillMd(
   group: ConceptGroup,
@@ -128,8 +176,9 @@ function generateSkillMd(
   lines.push(`description: ${group.description}`);
 
   // Argument hint: use annotation template if available
-  if (annot?.concept?.['argument-template']) {
-    lines.push(`argument-hint: ${annot.concept['argument-template']}`);
+  const argTemplate = contentKey<string>(annot?.concept, 'argument-template');
+  if (argTemplate) {
+    lines.push(`argument-hint: ${argTemplate}`);
   } else {
     const firstAction = group.concepts[0]?.actions?.[0];
     if (group.concepts.length === 1 && firstAction) {
@@ -141,8 +190,9 @@ function generateSkillMd(
   }
 
   // Tool permissions from annotation
-  if (annot?.concept?.['tool-permissions'] && annot.concept['tool-permissions'].length > 0) {
-    lines.push(`allowed-tools: ${annot.concept['tool-permissions'].join(', ')}`);
+  const toolPerms = contentKey<string[]>(annot?.concept, 'tool-permissions');
+  if (toolPerms && toolPerms.length > 0) {
+    lines.push(`allowed-tools: ${toolPerms.join(', ')}`);
   }
 
   lines.push('---');
@@ -150,20 +200,28 @@ function generateSkillMd(
 
   // --- Markdown Body ---
   if (group.concepts.length === 1 && workflow) {
-    // Rich workflow-based rendering
     renderWorkflowSkill(lines, manifest, workflow, annot);
   } else if (group.concepts.length === 1) {
-    // Flat single-concept rendering (default)
     renderFlatSkill(lines, manifest, annot);
   } else {
-    // Multi-concept rendering
     renderMultiConceptSkill(lines, group, manifestYaml);
   }
 
   return lines.join('\n');
 }
 
-/** Render a rich workflow-based skill with numbered steps. */
+/**
+ * Render a rich workflow-based skill with numbered steps.
+ *
+ * The target owns: heading, purpose, step numbering, action
+ * arguments, step-specific interleaving (checklists per action,
+ * content-sections/validation-commands placed after specific steps,
+ * per-action examples/references from annotations).
+ *
+ * The Renderer owns: global enrichment sections rendered before
+ * and after the workflow steps (design-principles, trigger,
+ * scaffolds, references, anti-patterns, quick-reference, etc.).
+ */
 function renderWorkflowSkill(
   lines: string[],
   manifest: ConceptManifest,
@@ -171,33 +229,51 @@ function renderWorkflowSkill(
   annot?: { concept?: AnnotationConfig; actions: Record<string, AnnotationConfig> },
 ): void {
   const pascal = toPascalCase(manifest.name);
+  const enrichment = mergeEnrichment(workflow, annot?.concept);
+  const fmt = 'skill-md';
+
+  // --- Header ---
   lines.push(`# ${pascal}`);
   lines.push('');
   lines.push(manifest.purpose || `Manage ${manifest.name} resources.`);
   lines.push('');
 
-  // Render workflow steps as numbered sections
+  // --- Pre-step enrichment (rendered by Renderer) ---
+  // Design principles and trigger description appear before steps
+  const preStepKeys: Record<string, unknown> = {};
+  if (enrichment['design-principles']) preStepKeys['design-principles'] = enrichment['design-principles'];
+  if (enrichment['trigger-description']) preStepKeys['trigger-description'] = enrichment['trigger-description'];
+  if (Object.keys(preStepKeys).length > 0) {
+    const { output } = renderContent(preStepKeys, fmt);
+    if (output) lines.push(output);
+  }
+
+  // --- Workflow steps (structural — target owns this) ---
+  const allContentSections = contentKey<Array<{ heading: string; body: string; afterStep?: number }>>(workflow, 'content-sections');
+  const allValidationCmds = contentKey<Array<{ label: string; command: string; afterStep?: number }>>(workflow, 'validation-commands');
+
   for (let i = 0; i < workflow.steps.length; i++) {
     const step = workflow.steps[i];
     const title = step.title || toPascalCase(step.action);
     lines.push(`## Step ${i + 1}: ${title}`);
     lines.push('');
 
-    // Use action description from manifest, then step prose, then variant prose
+    // Action prose
     const action = manifest.actions.find(a => a.name === step.action);
     const prose = action?.description || step.prose || action?.variants[0]?.prose || `Execute ${step.action}`;
     lines.push(prose);
     lines.push('');
 
-    // Arguments for this action
+    // Arguments
     if (action && action.params.length > 0) {
       const argParts = action.params.map((p, j) => `\`$${j}\` **${p.name}** (${typeLabel(p.type)})`);
       lines.push(`**Arguments:** ${argParts.join(', ')}`);
       lines.push('');
     }
 
-    // Checklist for this step
-    const checklist = workflow.checklists?.[step.action];
+    // Step-specific checklist
+    const checklists = contentKey<Record<string, string[]>>(workflow, 'checklists');
+    const checklist = checklists?.[step.action];
     if (checklist && checklist.length > 0) {
       lines.push('**Checklist:**');
       for (const item of checklist) {
@@ -206,52 +282,71 @@ function renderWorkflowSkill(
       lines.push('');
     }
 
-    // Per-action examples from annotations
+    // Per-action enrichment from annotations (rendered by Renderer)
     const actionAnnot = annot?.actions?.[step.action];
-    if (actionAnnot?.examples && actionAnnot.examples.length > 0) {
-      lines.push('**Examples:**');
-      for (const ex of actionAnnot.examples) {
-        lines.push(`*${ex.label}*`);
-        lines.push('```' + ex.language);
-        lines.push(ex.code);
+    if (actionAnnot) {
+      const actionEnrichment: Record<string, unknown> = {};
+      if (actionAnnot.examples) actionEnrichment.examples = actionAnnot.examples;
+      if (actionAnnot.references) actionEnrichment.references = actionAnnot.references;
+      if (Object.keys(actionEnrichment).length > 0) {
+        const { output } = renderContent(actionEnrichment, fmt);
+        if (output) lines.push(output);
+      }
+    }
+
+    // Content sections inserted after this step
+    const contentSections = allContentSections?.filter(s => s.afterStep === i + 1);
+    if (contentSections && contentSections.length > 0) {
+      for (const section of contentSections) {
+        lines.push(`### ${section.heading}`);
+        lines.push('');
+        lines.push(section.body);
+        lines.push('');
+      }
+    }
+
+    // Validation commands inserted after this step
+    const validationCmds = allValidationCmds?.filter(v => v.afterStep === i + 1);
+    if (validationCmds && validationCmds.length > 0) {
+      lines.push('**Validation:**');
+      for (const vc of validationCmds) {
+        lines.push(`*${vc.label}:*`);
+        lines.push('```bash');
+        lines.push(vc.command);
         lines.push('```');
       }
       lines.push('');
     }
   }
 
-  // References section
-  const refs = workflow.references || annot?.concept?.references;
-  if (refs && refs.length > 0) {
-    lines.push('## References');
-    lines.push('');
-    for (const ref of refs) {
-      lines.push(`- [${ref.label}](${ref.path})`);
-    }
-    lines.push('');
-  }
-
-  // Anti-patterns section
-  const antiPatterns = workflow['anti-patterns'];
-  if (antiPatterns && antiPatterns.length > 0) {
-    lines.push('## Anti-Patterns');
-    lines.push('');
-    for (const ap of antiPatterns) {
-      lines.push(`### ${ap.title}`);
-      lines.push(ap.description);
-      lines.push('');
+  // --- Post-step enrichment (rendered by Renderer) ---
+  // Everything except pre-step keys, structural keys, and step-specific keys
+  const postStepKeys: Record<string, unknown> = {};
+  const skipKeys = new Set([
+    'concept', 'steps',                     // structural
+    'design-principles', 'trigger-description', // pre-step
+    'checklists',                           // step-specific
+    'content-sections', 'validation-commands',  // step-interleaved (handled above)
+  ]);
+  for (const [key, value] of Object.entries(enrichment)) {
+    if (!skipKeys.has(key)) {
+      postStepKeys[key] = value;
     }
   }
 
-  // Related workflows
-  const related = workflow['related-workflows'];
-  if (related && related.length > 0) {
-    lines.push('## Related Skills');
-    lines.push('');
-    for (const r of related) {
-      lines.push(`- /${r}`);
-    }
-    lines.push('');
+  // Add global validation commands (no afterStep) and global content sections
+  const globalValidation = allValidationCmds?.filter(v => !v.afterStep);
+  if (globalValidation && globalValidation.length > 0) {
+    postStepKeys['validation-commands'] = globalValidation;
+  }
+  const globalContentSections = allContentSections?.filter(s => !s.afterStep);
+  if (globalContentSections && globalContentSections.length > 0) {
+    postStepKeys['content-sections'] = globalContentSections;
+  }
+
+  if (Object.keys(postStepKeys).length > 0) {
+    const { output } = renderContent(postStepKeys, fmt);
+    if (output) lines.push(output);
   }
 }
 
@@ -262,6 +357,7 @@ function renderFlatSkill(
   annot?: { concept?: AnnotationConfig; actions: Record<string, AnnotationConfig> },
 ): void {
   const pascal = toPascalCase(manifest.name);
+  const fmt = 'skill-md';
 
   lines.push(`# ${pascal}`);
   lines.push('');
@@ -272,7 +368,6 @@ function renderFlatSkill(
 
   for (const action of manifest.actions) {
     lines.push(`### ${action.name}`);
-    // Prefer action description, fall back to variant prose
     const prose = action.description || action.variants[0]?.prose || `Execute ${action.name}`;
     lines.push(prose);
     lines.push('');
@@ -283,15 +378,14 @@ function renderFlatSkill(
       lines.push('');
     }
 
-    // Per-action examples from annotations
+    // Per-action enrichment from annotations (rendered by Renderer)
     const actionAnnot = annot?.actions?.[action.name];
-    if (actionAnnot?.examples && actionAnnot.examples.length > 0) {
-      for (const ex of actionAnnot.examples) {
-        lines.push(`*${ex.label}*`);
-        lines.push('```' + ex.language);
-        lines.push(ex.code);
-        lines.push('```');
-        lines.push('');
+    if (actionAnnot) {
+      const actionEnrichment: Record<string, unknown> = {};
+      if (actionAnnot.examples) actionEnrichment.examples = actionAnnot.examples;
+      if (Object.keys(actionEnrichment).length > 0) {
+        const { output } = renderContent(actionEnrichment, fmt);
+        if (output) lines.push(output);
       }
     }
   }
@@ -304,6 +398,7 @@ function renderMultiConceptSkill(
   manifestYaml?: Record<string, unknown>,
 ): void {
   const pascal = toPascalCase(group.name);
+  const fmt = 'skill-md';
 
   lines.push(`# ${pascal}`);
   lines.push('');
@@ -335,15 +430,14 @@ function renderMultiConceptSkill(
         lines.push('');
       }
 
-      // Per-action examples
+      // Per-action enrichment from annotations (rendered by Renderer)
       const actionAnnot = annot.actions?.[action.name];
-      if (actionAnnot?.examples && actionAnnot.examples.length > 0) {
-        for (const ex of actionAnnot.examples) {
-          lines.push(`*${ex.label}*`);
-          lines.push('```' + ex.language);
-          lines.push(ex.code);
-          lines.push('```');
-          lines.push('');
+      if (actionAnnot) {
+        const actionEnrichment: Record<string, unknown> = {};
+        if (actionAnnot.examples) actionEnrichment.examples = actionAnnot.examples;
+        if (Object.keys(actionEnrichment).length > 0) {
+          const { output } = renderContent(actionEnrichment, fmt);
+          if (output) lines.push(output);
         }
       }
     }
@@ -443,12 +537,6 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
     const name = conceptName || manifest.name;
     const kebab = toKebabCase(name);
 
-    // --- Determine if we need multi-concept grouping ---
-    // When grouping is not per-concept, we need allProjections to group.
-    // However, the generator calls us per-concept. For non-per-concept modes,
-    // we accumulate: emit the SKILL.md only when we have allProjections context,
-    // but always emit the per-concept .commands.ts.
-
     // Parse manifestYaml for workflow/annotation metadata
     let parsedManifestYaml: Record<string, unknown> | undefined;
     if (input.manifestYaml && typeof input.manifestYaml === 'string') {
@@ -481,9 +569,6 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
     }
 
     // For grouped modes: check if allProjections is available.
-    // If so, build groups and emit SKILL.md files for all groups.
-    // The generator passes allProjections only once; we detect this
-    // by checking if this is the first concept (to avoid duplicates).
     if (grouping !== 'per-concept' && input.allProjections) {
       let allProjections: Record<string, unknown>[];
       try {
@@ -498,7 +583,6 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
         : undefined;
 
       if (firstConceptName && name === firstConceptName) {
-        // Parse all manifests from projections
         const allManifests: ConceptManifest[] = [];
         for (const proj of allProjections) {
           const mRaw = proj.conceptManifest as string;
@@ -521,17 +605,14 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
             content: skillMd,
           });
 
-          // For grouped modes, command runners go in the group directory
           for (const m of group.concepts) {
             const mKebab = toKebabCase(m.name);
-            // Only emit if not already emitted above (avoid duplicates for current concept)
             if (mKebab !== kebab) {
               files.push({
                 path: `${group.name}/${mKebab}.commands.ts`,
                 content: generateCommandRunner(m, m.name),
               });
             } else {
-              // Move the current concept's runner into the group directory
               const existingIdx = files.findIndex((f) => f.path === `${kebab}/${kebab}.commands.ts`);
               if (existingIdx >= 0) {
                 files[existingIdx].path = `${group.name}/${mKebab}.commands.ts`;

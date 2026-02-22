@@ -50,6 +50,11 @@ concepts:
     params:
       N: { as: annotation-ref, description: "Reference to concept/action metadata" }
 
+  Renderer:
+    spec: ./concepts/renderer.concept
+    params:
+      R: { as: renderer-handler-ref, description: "Reference to a registered render handler" }
+
   # --- Coordination Concepts ---
   Target:
     spec: ./concepts/target.concept
@@ -95,6 +100,12 @@ concepts:
     spec: ./concepts/providers/mcp-target.concept
     params:
       M: { as: mcp-tool-ref, description: "Reference to a generated MCP tool" }
+    optional: true
+
+  ClaudeSkillsTarget:
+    spec: ./concepts/providers/claude-skills-target.concept
+    params:
+      K: { as: claude-skill-ref, description: "Reference to a generated Claude Code skill" }
     optional: true
 
   # --- Spec Document Providers ---
@@ -158,6 +169,7 @@ syncs:
     - path: ./syncs/group-before-dispatch.sync
     - path: ./syncs/workflow-before-render.sync
     - path: ./syncs/annotate-before-generate.sync
+    - path: ./syncs/render-enrichment.sync
 
   recommended:
     - path: ./syncs/compose-on-complete.sync
@@ -181,6 +193,7 @@ syncs:
     - path: ./syncs/routing/route-to-grpc.sync
     - path: ./syncs/routing/route-to-cli.sync
     - path: ./syncs/routing/route-to-mcp.sync
+    - path: ./syncs/routing/route-to-claude-skills.sync
 
     # Spec routing
     - path: ./syncs/routing/route-to-openapi.sync
@@ -200,3 +213,4 @@ syncs:
     - path: ./syncs/routing/inject-middleware-grpc.sync
     - path: ./syncs/routing/inject-middleware-cli.sync
     - path: ./syncs/routing/inject-middleware-mcp.sync
+    - path: ./syncs/routing/inject-middleware-claude-skills.sync

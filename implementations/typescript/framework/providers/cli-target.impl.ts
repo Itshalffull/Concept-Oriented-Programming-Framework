@@ -2,13 +2,34 @@
 // CLI Target Provider Handler
 //
 // Generates Commander.js command definitions from concept
-// projections. Each concept produces a single .command.ts file
-// with subcommands for every action in the concept manifest.
-// Architecture doc: Interface Kit
+// projections. Each concept produces a .command.ts file with
+// subcommands for every action, and a command tree structure
+// with help text, examples, and argument mappings.
+// Architecture doc: Interface Kit, Section 2.4
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
 import { toKebabCase, toCamelCase, generateFileHeader } from './codegen-utils.js';
+
+// --- CLI Command Tree Metadata Types ---
+
+/** Action-level CLI override from manifest YAML. */
+interface CliActionMapping {
+  command?: string;
+  description?: string;
+  args?: Record<string, { positional?: boolean; choices?: string[]; default?: string; short?: string }>;
+  flags?: Record<string, { type?: string; required?: boolean; description?: string; short?: string; choices?: string[]; default?: string }>;
+  examples?: Array<{ description: string; command: string }>;
+  'see-also'?: string[];
+}
+
+/** Concept-level CLI config from manifest YAML. */
+interface CliConceptConfig {
+  actions?: Record<string, CliActionMapping>;
+  'command-group'?: string;
+  description?: string;
+  examples?: Array<{ description: string; command: string }>;
+}
 
 // --- Option Inference ---
 
@@ -31,24 +52,41 @@ function optionValueTag(param: ActionParamSchema): string {
   return `<${param.name}>`;
 }
 
+/** Get CLI config for a concept from manifestYaml. */
+function getCliConfig(
+  manifestYaml: Record<string, unknown> | undefined,
+  conceptName: string,
+): CliConceptConfig | undefined {
+  if (!manifestYaml) return undefined;
+  const concepts = manifestYaml.concepts as Record<string, Record<string, unknown>> | undefined;
+  if (!concepts?.[conceptName]) return undefined;
+  return concepts[conceptName].cli as CliConceptConfig | undefined;
+}
+
 // --- Command Builder ---
 
 function buildSubcommand(
   action: ActionSchema,
   conceptCamel: string,
   overrides: Record<string, unknown>,
+  cliConfig?: CliConceptConfig,
 ): string {
   const lines: string[] = [];
   const actionOverride = overrides[action.name] as Record<string, unknown> | undefined;
+  const cliMapping = cliConfig?.actions?.[action.name];
 
-  // Determine description: override > action description > variant prose > fallback
-  const description = (actionOverride?.description as string)
+  // Command name: CLI mapping > kebab-case action name
+  const commandName = cliMapping?.command || toKebabCase(action.name);
+
+  // Description: CLI mapping > override > action description > variant prose > fallback
+  const description = cliMapping?.description
+    || (actionOverride?.description as string)
     || action.description
     || (action.variants[0]?.prose)
     || `Execute ${action.name}`;
 
   lines.push(`${conceptCamel}Command`);
-  lines.push(`  .command('${toKebabCase(action.name)}')`);
+  lines.push(`  .command('${commandName}')`);
   lines.push(`  .description('${description}')`);
 
   // Emit options for each parameter
@@ -56,13 +94,29 @@ function buildSubcommand(
     const flag = `--${toKebabCase(param.name)} ${optionValueTag(param)}`;
     const label = paramLabel(param.name);
 
-    // Check if this parameter should be positional (from overrides)
+    // Check positional: CLI mapping > overrides
+    const cliArg = cliMapping?.args?.[param.name];
+    const cliFlag = cliMapping?.flags?.[param.name];
     const paramOverride = actionOverride?.params as Record<string, Record<string, unknown>> | undefined;
-    const isPositional = paramOverride?.[param.name]?.positional === true;
+    const isPositional = cliArg?.positional === true || paramOverride?.[param.name]?.positional === true;
 
     if (isPositional) {
-      // Positional arguments are added via .argument()
       lines.push(`  .argument('<${param.name}>', '${label}')`);
+    } else if (cliFlag || cliArg) {
+      // Build flag with choices if available
+      const choices = cliFlag?.choices || cliArg?.choices;
+      const short = cliFlag?.short || cliArg?.short;
+      const shortFlag = short ? `-${short}, ` : '';
+      const flagDesc = cliFlag?.description || label;
+      const defaultVal = cliFlag?.default || cliArg?.default;
+
+      if (choices && choices.length > 0) {
+        lines.push(`  .option('${shortFlag}--${toKebabCase(param.name)} <value>', '${flagDesc} (${choices.join('|')})'${defaultVal ? `, '${defaultVal}'` : ''})`);
+      } else {
+        const required = cliFlag?.required !== false;
+        const method = required ? 'requiredOption' : 'option';
+        lines.push(`  .${method}('${shortFlag}${flag}', '${flagDesc}'${defaultVal ? `, '${defaultVal}'` : ''})`);
+      }
     } else {
       lines.push(`  .requiredOption('${flag}', '${label}')`);
     }
@@ -70,6 +124,21 @@ function buildSubcommand(
 
   // Always add --json output flag
   lines.push(`  .option('--json', 'Output as JSON')`);
+
+  // Examples as help text
+  const examples = cliMapping?.examples;
+  if (examples && examples.length > 0) {
+    lines.push(`  .addHelpText('after', '\\nExamples:')`);
+    for (const ex of examples) {
+      lines.push(`  .addHelpText('after', '  ${ex.command}  # ${ex.description}')`);
+    }
+  }
+
+  // See-also references
+  const seeAlso = cliMapping?.['see-also'];
+  if (seeAlso && seeAlso.length > 0) {
+    lines.push(`  .addHelpText('after', '\\nSee also: ${seeAlso.join(', ')}')`);
+  }
 
   // Action handler
   lines.push(`  .action(async (opts) => {`);
@@ -86,22 +155,49 @@ function generateCommandFile(
   manifest: ConceptManifest,
   conceptName: string,
   overrides: Record<string, unknown>,
+  cliConfig?: CliConceptConfig,
 ): string {
   const conceptCamel = toCamelCase(conceptName);
   const kebab = toKebabCase(conceptName);
   const lines: string[] = [];
 
+  // Command group name from CLI config or kebab-case concept name
+  const groupName = cliConfig?.['command-group'] || kebab;
+  const groupDesc = cliConfig?.description || manifest.purpose || `Manage ${conceptName} resources.`;
+
   lines.push(generateFileHeader('cli', conceptName));
   lines.push(`import { Command } from 'commander';`);
   lines.push('');
-  lines.push(`export const ${conceptCamel}Command = new Command('${kebab}')`);
-  lines.push(`  .description('${manifest.purpose || `Manage ${conceptName} resources.`}');`);
+  lines.push(`export const ${conceptCamel}Command = new Command('${groupName}')`);
+  lines.push(`  .description('${groupDesc}');`);
   lines.push('');
 
-  for (const action of manifest.actions) {
-    lines.push(buildSubcommand(action, conceptCamel, overrides));
+  // Command-level examples
+  const examples = cliConfig?.examples;
+  if (examples && examples.length > 0) {
+    lines.push(`${conceptCamel}Command.addHelpText('after', '\\nExamples:');`);
+    for (const ex of examples) {
+      lines.push(`${conceptCamel}Command.addHelpText('after', '  ${ex.command}  # ${ex.description}');`);
+    }
     lines.push('');
   }
+
+  for (const action of manifest.actions) {
+    lines.push(buildSubcommand(action, conceptCamel, overrides, cliConfig));
+    lines.push('');
+  }
+
+  // Export command tree metadata for surface composition
+  const actionNames = manifest.actions.map(a => {
+    const cliName = cliConfig?.actions?.[a.name]?.command || toKebabCase(a.name);
+    return `{ action: '${a.name}', command: '${cliName}' }`;
+  });
+  lines.push(`export const ${conceptCamel}CommandTree = {`);
+  lines.push(`  group: '${groupName}',`);
+  lines.push(`  description: '${groupDesc}',`);
+  lines.push(`  commands: [${actionNames.join(', ')}],`);
+  lines.push(`};`);
+  lines.push('');
 
   return lines.join('\n');
 }
@@ -114,8 +210,9 @@ export const cliTargetHandler: ConceptHandler = {
    * Generate Commander.js command files for one or more concepts.
    *
    * Input projection contains the concept manifest (as nested JSON),
-   * concept name, and per-action overrides for positional args and
-   * flag customisation.
+   * concept name, per-action overrides for positional args and
+   * flag customisation, and optionally manifestYaml for CLI-specific
+   * config (command tree, examples, see-also, flag choices).
    */
   async generate(
     input: Record<string, unknown>,
@@ -159,9 +256,18 @@ export const cliTargetHandler: ConceptHandler = {
       }
     }
 
+    // Parse manifestYaml for CLI-specific config
+    let parsedManifestYaml: Record<string, unknown> | undefined;
+    if (input.manifestYaml && typeof input.manifestYaml === 'string') {
+      try {
+        parsedManifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>;
+      } catch { /* ignore */ }
+    }
+
     const name = conceptName || manifest.name;
     const kebab = toKebabCase(name);
-    const content = generateCommandFile(manifest, name, overrides);
+    const cliConfig = getCliConfig(parsedManifestYaml, name);
+    const content = generateCommandFile(manifest, name, overrides, cliConfig);
 
     const files = [
       {

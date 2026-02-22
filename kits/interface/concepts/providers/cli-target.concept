@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept CliTarget [C] {
 
   purpose {
@@ -6,6 +6,7 @@ concept CliTarget [C] {
     command/subcommand structure, flag derivation, argument
     mapping, output formatting (JSON/table/YAML), shell
     completion generation, and interactive mode for streaming.
+    See Architecture doc Section 2.4.
   }
 
   state {
@@ -15,21 +16,37 @@ concept CliTarget [C] {
       shell: C -> String
       outputFormats: C -> list String
     }
+    commandTree {
+      parent: C -> option C
+      name: C -> String
+      description: C -> String
+      children: C -> list C
+      depth: C -> Int
+    }
     mapping {
       concept: C -> String
       action: C -> String
       command: C -> String
-      args: C -> list { name: String, kind: String, required: Bool }
+      args: C -> list { name: String, kind: String, required: Bool, positional: Bool, choices: list String, default: String }
+      flags: C -> list { name: String, type: String, required: Bool, description: String, short: String }
+    }
+    help {
+      synopsis: C -> String
+      longDescription: C -> option String
+      examples: C -> list { description: String, command: String }
+      seeAlso: C -> list String
     }
   }
 
   actions {
     action generate(projection: String, config: String) {
       -> ok(commands: list String, files: list String) {
-        CLI command tree generated from projection. Flags
-        derived from action parameters. Shell completion
-        scripts produced for configured shells. Output
-        formatters attached per command.
+        CLI command tree generated from projection. Concept
+        names become top-level command groups. Action names
+        become subcommands. Flags derived from action parameters.
+        Shell completion scripts produced for configured shells.
+        Output formatters attached per command. Help text
+        generated from concept purpose and action prose.
       }
       -> tooManyPositional(action: String, count: Int) {
         Action has more positional arguments than CLI
@@ -53,7 +70,7 @@ concept CliTarget [C] {
     action listCommands(concept: String) {
       -> ok(commands: list String, subcommands: list String) {
         Return all generated commands and subcommands for
-        a concept.
+        a concept, including the full command tree hierarchy.
       }
     }
   }
