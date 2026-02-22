@@ -1,0 +1,84 @@
+@version(1)
+concept Renderer [R] {
+
+  purpose {
+    Render opaque enrichment JSON into formatted output strings.
+    Owns a registry of key handlers — each handler knows how to
+    render one enrichment key (e.g. "design-principles", "checklists",
+    "examples") in one output format (e.g. "skill-md", "cli-help").
+    Targets call render with their enrichment JSON and format; the
+    Renderer walks keys, dispatches to registered handlers, and
+    returns assembled output plus a list of unhandled keys for
+    transparency. New enrichment kinds register a handler — zero
+    changes to existing concepts or renderers.
+    See Architecture doc Section 1.8.
+  }
+
+  state {
+    handlers: set R
+    registry {
+      key: R -> String
+      format: R -> String
+      order: R -> Int
+      template: R -> String
+    }
+  }
+
+  actions {
+    action register(key: String, format: String, order: Int, template: String) {
+      description {
+        Register a handler for an enrichment key in a given format.
+        Order determines rendering position in the output — lower
+        numbers render first. Template is either a named handler
+        reference (e.g. "builtin:checklist") or an inline template
+        string. If a handler already exists for the (key, format)
+        pair, it is replaced.
+      }
+      -> ok(handler: R) {
+        Handler registered.
+      }
+      -> invalidTemplate(template: String, reason: String) {
+        Template reference or inline template is malformed.
+      }
+    }
+
+    action render(content: String, format: String) {
+      description {
+        Render enrichment content in the given format. Parses the
+        content JSON, walks top-level keys, dispatches each to the
+        registered handler for (key, format). Keys without a handler
+        are collected in unhandledKeys for transparency — the opaque
+        model means some keys are intended for other formats. Output
+        sections are ordered by handler registration order.
+      }
+      -> ok(output: String, sectionCount: Int, unhandledKeys: list String) {
+        Rendered output with sections assembled in order.
+        unhandledKeys lists content keys that had no registered
+        handler for this format — not an error, just transparency.
+      }
+      -> invalidContent(reason: String) {
+        Content string is not valid JSON.
+      }
+      -> unknownFormat(format: String) {
+        No handlers registered for this format.
+      }
+    }
+
+    action listHandlers(format: String) {
+      description {
+        List all registered handlers for a format, ordered by
+        rendering position.
+      }
+      -> ok(handlers: list String, count: Int) {
+        Handler keys for the format, in render order.
+      }
+    }
+  }
+
+  invariant {
+    after register(key: "design-principles", format: "skill-md", order: 10, template: "builtin:design-principles")
+      -> ok(handler: h)
+    then render(content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}", format: "skill-md")
+      -> ok(output: o, sectionCount: 1, unhandledKeys: u)
+  }
+}

@@ -1,0 +1,14 @@
+# Render enrichment content before target output assembly.
+# After workflow and annotation resolution, the Renderer
+# processes opaque JSON into format-specific output that
+# targets embed in their generated files.
+# Architecture doc: Interface Kit
+
+sync RenderEnrichment [eager]
+when {
+  Workflow/define: [ concept: ?concept; steps: ?steps; content: ?content ]
+    => [ workflow: ?w; stepCount: ?sc ]
+}
+then {
+  Renderer/render: [ content: ?content; format: ?format ]
+}
