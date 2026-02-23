@@ -315,8 +315,10 @@ describe('Claude Skills Target — Workflow Rendering', () => {
       .find(f => f.path.endsWith('SKILL.md'))!;
 
     expect(skillMd.content).toContain('## Related Skills');
-    expect(skillMd.content).toContain('- /sync-designer');
-    expect(skillMd.content).toContain('- /implementation-builder');
+    // skill-md format renders related-workflows as a table
+    expect(skillMd.content).toContain('| Skill | When to Use |');
+    expect(skillMd.content).toContain('`/sync-designer`');
+    expect(skillMd.content).toContain('`/implementation-builder`');
   });
 
   it('falls back to flat rendering when no workflow data exists', async () => {

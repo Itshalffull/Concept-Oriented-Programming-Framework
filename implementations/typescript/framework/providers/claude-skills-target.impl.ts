@@ -28,7 +28,7 @@ import {
   type GroupingMode,
   type HierarchicalConfig,
 } from './codegen-utils.js';
-import { renderContent, renderKey } from './renderer.impl.js';
+import { renderContent, renderKey, interpolateVars, filterByTier } from './renderer.impl.js';
 
 // --- Type Display ---
 
@@ -239,7 +239,16 @@ function renderWorkflowSkill(
   // --- Header ---
   lines.push(`# ${pascal}`);
   lines.push('');
-  lines.push(manifest.purpose || `Manage ${manifest.name} resources.`);
+
+  // Intro line: use intro-template with variable interpolation if available,
+  // otherwise fall back to manifest.purpose.
+  const introTemplate = contentKey<string>(annot?.concept, 'intro-template');
+  if (introTemplate) {
+    const vars: Record<string, string> = { ARGUMENTS: '$ARGUMENTS', CONCEPT: manifest.name };
+    lines.push(interpolateVars(introTemplate, vars));
+  } else {
+    lines.push(manifest.purpose || `Manage ${manifest.name} resources.`);
+  }
   lines.push('');
 
   // --- Pre-step enrichment (rendered by Renderer) ---
@@ -381,7 +390,15 @@ function renderFlatSkill(
 
   lines.push(`# ${pascal}`);
   lines.push('');
-  lines.push(manifest.purpose || `Manage ${manifest.name} resources.`);
+
+  // Intro line: use intro-template with variable interpolation if available
+  const introTemplate = contentKey<string>(annot?.concept, 'intro-template');
+  if (introTemplate) {
+    const vars: Record<string, string> = { ARGUMENTS: '$ARGUMENTS', CONCEPT: manifest.name };
+    lines.push(interpolateVars(introTemplate, vars));
+  } else {
+    lines.push(manifest.purpose || `Manage ${manifest.name} resources.`);
+  }
   lines.push('');
   lines.push('## Commands');
   lines.push('');
@@ -602,6 +619,36 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
         path: `${kebab}/SKILL.md`,
         content: skillMd,
       });
+
+      // --- Companion file emission ---
+      // Emit supporting materials (examples/, references/, templates/)
+      // from companion-docs and references enrichment keys. Reference
+      // items with tier=reference are emitted as separate files; others
+      // stay inline (already rendered in SKILL.md by the Renderer).
+      const conceptAnnot = getAnnotationsForConcept(parsedManifestYaml, name);
+      const conceptWorkflow = getWorkflowForConcept(parsedManifestYaml, name);
+      const enrichment = mergeEnrichment(conceptWorkflow, conceptAnnot?.concept);
+
+      // Emit companion-docs items as separate files
+      const companionDocs = enrichment['companion-docs'] as Array<{ path: string; content?: string; label: string; tier?: string }> | undefined;
+      if (companionDocs) {
+        for (const doc of companionDocs) {
+          if (doc.content && doc.path) {
+            files.push({ path: `${kebab}/${doc.path}`, content: doc.content });
+          }
+        }
+      }
+
+      // Emit reference items with tier=reference as companion files
+      const references = enrichment.references as Array<{ path: string; label: string; tier?: string; content?: string }> | undefined;
+      if (references) {
+        const refDocs = filterByTier(references, 'reference');
+        for (const ref of refDocs) {
+          if (ref.content && ref.path) {
+            files.push({ path: `${kebab}/${ref.path}`, content: ref.content });
+          }
+        }
+      }
     }
 
     // For grouped modes: check if allProjections is available.
