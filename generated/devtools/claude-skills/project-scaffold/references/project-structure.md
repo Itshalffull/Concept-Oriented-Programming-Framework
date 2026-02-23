@@ -1,0 +1,60 @@
+# Standard Project Directory Layout
+
+A COPF project follows a convention-over-configuration directory
+structure. Tools expect this layout to work without extra config.
+
+## Directory Tree
+
+```
+my-app/
+├── specs/                 # Concept specifications
+│   ├── user.concept
+│   ├── article.concept
+│   └── comment.concept
+├── syncs/                 # Synchronization rules
+│   ├── create-profile.sync
+│   └── welcome-email.sync
+├── implementations/       # Handler code
+│   ├── user.impl.ts
+│   ├── article.impl.ts
+│   └── comment.impl.ts
+├── kits/                  # Reusable concept packages
+│   └── auth-kit/
+│       ├── kit.yaml
+│       ├── concepts/
+│       └── syncs/
+├── tests/                 # Conformance and integration tests
+│   ├── user.test.ts
+│   └── syncs.test.ts
+├── generated/             # Auto-generated output (do not edit)
+│   ├── manifests/
+│   └── types/
+├── deploy.yaml            # Deployment manifest
+└── copf.config.yaml       # Project configuration
+```
+
+## Key Directories
+
+| Directory | Purpose | File Types |
+|-----------|---------|------------|
+| `specs/` | Concept definitions | `.concept` |
+| `syncs/` | Sync rules | `.sync` |
+| `implementations/` | Handler code | `.impl.ts` |
+| `kits/` | Reusable packages | `kit.yaml` + subdirs |
+| `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
+| `tests/` | Tests | `.test.ts` |
+
+## Configuration File
+
+```yaml
+# copf.config.yaml
+project:
+  name: my-app
+  version: 0.1.0
+specs:
+  dir: ./specs
+syncs:
+  dir: ./syncs
+output:
+  dir: ./generated
+```

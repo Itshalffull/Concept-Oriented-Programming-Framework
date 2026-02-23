@@ -1,0 +1,40 @@
+# Walkthrough: Validating a Sync File
+
+This walkthrough shows how to validate a sync file and fix
+common errors caught by the parser.
+
+## Step 1: Write the Sync
+
+```
+sync WelcomeEmail [eager] {
+  when { User/create => ok[user: ?u] }
+  where { User: { ?u email: ?email } }
+  then { Email/send[to: ?email, template: "welcome"] }
+}
+```
+
+## Step 2: Parse and Validate
+
+```bash
+copf compile-syncs syncs/welcome-email.sync
+```
+
+## Step 3: Fix Common Errors
+
+**Unbound variable:**
+```
+ERROR: Variable ?email in then-clause is not bound
+FIX: Add a where-clause to bind ?email from User state
+```
+
+**Missing concept reference:**
+```
+ERROR: Concept 'Emaill' not found in loaded manifests
+FIX: Check spelling — should be 'Email'
+```
+
+**Parameter mismatch:**
+```
+ERROR: Email/send expects 'to' (String) but got 'to' (Int)
+FIX: Ensure variable type matches action parameter type
+```

@@ -1,0 +1,57 @@
+# Transport Adapter Reference
+
+Transport adapters enable cross-runtime communication when
+concepts in different runtimes need to interact through syncs.
+
+## Adapter Types
+
+| Type | Use Case | Latency |
+|------|----------|---------|
+| `http` | REST-based communication | Medium |
+| `websocket` | Bidirectional real-time | Low |
+| `amqp` | Message queue (RabbitMQ) | Medium |
+| `in-process` | Same runtime (no transport) | None |
+
+## HTTP Adapter
+
+```yaml
+transports:
+  api-to-worker:
+    type: http
+    from: api
+    to: worker
+    endpoint: http://worker:3001
+    timeout: 5000
+    retries: 3
+```
+
+## WebSocket Adapter
+
+```yaml
+transports:
+  realtime:
+    type: websocket
+    from: api
+    to: client
+    path: /ws
+```
+
+## AMQP Adapter
+
+```yaml
+transports:
+  async-bridge:
+    type: amqp
+    from: api
+    to: worker
+    url: amqp://rabbitmq:5672
+    exchange: copf-events
+    queue: worker-tasks
+```
+
+## When to Use Transports
+
+- **Same runtime**: No transport needed. Syncs run in-process.
+- **Two runtimes, same machine**: Use `http` or `in-process` IPC.
+- **Distributed**: Use `amqp` for reliability or `websocket` for
+  low-latency bidirectional communication.

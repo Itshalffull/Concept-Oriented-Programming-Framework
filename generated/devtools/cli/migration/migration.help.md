@@ -1,15 +1,6 @@
----
-name: migration
-description: Track concept schema versions and gate concept startup 
- Detect when a concept s deployed storage schema differs from 
- its current spec version and coordinate migration steps
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf migration — Help
 
-# Migration
-
-Plan and apply schema migration for **$ARGUMENTS**, transforming stored state from the previous version to the current spec version.
+Plan and apply schema migration for **<source>**, transforming stored state from the previous version to the current spec version.
 
 
 > **When to use:** Use when concept schemas have changed and stored state needs to be migrated to match the new version. Covers migration planning, dry-run validation, and execution.
@@ -19,39 +10,15 @@ Plan and apply schema migration for **$ARGUMENTS**, transforming stored state fr
 
 - **Version Gating:** A concept cannot start until its storage schema matches its current spec version — the migration concept gates startup.
 - **Reversible by Default:** Every migration step should have a corresponding rollback step — data transformations should be invertible.
-
-## Step-by-Step Process
-
-### Step 1: Plan Migration
-
-Analyze schema changes and plan migration steps for concept state transitions.
-
-**Checklist:**
+**plan:**
 - [ ] Schema diff shows expected changes?
 - [ ] No data loss in state transformations?
 - [ ] Rollback strategy identified?
 
-**Examples:**
-*Plan a migration*
-```bash
-copf migrate --plan
-```
-
-### Step 2: Apply Migration
-
-Execute the planned migration, transforming stored state to match the new schema.
-
-**Checklist:**
+**apply:**
 - [ ] Backup created before applying?
 - [ ] Migration ran to completion?
 - [ ] Post-migration validation passed?
-
-**Examples:**
-*Apply migration*
-```bash
-copf migrate --apply
-```
-
 ## References
 
 - [Migration planning and execution guide](references/migration-guide.md)
@@ -79,8 +46,6 @@ npx tsx tools/copf-cli/src/index.ts migrate --dry-run
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/concept-validator` | Validate the updated concept spec |
-| `/implementation-builder` | Update the handler implementation after schema change |
-| `/deployment-config` | Re-validate deployment after migration |
+- /concept-validator — Validate the updated concept spec
+- /implementation-builder — Update the handler implementation after schema change
+- /deployment-config — Re-validate deployment after migration

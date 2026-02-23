@@ -1,17 +1,6 @@
----
-name: schema-gen
-description: Transform parsed concept ASTs into rich , language neutral 
- ConceptManifests The manifest contains everything a code 
- generator needs : relation schemas ( after merge grouping ) , 
- fully typed action signatures , structured invariants with 
- test values , GraphQL schema fragments , and JSON Schemas
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf schema-gen — Help
 
-# SchemaGen
-
-Generate a ConceptManifest from **$ARGUMENTS** that provides typed action signatures, state schemas, and invariant test values for code generation.
+Generate a ConceptManifest from **<source>** that provides typed action signatures, state schemas, and invariant test values for code generation.
 
 
 > **When to use:** Use when generating ConceptManifests from parsed ASTs, implementing concept handlers, or inspecting the schema that drives code generation.
@@ -22,37 +11,11 @@ Generate a ConceptManifest from **$ARGUMENTS** that provides typed action signat
 - **One Handler per Action:** Each action in the concept spec maps to exactly one async method in the implementation handler.
 - **Variant Completeness:** Every return variant declared in the spec must have a corresponding code path in the handler — no missing branches.
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
-
-## Step-by-Step Process
-
-### Step 1: Generate Schema from Spec
-
-Generate ConceptManifest from parsed AST. The manifest provides typed action signatures for implementation.
-
-**Arguments:** `$0` **spec** (S), `$1` **ast** (ast)
-
-**Checklist:**
+**generate:**
 - [ ] All action parameters have types?
 - [ ] Return variants match spec declarations?
 - [ ] State relations are correctly grouped?
 - [ ] Type parameters are resolved?
-
-**Examples:**
-*Generate manifest from AST*
-```typescript
-import { schemaGenHandler } from './schema-gen.impl';
-const result = await schemaGenHandler.generate(
-  { conceptAst: JSON.stringify(ast) }, storage
-);
-```
-*Generate from CLI*
-```bash
-copf generate specs/my-concept.concept
-```
-## References
-
-- [Spec-to-TypeScript type mapping rules](references/type-mapping.md)
-
 ## References
 
 - [Implementation patterns and storage](references/implementation-patterns.md)
@@ -113,8 +76,6 @@ npx vitest run tests/schema-gen.test.ts
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/concept-designer` | Design concepts before implementing them |
-| `/concept-validator` | Validate specs before generating schemas |
-| `/sync-designer` | Wire implemented concepts together with syncs |
+- /concept-designer — Design concepts before implementing them
+- /concept-validator — Validate specs before generating schemas
+- /sync-designer — Wire implemented concepts together with syncs

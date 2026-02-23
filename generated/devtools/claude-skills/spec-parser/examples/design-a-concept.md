@@ -1,0 +1,72 @@
+# Walkthrough: Designing a Concept from Scratch
+
+This walkthrough shows how to design a `Bookmark` concept
+following Jackson's methodology.
+
+## Step 1: Articulate the Purpose
+
+> What is this concept for?
+
+```
+purpose { Allow users to save and organize references to items. }
+```
+
+- One sentence, imperative present tense.
+- No implementation details (no "stores in database").
+
+## Step 2: Design the State
+
+Start from the purpose. A bookmark needs:
+- A collection of bookmarks
+- Which user owns it
+- Which item it references
+- Optional: a label
+
+```
+state {
+  bookmarks: set B
+  owner: B -> U
+  item: B -> I
+  label: B -> option String
+  created: B -> String
+}
+```
+
+## Step 3: Design the Actions
+
+What can users do with bookmarks?
+
+```
+actions {
+  action add(item: I, label: option String) {
+    -> ok(bookmark: B) { Bookmark created. }
+    -> duplicate(item: I) { Item already bookmarked. }
+  }
+  action remove(bookmark: B) {
+    -> ok { Bookmark removed. }
+    -> notFound(bookmark: B) { Bookmark does not exist. }
+  }
+  action list(owner: U) {
+    -> ok(bookmarks: list B) { User's bookmarks returned. }
+  }
+}
+```
+
+## Step 4: Write Invariants
+
+```
+invariants {
+  after add(item) -> ok(bookmark) {
+    then { bookmark in bookmarks; item(bookmark) = item }
+  }
+  after remove(bookmark) -> ok {
+    then { bookmark not in bookmarks }
+  }
+}
+```
+
+## Step 5: Validate
+
+```bash
+copf check specs/bookmark.concept
+```

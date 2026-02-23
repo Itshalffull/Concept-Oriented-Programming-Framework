@@ -1,15 +1,6 @@
----
-name: deployment-validator
-description: Parse and validate deployment manifests against compiled concepts 
- and syncs Produce deployment plans with transport assignments , 
- runtime mappings , and sync to engine bindings
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf deployment-validator — Help
 
-# DeploymentValidator
-
-Validate deployment manifest **$ARGUMENTS** against compiled concepts and syncs, checking runtime mappings, engine assignments, and transport configuration.
+Validate deployment manifest **<source>** against compiled concepts and syncs, checking runtime mappings, engine assignments, and transport configuration.
 
 
 > **When to use:** Use when configuring deployment manifests that map concepts to runtimes, assign syncs to engines, set up transport adapters, and validate capability requirements.
@@ -19,31 +10,11 @@ Validate deployment manifest **$ARGUMENTS** against compiled concepts and syncs,
 
 - **Declarative Deployment:** The deployment manifest declares intent (what runs where), not imperative steps — the framework resolves transport and engine assignments.
 - **Capability Matching:** Each runtime declares capabilities (storage types, transport protocols) and the validator checks that every concept's needs are met.
-
-## Step-by-Step Process
-
-### Step 1: Validate Deployment Manifest
-
-Validate that deployment manifests correctly map concepts to runtimes, assign syncs to engines, and satisfy capability requirements.
-
-**Arguments:** `$0` **manifest** (M), `$1` **concepts** (conceptmanifest[]), `$2` **syncs** (compiledsync[])
-
-**Checklist:**
+**validate:**
 - [ ] Every concept mapped to a runtime?
 - [ ] Sync engine assignments cover all syncs?
 - [ ] Transport adapters match concept locations?
 - [ ] Capability requirements satisfied by target runtimes?
-
-**Examples:**
-*Validate deployment manifest*
-```bash
-copf deploy --validate app.deploy.yaml
-```
-## References
-
-- [Deployment configuration guide](references/deployment-guide.md)
-- [Transport adapter reference](references/transport-adapters.md)
-
 ## References
 
 - [Deployment configuration guide](references/deployment-guide.md)
@@ -99,8 +70,6 @@ npx vitest run tests/deployment-validator.test.ts
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/concept-validator` | Validate concept specs before deployment |
-| `/cache-build` | Pre-compile artifacts for faster deployment |
-| `/kit-lifecycle` | Manage kits that bundle deployed concepts |
+- /concept-validator — Validate concept specs before deployment
+- /cache-build — Pre-compile artifacts for faster deployment
+- /kit-lifecycle — Manage kits that bundle deployed concepts

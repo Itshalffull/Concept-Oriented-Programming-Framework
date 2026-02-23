@@ -1,0 +1,49 @@
+# Jackson's Concept Design Methodology
+
+Summary of Daniel Jackson's software concept design methodology
+as applied in COPF.
+
+## Five Core Principles
+
+### 1. Singularity
+Each concept serves exactly one purpose. If the purpose statement
+contains "and", it should be split into separate concepts.
+
+### 2. Independence
+A concept never references another concept directly — no imports,
+no shared types, no cross-concept calls. Concepts communicate only
+through type parameters and syncs.
+
+### 3. Sufficiency
+The concept's state and actions are sufficient to fulfill its purpose.
+Every use case implied by the purpose can be served by the declared actions.
+
+### 4. Necessity
+Every piece of state is needed by at least one action. Every action
+serves the concept's purpose. No dead state or unused actions.
+
+### 5. Invariant Completeness
+Key properties of the concept are captured as formal invariants.
+Invariants document what must always be true after each action completes.
+
+## Design Workflow
+
+1. **Articulate purpose** — Write 1-3 sentences describing what the
+   concept is for, not how it works.
+2. **Design state** — Start with the primary collection (`items: set T`),
+   then add relations that serve the actions.
+3. **Design actions** — Define verbs with typed parameters and return
+   variants. Each variant represents a distinct outcome.
+4. **Write invariants** — For each action+variant, state what must be
+   true afterward. This catches design gaps early.
+5. **Validate** — Run `copf check` to verify syntax, completeness, and
+   consistency.
+
+## Common Concept Patterns
+
+| Pattern | State Shape | Example |
+|---------|-------------|---------|
+| Entity CRUD | `items: set T; fields: T -> Type` | User, Article |
+| Relationship | `links: set L; from: L -> A; to: L -> B` | Friendship, Membership |
+| Workflow | `items: set T; status: T -> Status` | Order, Approval |
+| Guard | `(no primary state)` | Password, RateLimit |
