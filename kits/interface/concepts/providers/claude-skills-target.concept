@@ -11,7 +11,9 @@ concept ClaudeSkillsTarget [K] {
     trigger-description, validation-commands, etc.) and ignores
     the rest. New enrichment kinds require only a new YAML key
     and a renderer update — zero concept changes.
-    See Architecture doc Section 2.7.
+    When @hierarchical trait is present, skill instructions
+    include tree navigation workflow steps and hierarchy-aware
+    checklists. See Architecture doc Section 2.6.
   }
 
   state {

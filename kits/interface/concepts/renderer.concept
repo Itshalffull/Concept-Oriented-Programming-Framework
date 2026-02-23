@@ -1,16 +1,15 @@
-@version(1)
+@version(2)
 concept Renderer [R] {
 
   purpose {
-    Render opaque enrichment JSON into formatted output strings.
-    Owns a registry of key handlers — each handler knows how to
-    render one enrichment key (e.g. "design-principles", "checklists",
-    "examples") in one output format (e.g. "skill-md", "cli-help").
-    Targets call render with their enrichment JSON and format; the
-    Renderer walks keys, dispatches to registered handlers, and
-    returns assembled output plus a list of unhandled keys for
-    transparency. New enrichment kinds register a handler — zero
-    changes to existing concepts or renderers.
+    Render opaque enrichment JSON into formatted output strings
+    using data-driven templates. Handlers are declarative — each
+    maps an enrichment key to a built-in render pattern (list,
+    checklist, code-list, callout, heading-body, bad-good, etc.)
+    plus a template config with {{field}} interpolation. Patterns
+    are the small code surface shipped once; handlers are pure
+    data that can live in YAML manifests. New enrichment kinds
+    need only a YAML entry — zero code changes.
     See Architecture doc Section 1.8.
   }
 
@@ -20,25 +19,31 @@ concept Renderer [R] {
       key: R -> String
       format: R -> String
       order: R -> Int
+      pattern: R -> String
       template: R -> String
     }
   }
 
   actions {
-    action register(key: String, format: String, order: Int, template: String) {
+    action register(key: String, format: String, order: Int, pattern: String, template: String) {
       description {
         Register a handler for an enrichment key in a given format.
-        Order determines rendering position in the output — lower
-        numbers render first. Template is either a named handler
-        reference (e.g. "builtin:checklist") or an inline template
-        string. If a handler already exists for the (key, format)
-        pair, it is replaced.
+        Order determines rendering position — lower numbers render
+        first. Pattern names a built-in render pattern (list,
+        checklist, code-list, link-list, callout, heading-body,
+        bad-good, scaffold-list, slash-list, keyed-checklist,
+        inline-list). Template is a JSON config for the pattern
+        with {{field}} interpolation placeholders. If a handler
+        already exists for the (key, format) pair, it is replaced.
       }
       -> ok(handler: R) {
         Handler registered.
       }
+      -> unknownPattern(pattern: String) {
+        The named pattern does not exist.
+      }
       -> invalidTemplate(template: String, reason: String) {
-        Template reference or inline template is malformed.
+        Template config is malformed JSON.
       }
     }
 
@@ -46,10 +51,9 @@ concept Renderer [R] {
       description {
         Render enrichment content in the given format. Parses the
         content JSON, walks top-level keys, dispatches each to the
-        registered handler for (key, format). Keys without a handler
-        are collected in unhandledKeys for transparency — the opaque
-        model means some keys are intended for other formats. Output
-        sections are ordered by handler registration order.
+        registered handler's pattern with its template config. Keys
+        without a handler are collected in unhandledKeys for
+        transparency. Output sections are ordered by handler order.
       }
       -> ok(output: String, sectionCount: Int, unhandledKeys: list String) {
         Rendered output with sections assembled in order.
@@ -65,20 +69,28 @@ concept Renderer [R] {
     }
 
     action listHandlers(format: String) {
-      description {
-        List all registered handlers for a format, ordered by
-        rendering position.
-      }
       -> ok(handlers: list String, count: Int) {
         Handler keys for the format, in render order.
+      }
+    }
+
+    action listPatterns() {
+      description {
+        List all available render patterns.
+      }
+      -> ok(patterns: list String) {
+        Names of built-in patterns available for handler templates.
       }
     }
   }
 
   invariant {
-    after register(key: "design-principles", format: "skill-md", order: 10, template: "builtin:design-principles")
+    after register(key: "migration-guide", format: "skill-md", order: 75,
+      pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}")
       -> ok(handler: h)
-    then render(content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}", format: "skill-md")
+    then render(
+      content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}",
+      format: "skill-md")
       -> ok(output: o, sectionCount: 1, unhandledKeys: u)
   }
 }

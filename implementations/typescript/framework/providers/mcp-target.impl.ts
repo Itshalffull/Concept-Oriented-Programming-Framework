@@ -9,7 +9,8 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader } from './codegen-utils.js';
+import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
+import type { HierarchicalConfig } from './codegen-utils.js';
 
 // --- MCP Entry Types ---
 
@@ -123,12 +124,56 @@ function toPascalLabel(name: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+// --- Hierarchical Entry Builder ---
+
+/**
+ * Generate additional MCP tool entries for @hierarchical concepts.
+ * Adds list_children, get_ancestors, and get_descendants tools.
+ */
+function buildHierarchicalEntries(conceptName: string): McpEntry[] {
+  const snake = toSnakeCase(conceptName);
+  return [
+    {
+      type: 'tool' as const,
+      name: `${snake}_list_children`,
+      description: `List direct children of a ${conceptName.toLowerCase()} node in the hierarchy`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          parentId: { type: 'string', description: 'ID of the parent node' },
+          depth: { type: 'integer', description: 'Max depth to recurse (default: 1)' },
+        },
+        required: ['parentId'],
+      },
+    },
+    {
+      type: 'tool' as const,
+      name: `${snake}_get_ancestors`,
+      description: `Get the ancestor chain from a ${conceptName.toLowerCase()} node to the root`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'ID of the node' },
+        },
+        required: ['id'],
+      },
+    },
+    {
+      type: 'resource-template' as const,
+      name: `${snake}_tree`,
+      uriTemplate: `${toKebabCase(conceptName)}://{path}`,
+      description: `Navigate the ${conceptName.toLowerCase()} hierarchy by path (e.g. root/sub1/sub2)`,
+    },
+  ];
+}
+
 // --- Generate Tools File ---
 
 function generateToolsFile(
   manifest: ConceptManifest,
   conceptName: string,
   overrides: Record<string, Record<string, unknown>>,
+  hierConfig?: HierarchicalConfig,
 ): string {
   const camel = conceptName.charAt(0).toLowerCase() + conceptName.slice(1);
   const uriBase = `${toKebabCase(manifest.uri?.split('/')[0] || conceptName)}:/`;
@@ -157,6 +202,11 @@ function generateToolsFile(
       default:
         entries.push(buildToolEntry(conceptName, action, overrideDesc));
     }
+  }
+
+  // @hierarchical: add tree traversal tools
+  if (hierConfig) {
+    entries.push(...buildHierarchicalEntries(conceptName));
   }
 
   const lines: string[] = [];
@@ -222,8 +272,15 @@ export const mcpTargetHandler: ConceptHandler = {
     }
 
     const name = conceptName || manifest.name;
+    let parsedManifestYaml: Record<string, unknown> | undefined;
+    if (input.manifestYaml && typeof input.manifestYaml === 'string') {
+      try {
+        parsedManifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>;
+      } catch { /* ignore */ }
+    }
+    const hierConfig = getHierarchicalTrait(parsedManifestYaml, name);
     const kebab = toKebabCase(name);
-    const content = generateToolsFile(manifest, name, overrides);
+    const content = generateToolsFile(manifest, name, overrides, hierConfig);
 
     const files = [
       {

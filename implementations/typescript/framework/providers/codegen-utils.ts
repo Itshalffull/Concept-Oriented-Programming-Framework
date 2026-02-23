@@ -382,6 +382,75 @@ export function classifyAction(actionName: string): ActionClassification {
   return { crudRole, intent, eventProducing, eventVerb, mcpType };
 }
 
+// --- Hierarchical Trait Detection ---
+
+/** Trait config from manifest YAML concepts.{name}.traits */
+export interface TraitConfig {
+  name: string;
+  config?: Record<string, unknown>;
+  actions?: string[] | ['all'];
+}
+
+/** Parsed @hierarchical trait config. */
+export interface HierarchicalConfig {
+  relation: string;
+  labelField?: string;
+  maxDepth?: number;
+  style: 'nested' | 'prefixed';
+}
+
+/**
+ * Extract the @hierarchical trait from a concept's traits array.
+ * Returns undefined if not present.
+ */
+export function getHierarchicalTrait(
+  manifestYaml: Record<string, unknown> | undefined,
+  conceptName: string,
+): HierarchicalConfig | undefined {
+  if (!manifestYaml) return undefined;
+  const concepts = manifestYaml.concepts as Record<string, Record<string, unknown>> | undefined;
+  if (!concepts?.[conceptName]) return undefined;
+  const traits = concepts[conceptName].traits as TraitConfig[] | undefined;
+  if (!traits) return undefined;
+  const hier = traits.find(t => t.name === 'hierarchical');
+  if (!hier?.config) return undefined;
+  return {
+    relation: (hier.config.relation as string) || 'parentOf',
+    labelField: hier.config.labelField as string | undefined,
+    maxDepth: hier.config.maxDepth as number | undefined,
+    style: (hier.config.style as 'nested' | 'prefixed') || 'nested',
+  };
+}
+
+/**
+ * Infer additional hierarchical HTTP routes for a concept.
+ * Returns routes for children, ancestors, descendants, and move endpoints.
+ */
+export function inferHierarchicalRoutes(basePath: string): HttpRoute[] {
+  return [
+    { method: 'GET', path: `${basePath}/{id}/children`, statusCodes: { ok: 200, notFound: 404 } },
+    { method: 'POST', path: `${basePath}/{id}/children`, statusCodes: { ok: 201, notFound: 404 } },
+    { method: 'GET', path: `${basePath}/{id}/ancestors`, statusCodes: { ok: 200, notFound: 404 } },
+    { method: 'GET', path: `${basePath}/{id}/descendants`, statusCodes: { ok: 200, notFound: 404 } },
+  ];
+}
+
+/**
+ * Get enrichment content from a parsed projection's content field.
+ * Returns an empty object if no content is available.
+ */
+export function getEnrichmentContent(
+  projection: Record<string, unknown>,
+): Record<string, unknown> {
+  const contentStr = projection.content as string | undefined;
+  if (!contentStr) return {};
+  try {
+    return JSON.parse(contentStr) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
 // --- Concept Grouping ---
 
 export type GroupingMode =

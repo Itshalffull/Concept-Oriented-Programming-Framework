@@ -23,7 +23,10 @@ import {
   toPascalCase,
   toCamelCase,
   classifyAction,
+  getHierarchicalTrait,
 } from './codegen-utils.js';
+
+import type { HierarchicalConfig } from './codegen-utils.js';
 
 // --- YAML String Helpers ---
 
@@ -270,6 +273,15 @@ function assembleAsyncApiDocument(
     allEvents.push(...extractEvents(manifest));
   }
 
+  // Detect @hierarchical traits for each concept
+  const hierConfigs = new Map<string, HierarchicalConfig>();
+  for (const manifest of manifests) {
+    const hierConfig = getHierarchicalTrait(manifestYaml, manifest.name);
+    if (hierConfig) {
+      hierConfigs.set(manifest.name, hierConfig);
+    }
+  }
+
   const lines: string[] = [];
 
   // --- Header ---
@@ -297,6 +309,30 @@ function assembleAsyncApiDocument(
       lines.push(`      ${toCamelCase(event.messageName)}:`);
       lines.push(`        $ref: '#/components/messages/${event.messageName}'`);
     }
+
+    // @hierarchical: additional channels for hierarchy events
+    for (const [conceptName, hierConfig] of hierConfigs) {
+      const conceptKebab = toKebabCase(conceptName);
+      const conceptPascal = toPascalCase(conceptName);
+
+      // {concept}.{id}.children.created channel
+      const childrenCreatedChannel = `${conceptKebab}/{id}/children/created`;
+      const childrenCreatedMsg = `${conceptPascal}ChildrenCreated`;
+      lines.push(`  ${childrenCreatedChannel}:`);
+      lines.push(`    description: Fires when a child is created under a ${conceptPascal} node`);
+      lines.push(`    messages:`);
+      lines.push(`      ${toCamelCase(childrenCreatedMsg)}:`);
+      lines.push(`        $ref: '#/components/messages/${childrenCreatedMsg}'`);
+
+      // {concept}.{id}.moved channel (for reparent events)
+      const movedChannel = `${conceptKebab}/{id}/moved`;
+      const movedMsg = `${conceptPascal}Moved`;
+      lines.push(`  ${movedChannel}:`);
+      lines.push(`    description: Fires when a ${conceptPascal} node is reparented`);
+      lines.push(`    messages:`);
+      lines.push(`      ${toCamelCase(movedMsg)}:`);
+      lines.push(`        $ref: '#/components/messages/${movedMsg}'`);
+    }
     lines.push('');
 
     // --- Operations ---
@@ -310,6 +346,32 @@ function assembleAsyncApiDocument(
       lines.push(`    summary: Publish event when ${toPascalCase(event.conceptName)}/${event.actionName} completes`);
       lines.push(`    messages:`);
       lines.push(`      - $ref: '#/channels/${event.channelId}/messages/${toCamelCase(event.messageName)}'`);
+    }
+
+    // @hierarchical: operations for hierarchy event channels
+    for (const [conceptName] of hierConfigs) {
+      const conceptKebab = toKebabCase(conceptName);
+      const conceptPascal = toPascalCase(conceptName);
+
+      const childrenCreatedChannel = `${conceptKebab}/{id}/children/created`;
+      const childrenCreatedMsg = `${conceptPascal}ChildrenCreated`;
+      lines.push(`  publish${childrenCreatedMsg}:`);
+      lines.push(`    action: send`);
+      lines.push(`    channel:`);
+      lines.push(`      $ref: '#/channels/${childrenCreatedChannel}'`);
+      lines.push(`    summary: Publish event when a child is created under ${conceptPascal}`);
+      lines.push(`    messages:`);
+      lines.push(`      - $ref: '#/channels/${childrenCreatedChannel}/messages/${toCamelCase(childrenCreatedMsg)}'`);
+
+      const movedChannel = `${conceptKebab}/{id}/moved`;
+      const movedMsg = `${conceptPascal}Moved`;
+      lines.push(`  publish${movedMsg}:`);
+      lines.push(`    action: send`);
+      lines.push(`    channel:`);
+      lines.push(`      $ref: '#/channels/${movedChannel}'`);
+      lines.push(`    summary: Publish event when a ${conceptPascal} node is reparented`);
+      lines.push(`    messages:`);
+      lines.push(`      - $ref: '#/channels/${movedChannel}/messages/${toCamelCase(movedMsg)}'`);
     }
     lines.push('');
   }
@@ -325,8 +387,52 @@ function assembleAsyncApiDocument(
       lines.push(`      name: ${event.messageName}`);
       lines.push(`      title: ${toPascalCase(event.conceptName)} ${toPascalCase(event.eventVerb)} Event`);
       lines.push(`      contentType: application/json`);
+      // @hierarchical: add parentPath header for events from hierarchical concepts
+      if (hierConfigs.has(event.conceptName)) {
+        lines.push(`      headers:`);
+        lines.push(`        type: object`);
+        lines.push(`        properties:`);
+        lines.push(`          parentPath:`);
+        lines.push(`            type: string`);
+        lines.push(`            description: Materialized path from root to this node's parent`);
+      }
       lines.push(`      payload:`);
       lines.push(`        $ref: '#/components/schemas/${event.schemaName}'`);
+    }
+
+    // @hierarchical: additional messages for hierarchy events
+    for (const [conceptName] of hierConfigs) {
+      const conceptPascal = toPascalCase(conceptName);
+
+      // ChildrenCreated message
+      const childrenCreatedMsg = `${conceptPascal}ChildrenCreated`;
+      lines.push(`    ${childrenCreatedMsg}:`);
+      lines.push(`      name: ${childrenCreatedMsg}`);
+      lines.push(`      title: ${conceptPascal} Children Created Event`);
+      lines.push(`      contentType: application/json`);
+      lines.push(`      headers:`);
+      lines.push(`        type: object`);
+      lines.push(`        properties:`);
+      lines.push(`          parentPath:`);
+      lines.push(`            type: string`);
+      lines.push(`            description: Materialized path from root to the parent node`);
+      lines.push(`      payload:`);
+      lines.push(`        $ref: '#/components/schemas/${childrenCreatedMsg}Payload'`);
+
+      // Moved message
+      const movedMsg = `${conceptPascal}Moved`;
+      lines.push(`    ${movedMsg}:`);
+      lines.push(`      name: ${movedMsg}`);
+      lines.push(`      title: ${conceptPascal} Moved Event`);
+      lines.push(`      contentType: application/json`);
+      lines.push(`      headers:`);
+      lines.push(`        type: object`);
+      lines.push(`        properties:`);
+      lines.push(`          parentPath:`);
+      lines.push(`            type: string`);
+      lines.push(`            description: Materialized path from root to the new parent node`);
+      lines.push(`      payload:`);
+      lines.push(`        $ref: '#/components/schemas/${movedMsg}Payload'`);
     }
     lines.push('');
   }
@@ -352,6 +458,39 @@ function assembleAsyncApiDocument(
     );
     lines.push(`    ${event.schemaName}:`);
     lines.push(indent(jsonToYaml(payloadSchema, 0), 6));
+  }
+
+  // @hierarchical: payload schemas for hierarchy events
+  for (const [conceptName] of hierConfigs) {
+    const conceptPascal = toPascalCase(conceptName);
+
+    // ChildrenCreated payload
+    const childrenCreatedPayload = {
+      type: 'object',
+      properties: {
+        parentId: { type: 'string' },
+        childId: { type: 'string' },
+        parentPath: { type: 'string' },
+      },
+      required: ['parentId', 'childId'],
+    };
+    lines.push(`    ${conceptPascal}ChildrenCreatedPayload:`);
+    lines.push(indent(jsonToYaml(childrenCreatedPayload, 0), 6));
+
+    // Moved payload
+    const movedPayload = {
+      type: 'object',
+      properties: {
+        nodeId: { type: 'string' },
+        oldParentId: { type: 'string' },
+        newParentId: { type: 'string' },
+        oldParentPath: { type: 'string' },
+        newParentPath: { type: 'string' },
+      },
+      required: ['nodeId', 'newParentId'],
+    };
+    lines.push(`    ${conceptPascal}MovedPayload:`);
+    lines.push(indent(jsonToYaml(movedPayload, 0), 6));
   }
 
   // Action input/output schemas (for reference)

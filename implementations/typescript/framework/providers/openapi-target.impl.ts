@@ -26,9 +26,10 @@ import {
   getRestBasePath,
   getApiBasePath,
   getActionOverrides,
+  getHierarchicalTrait,
 } from './codegen-utils.js';
 
-import type { HttpRoute } from './codegen-utils.js';
+import type { HttpRoute, HierarchicalConfig } from './codegen-utils.js';
 
 // --- YAML String Helpers ---
 
@@ -362,6 +363,151 @@ function buildPathOperations(
     };
 
     operations.push(op);
+  }
+
+  // @hierarchical: add tree navigation paths
+  const hierConfig = getHierarchicalTrait(manifestYaml, conceptName);
+  if (hierConfig) {
+    const pascal = toPascalCase(conceptName);
+
+    // GET /{resource}/{id}/children
+    operations.push({
+      method: 'get',
+      path: `${basePath}/{id}/children`,
+      operationId: `${conceptName}_getChildren`,
+      summary: `Get Children of ${pascal}`,
+      tags: [pascal],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `${pascal} identifier`,
+        },
+      ],
+      responses: {
+        '200': {
+          description: 'List of child resources',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } },
+            },
+          },
+        },
+        '404': {
+          description: 'Resource not found',
+        },
+      },
+    });
+
+    // POST /{resource}/{id}/children
+    operations.push({
+      method: 'post',
+      path: `${basePath}/{id}/children`,
+      operationId: `${conceptName}_createChild`,
+      summary: `Create Child of ${pascal}`,
+      tags: [pascal],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `Parent ${pascal} identifier`,
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: `#/components/schemas/${pascal}` },
+          },
+        },
+      },
+      responses: {
+        '201': {
+          description: 'Child resource created',
+          content: {
+            'application/json': {
+              schema: { $ref: `#/components/schemas/${pascal}` },
+            },
+          },
+        },
+        '404': {
+          description: 'Parent resource not found',
+        },
+      },
+    });
+
+    // GET /{resource}/{id}/ancestors
+    operations.push({
+      method: 'get',
+      path: `${basePath}/{id}/ancestors`,
+      operationId: `${conceptName}_getAncestors`,
+      summary: `Get Ancestors of ${pascal}`,
+      tags: [pascal],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `${pascal} identifier`,
+        },
+      ],
+      responses: {
+        '200': {
+          description: 'List of ancestor resources',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } },
+            },
+          },
+        },
+        '404': {
+          description: 'Resource not found',
+        },
+      },
+    });
+
+    // GET /{resource}/{id}/descendants with depth query parameter
+    operations.push({
+      method: 'get',
+      path: `${basePath}/{id}/descendants`,
+      operationId: `${conceptName}_getDescendants`,
+      summary: `Get Descendants of ${pascal}`,
+      tags: [pascal],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `${pascal} identifier`,
+        },
+        {
+          name: 'depth',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer' },
+          description: 'Maximum depth of descendants to return',
+        },
+      ],
+      responses: {
+        '200': {
+          description: 'List of descendant resources',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } },
+            },
+          },
+        },
+        '404': {
+          description: 'Resource not found',
+        },
+      },
+    });
   }
 
   return operations;

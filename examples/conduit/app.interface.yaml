@@ -82,6 +82,12 @@ traits:
   - name: validated
     scope: kit
 
+# ─── GROUPING ─────────────────────────────────────────
+# Controls how concepts are grouped in multi-concept
+# targets (Claude Skills, CLI help). Default: per-concept.
+grouping:
+  strategy: per-concept
+
 # ─── PER-CONCEPT OVERRIDES ───────────────────────────
 concepts:
   User:
@@ -101,6 +107,9 @@ concepts:
           args:
             name: { positional: true }
             email: { positional: true }
+          examples:
+            - description: Register a new user
+              command: conduit user register alice alice@example.com
     mcp:
       actions:
         register:
@@ -123,6 +132,43 @@ concepts:
         validate:
           method: POST
           path: /users/password/validate
+    graphql:
+      actions:
+        set: mutation
+        check: mutation
+        validate: query
+    cli:
+      actions:
+        set:
+          command: set
+          args:
+            user: { positional: true }
+          examples:
+            - description: Set password for a user
+              command: conduit password set alice
+        check:
+          command: check
+          args:
+            user: { positional: true }
+          examples:
+            - description: Check user password
+              command: conduit password check alice
+        validate:
+          command: validate
+          examples:
+            - description: Validate password strength
+              command: conduit password validate --password "s3cure!Pass"
+    mcp:
+      actions:
+        set:
+          type: tool
+          description: "Set or update a user's password"
+        check:
+          type: tool
+          description: "Verify a user's password"
+        validate:
+          type: tool
+          description: "Check password strength without storing"
 
   JWT:
     rest:
@@ -134,6 +180,34 @@ concepts:
         verify:
           method: POST
           path: /auth/verify
+    graphql:
+      actions:
+        generate: mutation
+        verify: query
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            user: { positional: true }
+          examples:
+            - description: Generate a token for a user
+              command: conduit jwt generate alice
+        verify:
+          command: verify
+          args:
+            token: { positional: true }
+          examples:
+            - description: Verify a JWT token
+              command: conduit jwt verify eyJhbGciOi...
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate a JWT for a user session"
+        verify:
+          type: tool
+          description: "Verify and decode a JWT token"
 
   Profile:
     rest:
@@ -149,11 +223,30 @@ concepts:
       actions:
         update: mutation
         get: query
+    cli:
+      actions:
+        update:
+          command: update
+          args:
+            user: { positional: true }
+          examples:
+            - description: Update user profile
+              command: conduit profile update alice --bio "Hello world" --image "https://img.png"
+        get:
+          command: get
+          args:
+            user: { positional: true }
+          examples:
+            - description: View user profile
+              command: conduit profile get alice
     mcp:
       actions:
         get:
           type: resource
           uriTemplate: "conduit://profiles/{user}"
+        update:
+          type: tool
+          description: "Update a user's profile bio and image"
 
   Article:
     traits:
@@ -192,11 +285,44 @@ concepts:
           command: create
           args:
             title: { positional: true }
+          examples:
+            - description: Create a new article
+              command: conduit article create "Hello World" --description "My first" --body "Content"
+            - description: Create with tags
+              command: conduit article create "Tutorial" --body "Content" --tag javascript
+        get:
+          command: get
+          args:
+            article: { positional: true }
+          examples:
+            - description: Get article by slug
+              command: conduit article get hello-world
         list:
           command: list
           flags:
             limit: { type: number, default: 20 }
             offset: { type: number, default: 0 }
+            tag: { type: string, description: Filter by tag }
+            author: { type: string, description: Filter by author }
+          examples:
+            - description: List articles with tag filter
+              command: conduit article list --tag javascript --limit 10
+            - description: List articles by author
+              command: conduit article list --author johndoe --offset 20
+        update:
+          command: update
+          args:
+            article: { positional: true }
+          examples:
+            - description: Update article title
+              command: conduit article update hello-world --title "Hello World v2"
+        delete:
+          command: delete
+          args:
+            article: { positional: true }
+          examples:
+            - description: Delete an article
+              command: conduit article delete hello-world
     mcp:
       actions:
         get:
@@ -205,8 +331,24 @@ concepts:
         list:
           type: resource-template
           uriTemplate: "conduit://articles"
+        create:
+          type: tool
+          description: "Create a new article"
+        update:
+          type: tool
+          description: "Update an existing article"
+        delete:
+          type: tool
+          description: "Delete an article"
 
   Comment:
+    traits:
+      - name: hierarchical
+        config:
+          relation: parent
+          labelField: body
+          maxDepth: 10
+          style: nested
     rest:
       path: /articles/{target}/comments
       actions:
@@ -224,6 +366,46 @@ concepts:
         create: mutation
         delete: mutation
         list: query
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            target: { positional: true }
+          examples:
+            - description: Comment on an article
+              command: conduit comment create hello-world --body "Great post!"
+            - description: Reply to a comment (threaded)
+              command: conduit comment create hello-world --body "I agree!" --parent c123
+        delete:
+          command: delete
+          args:
+            comment: { positional: true }
+          examples:
+            - description: Delete a comment
+              command: conduit comment delete c123
+        list:
+          command: list
+          args:
+            target: { positional: true }
+          flags:
+            depth: { type: number, default: 1, description: Thread depth to display }
+          examples:
+            - description: List article comments
+              command: conduit comment list hello-world
+            - description: List with full thread depth
+              command: conduit comment list hello-world --depth 5
+    mcp:
+      actions:
+        list:
+          type: resource-template
+          uriTemplate: "conduit://articles/{target}/comments"
+        create:
+          type: tool
+          description: "Add a comment to an article"
+        delete:
+          type: tool
+          description: "Remove a comment"
 
   Follow:
     rest:
@@ -243,6 +425,40 @@ concepts:
         follow: mutation
         unfollow: mutation
         isFollowing: query
+    cli:
+      actions:
+        follow:
+          command: follow
+          args:
+            target: { positional: true }
+          examples:
+            - description: Follow a user
+              command: conduit follow follow johndoe
+        unfollow:
+          command: unfollow
+          args:
+            target: { positional: true }
+          examples:
+            - description: Unfollow a user
+              command: conduit follow unfollow johndoe
+        isFollowing:
+          command: is-following
+          args:
+            target: { positional: true }
+          examples:
+            - description: Check if following a user
+              command: conduit follow is-following johndoe
+    mcp:
+      actions:
+        follow:
+          type: tool
+          description: "Follow a user"
+        unfollow:
+          type: tool
+          description: "Unfollow a user"
+        isFollowing:
+          type: resource-template
+          uriTemplate: "conduit://follows/{user}/{target}"
 
   Favorite:
     rest:
@@ -266,6 +482,50 @@ concepts:
         unfavorite: mutation
         isFavorited: query
         count: query
+    cli:
+      actions:
+        favorite:
+          command: favorite
+          args:
+            article: { positional: true }
+          examples:
+            - description: Favorite an article
+              command: conduit favorite favorite hello-world
+        unfavorite:
+          command: unfavorite
+          args:
+            article: { positional: true }
+          examples:
+            - description: Unfavorite an article
+              command: conduit favorite unfavorite hello-world
+        isFavorited:
+          command: is-favorited
+          args:
+            article: { positional: true }
+          examples:
+            - description: Check if article is favorited
+              command: conduit favorite is-favorited hello-world
+        count:
+          command: count
+          args:
+            article: { positional: true }
+          examples:
+            - description: Get favorite count
+              command: conduit favorite count hello-world
+    mcp:
+      actions:
+        favorite:
+          type: tool
+          description: "Favorite an article"
+        unfavorite:
+          type: tool
+          description: "Unfavorite an article"
+        isFavorited:
+          type: resource-template
+          uriTemplate: "conduit://favorites/{user}/{article}"
+        count:
+          type: resource-template
+          uriTemplate: "conduit://articles/{article}/favorites/count"
 
   Tag:
     rest:
@@ -285,11 +545,40 @@ concepts:
         add: mutation
         remove: mutation
         list: query
+    cli:
+      actions:
+        add:
+          command: add
+          args:
+            tag: { positional: true }
+          examples:
+            - description: Tag an article
+              command: conduit tag add javascript --article hello-world
+        remove:
+          command: remove
+          args:
+            tag: { positional: true }
+          examples:
+            - description: Remove tag from article
+              command: conduit tag remove javascript --article hello-world
+        list:
+          command: list
+          examples:
+            - description: List all tags
+              command: conduit tag list
+            - description: List tags as JSON
+              command: conduit tag list --json
     mcp:
       actions:
         list:
           type: resource
           uriTemplate: "conduit://tags"
+        add:
+          type: tool
+          description: "Tag an article"
+        remove:
+          type: tool
+          description: "Remove a tag from an article"
 
   Echo:
     rest:
@@ -298,6 +587,17 @@ concepts:
         send:
           method: POST
           path: /echo
+    cli:
+      actions:
+        send:
+          command: send
+          args:
+            text: { positional: true }
+          examples:
+            - description: Echo a message
+              command: conduit echo send "hello world"
+            - description: Echo with JSON output
+              command: conduit echo send "ping" --json
     mcp:
       actions:
         send:
@@ -407,6 +707,8 @@ workflows:
         description: Manage article comments
       - name: favorite-management
         description: Favorite/unfavorite articles
+      - name: tag-management
+        description: Manage tags applied to articles
 
   user-registration:
     concept: User
@@ -416,12 +718,522 @@ workflows:
         prose: >
           Create a new user account with username, email, and
           password. Returns the user profile and auth token.
+    checklists:
+      register:
+        - Username is non-empty and unique
+        - Email is valid and unique
+        - Password meets strength requirements
     design-principles:
       - title: Unique Identity
         rule: Email addresses and usernames must be globally unique
+      - title: Fail Fast
+        rule: Return clear error on duplicate name or email before storing
+    anti-patterns:
+      - title: Silent Duplicate
+        description: >
+          Silently accepting a duplicate username or email and
+          overwriting the existing user. Always check uniqueness
+          and return an error.
+        bad: "INSERT OR REPLACE INTO users (name, email) VALUES (...)"
+        good: "Check uniqueness first, return error('name already taken')"
     references:
       - path: references/auth-flow.md
         label: Authentication Flow
+      - path: references/user-api.md
+        label: User API Reference
+    validation-commands:
+      - label: Run user tests
+        command: copf test User
+      - label: Validate uniqueness constraint
+        command: copf check --pattern uniqueness User
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | register | POST | /users | None |
+    related-workflows:
+      - name: password-management
+        description: Set and verify user passwords
+      - name: auth-token
+        description: Generate authentication tokens
+
+  comment-management:
+    concept: Comment
+    steps:
+      - action: create
+        title: Create Comment
+        prose: >
+          Add a comment to an article. Requires the target article
+          reference and comment body. Threaded replies are supported
+          by specifying a parent comment.
+      - action: list
+        title: List Comments
+        prose: >
+          Retrieve all comments for a given article. Comments are
+          returned in chronological order. When threaded, nested
+          replies are included under their parent comments.
+      - action: delete
+        title: Delete Comment
+        prose: >
+          Remove a comment. Only the comment author or the article
+          owner can delete. Threaded replies under a deleted comment
+          are preserved but shown as deleted.
+    checklists:
+      create:
+        - Target article exists
+        - Comment body is non-empty
+        - Parent comment exists (if replying to a thread)
+        - Author is authenticated
+      delete:
+        - Comment exists
+        - Caller is comment author or article owner
+    design-principles:
+      - title: Article Scoping
+        rule: Comments are always scoped to a specific article
+      - title: Author Attribution
+        rule: Every comment records its author for accountability
+      - title: Thread Preservation
+        rule: Deleting a parent comment preserves child replies
+    anti-patterns:
+      - title: Orphaned Threads
+        description: >
+          Deleting a parent comment by removing it completely
+          disconnects all threaded replies. Instead, mark as
+          deleted while keeping the tree structure.
+        bad: "DELETE FROM comments WHERE id = parent_id (removes subtree)"
+        good: "UPDATE comments SET body = '[deleted]' WHERE id = parent_id"
+    references:
+      - path: references/comment-api.md
+        label: Comment API Reference
+      - path: references/threading-patterns.md
+        label: Comment Threading Patterns
+    validation-commands:
+      - label: Run comment tests
+        command: copf test Comment
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | create | POST | /articles/{target}/comments | Required |
+        | list | GET | /articles/{target}/comments | Optional |
+        | delete | DELETE | /articles/{target}/comments/{id} | Required |
+    related-workflows:
+      - name: article-management
+        description: Manage the articles that comments belong to
+
+  follow-management:
+    concept: Follow
+    steps:
+      - action: follow
+        title: Follow User
+        prose: >
+          Add a target user to the current user's following set.
+          The relationship is one-directional — following someone
+          does not make them follow you back.
+      - action: isFollowing
+        title: Check Follow Status
+        prose: >
+          Query whether the current user follows a given target.
+          Returns a boolean result useful for toggling UI state.
+      - action: unfollow
+        title: Unfollow User
+        prose: >
+          Remove a target user from the current user's following
+          set. Idempotent — unfollowing someone you don't follow
+          succeeds silently.
+    checklists:
+      follow:
+        - Target user exists
+        - Not already following target
+        - Cannot follow yourself
+      unfollow:
+        - Target user exists
+    design-principles:
+      - title: One-Directional
+        rule: Follow relationships are asymmetric — A following B does not imply B following A
+      - title: Idempotent Operations
+        rule: Following an already-followed user or unfollowing a non-followed user succeeds silently
+      - title: Self-Exclusion
+        rule: A user cannot follow themselves
+    anti-patterns:
+      - title: Bidirectional Assumption
+        description: >
+          Assuming follow is mutual (like a friend request).
+          Follow is one-directional by design.
+        bad: "follow(a, b) implies follow(b, a)"
+        good: "follow(a, b) is independent of follow(b, a)"
+    references:
+      - path: references/social-api.md
+        label: Social Relationships API
+    validation-commands:
+      - label: Run follow tests
+        command: copf test Follow
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | follow | POST | /profiles/{target}/follow | Required |
+        | unfollow | DELETE | /profiles/{target}/follow | Required |
+        | isFollowing | GET | /profiles/{target}/follow | Required |
+    related-workflows:
+      - name: user-registration
+        description: Register users to follow
+      - name: favorite-management
+        description: Favorite articles from followed users
+
+  favorite-management:
+    concept: Favorite
+    steps:
+      - action: favorite
+        title: Favorite Article
+        prose: >
+          Add an article to the current user's favorites set.
+          Increments the article's global favorite count.
+      - action: isFavorited
+        title: Check Favorite Status
+        prose: >
+          Query whether the current user has favorited a given
+          article. Returns a boolean for toggle UI state.
+      - action: count
+        title: Get Favorite Count
+        prose: >
+          Return the total number of users who have favorited
+          the article. Used for popularity display.
+      - action: unfavorite
+        title: Unfavorite Article
+        prose: >
+          Remove an article from the current user's favorites.
+          Decrements the article's global favorite count.
+    checklists:
+      favorite:
+        - Article exists
+        - Not already favorited by this user
+      unfavorite:
+        - Article exists
+        - Currently favorited by this user
+    design-principles:
+      - title: User-Scoped
+        rule: Favorite status is per-user — each user has their own favorites set
+      - title: Count Consistency
+        rule: The favorite count always reflects the actual number of users who favorited
+      - title: Idempotent Toggles
+        rule: Favoriting an already-favorited article or unfavoriting a non-favorited one is safe
+    anti-patterns:
+      - title: Global Counter Without Source
+        description: >
+          Maintaining a favorite count as a standalone counter
+          that can drift from the actual favorites set. The count
+          should always be derived from the set membership.
+        bad: "INCREMENT counter without checking set membership"
+        good: "count = |{ u | article in favorites(u) }|"
+    references:
+      - path: references/social-api.md
+        label: Social Engagement API
+    validation-commands:
+      - label: Run favorite tests
+        command: copf test Favorite
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | favorite | POST | /articles/{article}/favorite | Required |
+        | unfavorite | DELETE | /articles/{article}/favorite | Required |
+        | isFavorited | GET | /articles/{article}/favorite | Required |
+        | count | GET | /articles/{article}/favorite/count | Optional |
+    related-workflows:
+      - name: article-management
+        description: Manage articles to favorite
+      - name: follow-management
+        description: Follow users whose articles you favorite
+
+  password-management:
+    concept: Password
+    steps:
+      - action: validate
+        title: Validate Password Strength
+        prose: >
+          Check that a password meets strength requirements
+          without storing anything. Use before registration to
+          give immediate feedback on password quality.
+      - action: set
+        title: Set Password
+        prose: >
+          Generate a random salt, hash the password with the salt,
+          and store both. The plaintext password is never stored.
+          Returns the user reference on success.
+      - action: check
+        title: Verify Password
+        prose: >
+          Retrieve the stored salt for the user, hash the provided
+          password with it, and compare against the stored hash.
+          Returns true if they match, false otherwise.
+    checklists:
+      validate:
+        - Minimum length requirement met (8+ characters)
+        - Contains mixed case, numbers, or special characters
+      set:
+        - Password passes validate first
+        - Salt is cryptographically random
+        - Hashing algorithm is bcrypt/argon2 (not MD5/SHA1)
+      check:
+        - User exists and has stored credentials
+        - Comparison is constant-time (prevent timing attacks)
+    design-principles:
+      - title: Never Store Plaintext
+        rule: Passwords are always salted and hashed before storage
+      - title: Validate Before Store
+        rule: Check strength requirements before committing to storage
+      - title: Constant-Time Comparison
+        rule: Password verification uses constant-time comparison to prevent timing attacks
+      - title: Independent of Reset Flow
+        rule: Password storage is separate from reset tokens — composed via sync
+    anti-patterns:
+      - title: Plaintext Storage
+        description: >
+          Storing passwords in plaintext or with reversible encryption.
+          Always use one-way hashing with a per-user salt.
+        bad: "INSERT INTO passwords (user, password) VALUES (u, 'secret')"
+        good: "INSERT INTO passwords (user, hash, salt) VALUES (u, bcrypt(pw, salt), salt)"
+      - title: Shared Salt
+        description: >
+          Using the same salt for all users. Each user must have
+          a unique, random salt to prevent rainbow table attacks.
+        bad: "const GLOBAL_SALT = 'fixed-salt-value'"
+        good: "const salt = crypto.randomBytes(32)"
+    content-sections:
+      - heading: Security Considerations
+        body: >
+          The Password concept requires the `crypto` capability.
+          Implementations must use industry-standard algorithms
+          (bcrypt, argon2id) with appropriate work factors. Never
+          log passwords or include them in error messages.
+        afterStep: 2
+    references:
+      - path: references/auth-flow.md
+        label: Authentication Flow
+      - path: references/security-patterns.md
+        label: Security Best Practices
+    validation-commands:
+      - label: Run password tests
+        command: copf test Password
+      - label: Verify crypto capability
+        command: copf check --capability crypto Password
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | validate | POST | /users/password/validate | None |
+        | set | PUT | /users/password | Required |
+        | check | POST | /users/password/check | None |
+    related-workflows:
+      - name: user-registration
+        description: Register user before setting password
+      - name: auth-token
+        description: Generate tokens after password check
+
+  auth-token:
+    concept: JWT
+    steps:
+      - action: generate
+        title: Generate Token
+        prose: >
+          Create a JWT containing the user reference as the subject
+          claim. The token includes an expiration time and is signed
+          with the application secret. Store and return the token.
+      - action: verify
+        title: Verify Token
+        prose: >
+          Decode and validate a JWT. Check the signature, expiration,
+          and claims. Return the user reference if valid, or an error
+          describing why verification failed (expired, malformed, etc).
+    checklists:
+      generate:
+        - User reference is valid
+        - Signing secret is configured
+        - Expiration time is set (not unlimited)
+      verify:
+        - Token format is valid JWT (header.payload.signature)
+        - Signature matches using application secret
+        - Token has not expired
+        - Required claims are present
+    design-principles:
+      - title: Stateless Verification
+        rule: Token validity is determined by signature and claims, not database lookup
+      - title: Bounded Lifetime
+        rule: Every token has an expiration time — no permanent tokens
+      - title: Minimal Claims
+        rule: Tokens contain only the user reference, not profile data or permissions
+    anti-patterns:
+      - title: Unlimited Token Lifetime
+        description: >
+          Generating tokens without expiration creates a permanent
+          credential that cannot be revoked without changing the
+          signing secret.
+        bad: "jwt.sign({ user }, secret) // no exp"
+        good: "jwt.sign({ user }, secret, { expiresIn: '24h' })"
+      - title: Sensitive Data in Claims
+        description: >
+          Putting passwords, emails, or permissions in the JWT
+          payload. Tokens are base64-encoded, not encrypted.
+        bad: "jwt.sign({ user, password, email, role }, secret)"
+        good: "jwt.sign({ sub: userId }, secret)"
+    references:
+      - path: references/auth-flow.md
+        label: Authentication Flow
+      - path: references/jwt-patterns.md
+        label: JWT Best Practices
+    validation-commands:
+      - label: Run JWT tests
+        command: copf test JWT
+      - label: Validate token roundtrip
+        command: copf check --pattern roundtrip JWT
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | generate | POST | /auth/token | Required |
+        | verify | POST | /auth/verify | None |
+    related-workflows:
+      - name: user-registration
+        description: Register user before generating tokens
+      - name: password-management
+        description: Verify password before generating tokens
+
+  profile-management:
+    concept: Profile
+    steps:
+      - action: update
+        title: Update Profile
+        prose: >
+          Set or update the user's biography and avatar image URL.
+          Both fields are optional — only provided fields are changed.
+          Returns the updated profile data.
+      - action: get
+        title: View Profile
+        prose: >
+          Retrieve a user's profile by their identifier. Returns
+          bio and image. Used for public profile display on articles
+          and in follow lists.
+    checklists:
+      update:
+        - User is authenticated
+        - Image URL is valid if provided
+        - Bio length is within limits
+      get:
+        - User identifier exists
+    design-principles:
+      - title: Separate from Identity
+        rule: Profile data (bio, image) is independent from identity data (name, email) for separate evolution
+      - title: Optional Fields
+        rule: Bio and image can be empty — a profile exists for every registered user
+      - title: Public Visibility
+        rule: Profiles are publicly readable — no auth required for get
+    references:
+      - path: references/profile-api.md
+        label: Profile API Reference
+    validation-commands:
+      - label: Run profile tests
+        command: copf test Profile
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | update | PUT | /user | Required |
+        | get | GET | /profiles/{user} | Optional |
+    related-workflows:
+      - name: user-registration
+        description: Register user before creating profile
+
+  tag-management:
+    concept: Tag
+    steps:
+      - action: add
+        title: Add Tag
+        prose: >
+          Associate a tag with an article. If the tag does not yet
+          exist in the global registry, it is created automatically.
+          Tags are case-insensitive and normalized to lowercase.
+      - action: list
+        title: List Tags
+        prose: >
+          Return all known tags in the system. Used for tag clouds,
+          autocomplete, and article filtering. Results are sorted
+          alphabetically.
+      - action: remove
+        title: Remove Tag
+        prose: >
+          Remove a tag association from an article. If no articles
+          reference the tag after removal, the tag remains in the
+          registry for future use.
+    checklists:
+      add:
+        - Tag name is non-empty
+        - Article reference is valid
+      remove:
+        - Tag exists
+        - Article is currently associated with tag
+    design-principles:
+      - title: Auto-Creation
+        rule: Tags are created on first use — no separate create action needed
+      - title: Case Normalization
+        rule: Tag names are normalized to lowercase for consistent matching
+      - title: Persistent Registry
+        rule: Tags persist even when no articles reference them
+    anti-patterns:
+      - title: Case-Sensitive Tags
+        description: >
+          Treating "JavaScript" and "javascript" as different tags
+          creates duplicate entries and confuses filtering.
+        bad: "tags.add('JavaScript') !== tags.add('javascript')"
+        good: "tags.add(tag.toLowerCase())"
+    references:
+      - path: references/tag-api.md
+        label: Tag API Reference
+    validation-commands:
+      - label: Run tag tests
+        command: copf test Tag
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | add | POST | /tags | Required |
+        | list | GET | /tags | Optional |
+        | remove | DELETE | /tags/{tag} | Required |
+    related-workflows:
+      - name: article-management
+        description: Manage articles that tags are applied to
+
+  echo-diagnostic:
+    concept: Echo
+    steps:
+      - action: send
+        title: Send Echo
+        prose: >
+          Send a text message and receive it back verbatim. Used
+          as a health check and connectivity diagnostic. The message
+          is stored for audit trailing.
+    design-principles:
+      - title: Verbatim Echo
+        rule: The response must be identical to the input — no transformation
+      - title: Stateless Verification
+        rule: Echo is used to verify the system is alive, not to store data permanently
+    validation-commands:
+      - label: Run echo tests
+        command: copf test Echo
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Method | Path | Auth |
+        |--------|--------|------|------|
+        | send | POST | /echo | Optional |
 
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Concept-level and action-level metadata for skill and
@@ -495,6 +1307,12 @@ annotations:
           language: bash
           code: |
             conduit article update hello-world --title "Hello World v2"
+    delete:
+      examples:
+        - label: Delete an article
+          language: bash
+          code: |
+            conduit article delete hello-world --json
 
   User:
     concept:
@@ -506,9 +1324,326 @@ annotations:
       argument-template: "<username> [--email <email>]"
       trigger-description: >
         Use when managing user registration and account operations.
+      trigger-patterns:
+        - "user"
+        - "register"
+        - "account"
+        - "sign up"
+      trigger-exclude:
+        - "profile"
+        - "password"
+      references:
+        - path: references/user-api.md
+          label: User API Reference
+        - path: references/conduit-spec.md
+          label: Conduit Specification
     register:
       examples:
         - label: Register a new user
           language: bash
           code: |
             conduit user register johndoe johndoe@example.com
+        - label: Register with JSON output
+          language: bash
+          code: |
+            conduit user register alice alice@example.com --json
+
+  Comment:
+    concept:
+      tool-permissions:
+        - Read
+        - Grep
+        - Edit
+        - Write
+        - Bash
+      argument-template: "<article-slug> [--body <body>] [--parent <parent-id>]"
+      trigger-description: >
+        Use when adding, listing, or removing comments on articles.
+        Supports threaded replies via parent references.
+      trigger-patterns:
+        - "comment"
+        - "reply"
+        - "discuss"
+      trigger-exclude:
+        - "article"
+        - "favorite"
+      references:
+        - path: references/comment-api.md
+          label: Comment API Reference
+    create:
+      examples:
+        - label: Comment on an article
+          language: bash
+          code: |
+            conduit comment create hello-world \
+              --body "Great article!" --author u1
+        - label: Reply to a comment (threaded)
+          language: bash
+          code: |
+            conduit comment create hello-world \
+              --body "I agree!" --author u2 --parent c123
+    list:
+      examples:
+        - label: List article comments
+          language: bash
+          code: |
+            conduit comment list hello-world
+        - label: List with thread depth
+          language: bash
+          code: |
+            conduit comment list hello-world --depth 5 --json
+
+  Follow:
+    concept:
+      tool-permissions:
+        - Read
+        - Bash
+      argument-template: "<target-username>"
+      trigger-description: >
+        Use when following or unfollowing users, or checking
+        follow status between users.
+      trigger-patterns:
+        - "follow"
+        - "unfollow"
+        - "following"
+        - "social"
+      trigger-exclude:
+        - "favorite"
+        - "profile"
+      references:
+        - path: references/social-api.md
+          label: Social Relationships API
+    follow:
+      examples:
+        - label: Follow a user
+          language: bash
+          code: |
+            conduit follow follow johndoe --user alice
+    unfollow:
+      examples:
+        - label: Unfollow a user
+          language: bash
+          code: |
+            conduit follow unfollow johndoe --user alice
+    isFollowing:
+      examples:
+        - label: Check follow status
+          language: bash
+          code: |
+            conduit follow is-following johndoe --user alice --json
+
+  Favorite:
+    concept:
+      tool-permissions:
+        - Read
+        - Bash
+      argument-template: "<article-slug>"
+      trigger-description: >
+        Use when favoriting or unfavoriting articles, checking
+        favorite status, or counting favorites.
+      trigger-patterns:
+        - "favorite"
+        - "like"
+        - "star"
+        - "bookmark"
+      trigger-exclude:
+        - "follow"
+        - "comment"
+      references:
+        - path: references/social-api.md
+          label: Social Engagement API
+    favorite:
+      examples:
+        - label: Favorite an article
+          language: bash
+          code: |
+            conduit favorite favorite hello-world --user alice
+    unfavorite:
+      examples:
+        - label: Unfavorite an article
+          language: bash
+          code: |
+            conduit favorite unfavorite hello-world --user alice
+    isFavorited:
+      examples:
+        - label: Check favorite status
+          language: bash
+          code: |
+            conduit favorite is-favorited hello-world --user alice --json
+    count:
+      examples:
+        - label: Get favorite count
+          language: bash
+          code: |
+            conduit favorite count hello-world --json
+
+  Password:
+    concept:
+      tool-permissions:
+        - Bash
+      argument-template: "<user>"
+      trigger-description: >
+        Use when setting, verifying, or validating user passwords.
+        Handles cryptographic hashing and strength requirements.
+      trigger-patterns:
+        - "password"
+        - "credential"
+        - "authenticate"
+      trigger-exclude:
+        - "token"
+        - "jwt"
+        - "profile"
+      references:
+        - path: references/auth-flow.md
+          label: Authentication Flow
+        - path: references/security-patterns.md
+          label: Security Best Practices
+    set:
+      examples:
+        - label: Set user password
+          language: bash
+          code: |
+            conduit password set alice --password "s3cure!Pass"
+    check:
+      examples:
+        - label: Verify user password
+          language: bash
+          code: |
+            conduit password check alice --password "s3cure!Pass"
+    validate:
+      examples:
+        - label: Check password strength
+          language: bash
+          code: |
+            conduit password validate --password "weak"
+
+  JWT:
+    concept:
+      tool-permissions:
+        - Bash
+      argument-template: "<user-or-token>"
+      trigger-description: >
+        Use when generating or verifying JWT authentication tokens.
+        Handles token creation, validation, and expiration.
+      trigger-patterns:
+        - "jwt"
+        - "token"
+        - "auth"
+        - "session"
+      trigger-exclude:
+        - "password"
+        - "register"
+      references:
+        - path: references/auth-flow.md
+          label: Authentication Flow
+        - path: references/jwt-patterns.md
+          label: JWT Best Practices
+    generate:
+      examples:
+        - label: Generate a token
+          language: bash
+          code: |
+            conduit jwt generate alice --json
+    verify:
+      examples:
+        - label: Verify a token
+          language: bash
+          code: |
+            conduit jwt verify eyJhbGciOi... --json
+
+  Profile:
+    concept:
+      tool-permissions:
+        - Read
+        - Edit
+        - Write
+        - Bash
+      argument-template: "<username> [--bio <bio>] [--image <url>]"
+      trigger-description: >
+        Use when viewing or updating user profile information
+        including biography and avatar image.
+      trigger-patterns:
+        - "profile"
+        - "bio"
+        - "avatar"
+      trigger-exclude:
+        - "user"
+        - "register"
+        - "password"
+      references:
+        - path: references/profile-api.md
+          label: Profile API Reference
+    update:
+      examples:
+        - label: Update profile bio
+          language: bash
+          code: |
+            conduit profile update alice \
+              --bio "Hello world" --image "https://img.png"
+    get:
+      examples:
+        - label: View user profile
+          language: bash
+          code: |
+            conduit profile get alice --json
+
+  Tag:
+    concept:
+      tool-permissions:
+        - Read
+        - Bash
+      argument-template: "<tag-name> [--article <article-slug>]"
+      trigger-description: >
+        Use when managing tags and their associations with
+        articles. Covers adding, removing, and listing tags.
+      trigger-patterns:
+        - "tag"
+        - "label"
+        - "category"
+      trigger-exclude:
+        - "article"
+        - "comment"
+      references:
+        - path: references/tag-api.md
+          label: Tag API Reference
+    add:
+      examples:
+        - label: Tag an article
+          language: bash
+          code: |
+            conduit tag add javascript --article hello-world
+    remove:
+      examples:
+        - label: Remove tag from article
+          language: bash
+          code: |
+            conduit tag remove javascript --article hello-world
+    list:
+      examples:
+        - label: List all tags
+          language: bash
+          code: |
+            conduit tag list --json
+
+  Echo:
+    concept:
+      tool-permissions:
+        - Bash
+      argument-template: "<message>"
+      trigger-description: >
+        Use for health checks and connectivity diagnostics.
+        Sends a message and receives it back verbatim.
+      trigger-patterns:
+        - "echo"
+        - "ping"
+        - "health check"
+    send:
+      examples:
+        - label: Echo a message
+          language: bash
+          code: |
+            conduit echo send "hello world"
+        - label: Echo with JSON output
+          language: bash
+          code: |
+            conduit echo send "ping" --json

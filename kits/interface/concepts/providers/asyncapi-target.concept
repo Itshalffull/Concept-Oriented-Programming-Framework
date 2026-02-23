@@ -1,11 +1,16 @@
-@version(1)
+@version(2)
 concept AsyncApiTarget [A] {
 
   purpose {
     Generate AsyncAPI 3.0 specification documents for event-
     driven concept interfaces. Covers sync-triggered events,
     streaming actions, and pub/sub patterns. Complements
-    OpenAPI for request/response.
+    OpenAPI for request/response. When @hierarchical trait is
+    present, generates hierarchical channel names with parent
+    context in message headers (e.g. categories.{id}.children.created).
+    Enrichment content from Projection provides additional
+    channel and message documentation.
+    See Architecture doc Section 2.7.
   }
 
   state {
@@ -15,6 +20,7 @@ concept AsyncApiTarget [A] {
       channels: A -> Int
       operations: A -> Int
     }
+    content: A -> String
   }
 
   actions {
@@ -23,7 +29,9 @@ concept AsyncApiTarget [A] {
         Map sync completions to channels. Map streaming actions
         to operations. Derive message schemas from completion
         variant types. Include protocol bindings (WebSocket,
-        Kafka, AMQP) based on configured transport.
+        Kafka, AMQP) based on configured transport. When
+        @hierarchical trait is detected, channel name segments
+        mirror tree path and messages include parentPath header.
       }
     }
   }

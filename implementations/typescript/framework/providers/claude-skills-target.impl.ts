@@ -22,9 +22,11 @@ import {
   toPascalCase,
   generateFileHeader,
   buildConceptGroups,
+  getHierarchicalTrait,
   type ConceptGroup,
   type GroupingConfig,
   type GroupingMode,
+  type HierarchicalConfig,
 } from './codegen-utils.js';
 import { renderContent, renderKey } from './renderer.impl.js';
 
@@ -169,6 +171,7 @@ function generateSkillMd(
   // Lookup workflow and annotation data
   const workflow = conceptName ? getWorkflowForConcept(manifestYaml, conceptName) : undefined;
   const annot = conceptName ? getAnnotationsForConcept(manifestYaml, conceptName) : undefined;
+  const hierConfig = conceptName ? getHierarchicalTrait(manifestYaml, conceptName) : undefined;
 
   // --- YAML Frontmatter ---
   lines.push('---');
@@ -200,11 +203,11 @@ function generateSkillMd(
 
   // --- Markdown Body ---
   if (group.concepts.length === 1 && workflow) {
-    renderWorkflowSkill(lines, manifest, workflow, annot);
+    renderWorkflowSkill(lines, manifest, workflow, annot, hierConfig);
   } else if (group.concepts.length === 1) {
-    renderFlatSkill(lines, manifest, annot);
+    renderFlatSkill(lines, manifest, annot, hierConfig);
   } else {
-    renderMultiConceptSkill(lines, group, manifestYaml);
+    renderMultiConceptSkill(lines, group, manifestYaml, hierConfig);
   }
 
   return lines.join('\n');
@@ -227,6 +230,7 @@ function renderWorkflowSkill(
   manifest: ConceptManifest,
   workflow: WorkflowConfig,
   annot?: { concept?: AnnotationConfig; actions: Record<string, AnnotationConfig> },
+  hierConfig?: HierarchicalConfig,
 ): void {
   const pascal = toPascalCase(manifest.name);
   const enrichment = mergeEnrichment(workflow, annot?.concept);
@@ -319,6 +323,21 @@ function renderWorkflowSkill(
     }
   }
 
+  // @hierarchical: add tree navigation note
+  if (hierConfig) {
+    lines.push('## Tree Navigation');
+    lines.push('');
+    lines.push('This concept has hierarchical structure. When working with nested items:');
+    lines.push('');
+    lines.push('1. Identify the parent node first');
+    lines.push('2. Navigate to the target level using the parent path');
+    lines.push('3. Perform the action at the correct level');
+    lines.push('');
+    lines.push('- [ ] Verify parent exists before creating children');
+    lines.push('- [ ] Check depth limit when recursing');
+    lines.push('');
+  }
+
   // --- Post-step enrichment (rendered by Renderer) ---
   // Everything except pre-step keys, structural keys, and step-specific keys
   const postStepKeys: Record<string, unknown> = {};
@@ -355,6 +374,7 @@ function renderFlatSkill(
   lines: string[],
   manifest: ConceptManifest,
   annot?: { concept?: AnnotationConfig; actions: Record<string, AnnotationConfig> },
+  hierConfig?: HierarchicalConfig,
 ): void {
   const pascal = toPascalCase(manifest.name);
   const fmt = 'skill-md';
@@ -389,6 +409,21 @@ function renderFlatSkill(
       }
     }
   }
+
+  // @hierarchical: add tree navigation note
+  if (hierConfig) {
+    lines.push('## Tree Navigation');
+    lines.push('');
+    lines.push('This concept has hierarchical structure. When working with nested items:');
+    lines.push('');
+    lines.push('1. Identify the parent node first');
+    lines.push('2. Navigate to the target level using the parent path');
+    lines.push('3. Perform the action at the correct level');
+    lines.push('');
+    lines.push('- [ ] Verify parent exists before creating children');
+    lines.push('- [ ] Check depth limit when recursing');
+    lines.push('');
+  }
 }
 
 /** Render a multi-concept skill (grouped mode). */
@@ -396,6 +431,7 @@ function renderMultiConceptSkill(
   lines: string[],
   group: ConceptGroup,
   manifestYaml?: Record<string, unknown>,
+  hierConfig?: HierarchicalConfig,
 ): void {
   const pascal = toPascalCase(group.name);
   const fmt = 'skill-md';
