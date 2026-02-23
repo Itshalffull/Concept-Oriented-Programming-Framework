@@ -9,8 +9,9 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
+import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
+import { renderContent, interpolateVars } from './renderer.impl.js';
 
 // --- CLI Command Tree Metadata Types ---
 
@@ -262,6 +263,48 @@ function generateCommandFile(
   return lines.join('\n');
 }
 
+// --- CLI Help Markdown Generator ---
+
+/**
+ * Generate a cli-help.md file with rendered enrichment content
+ * (design principles, references, anti-patterns, companion docs, etc.)
+ * using the Renderer's cli-help format.
+ *
+ * CLI uses <SOURCE> as its variable vocabulary for intro-template.
+ */
+function generateCliHelpMd(
+  manifest: ConceptManifest,
+  conceptName: string,
+  manifestYaml?: Record<string, unknown>,
+): string | null {
+  const enrichment = getManifestEnrichment(manifestYaml, conceptName);
+  if (!enrichment || Object.keys(enrichment).length === 0) return null;
+
+  const lines: string[] = [];
+  const kebab = toKebabCase(conceptName);
+
+  lines.push(`# copf ${kebab} — Help`);
+  lines.push('');
+
+  // Intro line with CLI variable vocabulary
+  const introTemplate = enrichment['intro-template'] as string | undefined;
+  if (introTemplate) {
+    const vars: Record<string, string> = { ARGUMENTS: '<source>', CONCEPT: conceptName };
+    lines.push(interpolateVars(introTemplate, vars));
+    lines.push('');
+    delete enrichment['intro-template'];
+  } else {
+    lines.push(manifest.purpose || `Manage ${conceptName} resources.`);
+    lines.push('');
+  }
+
+  // Render all enrichment keys via the Renderer in cli-help format
+  const { output } = renderContent(enrichment, 'cli-help');
+  if (output) lines.push(output);
+
+  return lines.join('\n');
+}
+
 // --- Concept Handler ---
 
 export const cliTargetHandler: ConceptHandler = {
@@ -330,12 +373,21 @@ export const cliTargetHandler: ConceptHandler = {
     const hierConfig = getHierarchicalTrait(parsedManifestYaml, name);
     const content = generateCommandFile(manifest, name, overrides, cliConfig, hierConfig);
 
-    const files = [
+    const files: Array<{ path: string; content: string }> = [
       {
         path: `${kebab}/${kebab}.command.ts`,
         content,
       },
     ];
+
+    // Emit enrichment-driven CLI help documentation if available
+    const helpMd = generateCliHelpMd(manifest, name, parsedManifestYaml);
+    if (helpMd) {
+      files.push({
+        path: `${kebab}/${kebab}.help.md`,
+        content: helpMd,
+      });
+    }
 
     return { variant: 'ok', files };
   },

@@ -8,7 +8,8 @@
 // Built-in patterns:
 //   list, checklist, link-list, code-list, heading-body,
 //   callout, inline-list, bad-good, scaffold-list,
-//   slash-list, keyed-checklist, example-list
+//   slash-list, keyed-checklist, example-list,
+//   table-list, companion-link-list
 //
 // Template configs use {{field}} interpolation.
 // Architecture doc: Interface Kit, Section 1.8
@@ -300,6 +301,100 @@ function patternSlashList(data: unknown, tpl: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
+/**
+ * table-list — Array of objects → markdown table.
+ * Renders structured data as a table with configurable headers.
+ *
+ * Template config: { heading?, headers: string[], fields: string[], namePrefix? }
+ * headers: column header labels (e.g. ["Skill", "When to Use"])
+ * fields: object keys to extract for each column (e.g. ["name", "description"])
+ * namePrefix: optional prefix for the first column value (e.g. "`/")
+ */
+function patternTableList(data: unknown, tpl: Record<string, unknown>): string {
+  const items = data as Array<Record<string, unknown>>;
+  if (!Array.isArray(items) || items.length === 0) return '';
+  const heading = tpl.heading as string | undefined;
+  const headers = (tpl.headers as string[]) || ['Name', 'Description'];
+  const fields = (tpl.fields as string[]) || ['name', 'description'];
+  const namePrefix = (tpl.namePrefix as string) || '';
+  const nameSuffix = (tpl.nameSuffix as string) || '';
+  const lines: string[] = [];
+  if (heading) lines.push(`## ${heading}`, '');
+  // Header row
+  lines.push(`| ${headers.join(' | ')} |`);
+  lines.push(`| ${headers.map(() => '---').join(' | ')} |`);
+  // Data rows
+  for (const item of items) {
+    const obj = typeof item === 'object' && item !== null ? item : { name: item };
+    const cells = fields.map((f, i) => {
+      const val = typeof obj === 'string' ? obj : String(obj[f] ?? '');
+      return i === 0 && namePrefix ? `${namePrefix}${val}${nameSuffix}` : val;
+    });
+    lines.push(`| ${cells.join(' | ')} |`);
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
+/**
+ * companion-link-list — Array of {path, label, tier?} → categorised links.
+ * Groups companion documents by tier (inline, reference, summary) and
+ * renders them as sectioned markdown links.
+ *
+ * Template config: { heading?, tiers?: string[] }
+ * tiers: which tiers to include (default: all).
+ */
+function patternCompanionLinkList(data: unknown, tpl: Record<string, unknown>): string {
+  const docs = data as Array<{ path: string; label: string; tier?: string; description?: string }>;
+  if (!Array.isArray(docs) || docs.length === 0) return '';
+  const heading = tpl.heading as string | undefined;
+  const preamble = tpl.preamble as string | undefined;
+  const tierFilter = tpl.tiers as string[] | undefined;
+  const filtered = tierFilter ? docs.filter(d => !d.tier || tierFilter.includes(d.tier)) : docs;
+  if (filtered.length === 0) return '';
+  const lines: string[] = [];
+  if (heading) lines.push(`## ${heading}`, '');
+  if (preamble) lines.push(preamble, '');
+  for (const doc of filtered) {
+    const desc = doc.description ? ` — ${doc.description}` : '';
+    lines.push(`- [${doc.label}](${doc.path})${desc}`);
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
+// --- Content Variable Interpolation ---
+
+/**
+ * Replace $VARIABLE placeholders in a string with values from a
+ * variables context. Each target provides its own variable vocabulary
+ * (e.g. Claude Skills uses $ARGUMENTS, CLI uses <SOURCE>).
+ *
+ * Exported so targets can use this for intro-template rendering.
+ */
+export function interpolateVars(text: string, variables: Record<string, string>): string {
+  let result = text;
+  for (const [name, value] of Object.entries(variables)) {
+    result = result.replace(new RegExp(`\\$${name}`, 'g'), value);
+  }
+  return result;
+}
+
+// --- Tier Filtering Utility ---
+
+/**
+ * Filter an array of enrichment items by tier.
+ * Items without a tier field pass through (treated as 'inline').
+ *
+ * Exported so targets can filter enrichment items by tier before rendering.
+ */
+export function filterByTier<T extends { tier?: string }>(
+  items: T[],
+  tier: string,
+): T[] {
+  return items.filter(item => (item.tier || 'inline') === tier);
+}
+
 // --- Pattern Registry ---
 
 const PATTERNS: Record<string, PatternFn> = {
@@ -314,8 +409,10 @@ const PATTERNS: Record<string, PatternFn> = {
   'callout':           patternCallout,
   'inline-list':       patternInlineList,
   'bad-good':          patternBadGood,
-  'scaffold-list':     patternScaffoldList,
-  'slash-list':        patternSlashList,
+  'scaffold-list':          patternScaffoldList,
+  'slash-list':             patternSlashList,
+  'table-list':             patternTableList,
+  'companion-link-list':    patternCompanionLinkList,
 };
 
 // --- Handler Registry (data-driven) ---
@@ -434,12 +531,67 @@ const BUILTIN_HANDLERS: HandlerDef[] = [
   },
 ];
 
-// Register built-in handlers for both skill-md and cli-help formats
-for (const format of ['skill-md', 'cli-help']) {
+// Register built-in handlers for all textual interface formats.
+// skill-md: Claude Skills SKILL.md files
+// cli-help: CLI help text and man pages
+// mcp-help: MCP tool/resource descriptions
+// rest-help: REST API documentation
+for (const format of ['skill-md', 'cli-help', 'mcp-help', 'rest-help']) {
   for (const h of BUILTIN_HANDLERS) {
     registerHandler({ ...h, format });
   }
 }
+
+// --- Format-Specific Handler Overrides ---
+// skill-md: related-workflows renders as a table with "When to Use" column
+registerHandler({
+  key: 'related-workflows',
+  format: 'skill-md',
+  order: 100,
+  pattern: 'table-list',
+  template: { heading: 'Related Skills', headers: ['Skill', 'When to Use'], fields: ['name', 'description'], namePrefix: '`/', nameSuffix: '`' },
+});
+
+// All formats: companion-docs renders as categorised links
+for (const format of ['skill-md', 'cli-help', 'mcp-help', 'rest-help']) {
+  registerHandler({
+    key: 'companion-docs',
+    format,
+    order: 65,
+    pattern: 'companion-link-list',
+    template: { heading: 'Supporting Materials' },
+  });
+}
+
+// All formats: example-walkthroughs renders as link list with preamble
+for (const format of ['skill-md', 'cli-help', 'mcp-help', 'rest-help']) {
+  registerHandler({
+    key: 'example-walkthroughs',
+    format,
+    order: 88,
+    pattern: 'companion-link-list',
+    template: { heading: 'Example Walkthroughs', preamble: 'For complete examples with design rationale:' },
+  });
+}
+
+// cli-help: related-workflows stays as slash-list (already registered above)
+// mcp-help: related-workflows as inline-list
+registerHandler({
+  key: 'related-workflows',
+  format: 'mcp-help',
+  order: 100,
+  pattern: 'inline-list',
+  template: { prefix: '**Related tools:**' },
+});
+
+// rest-help: related-workflows as table
+registerHandler({
+  key: 'related-workflows',
+  format: 'rest-help',
+  order: 100,
+  pattern: 'table-list',
+  template: { heading: 'Related Endpoints', headers: ['Endpoint', 'Description'], fields: ['name', 'description'] },
+});
 
 // --- Public Utility API ---
 // Targets import these directly for inline rendering.

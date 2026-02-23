@@ -9,8 +9,9 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
+import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
+import { renderContent, interpolateVars } from './renderer.impl.js';
 
 // --- MCP Entry Types ---
 
@@ -218,6 +219,47 @@ function generateToolsFile(
   return lines.join('\n');
 }
 
+// --- MCP Help Markdown Generator ---
+
+/**
+ * Generate a mcp-help.md file with rendered enrichment content
+ * (design principles, references, companion docs, etc.) using
+ * the Renderer's mcp-help format.
+ *
+ * MCP uses {inputName} as its variable vocabulary for intro-template.
+ */
+function generateMcpHelpMd(
+  manifest: ConceptManifest,
+  conceptName: string,
+  manifestYaml?: Record<string, unknown>,
+): string | null {
+  const enrichment = getManifestEnrichment(manifestYaml, conceptName);
+  if (!enrichment || Object.keys(enrichment).length === 0) return null;
+
+  const lines: string[] = [];
+  const snake = toSnakeCase(conceptName);
+
+  lines.push(`# ${snake} — MCP Tool Guide`);
+  lines.push('');
+
+  // Intro line with MCP variable vocabulary
+  const introTemplate = enrichment['intro-template'] as string | undefined;
+  if (introTemplate) {
+    const vars: Record<string, string> = { ARGUMENTS: '{input}', CONCEPT: conceptName };
+    lines.push(interpolateVars(introTemplate, vars));
+    lines.push('');
+    delete enrichment['intro-template'];
+  } else {
+    lines.push(manifest.purpose || `${conceptName} MCP tools.`);
+    lines.push('');
+  }
+
+  const { output } = renderContent(enrichment, 'mcp-help');
+  if (output) lines.push(output);
+
+  return lines.join('\n');
+}
+
 // --- Concept Handler ---
 
 export const mcpTargetHandler: ConceptHandler = {
@@ -282,12 +324,21 @@ export const mcpTargetHandler: ConceptHandler = {
     const kebab = toKebabCase(name);
     const content = generateToolsFile(manifest, name, overrides, hierConfig);
 
-    const files = [
+    const files: Array<{ path: string; content: string }> = [
       {
         path: `${kebab}/${kebab}.tools.ts`,
         content,
       },
     ];
+
+    // Emit enrichment-driven MCP help documentation if available
+    const helpMd = generateMcpHelpMd(manifest, name, parsedManifestYaml);
+    if (helpMd) {
+      files.push({
+        path: `${kebab}/${kebab}.help.md`,
+        content: helpMd,
+      });
+    }
 
     return { variant: 'ok', files };
   },

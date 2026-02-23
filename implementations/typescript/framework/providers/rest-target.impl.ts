@@ -24,9 +24,11 @@ import {
   getHierarchicalTrait,
   inferHierarchicalRoutes,
   getEnrichmentContent,
+  getManifestEnrichment,
 } from './codegen-utils.js';
 
 import type { HttpRoute, HierarchicalConfig } from './codegen-utils.js';
+import { renderContent, interpolateVars } from './renderer.impl.js';
 
 // --- Internal Types ---
 
@@ -229,6 +231,48 @@ function generateRoutesFile(
   return { content: body, routes: routeSummaries };
 }
 
+// --- REST API Documentation Generator ---
+
+/**
+ * Generate an api-docs.md file with rendered enrichment content
+ * (design principles, references, companion docs, related endpoints, etc.)
+ * using the Renderer's rest-help format.
+ *
+ * REST uses path parameter syntax for intro-template variables.
+ */
+function generateRestHelpMd(
+  manifest: ConceptManifest,
+  basePath: string,
+  manifestYaml?: Record<string, unknown>,
+): string | null {
+  const enrichment = getManifestEnrichment(manifestYaml, manifest.name);
+  if (!enrichment || Object.keys(enrichment).length === 0) return null;
+
+  const lines: string[] = [];
+
+  lines.push(`# ${toPascalCase(manifest.name)} API`);
+  lines.push('');
+  lines.push(`Base path: \`${basePath}\``);
+  lines.push('');
+
+  // Intro line with REST variable vocabulary
+  const introTemplate = enrichment['intro-template'] as string | undefined;
+  if (introTemplate) {
+    const vars: Record<string, string> = { ARGUMENTS: `${basePath}/{id}`, CONCEPT: manifest.name };
+    lines.push(interpolateVars(introTemplate, vars));
+    lines.push('');
+    delete enrichment['intro-template'];
+  } else {
+    lines.push(manifest.purpose || `${manifest.name} REST API.`);
+    lines.push('');
+  }
+
+  const { output } = renderContent(enrichment, 'rest-help');
+  if (output) lines.push(output);
+
+  return lines.join('\n');
+}
+
 // --- Concept Handler ---
 
 export const restTargetHandler: ConceptHandler = {
@@ -332,6 +376,15 @@ export const restTargetHandler: ConceptHandler = {
         content,
       },
     ];
+
+    // Emit enrichment-driven REST API documentation if available
+    const helpMd = generateRestHelpMd(manifest, basePath, parsedManifestYaml);
+    if (helpMd) {
+      files.push({
+        path: `${kebabName}/api-docs.md`,
+        content: helpMd,
+      });
+    }
 
     return {
       variant: 'ok',

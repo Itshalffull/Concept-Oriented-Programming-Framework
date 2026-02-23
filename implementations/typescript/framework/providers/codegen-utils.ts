@@ -451,6 +451,49 @@ export function getEnrichmentContent(
   }
 }
 
+/**
+ * Get merged enrichment content from manifest YAML for a concept.
+ * Combines workflow decoration keys and annotation concept-level keys,
+ * excluding structural fields (concept, steps, tool-permissions, etc.).
+ * Workflow keys take precedence over annotation keys.
+ */
+export function getManifestEnrichment(
+  manifestYaml: Record<string, unknown> | undefined,
+  conceptName: string,
+): Record<string, unknown> {
+  if (!manifestYaml) return {};
+  const merged: Record<string, unknown> = {};
+
+  // Annotation concept-level keys (lower priority)
+  const annotations = manifestYaml.annotations as Record<string, Record<string, unknown>> | undefined;
+  if (annotations?.[conceptName]) {
+    const conceptAnnot = annotations[conceptName].concept as Record<string, unknown> | undefined;
+    if (conceptAnnot) {
+      for (const [key, value] of Object.entries(conceptAnnot)) {
+        if (key === 'tool-permissions' || key === 'argument-template') continue;
+        if (key === 'trigger-patterns' || key === 'trigger-exclude') continue;
+        merged[key] = value;
+      }
+    }
+  }
+
+  // Workflow keys (higher priority)
+  const workflows = manifestYaml.workflows as Record<string, Record<string, unknown>> | undefined;
+  if (workflows) {
+    for (const wf of Object.values(workflows)) {
+      if (wf.concept === conceptName) {
+        for (const [key, value] of Object.entries(wf)) {
+          if (key === 'concept' || key === 'steps') continue;
+          merged[key] = value;
+        }
+        break;
+      }
+    }
+  }
+
+  return merged;
+}
+
 // --- Concept Grouping ---
 
 export type GroupingMode =

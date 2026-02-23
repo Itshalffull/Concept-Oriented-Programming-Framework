@@ -65,6 +65,14 @@ const DEVTOOLS_MANIFEST_YAML = {
       checklists: {
         parse: ['Has purpose block?', 'Actions have variants?', 'Invariants reference valid actions?'],
       },
+      'checklist-labels': {
+        parse: 'Validation checklist',
+      },
+      'step-references': {
+        parse: [
+          { path: 'references/concept-grammar.md', label: 'Concept grammar reference', context: 'the complete grammar' },
+        ],
+      },
       references: [
         { path: 'references/concept-grammar.md', label: 'Concept grammar reference' },
       ],
@@ -72,6 +80,13 @@ const DEVTOOLS_MANIFEST_YAML = {
         { title: 'Kitchen-sink concept', description: 'Concept has multiple unrelated purposes.' },
       ],
       'related-workflows': ['sync-designer', 'implementation-builder'],
+      'example-walkthroughs': [
+        { path: 'examples/domain-concepts.md', label: 'Domain concept examples', description: 'Password, Follow, Article' },
+      ],
+      'quick-reference': {
+        heading: 'Quick Reference: Concept Structure',
+        body: '```\nconcept Name [T] {\n  purpose { ... }\n  state { ... }\n  actions { ... }\n}\n```',
+      },
     },
   },
   annotations: {
@@ -79,6 +94,7 @@ const DEVTOOLS_MANIFEST_YAML = {
       concept: {
         'tool-permissions': ['Read', 'Grep', 'Glob', 'Edit', 'Write', 'Bash'],
         'argument-template': '$ARGUMENTS',
+        'skill-title': 'Validate COPF Concept Specs',
       },
       parse: {
         examples: [
@@ -175,7 +191,7 @@ describe('Claude Skills Target — Flat Rendering', () => {
 // ============================================================
 
 describe('Claude Skills Target — Workflow Rendering', () => {
-  it('renders workflow steps as numbered sections', async () => {
+  it('renders workflow steps as numbered sections under wrapper heading', async () => {
     const storage = createInMemoryStorage();
     const result = await claudeSkillsTargetHandler.generate(
       {
@@ -189,7 +205,9 @@ describe('Claude Skills Target — Workflow Rendering', () => {
     const skillMd = (result.files as Array<{ path: string; content: string }>)
       .find(f => f.path.endsWith('SKILL.md'))!;
 
-    expect(skillMd.content).toContain('## Step 1: Parse and Validate');
+    // Steps are nested under a wrapper section
+    expect(skillMd.content).toContain('## Step-by-Step Process');
+    expect(skillMd.content).toContain('### Step 1: Parse and Validate');
   });
 
   it('includes tool-permissions in frontmatter', async () => {
@@ -240,7 +258,8 @@ describe('Claude Skills Target — Workflow Rendering', () => {
     const skillMd = (result.files as Array<{ path: string; content: string }>)
       .find(f => f.path.endsWith('SKILL.md'))!;
 
-    expect(skillMd.content).toContain('**Checklist:**');
+    // Uses named checklist label from checklist-labels
+    expect(skillMd.content).toContain('**Validation checklist:**');
     expect(skillMd.content).toContain('- [ ] Has purpose block?');
     expect(skillMd.content).toContain('- [ ] Actions have variants?');
   });
@@ -315,8 +334,83 @@ describe('Claude Skills Target — Workflow Rendering', () => {
       .find(f => f.path.endsWith('SKILL.md'))!;
 
     expect(skillMd.content).toContain('## Related Skills');
-    expect(skillMd.content).toContain('- /sync-designer');
-    expect(skillMd.content).toContain('- /implementation-builder');
+    // skill-md format renders related-workflows as a table
+    expect(skillMd.content).toContain('| Skill | When to Use |');
+    expect(skillMd.content).toContain('`/sync-designer`');
+    expect(skillMd.content).toContain('`/implementation-builder`');
+  });
+
+  it('uses skill-title annotation for descriptive heading', async () => {
+    const storage = createInMemoryStorage();
+    const result = await claudeSkillsTargetHandler.generate(
+      {
+        projection: JSON.stringify({ conceptName: 'SpecParser', conceptManifest: JSON.stringify(SPEC_PARSER_MANIFEST) }),
+        config: JSON.stringify({ grouping: 'per-concept' }),
+        manifestYaml: JSON.stringify(DEVTOOLS_MANIFEST_YAML),
+      },
+      storage,
+    );
+
+    const skillMd = (result.files as Array<{ path: string; content: string }>)
+      .find(f => f.path.endsWith('SKILL.md'))!;
+
+    // Uses skill-title from annotations instead of PascalCase concept name
+    expect(skillMd.content).toContain('# Validate COPF Concept Specs');
+  });
+
+  it('renders per-step inline references', async () => {
+    const storage = createInMemoryStorage();
+    const result = await claudeSkillsTargetHandler.generate(
+      {
+        projection: JSON.stringify({ conceptName: 'SpecParser', conceptManifest: JSON.stringify(SPEC_PARSER_MANIFEST) }),
+        config: JSON.stringify({ grouping: 'per-concept' }),
+        manifestYaml: JSON.stringify(DEVTOOLS_MANIFEST_YAML),
+      },
+      storage,
+    );
+
+    const skillMd = (result.files as Array<{ path: string; content: string }>)
+      .find(f => f.path.endsWith('SKILL.md'))!;
+
+    // step-references rendered inline within the step
+    expect(skillMd.content).toContain('Read [Concept grammar reference](references/concept-grammar.md) for the complete grammar.');
+  });
+
+  it('renders example-walkthroughs section', async () => {
+    const storage = createInMemoryStorage();
+    const result = await claudeSkillsTargetHandler.generate(
+      {
+        projection: JSON.stringify({ conceptName: 'SpecParser', conceptManifest: JSON.stringify(SPEC_PARSER_MANIFEST) }),
+        config: JSON.stringify({ grouping: 'per-concept' }),
+        manifestYaml: JSON.stringify(DEVTOOLS_MANIFEST_YAML),
+      },
+      storage,
+    );
+
+    const skillMd = (result.files as Array<{ path: string; content: string }>)
+      .find(f => f.path.endsWith('SKILL.md'))!;
+
+    expect(skillMd.content).toContain('## Example Walkthroughs');
+    expect(skillMd.content).toContain('[Domain concept examples](examples/domain-concepts.md)');
+    expect(skillMd.content).toContain('Password, Follow, Article');
+  });
+
+  it('renders quick-reference section', async () => {
+    const storage = createInMemoryStorage();
+    const result = await claudeSkillsTargetHandler.generate(
+      {
+        projection: JSON.stringify({ conceptName: 'SpecParser', conceptManifest: JSON.stringify(SPEC_PARSER_MANIFEST) }),
+        config: JSON.stringify({ grouping: 'per-concept' }),
+        manifestYaml: JSON.stringify(DEVTOOLS_MANIFEST_YAML),
+      },
+      storage,
+    );
+
+    const skillMd = (result.files as Array<{ path: string; content: string }>)
+      .find(f => f.path.endsWith('SKILL.md'))!;
+
+    expect(skillMd.content).toContain('## Quick Reference: Concept Structure');
+    expect(skillMd.content).toContain('concept Name [T]');
   });
 
   it('falls back to flat rendering when no workflow data exists', async () => {
@@ -334,9 +428,9 @@ describe('Claude Skills Target — Workflow Rendering', () => {
     const skillMd = (result.files as Array<{ path: string; content: string }>)
       .find(f => f.path.endsWith('SKILL.md'))!;
 
-    // Should use flat rendering (## Commands), not workflow (## Step N:)
+    // Should use flat rendering (## Commands), not workflow (### Step N:)
     expect(skillMd.content).toContain('## Commands');
-    expect(skillMd.content).not.toContain('## Step 1:');
+    expect(skillMd.content).not.toContain('### Step 1:');
   });
 });
 
