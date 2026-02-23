@@ -237,7 +237,10 @@ function renderWorkflowSkill(
   const fmt = 'skill-md';
 
   // --- Header ---
-  lines.push(`# ${pascal}`);
+  // Use skill-title from annotations for a descriptive heading (e.g.
+  // "Create a New COPF Concept") instead of just the PascalCase concept name.
+  const skillTitle = contentKey<string>(annot?.concept, 'skill-title');
+  lines.push(`# ${skillTitle || pascal}`);
   lines.push('');
 
   // Intro line: use intro-template with variable interpolation if available,
@@ -261,14 +264,23 @@ function renderWorkflowSkill(
     if (output) lines.push(output);
   }
 
+  // --- Step heading hierarchy ---
+  // Matches handmade skill structure: "## Step-by-Step Process" wrapper
+  // with steps rendered as "### Step N:" underneath.
+  const stepsHeading = contentKey<string>(workflow, 'steps-heading') || 'Step-by-Step Process';
+  lines.push(`## ${stepsHeading}`);
+  lines.push('');
+
   // --- Workflow steps (structural — target owns this) ---
   const allContentSections = contentKey<Array<{ heading: string; body: string; afterStep?: number }>>(workflow, 'content-sections');
   const allValidationCmds = contentKey<Array<{ label: string; command: string; afterStep?: number }>>(workflow, 'validation-commands');
+  const stepRefs = contentKey<Record<string, Array<{ path: string; label: string; context?: string }>>>(workflow, 'step-references');
+  const checklistLabels = contentKey<Record<string, string>>(workflow, 'checklist-labels');
 
   for (let i = 0; i < workflow.steps.length; i++) {
     const step = workflow.steps[i];
     const title = step.title || toPascalCase(step.action);
-    lines.push(`## Step ${i + 1}: ${title}`);
+    lines.push(`### Step ${i + 1}: ${title}`);
     lines.push('');
 
     // Action prose
@@ -277,6 +289,17 @@ function renderWorkflowSkill(
     lines.push(prose);
     lines.push('');
 
+    // Per-step inline references — rendered as "Read [label](path) for..."
+    // within the step, matching handmade skill format.
+    const refs = stepRefs?.[step.action];
+    if (refs && refs.length > 0) {
+      for (const ref of refs) {
+        const suffix = ref.context ? ` for ${ref.context}` : '';
+        lines.push(`Read [${ref.label}](${ref.path})${suffix}.`);
+      }
+      lines.push('');
+    }
+
     // Arguments
     if (action && action.params.length > 0) {
       const argParts = action.params.map((p, j) => `\`$${j}\` **${p.name}** (${typeLabel(p.type)})`);
@@ -284,11 +307,12 @@ function renderWorkflowSkill(
       lines.push('');
     }
 
-    // Step-specific checklist
+    // Step-specific checklist with named heading
     const checklists = contentKey<Record<string, string[]>>(workflow, 'checklists');
     const checklist = checklists?.[step.action];
     if (checklist && checklist.length > 0) {
-      lines.push('**Checklist:**');
+      const label = checklistLabels?.[step.action] || 'Checklist';
+      lines.push(`**${label}:**`);
       for (const item of checklist) {
         lines.push(`- [ ] ${item}`);
       }
@@ -311,7 +335,7 @@ function renderWorkflowSkill(
     const contentSections = allContentSections?.filter(s => s.afterStep === i + 1);
     if (contentSections && contentSections.length > 0) {
       for (const section of contentSections) {
-        lines.push(`### ${section.heading}`);
+        lines.push(`#### ${section.heading}`);
         lines.push('');
         lines.push(section.body);
         lines.push('');
@@ -353,7 +377,8 @@ function renderWorkflowSkill(
   const skipKeys = new Set([
     'concept', 'steps',                     // structural
     'design-principles', 'trigger-description', // pre-step
-    'checklists',                           // step-specific
+    'checklists', 'checklist-labels',       // step-specific
+    'step-references', 'steps-heading',     // step-structural
     'content-sections', 'validation-commands',  // step-interleaved (handled above)
   ]);
   for (const [key, value] of Object.entries(enrichment)) {
@@ -388,7 +413,9 @@ function renderFlatSkill(
   const pascal = toPascalCase(manifest.name);
   const fmt = 'skill-md';
 
-  lines.push(`# ${pascal}`);
+  // Use skill-title for a descriptive heading, falling back to PascalCase.
+  const skillTitle = contentKey<string>(annot?.concept, 'skill-title');
+  lines.push(`# ${skillTitle || pascal}`);
   lines.push('');
 
   // Intro line: use intro-template with variable interpolation if available

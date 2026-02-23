@@ -348,11 +348,13 @@ function patternCompanionLinkList(data: unknown, tpl: Record<string, unknown>): 
   const docs = data as Array<{ path: string; label: string; tier?: string; description?: string }>;
   if (!Array.isArray(docs) || docs.length === 0) return '';
   const heading = tpl.heading as string | undefined;
+  const preamble = tpl.preamble as string | undefined;
   const tierFilter = tpl.tiers as string[] | undefined;
   const filtered = tierFilter ? docs.filter(d => !d.tier || tierFilter.includes(d.tier)) : docs;
   if (filtered.length === 0) return '';
   const lines: string[] = [];
   if (heading) lines.push(`## ${heading}`, '');
+  if (preamble) lines.push(preamble, '');
   for (const doc of filtered) {
     const desc = doc.description ? ` — ${doc.description}` : '';
     lines.push(`- [${doc.label}](${doc.path})${desc}`);
@@ -558,6 +560,17 @@ for (const format of ['skill-md', 'cli-help', 'mcp-help', 'rest-help']) {
     order: 65,
     pattern: 'companion-link-list',
     template: { heading: 'Supporting Materials' },
+  });
+}
+
+// All formats: example-walkthroughs renders as link list with preamble
+for (const format of ['skill-md', 'cli-help', 'mcp-help', 'rest-help']) {
+  registerHandler({
+    key: 'example-walkthroughs',
+    format,
+    order: 88,
+    pattern: 'companion-link-list',
+    template: { heading: 'Example Walkthroughs', preamble: 'For complete examples with design rationale:' },
   });
 }
 
