@@ -1,15 +1,6 @@
----
-name: kit-manager
-description: Manage concept kits scaffold new kits , validate kit 
- manifests and cross kit references , run kit tests , list 
- active kits , and check app overrides
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf kit-manager — Help
 
-# KitManager
-
-Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish reusable concept packages.
+Manage kit **<source>** — scaffold, validate, test, and publish reusable concept packages.
 
 
 > **When to use:** Use when creating, validating, testing, or managing concept kits. Covers the full kit lifecycle from scaffolding to publishing.
@@ -20,93 +11,25 @@ Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish reusable con
 - **Kit as Reusable Unit:** A kit bundles related concepts and syncs into a single distributable package — like an npm package for COPF.
 - **Cross-Kit Isolation:** Concepts in one kit never reference concepts in another kit directly — cross-kit integration happens through syncs and type parameter alignment.
 - **Required vs Recommended Syncs:** Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other kits.
-
-## Step-by-Step Process
-
-### Step 1: Create Kit
-
-Scaffold a new kit directory with kit yaml , concept 
- and sync subdirectories , and example files
-
-**Arguments:** `$0` **name** (string)
-
-**Checklist:**
+**init:**
 - [ ] Kit name follows naming convention?
 - [ ] Kit.yaml has required fields (name, version, description)?
 - [ ] Example concept spec is valid?
 
-**Examples:**
-*Create a new kit*
-```bash
-copf kit init my-kit
-```
-
-### Step 2: Validate Kit
-
-Validate a kit manifest , its concept specs , sync 
- definitions , and cross kit concept references
-
-**Arguments:** `$0` **path** (string)
-
-**Checklist:**
+**validate:**
 - [ ] All concept specs parse successfully?
 - [ ] All sync files compile?
 - [ ] Cross-kit references resolve?
 - [ ] Type parameters align across concepts?
 
-**Examples:**
-*Validate a kit*
-```bash
-copf kit validate ./kits/my-kit
-```
-
-### Step 3: Test Kit
-
-Run conformance and integration tests for a kit 
- Tests invariants from concept specs and validates 
- sync compilation
-
-**Arguments:** `$0` **path** (string)
-
-**Checklist:**
+**test:**
 - [ ] Conformance tests pass?
 - [ ] Integration tests pass?
 - [ ] No failing assertions?
 
-**Examples:**
-*Test a kit*
-```bash
-copf kit test ./kits/my-kit
-```
-
-### Step 4: List Active Kits
-
-List all kits used by the current application , 
- including their versions and concept counts
-
-**Examples:**
-*List active kits*
-```bash
-copf kit list
-```
-
-### Step 5: Check Overrides
-
-Verify that application sync overrides reference 
- valid syncs in the target kit
-
-**Arguments:** `$0` **path** (string)
-
-**Checklist:**
+**checkOverrides:**
 - [ ] Override references valid syncs?
 - [ ] Override parameters match original sync signature?
-
-**Examples:**
-*Check sync overrides*
-```bash
-copf kit check-overrides ./kits/my-kit
-```
-
 ## References
 
 - [Kit manifest and directory structure](references/kit-structure.md)
@@ -179,8 +102,6 @@ npx tsx tools/copf-cli/src/index.ts kit list
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/concept-designer` | Design concepts to include in the kit |
-| `/sync-designer` | Write syncs that wire kit concepts together |
-| `/deployment-config` | Deploy kits to production runtimes |
+- /concept-designer — Design concepts to include in the kit
+- /sync-designer — Write syncs that wire kit concepts together
+- /deployment-config — Deploy kits to production runtimes

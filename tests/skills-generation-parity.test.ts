@@ -91,7 +91,8 @@ function parseSkillFrontmatter(content: string): SkillFrontmatter | null {
 
 function extractSteps(content: string): Array<{ number: number; title: string }> {
   const steps: Array<{ number: number; title: string }> = [];
-  const regex = /^## Step (\d+): (.+)$/gm;
+  // Matches both ## Step N and ### Step N heading levels
+  const regex = /^#{2,3} Step (\d+): (.+)$/gm;
   let match;
   while ((match = regex.exec(content)) !== null) {
     steps.push({ number: parseInt(match[1], 10), title: match[2] });
@@ -396,14 +397,19 @@ describe('Claude Skills Generation Parity', () => {
         for (let i = 0; i < wf.steps.length; i++) {
           const step = wf.steps[i];
           const title = step.title || toPascal(step.action);
-          const stepHeader = `## Step ${i + 1}: ${title}`;
-          const headerIdx = content.indexOf(stepHeader);
+          // Match both ## Step N and ### Step N heading levels
+          const stepHeader2 = `## Step ${i + 1}: ${title}`;
+          const stepHeader3 = `### Step ${i + 1}: ${title}`;
+          const idx2 = content.indexOf(stepHeader2);
+          const idx3 = content.indexOf(stepHeader3);
+          const headerIdx = Math.max(idx2, idx3);
+          const matchedHeader = idx3 >= 0 ? stepHeader3 : stepHeader2;
           if (headerIdx === -1) {
             failures.push(`${wf.concept}/${step.action}: step header not found`);
             continue;
           }
           // Check that there's non-empty prose after the step header
-          const afterHeader = content.substring(headerIdx + stepHeader.length).trim();
+          const afterHeader = content.substring(headerIdx + matchedHeader.length).trim();
           const firstLine = afterHeader.split('\n').find(l => l.trim().length > 0);
           if (!firstLine || firstLine.startsWith('##') || firstLine.startsWith('**Arguments')) {
             failures.push(`${wf.concept}/${step.action}: no prose after step header`);
@@ -756,11 +762,12 @@ describe('Claude Skills Generation Parity', () => {
       expect(steps[0].title).toBe('Compile Sync Rules');
     });
 
-    it('has 3 checklist items', () => {
+    it('has 4 checklist items', () => {
       const items = extractChecklists(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));
       expect(items).toContain('Sync references valid concept actions?');
-      expect(items).toContain('Variable bindings are consistent?');
+      expect(items).toContain('Variable bindings are consistent across when/where/then?');
       expect(items).toContain('Where-clause queries are well-formed?');
+      expect(items).toContain('Sync mode (eager vs eventual) matches intent?');
     });
 
     it('has compile sync example', () => {
@@ -828,10 +835,11 @@ describe('Claude Skills Generation Parity', () => {
   describe('FlowTrace skill', () => {
     const kebab = 'flow-trace';
 
-    it('has 1 workflow step "Build Execution Trace"', () => {
+    it('has 2 workflow steps', () => {
       const steps = extractSteps(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));
-      expect(steps.length).toBe(1);
+      expect(steps.length).toBe(2);
       expect(steps[0].title).toBe('Build Execution Trace');
+      expect(steps[1].title).toBe('Render Trace Output');
     });
 
     it('has trace example and debugging reference', () => {
@@ -925,18 +933,27 @@ describe('Claude Skills Generation Parity', () => {
     });
   });
 
-  describe('SyncParser skill (no workflow, flat layout)', () => {
+  describe('SyncParser skill', () => {
     const kebab = 'sync-parser';
 
-    it('has no workflow steps (flat skill layout)', () => {
+    it('has 1 workflow step "Parse and Validate Sync Files"', () => {
       const steps = extractSteps(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));
-      expect(steps.length).toBe(0);
+      expect(steps.length).toBe(1);
+      expect(steps[0].title).toBe('Parse and Validate Sync Files');
     });
 
-    it('has "Commands" section with parse action', () => {
+    it('has 5 checklist items', () => {
+      const items = extractChecklists(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));
+      expect(items).toContain('Sync file has valid when/then structure?');
+      expect(items).toContain('All concept references resolve to loaded manifests?');
+      expect(items).toContain('Variable bindings are consistent across clauses?');
+      expect(items).toContain('Action parameters match concept action signatures?');
+      expect(items).toContain('Sync mode (eager/eventual) is declared?');
+    });
+
+    it('has trigger description', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
-      expect(content).toContain('## Commands');
-      expect(content).toContain('### parse');
+      expect(content).toContain('When to use');
     });
 
     it('.commands.ts exports ["parse"]', () => {

@@ -1,13 +1,6 @@
----
-name: sync-compiler
-description: Compile parsed synchronizations into executable registrations
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf sync-compiler — Help
 
-# SyncCompiler
-
-Compile sync rules in **$ARGUMENTS** into executable registrations for the sync engine.
+Compile sync rules in **<source>** into executable registrations for the sync engine.
 
 
 > **When to use:** Use when compiling parsed sync ASTs into executable registrations that the sync engine can evaluate at runtime.
@@ -18,50 +11,11 @@ Compile sync rules in **$ARGUMENTS** into executable registrations for the sync 
 - **Completion Chaining:** Syncs compose through completions, never by referencing other syncs — each sync reacts to what happened, not who caused it.
 - **Concept Independence:** Syncs wire concepts together without the concepts knowing about each other — concepts never import or reference each other.
 - **Pattern Exhaustiveness:** Every when-clause variant that a sync matches should be explicitly listed — don't rely on fallthrough behavior.
-
-## Step-by-Step Process
-
-### Step 1: Compile Sync Rules
-
-Compile .sync files that wire concepts together through pattern matching on completions.
-
-**Arguments:** `$0` **sync** (Y), `$1` **ast** (syncast)
-
-**Checklist:**
+**compile:**
 - [ ] Sync references valid concept actions?
 - [ ] Variable bindings are consistent across when/where/then?
 - [ ] Where-clause queries are well-formed?
 - [ ] Sync mode (eager vs eventual) matches intent?
-
-**Examples:**
-*Compile sync rules*
-```bash
-copf compile-syncs --dir ./syncs
-```
-*Compile programmatically*
-```typescript
-import { syncCompilerHandler } from './sync-compiler.impl';
-const result = await syncCompilerHandler.compile(
-  { sync: parsedSync, ast: syncAst }, storage
-);
-```
-## References
-
-- [Reusable sync templates and patterns](references/sync-patterns.md)
-
-#### Completion Chaining Pattern
-
-Syncs compose through completions, not references. A typical
-authenticated CRUD flow chains like this:
-
-1. `User/login => ok[session: ?s]`
-2. → `Auth/validate[session: ?s] => ok[token: ?t]`
-3. → `Article/create[author: ?t] => ok[article: ?a]`
-
-Each sync sees only the completion it reacts to — no sync
-knows about the others in the chain.
-
-
 ## References
 
 - [Sync language and patterns](references/sync-design.md)
@@ -131,8 +85,6 @@ npx vitest run tests/sync-compiler.test.ts
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/concept-designer` | Design concepts that syncs connect |
-| `/implementation-builder` | Write handlers for concept actions |
-| `/concept-validator` | Validate concept specs before writing syncs |
+- /concept-designer — Design concepts that syncs connect
+- /implementation-builder — Write handlers for concept actions
+- /concept-validator — Validate concept specs before writing syncs

@@ -1,13 +1,6 @@
----
-name: spec-parser
-description: Parse concept files into structured ASTs
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf spec-parser — Help
 
-# SpecParser
-
-Parse and validate concept spec **$ARGUMENTS** to verify syntax, structure, and adherence to Jackson's concept design methodology.
+Parse and validate concept spec **<source>** to verify syntax, structure, and adherence to Jackson's concept design methodology.
 
 
 > **When to use:** Use when designing, creating, or validating concept specs following Jackson's methodology. Covers purpose articulation, state design, action design, invariant writing, and spec syntax validation.
@@ -17,35 +10,11 @@ Parse and validate concept spec **$ARGUMENTS** to verify syntax, structure, and 
 
 - **Spec as Source of Truth:** The .concept file is the single authoritative definition — all generated code, tests, and documentation derive from it.
 - **Fail Fast on Ambiguity:** Parser rejects specs with ambiguous state relations or incomplete action signatures rather than guessing intent.
-
-## Step-by-Step Process
-
-### Step 1: Parse and Validate
-
-Parse all .concept specs in the project and report syntax or structural errors.
-
-**Arguments:** `$0` **source** (string)
-
-**Checklist:**
+**parse:**
 - [ ] Has purpose block?
 - [ ] Actions have at least one variant?
 - [ ] Invariants reference valid actions?
 - [ ] Type parameters declared and used?
-
-**Examples:**
-*Parse a concept file*
-```typescript
-import { parseConceptFile } from './parser';
-const ast = parseConceptFile(source);
-```
-*Parse from CLI*
-```bash
-copf check specs/my-concept.concept
-```
-## References
-
-- [Full concept grammar specification](references/concept-grammar.md)
-
 ## References
 
 - [Concept grammar reference](references/concept-grammar.md)
@@ -107,8 +76,6 @@ npx vitest run tests/spec-parser.test.ts
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/concept-designer` | Design new concepts following Jackson's methodology |
-| `/implementation-builder` | Write handlers that implement concept actions |
-| `/sync-designer` | Write syncs that connect concepts together |
+- /concept-designer — Design new concepts following Jackson's methodology
+- /implementation-builder — Write handlers that implement concept actions
+- /sync-designer — Write syncs that connect concepts together

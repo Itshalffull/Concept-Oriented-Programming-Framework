@@ -1,14 +1,6 @@
----
-name: sync-parser
-description: Parse sync files into structured ASTs and validate 
- against concept manifests
-argument-hint: $ARGUMENTS
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
----
+# copf sync-parser — Help
 
-# SyncParser
-
-Parse sync file **$ARGUMENTS** and validate its structure, variable bindings, and concept references against loaded manifests.
+Parse sync file **<source>** and validate its structure, variable bindings, and concept references against loaded manifests.
 
 
 > **When to use:** Use when parsing and validating .sync files against loaded concept manifests. Catches variable binding errors, missing concept references, and parameter mismatches at parse time.
@@ -18,38 +10,12 @@ Parse sync file **$ARGUMENTS** and validate its structure, variable bindings, an
 
 - **Manifest-Aware Validation:** Sync validation cross-references concept manifests to verify that referenced actions and parameters actually exist.
 - **Early Error Detection:** Catch variable binding mismatches and type errors at parse time, not at runtime when the sync fires.
-
-## Step-by-Step Process
-
-### Step 1: Parse and Validate Sync Files
-
-Parse .sync files into structured ASTs and validate variable bindings, concept references, and action signatures against loaded manifests.
-
-**Arguments:** `$0` **source** (string), `$1` **manifests** (manifest[])
-
-**Checklist:**
+**parse:**
 - [ ] Sync file has valid when/then structure?
 - [ ] All concept references resolve to loaded manifests?
 - [ ] Variable bindings are consistent across clauses?
 - [ ] Action parameters match concept action signatures?
 - [ ] Sync mode (eager/eventual) is declared?
-
-**Examples:**
-*Parse a sync file*
-```typescript
-import { syncParserHandler } from './sync-parser.impl';
-const result = await syncParserHandler.parse(
-  { source: syncSource, manifests: loadedManifests }, storage
-);
-```
-*Parse from CLI*
-```bash
-copf compile-syncs syncs/my-sync.sync
-```
-## References
-
-- [Sync language reference](references/sync-design.md)
-
 ## References
 
 - [Sync language reference](references/sync-design.md)
@@ -99,7 +65,5 @@ npx vitest run tests/sync-parser.test.ts
 ```
 ## Related Skills
 
-| Skill | When to Use |
-| --- | --- |
-| `/sync-designer` | Compile validated sync rules into executables |
-| `/concept-validator` | Validate concept specs referenced by syncs |
+- /sync-designer — Compile validated sync rules into executables
+- /concept-validator — Validate concept specs referenced by syncs

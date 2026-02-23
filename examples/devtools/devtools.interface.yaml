@@ -10,7 +10,7 @@
 
 interface:
   name: copf-devtools
-  version: 0.1.0
+  version: 0.2.0
 
 # ─── GENERATION TARGETS ──────────────────────────────
 targets:
@@ -49,6 +49,8 @@ output:
 # Each workflow maps a concept to a step-by-step guide.
 
 workflows:
+
+  # ─── SpecParser: concept-validator ─────────────────
   concept-validator:
     concept: SpecParser
     steps:
@@ -61,12 +63,56 @@ workflows:
         - "Actions have at least one variant?"
         - "Invariants reference valid actions?"
         - "Type parameters declared and used?"
+    design-principles:
+      - title: "Spec as Source of Truth"
+        rule: "The .concept file is the single authoritative definition — all generated code, tests, and documentation derive from it."
+      - title: "Fail Fast on Ambiguity"
+        rule: "Parser rejects specs with ambiguous state relations or incomplete action signatures rather than guessing intent."
     references:
       - path: references/concept-grammar.md
         label: "Concept grammar reference"
       - path: references/jackson-methodology.md
         label: "Jackson's concept design methodology"
+    validation-commands:
+      - label: "Parse and validate all concept specs"
+        command: "npx tsx tools/copf-cli/src/index.ts check"
+      - label: "Run parser tests"
+        command: "npx vitest run tests/spec-parser.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | parse | `copf check <file>` | Validate concept spec syntax and structure |
+    related-workflows:
+      - name: concept-designer
+        description: "Design new concepts following Jackson's methodology"
+      - name: implementation-builder
+        description: "Write handlers that implement concept actions"
+      - name: sync-designer
+        description: "Write syncs that connect concepts together"
+    anti-patterns:
+      - title: "Missing purpose block"
+        description: "Concept spec has no purpose — impossible to evaluate design quality."
+        bad: |
+          concept User [U] {
+            state { users: set U; name: U -> String }
+            actions { action create(name: String) { -> ok(user: U) { Created. } } }
+          }
+        good: |
+          concept User [U] {
+            purpose { Manage user identity and profile information. }
+            state { users: set U; name: U -> String }
+            actions { action create(name: String) { -> ok(user: U) { Created. } } }
+          }
+      - title: "Untyped action parameters"
+        description: "Action parameters lack types — generated code will use 'any'."
+        bad: |
+          action create(name, email) { -> ok(user: U) { Created. } }
+        good: |
+          action create(name: String, email: String) { -> ok(user: U) { Created. } }
 
+  # ─── SpecParser: concept-designer ──────────────────
   concept-designer:
     concept: SpecParser
     steps:
@@ -78,6 +124,13 @@ workflows:
         - "Single purpose — no 'and also'?"
         - "Describes why, not what?"
         - "A user would understand it without seeing the implementation?"
+    design-principles:
+      - title: "Singularity"
+        rule: "Each concept serves exactly one purpose — if the purpose has 'and', it's two concepts."
+      - title: "Independence"
+        rule: "A concept never references another concept's types or calls another concept's actions directly — use type parameters and syncs."
+      - title: "Sufficiency & Necessity"
+        rule: "Every state field is needed by at least one action, and every action can be served from the declared state."
     references:
       - path: references/jackson-methodology.md
         label: "Jackson's full methodology"
@@ -86,10 +139,52 @@ workflows:
     anti-patterns:
       - title: "Kitchen-sink concept"
         description: "Concept has multiple unrelated purposes — split into separate concepts."
+        bad: |
+          concept UserAuth [U] {
+            purpose { Manage users AND authenticate them. }
+          }
+        good: |
+          concept User [U] { purpose { Manage user identity. } }
+          concept Password [U] { purpose { Verify credentials for a user. } }
       - title: "Leaky independence"
         description: "Concept references another concept's types or calls another concept's actions — use type parameters instead."
-    related-workflows: [sync-designer, implementation-builder]
+        bad: |
+          concept Order [O] {
+            state { customer: O -> User }
+          }
+        good: |
+          concept Order [O, U] {
+            state { customer: O -> U }
+          }
+    validation-commands:
+      - label: "Validate the new concept spec"
+        command: "npx tsx tools/copf-cli/src/index.ts check"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Section | What to Write | Key Question |
+        |---------|---------------|--------------|
+        | purpose | 1-3 sentences | What is this concept for? |
+        | state | Relations on type params | What does the concept remember? |
+        | actions | Verbs with variants | What can users do? |
+        | invariants | after/then assertions | What must always be true? |
+    related-workflows:
+      - name: concept-validator
+        description: "Parse and validate concept specs for syntax errors"
+      - name: sync-designer
+        description: "Write syncs that connect concepts together"
+      - name: implementation-builder
+        description: "Write TypeScript handlers for concept actions"
+    content-sections:
+      - heading: "State Design Principles"
+        body: |
+          State is what the concept remembers. Start from the purpose — every
+          piece of state must serve at least one action. Use the primary
+          collection pattern (`items: set T`) and derive everything else as
+          relations on T. Avoid storing derived data that can be computed.
+        afterStep: 1
 
+  # ─── SyncCompiler: sync-designer ───────────────────
   sync-designer:
     concept: SyncCompiler
     steps:
@@ -99,44 +194,311 @@ workflows:
     checklists:
       compile:
         - "Sync references valid concept actions?"
-        - "Variable bindings are consistent?"
+        - "Variable bindings are consistent across when/where/then?"
         - "Where-clause queries are well-formed?"
+        - "Sync mode (eager vs eventual) matches intent?"
+    design-principles:
+      - title: "Completion Chaining"
+        rule: "Syncs compose through completions, never by referencing other syncs — each sync reacts to what happened, not who caused it."
+      - title: "Concept Independence"
+        rule: "Syncs wire concepts together without the concepts knowing about each other — concepts never import or reference each other."
+      - title: "Pattern Exhaustiveness"
+        rule: "Every when-clause variant that a sync matches should be explicitly listed — don't rely on fallthrough behavior."
     references:
       - path: references/sync-design.md
         label: "Sync language and patterns"
       - path: references/sync-patterns.md
         label: "Reusable sync templates"
+    anti-patterns:
+      - title: "Sync referencing sync"
+        description: "One sync tries to trigger another sync directly instead of reacting to a completion."
+        bad: |
+          sync BadChain [eager] {
+            when { MySyncA/complete => ok }
+            then { ConceptB/doThing }
+          }
+        good: |
+          sync GoodChain [eager] {
+            when { ConceptA/create => ok[item: ?x] }
+            then { ConceptB/process[item: ?x] }
+          }
+      - title: "Overly broad pattern match"
+        description: "Sync matches all variants of an action instead of the specific one it needs."
+        bad: |
+          sync TooWide [eager] {
+            when { User/register => [user: ?u] }
+            then { Email/send[to: ?u] }
+          }
+        good: |
+          sync Precise [eager] {
+            when { User/register => ok[user: ?u] }
+            then { Email/send[to: ?u] }
+          }
+    validation-commands:
+      - label: "Compile all sync rules"
+        command: "npx tsx tools/copf-cli/src/index.ts compile-syncs"
+      - label: "Run sync compiler tests"
+        command: "npx vitest run tests/sync-compiler.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Clause | Purpose | Example |
+        |--------|---------|---------|
+        | when | Pattern match on completion | `ConceptA/action => ok[field: ?var]` |
+        | where | Query concept state | `ConceptB: { ?item state.field: ?val }` |
+        | then | Invoke target action | `ConceptC/action[param: ?var]` |
+        | filter | Guard condition | `filter(?val > 0)` |
+    related-workflows:
+      - name: concept-designer
+        description: "Design concepts that syncs connect"
+      - name: implementation-builder
+        description: "Write handlers for concept actions"
+      - name: concept-validator
+        description: "Validate concept specs before writing syncs"
+    content-sections:
+      - heading: "Completion Chaining Pattern"
+        body: |
+          Syncs compose through completions, not references. A typical
+          authenticated CRUD flow chains like this:
 
+          1. `User/login => ok[session: ?s]`
+          2. → `Auth/validate[session: ?s] => ok[token: ?t]`
+          3. → `Article/create[author: ?t] => ok[article: ?a]`
+
+          Each sync sees only the completion it reacts to — no sync
+          knows about the others in the chain.
+        afterStep: 1
+
+  # ─── SchemaGen: implementation-builder ─────────────
   implementation-builder:
     concept: SchemaGen
     steps:
       - action: generate
         title: "Generate Schema from Spec"
         prose: "Generate ConceptManifest from parsed AST. The manifest provides typed action signatures for implementation."
+    checklists:
+      generate:
+        - "All action parameters have types?"
+        - "Return variants match spec declarations?"
+        - "State relations are correctly grouped?"
+        - "Type parameters are resolved?"
+    design-principles:
+      - title: "One Handler per Action"
+        rule: "Each action in the concept spec maps to exactly one async method in the implementation handler."
+      - title: "Variant Completeness"
+        rule: "Every return variant declared in the spec must have a corresponding code path in the handler — no missing branches."
+      - title: "Storage Sovereignty"
+        rule: "Each concept owns its storage exclusively — no shared databases, no cross-concept state access."
     references:
       - path: references/implementation-patterns.md
         label: "Implementation patterns and storage"
+      - path: references/type-mapping.md
+        label: "Spec-to-TypeScript type mapping rules"
+    validation-commands:
+      - label: "Generate manifests from specs"
+        command: "npx tsx tools/copf-cli/src/index.ts generate"
+      - label: "Run schema generation tests"
+        command: "npx vitest run tests/schema-gen.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Spec Type | TypeScript Type | Notes |
+        |-----------|----------------|-------|
+        | String | string | Direct mapping |
+        | Int | number | Direct mapping |
+        | Bool | boolean | Direct mapping |
+        | list T | T[] | Array mapping |
+        | option T | T \| undefined | Optional mapping |
+        | set T | Set<T> or Map | Primary collection |
+    related-workflows:
+      - name: concept-designer
+        description: "Design concepts before implementing them"
+      - name: concept-validator
+        description: "Validate specs before generating schemas"
+      - name: sync-designer
+        description: "Wire implemented concepts together with syncs"
+    anti-patterns:
+      - title: "Cross-concept storage access"
+        description: "Handler reads or writes another concept's storage — violates sovereignty."
+        bad: |
+          async create(input, storage) {
+            const user = await userStorage.get(input.userId); // Wrong!
+            // ...
+          }
+        good: |
+          async create(input, storage) {
+            // userId is passed in — concept doesn't know where it came from
+            const item = { id: generateId(), owner: input.userId };
+            await storage.set(item.id, item);
+            return { variant: 'ok', item: item.id };
+          }
 
+  # ─── SyncParser: sync-validator ────────────────────
+  sync-validator:
+    concept: SyncParser
+    steps:
+      - action: parse
+        title: "Parse and Validate Sync Files"
+        prose: "Parse .sync files into structured ASTs and validate variable bindings, concept references, and action signatures against loaded manifests."
+    checklists:
+      parse:
+        - "Sync file has valid when/then structure?"
+        - "All concept references resolve to loaded manifests?"
+        - "Variable bindings are consistent across clauses?"
+        - "Action parameters match concept action signatures?"
+        - "Sync mode (eager/eventual) is declared?"
+    design-principles:
+      - title: "Manifest-Aware Validation"
+        rule: "Sync validation cross-references concept manifests to verify that referenced actions and parameters actually exist."
+      - title: "Early Error Detection"
+        rule: "Catch variable binding mismatches and type errors at parse time, not at runtime when the sync fires."
+    references:
+      - path: references/sync-design.md
+        label: "Sync language reference"
+      - path: references/sync-patterns.md
+        label: "Common sync patterns and templates"
+    validation-commands:
+      - label: "Parse all sync files"
+        command: "npx tsx tools/copf-cli/src/index.ts compile-syncs"
+      - label: "Run sync parser tests"
+        command: "npx vitest run tests/sync-parser.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Element | Syntax | Purpose |
+        |---------|--------|---------|
+        | Sync declaration | `sync Name [mode] { ... }` | Define a synchronization rule |
+        | When clause | `Concept/action => variant[bindings]` | Pattern match on completion |
+        | Where clause | `Concept: { ?item field: ?val }` | Query concept state |
+        | Then clause | `Concept/action[params]` | Invoke target action |
+    related-workflows:
+      - name: sync-designer
+        description: "Compile validated sync rules into executables"
+      - name: concept-validator
+        description: "Validate concept specs referenced by syncs"
+    anti-patterns:
+      - title: "Unbound variable in then-clause"
+        description: "Then-clause uses a variable not bound in when or where — will fail at runtime."
+        bad: |
+          sync Broken [eager] {
+            when { User/create => ok[user: ?u] }
+            then { Email/send[to: ?email] }
+          }
+        good: |
+          sync Working [eager] {
+            when { User/create => ok[user: ?u] }
+            where { User: { ?u email: ?email } }
+            then { Email/send[to: ?email] }
+          }
+
+  # ─── FlowTrace: trace-debugger ────────────────────
   trace-debugger:
     concept: FlowTrace
     steps:
       - action: build
         title: "Build Execution Trace"
         prose: "Build a trace from a flow ID showing which concepts were invoked, what syncs fired, and data flow between them."
+      - action: render
+        title: "Render Trace Output"
+        prose: "Render the trace tree as a human-readable output with timing, success/failure status, and data flow arrows."
+    checklists:
+      build:
+        - "Flow ID exists in action log?"
+        - "All causal links followed (action → sync → action)?"
+        - "Timing data captured for each node?"
+      render:
+        - "Tree indentation correct?"
+        - "Failed nodes highlighted?"
+        - "Data flow arrows show variable propagation?"
+    design-principles:
+      - title: "Causal Completeness"
+        rule: "The trace shows the complete causal chain — every action that fired because of the initial trigger, not just the immediate effects."
+      - title: "Non-Intrusive"
+        rule: "Tracing reads the action log — it never modifies runtime behavior or adds overhead to normal execution."
     references:
       - path: references/debugging.md
         label: "Debugging with FlowTrace"
+    validation-commands:
+      - label: "Build a trace"
+        command: "npx tsx tools/copf-cli/src/index.ts trace <flow-id>"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | build | `copf trace <flow-id>` | Build trace from a flow ID |
+        | render | (automatic) | Render trace as tree output |
+    related-workflows:
+      - name: sync-designer
+        description: "Design the syncs whose execution traces debug"
+      - name: concept-validator
+        description: "Validate specs before debugging runtime issues"
+      - name: dev-workflow
+        description: "Run the dev server to generate flow IDs for tracing"
 
+  # ─── DeploymentValidator: deployment-config ────────
   deployment-config:
     concept: DeploymentValidator
     steps:
       - action: validate
         title: "Validate Deployment Manifest"
         prose: "Validate that deployment manifests correctly map concepts to runtimes, assign syncs to engines, and satisfy capability requirements."
+    checklists:
+      validate:
+        - "Every concept mapped to a runtime?"
+        - "Sync engine assignments cover all syncs?"
+        - "Transport adapters match concept locations?"
+        - "Capability requirements satisfied by target runtimes?"
+    design-principles:
+      - title: "Declarative Deployment"
+        rule: "The deployment manifest declares intent (what runs where), not imperative steps — the framework resolves transport and engine assignments."
+      - title: "Capability Matching"
+        rule: "Each runtime declares capabilities (storage types, transport protocols) and the validator checks that every concept's needs are met."
     references:
       - path: references/deployment-guide.md
         label: "Deployment configuration guide"
+      - path: references/transport-adapters.md
+        label: "Transport adapter configuration"
+    validation-commands:
+      - label: "Validate deployment manifest"
+        command: "npx tsx tools/copf-cli/src/index.ts deploy --validate"
+      - label: "Run deployment validator tests"
+        command: "npx vitest run tests/deployment-validator.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Section | Purpose | Required |
+        |---------|---------|----------|
+        | runtimes | Map concepts to execution environments | Yes |
+        | engines | Assign sync engines to sync groups | Yes |
+        | transports | Configure cross-runtime communication | If multi-runtime |
+        | capabilities | Declare runtime capabilities | Recommended |
+    related-workflows:
+      - name: concept-validator
+        description: "Validate concept specs before deployment"
+      - name: cache-build
+        description: "Pre-compile artifacts for faster deployment"
+      - name: kit-lifecycle
+        description: "Manage kits that bundle deployed concepts"
+    anti-patterns:
+      - title: "Missing transport for cross-runtime sync"
+        description: "Two concepts in different runtimes connected by a sync but no transport adapter configured."
+        bad: |
+          runtimes:
+            api: { concepts: [User] }
+            worker: { concepts: [Email] }
+          syncs:
+            - SendWelcome  # User -> Email, but no transport!
+        good: |
+          runtimes:
+            api: { concepts: [User] }
+            worker: { concepts: [Email] }
+          transports:
+            api-to-worker: { type: http, from: api, to: worker }
+          syncs:
+            - SendWelcome  # Now has a transport path
 
+  # ─── Migration: migration-runner ───────────────────
   migration-runner:
     concept: Migration
     steps:
@@ -146,14 +508,86 @@ workflows:
       - action: apply
         title: "Apply Migration"
         prose: "Execute the planned migration, transforming stored state to match the new schema."
+    checklists:
+      plan:
+        - "Schema diff shows expected changes?"
+        - "No data loss in state transformations?"
+        - "Rollback strategy identified?"
+      apply:
+        - "Backup created before applying?"
+        - "Migration ran to completion?"
+        - "Post-migration validation passed?"
+    design-principles:
+      - title: "Version Gating"
+        rule: "A concept cannot start until its storage schema matches its current spec version — the migration concept gates startup."
+      - title: "Reversible by Default"
+        rule: "Every migration step should have a corresponding rollback step — data transformations should be invertible."
+    references:
+      - path: references/migration-guide.md
+        label: "Migration planning and execution guide"
+    validation-commands:
+      - label: "Check migration status"
+        command: "npx tsx tools/copf-cli/src/index.ts migrate --status"
+      - label: "Run migration dry-run"
+        command: "npx tsx tools/copf-cli/src/index.ts migrate --dry-run"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | plan | `copf migrate --plan` | Show planned migration steps |
+        | apply | `copf migrate --apply` | Execute migration |
+        | status | `copf migrate --status` | Check current schema versions |
+    related-workflows:
+      - name: concept-validator
+        description: "Validate the updated concept spec"
+      - name: implementation-builder
+        description: "Update the handler implementation after schema change"
+      - name: deployment-config
+        description: "Re-validate deployment after migration"
 
+  # ─── ProjectScaffold: project-initializer ──────────
   project-initializer:
     concept: ProjectScaffold
     steps:
       - action: scaffold
         title: "Scaffold New Project"
         prose: "Create a new COPF project directory with specs, syncs, implementations, and configuration files."
+    checklists:
+      scaffold:
+        - "Project name is valid (kebab-case, no conflicts)?"
+        - "Directory structure created correctly?"
+        - "Example concept spec is parseable?"
+        - "Configuration files have sensible defaults?"
+    design-principles:
+      - title: "Minimal Viable Structure"
+        rule: "Scaffold the minimum needed to run `copf check` and `copf generate` — don't overload with unused templates."
+      - title: "Convention Over Configuration"
+        rule: "Project follows standard directory layout (specs/, syncs/, implementations/) so tools work without configuration."
+    references:
+      - path: references/project-structure.md
+        label: "Standard project directory layout"
+    validation-commands:
+      - label: "Validate scaffolded project"
+        command: "npx tsx tools/copf-cli/src/index.ts check"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Directory | Purpose | Contains |
+        |-----------|---------|----------|
+        | specs/ | Concept specifications | .concept files |
+        | syncs/ | Synchronization rules | .sync files |
+        | implementations/ | Handler code | .impl.ts files |
+        | kits/ | Kit manifests | kit.yaml + concepts + syncs |
+    related-workflows:
+      - name: concept-designer
+        description: "Design concepts for the new project"
+      - name: kit-lifecycle
+        description: "Bundle concepts into reusable kits"
+      - name: dev-workflow
+        description: "Start the dev server for the new project"
 
+  # ─── KitManager: kit-lifecycle ─────────────────────
   kit-lifecycle:
     concept: KitManager
     steps:
@@ -172,7 +606,84 @@ workflows:
       - action: checkOverrides
         title: "Check Overrides"
         prose: "Verify that application sync overrides reference valid syncs in the target kit."
+    checklists:
+      init:
+        - "Kit name follows naming convention?"
+        - "Kit.yaml has required fields (name, version, description)?"
+        - "Example concept spec is valid?"
+      validate:
+        - "All concept specs parse successfully?"
+        - "All sync files compile?"
+        - "Cross-kit references resolve?"
+        - "Type parameters align across concepts?"
+      test:
+        - "Conformance tests pass?"
+        - "Integration tests pass?"
+        - "No failing assertions?"
+      checkOverrides:
+        - "Override references valid syncs?"
+        - "Override parameters match original sync signature?"
+    design-principles:
+      - title: "Kit as Reusable Unit"
+        rule: "A kit bundles related concepts and syncs into a single distributable package — like an npm package for COPF."
+      - title: "Cross-Kit Isolation"
+        rule: "Concepts in one kit never reference concepts in another kit directly — cross-kit integration happens through syncs and type parameter alignment."
+      - title: "Required vs Recommended Syncs"
+        rule: "Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other kits."
+    references:
+      - path: references/kit-structure.md
+        label: "Kit manifest and directory structure"
+      - path: references/kit-publishing.md
+        label: "Publishing and versioning kits"
+    anti-patterns:
+      - title: "Cross-kit concept reference"
+        description: "Kit A's concept imports Kit B's types directly instead of using type parameters."
+        bad: |
+          # In kit-a/concepts/order.concept
+          concept Order [O] {
+            state { customer: O -> kit_b.User }  # Direct reference!
+          }
+        good: |
+          # In kit-a/concepts/order.concept
+          concept Order [O, U] {
+            state { customer: O -> U }  # Type parameter, wired by sync
+          }
+      - title: "Monolithic kit"
+        description: "Kit bundles unrelated concepts — violates the reusable unit principle."
+        bad: |
+          # kit.yaml
+          kit: { name: everything }
+          concepts: [User, Article, Payment, Analytics, Email, Notification]
+        good: |
+          # Split into focused kits
+          kit: { name: content }   # concepts: [Article, Tag, Comment]
+          kit: { name: commerce }  # concepts: [Payment, Invoice, Refund]
+    validation-commands:
+      - label: "Validate a kit"
+        command: "npx tsx tools/copf-cli/src/index.ts kit validate ./kits/my-kit"
+      - label: "Run kit tests"
+        command: "npx tsx tools/copf-cli/src/index.ts kit test ./kits/my-kit"
+      - label: "List active kits"
+        command: "npx tsx tools/copf-cli/src/index.ts kit list"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | init | `copf kit init <name>` | Scaffold a new kit |
+        | validate | `copf kit validate <path>` | Validate kit manifest |
+        | test | `copf kit test <path>` | Run kit tests |
+        | list | `copf kit list` | List active kits |
+        | checkOverrides | `copf kit check-overrides <path>` | Verify sync overrides |
+    related-workflows:
+      - name: concept-designer
+        description: "Design concepts to include in the kit"
+      - name: sync-designer
+        description: "Write syncs that wire kit concepts together"
+      - name: deployment-config
+        description: "Deploy kits to production runtimes"
 
+  # ─── DevServer: dev-workflow ───────────────────────
   dev-workflow:
     concept: DevServer
     steps:
@@ -185,23 +696,100 @@ workflows:
       - action: stop
         title: "Stop Server"
         prose: "Stop the running development server."
+    checklists:
+      start:
+        - "Port is available?"
+        - "Specs and syncs directories exist?"
+        - "Initial compilation succeeds?"
+      status:
+        - "Server is responsive?"
+        - "Last recompile was successful?"
+    design-principles:
+      - title: "Watch and Recompile"
+        rule: "The dev server watches .concept and .sync files for changes and recompiles automatically — no manual rebuild step."
+      - title: "Fast Feedback Loop"
+        rule: "Recompilation should complete in under a second for typical projects — parse errors show immediately."
+    references:
+      - path: references/dev-workflow.md
+        label: "Development workflow guide"
+    validation-commands:
+      - label: "Start dev server"
+        command: "npx tsx tools/copf-cli/src/index.ts dev --port 3000"
+      - label: "Check dev server status"
+        command: "npx tsx tools/copf-cli/src/index.ts dev status"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | start | `copf dev --port <port>` | Start dev server |
+        | status | `copf dev status` | Check if running |
+        | stop | `copf dev stop` | Stop the server |
+    related-workflows:
+      - name: concept-validator
+        description: "Validate specs that the dev server watches"
+      - name: trace-debugger
+        description: "Debug flows generated during dev server sessions"
+      - name: cache-build
+        description: "Pre-compile for production after dev iteration"
 
+  # ─── CacheCompiler: cache-build ────────────────────
   cache-build:
     concept: CacheCompiler
     steps:
       - action: compile
         title: "Build Cache"
         prose: "Parse specs and syncs, generate manifests, compile sync rules, and write pre-compiled artifacts to the cache directory."
+    checklists:
+      compile:
+        - "All concept specs parse without errors?"
+        - "All sync files compile?"
+        - "Cache directory is writable?"
+        - "Previous cache is cleaned or invalidated?"
+    design-principles:
+      - title: "Content-Addressed Cache"
+        rule: "Cached artifacts are keyed by content hash — identical input produces identical output, and unchanged files are never rewritten."
+      - title: "Complete Compilation"
+        rule: "Cache includes everything needed for deployment — parsed ASTs, generated manifests, compiled syncs, and type information."
+    references:
+      - path: references/caching.md
+        label: "Cache compilation and invalidation"
+    validation-commands:
+      - label: "Build the cache"
+        command: "npx tsx tools/copf-cli/src/index.ts compile --cache"
+      - label: "Verify cache contents"
+        command: "ls -la .copf-cache/"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | compile | `copf compile --cache` | Build pre-compiled cache |
+    related-workflows:
+      - name: concept-validator
+        description: "Validate specs before caching"
+      - name: deployment-config
+        description: "Deploy using cached artifacts"
+      - name: dev-workflow
+        description: "Dev server uses cache for fast startup"
 
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Rich metadata for skills and CLI: tool permissions,
-# argument templates, code examples, references.
+# argument templates, code examples, references, and
+# trigger descriptions.
 
 annotations:
   SpecParser:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when designing, creating, or validating concept specs following
+        Jackson's methodology. Covers purpose articulation, state design,
+        action design, invariant writing, and spec syntax validation.
+      intro-template: >
+        Parse and validate concept spec **$ARGUMENTS** to verify syntax,
+        structure, and adherence to Jackson's concept design methodology.
     parse:
       examples:
         - label: "Parse a concept file"
@@ -209,11 +797,24 @@ annotations:
           code: |
             import { parseConceptFile } from './parser';
             const ast = parseConceptFile(source);
+        - label: "Parse from CLI"
+          language: bash
+          code: "copf check specs/my-concept.concept"
+      references:
+        - path: references/concept-grammar.md
+          label: "Full concept grammar specification"
 
   SchemaGen:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when generating ConceptManifests from parsed ASTs, implementing
+        concept handlers, or inspecting the schema that drives code generation.
+      intro-template: >
+        Generate a ConceptManifest from **$ARGUMENTS** that provides typed
+        action signatures, state schemas, and invariant test values for
+        code generation.
     generate:
       examples:
         - label: "Generate manifest from AST"
@@ -223,53 +824,176 @@ annotations:
             const result = await schemaGenHandler.generate(
               { conceptAst: JSON.stringify(ast) }, storage
             );
+        - label: "Generate from CLI"
+          language: bash
+          code: "copf generate specs/my-concept.concept"
+      references:
+        - path: references/type-mapping.md
+          label: "Spec-to-TypeScript type mapping rules"
+
+  SyncParser:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when parsing and validating .sync files against loaded concept
+        manifests. Catches variable binding errors, missing concept references,
+        and parameter mismatches at parse time.
+      intro-template: >
+        Parse sync file **$ARGUMENTS** and validate its structure, variable
+        bindings, and concept references against loaded manifests.
+    parse:
+      examples:
+        - label: "Parse a sync file"
+          language: typescript
+          code: |
+            import { syncParserHandler } from './sync-parser.impl';
+            const result = await syncParserHandler.parse(
+              { source: syncSource, manifests: loadedManifests }, storage
+            );
+        - label: "Parse from CLI"
+          language: bash
+          code: "copf compile-syncs syncs/my-sync.sync"
+      references:
+        - path: references/sync-design.md
+          label: "Sync language reference"
 
   SyncCompiler:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when compiling parsed sync ASTs into executable registrations
+        that the sync engine can evaluate at runtime.
+      intro-template: >
+        Compile sync rules in **$ARGUMENTS** into executable registrations
+        for the sync engine.
     compile:
       examples:
         - label: "Compile sync rules"
           language: bash
           code: "copf compile-syncs --dir ./syncs"
+        - label: "Compile programmatically"
+          language: typescript
+          code: |
+            import { syncCompilerHandler } from './sync-compiler.impl';
+            const result = await syncCompilerHandler.compile(
+              { sync: parsedSync, ast: syncAst }, storage
+            );
+      references:
+        - path: references/sync-patterns.md
+          label: "Reusable sync templates and patterns"
 
   FlowTrace:
     concept:
       tool-permissions: [Read, Bash]
+      argument-template: "<flow-id>"
+      trigger-description: >
+        Use when debugging action flows, tracing causal chains through
+        concept actions and sync firings, or diagnosing why an expected
+        sync did not trigger.
+      intro-template: >
+        Build a debug trace for flow **$ARGUMENTS** showing the causal
+        chain of concept actions, sync firings, and data propagation.
     build:
       examples:
         - label: "Build trace from flow ID"
           language: bash
           code: "copf trace <flow-id>"
+        - label: "Build trace programmatically"
+          language: typescript
+          code: |
+            import { flowTraceHandler } from './flow-trace.impl';
+            const result = await flowTraceHandler.build(
+              { flowId: 'abc-123' }, storage
+            );
 
   DeploymentValidator:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when configuring deployment manifests that map concepts to
+        runtimes, assign syncs to engines, set up transport adapters,
+        and validate capability requirements.
+      intro-template: >
+        Validate deployment manifest **$ARGUMENTS** against compiled
+        concepts and syncs, checking runtime mappings, engine assignments,
+        and transport configuration.
+    validate:
+      examples:
+        - label: "Validate deployment manifest"
+          language: bash
+          code: "copf deploy --validate app.deploy.yaml"
+      references:
+        - path: references/deployment-guide.md
+          label: "Deployment configuration guide"
+        - path: references/transport-adapters.md
+          label: "Transport adapter reference"
 
   Migration:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when concept schemas have changed and stored state needs to
+        be migrated to match the new version. Covers migration planning,
+        dry-run validation, and execution.
+      intro-template: >
+        Plan and apply schema migration for **$ARGUMENTS**, transforming
+        stored state from the previous version to the current spec version.
+    plan:
+      examples:
+        - label: "Plan a migration"
+          language: bash
+          code: "copf migrate --plan"
+    apply:
+      examples:
+        - label: "Apply migration"
+          language: bash
+          code: "copf migrate --apply"
 
   ProjectScaffold:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when starting a new COPF project from scratch. Creates the
+        standard directory structure, example concept spec, and
+        configuration files.
+      intro-template: >
+        Scaffold a new COPF project named **$ARGUMENTS** with the standard
+        directory layout, example concept, and configuration files.
     scaffold:
       examples:
         - label: "Scaffold a new project"
           language: bash
           code: "copf init my-app"
+        - label: "Scaffold with custom template"
+          language: bash
+          code: "copf init my-app --template minimal"
 
   DevServer:
     concept:
       tool-permissions: [Read, Bash]
+      argument-template: "--port <port>"
+      trigger-description: >
+        Use when developing concepts and syncs iteratively. The dev server
+        watches for file changes and recompiles automatically, providing
+        a fast feedback loop.
+      intro-template: >
+        Start a development server that watches concept specs and syncs for
+        changes and auto-recompiles on save.
     start:
       examples:
         - label: "Start dev server"
           language: bash
           code: "copf dev --port 3000"
+    status:
+      examples:
+        - label: "Check dev server status"
+          language: bash
+          code: "copf dev status"
     stop:
       examples:
         - label: "Stop dev server"
@@ -279,16 +1003,33 @@ annotations:
   CacheCompiler:
     concept:
       tool-permissions: [Read, Bash]
+      argument-template: "--cache"
+      trigger-description: >
+        Use when building pre-compiled artifacts for deployment or to
+        speed up startup. Parses all specs, generates manifests, compiles
+        syncs, and writes cache files.
+      intro-template: >
+        Build pre-compiled cache artifacts from all concept specs and sync
+        rules for faster startup and deployment.
     compile:
       examples:
         - label: "Build cache"
           language: bash
           code: "copf compile --cache"
+        - label: "Build cache with verbose output"
+          language: bash
+          code: "copf compile --cache --verbose"
 
   KitManager:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when creating, validating, testing, or managing concept kits.
+        Covers the full kit lifecycle from scaffolding to publishing.
+      intro-template: >
+        Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish
+        reusable concept packages.
     init:
       examples:
         - label: "Create a new kit"
@@ -299,6 +1040,21 @@ annotations:
         - label: "Validate a kit"
           language: bash
           code: "copf kit validate ./kits/my-kit"
+    test:
+      examples:
+        - label: "Test a kit"
+          language: bash
+          code: "copf kit test ./kits/my-kit"
+    list:
+      examples:
+        - label: "List active kits"
+          language: bash
+          code: "copf kit list"
+    checkOverrides:
+      examples:
+        - label: "Check sync overrides"
+          language: bash
+          code: "copf kit check-overrides ./kits/my-kit"
 
 # ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
 # CLI-specific: positional args, custom command names.
