@@ -1,0 +1,43 @@
+# Development Workflow Guide
+
+The COPF dev server provides a fast feedback loop for iterating
+on concept specs and sync rules.
+
+## Starting the Dev Server
+
+```bash
+copf dev --port 3000
+```
+
+The dev server:
+1. Parses all `.concept` files in `specs/`.
+2. Compiles all `.sync` files in `syncs/`.
+3. Generates manifests and types.
+4. Watches for file changes and re-runs on save.
+
+## Development Cycle
+
+1. **Edit a .concept file** — Save triggers reparse + validation.
+2. **Edit a .sync file** — Save triggers recompile + binding check.
+3. **Edit a .impl.ts file** — Save triggers type check against manifest.
+4. **View errors** — Parse/compile errors show in terminal immediately.
+
+## Watch Mode Behavior
+
+| File Change | Action Taken |
+|-------------|-------------|
+| `.concept` modified | Reparse spec, regenerate manifest |
+| `.sync` modified | Recompile sync, recheck bindings |
+| `.impl.ts` modified | Type-check against manifest |
+| `copf.config.yaml` modified | Full restart |
+
+## Debugging During Dev
+
+The dev server assigns flow IDs to every action invocation.
+Use `copf trace <flow-id>` to debug execution chains.
+
+## Performance
+
+- Incremental recompilation: only changed files are reprocessed.
+- Typical recompile time: under 100ms for small-medium projects.
+- Full rebuild on config change or first start.

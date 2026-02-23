@@ -66,6 +66,9 @@ knows about the others in the chain.
 
 - [Sync language and patterns](references/sync-design.md)
 - [Reusable sync templates](references/sync-patterns.md)
+## Supporting Materials
+
+- [Sync chain composition walkthrough](examples/write-a-sync-chain.md)
 ## Quick Reference
 
 | Clause | Purpose | Example |
@@ -76,6 +79,11 @@ knows about the others in the chain.
 | filter | Guard condition | `filter(?val > 0)` |
 
 
+## Example Walkthroughs
+
+For complete examples with design rationale:
+
+- [Compose a sync chain (registration flow)](examples/write-a-sync-chain.md)
 ## Anti-Patterns
 
 ### Sync referencing sync

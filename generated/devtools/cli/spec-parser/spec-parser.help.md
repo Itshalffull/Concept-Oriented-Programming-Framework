@@ -19,6 +19,9 @@ Parse and validate concept spec **<source>** to verify syntax, structure, and ad
 
 - [Concept grammar reference](references/concept-grammar.md)
 - [Jackson's concept design methodology](references/jackson-methodology.md)
+## Supporting Materials
+
+- [End-to-end concept design walkthrough](examples/design-a-concept.md)
 ## Quick Reference
 
 | Action | Command | Purpose |
@@ -26,6 +29,11 @@ Parse and validate concept spec **<source>** to verify syntax, structure, and ad
 | parse | `copf check <file>` | Validate concept spec syntax and structure |
 
 
+## Example Walkthroughs
+
+For complete examples with design rationale:
+
+- [Design a concept from scratch (Bookmark example)](examples/design-a-concept.md)
 ## Anti-Patterns
 
 ### Missing purpose block

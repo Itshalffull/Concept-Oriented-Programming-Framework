@@ -18,6 +18,9 @@ Scaffold a new COPF project named **<source>** with the standard directory layou
 ## References
 
 - [Standard project directory layout](references/project-structure.md)
+## Supporting Materials
+
+- [Concept spec starter template](templates/concept-template.md)
 ## Quick Reference
 
 | Directory | Purpose | Contains |

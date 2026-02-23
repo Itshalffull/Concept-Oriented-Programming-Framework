@@ -22,6 +22,9 @@ Plan and apply schema migration for **<source>**, transforming stored state from
 ## References
 
 - [Migration planning and execution guide](references/migration-guide.md)
+## Supporting Materials
+
+- [Migration execution walkthrough](examples/run-a-migration.md)
 ## Quick Reference
 
 | Action | Command | Purpose |

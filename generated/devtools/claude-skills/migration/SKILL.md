@@ -55,6 +55,9 @@ copf migrate --apply
 ## References
 
 - [Migration planning and execution guide](references/migration-guide.md)
+## Supporting Materials
+
+- [Migration execution walkthrough](examples/run-a-migration.md)
 ## Quick Reference
 
 | Action | Command | Purpose |

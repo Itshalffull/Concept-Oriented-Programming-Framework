@@ -20,6 +20,9 @@ Generate a ConceptManifest from **<source>** that provides typed action signatur
 
 - [Implementation patterns and storage](references/implementation-patterns.md)
 - [Spec-to-TypeScript type mapping rules](references/type-mapping.md)
+## Supporting Materials
+
+- [End-to-end handler implementation walkthrough](examples/implement-a-handler.md)
 ## Quick Reference
 
 | Spec Type | TypeScript Type | Notes |
@@ -32,6 +35,11 @@ Generate a ConceptManifest from **<source>** that provides typed action signatur
 | set T | Set<T> or Map | Primary collection |
 
 
+## Example Walkthroughs
+
+For complete examples with design rationale:
+
+- [Implement a concept handler (User example)](examples/implement-a-handler.md)
 ## Anti-Patterns
 
 ### Cross-concept storage access

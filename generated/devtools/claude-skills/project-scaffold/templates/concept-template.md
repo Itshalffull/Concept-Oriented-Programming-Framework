@@ -1,0 +1,44 @@
+# Concept Spec Template
+
+Use this template when creating a new concept spec file.
+
+```
+concept Name [T] {
+
+  purpose {
+    One to three sentences describing what this concept is for.
+    Use imperative present tense. No implementation details.
+  }
+
+  state {
+    items: set T
+    // Add relations on T:
+    // name: T -> String        (required field)
+    // label: T -> option String (optional field)
+    // tags: T -> list String    (multi-valued)
+  }
+
+  actions {
+    action create(/* params */) {
+      -> ok(item: T) { Created successfully. }
+      // Add error variants as needed:
+      // -> duplicate(name: String) { Name already taken. }
+      // -> invalid(reason: String) { Validation failed. }
+    }
+
+    action delete(item: T) {
+      -> ok { Deleted successfully. }
+      -> notFound(item: T) { Item does not exist. }
+    }
+  }
+
+  invariants {
+    after create(/* params */) -> ok(item) {
+      then { item in items }
+    }
+    after delete(item) -> ok {
+      then { item not in items }
+    }
+  }
+}
+```

@@ -111,6 +111,9 @@ copf kit check-overrides ./kits/my-kit
 
 - [Kit manifest and directory structure](references/kit-structure.md)
 - [Publishing and versioning kits](references/kit-publishing.md)
+## Supporting Materials
+
+- [Kit creation walkthrough](examples/create-a-kit.md)
 ## Quick Reference
 
 | Action | Command | Purpose |
@@ -122,6 +125,11 @@ copf kit check-overrides ./kits/my-kit
 | checkOverrides | `copf kit check-overrides <path>` | Verify sync overrides |
 
 
+## Example Walkthroughs
+
+For complete examples with design rationale:
+
+- [Create a reusable kit (auth example)](examples/create-a-kit.md)
 ## Anti-Patterns
 
 ### Cross-kit concept reference

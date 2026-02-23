@@ -71,8 +71,140 @@ workflows:
     references:
       - path: references/concept-grammar.md
         label: "Concept grammar reference"
+        tier: reference
+        content: |
+          # Concept Grammar Reference
+
+          Complete grammar for `.concept` specification files.
+
+          ## Top-Level Structure
+
+          ```
+          concept Name [TypeParam, ...] {
+            purpose { ... }
+            state { ... }
+            actions { ... }
+            invariants { ... }
+          }
+          ```
+
+          ## Purpose Block
+
+          ```
+          purpose { Free-text description in imperative present tense. }
+          ```
+
+          One to three sentences. No implementation details.
+
+          ## State Block
+
+          ```
+          state {
+            items: set T            # Primary collection
+            name: T -> String       # Total function (every T has one)
+            email: T -> option String  # Partial (may be absent)
+            tags: T -> list String  # Multi-valued
+          }
+          ```
+
+          **Relation types:**
+          | Syntax | Meaning | TypeScript |
+          |--------|---------|-----------|
+          | `set T` | Collection of T | `Map<id, T>` |
+          | `T -> V` | Total function | Required field |
+          | `T -> option V` | Partial function | Optional field |
+          | `T -> list V` | Multi-valued | Array field |
+
+          ## Actions Block
+
+          ```
+          actions {
+            action create(name: String, email: String) {
+              -> ok(item: T) { Created successfully. }
+              -> duplicate(name: String) { Name already taken. }
+            }
+          }
+          ```
+
+          - Each action has a name, typed parameters, and one or more **variants**.
+          - Variants use `->` arrow syntax: `-> variantName(bindings) { prose }`.
+          - At least one variant is required per action.
+
+          **Parameter types:** `String`, `Int`, `Bool`, `T` (type param), `list T`, `option T`.
+
+          ## Invariants Block
+
+          ```
+          invariants {
+            after create(name) -> ok(item) {
+              then { item in items; name(item) = name }
+            }
+            after delete(item) -> ok {
+              then { item not in items }
+            }
+          }
+          ```
+
+          - `after action -> variant { then { assertions } }` — post-condition.
+          - Assertions: `field(item) = value`, `item in collection`, `item not in collection`.
+
+          ## Type Parameters
+
+          Declared in brackets after concept name: `concept Name [T, U]`.
+          Used throughout state and action signatures. Resolved by syncs at composition time.
       - path: references/jackson-methodology.md
         label: "Jackson's concept design methodology"
+        tier: reference
+        content: |
+          # Jackson's Concept Design Methodology
+
+          Summary of Daniel Jackson's software concept design methodology
+          as applied in COPF.
+
+          ## Five Core Principles
+
+          ### 1. Singularity
+          Each concept serves exactly one purpose. If the purpose statement
+          contains "and", it should be split into separate concepts.
+
+          ### 2. Independence
+          A concept never references another concept directly — no imports,
+          no shared types, no cross-concept calls. Concepts communicate only
+          through type parameters and syncs.
+
+          ### 3. Sufficiency
+          The concept's state and actions are sufficient to fulfill its purpose.
+          Every use case implied by the purpose can be served by the declared actions.
+
+          ### 4. Necessity
+          Every piece of state is needed by at least one action. Every action
+          serves the concept's purpose. No dead state or unused actions.
+
+          ### 5. Invariant Completeness
+          Key properties of the concept are captured as formal invariants.
+          Invariants document what must always be true after each action completes.
+
+          ## Design Workflow
+
+          1. **Articulate purpose** — Write 1-3 sentences describing what the
+             concept is for, not how it works.
+          2. **Design state** — Start with the primary collection (`items: set T`),
+             then add relations that serve the actions.
+          3. **Design actions** — Define verbs with typed parameters and return
+             variants. Each variant represents a distinct outcome.
+          4. **Write invariants** — For each action+variant, state what must be
+             true afterward. This catches design gaps early.
+          5. **Validate** — Run `copf check` to verify syntax, completeness, and
+             consistency.
+
+          ## Common Concept Patterns
+
+          | Pattern | State Shape | Example |
+          |---------|-------------|---------|
+          | Entity CRUD | `items: set T; fields: T -> Type` | User, Article |
+          | Relationship | `links: set L; from: L -> A; to: L -> B` | Friendship, Membership |
+          | Workflow | `items: set T; status: T -> Status` | Order, Approval |
+          | Guard | `(no primary state)` | Password, RateLimit |
     validation-commands:
       - label: "Parse and validate all concept specs"
         command: "npx tsx tools/copf-cli/src/index.ts check"
@@ -134,8 +266,111 @@ workflows:
     references:
       - path: references/jackson-methodology.md
         label: "Jackson's full methodology"
+        tier: reference
+        content: |
+          # Jackson's Concept Design Methodology
+
+          Summary of Daniel Jackson's software concept design methodology
+          as applied in COPF.
+
+          ## Five Core Principles
+
+          ### 1. Singularity
+          Each concept serves exactly one purpose. If the purpose statement
+          contains "and", it should be split into separate concepts.
+
+          ### 2. Independence
+          A concept never references another concept directly — no imports,
+          no shared types, no cross-concept calls. Concepts communicate only
+          through type parameters and syncs.
+
+          ### 3. Sufficiency
+          The concept's state and actions are sufficient to fulfill its purpose.
+          Every use case implied by the purpose can be served by the declared actions.
+
+          ### 4. Necessity
+          Every piece of state is needed by at least one action. Every action
+          serves the concept's purpose. No dead state or unused actions.
+
+          ### 5. Invariant Completeness
+          Key properties of the concept are captured as formal invariants.
+          Invariants document what must always be true after each action completes.
+
+          ## Design Workflow
+
+          1. **Articulate purpose** — Write 1-3 sentences describing what the
+             concept is for, not how it works.
+          2. **Design state** — Start with the primary collection (`items: set T`),
+             then add relations that serve the actions.
+          3. **Design actions** — Define verbs with typed parameters and return
+             variants. Each variant represents a distinct outcome.
+          4. **Write invariants** — For each action+variant, state what must be
+             true afterward. This catches design gaps early.
+          5. **Validate** — Run `copf check` to verify syntax, completeness, and
+             consistency.
+
+          ## Common Concept Patterns
+
+          | Pattern | State Shape | Example |
+          |---------|-------------|---------|
+          | Entity CRUD | `items: set T; fields: T -> Type` | User, Article |
+          | Relationship | `links: set L; from: L -> A; to: L -> B` | Friendship, Membership |
+          | Workflow | `items: set T; status: T -> Status` | Order, Approval |
+          | Guard | `(no primary state)` | Password, RateLimit |
       - path: references/concept-catalog.md
         label: "Reusable concept catalog"
+        tier: reference
+        content: |
+          # Reusable Concept Catalog
+
+          Common concepts that appear across applications. Use as starting
+          points — adapt state and actions to your specific purpose.
+
+          ## Identity & Access
+
+          | Concept | Purpose | Key Actions |
+          |---------|---------|-------------|
+          | User | Manage user identity | create, update, delete, find |
+          | Password | Verify credentials | set, check, reset |
+          | Session | Track authenticated sessions | start, end, validate |
+          | Role | Assign permissions to users | grant, revoke, check |
+
+          ## Content
+
+          | Concept | Purpose | Key Actions |
+          |---------|---------|-------------|
+          | Article | Manage authored content | create, publish, archive |
+          | Tag | Categorize items with labels | add, remove, find |
+          | Comment | Attach discussion to items | post, edit, delete |
+
+          ## Commerce
+
+          | Concept | Purpose | Key Actions |
+          |---------|---------|-------------|
+          | Cart | Collect items for purchase | add, remove, clear |
+          | Order | Track purchase lifecycle | place, fulfill, cancel |
+          | Payment | Process financial transactions | charge, refund |
+          | Invoice | Record financial obligations | issue, pay, void |
+
+          ## Communication
+
+          | Concept | Purpose | Key Actions |
+          |---------|---------|-------------|
+          | Email | Send transactional messages | send, schedule, cancel |
+          | Notification | Alert users of events | create, read, dismiss |
+
+          ## Composition Notes
+
+          These concepts are designed to be independent. Wire them together
+          using syncs:
+
+          ```
+          sync WelcomeEmail [eager] {
+            when { User/create => ok[user: ?u] }
+            where { User: { ?u email: ?email } }
+            then { Email/send[to: ?email, template: "welcome"] }
+          }
+          ```
     anti-patterns:
       - title: "Kitchen-sink concept"
         description: "Concept has multiple unrelated purposes — split into separate concepts."
@@ -207,8 +442,155 @@ workflows:
     references:
       - path: references/sync-design.md
         label: "Sync language and patterns"
+        tier: reference
+        content: |
+          # Sync Language Reference
+
+          Syncs wire concepts together by reacting to completions. A sync
+          never calls another sync — it only sees concept action completions.
+
+          ## Sync Declaration
+
+          ```
+          sync Name [mode] {
+            when { ... }
+            where { ... }    # optional
+            filter(...)      # optional
+            then { ... }
+          }
+          ```
+
+          **Modes:**
+          - `eager` — Executes synchronously within the same transaction.
+            Use for data consistency (e.g., creating related records).
+          - `eventual` — Queued for async execution. Use for side effects
+            (e.g., sending emails, updating caches).
+
+          ## When Clause
+
+          Pattern matches on a concept action completion:
+
+          ```
+          when { Concept/action => variant[binding: ?var, ...] }
+          ```
+
+          - `Concept/action` — The concept and action to watch.
+          - `=> variant` — Which return variant to match.
+          - `[binding: ?var]` — Extract values from the completion into variables.
+
+          ## Where Clause
+
+          Queries concept state to bind additional variables:
+
+          ```
+          where { Concept: { ?item field: ?value } }
+          ```
+
+          - `?item` — Binds to items in the concept's primary collection.
+          - `field: ?value` — Binds the field value to a variable.
+
+          ## Filter Clause
+
+          Guards execution with a boolean condition:
+
+          ```
+          filter(?count > 0)
+          filter(?status = "active")
+          ```
+
+          ## Then Clause
+
+          Invokes a target concept action with bound variables:
+
+          ```
+          then { Concept/action[param: ?var, ...] }
+          ```
+
+          All variables in then must be bound in when or where.
+
+          ## Variable Binding Rules
+
+          1. Variables start with `?` — e.g., `?user`, `?email`.
+          2. A variable must be bound (in when or where) before use in then.
+          3. Variables are scoped to a single sync — no cross-sync sharing.
       - path: references/sync-patterns.md
         label: "Reusable sync templates"
+        tier: reference
+        content: |
+          # Reusable Sync Patterns
+
+          Common sync patterns for wiring concepts together.
+
+          ## CRUD Chain
+
+          When one entity is created, create related records:
+
+          ```
+          sync CreateProfile [eager] {
+            when { User/create => ok[user: ?u] }
+            then { Profile/create[owner: ?u] }
+          }
+          ```
+
+          ## Auth-Gated Action
+
+          Validate authentication before allowing an action:
+
+          ```
+          sync AuthGate [eager] {
+            when { Session/validate => ok[token: ?t] }
+            where { Session: { ?t userId: ?uid } }
+            then { Article/create[author: ?uid] }
+          }
+          ```
+
+          ## Notification on Event
+
+          Send async notification when something happens:
+
+          ```
+          sync NotifyOnOrder [eventual] {
+            when { Order/place => ok[order: ?o] }
+            where { Order: { ?o customer: ?c } }
+            where { User: { ?c email: ?email } }
+            then { Email/send[to: ?email, template: "order-placed"] }
+          }
+          ```
+
+          ## Cache Invalidation
+
+          Invalidate cache when source data changes:
+
+          ```
+          sync InvalidateUserCache [eager] {
+            when { User/update => ok[user: ?u] }
+            then { Cache/invalidate[key: ?u, namespace: "user"] }
+          }
+          ```
+
+          ## Cascade Delete
+
+          Clean up related data when a parent is deleted:
+
+          ```
+          sync CascadeDelete [eager] {
+            when { User/delete => ok[user: ?u] }
+            then { Profile/deleteByOwner[owner: ?u] }
+          }
+          ```
+
+          ## Guarded Sync
+
+          Only fire when a condition is met:
+
+          ```
+          sync HighValueOrder [eventual] {
+            when { Order/place => ok[order: ?o] }
+            where { Order: { ?o total: ?amount } }
+            filter(?amount > 1000)
+            then { Alert/create[type: "high-value", ref: ?o] }
+          }
+          ```
     anti-patterns:
       - title: "Sync referencing sync"
         description: "One sync tries to trigger another sync directly instead of reacting to a completion."
@@ -292,8 +674,124 @@ workflows:
     references:
       - path: references/implementation-patterns.md
         label: "Implementation patterns and storage"
+        tier: reference
+        content: |
+          # Implementation Patterns
+
+          Patterns for writing concept handler implementations.
+
+          ## Handler Structure
+
+          Each concept gets one handler file. Each action maps to one async method:
+
+          ```typescript
+          export const userHandler: ConceptHandler<UserState> = {
+            async create(input, storage) {
+              const id = generateId();
+              await storage.set(id, { name: input.name, email: input.email });
+              return { variant: 'ok', user: id };
+            },
+
+            async delete(input, storage) {
+              const exists = await storage.has(input.user);
+              if (!exists) return { variant: 'notFound', user: input.user };
+              await storage.delete(input.user);
+              return { variant: 'ok' };
+            },
+          };
+          ```
+
+          ## Storage Patterns
+
+          **Key-value storage** — Every concept gets isolated key-value storage:
+          - `storage.get(key)` — Read a record
+          - `storage.set(key, value)` — Write a record
+          - `storage.has(key)` — Check existence
+          - `storage.delete(key)` — Remove a record
+          - `storage.list()` — List all keys
+
+          **Storage sovereignty** — A concept only accesses its own storage.
+          Never import or reference another concept's storage.
+
+          ## Return Variants
+
+          Every code path must return one of the declared variants:
+
+          ```typescript
+          // Spec declares: -> ok(item: T), -> duplicate(name: String)
+          async create(input, storage) {
+            const existing = await findByName(input.name, storage);
+            if (existing) {
+              return { variant: 'duplicate', name: input.name };
+            }
+            // ... create logic
+            return { variant: 'ok', item: id };
+          }
+          ```
+
+          **Rules:**
+          - Every variant from the spec must have a code path.
+          - Return object must include `variant` field plus declared bindings.
+          - No undeclared variants — the runtime rejects unknown variants.
+
+          ## Error Handling
+
+          - Use variants for expected outcomes (not found, duplicate, invalid).
+          - Throw exceptions only for unexpected failures (storage errors, bugs).
+          - The runtime wraps thrown exceptions as `error` completions automatically.
       - path: references/type-mapping.md
         label: "Spec-to-TypeScript type mapping rules"
+        tier: reference
+        content: |
+          # Spec-to-TypeScript Type Mapping
+
+          Rules for mapping concept spec types to TypeScript types in
+          generated manifests and handler interfaces.
+
+          ## Primitive Types
+
+          | Spec Type | TypeScript Type | Notes |
+          |-----------|----------------|-------|
+          | `String` | `string` | |
+          | `Int` | `number` | Integer values |
+          | `Bool` | `boolean` | |
+          | `Float` | `number` | Floating point |
+
+          ## Collection Types
+
+          | Spec Type | TypeScript Type | Notes |
+          |-----------|----------------|-------|
+          | `set T` | `Map<string, T>` | Primary collection keyed by ID |
+          | `list T` | `T[]` | Ordered array |
+          | `option T` | `T \| undefined` | Nullable/optional |
+
+          ## Relation Types
+
+          | Spec Syntax | TypeScript Type | Meaning |
+          |-------------|----------------|---------|
+          | `T -> String` | `string` (required field) | Total function |
+          | `T -> option String` | `string \| undefined` | Partial function |
+          | `T -> list String` | `string[]` | Multi-valued |
+          | `T -> set U` | `Set<U>` | Set-valued |
+
+          ## Type Parameters
+
+          Type parameters (`[T, U]`) become generic type arguments.
+          In generated code, they resolve to `string` (ID references)
+          unless a concrete type is provided by the sync wiring.
+
+          ## Action Signatures
+
+          ```
+          // Spec:
+          action create(name: String, count: Int) {
+            -> ok(item: T) { ... }
+          }
+
+          // Generated TypeScript:
+          create(input: { name: string; count: number }, storage: Storage)
+            : Promise<{ variant: 'ok'; item: string } | ...>
+          ```
     validation-commands:
       - label: "Generate manifests from specs"
         command: "npx tsx tools/copf-cli/src/index.ts generate"
@@ -355,8 +853,98 @@ workflows:
     references:
       - path: references/sync-design.md
         label: "Sync language reference"
+        tier: reference
+        content: |
+          # Sync Language Reference
+
+          Syncs wire concepts together by reacting to completions. A sync
+          never calls another sync — it only sees concept action completions.
+
+          ## Sync Declaration
+
+          ```
+          sync Name [mode] {
+            when { ... }
+            where { ... }    # optional
+            filter(...)      # optional
+            then { ... }
+          }
+          ```
+
+          **Modes:**
+          - `eager` — Synchronous, same transaction. Use for data consistency.
+          - `eventual` — Queued async. Use for side effects.
+
+          ## When Clause
+
+          ```
+          when { Concept/action => variant[binding: ?var, ...] }
+          ```
+
+          ## Where Clause
+
+          ```
+          where { Concept: { ?item field: ?value } }
+          ```
+
+          ## Filter Clause
+
+          ```
+          filter(?count > 0)
+          ```
+
+          ## Then Clause
+
+          ```
+          then { Concept/action[param: ?var, ...] }
+          ```
+
+          ## Variable Binding Rules
+
+          1. Variables start with `?`.
+          2. Must be bound in when or where before use in then.
+          3. Scoped to a single sync.
       - path: references/sync-patterns.md
         label: "Common sync patterns and templates"
+        tier: reference
+        content: |
+          # Common Sync Patterns
+
+          ## CRUD Chain
+          ```
+          sync CreateProfile [eager] {
+            when { User/create => ok[user: ?u] }
+            then { Profile/create[owner: ?u] }
+          }
+          ```
+
+          ## Notification
+          ```
+          sync NotifyOnOrder [eventual] {
+            when { Order/place => ok[order: ?o] }
+            where { Order: { ?o customer: ?c } }
+            where { User: { ?c email: ?email } }
+            then { Email/send[to: ?email, template: "order-placed"] }
+          }
+          ```
+
+          ## Cache Invalidation
+          ```
+          sync InvalidateCache [eager] {
+            when { User/update => ok[user: ?u] }
+            then { Cache/invalidate[key: ?u, namespace: "user"] }
+          }
+          ```
+
+          ## Guarded Sync
+          ```
+          sync HighValue [eventual] {
+            when { Order/place => ok[order: ?o] }
+            where { Order: { ?o total: ?amount } }
+            filter(?amount > 1000)
+            then { Alert/create[type: "high-value", ref: ?o] }
+          }
+          ```
     validation-commands:
       - label: "Parse all sync files"
         command: "npx tsx tools/copf-cli/src/index.ts compile-syncs"
@@ -418,6 +1006,56 @@ workflows:
     references:
       - path: references/debugging.md
         label: "Debugging with FlowTrace"
+        tier: reference
+        content: |
+          # Debugging with FlowTrace
+
+          FlowTrace builds causal execution trees from the action log,
+          showing every concept action and sync firing triggered by
+          an initial action.
+
+          ## Reading a Trace
+
+          ```
+          Flow abc-123
+          ├─ User/create => ok [user: u1]        2ms
+          │  ├─ [sync: CreateProfile] eager
+          │  │  └─ Profile/create => ok [profile: p1]  1ms
+          │  └─ [sync: WelcomeEmail] eventual
+          │     └─ Email/send => ok               45ms
+          └─ total: 48ms
+          ```
+
+          **Reading the tree:**
+          - Root node is the initial action.
+          - Indented children are syncs that fired from the parent.
+          - `[sync: Name]` shows which sync rule triggered the action.
+          - Timing shows per-node and total duration.
+
+          ## Common Debugging Scenarios
+
+          ### Sync didn't fire
+          1. Check the when-clause variant matches the actual completion.
+          2. Verify variable bindings — a misspelled binding silently fails.
+          3. Check sync mode — eventual syncs execute asynchronously.
+
+          ### Unexpected cascade
+          1. Look for broad pattern matches (missing variant name).
+          2. Check if multiple syncs react to the same completion.
+          3. Look for circular chains: A→B→C→A.
+
+          ### Slow execution
+          1. Look for deep nesting (long sync chains).
+          2. Check eventual syncs for slow external calls.
+          3. Look for N+1 patterns in where-clause queries.
+
+          ## Trace Commands
+
+          | Command | Purpose |
+          |---------|---------|
+          | `copf trace <flow-id>` | Build and display a trace |
+          | `copf trace <flow-id> --json` | Output trace as JSON |
+          | `copf trace --recent` | Show last 10 flow traces |
     validation-commands:
       - label: "Build a trace"
         command: "npx tsx tools/copf-cli/src/index.ts trace <flow-id>"
@@ -457,8 +1095,128 @@ workflows:
     references:
       - path: references/deployment-guide.md
         label: "Deployment configuration guide"
+        tier: reference
+        content: |
+          # Deployment Configuration Guide
+
+          A deployment manifest maps concepts to runtimes, assigns syncs
+          to engines, and configures transport between runtimes.
+
+          ## Manifest Structure
+
+          ```yaml
+          deployment:
+            name: my-app
+            version: 1.0.0
+
+          runtimes:
+            api:
+              type: node
+              concepts: [User, Article, Comment]
+              capabilities: [storage-postgres, transport-http]
+            worker:
+              type: node
+              concepts: [Email, Notification]
+              capabilities: [storage-redis, transport-amqp]
+
+          engines:
+            default:
+              type: in-process
+              syncs: [CreateProfile, UpdateCache]
+            async:
+              type: queue
+              syncs: [WelcomeEmail, NotifyOnComment]
+
+          transports:
+            api-to-worker:
+              type: http
+              from: api
+              to: worker
+              endpoint: http://worker:3001
+          ```
+
+          ## Runtime Configuration
+
+          Each runtime declares:
+          - **type** — Execution environment (node, deno, edge)
+          - **concepts** — Which concepts run in this runtime
+          - **capabilities** — Available storage and transport types
+
+          ## Engine Assignment
+
+          Sync engines execute sync rules. Types:
+          - `in-process` — Runs within the concept's runtime. For eager syncs.
+          - `queue` — Uses a message queue. For eventual syncs.
+          - `distributed` — Cross-runtime engine. For multi-runtime syncs.
+
+          ## Validation Rules
+
+          The validator checks:
+          1. Every concept is assigned to exactly one runtime.
+          2. Every sync is assigned to an engine.
+          3. Cross-runtime syncs have a transport adapter configured.
+          4. Runtime capabilities satisfy concept requirements.
       - path: references/transport-adapters.md
         label: "Transport adapter configuration"
+        tier: reference
+        content: |
+          # Transport Adapter Reference
+
+          Transport adapters enable cross-runtime communication when
+          concepts in different runtimes need to interact through syncs.
+
+          ## Adapter Types
+
+          | Type | Use Case | Latency |
+          |------|----------|---------|
+          | `http` | REST-based communication | Medium |
+          | `websocket` | Bidirectional real-time | Low |
+          | `amqp` | Message queue (RabbitMQ) | Medium |
+          | `in-process` | Same runtime (no transport) | None |
+
+          ## HTTP Adapter
+
+          ```yaml
+          transports:
+            api-to-worker:
+              type: http
+              from: api
+              to: worker
+              endpoint: http://worker:3001
+              timeout: 5000
+              retries: 3
+          ```
+
+          ## WebSocket Adapter
+
+          ```yaml
+          transports:
+            realtime:
+              type: websocket
+              from: api
+              to: client
+              path: /ws
+          ```
+
+          ## AMQP Adapter
+
+          ```yaml
+          transports:
+            async-bridge:
+              type: amqp
+              from: api
+              to: worker
+              url: amqp://rabbitmq:5672
+              exchange: copf-events
+              queue: worker-tasks
+          ```
+
+          ## When to Use Transports
+
+          - **Same runtime**: No transport needed. Syncs run in-process.
+          - **Two runtimes, same machine**: Use `http` or `in-process` IPC.
+          - **Distributed**: Use `amqp` for reliability or `websocket` for
+            low-latency bidirectional communication.
     validation-commands:
       - label: "Validate deployment manifest"
         command: "npx tsx tools/copf-cli/src/index.ts deploy --validate"
@@ -525,6 +1283,63 @@ workflows:
     references:
       - path: references/migration-guide.md
         label: "Migration planning and execution guide"
+        tier: reference
+        content: |
+          # Migration Planning and Execution Guide
+
+          When a concept's spec changes (new state fields, renamed actions,
+          changed types), stored data must be migrated to match.
+
+          ## Migration Workflow
+
+          1. **Detect** — Compare current spec version against stored schema version.
+          2. **Plan** — Generate migration steps from the schema diff.
+          3. **Dry-run** — Validate the plan against a copy of stored data.
+          4. **Apply** — Execute the migration, transforming stored state.
+          5. **Verify** — Confirm the new schema matches the updated spec.
+
+          ## Schema Diff Types
+
+          | Change | Migration Action | Risk |
+          |--------|-----------------|------|
+          | Add field (optional) | Set default value | Low |
+          | Add field (required) | Compute or prompt for value | Medium |
+          | Remove field | Drop column/key | Low (data loss) |
+          | Rename field | Copy + drop | Medium |
+          | Change type | Transform values | High |
+          | Add action | No migration needed | None |
+          | Remove action | No migration needed | None |
+
+          ## Rollback Strategy
+
+          Every migration step should be reversible:
+
+          ```yaml
+          migration:
+            steps:
+              - action: addField
+                concept: User
+                field: displayName
+                type: String
+                default: ""
+                rollback: removeField
+          ```
+
+          ## Commands
+
+          | Command | Purpose |
+          |---------|---------|
+          | `copf migrate --status` | Show current schema versions |
+          | `copf migrate --plan` | Preview planned migration steps |
+          | `copf migrate --dry-run` | Test migration without applying |
+          | `copf migrate --apply` | Execute the migration |
+
+          ## Safety Rules
+
+          - Always create a backup before applying.
+          - Run `--dry-run` before `--apply` on production data.
+          - Never skip schema versions — migrations are sequential.
+          - Version-gate startup: concepts refuse to start if schema is outdated.
     validation-commands:
       - label: "Check migration status"
         command: "npx tsx tools/copf-cli/src/index.ts migrate --status"
@@ -567,6 +1382,68 @@ workflows:
     references:
       - path: references/project-structure.md
         label: "Standard project directory layout"
+        tier: reference
+        content: |
+          # Standard Project Directory Layout
+
+          A COPF project follows a convention-over-configuration directory
+          structure. Tools expect this layout to work without extra config.
+
+          ## Directory Tree
+
+          ```
+          my-app/
+          ├── specs/                 # Concept specifications
+          │   ├── user.concept
+          │   ├── article.concept
+          │   └── comment.concept
+          ├── syncs/                 # Synchronization rules
+          │   ├── create-profile.sync
+          │   └── welcome-email.sync
+          ├── implementations/       # Handler code
+          │   ├── user.impl.ts
+          │   ├── article.impl.ts
+          │   └── comment.impl.ts
+          ├── kits/                  # Reusable concept packages
+          │   └── auth-kit/
+          │       ├── kit.yaml
+          │       ├── concepts/
+          │       └── syncs/
+          ├── tests/                 # Conformance and integration tests
+          │   ├── user.test.ts
+          │   └── syncs.test.ts
+          ├── generated/             # Auto-generated output (do not edit)
+          │   ├── manifests/
+          │   └── types/
+          ├── deploy.yaml            # Deployment manifest
+          └── copf.config.yaml       # Project configuration
+          ```
+
+          ## Key Directories
+
+          | Directory | Purpose | File Types |
+          |-----------|---------|------------|
+          | `specs/` | Concept definitions | `.concept` |
+          | `syncs/` | Sync rules | `.sync` |
+          | `implementations/` | Handler code | `.impl.ts` |
+          | `kits/` | Reusable packages | `kit.yaml` + subdirs |
+          | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
+          | `tests/` | Tests | `.test.ts` |
+
+          ## Configuration File
+
+          ```yaml
+          # copf.config.yaml
+          project:
+            name: my-app
+            version: 0.1.0
+          specs:
+            dir: ./specs
+          syncs:
+            dir: ./syncs
+          output:
+            dir: ./generated
+          ```
     validation-commands:
       - label: "Validate scaffolded project"
         command: "npx tsx tools/copf-cli/src/index.ts check"
@@ -633,8 +1510,126 @@ workflows:
     references:
       - path: references/kit-structure.md
         label: "Kit manifest and directory structure"
+        tier: reference
+        content: |
+          # Kit Manifest and Directory Structure
+
+          A kit bundles related concepts and syncs into a reusable package.
+
+          ## Kit Directory
+
+          ```
+          my-kit/
+          ├── kit.yaml              # Kit manifest
+          ├── concepts/             # Concept specs
+          │   ├── user.concept
+          │   └── profile.concept
+          ├── syncs/                # Internal syncs
+          │   └── create-profile.sync
+          ├── implementations/      # Default implementations
+          │   ├── user.impl.ts
+          │   └── profile.impl.ts
+          └── tests/                # Kit tests
+              └── conformance.test.ts
+          ```
+
+          ## Kit Manifest (kit.yaml)
+
+          ```yaml
+          kit:
+            name: auth
+            version: 1.0.0
+            description: Authentication and identity management
+
+          concepts:
+            - concepts/user.concept
+            - concepts/password.concept
+            - concepts/session.concept
+
+          syncs:
+            required:
+              - syncs/validate-session.sync
+            recommended:
+              - syncs/create-profile.sync
+            integration:
+              - syncs/audit-login.sync
+
+          typeParameters:
+            User: [U]
+            Session: [S, U]
+
+          dependencies: []
+          ```
+
+          ## Sync Tiers
+
+          | Tier | Meaning | Override? |
+          |------|---------|-----------|
+          | `required` | Load-bearing, must be active | No |
+          | `recommended` | Useful defaults | Yes |
+          | `integration` | Wire to other kits | Yes |
+
+          ## Kit vs Application Syncs
+
+          Kit syncs wire concepts *within* the kit. Application syncs
+          wire *across* kits. Applications can override recommended
+          and integration syncs but not required syncs.
       - path: references/kit-publishing.md
         label: "Publishing and versioning kits"
+        tier: reference
+        content: |
+          # Publishing and Versioning Kits
+
+          ## Versioning
+
+          Kits follow semantic versioning:
+          - **Major** — Breaking changes to concept specs or required syncs.
+          - **Minor** — New concepts, new optional syncs, new actions.
+          - **Patch** — Bug fixes, documentation, implementation improvements.
+
+          ## Publishing Workflow
+
+          1. **Validate** — `copf kit validate ./kits/my-kit`
+          2. **Test** — `copf kit test ./kits/my-kit`
+          3. **Version** — Update `kit.yaml` version field.
+          4. **Package** — `copf kit pack ./kits/my-kit`
+          5. **Publish** — `copf kit publish ./kits/my-kit`
+
+          ## Registry
+
+          Kits are published to a registry (npm-compatible):
+
+          ```bash
+          # Publish to default registry
+          copf kit publish ./kits/my-kit
+
+          # Publish to custom registry
+          copf kit publish ./kits/my-kit --registry https://my-registry.com
+          ```
+
+          ## Installing Kits
+
+          ```bash
+          copf kit add auth@1.0.0
+          ```
+
+          This adds the kit to the project's `copf.config.yaml`:
+
+          ```yaml
+          kits:
+            - name: auth
+              version: 1.0.0
+              overrides:
+                syncs:
+                  - syncs/custom-profile.sync  # Override recommended sync
+          ```
+
+          ## Breaking Change Guidelines
+
+          When making a breaking change:
+          1. Bump major version.
+          2. Document migration steps.
+          3. Provide a migration sync if state schema changed.
     anti-patterns:
       - title: "Cross-kit concept reference"
         description: "Kit A's concept imports Kit B's types directly instead of using type parameters."
@@ -712,6 +1707,51 @@ workflows:
     references:
       - path: references/dev-workflow.md
         label: "Development workflow guide"
+        tier: reference
+        content: |
+          # Development Workflow Guide
+
+          The COPF dev server provides a fast feedback loop for iterating
+          on concept specs and sync rules.
+
+          ## Starting the Dev Server
+
+          ```bash
+          copf dev --port 3000
+          ```
+
+          The dev server:
+          1. Parses all `.concept` files in `specs/`.
+          2. Compiles all `.sync` files in `syncs/`.
+          3. Generates manifests and types.
+          4. Watches for file changes and re-runs on save.
+
+          ## Development Cycle
+
+          1. **Edit a .concept file** — Save triggers reparse + validation.
+          2. **Edit a .sync file** — Save triggers recompile + binding check.
+          3. **Edit a .impl.ts file** — Save triggers type check against manifest.
+          4. **View errors** — Parse/compile errors show in terminal immediately.
+
+          ## Watch Mode Behavior
+
+          | File Change | Action Taken |
+          |-------------|-------------|
+          | `.concept` modified | Reparse spec, regenerate manifest |
+          | `.sync` modified | Recompile sync, recheck bindings |
+          | `.impl.ts` modified | Type-check against manifest |
+          | `copf.config.yaml` modified | Full restart |
+
+          ## Debugging During Dev
+
+          The dev server assigns flow IDs to every action invocation.
+          Use `copf trace <flow-id>` to debug execution chains.
+
+          ## Performance
+
+          - Incremental recompilation: only changed files are reprocessed.
+          - Typical recompile time: under 100ms for small-medium projects.
+          - Full rebuild on config change or first start.
     validation-commands:
       - label: "Start dev server"
         command: "npx tsx tools/copf-cli/src/index.ts dev --port 3000"
@@ -754,6 +1794,61 @@ workflows:
     references:
       - path: references/caching.md
         label: "Cache compilation and invalidation"
+        tier: reference
+        content: |
+          # Cache Compilation and Invalidation
+
+          The cache compiler pre-compiles all concept specs and sync rules
+          into artifacts for faster startup and deployment.
+
+          ## What Gets Cached
+
+          | Artifact | Source | Format |
+          |----------|--------|--------|
+          | Parsed ASTs | `.concept` files | JSON |
+          | Concept manifests | Parsed ASTs | JSON |
+          | Compiled syncs | `.sync` files | JavaScript |
+          | Type definitions | Manifests | TypeScript `.d.ts` |
+
+          ## Cache Directory
+
+          ```
+          .copf-cache/
+          ├── manifests/
+          │   ├── user.manifest.json
+          │   └── article.manifest.json
+          ├── syncs/
+          │   ├── create-profile.compiled.js
+          │   └── welcome-email.compiled.js
+          ├── types/
+          │   ├── user.d.ts
+          │   └── article.d.ts
+          └── cache.lock.json       # Content hashes for invalidation
+          ```
+
+          ## Content-Addressed Invalidation
+
+          Each cached artifact is keyed by the content hash of its source
+          file. When you run `copf compile --cache`:
+
+          1. Hash each source file.
+          2. Compare against `cache.lock.json`.
+          3. Only recompile files whose hash changed.
+          4. Update `cache.lock.json` with new hashes.
+
+          ## Commands
+
+          | Command | Purpose |
+          |---------|---------|
+          | `copf compile --cache` | Build/rebuild the cache |
+          | `copf compile --cache --clean` | Wipe and rebuild from scratch |
+          | `copf compile --cache --verbose` | Show per-file cache hits/misses |
+
+          ## Deployment Use
+
+          In production, deploy the `.copf-cache/` directory alongside
+          your application. The runtime loads pre-compiled artifacts
+          instead of parsing specs at startup.
     validation-commands:
       - label: "Build the cache"
         command: "npx tsx tools/copf-cli/src/index.ts compile --cache"
@@ -790,6 +1885,85 @@ annotations:
       intro-template: >
         Parse and validate concept spec **$ARGUMENTS** to verify syntax,
         structure, and adherence to Jackson's concept design methodology.
+      companion-docs:
+        - path: examples/design-a-concept.md
+          label: "End-to-end concept design walkthrough"
+          content: |
+            # Walkthrough: Designing a Concept from Scratch
+
+            This walkthrough shows how to design a `Bookmark` concept
+            following Jackson's methodology.
+
+            ## Step 1: Articulate the Purpose
+
+            > What is this concept for?
+
+            ```
+            purpose { Allow users to save and organize references to items. }
+            ```
+
+            - One sentence, imperative present tense.
+            - No implementation details (no "stores in database").
+
+            ## Step 2: Design the State
+
+            Start from the purpose. A bookmark needs:
+            - A collection of bookmarks
+            - Which user owns it
+            - Which item it references
+            - Optional: a label
+
+            ```
+            state {
+              bookmarks: set B
+              owner: B -> U
+              item: B -> I
+              label: B -> option String
+              created: B -> String
+            }
+            ```
+
+            ## Step 3: Design the Actions
+
+            What can users do with bookmarks?
+
+            ```
+            actions {
+              action add(item: I, label: option String) {
+                -> ok(bookmark: B) { Bookmark created. }
+                -> duplicate(item: I) { Item already bookmarked. }
+              }
+              action remove(bookmark: B) {
+                -> ok { Bookmark removed. }
+                -> notFound(bookmark: B) { Bookmark does not exist. }
+              }
+              action list(owner: U) {
+                -> ok(bookmarks: list B) { User's bookmarks returned. }
+              }
+            }
+            ```
+
+            ## Step 4: Write Invariants
+
+            ```
+            invariants {
+              after add(item) -> ok(bookmark) {
+                then { bookmark in bookmarks; item(bookmark) = item }
+              }
+              after remove(bookmark) -> ok {
+                then { bookmark not in bookmarks }
+              }
+            }
+            ```
+
+            ## Step 5: Validate
+
+            ```bash
+            copf check specs/bookmark.concept
+            ```
+      example-walkthroughs:
+        - path: examples/design-a-concept.md
+          label: "Design a concept from scratch (Bookmark example)"
     parse:
       examples:
         - label: "Parse a concept file"
@@ -815,6 +1989,75 @@ annotations:
         Generate a ConceptManifest from **$ARGUMENTS** that provides typed
         action signatures, state schemas, and invariant test values for
         code generation.
+      companion-docs:
+        - path: examples/implement-a-handler.md
+          label: "End-to-end handler implementation walkthrough"
+          content: |
+            # Walkthrough: Implementing a Concept Handler
+
+            This walkthrough shows how to implement a handler for the
+            `User` concept from spec to working code.
+
+            ## Step 1: Generate the Manifest
+
+            ```bash
+            copf generate specs/user.concept
+            ```
+
+            This produces `generated/manifests/user.manifest.json` with typed
+            action signatures.
+
+            ## Step 2: Create the Handler File
+
+            ```typescript
+            // implementations/user.impl.ts
+            import type { ConceptHandler, ConceptStorage } from '@copf/kernel';
+
+            interface UserState {
+              name: string;
+              email: string;
+            }
+
+            export const userHandler: ConceptHandler<UserState> = {
+              async create(input, storage) {
+                // Check for duplicate
+                for (const [id, user] of await storage.entries()) {
+                  if (user.name === input.name) {
+                    return { variant: 'duplicate', name: input.name };
+                  }
+                }
+                // Create
+                const id = crypto.randomUUID();
+                await storage.set(id, { name: input.name, email: input.email });
+                return { variant: 'ok', user: id };
+              },
+
+              async delete(input, storage) {
+                if (!await storage.has(input.user)) {
+                  return { variant: 'notFound', user: input.user };
+                }
+                await storage.delete(input.user);
+                return { variant: 'ok' };
+              },
+            };
+            ```
+
+            ## Step 3: Verify Against Manifest
+
+            Every variant declared in the spec must have a code path:
+            - `create → ok` ✓
+            - `create → duplicate` ✓
+            - `delete → ok` ✓
+            - `delete → notFound` ✓
+
+            ## Step 4: Run Tests
+
+            ```bash
+            npx vitest run tests/user.test.ts
+            ```
+      example-walkthroughs:
+        - path: examples/implement-a-handler.md
+          label: "Implement a concept handler (User example)"
     generate:
       examples:
         - label: "Generate manifest from AST"
@@ -842,6 +2085,50 @@ annotations:
       intro-template: >
         Parse sync file **$ARGUMENTS** and validate its structure, variable
         bindings, and concept references against loaded manifests.
+      companion-docs:
+        - path: examples/validate-a-sync.md
+          label: "Sync validation walkthrough"
+          content: |
+            # Walkthrough: Validating a Sync File
+
+            This walkthrough shows how to validate a sync file and fix
+            common errors caught by the parser.
+
+            ## Step 1: Write the Sync
+
+            ```
+            sync WelcomeEmail [eager] {
+              when { User/create => ok[user: ?u] }
+              where { User: { ?u email: ?email } }
+              then { Email/send[to: ?email, template: "welcome"] }
+            }
+            ```
+
+            ## Step 2: Parse and Validate
+
+            ```bash
+            copf compile-syncs syncs/welcome-email.sync
+            ```
+
+            ## Step 3: Fix Common Errors
+
+            **Unbound variable:**
+            ```
+            ERROR: Variable ?email in then-clause is not bound
+            FIX: Add a where-clause to bind ?email from User state
+            ```
+
+            **Missing concept reference:**
+            ```
+            ERROR: Concept 'Emaill' not found in loaded manifests
+            FIX: Check spelling — should be 'Email'
+            ```
+
+            **Parameter mismatch:**
+            ```
+            ERROR: Email/send expects 'to' (String) but got 'to' (Int)
+            FIX: Ensure variable type matches action parameter type
+            ```
     parse:
       examples:
         - label: "Parse a sync file"
@@ -868,6 +2155,61 @@ annotations:
       intro-template: >
         Compile sync rules in **$ARGUMENTS** into executable registrations
         for the sync engine.
+      companion-docs:
+        - path: examples/write-a-sync-chain.md
+          label: "Sync chain composition walkthrough"
+          content: |
+            # Walkthrough: Writing a Sync Chain
+
+            This walkthrough shows how to compose syncs into a chain
+            where each sync reacts to the previous one's completion.
+
+            ## The Scenario
+
+            When a user registers:
+            1. Create their profile (eager)
+            2. Send a welcome email (eventual)
+            3. Notify the admin (eventual)
+
+            ## Step 1: Registration → Profile
+
+            ```
+            sync CreateProfile [eager] {
+              when { User/create => ok[user: ?u] }
+              then { Profile/create[owner: ?u] }
+            }
+            ```
+
+            ## Step 2: Profile → Welcome Email
+
+            ```
+            sync WelcomeEmail [eventual] {
+              when { Profile/create => ok[profile: ?p] }
+              where { Profile: { ?p owner: ?u } }
+              where { User: { ?u email: ?email, name: ?name } }
+              then { Email/send[to: ?email, template: "welcome", data: ?name] }
+            }
+            ```
+
+            ## Step 3: Registration → Admin Notification
+
+            ```
+            sync NotifyAdmin [eventual] {
+              when { User/create => ok[user: ?u] }
+              where { User: { ?u name: ?name } }
+              then { Notification/create[type: "new-user", message: ?name] }
+            }
+            ```
+
+            ## Key Points
+
+            - Each sync sees only the completion it reacts to.
+            - Sync 2 reacts to Profile/create, not to User/create.
+            - Sync 3 runs independently from Sync 2.
+            - Eager syncs run in the same transaction. Eventual syncs are queued.
+      example-walkthroughs:
+        - path: examples/write-a-sync-chain.md
+          label: "Compose a sync chain (registration flow)"
     compile:
       examples:
         - label: "Compile sync rules"
@@ -895,6 +2237,56 @@ annotations:
       intro-template: >
         Build a debug trace for flow **$ARGUMENTS** showing the causal
         chain of concept actions, sync firings, and data propagation.
+      companion-docs:
+        - path: examples/debug-a-flow.md
+          label: "Flow debugging walkthrough"
+          content: |
+            # Walkthrough: Debugging a Flow
+
+            This walkthrough shows how to use FlowTrace to debug
+            a sync that didn't fire as expected.
+
+            ## The Problem
+
+            A welcome email should be sent when a user registers,
+            but no email is being sent.
+
+            ## Step 1: Find the Flow ID
+
+            ```bash
+            copf trace --recent
+            ```
+
+            Output shows recent flows. Find the User/create flow.
+
+            ## Step 2: Build the Trace
+
+            ```bash
+            copf trace abc-123
+            ```
+
+            ```
+            Flow abc-123
+            ├─ User/create => ok [user: u1]        2ms
+            │  └─ [sync: CreateProfile] eager
+            │     └─ Profile/create => ok [p: p1]   1ms
+            └─ total: 3ms
+            ```
+
+            ## Step 3: Diagnose
+
+            The WelcomeEmail sync is missing from the trace. Check:
+
+            1. **Is it registered?** — Check `syncs/welcome-email.sync` exists.
+            2. **Does the pattern match?** — The sync watches
+               `Profile/create => ok`, which DID fire. Check variable bindings.
+            3. **Is it eventual?** — Eventual syncs execute asynchronously.
+               Check the async queue for pending jobs.
+
+            ## Step 4: Fix
+
+            The sync had a typo in the variant name (`sucess` → `ok`).
+            After fixing, the trace shows the complete chain.
     build:
       examples:
         - label: "Build trace from flow ID"
@@ -920,6 +2312,63 @@ annotations:
         Validate deployment manifest **$ARGUMENTS** against compiled
         concepts and syncs, checking runtime mappings, engine assignments,
         and transport configuration.
+      companion-docs:
+        - path: examples/configure-deployment.md
+          label: "Deployment configuration walkthrough"
+          content: |
+            # Walkthrough: Configuring a Deployment
+
+            This walkthrough shows how to set up a deployment manifest
+            for a two-runtime application.
+
+            ## The Application
+
+            - **API runtime**: User, Article, Comment concepts
+            - **Worker runtime**: Email, Notification concepts
+            - Syncs cross the boundary (e.g., WelcomeEmail)
+
+            ## Step 1: Define Runtimes
+
+            ```yaml
+            runtimes:
+              api:
+                type: node
+                concepts: [User, Article, Comment]
+                capabilities: [storage-postgres, transport-http]
+              worker:
+                type: node
+                concepts: [Email, Notification]
+                capabilities: [storage-redis, transport-amqp]
+            ```
+
+            ## Step 2: Assign Sync Engines
+
+            ```yaml
+            engines:
+              default:
+                type: in-process
+                syncs: [CreateProfile, UpdateCache]
+              async:
+                type: queue
+                syncs: [WelcomeEmail, NotifyOnComment]
+            ```
+
+            ## Step 3: Configure Transport
+
+            ```yaml
+            transports:
+              api-to-worker:
+                type: http
+                from: api
+                to: worker
+                endpoint: http://worker:3001
+            ```
+
+            ## Step 4: Validate
+
+            ```bash
+            copf deploy --validate deploy.yaml
+            ```
     validate:
       examples:
         - label: "Validate deployment manifest"
@@ -942,6 +2391,60 @@ annotations:
       intro-template: >
         Plan and apply schema migration for **$ARGUMENTS**, transforming
         stored state from the previous version to the current spec version.
+      companion-docs:
+        - path: examples/run-a-migration.md
+          label: "Migration execution walkthrough"
+          content: |
+            # Walkthrough: Running a Migration
+
+            This walkthrough shows how to migrate a concept after
+            adding a new required field.
+
+            ## The Change
+
+            Adding a `displayName` field to the User concept:
+
+            ```
+            state {
+              users: set U
+              name: U -> String
+              email: U -> String
+              displayName: U -> String   # NEW
+            }
+            ```
+
+            ## Step 1: Check Status
+
+            ```bash
+            copf migrate --status
+            ```
+            ```
+            User: v1 (stored) → v2 (spec) — MIGRATION NEEDED
+            Article: v1 (stored) → v1 (spec) — up to date
+            ```
+
+            ## Step 2: Plan
+
+            ```bash
+            copf migrate --plan
+            ```
+            ```
+            Migration plan for User v1 → v2:
+              1. ADD FIELD displayName (String)
+                 Default: compute from name field
+            ```
+
+            ## Step 3: Dry Run
+
+            ```bash
+            copf migrate --dry-run
+            ```
+
+            ## Step 4: Apply
+
+            ```bash
+            copf migrate --apply
+            ```
     plan:
       examples:
         - label: "Plan a migration"
@@ -964,6 +2467,54 @@ annotations:
       intro-template: >
         Scaffold a new COPF project named **$ARGUMENTS** with the standard
         directory layout, example concept, and configuration files.
+      companion-docs:
+        - path: templates/concept-template.md
+          label: "Concept spec starter template"
+          content: |
+            # Concept Spec Template
+
+            Use this template when creating a new concept spec file.
+
+            ```
+            concept Name [T] {
+
+              purpose {
+                One to three sentences describing what this concept is for.
+                Use imperative present tense. No implementation details.
+              }
+
+              state {
+                items: set T
+                // Add relations on T:
+                // name: T -> String        (required field)
+                // label: T -> option String (optional field)
+                // tags: T -> list String    (multi-valued)
+              }
+
+              actions {
+                action create(/* params */) {
+                  -> ok(item: T) { Created successfully. }
+                  // Add error variants as needed:
+                  // -> duplicate(name: String) { Name already taken. }
+                  // -> invalid(reason: String) { Validation failed. }
+                }
+
+                action delete(item: T) {
+                  -> ok { Deleted successfully. }
+                  -> notFound(item: T) { Item does not exist. }
+                }
+              }
+
+              invariants {
+                after create(/* params */) -> ok(item) {
+                  then { item in items }
+                }
+                after delete(item) -> ok {
+                  then { item not in items }
+                }
+              }
+            }
+            ```
     scaffold:
       examples:
         - label: "Scaffold a new project"
@@ -984,6 +2535,68 @@ annotations:
       intro-template: >
         Start a development server that watches concept specs and syncs for
         changes and auto-recompiles on save.
+      companion-docs:
+        - path: examples/dev-iteration-cycle.md
+          label: "Development iteration cycle walkthrough"
+          content: |
+            # Walkthrough: Development Iteration Cycle
+
+            This walkthrough shows a typical edit-validate-test cycle
+            using the dev server.
+
+            ## Step 1: Start the Dev Server
+
+            ```bash
+            copf dev --port 3000
+            ```
+
+            ```
+            COPF dev server started on port 3000
+            Watching: specs/, syncs/, implementations/
+            Parsed 5 concepts, compiled 3 syncs — all valid
+            ```
+
+            ## Step 2: Edit a Concept
+
+            Add a new action to `specs/user.concept`:
+
+            ```
+            action updateEmail(user: U, email: String) {
+              -> ok { Email updated. }
+              -> notFound(user: U) { User not found. }
+            }
+            ```
+
+            Save → dev server output:
+            ```
+            [hot] user.concept changed
+            [parse] User: valid ✓
+            [generate] user.manifest.json updated
+            [type] user.d.ts updated
+            ```
+
+            ## Step 3: Add a Sync
+
+            Create `syncs/email-updated.sync`:
+
+            ```
+            sync NotifyEmailChange [eventual] {
+              when { User/updateEmail => ok }
+              where { User: { ?u email: ?email } }
+              then { Email/send[to: ?email, template: "email-changed"] }
+            }
+            ```
+
+            Save → dev server output:
+            ```
+            [hot] email-updated.sync changed
+            [compile] NotifyEmailChange: valid ✓
+            ```
+
+            ## Step 4: Implement the Handler
+
+            Add the handler method in `implementations/user.impl.ts`,
+            then run tests to verify.
     start:
       examples:
         - label: "Start dev server"
@@ -1011,6 +2624,47 @@ annotations:
       intro-template: >
         Build pre-compiled cache artifacts from all concept specs and sync
         rules for faster startup and deployment.
+      companion-docs:
+        - path: examples/build-for-production.md
+          label: "Production build walkthrough"
+          content: |
+            # Walkthrough: Building for Production
+
+            This walkthrough shows how to build a production-ready
+            cache from your concept specs and syncs.
+
+            ## Step 1: Validate Everything
+
+            ```bash
+            copf check           # Validate all specs
+            copf compile-syncs   # Validate all syncs
+            ```
+
+            ## Step 2: Build the Cache
+
+            ```bash
+            copf compile --cache --verbose
+            ```
+
+            ```
+            Building cache...
+            [cache] user.concept → manifests/user.manifest.json (new)
+            [cache] article.concept → manifests/article.manifest.json (new)
+            [cache] create-profile.sync → syncs/create-profile.compiled.js (new)
+            [cache] types → types/user.d.ts, types/article.d.ts (new)
+            Cache built: 4 manifests, 2 syncs, 4 type files
+            ```
+
+            ## Step 3: Deploy
+
+            Include `.copf-cache/` in your deployment:
+
+            ```dockerfile
+            COPY .copf-cache/ /app/.copf-cache/
+            ```
+
+            The runtime loads pre-compiled artifacts on startup,
+            skipping the parse/compile step entirely.
     compile:
       examples:
         - label: "Build cache"
@@ -1030,6 +2684,68 @@ annotations:
       intro-template: >
         Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish
         reusable concept packages.
+      companion-docs:
+        - path: examples/create-a-kit.md
+          label: "Kit creation walkthrough"
+          content: |
+            # Walkthrough: Creating a Kit
+
+            This walkthrough shows how to create, validate, and test
+            a reusable concept kit.
+
+            ## Step 1: Scaffold
+
+            ```bash
+            copf kit init auth-kit
+            ```
+
+            Creates:
+            ```
+            auth-kit/
+            ├── kit.yaml
+            ├── concepts/
+            │   └── example.concept
+            ├── syncs/
+            └── tests/
+            ```
+
+            ## Step 2: Add Concepts
+
+            Move your concept specs into `concepts/`:
+
+            ```bash
+            cp specs/user.concept auth-kit/concepts/
+            cp specs/password.concept auth-kit/concepts/
+            cp specs/session.concept auth-kit/concepts/
+            ```
+
+            ## Step 3: Update kit.yaml
+
+            ```yaml
+            kit:
+              name: auth
+              version: 1.0.0
+              description: Authentication and identity management
+
+            concepts:
+              - concepts/user.concept
+              - concepts/password.concept
+              - concepts/session.concept
+
+            syncs:
+              required:
+                - syncs/validate-session.sync
+            ```
+
+            ## Step 4: Validate and Test
+
+            ```bash
+            copf kit validate ./auth-kit
+            copf kit test ./auth-kit
+            ```
+      example-walkthroughs:
+        - path: examples/create-a-kit.md
+          label: "Create a reusable kit (auth example)"
     init:
       examples:
         - label: "Create a new kit"

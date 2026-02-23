@@ -1,0 +1,48 @@
+# Walkthrough: Writing a Sync Chain
+
+This walkthrough shows how to compose syncs into a chain
+where each sync reacts to the previous one's completion.
+
+## The Scenario
+
+When a user registers:
+1. Create their profile (eager)
+2. Send a welcome email (eventual)
+3. Notify the admin (eventual)
+
+## Step 1: Registration → Profile
+
+```
+sync CreateProfile [eager] {
+  when { User/create => ok[user: ?u] }
+  then { Profile/create[owner: ?u] }
+}
+```
+
+## Step 2: Profile → Welcome Email
+
+```
+sync WelcomeEmail [eventual] {
+  when { Profile/create => ok[profile: ?p] }
+  where { Profile: { ?p owner: ?u } }
+  where { User: { ?u email: ?email, name: ?name } }
+  then { Email/send[to: ?email, template: "welcome", data: ?name] }
+}
+```
+
+## Step 3: Registration → Admin Notification
+
+```
+sync NotifyAdmin [eventual] {
+  when { User/create => ok[user: ?u] }
+  where { User: { ?u name: ?name } }
+  then { Notification/create[type: "new-user", message: ?name] }
+}
+```
+
+## Key Points
+
+- Each sync sees only the completion it reacts to.
+- Sync 2 reacts to Profile/create, not to User/create.
+- Sync 3 runs independently from Sync 2.
+- Eager syncs run in the same transaction. Eventual syncs are queued.

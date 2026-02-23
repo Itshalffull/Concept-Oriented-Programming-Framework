@@ -1,0 +1,49 @@
+# Sync Language Reference
+
+Syncs wire concepts together by reacting to completions. A sync
+never calls another sync — it only sees concept action completions.
+
+## Sync Declaration
+
+```
+sync Name [mode] {
+  when { ... }
+  where { ... }    # optional
+  filter(...)      # optional
+  then { ... }
+}
+```
+
+**Modes:**
+- `eager` — Synchronous, same transaction. Use for data consistency.
+- `eventual` — Queued async. Use for side effects.
+
+## When Clause
+
+```
+when { Concept/action => variant[binding: ?var, ...] }
+```
+
+## Where Clause
+
+```
+where { Concept: { ?item field: ?value } }
+```
+
+## Filter Clause
+
+```
+filter(?count > 0)
+```
+
+## Then Clause
+
+```
+then { Concept/action[param: ?var, ...] }
+```
+
+## Variable Binding Rules
+
+1. Variables start with `?`.
+2. Must be bound in when or where before use in then.
+3. Scoped to a single sync.

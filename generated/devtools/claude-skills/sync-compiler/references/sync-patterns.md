@@ -1,0 +1,74 @@
+# Reusable Sync Patterns
+
+Common sync patterns for wiring concepts together.
+
+## CRUD Chain
+
+When one entity is created, create related records:
+
+```
+sync CreateProfile [eager] {
+  when { User/create => ok[user: ?u] }
+  then { Profile/create[owner: ?u] }
+}
+```
+
+## Auth-Gated Action
+
+Validate authentication before allowing an action:
+
+```
+sync AuthGate [eager] {
+  when { Session/validate => ok[token: ?t] }
+  where { Session: { ?t userId: ?uid } }
+  then { Article/create[author: ?uid] }
+}
+```
+
+## Notification on Event
+
+Send async notification when something happens:
+
+```
+sync NotifyOnOrder [eventual] {
+  when { Order/place => ok[order: ?o] }
+  where { Order: { ?o customer: ?c } }
+  where { User: { ?c email: ?email } }
+  then { Email/send[to: ?email, template: "order-placed"] }
+}
+```
+
+## Cache Invalidation
+
+Invalidate cache when source data changes:
+
+```
+sync InvalidateUserCache [eager] {
+  when { User/update => ok[user: ?u] }
+  then { Cache/invalidate[key: ?u, namespace: "user"] }
+}
+```
+
+## Cascade Delete
+
+Clean up related data when a parent is deleted:
+
+```
+sync CascadeDelete [eager] {
+  when { User/delete => ok[user: ?u] }
+  then { Profile/deleteByOwner[owner: ?u] }
+}
+```
+
+## Guarded Sync
+
+Only fire when a condition is met:
+
+```
+sync HighValueOrder [eventual] {
+  when { Order/place => ok[order: ?o] }
+  where { Order: { ?o total: ?amount } }
+  filter(?amount > 1000)
+  then { Alert/create[type: "high-value", ref: ?o] }
+}
+```

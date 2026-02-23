@@ -49,6 +49,9 @@ copf compile --cache --verbose
 ## References
 
 - [Cache compilation and invalidation](references/caching.md)
+## Supporting Materials
+
+- [Production build walkthrough](examples/build-for-production.md)
 ## Quick Reference
 
 | Action | Command | Purpose |

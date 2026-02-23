@@ -1,0 +1,79 @@
+# Concept Grammar Reference
+
+Complete grammar for `.concept` specification files.
+
+## Top-Level Structure
+
+```
+concept Name [TypeParam, ...] {
+  purpose { ... }
+  state { ... }
+  actions { ... }
+  invariants { ... }
+}
+```
+
+## Purpose Block
+
+```
+purpose { Free-text description in imperative present tense. }
+```
+
+One to three sentences. No implementation details.
+
+## State Block
+
+```
+state {
+  items: set T            # Primary collection
+  name: T -> String       # Total function (every T has one)
+  email: T -> option String  # Partial (may be absent)
+  tags: T -> list String  # Multi-valued
+}
+```
+
+**Relation types:**
+| Syntax | Meaning | TypeScript |
+|--------|---------|-----------|
+| `set T` | Collection of T | `Map<id, T>` |
+| `T -> V` | Total function | Required field |
+| `T -> option V` | Partial function | Optional field |
+| `T -> list V` | Multi-valued | Array field |
+
+## Actions Block
+
+```
+actions {
+  action create(name: String, email: String) {
+    -> ok(item: T) { Created successfully. }
+    -> duplicate(name: String) { Name already taken. }
+  }
+}
+```
+
+- Each action has a name, typed parameters, and one or more **variants**.
+- Variants use `->` arrow syntax: `-> variantName(bindings) { prose }`.
+- At least one variant is required per action.
+
+**Parameter types:** `String`, `Int`, `Bool`, `T` (type param), `list T`, `option T`.
+
+## Invariants Block
+
+```
+invariants {
+  after create(name) -> ok(item) {
+    then { item in items; name(item) = name }
+  }
+  after delete(item) -> ok {
+    then { item not in items }
+  }
+}
+```
+
+- `after action -> variant { then { assertions } }` — post-condition.
+- Assertions: `field(item) = value`, `item in collection`, `item not in collection`.
+
+## Type Parameters
+
+Declared in brackets after concept name: `concept Name [T, U]`.
+Used throughout state and action signatures. Resolved by syncs at composition time.

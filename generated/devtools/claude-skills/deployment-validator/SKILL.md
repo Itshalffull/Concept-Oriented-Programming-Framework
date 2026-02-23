@@ -48,6 +48,9 @@ copf deploy --validate app.deploy.yaml
 
 - [Deployment configuration guide](references/deployment-guide.md)
 - [Transport adapter configuration](references/transport-adapters.md)
+## Supporting Materials
+
+- [Deployment configuration walkthrough](examples/configure-deployment.md)
 ## Quick Reference
 
 | Section | Purpose | Required |

@@ -18,6 +18,9 @@ Build pre-compiled cache artifacts from all concept specs and sync rules for fas
 ## References
 
 - [Cache compilation and invalidation](references/caching.md)
+## Supporting Materials
+
+- [Production build walkthrough](examples/build-for-production.md)
 ## Quick Reference
 
 | Action | Command | Purpose |

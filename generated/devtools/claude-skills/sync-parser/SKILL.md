@@ -54,6 +54,9 @@ copf compile-syncs syncs/my-sync.sync
 
 - [Sync language reference](references/sync-design.md)
 - [Common sync patterns and templates](references/sync-patterns.md)
+## Supporting Materials
+
+- [Sync validation walkthrough](examples/validate-a-sync.md)
 ## Quick Reference
 
 | Element | Syntax | Purpose |

@@ -22,6 +22,9 @@ Build a debug trace for flow **<source>** showing the causal chain of concept ac
 ## References
 
 - [Debugging with FlowTrace](references/debugging.md)
+## Supporting Materials
+
+- [Flow debugging walkthrough](examples/debug-a-flow.md)
 ## Quick Reference
 
 | Action | Command | Purpose |

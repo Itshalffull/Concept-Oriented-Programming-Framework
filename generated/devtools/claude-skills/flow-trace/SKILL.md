@@ -60,6 +60,9 @@ Render the trace tree as a human-readable output with timing, success/failure st
 ## References
 
 - [Debugging with FlowTrace](references/debugging.md)
+## Supporting Materials
+
+- [Flow debugging walkthrough](examples/debug-a-flow.md)
 ## Quick Reference
 
 | Action | Command | Purpose |

@@ -1,0 +1,63 @@
+# Implementation Patterns
+
+Patterns for writing concept handler implementations.
+
+## Handler Structure
+
+Each concept gets one handler file. Each action maps to one async method:
+
+```typescript
+export const userHandler: ConceptHandler<UserState> = {
+  async create(input, storage) {
+    const id = generateId();
+    await storage.set(id, { name: input.name, email: input.email });
+    return { variant: 'ok', user: id };
+  },
+
+  async delete(input, storage) {
+    const exists = await storage.has(input.user);
+    if (!exists) return { variant: 'notFound', user: input.user };
+    await storage.delete(input.user);
+    return { variant: 'ok' };
+  },
+};
+```
+
+## Storage Patterns
+
+**Key-value storage** — Every concept gets isolated key-value storage:
+- `storage.get(key)` — Read a record
+- `storage.set(key, value)` — Write a record
+- `storage.has(key)` — Check existence
+- `storage.delete(key)` — Remove a record
+- `storage.list()` — List all keys
+
+**Storage sovereignty** — A concept only accesses its own storage.
+Never import or reference another concept's storage.
+
+## Return Variants
+
+Every code path must return one of the declared variants:
+
+```typescript
+// Spec declares: -> ok(item: T), -> duplicate(name: String)
+async create(input, storage) {
+  const existing = await findByName(input.name, storage);
+  if (existing) {
+    return { variant: 'duplicate', name: input.name };
+  }
+  // ... create logic
+  return { variant: 'ok', item: id };
+}
+```
+
+**Rules:**
+- Every variant from the spec must have a code path.
+- Return object must include `variant` field plus declared bindings.
+- No undeclared variants — the runtime rejects unknown variants.
+
+## Error Handling
+
+- Use variants for expected outcomes (not found, duplicate, invalid).
+- Throw exceptions only for unexpected failures (storage errors, bugs).
+- The runtime wraps thrown exceptions as `error` completions automatically.
