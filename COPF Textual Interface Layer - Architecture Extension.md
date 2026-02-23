@@ -1,6 +1,26 @@
-# COPF Interface Kit — Architecture Extension (v3)
+# COPF Interface Kit — Architecture Extension (v4)
 
 > **Changelog**
+>
+> **v4 (2026-02-23):**
+> - Added 3 new render patterns: `table-list`, `companion-link-list`, `example-walkthroughs` (§1.10)
+> - Added `interpolateVars()` for `$VARIABLE` substitution in intro-template content (§1.10)
+> - Added `filterByTier()` for tier-aware enrichment filtering: inline, reference, summary (§1.10)
+> - Added multi-format handler registrations: `skill-md`, `cli-help`, `mcp-help`, `rest-help` (§1.10)
+> - Added `companion-docs` and `example-walkthroughs` built-in handlers (§1.10)
+> - Added enrichment-driven documentation generation to all text targets:
+>   - CliTarget: `{concept}.help.md` using `cli-help` format (§2.4)
+>   - McpTarget: `{concept}.help.md` using `mcp-help` format (§2.5)
+>   - RestTarget: `{concept}/api-docs.md` using `rest-help` format (§2.1)
+> - Added `intro-template` annotation with per-target variable vocabularies (§2.1–§2.6)
+> - Added `skill-title` annotation for descriptive skill headings (§2.6)
+> - Added `step-references` workflow key for per-step inline reference links (§2.6)
+> - Added `checklist-labels` workflow key for named per-step checklists (§2.6)
+> - Added `## wrapper + ### steps` heading hierarchy for workflow-based skills (§2.6)
+> - Added companion file emission from `companion-docs` and `tier=reference` items (§2.6)
+> - Added `getManifestEnrichment()` shared utility for merged workflow+annotation enrichment (§2.9)
+> - Added concept-overrides fix for CLI generation — `concept-overrides` key now correctly applied (§2.4)
+> - Added handmade-vs-generated parity tests: 127 skills tests + 111 CLI tests + 32 behavioral tests (Part 7)
 >
 > **v3 (2026-02-22):**
 > - Added `@hierarchical` structural trait (§1.8) — general-purpose hierarchy support across all targets
@@ -714,15 +734,15 @@ concept Surface [S] {
 
 #### Per-Target Composition
 
-| Target | Composition Strategy | Entrypoint |
-|--------|---------------------|------------|
-| REST | Shared router, concept-prefixed routes (`/todos/*`, `/users/*`) | `router.ts` / `app.py` |
-| GraphQL | Schema stitching, shared `Query`/`Mutation` root types | `schema.graphql` + `resolvers.ts` |
-| gRPC | Multi-service proto package, shared message types | `service.proto` + `server.ts` |
-| CLI | Root command, concept subcommands (`app todo add`, `app user list`) | `main.ts` / `main.go` |
-| MCP | Combined tool set, concept-namespaced tool names | `mcp-server.ts` |
-| Claude Skills | Configurable grouping (per-concept, by-crud, custom, etc.) | Per-skill `SKILL.md` + `.commands.ts` |
-| SDK | Single client class, concept-namespaced method groups | `client.ts` / `client.py` |
+| Target | Composition Strategy | Entrypoint | Documentation |
+|--------|---------------------|------------|---------------|
+| REST | Shared router, concept-prefixed routes (`/todos/*`, `/users/*`) | `router.ts` / `app.py` | `api-docs.md` (rest-help format) |
+| GraphQL | Schema stitching, shared `Query`/`Mutation` root types | `schema.graphql` + `resolvers.ts` | — |
+| gRPC | Multi-service proto package, shared message types | `service.proto` + `server.ts` | — |
+| CLI | Root command, concept subcommands (`app todo add`, `app user list`) | `main.ts` / `main.go` | `help.md` (cli-help format) |
+| MCP | Combined tool set, concept-namespaced tool names | `mcp-server.ts` | `help.md` (mcp-help format) |
+| Claude Skills | Configurable grouping (per-concept, by-crud, custom, etc.) | Per-skill `SKILL.md` + `.commands.ts` | Companion files (skill-md format) |
+| SDK | Single client class, concept-namespaced method groups | `client.ts` / `client.py` | — |
 
 
 ### 1.8 Middleware
@@ -1128,10 +1148,13 @@ Patterns are small code functions shipped with the framework. Each accepts data 
 | `bad-good` | `{title, description, bad?, good?}[]` | Comparison blocks | `heading?` |
 | `scaffold-list` | `{name, path, description}[]` | Sections with links | `heading?` |
 | `slash-list` | `(string \| {name, description})[]` | Skill references (`/name`) | `heading?` |
+| `table-list` | `{name, description, ...}[]` | Markdown table | `heading?`, `headers` (column names), `fields` (data keys), `namePrefix?`, `nameSuffix?` |
+| `companion-link-list` | `{path, label, tier?}[]` | Categorized link groups by tier | `heading?`, tiers: inline, reference, summary |
+| `example-walkthroughs` | `{path, label, preamble?}[]` | Companion links with optional preamble text | `heading?` |
 
 #### Built-in Handlers
 
-Default handlers registered for `skill-md` and `cli-help` formats:
+Default handlers registered for all four text formats (`skill-md`, `cli-help`, `mcp-help`, `rest-help`):
 
 | Enrichment Key | Order | Pattern | Purpose |
 |---------------|-------|---------|---------|
@@ -1146,7 +1169,54 @@ Default handlers registered for `skill-md` and `cli-help` formats:
 | `quick-reference` | 85 | `heading-body` | Single quick-reference section |
 | `anti-patterns` | 90 | `bad-good` | Anti-patterns with bad/good examples |
 | `validation-commands` | 95 | `code-list` | Bash validation commands |
-| `related-workflows` | 100 | `slash-list` | Related skills |
+| `related-workflows` | 100 | `table-list` (skill-md) / `slash-list` (cli-help) / `inline-list` (mcp-help) / `table-list` (rest-help) | Related skills — format-specific rendering |
+| `companion-docs` | 105 | `companion-link-list` | Categorized companion document links |
+| `example-walkthroughs` | 110 | `example-walkthroughs` | Walkthrough links with preamble |
+
+#### Format-Specific Handler Overrides
+
+The `related-workflows` handler demonstrates format-specific rendering — the same enrichment key produces different output per format:
+
+| Format | Pattern | Output |
+|--------|---------|--------|
+| `skill-md` | `table-list` | Markdown table with `Skill` and `When to Use` columns |
+| `cli-help` | `slash-list` | Bullet list with `/name — description` |
+| `mcp-help` | `inline-list` | Comma-separated inline list |
+| `rest-help` | `table-list` | Markdown table with `Endpoint` and `When to Use` columns |
+
+#### Multi-Format Registration
+
+Handlers are registered per format. All four text formats share the same enrichment keys but may use different patterns:
+
+| Format | Used By | Variable Vocabulary |
+|--------|---------|-------------------|
+| `skill-md` | ClaudeSkillsTarget | `$ARGUMENTS`, `$CONCEPT` |
+| `cli-help` | CliTarget | `<source>` (CLI positional arg style) |
+| `mcp-help` | McpTarget | `{input}` (MCP input schema style) |
+| `rest-help` | RestTarget | `{basePath}/{id}` (path parameter style) |
+
+#### Utility Functions
+
+**`interpolateVars(text, variables)`** — Replaces `$VARIABLE` placeholders in intro-template strings with target-specific values. Each target provides its own variable vocabulary:
+
+```typescript
+// Claude Skills
+interpolateVars(template, { ARGUMENTS: 'concept spec file path', CONCEPT: 'SpecParser' });
+// CLI
+interpolateVars(template, { ARGUMENTS: '<source>' });
+// MCP
+interpolateVars(template, { ARGUMENTS: '{input}' });
+// REST
+interpolateVars(template, { ARGUMENTS: '{basePath}/{id}' });
+```
+
+**`filterByTier(items, tier)`** — Filters enrichment items by disclosure tier. Items without a `tier` field default to `inline`. Used for tier-based routing where `reference` items are emitted as companion files and `inline` items appear in the main document:
+
+| Tier | Behavior |
+|------|----------|
+| `inline` | Rendered in the main document body (SKILL.md, help.md, api-docs.md) |
+| `reference` | Emitted as a separate companion file alongside the main document |
+| `summary` | Rendered as a compact summary with a link to the full companion file |
 
 #### Adding a Custom Enrichment Kind
 
@@ -1368,14 +1438,16 @@ The `classify` action consolidates action classification heuristics previously s
 ### 2.1 RestTarget
 
 ```
-@version(1)
+@version(2)
 concept RestTarget [R] {
 
   purpose {
     Generate REST API code from concept projections. Owns
     HTTP method mappings, URL pattern derivation, status code
     tables, request/response serialization, and middleware
-    integration. Produces route handlers + types.
+    integration. Produces route handlers, types, and enrichment-
+    driven API documentation. Content field stores opaque
+    enrichment for documentation rendering.
   }
 
   state {
@@ -1392,6 +1464,7 @@ concept RestTarget [R] {
       path: R -> String
       statusCodes: R -> list { variant: String, code: Int }
     }
+    content: R -> String
   }
 
   actions {
@@ -1402,6 +1475,8 @@ concept RestTarget [R] {
         action params to path params, query params, or request body.
         Map return variants to status codes. Generate route
         handler, request/response types, validation middleware.
+        If enrichment exists, generate api-docs.md using the
+        rest-help Renderer format.
       }
       -> ambiguousMapping(action: String, reason: String) {
         Can't determine HTTP method or path for a non-CRUD action
@@ -1412,6 +1487,31 @@ concept RestTarget [R] {
   }
 }
 ```
+
+#### Output Structure
+
+Each concept produces route handlers and optional enrichment-driven documentation:
+
+```
+generated/interfaces/rest/{concept}/
+├── routes.ts          # Hono route handler with kernel dispatch
+└── api-docs.md        # Enrichment-driven API documentation (if enrichment exists)
+```
+
+**api-docs.md** is generated only when enrichment data exists in the interface manifest. It uses the `rest-help` Renderer format with path parameter variable vocabulary (`{basePath}/{id}`).
+
+#### Intro-Template Support
+
+RestTarget supports `intro-template` in annotations for customized API documentation introductions:
+
+```yaml
+annotations:
+  concept:
+    intro-template: >
+      Manage $ARGUMENTS through the REST endpoint at {basePath}/{id}.
+```
+
+Variables are interpolated: `$ARGUMENTS` → action arguments, `{basePath}` → configured base path.
 
 
 ### 2.2 GraphqlTarget
@@ -1590,6 +1690,43 @@ concept CliTarget [C] {
 }
 ```
 
+#### Output Structure
+
+Each concept produces a command tree and optional enrichment-driven documentation:
+
+```
+generated/interfaces/cli/{concept}/
+├── {concept}.command.ts   # Commander.js command tree with help text + examples
+└── {concept}.help.md      # Enrichment-driven CLI help documentation (if enrichment exists)
+```
+
+**{concept}.help.md** is generated only when enrichment data exists in the interface manifest. It uses the `cli-help` Renderer format with CLI variable vocabulary (`<source>`).
+
+#### Intro-Template Support
+
+CliTarget supports `intro-template` in annotations for customized help documentation introductions:
+
+```yaml
+annotations:
+  concept:
+    intro-template: >
+      Parse and validate $ARGUMENTS using the spec-parser command.
+```
+
+Variables are interpolated: `$ARGUMENTS` → `<source>` (CLI positional argument style).
+
+#### Concept-Overrides
+
+The CLI generator reads both `concepts` and `concept-overrides` keys from the interface manifest. The `concept-overrides` key is used by manifests that list concepts as file paths (e.g. devtools-style manifests) and supports command name overrides and positional argument mappings:
+
+```yaml
+concept-overrides:
+  SpecParser:
+    command: check          # Override default "parse" → "check"
+    positional:
+      source: specs         # Map "source" param to "specs" positional arg
+```
+
 #### CLI Argument Derivation Rules
 
 ```
@@ -1666,6 +1803,32 @@ concept McpTarget [M] {
   }
 }
 ```
+
+#### Output Structure
+
+Each concept produces MCP tool/resource definitions and optional enrichment-driven documentation:
+
+```
+generated/interfaces/mcp/{concept}/
+├── {concept}.tools.ts     # Exported MCP entries array with tool/resource/resource-template definitions
+└── {concept}.help.md      # Enrichment-driven MCP tool guide (if enrichment exists)
+```
+
+**{concept}.help.md** is generated only when enrichment data exists in the interface manifest. It uses the `mcp-help` Renderer format with MCP variable vocabulary (`{input}`).
+
+#### Intro-Template Support
+
+McpTarget supports `intro-template` in annotations for customized tool guide introductions:
+
+```yaml
+annotations:
+  concept:
+    intro-template: >
+      Manage $ARGUMENTS through the MCP tool interface. Provide {input}
+      as a structured JSON object matching the input schema.
+```
+
+Variables are interpolated: `$ARGUMENTS` → `{input}` (MCP input schema style).
 
 #### MCP Classification Rules
 
@@ -1772,13 +1935,24 @@ concept ClaudeSkillsTarget [K] {
 
 #### Output Structure
 
-Each concept produces two files:
+Each concept produces two files, plus optional companion files:
 
 ```
 generated/interfaces/claude-skills/{concept}/
-├── SKILL.md           # Markdown skill file with YAML frontmatter
-└── {concept}.commands.ts   # TypeScript command runner
+├── SKILL.md                  # Markdown skill file with YAML frontmatter
+├── {concept}.commands.ts     # TypeScript command runner
+├── references/               # Companion files (from companion-docs or tier=reference items)
+│   ├── sync-syntax.md
+│   └── projection-rules.md
+└── examples/                 # Example walkthroughs (from example-walkthroughs)
+    └── basic-workflow.md
 ```
+
+**Companion files** are emitted from two sources:
+1. `companion-docs` enrichment key — explicitly declared companion documents
+2. Items with `tier: reference` — automatically routed to separate files via `filterByTier()`
+
+The main SKILL.md links to companion files where they're emitted. Reference-tier items appear as links rather than inline content.
 
 **SKILL.md structure:**
 ```markdown
@@ -1789,27 +1963,35 @@ argument-hint: {argument template or per-action hints}
 allowed-tools: Read, Bash, Grep, Glob
 ---
 
-> **When to use:** {trigger description}
+# Create a New COPF Concept
+
+> **When to use:** {trigger description or intro-template with $ARGUMENTS interpolated}
 
 ## Design Principles
 
 - **Slug Immutability:** Once assigned, article slugs never change
 
-## Steps
+## Step-by-Step Process
 
 ### Step 1: Create the article
 {prose description}
+
+Read [Concept Design Guide](references/concept-design.md) for context.
 
 **Arguments:**
 - `--title` (required): Article title
 - `--body` (required): Article body
 
+**Purpose checklist:**
 - [ ] Provide title, description, body, and tags
 
 *Verify creation:*
 ```bash
 copf article list --limit 1
 \```
+
+#### Important Note
+{content-section with afterStep: 1 rendered here}
 
 ### Step 2: Tag it
 ...
@@ -1821,9 +2003,36 @@ copf article list --limit 1
 ...
 
 ## Related Skills
-- /create-concept
-- /create-sync
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept` | Design concepts that syncs connect |
+| `/create-sync` | Write syncs that connect concepts together |
 ```
+
+#### Key Structural Features
+
+| Feature | Annotation/Workflow Key | Behavior |
+|---------|----------------------|----------|
+| **Skill title** | `skill-title` (annotation) | Descriptive heading (e.g. "Create a New COPF Concept") instead of PascalCase concept name |
+| **Intro-template** | `intro-template` (annotation) | Customized introduction with `$ARGUMENTS` and `$CONCEPT` variable interpolation |
+| **Step references** | `step-references` (workflow) | Per-step inline reference links rendered as "Read [label](path) for context." |
+| **Checklist labels** | `checklist-labels` (workflow) | Named checklists per step (e.g. "Purpose checklist") instead of generic "Checklist" |
+| **Heading hierarchy** | (structural) | `## Step-by-Step Process` wrapper section with `### Step N` steps; content sections under steps use `####` |
+| **Companion docs** | `companion-docs` (annotation) | Separate files emitted alongside SKILL.md with links in the main document |
+| **Tier routing** | `tier` field on enrichment items | `inline` → main doc, `reference` → companion file, `summary` → compact link |
+
+#### Intro-Template Variable Interpolation
+
+```yaml
+annotations:
+  concept:
+    intro-template: >
+      Design a new concept named **$ARGUMENTS** following Jackson's
+      methodology. The $CONCEPT concept handles parsing and validation.
+```
+
+`$ARGUMENTS` is replaced with the concept's argument-template value. `$CONCEPT` is replaced with the concept name. Without an intro-template, the generator falls back to the manifest's purpose statement.
 
 #### Three Rendering Modes
 
@@ -2000,6 +2209,73 @@ concept PySdkTarget [S] {
 | `RustSdkTarget` | Crate name, Cargo.toml | `Result<T, E>` enums, async/tokio, builder pattern |
 | `JavaSdkTarget` | Maven coordinates, pom.xml | Sealed interfaces (17+), CompletableFuture, builder |
 | `SwiftSdkTarget` | Package.swift, SPM config | Result type, Codable, async/await |
+
+
+### 2.9 Shared Code Generation Utilities (codegen-utils)
+
+All target providers share a common utility module that consolidates inference heuristics, enrichment extraction, type mapping, and naming conventions. This is implementation infrastructure, not a concept — it has no state, no actions, no invariants.
+
+#### Enrichment Extraction
+
+**`getManifestEnrichment(manifestYaml, conceptName)`** — Merges workflow and annotation enrichment from the interface manifest into a single record. Workflow keys take precedence over annotation keys. Structural keys (`concept`, `steps`, `trigger-patterns`, `tool-permissions`, `argument-template`, `trigger-exclude`) are excluded from the merge:
+
+```typescript
+const enrichment = getManifestEnrichment(manifest, 'SpecParser');
+// Returns: { 'design-principles': [...], 'checklists': {...}, 'examples': [...], ... }
+```
+
+**`getEnrichmentContent(projection)`** — Extracts and parses the opaque `content` field from a projection into a typed record.
+
+#### Hierarchical Trait Extraction
+
+**`getHierarchicalTrait(manifestYaml, conceptName)`** — Extracts `@hierarchical` trait configuration from the manifest. Returns `null` if the concept has no hierarchical trait:
+
+```typescript
+const trait = getHierarchicalTrait(manifest, 'Category');
+// Returns: { relation: 'parentOf', labelField: 'name', maxDepth: 5, style: 'nested' }
+```
+
+**`inferHierarchicalRoutes(basePath)`** — Generates children, ancestors, and descendants routes for hierarchical concepts.
+
+#### Action Classification
+
+**`classifyAction(actionName)`** — Consolidates action classification heuristics into a single call. Returns CRUD role, intent (read/write), event-producing flag, event verb, and MCP type. Used by Grouping and by targets for inference.
+
+#### Concept Grouping
+
+**`buildConceptGroups(manifests, config)`** — Organizes concepts into named groups using 8 strategies (see §1.12).
+
+#### Type Mapping
+
+Cross-language type mapping functions: `typeToTypeScript()`, `typeToPython()`, `typeToGo()`, `typeToRust()`, `typeToJava()`, `typeToSwift()`, `typeToProtobuf()`, `typeToGraphQL()`, `typeToJsonSchema()`.
+
+
+### 2.10 Cross-Target Enrichment Rendering
+
+All four text-generating targets (REST, CLI, MCP, Claude Skills) follow the same enrichment rendering pattern. The target owns structural rendering (route handlers, command trees, tool definitions, frontmatter), while the Renderer owns content formatting. This separation means enrichment keys added to any target's manifest are automatically rendered without target-specific code changes.
+
+```
+┌──────────────────────┐     ┌──────────────┐     ┌──────────────────┐
+│ Interface Manifest   │────▶│  codegen-utils│────▶│  Renderer        │
+│ (workflows,          │     │  getManifest  │     │  renderContent() │
+│  annotations)        │     │  Enrichment() │     │  (format-aware)  │
+└──────────────────────┘     └──────────────┘     └────────┬─────────┘
+                                                           │
+                              ┌─────────────────────────────┤
+                              ▼              ▼              ▼              ▼
+                        ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+                        │ skill-md │  │ cli-help │  │ mcp-help │  │ rest-help│
+                        │ SKILL.md │  │ help.md  │  │ help.md  │  │api-docs.md│
+                        └──────────┘  └──────────┘  └──────────┘  └──────────┘
+```
+
+Each target:
+1. Calls `getManifestEnrichment()` to extract merged workflow+annotation enrichment
+2. Calls `renderContent(enrichment, format)` with its target-specific format
+3. Appends the rendered output to its documentation file
+4. Only emits the documentation file if enrichment data exists
+
+This design ensures that adding a new enrichment key to a manifest (e.g. `migration-guide`) and registering a handler for it in the Renderer causes all four targets to render it automatically — no per-target code changes needed.
 
 ---
 
@@ -2910,14 +3186,15 @@ copf interface generate
 # ├─ Projection: 3 concepts, 12 actions, 8 traits
 # ├─ Enrichment: 3 workflows, 9 annotations, 12 render handlers
 # ├─ Targets:
-# │  ├─ REST: 12 routes (4 inferred, 8 annotated)
-# │  ├─ CLI: 12 commands under 3 groups
-# │  ├─ MCP: 8 tools, 3 resources, 1 resource template
-# │  └─ Claude Skills: 3 skills (3 workflow-enriched, 0 flat)
+# │  ├─ REST: 12 routes (4 inferred, 8 annotated) + 3 api-docs.md
+# │  ├─ CLI: 12 commands under 3 groups + 3 help.md
+# │  ├─ MCP: 8 tools, 3 resources, 1 resource template + 3 help.md
+# │  └─ Claude Skills: 3 skills (3 workflow-enriched, 0 flat) + 5 companion files
 # ├─ SDK: TypeScript (@myapp/client)
 # ├─ Specs: OpenAPI 3.1
 # ├─ Middleware: auth(bearer), rateLimit(100/60s), validated
-# └─ Estimated: 53 files
+# ├─ Enrichment docs: 12 files across 4 targets (rest-help, cli-help, mcp-help, skill-md)
+# └─ Estimated: 65 files
 #
 # Pre-generation validation:
 #   ✅ All annotations resolve
@@ -2942,17 +3219,20 @@ copf interface generate
 7. `Generator/generate` dispatches to Target, Sdk, and Spec coordination concepts
 8. Target routing: `Target/generate(targetType: "rest")` → `RestTarget/generate` (integration sync)
 9. Target routing: `Target/generate(targetType: "claude-skills")` → `ClaudeSkillsTarget/generate`
-10. `RestTarget/generate` produces route handlers + types per concept
-11. `ClaudeSkillsTarget/generate` produces SKILL.md + .commands.ts with enrichment rendering
-12. `Middleware/resolve(traits: [auth, rateLimit, validated], target: "rest")` → ordered middleware chain
-13. `Middleware/inject` wraps route handlers in middleware
-14. `Emitter/write` writes files (content-addressed — skips unchanged)
-15. `Emitter/format` runs prettier on written TypeScript files
-16. `Surface/compose` merges per-concept REST routes into unified router
-17. `Emitter/write` writes composed entrypoint (router.ts)
-18. `Emitter/clean` removes orphaned files from previous runs
-19. Parallel: same flow for CLI, MCP, TypeScript SDK, OpenAPI spec
-20. `Spec/validate` runs OpenAPI linter on generated spec document
+10. `RestTarget/generate` produces route handlers + types + api-docs.md (enrichment-driven) per concept
+11. `CliTarget/generate` produces command trees + help.md (enrichment-driven) per concept
+12. `McpTarget/generate` produces tool/resource definitions + help.md (enrichment-driven) per concept
+13. `ClaudeSkillsTarget/generate` produces SKILL.md + .commands.ts + companion files with enrichment rendering
+14. Each text target calls `getManifestEnrichment()` → `renderContent(enrichment, format)` for documentation
+15. `Middleware/resolve(traits: [auth, rateLimit, validated], target: "rest")` → ordered middleware chain
+16. `Middleware/inject` wraps route handlers in middleware
+17. `Emitter/write` writes files (content-addressed — skips unchanged)
+18. `Emitter/format` runs prettier on written TypeScript files
+19. `Surface/compose` merges per-concept REST routes into unified router
+20. `Emitter/write` writes composed entrypoint (router.ts)
+21. `Emitter/clean` removes orphaned files from previous runs
+22. Parallel: same flow for all configured targets, SDKs, spec formats
+23. `Spec/validate` runs OpenAPI linter on generated spec document
 
 ### Concept count
 
@@ -2986,6 +3266,20 @@ runtimes:
 ```
 
 The deploy kit deploys what the interface kit generates. The interface kit generates what concept specs declare. Concept specs are the single source of truth.
+
+### Parity Testing
+
+The interface kit includes comprehensive parity tests ensuring generated output matches the quality and structure of handmade equivalents:
+
+| Test Suite | Tests | Coverage |
+|-----------|-------|---------|
+| **CLI generation regression** | 111 | Per-command: subcommand names, positional args, required options, optional flags, --json flag, parameter types. Cross-cutting: concept-overrides applied, flag parity. |
+| **Claude Skills generation parity** | 74 | Manifest → generated SKILL.md: frontmatter field coverage, workflow step titles/prose/checklists, annotation examples/references, command dispatch, per-concept structural checks, cross-target consistency. |
+| **Handmade-vs-generated skills convention** | 53 | Generated skills follow handmade skill conventions: frontmatter fields (name, description, allowed-tools, argument-hint), markdown structure (H1, description paragraph, numbered steps), content quality (no truncated descriptions, valid tools), checklist/code block formatting. |
+| **Behavioral parity (handler vs kernel)** | 32 | Direct handler calls produce identical results to kernel dispatch. Tests SpecParser, SchemaGen, and SyncCompiler across success/error/edge cases, full pipeline, storage side effects, and variant field consistency. |
+| **Total** | **270** | |
+
+These tests guard against convention drift — if a handmade skill is updated, the corresponding generated skill must match. The test infrastructure compares structural properties (heading levels, frontmatter keys, step counts) rather than exact string matching, allowing generated content to evolve while maintaining structural parity.
 
 ---
 
@@ -3073,6 +3367,39 @@ Claude Code skills and CLIs serve different audiences and have different constra
 - **ClaudeSkillsTarget** produces SKILL.md files with YAML frontmatter, guided workflows, and design principles. Its audience is an LLM (Claude) interpreting natural-language instructions.
 
 The output formats are fundamentally different: CLIs need argument parsing, flag derivation, and exit code mapping. Skills need trigger descriptions, step-by-step prose, checklists, and anti-patterns. Conflating them would violate the singularity principle.
+
+
+### Why enrichment-driven documentation generation across all text targets
+
+All four text-generating targets (REST, CLI, MCP, Claude Skills) emit enrichment-driven documentation files (api-docs.md, help.md, SKILL.md) using the same Renderer infrastructure. This was a deliberate design choice over target-specific rendering:
+
+1. **Single rendering codebase.** Adding a new enrichment key (e.g. `migration-guide`) with a Renderer handler causes all four targets to render it automatically. Without this, each target would need per-key rendering code — 4x the maintenance surface.
+2. **Format-specific rendering via handler overrides.** The same `related-workflows` key renders as a table in skill-md, a slash-list in cli-help, and an inline-list in mcp-help. The Renderer's per-format handler registry handles this without conditional logic in targets.
+3. **Documentation only when enrichment exists.** Targets only emit documentation files when the manifest provides enrichment data. A concept with no workflows or annotations gets no help.md — no empty file clutter.
+
+The trade-off is an additional dependency: targets now depend on the Renderer concept. This is acceptable because enrichment rendering is Renderer's sole purpose, and targets already depend on Annotation and Workflow for structural enrichment data.
+
+
+### Why intro-template variable interpolation
+
+Handmade skills include contextual introductions like "Write a sync rule named **$ARGUMENTS** that connects concepts through completion chaining." Generated skills previously used the manifest's purpose statement verbatim, which reads like documentation rather than instruction.
+
+The `intro-template` annotation with `$ARGUMENTS`/`$CONCEPT` variable interpolation bridges this gap:
+
+1. **Each target provides its own variable vocabulary.** CLI uses `<source>` (positional arg style), MCP uses `{input}` (JSON schema style), REST uses `{basePath}/{id}` (path parameter style), Claude Skills uses the argument-template value. The shared `interpolateVars()` function handles substitution.
+2. **Falls back gracefully.** Without an intro-template, targets use the manifest purpose — the same behavior as before the feature existed. No manifest changes required for existing concepts.
+3. **One template, multiple targets.** The same intro-template produces target-appropriate introductions by interpolating target-specific variable values.
+
+
+### Why companion file emission via tier routing
+
+Handmade Claude Skills include 6–10 supporting files per skill (references, examples, templates). Generated skills previously emitted only SKILL.md + .commands.ts. Tier routing bridges this gap:
+
+1. **`tier: reference` items** in enrichment data are automatically emitted as companion files alongside the main document. The main document includes links to these files.
+2. **`companion-docs` enrichment key** allows explicit declaration of companion documents with path, content, and categorization.
+3. **`filterByTier()`** partitions enrichment items into inline (main document), reference (companion file), and summary (compact link) tiers.
+
+This design means the manifest controls progressive disclosure — what goes inline vs. what gets a separate file — without code changes in the generator.
 
 
 ### What remains pre-conceptual
