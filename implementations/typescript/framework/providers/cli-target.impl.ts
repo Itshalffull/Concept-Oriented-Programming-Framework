@@ -53,15 +53,19 @@ function optionValueTag(param: ActionParamSchema): string {
   return `<${param.name}>`;
 }
 
-/** Get CLI config for a concept from manifestYaml. */
+/** Get CLI config for a concept from manifestYaml.
+ *  Checks both 'concepts' (conduit-style: config objects keyed by name)
+ *  and 'concept-overrides' (devtools-style: separate overrides key). */
 function getCliConfig(
   manifestYaml: Record<string, unknown> | undefined,
   conceptName: string,
 ): CliConceptConfig | undefined {
   if (!manifestYaml) return undefined;
   const concepts = manifestYaml.concepts as Record<string, Record<string, unknown>> | undefined;
-  if (!concepts?.[conceptName]) return undefined;
-  return concepts[conceptName].cli as CliConceptConfig | undefined;
+  const conceptOverrides = manifestYaml['concept-overrides'] as Record<string, Record<string, unknown>> | undefined;
+  const conceptConfig = concepts?.[conceptName] || conceptOverrides?.[conceptName];
+  if (!conceptConfig) return undefined;
+  return conceptConfig.cli as CliConceptConfig | undefined;
 }
 
 // --- Hierarchical Support ---

@@ -450,9 +450,14 @@ function getConceptOverrides(
   conceptName: string,
   target: string,
 ): Record<string, unknown> {
+  // Check both 'concepts' (conduit-style: concepts as config objects)
+  // and 'concept-overrides' (devtools-style: concepts as file paths
+  // with overrides in a separate key).
   const concepts = manifestYaml?.concepts as Record<string, Record<string, unknown>> | undefined;
-  if (!concepts?.[conceptName]) return {};
-  const conceptConfig = concepts[conceptName];
+  const conceptOverrides = manifestYaml?.['concept-overrides'] as Record<string, Record<string, unknown>> | undefined;
+
+  const conceptConfig = concepts?.[conceptName] || conceptOverrides?.[conceptName];
+  if (!conceptConfig) return {};
   const targetConfig = conceptConfig[target] as Record<string, unknown> | undefined;
   return targetConfig?.actions as Record<string, unknown> || {};
 }
