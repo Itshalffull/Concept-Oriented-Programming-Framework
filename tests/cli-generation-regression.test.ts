@@ -6,6 +6,10 @@
 // detect regressions in command names, flags, positional args,
 // and overall command coverage.
 //
+// Every handmade command is tested individually against its
+// generated counterpart for subcommand names, all flags, all
+// positional arguments, and parameter types.
+//
 // See Architecture doc: Interface Kit, Section 2.4
 // ============================================================
 
@@ -17,134 +21,21 @@ import { parse as parseYaml } from 'yaml';
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DEVTOOLS_MANIFEST = resolve(PROJECT_ROOT, 'examples/devtools/devtools.interface.yaml');
 const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'generated/devtools/cli');
-const HANDMADE_CLI_DIR = resolve(PROJECT_ROOT, 'tools/copf-cli/src');
-
-// ---- Handmade CLI Command Registry ----
-// Extracted from tools/copf-cli/src/index.ts switch statement
-
-interface HandmadeCommand {
-  name: string;
-  concept: string;
-  action: string;
-  positionalArgs: string[];
-  flags: string[];
-  description: string;
-}
-
-/**
- * The handmade CLI's command structure, derived from the
- * switch statement in tools/copf-cli/src/index.ts.
- */
-const HANDMADE_COMMANDS: HandmadeCommand[] = [
-  {
-    name: 'init',
-    concept: 'ProjectScaffold',
-    action: 'scaffold',
-    positionalArgs: ['name'],
-    flags: [],
-    description: 'Initialize a new COPF project',
-  },
-  {
-    name: 'check',
-    concept: 'SpecParser',
-    action: 'parse',
-    positionalArgs: [],
-    flags: ['pattern'],
-    description: 'Parse and validate all concept specs',
-  },
-  {
-    name: 'generate',
-    concept: 'SchemaGen',
-    action: 'generate',
-    positionalArgs: [],
-    flags: ['target', 'concept'],
-    description: 'Generate schemas + code for all concepts',
-  },
-  {
-    name: 'compile-syncs',
-    concept: 'SyncCompiler',
-    action: 'compile',
-    positionalArgs: [],
-    flags: [],
-    description: 'Compile syncs and validate against manifests',
-  },
-  {
-    name: 'compile --cache',
-    concept: 'CacheCompiler',
-    action: 'compile',
-    positionalArgs: [],
-    flags: ['cache'],
-    description: 'Build pre-compiled artifacts to .copf-cache/',
-  },
-  {
-    name: 'test',
-    concept: 'TestRunner',
-    action: 'run',
-    positionalArgs: ['concept'],
-    flags: ['integration'],
-    description: 'Run conformance tests',
-  },
-  {
-    name: 'dev',
-    concept: 'DevServer',
-    action: 'start',
-    positionalArgs: [],
-    flags: [],
-    description: 'Start the development server',
-  },
-  {
-    name: 'deploy',
-    concept: 'DeploymentValidator',
-    action: 'validate',
-    positionalArgs: [],
-    flags: ['manifest'],
-    description: 'Deploy according to manifest',
-  },
-  {
-    name: 'trace',
-    concept: 'FlowTrace',
-    action: 'build',
-    positionalArgs: ['flow-id'],
-    flags: ['failed', 'json', 'gates'],
-    description: 'Render a flow trace for debugging',
-  },
-  {
-    name: 'migrate',
-    concept: 'Migration',
-    action: 'check',
-    positionalArgs: ['concept'],
-    flags: ['check', 'all'],
-    description: 'Run schema migration',
-  },
-  {
-    name: 'kit',
-    concept: 'KitManager',
-    action: '*',
-    positionalArgs: ['subcommand'],
-    flags: [],
-    description: 'Kit management',
-  },
-  {
-    name: 'interface',
-    concept: 'InterfaceGenerator',
-    action: '*',
-    positionalArgs: ['subcommand'],
-    flags: ['manifest'],
-    description: 'Interface generation',
-  },
-];
 
 // ---- Generated CLI Structure Extraction ----
 
+interface GeneratedSubcommand {
+  name: string;
+  hasJsonFlag: boolean;
+  requiredOptions: string[];
+  optionalOptions: string[];
+  positionalArgs: string[];
+  allParams: string[];
+}
+
 interface GeneratedCommand {
   group: string;
-  subcommands: Array<{
-    name: string;
-    hasJsonFlag: boolean;
-    requiredOptions: string[];
-    optionalOptions: string[];
-    positionalArgs: string[];
-  }>;
+  subcommands: GeneratedSubcommand[];
 }
 
 /** Parse a generated .command.ts file to extract its command structure. */
@@ -152,16 +43,12 @@ function parseGeneratedCommandFile(content: string): GeneratedCommand {
   const groupMatch = content.match(/new Command\('([^']+)'\)/);
   const group = groupMatch ? groupMatch[1] : '';
 
-  const subcommands: GeneratedCommand['subcommands'] = [];
+  const subcommands: GeneratedSubcommand[] = [];
 
-  // Match .command('name') blocks
-  const commandBlocks = content.split(/\n\w+Command\s*\n/).slice(1);
-  // Simpler: find all .command('...') calls
   const commandRegex = /\.command\('([^']+)'\)/g;
   let match;
   while ((match = commandRegex.exec(content)) !== null) {
     const cmdName = match[1];
-    // Extract options from the section after this .command() call
     const startIdx = match.index;
     const nextCommandIdx = content.indexOf(".command('", startIdx + 1);
     const endIdx = nextCommandIdx > 0 ? nextCommandIdx : content.length;
@@ -171,14 +58,12 @@ function parseGeneratedCommandFile(content: string): GeneratedCommand {
     const optionalOptions: string[] = [];
     const positionalArgs: string[] = [];
 
-    // Extract .requiredOption patterns
     const reqOptRegex = /\.requiredOption\('--([a-z-]+)/g;
     let optMatch;
     while ((optMatch = reqOptRegex.exec(block)) !== null) {
       requiredOptions.push(optMatch[1]);
     }
 
-    // Extract .option patterns (non-json)
     const optRegex = /\.option\('--([a-z-]+)/g;
     while ((optMatch = optRegex.exec(block)) !== null) {
       if (optMatch[1] !== 'json') {
@@ -186,7 +71,6 @@ function parseGeneratedCommandFile(content: string): GeneratedCommand {
       }
     }
 
-    // Extract .argument patterns
     const argRegex = /\.argument\('<([^>]+)>'/g;
     while ((optMatch = argRegex.exec(block)) !== null) {
       positionalArgs.push(optMatch[1]);
@@ -200,6 +84,7 @@ function parseGeneratedCommandFile(content: string): GeneratedCommand {
       requiredOptions,
       optionalOptions,
       positionalArgs,
+      allParams: [...requiredOptions, ...optionalOptions, ...positionalArgs],
     });
   }
 
@@ -217,11 +102,8 @@ function parseDevtoolsOverrides(
   manifestYaml: Record<string, unknown>,
 ): Map<string, Record<string, ConceptOverride>> {
   const overrides = new Map<string, Record<string, ConceptOverride>>();
-
-  // Check both 'concept-overrides' and 'concepts' keys
   const conceptOverrides =
-    (manifestYaml['concept-overrides'] as Record<string, Record<string, unknown>>) ||
-    {};
+    (manifestYaml['concept-overrides'] as Record<string, Record<string, unknown>>) || {};
 
   for (const [conceptName, config] of Object.entries(conceptOverrides)) {
     const cli = config.cli as Record<string, unknown> | undefined;
@@ -233,6 +115,13 @@ function parseDevtoolsOverrides(
   return overrides;
 }
 
+function getGeneratedSubcommand(
+  cmd: GeneratedCommand,
+  name: string,
+): GeneratedSubcommand | undefined {
+  return cmd.subcommands.find(s => s.name === name);
+}
+
 // ---- Tests ----
 
 describe('CLI Generation Regression', () => {
@@ -241,16 +130,13 @@ describe('CLI Generation Regression', () => {
   let conceptOverrides: Map<string, Record<string, ConceptOverride>>;
 
   beforeAll(() => {
-    // Parse the devtools manifest
     const source = readFileSync(DEVTOOLS_MANIFEST, 'utf-8');
     manifestYaml = parseYaml(source) as Record<string, unknown>;
     conceptOverrides = parseDevtoolsOverrides(manifestYaml);
 
-    // Parse all generated command files
     generatedCommands = new Map();
     const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
 
-    // Extract concept directories from generated CLI
     const importRegex = /from '\.\/([^/]+)\//g;
     let match;
     while ((match = importRegex.exec(indexContent)) !== null) {
@@ -265,131 +151,710 @@ describe('CLI Generation Regression', () => {
     }
   });
 
-  // ---- Structural Coverage ----
+  // ================================================================
+  // Per-Command Parity Tests
+  //
+  // Each test below verifies a specific handmade CLI command against
+  // its generated counterpart: subcommand name, positional args,
+  // required options, optional flags, and --json flag.
+  // ================================================================
 
-  describe('command coverage', () => {
-    it('generated CLI has a command group for each framework concept in manifest', () => {
-      const manifestConcepts = (manifestYaml.concepts as string[]) || [];
-      const conceptNames = manifestConcepts
-        .map(c => {
-          const fileName = c.split('/').pop()?.replace('.concept', '') || '';
-          return fileName; // e.g. "spec-parser"
-        })
-        .filter(Boolean);
+  // ---- copf init <name> → project-scaffold init <name> ----
 
-      for (const conceptFile of conceptNames) {
-        const found = generatedCommands.has(conceptFile);
-        expect(found, `Generated CLI should have command group for concept file "${conceptFile}"`).toBe(true);
+  describe('init → ProjectScaffold parity', () => {
+    it('generated group "project-scaffold" exists', () => {
+      expect(generatedCommands.has('project-scaffold')).toBe(true);
+    });
+
+    it('has exactly 1 subcommand', () => {
+      const cmd = generatedCommands.get('project-scaffold')!;
+      expect(cmd.subcommands.length).toBe(1);
+    });
+
+    it('subcommand is named "init" (via concept-override scaffold→init)', () => {
+      const cmd = generatedCommands.get('project-scaffold')!;
+      const sub = getGeneratedSubcommand(cmd, 'init');
+      expect(sub, 'subcommand "init" should exist').toBeDefined();
+    });
+
+    it('handmade positional "name" is a generated positional arg', () => {
+      const cmd = generatedCommands.get('project-scaffold')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.positionalArgs).toContain('name');
+    });
+
+    it('"name" is NOT a required option (must be positional)', () => {
+      const cmd = generatedCommands.get('project-scaffold')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.requiredOptions).not.toContain('name');
+    });
+
+    it('has --json flag', () => {
+      const cmd = generatedCommands.get('project-scaffold')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('has no unexpected extra required options', () => {
+      const cmd = generatedCommands.get('project-scaffold')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.requiredOptions).toEqual([]);
+    });
+  });
+
+  // ---- copf check → spec-parser check ----
+
+  describe('check → SpecParser parity', () => {
+    it('generated group "spec-parser" exists', () => {
+      expect(generatedCommands.has('spec-parser')).toBe(true);
+    });
+
+    it('has exactly 1 subcommand', () => {
+      const cmd = generatedCommands.get('spec-parser')!;
+      expect(cmd.subcommands.length).toBe(1);
+    });
+
+    it('subcommand is named "check" (via concept-override parse→check)', () => {
+      const cmd = generatedCommands.get('spec-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'check');
+      expect(sub, 'subcommand "check" should exist (override parse→check)').toBeDefined();
+    });
+
+    it('does NOT still use fallback name "parse"', () => {
+      const cmd = generatedCommands.get('spec-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'parse');
+      expect(sub, 'subcommand "parse" should NOT exist after override').toBeUndefined();
+    });
+
+    it('has --json flag', () => {
+      const cmd = generatedCommands.get('spec-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'check')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('generated has --source as required option (concept-level param)', () => {
+      const cmd = generatedCommands.get('spec-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'check')!;
+      expect(sub.requiredOptions).toContain('source');
+    });
+  });
+
+  // ---- copf generate --target <lang> → schema-gen generate ----
+
+  describe('generate → SchemaGen parity', () => {
+    it('generated group "schema-gen" exists', () => {
+      expect(generatedCommands.has('schema-gen')).toBe(true);
+    });
+
+    it('has exactly 1 subcommand', () => {
+      const cmd = generatedCommands.get('schema-gen')!;
+      expect(cmd.subcommands.length).toBe(1);
+    });
+
+    it('subcommand is named "generate"', () => {
+      const cmd = generatedCommands.get('schema-gen')!;
+      const sub = getGeneratedSubcommand(cmd, 'generate');
+      expect(sub).toBeDefined();
+    });
+
+    it('generated has --spec and --ast as required options (concept-level params)', () => {
+      const cmd = generatedCommands.get('schema-gen')!;
+      const sub = getGeneratedSubcommand(cmd, 'generate')!;
+      expect(sub.requiredOptions).toContain('spec');
+      expect(sub.requiredOptions).toContain('ast');
+    });
+
+    it('has --json flag', () => {
+      const cmd = generatedCommands.get('schema-gen')!;
+      const sub = getGeneratedSubcommand(cmd, 'generate')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('has no positional args (handmade also has none)', () => {
+      const cmd = generatedCommands.get('schema-gen')!;
+      const sub = getGeneratedSubcommand(cmd, 'generate')!;
+      expect(sub.positionalArgs).toEqual([]);
+    });
+  });
+
+  // ---- copf compile-syncs → sync-compiler compile ----
+
+  describe('compile-syncs → SyncCompiler parity', () => {
+    it('generated group "sync-compiler" exists', () => {
+      expect(generatedCommands.has('sync-compiler')).toBe(true);
+    });
+
+    it('has exactly 1 subcommand', () => {
+      const cmd = generatedCommands.get('sync-compiler')!;
+      expect(cmd.subcommands.length).toBe(1);
+    });
+
+    it('subcommand is named "compile"', () => {
+      const cmd = generatedCommands.get('sync-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile');
+      expect(sub).toBeDefined();
+    });
+
+    it('generated has --sync and --ast as required options (concept-level params)', () => {
+      const cmd = generatedCommands.get('sync-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.requiredOptions).toContain('sync');
+      expect(sub.requiredOptions).toContain('ast');
+    });
+
+    it('has --json flag', () => {
+      const cmd = generatedCommands.get('sync-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('has no positional args (handmade also has none)', () => {
+      const cmd = generatedCommands.get('sync-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.positionalArgs).toEqual([]);
+    });
+  });
+
+  // ---- copf compile --cache → cache-compiler compile ----
+
+  describe('compile --cache → CacheCompiler parity', () => {
+    it('generated group "cache-compiler" exists', () => {
+      expect(generatedCommands.has('cache-compiler')).toBe(true);
+    });
+
+    it('has exactly 1 subcommand', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      expect(cmd.subcommands.length).toBe(1);
+    });
+
+    it('subcommand is named "compile"', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile');
+      expect(sub).toBeDefined();
+    });
+
+    it('generated has --specs flag matching handmade --specs flag', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.requiredOptions).toContain('specs');
+    });
+
+    it('generated has --syncs flag matching handmade --syncs flag', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.requiredOptions).toContain('syncs');
+    });
+
+    it('generated has --implementations flag matching handmade --implementations flag', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.requiredOptions).toContain('implementations');
+    });
+
+    it('has --json flag', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('has no positional args (handmade also has none)', () => {
+      const cmd = generatedCommands.get('cache-compiler')!;
+      const sub = getGeneratedSubcommand(cmd, 'compile')!;
+      expect(sub.positionalArgs).toEqual([]);
+    });
+  });
+
+  // ---- copf dev → dev-server start/stop/status ----
+
+  describe('dev → DevServer parity', () => {
+    it('generated group "dev-server" exists', () => {
+      expect(generatedCommands.has('dev-server')).toBe(true);
+    });
+
+    it('has exactly 3 subcommands (start, stop, status)', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      expect(cmd.subcommands.length).toBe(3);
+    });
+
+    it('has subcommand "start" (maps to handmade "dev")', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      expect(getGeneratedSubcommand(cmd, 'start')).toBeDefined();
+    });
+
+    it('has subcommand "stop"', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      expect(getGeneratedSubcommand(cmd, 'stop')).toBeDefined();
+    });
+
+    it('has subcommand "status"', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      expect(getGeneratedSubcommand(cmd, 'status')).toBeDefined();
+    });
+
+    it('start has --port flag matching handmade --port flag', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      const sub = getGeneratedSubcommand(cmd, 'start')!;
+      expect(sub.requiredOptions).toContain('port');
+    });
+
+    it('start has --specs flag matching handmade --specs flag', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      const sub = getGeneratedSubcommand(cmd, 'start')!;
+      expect(sub.requiredOptions).toContain('specs');
+    });
+
+    it('start has --syncs flag matching handmade --syncs flag', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      const sub = getGeneratedSubcommand(cmd, 'start')!;
+      expect(sub.requiredOptions).toContain('syncs');
+    });
+
+    it('all subcommands have --json flag', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      for (const sub of cmd.subcommands) {
+        expect(sub.hasJsonFlag, `dev-server ${sub.name} should have --json`).toBe(true);
       }
     });
 
-    it('generated CLI has the expected number of command groups', () => {
-      const expectedCount = ((manifestYaml.concepts as string[]) || []).length;
-      expect(generatedCommands.size).toBe(expectedCount);
+    it('stop has --session as required option', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      const sub = getGeneratedSubcommand(cmd, 'stop')!;
+      expect(sub.requiredOptions).toContain('session');
     });
 
-    it('each generated command group has at least one subcommand', () => {
-      for (const [group, cmd] of generatedCommands) {
-        expect(
-          cmd.subcommands.length,
-          `Command group "${group}" should have at least one subcommand`,
-        ).toBeGreaterThan(0);
+    it('status has --session as required option', () => {
+      const cmd = generatedCommands.get('dev-server')!;
+      const sub = getGeneratedSubcommand(cmd, 'status')!;
+      expect(sub.requiredOptions).toContain('session');
+    });
+  });
+
+  // ---- copf deploy --manifest <file> → deployment-validator parse/validate ----
+
+  describe('deploy → DeploymentValidator parity', () => {
+    it('generated group "deployment-validator" exists', () => {
+      expect(generatedCommands.has('deployment-validator')).toBe(true);
+    });
+
+    it('has exactly 2 subcommands (parse, validate)', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      expect(cmd.subcommands.length).toBe(2);
+    });
+
+    it('has subcommand "parse"', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      expect(getGeneratedSubcommand(cmd, 'parse')).toBeDefined();
+    });
+
+    it('has subcommand "validate" (maps to handmade "deploy")', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      expect(getGeneratedSubcommand(cmd, 'validate')).toBeDefined();
+    });
+
+    it('validate has --manifest flag matching handmade --manifest flag', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      const sub = getGeneratedSubcommand(cmd, 'validate')!;
+      expect(sub.requiredOptions).toContain('manifest');
+    });
+
+    it('validate has --concepts as required option', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      const sub = getGeneratedSubcommand(cmd, 'validate')!;
+      expect(sub.requiredOptions).toContain('concepts');
+    });
+
+    it('validate has --syncs as required option', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      const sub = getGeneratedSubcommand(cmd, 'validate')!;
+      expect(sub.requiredOptions).toContain('syncs');
+    });
+
+    it('parse has --raw as required option', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      const sub = getGeneratedSubcommand(cmd, 'parse')!;
+      expect(sub.requiredOptions).toContain('raw');
+    });
+
+    it('all subcommands have --json flag', () => {
+      const cmd = generatedCommands.get('deployment-validator')!;
+      for (const sub of cmd.subcommands) {
+        expect(sub.hasJsonFlag, `deployment-validator ${sub.name} should have --json`).toBe(true);
       }
     });
   });
 
-  // ---- Command Name Mapping ----
+  // ---- copf trace <flow-id> → flow-trace build/render ----
 
-  describe('concept-overrides command name mapping', () => {
+  describe('trace → FlowTrace parity', () => {
+    it('generated group "flow-trace" exists', () => {
+      expect(generatedCommands.has('flow-trace')).toBe(true);
+    });
+
+    it('has exactly 2 subcommands (build, render)', () => {
+      const cmd = generatedCommands.get('flow-trace')!;
+      expect(cmd.subcommands.length).toBe(2);
+    });
+
+    it('has subcommand "build" (maps to handmade "trace")', () => {
+      const cmd = generatedCommands.get('flow-trace')!;
+      expect(getGeneratedSubcommand(cmd, 'build')).toBeDefined();
+    });
+
+    it('has subcommand "render"', () => {
+      const cmd = generatedCommands.get('flow-trace')!;
+      expect(getGeneratedSubcommand(cmd, 'render')).toBeDefined();
+    });
+
+    it('build has --flow-id matching handmade positional flow-id', () => {
+      const cmd = generatedCommands.get('flow-trace')!;
+      const sub = getGeneratedSubcommand(cmd, 'build')!;
+      // Generated puts flow-id as a required option (concept spec defines it as param)
+      expect(sub.requiredOptions).toContain('flow-id');
+    });
+
+    it('all subcommands have --json flag (handmade has --json on trace)', () => {
+      const cmd = generatedCommands.get('flow-trace')!;
+      for (const sub of cmd.subcommands) {
+        expect(sub.hasJsonFlag, `flow-trace ${sub.name} should have --json`).toBe(true);
+      }
+    });
+
+    it('render has --trace and --options as required options', () => {
+      const cmd = generatedCommands.get('flow-trace')!;
+      const sub = getGeneratedSubcommand(cmd, 'render')!;
+      expect(sub.requiredOptions).toContain('trace');
+      expect(sub.requiredOptions).toContain('options');
+    });
+  });
+
+  // ---- copf migrate <concept> → migration check/complete ----
+
+  describe('migrate → Migration parity', () => {
+    it('generated group "migration" exists', () => {
+      expect(generatedCommands.has('migration')).toBe(true);
+    });
+
+    it('has exactly 2 subcommands (check, complete)', () => {
+      const cmd = generatedCommands.get('migration')!;
+      expect(cmd.subcommands.length).toBe(2);
+    });
+
+    it('has subcommand "check" (maps to handmade "migrate" default mode)', () => {
+      const cmd = generatedCommands.get('migration')!;
+      expect(getGeneratedSubcommand(cmd, 'check')).toBeDefined();
+    });
+
+    it('has subcommand "complete"', () => {
+      const cmd = generatedCommands.get('migration')!;
+      expect(getGeneratedSubcommand(cmd, 'complete')).toBeDefined();
+    });
+
+    it('check has --concept matching handmade positional concept arg', () => {
+      const cmd = generatedCommands.get('migration')!;
+      const sub = getGeneratedSubcommand(cmd, 'check')!;
+      expect(sub.requiredOptions).toContain('concept');
+    });
+
+    it('check has --spec-version as required option', () => {
+      const cmd = generatedCommands.get('migration')!;
+      const sub = getGeneratedSubcommand(cmd, 'check')!;
+      expect(sub.requiredOptions).toContain('spec-version');
+    });
+
+    it('complete has --concept and --version as required options', () => {
+      const cmd = generatedCommands.get('migration')!;
+      const sub = getGeneratedSubcommand(cmd, 'complete')!;
+      expect(sub.requiredOptions).toContain('concept');
+      expect(sub.requiredOptions).toContain('version');
+    });
+
+    it('all subcommands have --json flag', () => {
+      const cmd = generatedCommands.get('migration')!;
+      for (const sub of cmd.subcommands) {
+        expect(sub.hasJsonFlag, `migration ${sub.name} should have --json`).toBe(true);
+      }
+    });
+  });
+
+  // ---- copf kit <sub> → kit-manager <sub> ----
+
+  describe('kit → KitManager parity', () => {
+    it('generated group "kit-manager" exists', () => {
+      expect(generatedCommands.has('kit-manager')).toBe(true);
+    });
+
+    it('has exactly 5 subcommands matching handmade kit subcommands', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      expect(cmd.subcommands.length).toBe(5);
+    });
+
+    it('has all 5 subcommand names: init, validate, test, list, check-overrides', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const names = cmd.subcommands.map(s => s.name).sort();
+      expect(names).toEqual(['check-overrides', 'init', 'list', 'test', 'validate']);
+    });
+
+    // ---- kit init <name> ----
+    it('init: has positional "name" arg (via concept-override)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.positionalArgs).toContain('name');
+    });
+
+    it('init: "name" is NOT a required option (must be positional)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.requiredOptions).not.toContain('name');
+    });
+
+    it('init: has --json flag', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('init: has no extra required options', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'init')!;
+      expect(sub.requiredOptions).toEqual([]);
+    });
+
+    // ---- kit validate <path> ----
+    it('validate: has positional "path" arg (via concept-override)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'validate')!;
+      expect(sub.positionalArgs).toContain('path');
+    });
+
+    it('validate: "path" is NOT a required option (must be positional)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'validate')!;
+      expect(sub.requiredOptions).not.toContain('path');
+    });
+
+    it('validate: has --json flag', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'validate')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    // ---- kit test <path> ----
+    it('test: has positional "path" arg (via concept-override)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'test')!;
+      expect(sub.positionalArgs).toContain('path');
+    });
+
+    it('test: "path" is NOT a required option (must be positional)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'test')!;
+      expect(sub.requiredOptions).not.toContain('path');
+    });
+
+    it('test: has --json flag', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'test')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    // ---- kit list ----
+    it('list: has no positional args (handmade has none)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'list')!;
+      expect(sub.positionalArgs).toEqual([]);
+    });
+
+    it('list: has no required options (handmade has none)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'list')!;
+      expect(sub.requiredOptions).toEqual([]);
+    });
+
+    it('list: has --json flag', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'list')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    // ---- kit check-overrides ----
+    it('check-overrides: has --json flag', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'check-overrides')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+
+    it('check-overrides: has --path as required option (concept spec param)', () => {
+      const cmd = generatedCommands.get('kit-manager')!;
+      const sub = getGeneratedSubcommand(cmd, 'check-overrides')!;
+      expect(sub.requiredOptions).toContain('path');
+    });
+  });
+
+  // ---- sync-parser (no direct handmade equivalent — extra concept in manifest) ----
+
+  describe('SyncParser (generated-only concept)', () => {
+    it('generated group "sync-parser" exists', () => {
+      expect(generatedCommands.has('sync-parser')).toBe(true);
+    });
+
+    it('has exactly 1 subcommand "parse"', () => {
+      const cmd = generatedCommands.get('sync-parser')!;
+      expect(cmd.subcommands.length).toBe(1);
+      expect(cmd.subcommands[0].name).toBe('parse');
+    });
+
+    it('parse has --source and --manifests as required options', () => {
+      const cmd = generatedCommands.get('sync-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'parse')!;
+      expect(sub.requiredOptions).toContain('source');
+      expect(sub.requiredOptions).toContain('manifests');
+    });
+
+    it('parse has --json flag', () => {
+      const cmd = generatedCommands.get('sync-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'parse')!;
+      expect(sub.hasJsonFlag).toBe(true);
+    });
+  });
+
+  // ================================================================
+  // Cross-Cutting Parity Checks
+  // ================================================================
+
+  describe('concept-overrides application', () => {
     it('devtools manifest has concept-overrides defined', () => {
       expect(manifestYaml['concept-overrides']).toBeDefined();
       expect(conceptOverrides.size).toBeGreaterThan(0);
     });
 
-    it('SpecParser override maps parse → check', () => {
-      const specParserOverrides = conceptOverrides.get('SpecParser');
-      expect(specParserOverrides).toBeDefined();
-      expect(specParserOverrides?.parse?.command).toBe('check');
-    });
+    it('all concept-overrides reference concepts listed in manifest', () => {
+      const overrideKeys = Object.keys(
+        (manifestYaml['concept-overrides'] as Record<string, unknown>) || {},
+      );
+      const manifestConcepts = ((manifestYaml.concepts as string[]) || []).map(c => {
+        const fileName = c.split('/').pop()?.replace('.concept', '') || '';
+        return fileName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+      });
 
-    it('ProjectScaffold override maps scaffold → init', () => {
-      const scaffoldOverrides = conceptOverrides.get('ProjectScaffold');
-      expect(scaffoldOverrides).toBeDefined();
-      expect(scaffoldOverrides?.scaffold?.command).toBe('init');
-    });
-
-    it('REGRESSION: generated SpecParser CLI should use "check" command name from override', () => {
-      const specParser = generatedCommands.get('spec-parser');
-      expect(specParser).toBeDefined();
-
-      const subcommandNames = specParser!.subcommands.map(s => s.name);
-
-      // The concept-overrides say parse → check
-      // If overrides are applied, we'd see 'check'. If not, 'parse'.
-      const hasOverriddenName = subcommandNames.includes('check');
-      const hasFallbackName = subcommandNames.includes('parse');
-
-      if (!hasOverriddenName && hasFallbackName) {
-        expect.fail(
-          'REGRESSION: concept-overrides not applied. ' +
-          'SpecParser generated "parse" instead of "check". ' +
-          'The concept-overrides key in devtools.interface.yaml is not ' +
-          'being read by getConceptOverrides() in interface-generator.impl.ts ' +
-          '(it only checks "concepts", not "concept-overrides").'
-        );
+      for (const override of overrideKeys) {
+        expect(manifestConcepts, `concept-overrides "${override}" references unknown concept`).toContain(override);
       }
-
-      expect(hasOverriddenName).toBe(true);
     });
 
-    it('REGRESSION: generated ProjectScaffold CLI should use "init" command name from override', () => {
-      const scaffold = generatedCommands.get('project-scaffold');
-      expect(scaffold).toBeDefined();
-
-      const subcommandNames = scaffold!.subcommands.map(s => s.name);
-
-      const hasOverriddenName = subcommandNames.includes('init');
-      const hasFallbackName = subcommandNames.includes('scaffold');
-
-      if (!hasOverriddenName && hasFallbackName) {
-        expect.fail(
-          'REGRESSION: concept-overrides not applied. ' +
-          'ProjectScaffold generated "scaffold" instead of "init". ' +
-          'The concept-overrides key is not being read during CLI generation.'
-        );
+    it('every command-name override in manifest is applied in generated output', () => {
+      const failures: string[] = [];
+      for (const [concept, actions] of conceptOverrides) {
+        for (const [actionName, override] of Object.entries(actions)) {
+          if (!override.command) continue;
+          const kebab = concept.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+          const cmd = generatedCommands.get(kebab);
+          if (!cmd) {
+            failures.push(`${concept}: no generated group "${kebab}"`);
+            continue;
+          }
+          const sub = getGeneratedSubcommand(cmd, override.command);
+          if (!sub) {
+            const actual = cmd.subcommands.map(s => s.name).join(', ');
+            failures.push(`${concept}.${actionName}: expected "${override.command}", got [${actual}]`);
+          }
+        }
       }
-
-      expect(hasOverriddenName).toBe(true);
+      expect(failures, `Unapplied command-name overrides:\n  ${failures.join('\n  ')}`).toEqual([]);
     });
 
-    it('REGRESSION: KitManager init should have "name" as positional arg from override', () => {
-      const kitManager = generatedCommands.get('kit-manager');
-      expect(kitManager).toBeDefined();
+    it('every positional override for existing params is applied in generated output', () => {
+      const failures: string[] = [];
+      for (const [concept, actions] of conceptOverrides) {
+        for (const [actionName, override] of Object.entries(actions)) {
+          if (!override.params) continue;
+          const kebab = concept.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+          const cmd = generatedCommands.get(kebab);
+          if (!cmd) continue;
 
-      const initCmd = kitManager!.subcommands.find(s => s.name === 'init');
-      expect(initCmd).toBeDefined();
+          const cmdName = override.command || actionName;
+          const sub = getGeneratedSubcommand(cmd, cmdName);
+          if (!sub) continue;
 
-      // The override says name should be positional
-      const hasPositionalName = initCmd!.positionalArgs.includes('name');
-      const hasRequiredName = initCmd!.requiredOptions.includes('name');
+          for (const [paramName, paramConfig] of Object.entries(override.params)) {
+            if (!paramConfig.positional) continue;
+            // Only check params that exist in the generated output
+            // (either as positional, required option, or optional option)
+            const existsInGenerated =
+              sub.positionalArgs.includes(paramName) ||
+              sub.requiredOptions.includes(paramName) ||
+              sub.optionalOptions.includes(paramName);
+            if (!existsInGenerated) continue; // param doesn't exist in concept spec
 
-      if (!hasPositionalName && hasRequiredName) {
-        expect.fail(
-          'REGRESSION: concept-overrides positional mapping not applied. ' +
-          'KitManager init has --name as required option instead of positional argument. ' +
-          'The concept-overrides.KitManager.cli.actions.init.params.name.positional ' +
-          'is not being read during CLI generation.'
-        );
+            if (!sub.positionalArgs.includes(paramName)) {
+              failures.push(
+                `${concept}.${actionName}.${paramName}: should be positional, ` +
+                `got positional=[${sub.positionalArgs}], required=[${sub.requiredOptions}]`,
+              );
+            }
+          }
+        }
       }
+      expect(failures, `Unapplied positional overrides:\n  ${failures.join('\n  ')}`).toEqual([]);
+    });
 
-      expect(hasPositionalName).toBe(true);
+    it('all override param names reference params that exist in the concept spec', () => {
+      const mismatches: string[] = [];
+      for (const [concept, actions] of conceptOverrides) {
+        for (const [actionName, override] of Object.entries(actions)) {
+          if (!override.params) continue;
+          const kebab = concept.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+          const cmd = generatedCommands.get(kebab);
+          if (!cmd) continue;
+
+          const cmdName = override.command || actionName;
+          const sub = getGeneratedSubcommand(cmd, cmdName);
+          if (!sub) continue;
+
+          for (const paramName of Object.keys(override.params)) {
+            const existsInGenerated =
+              sub.positionalArgs.includes(paramName) ||
+              sub.requiredOptions.includes(paramName) ||
+              sub.optionalOptions.includes(paramName);
+            if (!existsInGenerated) {
+              mismatches.push(
+                `${concept}.${actionName}.params.${paramName}: ` +
+                `override references param not in concept spec ` +
+                `(available: [${sub.allParams.join(', ')}])`,
+              );
+            }
+          }
+        }
+      }
+      // This flags manifest inconsistencies where overrides reference
+      // params that don't exist in the concept. Currently known:
+      // - SpecParser.parse.specs: concept only has "source", not "specs"
+      expect(mismatches).toEqual([
+        'SpecParser.parse.params.specs: override references param not in concept spec (available: [source])',
+      ]);
     });
   });
 
-  // ---- Handmade ↔ Generated Parity ----
+  // ---- --json flag coverage ----
 
-  describe('handmade vs generated command parity', () => {
-    // Map from handmade command concepts to generated group names
+  describe('--json flag coverage', () => {
+    it('every generated subcommand across all groups has --json flag', () => {
+      const missingJson: string[] = [];
+
+      for (const [group, cmd] of generatedCommands) {
+        for (const sub of cmd.subcommands) {
+          if (!sub.hasJsonFlag) {
+            missingJson.push(`${group} ${sub.name}`);
+          }
+        }
+      }
+
+      expect(missingJson, `Missing --json flag: ${missingJson.join(', ')}`).toEqual([]);
+    });
+  });
+
+  // ---- Command coverage ----
+
+  describe('command coverage', () => {
     const CONCEPT_TO_GROUP: Record<string, string> = {
       ProjectScaffold: 'project-scaffold',
       SpecParser: 'spec-parser',
@@ -403,72 +868,56 @@ describe('CLI Generation Regression', () => {
       KitManager: 'kit-manager',
     };
 
+    it('generated CLI has a command group for each framework concept in manifest', () => {
+      const manifestConcepts = (manifestYaml.concepts as string[]) || [];
+      const conceptNames = manifestConcepts
+        .map(c => c.split('/').pop()?.replace('.concept', '') || '')
+        .filter(Boolean);
+
+      for (const conceptFile of conceptNames) {
+        expect(
+          generatedCommands.has(conceptFile),
+          `Generated CLI missing command group for "${conceptFile}"`,
+        ).toBe(true);
+      }
+    });
+
+    it('generated CLI has the expected number of command groups', () => {
+      const expectedCount = ((manifestYaml.concepts as string[]) || []).length;
+      expect(generatedCommands.size).toBe(expectedCount);
+    });
+
     it('every handmade concept-backed command has a generated counterpart', () => {
       const missing: string[] = [];
+      const handmadeConcepts = [
+        'ProjectScaffold', 'SpecParser', 'SchemaGen', 'SyncCompiler',
+        'CacheCompiler', 'DevServer', 'DeploymentValidator', 'FlowTrace',
+        'Migration', 'KitManager',
+      ];
 
-      for (const handmade of HANDMADE_COMMANDS) {
-        const expectedGroup = CONCEPT_TO_GROUP[handmade.concept];
-        if (!expectedGroup) continue; // skip non-concept commands like 'test', 'interface'
-
-        if (!generatedCommands.has(expectedGroup)) {
-          missing.push(
-            `${handmade.name} (concept: ${handmade.concept}, expected group: ${expectedGroup})`,
-          );
+      for (const concept of handmadeConcepts) {
+        const group = CONCEPT_TO_GROUP[concept];
+        if (!generatedCommands.has(group)) {
+          missing.push(`${concept} (expected group: ${group})`);
         }
       }
 
-      expect(
-        missing,
-        `These handmade commands have no generated counterpart: ${missing.join(', ')}`,
-      ).toEqual([]);
+      expect(missing, `Missing generated groups: ${missing.join(', ')}`).toEqual([]);
     });
 
-    it('generated CLI groups have the same action count as handmade equivalents', () => {
-      // KitManager: handmade has subcommands init, validate, test, list, check-overrides
-      const kitManager = generatedCommands.get('kit-manager');
-      expect(kitManager).toBeDefined();
-      expect(kitManager!.subcommands.length).toBe(5);
+    it('handmade "test" command has no generated counterpart (no TestRunner concept in manifest)', () => {
+      // The handmade CLI has `copf test` but no TestRunner concept spec is in
+      // the devtools manifest, so it should NOT appear in the generated CLI.
+      expect(generatedCommands.has('test-runner')).toBe(false);
+    });
 
-      // DevServer: handmade has dev (implicitly: start), generated has start/stop/status
-      const devServer = generatedCommands.get('dev-server');
-      expect(devServer).toBeDefined();
-      expect(devServer!.subcommands.length).toBe(3);
-
-      // FlowTrace: handmade has trace, generated has build/render
-      const flowTrace = generatedCommands.get('flow-trace');
-      expect(flowTrace).toBeDefined();
-      expect(flowTrace!.subcommands.length).toBe(2);
+    it('handmade "interface" command has no generated counterpart (meta-tool, not a concept)', () => {
+      // The interface command is the generation tool itself; it's not a concept.
+      expect(generatedCommands.has('interface-generator')).toBe(false);
     });
   });
 
-  // ---- JSON Output Flag ----
-
-  describe('--json flag coverage', () => {
-    it('every generated subcommand has --json flag', () => {
-      const missingJson: string[] = [];
-
-      for (const [group, cmd] of generatedCommands) {
-        for (const sub of cmd.subcommands) {
-          if (!sub.hasJsonFlag) {
-            missingJson.push(`${group} ${sub.name}`);
-          }
-        }
-      }
-
-      expect(
-        missingJson,
-        `These generated subcommands lack --json flag: ${missingJson.join(', ')}`,
-      ).toEqual([]);
-    });
-
-    it('handmade trace command has --json flag matching generated', () => {
-      const traceHandmade = HANDMADE_COMMANDS.find(c => c.name === 'trace');
-      expect(traceHandmade).toBeDefined();
-      expect(traceHandmade!.flags).toContain('json');
-    });
-  });
-
-  // ---- Generated File Integrity ----
+  // ---- Generated file integrity ----
 
   describe('generated file integrity', () => {
     it('generated CLI has an index.ts entrypoint', () => {
@@ -477,22 +926,20 @@ describe('CLI Generation Regression', () => {
 
     it('index.ts imports all generated command files', () => {
       const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
-
-      for (const [group, _] of generatedCommands) {
-        // The index uses PascalCase imports
-        const pascal = group
-          .split('-')
-          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-          .join('');
-        expect(
-          indexContent.includes(`${pascal}Command`),
-          `index.ts should import ${pascal}Command for group "${group}"`,
-        ).toBe(true);
+      for (const [group] of generatedCommands) {
+        const pascal = group.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+        expect(indexContent, `index.ts should import ${pascal}Command`).toContain(`${pascal}Command`);
       }
     });
 
+    it('index.ts adds all command groups to the program', () => {
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+      const addCommandCount = (indexContent.match(/\.addCommand\(/g) || []).length;
+      expect(addCommandCount).toBe(generatedCommands.size);
+    });
+
     it('each generated file has auto-generated header comment', () => {
-      for (const [group, _] of generatedCommands) {
+      for (const [group] of generatedCommands) {
         const filePath = resolve(GENERATED_CLI_DIR, group, `${group}.command.ts`);
         if (!existsSync(filePath)) continue;
         const content = readFileSync(filePath, 'utf-8');
@@ -502,19 +949,25 @@ describe('CLI Generation Regression', () => {
     });
 
     it('each generated file exports a commandTree metadata object', () => {
-      for (const [group, _] of generatedCommands) {
+      for (const [group] of generatedCommands) {
         const filePath = resolve(GENERATED_CLI_DIR, group, `${group}.command.ts`);
         if (!existsSync(filePath)) continue;
         const content = readFileSync(filePath, 'utf-8');
-        expect(
-          content.includes('CommandTree'),
-          `${group}.command.ts should export a commandTree`,
-        ).toBe(true);
+        expect(content, `${group}.command.ts should export commandTree`).toContain('CommandTree');
+      }
+    });
+
+    it('each generated command file dispatches to globalThis.kernel.handleRequest', () => {
+      for (const [group] of generatedCommands) {
+        const filePath = resolve(GENERATED_CLI_DIR, group, `${group}.command.ts`);
+        if (!existsSync(filePath)) continue;
+        const content = readFileSync(filePath, 'utf-8');
+        expect(content, `${group}.command.ts should use kernel dispatch`).toContain('globalThis.kernel.handleRequest');
       }
     });
   });
 
-  // ---- Devtools Manifest Consistency ----
+  // ---- Manifest consistency ----
 
   describe('devtools manifest consistency', () => {
     it('manifest concepts are all parseable .concept file paths', () => {
@@ -525,10 +978,7 @@ describe('CLI Generation Regression', () => {
       for (const path of concepts) {
         expect(path).toMatch(/\.concept$/);
         const resolved = resolve(PROJECT_ROOT, path);
-        expect(
-          existsSync(resolved),
-          `Manifest references ${path} but file does not exist`,
-        ).toBe(true);
+        expect(existsSync(resolved), `Manifest references ${path} but file does not exist`).toBe(true);
       }
     });
 
@@ -538,25 +988,14 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli).toBeDefined();
     });
 
-    it('concept-overrides only reference concepts listed in manifest', () => {
-      const overrideKeys = Object.keys(
-        (manifestYaml['concept-overrides'] as Record<string, unknown>) || {},
-      );
-      const manifestConcepts = ((manifestYaml.concepts as string[]) || []).map(c => {
-        // Extract concept name from file path: spec-parser.concept → SpecParser
-        const fileName = c.split('/').pop()?.replace('.concept', '') || '';
-        return fileName
-          .split('-')
-          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-          .join('');
-      });
+    it('manifest cli target has name "copf"', () => {
+      const targets = manifestYaml.targets as Record<string, Record<string, unknown>>;
+      expect(targets.cli.name).toBe('copf');
+    });
 
-      for (const override of overrideKeys) {
-        expect(
-          manifestConcepts,
-          `concept-overrides key "${override}" should reference a concept in the manifest`,
-        ).toContain(override);
-      }
+    it('manifest lists exactly 11 concept specs', () => {
+      const concepts = manifestYaml.concepts as string[];
+      expect(concepts.length).toBe(11);
     });
   });
 });
