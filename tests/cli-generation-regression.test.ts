@@ -232,10 +232,16 @@ describe('CLI Generation Regression', () => {
       expect(sub.hasJsonFlag).toBe(true);
     });
 
-    it('generated has --source as required option (concept-level param)', () => {
+    it('has positional "source" arg (via concept-override source.positional)', () => {
       const cmd = generatedCommands.get('spec-parser')!;
       const sub = getGeneratedSubcommand(cmd, 'check')!;
-      expect(sub.requiredOptions).toContain('source');
+      expect(sub.positionalArgs).toContain('source');
+    });
+
+    it('"source" is NOT a required option (must be positional)', () => {
+      const cmd = generatedCommands.get('spec-parser')!;
+      const sub = getGeneratedSubcommand(cmd, 'check')!;
+      expect(sub.requiredOptions).not.toContain('source');
     });
   });
 
@@ -825,12 +831,9 @@ describe('CLI Generation Regression', () => {
           }
         }
       }
-      // This flags manifest inconsistencies where overrides reference
-      // params that don't exist in the concept. Currently known:
-      // - SpecParser.parse.specs: concept only has "source", not "specs"
-      expect(mismatches).toEqual([
-        'SpecParser.parse.params.specs: override references param not in concept spec (available: [source])',
-      ]);
+      // All override param names should reference real concept params.
+      // If this fails, a concept-override references a nonexistent param.
+      expect(mismatches).toEqual([]);
     });
   });
 

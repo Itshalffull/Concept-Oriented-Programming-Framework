@@ -310,7 +310,7 @@ concept-overrides:
         parse:
           command: check
           params:
-            specs:
+            source:
               positional: true
 
   ProjectScaffold:
