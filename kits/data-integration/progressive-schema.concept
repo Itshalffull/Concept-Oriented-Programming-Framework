@@ -1,0 +1,80 @@
+@version(1)
+concept ProgressiveSchema [P] {
+
+  purpose {
+    Accept content at any formality level — raw text, lightly tagged, partially
+    structured, fully typed — and help users incrementally formalize it by
+    detecting implicit structure and suggesting schema promotions.
+  }
+
+  state {
+    items: set P
+    content: P -> String
+    formality: P -> String
+    detectedStructure: P -> String
+    schema: P -> String
+    promotionHistory: P -> String
+  }
+
+  actions {
+    action captureFreeform(content: String) {
+      -> ok(itemId: String) {
+        Content stored at formality level freeform.
+      }
+    }
+
+    action detectStructure(itemId: String) {
+      -> ok(suggestions: String) {
+        Structure detectors identified fields, values, and types with confidence scores.
+      }
+      -> notfound(message: String) {
+        Item does not exist.
+      }
+    }
+
+    action acceptSuggestion(itemId: String, suggestionId: String) {
+      -> ok() {
+        Detected value promoted to a typed property.
+      }
+      -> notfound(message: String) {
+        Item or suggestion does not exist.
+      }
+    }
+
+    action rejectSuggestion(itemId: String, suggestionId: String) {
+      -> ok() {
+        Suggestion marked rejected.
+      }
+      -> notfound(message: String) {
+        Item or suggestion does not exist.
+      }
+    }
+
+    action promote(itemId: String, targetSchema: String) {
+      -> ok(result: String) {
+        Item promoted to full schema conformance.
+      }
+      -> notfound(message: String) {
+        Item does not exist.
+      }
+      -> incomplete(gaps: String) {
+        Item cannot fully conform; gaps describe missing required fields.
+      }
+    }
+
+    action inferSchema(items: String) {
+      -> ok(proposedSchema: String) {
+        Common schema proposed from analysis of multiple items.
+      }
+      -> error(message: String) {
+        Not enough items or too heterogeneous to infer a schema.
+      }
+    }
+  }
+
+  invariant {
+    after captureFreeform(content: "Meeting with John on 2026-03-01 about #project-x") -> ok(itemId: "ps-1")
+    then detectStructure(itemId: "ps-1") -> ok(suggestions: "[{\"field\":\"date\",\"value\":\"2026-03-01\",\"confidence\":0.95}]")
+    and  acceptSuggestion(itemId: "ps-1", suggestionId: "sug-1") -> ok()
+  }
+}

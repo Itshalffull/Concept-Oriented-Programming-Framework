@@ -1,0 +1,90 @@
+@version(1)
+concept SyncPair [S] {
+
+  purpose {
+    Maintain bidirectional correspondence between records in two systems with
+    configurable direction, conflict detection via version vectors, and
+    pluggable conflict resolution.
+  }
+
+  state {
+    pairs: set S
+    name: S -> String
+    endpointA: S -> String
+    endpointB: S -> String
+    direction: S -> String
+    conflictPolicy: S -> String
+    mapping: S -> String
+    pairMap: S -> String
+    versionVectors: S -> String
+    changeLog: S -> String
+    status: S -> String
+  }
+
+  actions {
+    action link(pairId: String, idA: String, idB: String) {
+      -> ok() {
+        Correspondence established between the two records.
+      }
+      -> notfound(message: String) {
+        Pair does not exist.
+      }
+    }
+
+    action sync(pairId: String) {
+      -> ok(changes: String) {
+        Changes detected and propagated per direction.
+      }
+      -> notfound(message: String) {
+        Pair does not exist.
+      }
+      -> conflict(conflicts: String) {
+        Conflicts detected that require resolution.
+      }
+    }
+
+    action detectConflicts(pairId: String) {
+      -> ok(conflicts: String) {
+        Conflict list from version vector comparison.
+      }
+      -> notfound(message: String) {
+        Pair does not exist.
+      }
+    }
+
+    action resolve(conflictId: String, resolution: String) {
+      -> ok(winner: String) {
+        Conflict resolved by the configured resolver provider.
+      }
+      -> notfound(message: String) {
+        Conflict does not exist.
+      }
+      -> error(message: String) {
+        Resolution failed.
+      }
+    }
+
+    action unlink(pairId: String, idA: String) {
+      -> ok() {
+        Correspondence removed without deleting data.
+      }
+      -> notfound(message: String) {
+        Pair or record not found.
+      }
+    }
+
+    action getChangeLog(pairId: String, since: String) {
+      -> ok(log: String) {
+        Change events since the given timestamp.
+      }
+      -> notfound(message: String) {
+        Pair does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after link(pairId: "pair-1", idA: "local-1", idB: "remote-1") -> ok()
+    then sync(pairId: "pair-1") -> ok(changes: "[{\"entity\":\"local-1\",\"op\":\"update\"}]")
+  }
+}

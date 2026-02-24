@@ -1,0 +1,59 @@
+@version(1)
+concept Transform [T] {
+
+  purpose {
+    Convert, clean, format, split, merge, or otherwise transform individual
+    field values as they flow through the sync chain, composable into chains
+    where each transform's output feeds the next.
+  }
+
+  state {
+    transforms: set T
+    name: T -> String
+    pluginId: T -> String
+    config: T -> String
+    inputType: T -> String
+    outputType: T -> String
+  }
+
+  actions {
+    action apply(value: String, transformId: String) {
+      -> ok(result: String) {
+        Value transformed by the plugin.
+      }
+      -> notfound(message: String) {
+        Transform does not exist.
+      }
+      -> error(message: String) {
+        Transform failed.
+      }
+    }
+
+    action chain(value: String, transformIds: String) {
+      -> ok(result: String) {
+        Value passed through the transform chain sequentially.
+      }
+      -> error(message: String, failedAt: String) {
+        Chain stopped at the specified transform due to a type or processing error.
+      }
+    }
+
+    action preview(value: String, transformId: String) {
+      -> ok(before: String, after: String) {
+        Preview showing the value before and after transformation.
+      }
+      -> notfound(message: String) {
+        Transform does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after apply(value: "<p>Hello World</p>", transformId: "html_to_markdown") -> ok(result: "Hello World")
+    then preview(value: "test", transformId: "html_to_markdown") -> ok(before: "test", after: "test")
+  }
+
+  invariant {
+    after chain(value: "Hello World!", transformIds: "slugify,truncate") -> ok(result: "hello-world")
+  }
+}

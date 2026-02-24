@@ -1,0 +1,75 @@
+@version(1)
+concept DataQuality [D] {
+
+  purpose {
+    Gate data flow with configurable validation rules, quarantine invalid items
+    for review, profile datasets for statistical understanding, and reconcile
+    values against external knowledge bases.
+  }
+
+  state {
+    rulesets: set D
+    rules: D -> String
+    appliesTo: D -> String
+    violations: D -> String
+    quarantine: D -> String
+    qualityScores: D -> String
+  }
+
+  actions {
+    action validate(item: String, rulesetId: String) {
+      -> ok(valid: String, score: String) {
+        Item passed all applicable quality rules.
+      }
+      -> invalid(violations: String) {
+        Item failed one or more rules; violations detail each failure.
+      }
+      -> notfound(message: String) {
+        Ruleset does not exist.
+      }
+    }
+
+    action quarantine(itemId: String, violations: String) {
+      -> ok() {
+        Item held for review with violation details.
+      }
+    }
+
+    action release(itemId: String) {
+      -> ok() {
+        Item released from quarantine back into the sync chain.
+      }
+      -> notfound(message: String) {
+        Item not in quarantine.
+      }
+    }
+
+    action profile(datasetQuery: String) {
+      -> ok(profile: String) {
+        Statistical overview of the dataset.
+      }
+    }
+
+    action reconcile(field: String, knowledgeBase: String) {
+      -> ok(matches: String) {
+        Matching results against the external knowledge base.
+      }
+    }
+
+    action deduplicate(query: String, strategy: String) {
+      -> ok(clusters: String) {
+        Duplicate clusters identified by the given strategy.
+      }
+    }
+  }
+
+  invariant {
+    after validate(item: "{\"title\":\"Test\",\"body\":\"content\"}", rulesetId: "article_rules") -> ok(valid: "true", score: "0.95")
+  }
+
+  invariant {
+    after validate(item: "{\"title\":\"\"}", rulesetId: "article_rules") -> invalid(violations: "[{\"rule\":\"required\",\"field\":\"title\"}]")
+    then quarantine(itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]") -> ok()
+    and  release(itemId: "item-1") -> ok()
+  }
+}

@@ -1,0 +1,19 @@
+// Captured items trigger structure detection for progressive formalization
+
+sync CaptureTriggersDetection [eager]
+when {
+  Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
+    => [ itemId: ?itemId; content: ?content ]
+}
+then {
+  ProgressiveSchema/detectStructure: [ itemId: ?itemId ]
+}
+
+sync ImportTriggersDetection [eager]
+when {
+  Capture/import: [ file: ?file; options: ?opts ]
+    => [ itemId: ?itemId; content: ?content ]
+}
+then {
+  ProgressiveSchema/detectStructure: [ itemId: ?itemId ]
+}

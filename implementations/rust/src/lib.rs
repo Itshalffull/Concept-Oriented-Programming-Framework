@@ -103,3 +103,15 @@ pub mod group;
 
 // Notification kit concepts
 pub mod notification;
+
+// Data integration kit concepts
+pub mod data_source;
+pub mod connector;
+pub mod capture;
+pub mod field_mapping;
+pub mod transform;
+pub mod enricher;
+pub mod sync_pair;
+pub mod data_quality;
+pub mod provenance;
+pub mod progressive_schema;

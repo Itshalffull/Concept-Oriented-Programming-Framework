@@ -1,0 +1,19 @@
+// Mapped items proceed to the transform stage
+
+sync MappingToTransform [eager]
+when {
+  FieldMapping/apply: [ record: ?record; mappingId: ?mappingId ]
+    => [ mapped: ?mapped ]
+}
+then {
+  Queue/enqueue: [ queue: "integration"; item: ?mapped; priority: 1 ]
+}
+
+sync QueueDispatchesTransform [eager]
+when {
+  Queue/claim: [ queue: "transform"; worker: ?worker ]
+    => [ item: ?item ]
+}
+then {
+  Transform/chain: [ value: ?item; transformIds: "default" ]
+}

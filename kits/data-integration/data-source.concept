@@ -1,0 +1,78 @@
+@version(1)
+concept DataSource [D] {
+
+  purpose {
+    Register, authenticate, and monitor external data systems so that other
+    concepts can reference them by name rather than embedding connection details.
+  }
+
+  state {
+    sources: set D
+    name: D -> String
+    uri: D -> String
+    credentials: D -> String
+    discoveredSchema: D -> String
+    status: D -> String
+    lastHealthCheck: D -> String
+    metadata: D -> String
+  }
+
+  actions {
+    action register(name: String, uri: String, credentials: String) {
+      -> ok(sourceId: String) {
+        Source registered and addressable by name.
+      }
+      -> exists(message: String) {
+        A source with this name is already registered.
+      }
+    }
+
+    action connect(sourceId: String) {
+      -> ok(message: String) {
+        Source is reachable and connection verified.
+      }
+      -> notfound(message: String) {
+        Source does not exist.
+      }
+      -> error(message: String) {
+        Connection failed.
+      }
+    }
+
+    action discover(sourceId: String) {
+      -> ok(rawSchema: String) {
+        Source schema introspected and returned.
+      }
+      -> notfound(message: String) {
+        Source does not exist.
+      }
+      -> error(message: String) {
+        Discovery failed.
+      }
+    }
+
+    action healthCheck(sourceId: String) {
+      -> ok(status: String) {
+        Health check completed.
+      }
+      -> notfound(message: String) {
+        Source does not exist.
+      }
+    }
+
+    action deactivate(sourceId: String) {
+      -> ok() {
+        Source marked inactive without deleting configuration.
+      }
+      -> notfound(message: String) {
+        Source does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc") -> ok(sourceId: "src-1")
+    then connect(sourceId: "src-1") -> ok(message: "connected")
+    and  discover(sourceId: "src-1") -> ok(rawSchema: "{\"streams\":[\"posts\",\"authors\"]}")
+  }
+}

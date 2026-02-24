@@ -1,0 +1,64 @@
+# Data Integration Kit Manifest
+name: data-integration
+version: 0.2.0
+description: "Data capture, integration, enrichment, and bidirectional sync — 10 concepts for connecting external systems, transforming data, enforcing quality, and tracking provenance."
+
+concepts:
+  - name: DataSource
+    spec: data-source.concept
+  - name: Connector
+    spec: connector.concept
+  - name: Capture
+    spec: capture.concept
+  - name: FieldMapping
+    spec: field-mapping.concept
+  - name: Transform
+    spec: transform.concept
+  - name: Enricher
+    spec: enricher.concept
+  - name: SyncPair
+    spec: sync-pair.concept
+  - name: DataQuality
+    spec: data-quality.concept
+  - name: Provenance
+    spec: provenance.concept
+  - name: ProgressiveSchema
+    spec: progressive-schema.concept
+
+syncs:
+  - name: capture-to-mapping
+    file: syncs/capture-to-mapping.sync
+    tier: required
+  - name: mapping-to-transform
+    file: syncs/mapping-to-transform.sync
+    tier: required
+  - name: transform-to-enrichment
+    file: syncs/transform-to-enrichment.sync
+    tier: required
+  - name: enrichment-to-validation
+    file: syncs/enrichment-to-validation.sync
+    tier: required
+  - name: validation-gates-storage
+    file: syncs/validation-gates-storage.sync
+    tier: required
+  - name: all-actions-tracked
+    file: syncs/all-actions-tracked.sync
+    tier: required
+  - name: progressive-schema-from-enrichment
+    file: syncs/progressive-schema-from-enrichment.sync
+    tier: recommended
+  - name: sync-pair-bidirectional
+    file: syncs/sync-pair-bidirectional.sync
+    tier: recommended
+  - name: capture-to-progressive-schema
+    file: syncs/capture-to-progressive-schema.sync
+    tier: recommended
+
+dependencies:
+  - "@copf/foundation"
+  - "@copf/classification"
+  - "@copf/infrastructure"
+  - "@copf/linking"
+  - "@copf/query"
+  - "@copf/automation"
+  - "@copf/media"

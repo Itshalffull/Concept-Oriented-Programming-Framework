@@ -1,0 +1,83 @@
+@version(1)
+concept Provenance [P] {
+
+  purpose {
+    Track the complete lineage of every data item — where it came from, what
+    happened to it, who initiated each operation — enabling trace-back to
+    origin, audit, rollback, and reproduction.
+  }
+
+  state {
+    records: set P
+    entity: P -> String
+    activity: P -> String
+    agent: P -> String
+    inputs: P -> String
+    timestamp: P -> String
+    batchId: P -> String
+    mapTables: P -> String
+  }
+
+  actions {
+    action record(entity: String, activity: String, agent: String, inputs: String) {
+      -> ok(recordId: String) {
+        Provenance event logged.
+      }
+    }
+
+    action trace(entityId: String) {
+      -> ok(chain: String) {
+        Derivation chain from entity back to original source.
+      }
+      -> notfound(message: String) {
+        Entity has no provenance records.
+      }
+    }
+
+    action audit(batchId: String) {
+      -> ok(graph: String) {
+        Full lineage DAG for the batch.
+      }
+      -> notfound(message: String) {
+        Batch does not exist.
+      }
+    }
+
+    action rollback(batchId: String) {
+      -> ok(rolled: Int) {
+        All writes from the batch reversed via the map table.
+      }
+      -> notfound(message: String) {
+        Batch does not exist.
+      }
+    }
+
+    action diff(entityId: String, version1: String, version2: String) {
+      -> ok(changes: String) {
+        Field-level differences between the two versions.
+      }
+      -> notfound(message: String) {
+        Entity or versions not found.
+      }
+    }
+
+    action reproduce(entityId: String) {
+      -> ok(plan: String) {
+        Steps to recreate the entity from its original source.
+      }
+      -> notfound(message: String) {
+        Entity has no provenance records.
+      }
+    }
+  }
+
+  invariant {
+    after record(entity: "item-1", activity: "capture", agent: "system", inputs: "") -> ok(recordId: "prov-1")
+    then trace(entityId: "item-1") -> ok(chain: "[{\"activity\":\"capture\",\"agent\":\"system\"}]")
+  }
+
+  invariant {
+    after record(entity: "item-1", activity: "import", agent: "system", inputs: "") -> ok(recordId: "prov-batch-1")
+    then rollback(batchId: "batch-1") -> ok(rolled: 1)
+  }
+}

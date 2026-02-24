@@ -1,0 +1,71 @@
+@version(1)
+concept FieldMapping [F] {
+
+  purpose {
+    Translate field names, paths, and structures between an external source's
+    data model and the destination schema so that data flows into the right
+    properties on the right content types.
+  }
+
+  state {
+    mappings: set F
+    name: F -> String
+    sourceSchema: F -> String
+    destSchema: F -> String
+    rules: F -> String
+    unmapped: F -> String
+  }
+
+  actions {
+    action map(mappingId: String, sourceField: String, destField: String, transform: String) {
+      -> ok() {
+        Mapping rule added.
+      }
+      -> notfound(message: String) {
+        Mapping does not exist.
+      }
+    }
+
+    action apply(record: String, mappingId: String) {
+      -> ok(mapped: String) {
+        Source record translated to destination shape via the mapper strategy.
+      }
+      -> notfound(message: String) {
+        Mapping does not exist.
+      }
+      -> error(message: String) {
+        Mapping application failed.
+      }
+    }
+
+    action reverse(record: String, mappingId: String) {
+      -> ok(reversed: String) {
+        Destination record inverted to source shape for write-back.
+      }
+      -> notfound(message: String) {
+        Mapping does not exist.
+      }
+    }
+
+    action autoDiscover(sourceSchema: String, destSchema: String) {
+      -> ok(mappingId: String, suggestions: String) {
+        Suggested mappings generated from name similarity and type compatibility.
+      }
+    }
+
+    action validate(mappingId: String) {
+      -> ok(warnings: String) {
+        Mapping validated; warnings returned for type mismatches and unmapped required fields.
+      }
+      -> notfound(message: String) {
+        Mapping does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after autoDiscover(sourceSchema: "external_post", destSchema: "Article") -> ok(mappingId: "map-1", suggestions: "[{\"src\":\"title\",\"dest\":\"title\"}]")
+    then map(mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown") -> ok()
+    and  apply(record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1") -> ok(mapped: "{\"title\":\"Hello\",\"body\":\"World\"}")
+  }
+}

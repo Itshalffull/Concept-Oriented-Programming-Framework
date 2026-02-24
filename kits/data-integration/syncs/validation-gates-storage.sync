@@ -1,0 +1,19 @@
+// Validation gates entry — valid items proceed to storage, invalid items are quarantined
+
+sync ValidToStorage [eager]
+when {
+  DataQuality/validate: [ item: ?item; rulesetId: ?rules ]
+    => [ valid: "true"; score: ?score ]
+}
+then {
+  ContentStorage/save: [ record: ?item; data: ?item ]
+}
+
+sync InvalidToQuarantine [eager]
+when {
+  DataQuality/validate: [ item: ?item; rulesetId: ?rules ]
+    => [ violations: ?violations ]
+}
+then {
+  DataQuality/quarantine: [ itemId: ?item; violations: ?violations ]
+}
