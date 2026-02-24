@@ -39,9 +39,7 @@ export const <lang>GenHandler: ConceptHandler = {
         files.push({ path: '<name>.<ext>', content: conformanceTest });
       }
 
-      // Store output keyed by spec reference
-      await storage.put('outputs', spec, { spec, files });
-
+      // Return files — BuildCache and Emitter handle caching and writing via syncs
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

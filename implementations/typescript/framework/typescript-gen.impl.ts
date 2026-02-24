@@ -325,9 +325,6 @@ export const typescriptGenHandler: ConceptHandler = {
         files.push({ path: `${lowerName}.conformance.test.ts`, content: conformanceTest });
       }
 
-      // Store the output keyed by spec reference
-      await storage.put('outputs', spec, { spec, files });
-
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

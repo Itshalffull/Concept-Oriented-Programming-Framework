@@ -618,10 +618,14 @@ These changes apply the generation kit infrastructure to each family. They can p
 | ~~`implementations/typescript/framework/swift-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | ~~`implementations/typescript/framework/solidity-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | `kits/interface/kit.yaml` | Import Emitter from generation kit | Done |
-| `kits/deploy/kit.yaml` | Import generation kit concepts | Pending |
-| `tools/copf-cli/src/commands/generate.ts` | Add --plan, --force, --audit, --history, --summary, --status flags | Pending |
-| `tools/copf-cli/src/index.ts` | Add `impact`, `kinds` commands | Pending |
-| **Total modified files** | **7 done, 3 pending** |
+| `kits/deploy/kit.yaml` | Import generation kit concepts | Done |
+| `tools/copf-cli/src/commands/generate.ts` | Add --plan, --force, --audit, --history, --summary, --status flags; expand --generator-syncs for interface providers | Done |
+| `tools/copf-cli/src/index.ts` | Add `impact`, `kinds` commands | Done |
+| `implementations/typescript/framework/typescript-gen.impl.ts` | Remove redundant `storage.put('outputs')` — BuildCache handles caching | Done |
+| `implementations/typescript/framework/rust-gen.impl.ts` | Remove redundant `storage.put('outputs')` | Done |
+| `implementations/typescript/framework/swift-gen.impl.ts` | Remove redundant `storage.put('outputs')` | Done |
+| `implementations/typescript/framework/solidity-gen.impl.ts` | Remove redundant `storage.put('outputs')` | Done |
+| **Total modified files** | **All done** |
 
 ---
 

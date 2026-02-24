@@ -355,4 +355,11 @@ syncs:
     - path: ./syncs/routing/route-to-flux.sync
       name: RouteFlux
 
+uses:
+  - kit: generation
+    concepts:
+      - name: Emitter
+      - name: BuildCache
+      - name: GenerationPlan
+
 dependencies: []

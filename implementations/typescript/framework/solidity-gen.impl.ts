@@ -414,9 +414,6 @@ export const solidityGenHandler: ConceptHandler = {
         files.push({ path: `test/${manifest.name}.t.sol`, content: foundryTest });
       }
 
-      // Store the output keyed by spec reference
-      await storage.put('outputs', spec, { spec, files });
-
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
