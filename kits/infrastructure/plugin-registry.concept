@@ -14,6 +14,18 @@ concept PluginRegistry [P] {
   }
 
   actions {
+    action register(type: String, name: String, metadata: String) {
+      -> ok(plugin: P) {
+        Register a plugin definition with the given type, name, and metadata.
+        Metadata is a JSON string containing plugin-specific attributes
+        (e.g., inputKind, outputKind, deterministic for generators).
+      }
+      -> exists(plugin: P) {
+        Plugin with this name and type already registered. Returns existing ref.
+        Idempotent — not an error.
+      }
+    }
+
     action discover(type: String) {
       -> ok(plugins: String) {
         Discover all available plugins of the specified type via attribute-based scanning.

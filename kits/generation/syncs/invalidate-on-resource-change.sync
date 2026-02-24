@@ -1,0 +1,10 @@
+# InvalidateOnResourceChange — generation kit recommended sync
+sync InvalidateOnResourceChange [eager]
+  purpose { Source change triggers direct cache invalidation. }
+when {
+  Resource/upsert: [ locator: ?loc; kind: ?kind ]
+    => changed(resource: ?r; previousDigest: ?prev)
+}
+then {
+  BuildCache/invalidateBySource: [ sourceLocator: ?loc ]
+}

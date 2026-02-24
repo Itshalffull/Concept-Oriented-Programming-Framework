@@ -14,12 +14,12 @@ export const fluxProviderHandler: ConceptHandler = {
     const kustomizationId = `ks-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['kustomization.yaml', 'source.yaml'];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, kustomizationId, {
       kustomization: kustomizationId,
       plan,
       repo,
       path,
-      files: JSON.stringify(files),
       readyStatus: 'False',
       status: 'emitted',
       createdAt: new Date().toISOString(),

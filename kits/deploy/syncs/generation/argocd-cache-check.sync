@@ -1,0 +1,14 @@
+# Check BuildCache before ArgoCDProvider emits — Section 3.8
+
+sync CheckCacheBeforeArgoCD [eager]
+when {
+  GitOps/emit: [ plan: ?plan; controller: "argocd"; repo: ?repo; path: ?path ]
+    => [ manifest: ?m; files: ?files ]
+}
+then {
+  BuildCache/check: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    deterministic: false
+  ]
+}

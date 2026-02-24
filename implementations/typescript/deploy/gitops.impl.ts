@@ -23,13 +23,13 @@ export const gitopsHandler: ConceptHandler = {
       `${path}/${controller}-project.yaml`,
     ];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, manifestId, {
       manifest: manifestId,
       plan,
       controller,
       repo,
       path,
-      files: JSON.stringify(files),
       status: 'pending',
       createdAt: new Date().toISOString(),
     });

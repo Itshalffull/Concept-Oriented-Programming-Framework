@@ -36,6 +36,12 @@ concepts:
   - specs/framework/dev-server.concept
   - specs/framework/cache-compiler.concept
   - specs/framework/kit-manager.concept
+  # Generation kit concepts
+  - kits/generation/emitter.concept
+  - kits/generation/build-cache.concept
+  - kits/generation/resource.concept
+  - kits/generation/kind-system.concept
+  - kits/generation/generation-plan.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -1868,6 +1874,360 @@ workflows:
       - name: dev-workflow
         description: "Dev server uses cache for fast startup"
 
+  # ─── Emitter: file-emission ──────────────────────────
+  file-emission:
+    concept: Emitter
+    steps:
+      - action: write
+        title: "Write Single File"
+        prose: "Write a single generated file with content-addressed deduplication."
+      - action: writeBatch
+        title: "Emit Generated Files"
+        prose: "Atomically write a batch of generated files with content-addressed deduplication."
+      - action: audit
+        title: "Drift Detection"
+        prose: "Compare generated files on disk against expected output to detect manual edits."
+      - action: clean
+        title: "Orphan Cleanup"
+        prose: "Remove output files that are no longer produced by any generator."
+      - action: trace
+        title: "Source Provenance"
+        prose: "Show which source files and concept actions produced a given output file."
+      - action: affected
+        title: "Impact Analysis"
+        prose: "Show what output files are affected by a change to a given source file."
+    checklists:
+      write:
+        - "Path is within the designated output directory?"
+        - "Content hash computed before write?"
+      writeBatch:
+        - "All source provenance metadata attached?"
+        - "Format hint set for each file?"
+        - "Output directory exists?"
+      audit:
+        - "Generated files match expected hashes?"
+        - "No manual edits detected?"
+      clean:
+        - "Current manifest accurately lists all expected files?"
+        - "Orphaned files identified and removed?"
+      trace:
+        - "Output path resolves to a tracked generated file?"
+        - "Source provenance entries are complete?"
+      affected:
+        - "Source path resolves to a tracked input?"
+        - "All downstream outputs identified?"
+    design-principles:
+      - title: "Content-Addressed Writes"
+        rule: "Files are only written when their content hash changes — identical rewrites are skipped."
+      - title: "Source Provenance"
+        rule: "Every output file tracks which source files and concept actions produced it."
+    references:
+      - path: references/emitter-architecture.md
+        label: "Emitter architecture and traceability"
+        tier: reference
+        content: |
+          # Emitter Architecture
+
+          The Emitter concept manages all file I/O for the generation pipeline.
+
+          ## Content-Addressed Writes
+
+          Every `write` or `writeBatch` call computes a SHA-256 hash of the
+          content. If the on-disk file already matches, the write is skipped.
+          This prevents unnecessary file-system churn and avoids triggering
+          downstream watchers.
+
+          ## Source Provenance (sourceMap)
+
+          Each output file stores a list of sources that contributed to it:
+          - `sourcePath` — the input file (e.g., `specs/app/article.concept`)
+          - `conceptName` — the concept that produced it
+          - `actionName` — the action (e.g., `generate`)
+
+          This enables:
+          - `copf impact <file>` — which outputs change if this input changes
+          - `copf emitter trace <output>` — which inputs produced this output
+          - `copf emitter audit <dir>` — detect files modified outside generation
+
+          ## Batch Writes
+
+          `writeBatch` writes multiple files atomically — if any file fails,
+          the batch reports the failure while the successful writes persist.
+    validation-commands:
+      - label: "Audit generated files"
+        command: "npx tsx tools/copf-cli/src/index.ts generate --audit"
+      - label: "Clean orphans"
+        command: "npx tsx tools/copf-cli/src/index.ts generate --clean"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | write | `copf emitter write` | Write a single file |
+        | writeBatch | `copf emitter write-batch` | Atomic batch write |
+        | audit | `copf emitter audit <dir>` | Detect drift |
+        | clean | `copf emitter clean <dir>` | Remove orphans |
+        | trace | `copf emitter trace <path>` | Show source provenance |
+        | affected | `copf emitter affected <path>` | Show impact of a source change |
+        | manifest | `copf emitter manifest <dir>` | List all tracked outputs |
+        | format | `copf emitter format <path>` | Format a generated file |
+    related-workflows:
+      - name: cache-compiler
+        description: "Cache compiler uses Emitter for output"
+      - name: implementation-builder
+        description: "Code generation writes through Emitter"
+
+  # ─── BuildCache: incremental-caching ──────────────────
+  incremental-caching:
+    concept: BuildCache
+    steps:
+      - action: check
+        title: "Check Cache"
+        prose: "Compare input hash against cached entry to determine if regeneration is needed."
+      - action: record
+        title: "Record Result"
+        prose: "Store generation result with input/output hashes for future cache lookups."
+      - action: status
+        title: "Cache Status"
+        prose: "Show all cache entries with staleness indicators."
+      - action: staleSteps
+        title: "List Stale Entries"
+        prose: "List step keys that need regeneration because their inputs have changed."
+    checklists:
+      check:
+        - "Step key uniquely identifies this generation step?"
+        - "Input hash is deterministic?"
+      record:
+        - "Output hash computed from actual files written?"
+        - "Source locator recorded for invalidation?"
+      status:
+        - "Stale entries identified?"
+      staleSteps:
+        - "All step keys evaluated?"
+    design-principles:
+      - title: "Hash-Based Invalidation"
+        rule: "Cache validity is determined solely by comparing input hashes — no timestamps or file watchers."
+      - title: "Per-Step Granularity"
+        rule: "Each generator+concept pair has its own cache entry, enabling partial rebuilds."
+    references:
+      - path: references/build-cache-architecture.md
+        label: "BuildCache design and invalidation strategy"
+        tier: reference
+        content: |
+          # BuildCache Architecture
+
+          BuildCache tracks generation results per step key (generator:concept pair).
+
+          ## Cache Check Flow
+
+          1. Compute input hash (deterministic hash of concept manifest or projection)
+          2. Look up step key in cache
+          3. Compare hashes → `unchanged` (cache hit) or `changed` (cache miss)
+
+          ## Invalidation Strategies
+
+          - **By source**: When a `.concept` file changes, invalidate all steps
+            that used it (`invalidateBySource`)
+          - **By kind**: When an IR kind is invalidated, cascade to all dependent
+            kinds (`invalidateByKind`)
+          - **Manual**: `invalidateAll` clears the entire cache
+
+          ## Deterministic vs Non-Deterministic
+
+          Deterministic generators (same input → same output) can be cached
+          aggressively. Non-deterministic generators (e.g., timestamp-based)
+          are always re-run.
+    validation-commands:
+      - label: "Show cache status"
+        command: "npx tsx tools/copf-cli/src/index.ts generate --status"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | check | `copf build-cache check` | Check if step is cached |
+        | record | `copf build-cache record` | Record generation result |
+        | status | `copf build-cache status` | Show all cache entries |
+        | staleSteps | `copf build-cache stale-steps` | List stale entries |
+        | invalidate | `copf build-cache invalidate` | Invalidate one step |
+        | invalidateBySource | `copf build-cache invalidate-by-source` | Invalidate by source file |
+        | invalidateByKind | `copf build-cache invalidate-by-kind` | Invalidate by IR kind |
+        | invalidateAll | `copf build-cache invalidate-all` | Clear entire cache |
+    related-workflows:
+      - name: file-emission
+        description: "Emitter writes files after cache miss"
+      - name: incremental-caching
+        description: "Self-referential: cache checks gate generation"
+
+  # ─── Resource: input-tracking ────────────────────────
+  input-tracking:
+    concept: Resource
+    steps:
+      - action: upsert
+        title: "Track Input"
+        prose: "Register or update a tracked input resource with its content digest."
+      - action: list
+        title: "List Resources"
+        prose: "List all tracked input resources, optionally filtered by kind."
+    checklists:
+      upsert:
+        - "Locator is a stable, unique identifier?"
+        - "Digest is a content hash (not a timestamp)?"
+      list:
+        - "Kind filter matches expected resource types?"
+    design-principles:
+      - title: "Content-Addressed Tracking"
+        rule: "Resources are tracked by content digest, not modification time. Two files with identical content have the same digest."
+    validation-commands:
+      - label: "List tracked resources"
+        command: "npx tsx tools/copf-cli/src/index.ts generate --status"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | upsert | `copf resource upsert` | Track or update an input |
+        | get | `copf resource get` | Look up a tracked resource |
+        | list | `copf resource list` | List all tracked inputs |
+        | remove | `copf resource remove` | Stop tracking a resource |
+        | diff | `copf resource diff` | Classify a content change |
+    related-workflows:
+      - name: incremental-caching
+        description: "Resource changes invalidate BuildCache entries"
+      - name: file-emission
+        description: "Resource tracking feeds into generation pipeline"
+
+  # ─── KindSystem: pipeline-topology ───────────────────
+  pipeline-topology:
+    concept: KindSystem
+    steps:
+      - action: graph
+        title: "View Kind Graph"
+        prose: "Display the full IR kind taxonomy showing all kinds and transform edges."
+      - action: route
+        title: "Find Transform Path"
+        prose: "Find the shortest transform path between two IR kinds."
+      - action: consumers
+        title: "Show Consumers"
+        prose: "List all transforms that consume a given kind."
+      - action: producers
+        title: "Show Producers"
+        prose: "List all transforms that produce a given kind."
+    checklists:
+      graph:
+        - "All generator kinds registered?"
+        - "No orphan kinds (unreachable from any source)?"
+      route:
+        - "Path exists between the two kinds?"
+    design-principles:
+      - title: "Cycle-Free DAG"
+        rule: "The kind graph must be a directed acyclic graph. Cycle detection runs on every connect() call."
+      - title: "Static Topology"
+        rule: "Kinds and edges are registered at startup from kit.yaml metadata, not at generation time."
+    references:
+      - path: references/kind-system-architecture.md
+        label: "KindSystem taxonomy and routing"
+        tier: reference
+        content: |
+          # KindSystem Architecture
+
+          The KindSystem models the pipeline topology as a directed acyclic graph
+          of IR (intermediate representation) kinds.
+
+          ## Kind Categories
+
+          - **source**: Raw input files (ConceptDSL, SyncDSL, InterfaceManifest)
+          - **model**: Parsed/structured data (ConceptAST, ConceptManifest, Projection)
+          - **artifact**: Generated output files (TypeScriptFiles, RestRoutes, etc.)
+
+          ## Transform Edges
+
+          Each edge represents a generator that transforms one kind into another:
+          - `ConceptDSL →[SpecParser]→ ConceptAST`
+          - `ConceptAST →[SchemaGen]→ ConceptManifest`
+          - `ConceptManifest →[TypeScriptGen]→ TypeScriptFiles`
+          - `Projection →[RestTarget]→ RestRoutes`
+
+          ## Routing
+
+          `route(from, to)` finds the shortest path using BFS. This determines
+          which generators must run to produce a desired artifact from a given source.
+
+          ## Cascade Invalidation
+
+          When a kind is invalidated, `dependents(kind)` returns all downstream
+          kinds that need re-generation. This drives the cascade invalidation syncs.
+    validation-commands:
+      - label: "List all kinds"
+        command: "npx tsx tools/copf-cli/src/index.ts kinds list"
+      - label: "Find transform path"
+        command: "npx tsx tools/copf-cli/src/index.ts kinds path ConceptDSL TypeScriptFiles"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | graph | `copf kind-system graph` | Show full kind taxonomy |
+        | route | `copf kind-system route` | Find shortest transform path |
+        | consumers | `copf kind-system consumers` | What consumes a kind |
+        | producers | `copf kind-system producers` | What produces a kind |
+        | define | `copf kind-system define` | Register a new kind |
+        | connect | `copf kind-system connect` | Declare a transform edge |
+        | validate | `copf kind-system validate` | Validate an edge |
+        | dependents | `copf kind-system dependents` | List downstream kinds |
+    related-workflows:
+      - name: incremental-caching
+        description: "Kind graph drives cascade invalidation"
+      - name: file-emission
+        description: "Kind routing determines generation order"
+
+  # ─── GenerationPlan: run-tracking ────────────────────
+  run-tracking:
+    concept: GenerationPlan
+    steps:
+      - action: status
+        title: "Run Status"
+        prose: "Show detailed step-by-step status of a generation run."
+      - action: summary
+        title: "Run Summary"
+        prose: "Show aggregate statistics: total/executed/cached/failed steps, duration, files produced."
+      - action: history
+        title: "Run History"
+        prose: "Show recent generation runs with their outcomes."
+    checklists:
+      status:
+        - "Run reference is valid?"
+      summary:
+        - "All steps accounted for?"
+      history:
+        - "Limit is reasonable?"
+    design-principles:
+      - title: "Passive Observer"
+        rule: "GenerationPlan is purely passive — it records what syncs report, never drives execution."
+      - title: "Run Isolation"
+        rule: "Each generation run has its own reference. Steps are recorded against the active run."
+    validation-commands:
+      - label: "Show generation summary"
+        command: "npx tsx tools/copf-cli/src/index.ts generate --summary"
+      - label: "Show generation history"
+        command: "npx tsx tools/copf-cli/src/index.ts generate --history"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | begin | `copf generation-plan begin` | Mark run started |
+        | recordStep | `copf generation-plan record-step` | Record step outcome |
+        | complete | `copf generation-plan complete` | Mark run finished |
+        | status | `copf generation-plan status` | Show step-by-step status |
+        | summary | `copf generation-plan summary` | Show aggregate statistics |
+        | history | `copf generation-plan history` | Show recent runs |
+    related-workflows:
+      - name: file-emission
+        description: "Emitter writes tracked by GenerationPlan"
+      - name: incremental-caching
+        description: "Cache hits/misses recorded as steps"
+
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Rich metadata for skills and CLI: tool permissions,
 # argument templates, code examples, references, and
@@ -2772,6 +3132,171 @@ annotations:
           language: bash
           code: "copf kit check-overrides ./kits/my-kit"
 
+  Emitter:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when writing generated files, auditing for drift, tracing
+        source provenance, or cleaning orphaned outputs.
+      intro-template: >
+        Manage generated file output for **$ARGUMENTS** with content-addressed
+        writes, source traceability, and drift detection.
+    write:
+      examples:
+        - label: "Write a single file"
+          language: typescript
+          code: |
+            const result = await emitterHandler.write(
+              { path: 'generated/user.types.ts', content: typesCode, formatHint: 'typescript' },
+              storage,
+            );
+    writeBatch:
+      examples:
+        - label: "Batch write generated files"
+          language: typescript
+          code: |
+            const result = await emitterHandler.writeBatch(
+              { files: [{ path: 'user.types.ts', content: types }, { path: 'user.handler.ts', content: handler }] },
+              storage,
+            );
+    audit:
+      examples:
+        - label: "Audit generated directory"
+          language: bash
+          code: "copf emitter audit ./generated"
+    trace:
+      examples:
+        - label: "Trace source provenance"
+          language: bash
+          code: "copf emitter trace ./generated/user.types.ts"
+    affected:
+      examples:
+        - label: "Show impact of changing a source file"
+          language: bash
+          code: "copf emitter affected ./specs/app/user.concept"
+    clean:
+      examples:
+        - label: "Remove orphaned files"
+          language: bash
+          code: "copf emitter clean ./generated"
+
+  BuildCache:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when checking cache validity, recording generation results,
+        or invalidating stale entries for incremental rebuilds.
+      intro-template: >
+        Manage incremental build cache for **$ARGUMENTS** with hash-based
+        invalidation and per-step granularity.
+    check:
+      examples:
+        - label: "Check if step is cached"
+          language: typescript
+          code: |
+            const result = await buildCacheHandler.check(
+              { stepKey: 'framework:TypeScriptGen:article', inputHash: hash, deterministic: true },
+              storage,
+            );
+            if (result.variant === 'unchanged') { /* skip generation */ }
+    status:
+      examples:
+        - label: "Show cache status"
+          language: bash
+          code: "copf build-cache status"
+    staleSteps:
+      examples:
+        - label: "List stale cache entries"
+          language: bash
+          code: "copf build-cache stale-steps"
+
+  Resource:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when tracking input files, detecting changes, or querying
+        which resources are currently registered.
+      intro-template: >
+        Track input resources for **$ARGUMENTS** with content-addressed
+        digests and change classification.
+    upsert:
+      examples:
+        - label: "Track a concept spec file"
+          language: typescript
+          code: |
+            const result = await resourceHandler.upsert(
+              { locator: 'specs/app/article.concept', kind: 'concept-spec', digest: contentHash },
+              storage,
+            );
+    list:
+      examples:
+        - label: "List all tracked resources"
+          language: bash
+          code: "copf resource list"
+        - label: "List only concept specs"
+          language: bash
+          code: "copf resource list --kind concept-spec"
+
+  KindSystem:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when inspecting the IR kind taxonomy, finding transform paths
+        between kinds, or querying which generators consume or produce a kind.
+      intro-template: >
+        Inspect the generation pipeline topology for **$ARGUMENTS** showing
+        IR kinds, transform edges, and routing paths.
+    graph:
+      examples:
+        - label: "Show full kind graph"
+          language: bash
+          code: "copf kind-system graph"
+    route:
+      examples:
+        - label: "Find path from source to artifact"
+          language: bash
+          code: "copf kind-system route --from ConceptDSL --to TypeScriptFiles"
+    consumers:
+      examples:
+        - label: "What consumes ConceptManifest?"
+          language: bash
+          code: "copf kind-system consumers --kind ConceptManifest"
+    producers:
+      examples:
+        - label: "What produces TypeScriptFiles?"
+          language: bash
+          code: "copf kind-system producers --kind TypeScriptFiles"
+
+  GenerationPlan:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when checking the status of a generation run, viewing run
+        summaries, or browsing generation history.
+      intro-template: >
+        View generation run tracking for **$ARGUMENTS** with step-by-step
+        status, aggregate summaries, and run history.
+    status:
+      examples:
+        - label: "Show current run status"
+          language: bash
+          code: "copf generation-plan status"
+    summary:
+      examples:
+        - label: "Show run summary"
+          language: bash
+          code: "copf generation-plan summary"
+    history:
+      examples:
+        - label: "Show last 5 runs"
+          language: bash
+          code: "copf generation-plan history --limit 5"
+
 # ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
 # CLI-specific: positional args, custom command names.
 
@@ -2809,3 +3334,327 @@ concept-overrides:
           params:
             path:
               positional: true
+
+  Emitter:
+    cli:
+      command-group: emitter
+      description: "Manage generated file output, traceability, and drift detection."
+      actions:
+        write:
+          description: "Write a single generated file"
+          args:
+            path:
+              positional: true
+          flags:
+            content:
+              type: string
+              required: true
+              description: "File content to write"
+            formatHint:
+              type: string
+              required: false
+              short: f
+              description: "Formatter to apply (e.g., prettier, rustfmt)"
+        writeBatch:
+          command: write-batch
+          description: "Atomically write a batch of generated files"
+        format:
+          description: "Format a generated file"
+          args:
+            path:
+              positional: true
+        clean:
+          description: "Remove orphaned generated files"
+          args:
+            outputDir:
+              positional: true
+          flags:
+            currentManifest:
+              type: string
+              required: false
+              description: "Path to current manifest listing expected files"
+          examples:
+            - description: "Clean generated directory"
+              command: "copf emitter clean ./generated"
+        manifest:
+          description: "List all tracked output files"
+          args:
+            outputDir:
+              positional: true
+          examples:
+            - description: "List outputs in generated/"
+              command: "copf emitter manifest ./generated"
+        trace:
+          description: "Show which sources produced an output file"
+          args:
+            outputPath:
+              positional: true
+          examples:
+            - description: "Trace provenance of a generated file"
+              command: "copf emitter trace ./generated/user.types.ts"
+        affected:
+          description: "Show what outputs change if a source changes"
+          args:
+            sourcePath:
+              positional: true
+          examples:
+            - description: "Impact analysis for a concept spec"
+              command: "copf emitter affected ./specs/app/user.concept"
+        audit:
+          description: "Check generated files for drift from expected output"
+          args:
+            outputDir:
+              positional: true
+          examples:
+            - description: "Audit generated directory"
+              command: "copf emitter audit ./generated"
+
+  BuildCache:
+    cli:
+      command-group: build-cache
+      description: "Manage incremental build cache for generation pipeline."
+      actions:
+        check:
+          description: "Check if a generation step is cached"
+          flags:
+            stepKey:
+              type: string
+              required: true
+              short: k
+              description: "Unique step identifier (generator:concept)"
+            inputHash:
+              type: string
+              required: true
+              description: "Hash of current input"
+            deterministic:
+              type: boolean
+              required: false
+              description: "Whether generator is deterministic"
+        record:
+          description: "Record a generation result in the cache"
+        invalidate:
+          description: "Invalidate a single cache entry"
+          flags:
+            stepKey:
+              type: string
+              required: true
+              short: k
+              description: "Step key to invalidate"
+        invalidateBySource:
+          command: invalidate-by-source
+          description: "Invalidate all steps that used a source file"
+          args:
+            sourceLocator:
+              positional: true
+          examples:
+            - description: "Invalidate after concept change"
+              command: "copf build-cache invalidate-by-source specs/app/article.concept"
+        invalidateByKind:
+          command: invalidate-by-kind
+          description: "Invalidate all steps producing a given IR kind"
+          args:
+            kindName:
+              positional: true
+          examples:
+            - description: "Invalidate all TypeScript generation"
+              command: "copf build-cache invalidate-by-kind TypeScriptFiles"
+        invalidateAll:
+          command: invalidate-all
+          description: "Clear the entire build cache"
+          examples:
+            - description: "Full cache reset"
+              command: "copf build-cache invalidate-all"
+        status:
+          description: "Show all cache entries with staleness indicators"
+          examples:
+            - description: "View cache status"
+              command: "copf build-cache status"
+        staleSteps:
+          command: stale-steps
+          description: "List step keys that need regeneration"
+          examples:
+            - description: "Find stale entries"
+              command: "copf build-cache stale-steps"
+
+  Resource:
+    cli:
+      command-group: resource
+      description: "Track input resources with content-addressed digests."
+      actions:
+        upsert:
+          description: "Register or update a tracked input resource"
+          args:
+            locator:
+              positional: true
+          flags:
+            kind:
+              type: string
+              required: true
+              short: k
+              description: "Resource kind (concept-spec, sync-spec, etc.)"
+            digest:
+              type: string
+              required: true
+              description: "Content hash of the resource"
+        get:
+          description: "Look up a tracked resource"
+          args:
+            locator:
+              positional: true
+        list:
+          description: "List all tracked input resources"
+          flags:
+            kind:
+              type: string
+              required: false
+              short: k
+              description: "Filter by resource kind"
+          examples:
+            - description: "List all tracked resources"
+              command: "copf resource list"
+            - description: "List only concept specs"
+              command: "copf resource list --kind concept-spec"
+        remove:
+          description: "Stop tracking a resource"
+          args:
+            locator:
+              positional: true
+        diff:
+          description: "Classify a content change between two digests"
+          args:
+            locator:
+              positional: true
+
+  KindSystem:
+    cli:
+      command-group: kind-system
+      description: "Inspect the IR kind taxonomy and pipeline topology."
+      actions:
+        define:
+          description: "Register a new IR kind"
+          args:
+            name:
+              positional: true
+          flags:
+            category:
+              type: string
+              required: true
+              short: c
+              description: "Kind category (source, model, artifact)"
+              choices: [source, model, artifact]
+        connect:
+          description: "Declare a transform edge between two kinds"
+          flags:
+            from:
+              type: string
+              required: true
+              description: "Source kind"
+            to:
+              type: string
+              required: true
+              description: "Target kind"
+            relation:
+              type: string
+              required: true
+              description: "Transform relation (normalizes_to, compiles_to, etc.)"
+            transformName:
+              type: string
+              required: false
+              short: t
+              description: "Name of the transform/generator"
+        route:
+          description: "Find shortest transform path between two kinds"
+          flags:
+            from:
+              type: string
+              required: true
+              description: "Source kind"
+            to:
+              type: string
+              required: true
+              description: "Target kind"
+          examples:
+            - description: "Route from source to TypeScript"
+              command: "copf kind-system route --from ConceptDSL --to TypeScriptFiles"
+        validate:
+          description: "Validate a transform edge"
+        dependents:
+          description: "List all downstream kinds from a given kind"
+          args:
+            kind:
+              positional: true
+          examples:
+            - description: "What depends on ConceptManifest?"
+              command: "copf kind-system dependents ConceptManifest"
+        producers:
+          description: "Show what transforms produce a given kind"
+          args:
+            kind:
+              positional: true
+          examples:
+            - description: "What produces TypeScriptFiles?"
+              command: "copf kind-system producers TypeScriptFiles"
+        consumers:
+          description: "Show what transforms consume a given kind"
+          args:
+            kind:
+              positional: true
+          examples:
+            - description: "What consumes ConceptManifest?"
+              command: "copf kind-system consumers ConceptManifest"
+        graph:
+          description: "Show the full kind taxonomy graph"
+          examples:
+            - description: "Display kind graph"
+              command: "copf kind-system graph"
+
+  GenerationPlan:
+    cli:
+      command-group: generation-plan
+      description: "Track and inspect generation runs."
+      actions:
+        begin:
+          description: "Mark a new generation run as started"
+        recordStep:
+          command: record-step
+          description: "Record a step outcome in the current run"
+          flags:
+            stepKey:
+              type: string
+              required: true
+              short: k
+              description: "Step identifier"
+            status:
+              type: string
+              required: true
+              description: "Step outcome (done, cached, failed)"
+            cached:
+              type: boolean
+              required: false
+              description: "Whether the step was a cache hit"
+        complete:
+          description: "Mark the current generation run as finished"
+        status:
+          description: "Show step-by-step status of a generation run"
+          examples:
+            - description: "Show current run status"
+              command: "copf generation-plan status"
+        summary:
+          description: "Show aggregate statistics for a generation run"
+          examples:
+            - description: "Show run summary"
+              command: "copf generation-plan summary"
+        history:
+          description: "Show recent generation runs"
+          flags:
+            limit:
+              type: string
+              required: false
+              short: n
+              description: "Maximum number of runs to show"
+              default: "10"
+          examples:
+            - description: "Show last 5 runs"
+              command: "copf generation-plan history --limit 5"
+            - description: "Show last 10 runs"
+              command: "copf generation-plan history"

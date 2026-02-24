@@ -1,0 +1,14 @@
+# Check BuildCache before CloudFormationProvider generates — Section 3.8
+
+sync CheckCacheBeforeCloudFormation [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "cloudformation" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  BuildCache/check: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    deterministic: false
+  ]
+}

@@ -1,0 +1,14 @@
+# Check BuildCache before TerraformProvider generates — Section 3.8
+
+sync CheckCacheBeforeTerraform [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "terraform" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  BuildCache/check: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    deterministic: false
+  ]
+}

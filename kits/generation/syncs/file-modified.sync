@@ -1,0 +1,13 @@
+# FileModified — generation kit required sync
+sync FileModified [eager]
+  purpose { Translate file modification into Resource upsert. }
+when {
+  FileWatcher/detected: [ path: ?path; hash: ?hash; event: "modify" ]
+    => []
+}
+where {
+  bind(kindFromExtension(?path) as ?kind)
+}
+then {
+  Resource/upsert: [ locator: ?path; kind: ?kind; digest: ?hash ]
+}

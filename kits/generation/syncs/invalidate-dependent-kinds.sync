@@ -1,0 +1,10 @@
+# InvalidateDependentKinds — generation kit recommended sync
+sync InvalidateDependentKinds [eager]
+  purpose { Invalidate cache entries for all downstream kinds. }
+when {
+  KindSystem/dependents: [ kind: ?kind ]
+    => ok(downstream: ?kinds)
+}
+then {
+  BuildCache/invalidateByKind: [ kindName: ?kinds ]
+}

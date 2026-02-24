@@ -1,0 +1,86 @@
+---
+name: resource
+description: Track input resources to generation pipelines : files , configs , 
+ environment facts Each resource has a content digest for change 
+ detection Centralizes what are my sources and which changed? 
+ so downstream systems ( caching , planning , invalidation ) have a 
+ single source of truth about inputs
+argument-hint: $ARGUMENTS
+allowed-tools: Read, Grep, Glob, Bash
+---
+
+# Resource
+
+Track input resources for **$ARGUMENTS** with content-addressed digests and change classification.
+
+
+> **When to use:** Use when tracking input files, detecting changes, or querying which resources are currently registered.
+
+
+## Design Principles
+
+- **Content-Addressed Tracking:** Resources are tracked by content digest, not modification time. Two files with identical content have the same digest.
+
+## Step-by-Step Process
+
+### Step 1: Track Input
+
+Register or update a tracked input resource with its content digest.
+
+**Arguments:** `$0` **locator** (string), `$1` **kind** (string), `$2` **digest** (string), `$3` **lastModified** (datetime?), `$4` **size** (int?)
+
+**Checklist:**
+- [ ] Locator is a stable, unique identifier?
+- [ ] Digest is a content hash (not a timestamp)?
+
+**Examples:**
+*Track a concept spec file*
+```typescript
+const result = await resourceHandler.upsert(
+  { locator: 'specs/app/article.concept', kind: 'concept-spec', digest: contentHash },
+  storage,
+);
+```
+
+### Step 2: List Resources
+
+List all tracked input resources, optionally filtered by kind.
+
+**Arguments:** `$0` **kind** (string?)
+
+**Checklist:**
+- [ ] Kind filter matches expected resource types?
+
+**Examples:**
+*List all tracked resources*
+```bash
+copf resource list
+```
+*List only concept specs*
+```bash
+copf resource list --kind concept-spec
+```
+
+## Quick Reference
+
+| Action | Command | Purpose |
+|--------|---------|---------|
+| upsert | `copf resource upsert` | Track or update an input |
+| get | `copf resource get` | Look up a tracked resource |
+| list | `copf resource list` | List all tracked inputs |
+| remove | `copf resource remove` | Stop tracking a resource |
+| diff | `copf resource diff` | Classify a content change |
+
+
+## Validation
+
+*List tracked resources:*
+```bash
+npx tsx tools/copf-cli/src/index.ts generate --status
+```
+## Related Skills
+
+| Skill | When to Use |
+| --- | --- |
+| `/incremental-caching` | Resource changes invalidate BuildCache entries |
+| `/file-emission` | Resource tracking feeds into generation pipeline |

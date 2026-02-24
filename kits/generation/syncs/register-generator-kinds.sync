@@ -1,0 +1,22 @@
+# RegisterGeneratorKinds — generation kit required sync
+sync RegisterGeneratorKinds [eager]
+  purpose { Auto-populate KindSystem edges from PluginRegistry generator registrations. }
+when {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: ?meta
+  ] => ok(plugin: ?p)
+}
+where {
+  bind(?meta.inputKind as ?inputKind)
+  bind(?meta.outputKind as ?outputKind)
+  bind(?meta.name as ?transformName)
+}
+then {
+  KindSystem/connect: [
+    from: ?inputKind;
+    to: ?outputKind;
+    relation: "renders_to";
+    transformName: ?transformName
+  ]
+}

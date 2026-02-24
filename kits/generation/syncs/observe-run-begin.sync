@@ -1,0 +1,10 @@
+# ObserveRunBegin — generation kit recommended sync
+sync ObserveRunBegin [eager]
+  purpose { Mark a generation run as started. }
+when {
+  CliCommand/generate: []
+    => []
+}
+then {
+  GenerationPlan/begin: []
+}

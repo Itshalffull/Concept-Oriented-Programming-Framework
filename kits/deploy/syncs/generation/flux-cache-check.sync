@@ -1,0 +1,14 @@
+# Check BuildCache before FluxProvider emits — Section 3.8
+
+sync CheckCacheBeforeFlux [eager]
+when {
+  GitOps/emit: [ plan: ?plan; controller: "flux"; repo: ?repo; path: ?path ]
+    => [ manifest: ?m; files: ?files ]
+}
+then {
+  BuildCache/check: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    deterministic: false
+  ]
+}

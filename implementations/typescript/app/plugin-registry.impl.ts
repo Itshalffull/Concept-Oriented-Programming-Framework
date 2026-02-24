@@ -2,6 +2,30 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const pluginRegistryHandler: ConceptHandler = {
+  async register(input, storage) {
+    const type = input.type as string;
+    const name = input.name as string;
+    const metadata = input.metadata as string;
+
+    // Check if plugin already registered (idempotent)
+    const existing = await storage.get('pluginDefinition', name);
+    if (existing && existing.type === type) {
+      return { variant: 'exists', plugin: existing.id || name };
+    }
+
+    const parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+
+    await storage.put('pluginDefinition', name, {
+      id: name,
+      type,
+      name,
+      metadata: parsedMetadata,
+      registeredAt: new Date().toISOString(),
+    });
+
+    return { variant: 'ok', plugin: name };
+  },
+
   async discover(input, storage) {
     const type = input.type as string;
 

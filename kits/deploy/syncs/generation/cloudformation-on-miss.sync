@@ -1,0 +1,15 @@
+# Route IaC/emit to CloudFormationProvider on cache miss — Section 3.8
+
+sync CloudFormationOnCacheMiss [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "cloudformation" ]
+    => [ output: ?output; fileCount: ?count ]
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => [ previousHash: ?prev ]
+}
+where {
+  filter(?stepKey == ?plan)
+}
+then {
+  CloudFormationProvider/generate: [ plan: ?plan ]
+}

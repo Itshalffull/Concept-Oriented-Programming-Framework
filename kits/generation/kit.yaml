@@ -1,0 +1,97 @@
+# kits/generation/kit.yaml
+kit:
+  name: generation
+  version: 0.1.0
+  description: >
+    Shared generation infrastructure for all COPF generation families.
+    Provides input tracking, pipeline topology, incremental build caching,
+    content-addressed file emission, traceability, drift detection, and
+    unified run reporting.
+
+concepts:
+  Resource:
+    spec: ./resource.concept
+    params:
+      R: { as: resource-ref, description: "Reference to a tracked input resource" }
+
+  KindSystem:
+    spec: ./kind-system.concept
+    params:
+      K: { as: kind-ref, description: "Reference to an IR/artifact kind" }
+
+  BuildCache:
+    spec: ./build-cache.concept
+    params:
+      E: { as: cache-entry-ref, description: "Reference to a cache entry" }
+
+  GenerationPlan:
+    spec: ./generation-plan.concept
+    params:
+      R: { as: run-ref, description: "Reference to a generation run" }
+
+  Emitter:
+    spec: ./emitter.concept
+    params:
+      F: { as: file-ref, description: "Reference to an output file entry" }
+
+syncs:
+  required:
+    - path: ./syncs/file-changed.sync
+      description: "FileWatcher create → Resource/upsert"
+
+    - path: ./syncs/file-modified.sync
+      description: "FileWatcher modify → Resource/upsert"
+
+    - path: ./syncs/file-removed.sync
+      description: "FileWatcher delete → Resource/remove"
+
+    - path: ./syncs/register-generator-kinds.sync
+      description: "PluginRegistry registration → KindSystem/connect"
+
+    - path: ./syncs/ensure-kinds-defined.sync
+      description: "PluginRegistry registration → KindSystem/define"
+
+    - path: ./syncs/format-after-write.sync
+      description: "Emitter/write → Emitter/format"
+
+  recommended:
+    - path: ./syncs/invalidate-on-resource-change.sync
+      name: InvalidateOnResourceChange
+      description: "Resource/changed → BuildCache/invalidateBySource"
+
+    - path: ./syncs/cascade-invalidation.sync
+      name: CascadeInvalidation
+      description: "BuildCache invalidation → KindSystem/dependents"
+
+    - path: ./syncs/invalidate-dependent-kinds.sync
+      name: InvalidateDependentKinds
+      description: "KindSystem/dependents → BuildCache/invalidateByKind"
+
+    - path: ./syncs/invalidate-on-resource-remove.sync
+      name: InvalidateOnResourceRemove
+      description: "Resource/remove → BuildCache/invalidateBySource"
+
+    - path: ./syncs/observe-cache-hit.sync
+      name: ObserveCacheHit
+      description: "BuildCache/unchanged → GenerationPlan/recordStep(cached)"
+
+    - path: ./syncs/observe-run-begin.sync
+      name: ObserveRunBegin
+      description: "CLI generate → GenerationPlan/begin"
+
+    - path: ./syncs/observe-run-complete.sync
+      name: ObserveRunComplete
+      description: "SyncEngine quiesced → GenerationPlan/complete"
+
+    - path: ./syncs/clean-orphans-after-run.sync
+      name: CleanOrphansAfterRun
+      description: "GenerationPlan/complete → Emitter/clean"
+
+  # Per-generator syncs (cache-check wrappers, output routing,
+  # observer syncs, registration syncs) live in each family's
+  # kit because they name family-specific concepts.
+
+uses:
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

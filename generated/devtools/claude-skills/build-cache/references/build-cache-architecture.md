@@ -1,0 +1,23 @@
+# BuildCache Architecture
+
+BuildCache tracks generation results per step key (generator:concept pair).
+
+## Cache Check Flow
+
+1. Compute input hash (deterministic hash of concept manifest or projection)
+2. Look up step key in cache
+3. Compare hashes → `unchanged` (cache hit) or `changed` (cache miss)
+
+## Invalidation Strategies
+
+- **By source**: When a `.concept` file changes, invalidate all steps
+  that used it (`invalidateBySource`)
+- **By kind**: When an IR kind is invalidated, cascade to all dependent
+  kinds (`invalidateByKind`)
+- **Manual**: `invalidateAll` clears the entire cache
+
+## Deterministic vs Non-Deterministic
+
+Deterministic generators (same input → same output) can be cached
+aggressively. Non-deterministic generators (e.g., timestamp-based)
+are always re-run.

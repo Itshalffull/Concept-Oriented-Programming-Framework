@@ -1,0 +1,15 @@
+# Record TerraformProvider completion in GenerationPlan — Section 3.8
+
+sync ObserveTerraform [eager]
+when {
+  TerraformProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: ?plan;
+    status: "done";
+    filesProduced: 1;
+    cached: false
+  ]
+}

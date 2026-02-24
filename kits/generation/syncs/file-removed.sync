@@ -1,0 +1,10 @@
+# FileRemoved — generation kit required sync
+sync FileRemoved [eager]
+  purpose { Track file deletions. }
+when {
+  FileWatcher/detected: [ path: ?path; event: "delete" ]
+    => []
+}
+then {
+  Resource/remove: [ locator: ?path ]
+}

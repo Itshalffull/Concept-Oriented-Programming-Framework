@@ -11,6 +11,11 @@ import { ProjectScaffoldCommand } from './ProjectScaffold/ProjectScaffold.comman
 import { DevServerCommand } from './DevServer/DevServer.command';
 import { CacheCompilerCommand } from './CacheCompiler/CacheCompiler.command';
 import { KitManagerCommand } from './KitManager/KitManager.command';
+import { EmitterCommand } from './Emitter/Emitter.command';
+import { BuildCacheCommand } from './BuildCache/BuildCache.command';
+import { ResourceCommand } from './Resource/Resource.command';
+import { KindSystemCommand } from './KindSystem/KindSystem.command';
+import { GenerationPlanCommand } from './GenerationPlan/GenerationPlan.command';
 
 const program = new Command();
 
@@ -25,5 +30,10 @@ const program = new Command();
   program.addCommand(DevServerCommand);
   program.addCommand(CacheCompilerCommand);
   program.addCommand(KitManagerCommand);
+  program.addCommand(EmitterCommand);
+  program.addCommand(BuildCacheCommand);
+  program.addCommand(ResourceCommand);
+  program.addCommand(KindSystemCommand);
+  program.addCommand(GenerationPlanCommand);
 
 export default program;

@@ -1,0 +1,10 @@
+# Route FluxProvider file output through Emitter — Section 3.8
+
+sync EmitFluxFiles [eager]
+when {
+  FluxProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

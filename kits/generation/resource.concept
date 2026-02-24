@@ -1,0 +1,86 @@
+@version(1)
+concept Resource [R] {
+
+  purpose {
+    Track input resources to generation pipelines: files, configs,
+    environment facts. Each resource has a content digest for change
+    detection. Centralizes "what are my sources and which changed?"
+    so downstream systems (caching, planning, invalidation) have a
+    single source of truth about inputs.
+  }
+
+  state {
+    resources: set R
+    locator: R -> String
+    kind: R -> String
+    digest: R -> String
+    lastModified: R -> option DateTime
+    size: R -> option Int
+  }
+
+  actions {
+    action upsert(locator: String, kind: String, digest: String, lastModified: option DateTime, size: option Int) {
+      -> created(resource: R) {
+        New resource. First time this locator has been seen.
+        Records kind, digest, and metadata. Downstream syncs
+        should treat this as a new input requiring full generation.
+      }
+      -> changed(resource: R, previousDigest: String) {
+        Known resource, digest differs from stored value.
+        Returns previous digest so downstream can diff if needed.
+        Downstream syncs should invalidate affected caches.
+      }
+      -> unchanged(resource: R) {
+        Known resource, digest identical to stored value.
+        No action needed downstream.
+      }
+    }
+
+    action get(locator: String) {
+      -> ok(resource: R, kind: String, digest: String) {
+        Return current resource record for this locator.
+      }
+      -> notFound(locator: String) {
+        No resource registered at this locator.
+      }
+    }
+
+    action list(kind: option String) {
+      -> ok(resources: list { locator: String, kind: String, digest: String }) {
+        List all tracked resources, optionally filtered by kind.
+      }
+    }
+
+    action remove(locator: String) {
+      -> ok(resource: R) {
+        Resource removed from tracking. Downstream syncs should
+        treat this as a deletion — clean up generated outputs
+        that depended on this resource.
+      }
+      -> notFound(locator: String) {
+        No resource registered at this locator.
+      }
+    }
+
+    action diff(locator: String, oldDigest: String, newDigest: String) {
+      -> ok(changeType: String) {
+        Classify the change type for this resource kind:
+        "content" — same structure, different values.
+        "structural" — fields/actions/types added or removed.
+        "breaking" — types changed, fields removed, signatures altered.
+        Classification depends on kind-specific diff logic.
+      }
+      -> unknown(message: String) {
+        Cannot determine change type — no kind-specific differ
+        registered for this resource kind.
+      }
+    }
+  }
+
+  invariant {
+    after upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> created(resource: r)
+    then  get(locator: "./specs/password.concept") -> ok(resource: r, kind: "concept-spec", digest: "abc123")
+    and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> unchanged(resource: r)
+    and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "def456") -> changed(resource: r, previousDigest: "abc123")
+  }
+}

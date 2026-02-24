@@ -1,0 +1,15 @@
+# Route GitOps/emit to FluxProvider on cache miss — Section 3.8
+
+sync FluxOnCacheMiss [eager]
+when {
+  GitOps/emit: [ plan: ?plan; controller: "flux"; repo: ?repo; path: ?path ]
+    => [ manifest: ?m; files: ?files ]
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => [ previousHash: ?prev ]
+}
+where {
+  filter(?stepKey == ?plan)
+}
+then {
+  FluxProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+}

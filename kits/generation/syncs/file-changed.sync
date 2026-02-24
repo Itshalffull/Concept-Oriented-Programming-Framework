@@ -1,0 +1,13 @@
+# FileChanged — generation kit required sync
+sync FileChanged [eager]
+  purpose { Translate filesystem create events into Resource upserts. }
+when {
+  FileWatcher/detected: [ path: ?path; hash: ?hash; event: "create" ]
+    => []
+}
+where {
+  bind(kindFromExtension(?path) as ?kind)
+}
+then {
+  Resource/upsert: [ locator: ?path; kind: ?kind; digest: ?hash ]
+}
