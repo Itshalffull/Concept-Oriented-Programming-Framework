@@ -9,8 +9,8 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
-import type { HierarchicalConfig } from './codegen-utils.js';
+import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait, getManifestEnrichment, getGenerationConfig } from './codegen-utils.js';
+import type { HierarchicalConfig, GenerationConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.impl.js';
 
 // --- CLI Command Tree Metadata Types ---
@@ -119,6 +119,7 @@ function buildSubcommand(
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
   hierConfig?: HierarchicalConfig,
+  genConfig?: GenerationConfig,
 ): string {
   const lines: string[] = [];
   const actionOverride = overrides[action.name] as Record<string, unknown> | undefined;
@@ -176,6 +177,11 @@ function buildSubcommand(
     addHierarchicalFlags(lines, action.name);
   }
 
+  // Generation kit flags for generate-like actions
+  if (genConfig && action.name.toLowerCase() === 'generate') {
+    addGenerationFlags(lines);
+  }
+
   // Always add --json output flag
   lines.push(`  .option('--json', 'Output as JSON')`);
 
@@ -203,6 +209,147 @@ function buildSubcommand(
   return lines.join('\n');
 }
 
+// --- Generation Kit Subcommands ---
+
+/**
+ * When a concept is declared as a generator in the manifest's
+ * generation.generators section, emit extra subcommands that
+ * integrate with the COPF generation kit:
+ *   --plan, --force, --audit, --status, --summary, --history, --clean
+ *
+ * These use the same pattern as the handwritten CLI but dispatch
+ * through the kernel's generation kit concepts (GenerationPlan,
+ * BuildCache, Emitter, KindSystem).
+ */
+function buildGenerationSubcommands(
+  conceptCamel: string,
+  genConfig: GenerationConfig,
+): string {
+  const lines: string[] = [];
+  const family = genConfig.family;
+  const genName = `${family}Generator`;
+
+  // --plan subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('plan')`);
+  lines.push(`  .description('Show what would be generated without executing')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
+  lines.push(`      method: 'generationPlan',`);
+  lines.push(`      family: '${family}',`);
+  lines.push(`      inputKind: '${genConfig.inputKind}',`);
+  lines.push(`      outputKind: '${genConfig.outputKind}',`);
+  lines.push(`    });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --status subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('status')`);
+  lines.push(`  .description('Show status of current or last generation run')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'generationStatus' });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --summary subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('summary')`);
+  lines.push(`  .description('Show summary statistics for the last generation run')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'generationSummary' });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --history subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('history')`);
+  lines.push(`  .description('Show recent generation runs')`);
+  lines.push(`  .option('--limit <n>', 'Maximum number of runs to show', parseInt)`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
+  lines.push(`      method: 'generationHistory',`);
+  lines.push(`      limit: opts.limit || 10,`);
+  lines.push(`    });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --audit subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('audit')`);
+  lines.push(`  .description('Check generated files for drift from expected output')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'emitterAudit' });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --clean subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('clean')`);
+  lines.push(`  .description('Remove orphaned generated files')`);
+  lines.push(`  .option('--dry-run', 'Show what would be removed without deleting')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
+  lines.push(`      method: 'emitterClean',`);
+  lines.push(`      dryRun: !!opts.dryRun,`);
+  lines.push(`    });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --impact subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('impact')`);
+  lines.push(`  .description('Show what outputs are affected by a source file change')`);
+  lines.push(`  .argument('<source>', 'Source file path to check impact for')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (source, opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
+  lines.push(`      method: 'emitterAffected',`);
+  lines.push(`      sourcePath: source,`);
+  lines.push(`    });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --kinds subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('kinds')`);
+  lines.push(`  .description('Show the IR kind taxonomy relevant to this generator')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
+  lines.push(`      method: 'kindSystemGraph',`);
+  lines.push(`      inputKind: '${genConfig.inputKind}',`);
+  lines.push(`      outputKind: '${genConfig.outputKind}',`);
+  lines.push(`    });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Add --force flag to a generator's main generate action.
+ * When a concept is a generator, its generate action gets:
+ *   --force  Force full rebuild, bypass cache
+ */
+function addGenerationFlags(lines: string[]): void {
+  lines.push(`  .option('--force', 'Force full rebuild, bypass cache')`);
+  lines.push(`  .option('--dry-run', 'Show changes without writing files')`);
+}
+
 // --- Generate Command File ---
 
 function generateCommandFile(
@@ -211,6 +358,7 @@ function generateCommandFile(
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
   hierConfig?: HierarchicalConfig,
+  genConfig?: GenerationConfig,
 ): string {
   const conceptCamel = toCamelCase(conceptName);
   const kebab = toKebabCase(conceptName);
@@ -238,7 +386,7 @@ function generateCommandFile(
   }
 
   for (const action of manifest.actions) {
-    lines.push(buildSubcommand(action, conceptCamel, overrides, cliConfig, hierConfig));
+    lines.push(buildSubcommand(action, conceptCamel, overrides, cliConfig, hierConfig, genConfig));
     lines.push('');
   }
 
@@ -248,15 +396,41 @@ function generateCommandFile(
     lines.push('');
   }
 
+  // Generation kit: auto-generated subcommands for generators
+  if (genConfig) {
+    lines.push('// --- Generation Kit Integration ---');
+    lines.push('');
+    lines.push(buildGenerationSubcommands(conceptCamel, genConfig));
+    lines.push('');
+  }
+
   // Export command tree metadata for surface composition
   const actionNames = manifest.actions.map(a => {
     const cliName = cliConfig?.actions?.[a.name]?.command || toKebabCase(a.name);
     return `{ action: '${a.name}', command: '${cliName}' }`;
   });
+
+  // Generation kit subcommands in tree
+  const genSubcommands = genConfig
+    ? `, { action: 'plan', command: 'plan' }, { action: 'status', command: 'status' }, ` +
+      `{ action: 'summary', command: 'summary' }, { action: 'history', command: 'history' }, ` +
+      `{ action: 'audit', command: 'audit' }, { action: 'clean', command: 'clean' }, ` +
+      `{ action: 'impact', command: 'impact' }, { action: 'kinds', command: 'kinds' }`
+    : '';
+
   lines.push(`export const ${conceptCamel}CommandTree = {`);
   lines.push(`  group: '${groupName}',`);
   lines.push(`  description: '${groupDesc}',`);
-  lines.push(`  commands: [${actionNames.join(', ')}],`);
+  lines.push(`  commands: [${actionNames.join(', ')}${genSubcommands}],`);
+  if (genConfig) {
+    lines.push(`  generation: {`);
+    lines.push(`    family: '${genConfig.family}',`);
+    lines.push(`    inputKind: '${genConfig.inputKind}',`);
+    lines.push(`    outputKind: '${genConfig.outputKind}',`);
+    lines.push(`    deterministic: ${genConfig.deterministic},`);
+    lines.push(`    pure: ${genConfig.pure},`);
+    lines.push(`  },`);
+  }
   lines.push(`};`);
   lines.push('');
 
@@ -371,7 +545,16 @@ export const cliTargetHandler: ConceptHandler = {
     const kebab = toKebabCase(name);
     const cliConfig = getCliConfig(parsedManifestYaml, name);
     const hierConfig = getHierarchicalTrait(parsedManifestYaml, name);
-    const content = generateCommandFile(manifest, name, overrides, cliConfig, hierConfig);
+    // Generation config: YAML manifest takes priority, then ConceptManifest.generation
+    const genConfig = getGenerationConfig(parsedManifestYaml, name)
+      || (manifest.generation ? {
+          family: manifest.generation.family,
+          inputKind: manifest.generation.inputKind,
+          outputKind: manifest.generation.outputKind,
+          deterministic: manifest.generation.deterministic,
+          pure: manifest.generation.pure,
+        } : undefined);
+    const content = generateCommandFile(manifest, name, overrides, cliConfig, hierConfig, genConfig);
 
     const files: Array<{ path: string; content: string }> = [
       {

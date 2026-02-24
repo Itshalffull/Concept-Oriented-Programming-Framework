@@ -1906,6 +1906,16 @@ This reduces the "add a generator" workflow to:
 
 **Planning is read-only analysis.** `copf generate --plan` queries three concepts (PluginRegistry, KindSystem, BuildCache) and computes what would happen. No side effects, no state changes, no triggers. This is the appropriate role for a planning concept.
 
+### Cross-Concept Contamination — Design Violation Caught During Implementation
+
+During initial implementation, two cross-concept contamination violations were introduced and subsequently corrected:
+
+1. **Generator `register` actions.** TypeScriptGen, RustGen, SwiftGen, and SolidityGen were given `register` actions that returned metadata (name, family, inputKind, outputKind, deterministic, pure). This embedded knowledge of the plugin registration system directly inside each generator concept. **Fix:** Removed all `register` actions. Generator metadata (name, family, inputKind, outputKind, deterministic, pure) is declared statically in `kit.yaml` under each generator's entry, and syncs wire that metadata to PluginRegistry. Generators never interact with PluginRegistry.
+
+2. **GenerationPlan `plan` action.** The original spec included a `plan` action that accepted `generators: list`, `staleSteps: list`, and `topology: graph` as input parameters. These are typed references to data owned by PluginRegistry, BuildCache, and KindSystem respectively — making GenerationPlan aware of three other concepts. **Fix:** Removed the `plan` action entirely. GenerationPlan is now purely passive: `begin`, `recordStep`, `complete`, `status`, `summary`, `history`. Planning queries (what would run, what's cached) are handled by the CLI layer, which queries PluginRegistry, KindSystem, and BuildCache independently and composes the plan view — no concept needs to know about the others.
+
+**Lesson:** Even when a concept *receives* other concepts' data as input parameters (rather than querying them directly), it still violates concept independence if the parameter types or semantics are specific to other concepts. The test is: "Could this concept be used without the other concepts existing?" If the parameters only make sense in the presence of specific other concepts, that's contamination.
+
 ### Why PluginRegistry is the single registration point
 
 Generators should know about exactly one infrastructure concept: PluginRegistry. The registration sync carries all metadata (name, family, inputKind, outputKind, deterministic, pure). Downstream syncs propagate this to KindSystem (topology) and make it available to GenerationPlan (planning). This means:

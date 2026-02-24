@@ -494,6 +494,50 @@ export function getManifestEnrichment(
   return merged;
 }
 
+// --- Generation Kit Config ---
+
+/** Parsed generation config from manifest YAML for a concept. */
+export interface GenerationConfig {
+  family: string;
+  inputKind: string;
+  outputKind: string;
+  deterministic: boolean;
+  pure: boolean;
+}
+
+/**
+ * Extract generation config from manifest YAML.
+ * Checks 'generation.generators' for concept-level generator declarations.
+ *
+ * YAML format:
+ *   generation:
+ *     generators:
+ *       ConceptName:
+ *         family: framework
+ *         inputKind: ConceptManifest
+ *         outputKind: TypeScriptFiles
+ *         deterministic: true
+ *         pure: true
+ */
+export function getGenerationConfig(
+  manifestYaml: Record<string, unknown> | undefined,
+  conceptName: string,
+): GenerationConfig | undefined {
+  if (!manifestYaml) return undefined;
+  const generation = manifestYaml.generation as Record<string, unknown> | undefined;
+  if (!generation) return undefined;
+  const generators = generation.generators as Record<string, Record<string, unknown>> | undefined;
+  if (!generators?.[conceptName]) return undefined;
+  const gen = generators[conceptName];
+  return {
+    family: (gen.family as string) || 'custom',
+    inputKind: (gen.inputKind as string) || 'Unknown',
+    outputKind: (gen.outputKind as string) || 'Unknown',
+    deterministic: gen.deterministic !== false,
+    pure: gen.pure !== false,
+  };
+}
+
 // --- Concept Grouping ---
 
 export type GroupingMode =

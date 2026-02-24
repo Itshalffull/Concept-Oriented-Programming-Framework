@@ -29,6 +29,8 @@ import { traceCommand } from './commands/trace.js';
 import { migrateCommand } from './commands/migrate.js';
 import { compileCacheCommand } from './commands/compile-cache.js';
 import { interfaceCommand } from './commands/interface.js';
+import { impactCommand } from './commands/impact.js';
+import { kindsCommand } from './commands/kinds.js';
 
 const VERSION = '0.1.0';
 
@@ -76,6 +78,16 @@ Commands:
   generate --target <lang>       Generate schemas + code for all concepts
     --target typescript|rust       Target language
     --concept <Name>               Generate for a single concept only
+    --force                        Force full rebuild (invalidate all caches)
+    --plan                         Show what would run without executing
+    --dry-run                      Show file changes without writing
+    --summary                      Show post-run statistics
+    --history                      Show recent generation runs
+    --status                       Show status of current/last run
+    --audit                        Check generated files for drift
+    --clean                        Remove orphaned generated files
+    --family <name>                Filter by generation family
+    --generator-syncs              Auto-generate per-generator sync files
   compile --cache                Build pre-compiled artifacts to .copf-cache/
   compile-syncs                  Compile syncs and validate against manifests
   test [concept]                 Run conformance tests for a concept
@@ -86,6 +98,12 @@ Commands:
     --failed                       Show only failed/unfired branches
     --gates                        Show only gate steps and downstream chains
     --json                         Output as JSON for tooling
+  impact <path>                  Show what regenerates if a source file changes
+  kinds <subcommand>             Kind system queries
+    list                           Show all registered IR/artifact kinds
+    path <from> <to>               Find shortest transform path between kinds
+    consumers <kind>               What transforms consume this kind
+    producers <kind>               What transforms produce this kind
   migrate <concept>              Run schema migration for a concept
     --check                        Report version status for all concepts
     --all                          Migrate all concepts needing migration
@@ -164,6 +182,12 @@ export async function main(argv: string[] = process.argv): Promise<void> {
         break;
       case 'interface':
         await interfaceCommand(parsed.positional, parsed.flags);
+        break;
+      case 'impact':
+        await impactCommand(parsed.positional, parsed.flags);
+        break;
+      case 'kinds':
+        await kindsCommand(parsed.positional, parsed.flags);
         break;
       default:
         console.error(`Unknown command: ${parsed.command}`);

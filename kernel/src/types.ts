@@ -397,6 +397,14 @@ export interface ConceptManifest {
   category?: string;
   /** Visibility level from @visibility annotation (e.g. "framework", "public", "internal"). */
   visibility?: string;
+  /** Generation kit metadata — set when concept is declared as a generator. */
+  generation?: {
+    family: string;
+    inputKind: string;
+    outputKind: string;
+    deterministic: boolean;
+    pure: boolean;
+  };
 }
 
 // --- Kit Manifest (Section 9) ---

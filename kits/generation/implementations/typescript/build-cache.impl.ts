@@ -78,6 +78,8 @@ export const buildCacheHandler: ConceptHandler = {
     const entryId = existing ? (existing.id as string) : randomUUID();
     const now = new Date().toISOString();
 
+    const kind = input.kind as string | undefined;
+
     await storage.put(ENTRIES_RELATION, stepKey, {
       id: entryId,
       stepKey,
@@ -85,6 +87,7 @@ export const buildCacheHandler: ConceptHandler = {
       outputHash,
       outputRef: outputRef || null,
       sourceLocator: sourceLocator || null,
+      kind: kind || null,
       deterministic,
       lastRun: now,
       stale: false,
@@ -148,16 +151,20 @@ export const buildCacheHandler: ConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ): Promise<{ variant: string; [key: string]: unknown }> {
-    const kindName = input.kindName as string;
+    const kind = (input.kind || input.kindName) as string;
     const allEntries = await storage.find(ENTRIES_RELATION);
     const invalidated: string[] = [];
 
     for (const entry of allEntries) {
       const stepKey = entry.stepKey as string;
-      // Match if the generator name in the step key relates to this kind.
-      // Step keys follow the pattern {family}:{generator}:{target}.
-      // A kind maps to the generator that produces it.
-      if (stepKey.includes(kindName)) {
+      const entryKind = entry.kind as string | null;
+
+      // Match on stored kind field, or fall back to stepKey substring match
+      const matches = entryKind
+        ? entryKind === kind
+        : stepKey.includes(kind);
+
+      if (matches) {
         await storage.put(ENTRIES_RELATION, stepKey, {
           ...entry,
           stale: true,

@@ -1,5 +1,5 @@
 // ============================================================
-// copf generate --target <lang> [--concept <Name>]
+// copf generate [--target <lang>] [--concept <Name>]
 //
 // Generates schemas and code for all (or a single) concept.
 //
@@ -8,11 +8,24 @@
 //   2. SchemaGen (AST → ConceptManifest)
 //   3. CodeGen (Manifest → target-language files)
 //
+// Generation kit integration (copf-generation-kit.md Part 6):
+//   --plan       Show what would run without executing
+//   --dry-run    Show file changes without writing
+//   --force      Force full rebuild (invalidate all caches)
+//   --status     Show live progress during generation
+//   --summary    Show post-run statistics
+//   --history    Show recent generation runs
+//   --audit      Check generated files for drift
+//   --clean      Remove orphaned generated files
+//   --family     Filter by generation family
+//   --generator-syncs  Auto-generate per-generator sync files
+//
 // Generated output goes to the generated/ directory.
 // ============================================================
 
-import { readFileSync, mkdirSync, writeFileSync } from 'fs';
+import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'fs';
 import { resolve, relative, join } from 'path';
+import { createHash } from 'crypto';
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import { schemaGenHandler } from '../../../../implementations/typescript/framework/schema-gen.impl.js';
@@ -20,33 +33,136 @@ import { typescriptGenHandler } from '../../../../implementations/typescript/fra
 import { rustGenHandler } from '../../../../implementations/typescript/framework/rust-gen.impl.js';
 import { swiftGenHandler } from '../../../../implementations/typescript/framework/swift-gen.impl.js';
 import { solidityGenHandler } from '../../../../implementations/typescript/framework/solidity-gen.impl.js';
+import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
+import { buildCacheHandler } from '../../../../kits/generation/implementations/typescript/build-cache.impl.js';
+import { generationPlanHandler } from '../../../../kits/generation/implementations/typescript/generation-plan.impl.js';
+import { resourceHandler } from '../../../../kits/generation/implementations/typescript/resource.impl.js';
+import { kindSystemHandler } from '../../../../kits/generation/implementations/typescript/kind-system.impl.js';
 import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
 const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity'] as const;
 type Target = (typeof SUPPORTED_TARGETS)[number];
 
+const GENERATOR_META: Record<string, {
+  name: string;
+  family: string;
+  inputKind: string;
+  outputKind: string;
+  deterministic: boolean;
+  handler: ConceptHandler;
+}> = {
+  typescript: {
+    name: 'TypeScriptGen',
+    family: 'framework',
+    inputKind: 'ConceptManifest',
+    outputKind: 'TypeScriptFiles',
+    deterministic: true,
+    handler: typescriptGenHandler,
+  },
+  rust: {
+    name: 'RustGen',
+    family: 'framework',
+    inputKind: 'ConceptManifest',
+    outputKind: 'RustFiles',
+    deterministic: true,
+    handler: rustGenHandler,
+  },
+  swift: {
+    name: 'SwiftGen',
+    family: 'framework',
+    inputKind: 'ConceptManifest',
+    outputKind: 'SwiftFiles',
+    deterministic: true,
+    handler: swiftGenHandler,
+  },
+  solidity: {
+    name: 'SolidityGen',
+    family: 'framework',
+    inputKind: 'ConceptManifest',
+    outputKind: 'SolidityFiles',
+    deterministic: true,
+    handler: solidityGenHandler,
+  },
+};
+
+function computeHash(content: string): string {
+  return createHash('sha256').update(content).digest('hex').slice(0, 16);
+}
+
 export async function generateCommand(
   _positional: string[],
   flags: Record<string, string | boolean>,
 ): Promise<void> {
+  // --- Dispatch to subcommands ---
+
+  if (flags.plan) return generatePlan(flags);
+  if (flags['dry-run']) return generateDryRun(flags);
+  if (flags.audit) return generateAudit(flags);
+  if (flags.clean) return generateClean(flags);
+  if (flags.summary) return generateSummary(flags);
+  if (flags.history) return generateHistory(flags);
+  if (flags.status) return generateStatus(flags);
+  if (flags['generator-syncs']) return generateSyncFiles(flags);
+
+  // --- Main generation pipeline ---
+
   const target = flags.target as string;
   if (!target || !SUPPORTED_TARGETS.includes(target as Target)) {
     console.error(
-      `Usage: copf generate --target <${SUPPORTED_TARGETS.join('|')}> [--concept <Name>]`,
+      `Usage: copf generate --target <${SUPPORTED_TARGETS.join('|')}> [options]`,
     );
+    console.error('\nOptions:');
+    console.error('  --concept <Name>   Generate for a single concept only');
+    console.error('  --force            Force full rebuild (invalidate all caches)');
+    console.error('  --plan             Show what would run without executing');
+    console.error('  --dry-run          Show file changes without writing');
+    console.error('  --summary          Show post-run statistics for last run');
+    console.error('  --history          Show recent generation runs');
+    console.error('  --status           Show status of current/last run');
+    console.error('  --audit            Check generated files for drift');
+    console.error('  --clean            Remove orphaned generated files');
+    console.error('  --generator-syncs  Auto-generate per-generator sync files');
     process.exit(1);
   }
 
+  const meta = GENERATOR_META[target];
   const filterConcept = flags.concept as string | undefined;
+  const filterFamily = flags.family as string | undefined;
+  const forceRebuild = flags.force === true;
   const projectDir = resolve(process.cwd());
   const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
   const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
+
+  // Initialize generation kit storages
+  const cacheStorage = createInMemoryStorage();
+  const planStorage = createInMemoryStorage();
+  const emitStorage = createInMemoryStorage();
+  const resourceStorage = createInMemoryStorage();
+
+  // Force rebuild: invalidate all caches
+  if (forceRebuild) {
+    const invalidateResult = await buildCacheHandler.invalidateAll({}, cacheStorage);
+    console.log(`Force rebuild: cleared ${invalidateResult.cleared || 0} cache entries.\n`);
+  }
+
+  // Begin generation run
+  const beginResult = await generationPlanHandler.begin({}, planStorage);
+  const runId = beginResult.run as string;
+  const runStartTime = Date.now();
 
   const conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
 
   if (conceptFiles.length === 0) {
     console.log('No .concept files found.');
+    await generationPlanHandler.complete({}, planStorage);
+    return;
+  }
+
+  // Filter by family if specified
+  if (filterFamily && meta.family !== filterFamily) {
+    console.log(`Skipping ${meta.name}: family "${meta.family}" does not match filter "${filterFamily}".`);
+    await generationPlanHandler.complete({}, planStorage);
     return;
   }
 
@@ -58,6 +174,13 @@ export async function generateCommand(
       const ast = parseConceptFile(source);
       if (filterConcept && ast.name !== filterConcept) continue;
       asts.push({ file: relative(projectDir, file), ast });
+
+      // Track input resource
+      const digest = computeHash(source);
+      await resourceHandler.upsert(
+        { locator: relative(projectDir, file), kind: 'concept-spec', digest },
+        resourceStorage,
+      );
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`Parse error in ${relative(projectDir, file)}: ${message}`);
@@ -67,6 +190,7 @@ export async function generateCommand(
 
   if (filterConcept && asts.length === 0) {
     console.error(`Concept "${filterConcept}" not found in spec files.`);
+    await generationPlanHandler.complete({}, planStorage);
     process.exit(1);
   }
 
@@ -75,8 +199,16 @@ export async function generateCommand(
   );
 
   let totalFiles = 0;
+  let cachedCount = 0;
+  let executedCount = 0;
+  let failedCount = 0;
+  let writtenCount = 0;
+  let skippedCount = 0;
 
   for (const { file, ast } of asts) {
+    const stepStartTime = Date.now();
+    const stepKey = `${meta.family}:${meta.name}:${ast.name}`;
+
     // SchemaGen — produce ConceptManifest
     const schemaStorage = createInMemoryStorage();
     const schemaResult = await schemaGenHandler.generate(
@@ -86,10 +218,32 @@ export async function generateCommand(
 
     if (schemaResult.variant !== 'ok') {
       console.error(`Schema generation failed for ${ast.name}: ${schemaResult.message}`);
-      process.exit(1);
+      await generationPlanHandler.recordStep(
+        { stepKey, status: 'failed', cached: false },
+        planStorage,
+      );
+      failedCount++;
+      continue;
     }
 
     const manifest = schemaResult.manifest as ConceptManifest;
+
+    // BuildCache check — skip if input unchanged
+    const inputHash = computeHash(JSON.stringify(manifest));
+    const cacheCheck = await buildCacheHandler.check(
+      { stepKey, inputHash, deterministic: meta.deterministic },
+      cacheStorage,
+    );
+
+    if (cacheCheck.variant === 'unchanged') {
+      console.log(`  ${ast.name}: cached (skip)`);
+      await generationPlanHandler.recordStep(
+        { stepKey, status: 'cached', cached: true },
+        planStorage,
+      );
+      cachedCount++;
+      continue;
+    }
 
     // Write JSON schemas
     const jsonSchemaDir = join(projectDir, outDir, 'schemas', 'json', ast.name.toLowerCase());
@@ -109,15 +263,7 @@ export async function generateCommand(
 
     // CodeGen — produce target-language files
     const codeStorage = createInMemoryStorage();
-    const generators: Record<string, ConceptHandler> = {
-      typescript: typescriptGenHandler,
-      rust: rustGenHandler,
-      swift: swiftGenHandler,
-      solidity: solidityGenHandler,
-    };
-    const generator = generators[target];
-
-    const codeResult = await generator.generate(
+    const codeResult = await meta.handler.generate(
       { spec: file, manifest },
       codeStorage,
     );
@@ -126,23 +272,578 @@ export async function generateCommand(
       console.error(
         `Code generation failed for ${ast.name}: ${codeResult.message}`,
       );
-      process.exit(1);
+      await generationPlanHandler.recordStep(
+        { stepKey, status: 'failed', cached: false },
+        planStorage,
+      );
+      failedCount++;
+      continue;
     }
 
     const files = codeResult.files as { path: string; content: string }[];
+
+    // Write files through Emitter for content-addressed writes
+    let stepFilesWritten = 0;
+    let stepFilesSkipped = 0;
     const targetDir = join(projectDir, outDir, target);
-    mkdirSync(targetDir, { recursive: true });
 
     for (const f of files) {
       const filePath = join(targetDir, f.path);
-      // Ensure nested directories exist (e.g., for Rust modules)
       mkdirSync(join(filePath, '..'), { recursive: true });
-      writeFileSync(filePath, f.content + '\n');
+
+      const writeResult = await emitterHandler.write(
+        {
+          path: filePath,
+          content: f.content + '\n',
+          target,
+          concept: ast.name,
+          sources: [{ sourcePath: file, conceptName: ast.name }],
+        },
+        emitStorage,
+      );
+
+      if (writeResult.variant === 'ok' && writeResult.written) {
+        stepFilesWritten++;
+        writtenCount++;
+      } else {
+        stepFilesSkipped++;
+        skippedCount++;
+      }
     }
 
+    // Record cache entry
+    const outputHash = computeHash(JSON.stringify(files));
+    await buildCacheHandler.record(
+      {
+        stepKey,
+        inputHash,
+        outputHash,
+        sourceLocator: file,
+        deterministic: meta.deterministic,
+      },
+      cacheStorage,
+    );
+
+    const stepDuration = Date.now() - stepStartTime;
     totalFiles += files.length + 2; // +2 for manifest.json and .graphql
-    console.log(`  ${ast.name}: ${files.length} ${target} file(s) + schemas`);
+
+    // Record step in GenerationPlan
+    await generationPlanHandler.recordStep(
+      {
+        stepKey,
+        status: 'done',
+        filesProduced: files.length,
+        duration: stepDuration,
+        cached: false,
+      },
+      planStorage,
+    );
+
+    executedCount++;
+    console.log(
+      `  ${ast.name}: ${files.length} ${target} file(s) + schemas` +
+      ` (${stepFilesWritten} written, ${stepFilesSkipped} unchanged, ${stepDuration}ms)`,
+    );
   }
 
-  console.log(`\n${totalFiles} file(s) written to ${outDir}/`);
+  // Complete generation run
+  await generationPlanHandler.complete({}, planStorage);
+  const totalDuration = Date.now() - runStartTime;
+
+  // Print summary
+  console.log(`\nGeneration complete (${totalDuration}ms):`);
+  console.log(`  ${totalFiles} total file(s) to ${outDir}/`);
+  console.log(`  ${executedCount} executed, ${cachedCount} cached, ${failedCount} failed`);
+  console.log(`  ${writtenCount} written, ${skippedCount} unchanged`);
+
+  if (failedCount > 0) {
+    process.exit(1);
+  }
+}
+
+// --- Subcommand: --plan ---
+
+async function generatePlan(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const projectDir = resolve(process.cwd());
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+  const filterFamily = flags.family as string | undefined;
+  const filterTarget = flags.target as string | undefined;
+
+  const cacheStorage = createInMemoryStorage();
+  const kindStorage = createInMemoryStorage();
+
+  // Register standard kind taxonomy
+  await kindSystemHandler.define({ name: 'ConceptDSL', category: 'source' }, kindStorage);
+  await kindSystemHandler.define({ name: 'ConceptAST', category: 'model' }, kindStorage);
+  await kindSystemHandler.define({ name: 'ConceptManifest', category: 'model' }, kindStorage);
+  await kindSystemHandler.connect(
+    { from: 'ConceptDSL', to: 'ConceptAST', relation: 'parses_to', transformName: 'SpecParser' },
+    kindStorage,
+  );
+  await kindSystemHandler.connect(
+    { from: 'ConceptAST', to: 'ConceptManifest', relation: 'normalizes_to', transformName: 'SchemaGen' },
+    kindStorage,
+  );
+
+  // Register generator kinds
+  for (const [targetKey, meta] of Object.entries(GENERATOR_META)) {
+    if (filterFamily && meta.family !== filterFamily) continue;
+    if (filterTarget && targetKey !== filterTarget) continue;
+
+    await kindSystemHandler.define({ name: meta.outputKind, category: 'artifact' }, kindStorage);
+    await kindSystemHandler.connect(
+      { from: meta.inputKind, to: meta.outputKind, relation: 'renders_to', transformName: meta.name },
+      kindStorage,
+    );
+  }
+
+  // Count concept files
+  const conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
+
+  // Get stale steps
+  const staleResult = await buildCacheHandler.staleSteps({}, cacheStorage);
+  const staleSteps = (staleResult.steps as string[]) || [];
+
+  // Get full graph
+  const graphResult = await kindSystemHandler.graph({}, kindStorage);
+  const kinds = (graphResult.kinds as { name: string; category: string }[]) || [];
+  const edges = (graphResult.edges as { from: string; to: string; relation: string; transform: string | null }[]) || [];
+
+  console.log('Generation Plan');
+  console.log('===============\n');
+  console.log(`  Source files: ${conceptFiles.length} .concept file(s)`);
+  console.log(`  Kind taxonomy: ${kinds.length} kind(s), ${edges.length} edge(s)`);
+  console.log(`  Stale steps: ${staleSteps.length}`);
+  console.log('');
+
+  // Display kind graph
+  console.log('  Pipeline:');
+  for (const edge of edges) {
+    const transform = edge.transform ? ` (${edge.transform})` : '';
+    console.log(`    ${edge.from} --${edge.relation}--> ${edge.to}${transform}`);
+  }
+  console.log('');
+
+  // Display per-target plan
+  console.log('  Steps:');
+  for (const [targetKey, meta] of Object.entries(GENERATOR_META)) {
+    if (filterFamily && meta.family !== filterFamily) continue;
+    if (filterTarget && targetKey !== filterTarget) continue;
+
+    for (const file of conceptFiles) {
+      const relFile = relative(projectDir, file);
+      const source = readFileSync(file, 'utf-8');
+      let conceptName = '(unknown)';
+      try {
+        conceptName = parseConceptFile(source).name;
+      } catch { /* skip */ }
+
+      const stepKey = `${meta.family}:${meta.name}:${conceptName}`;
+      const isStale = staleSteps.includes(stepKey);
+
+      // Check cache
+      const inputHash = computeHash(source);
+      const cacheResult = await buildCacheHandler.check(
+        { stepKey, inputHash, deterministic: meta.deterministic },
+        cacheStorage,
+      );
+
+      const willRun = cacheResult.variant === 'changed' || isStale;
+      const reason = willRun
+        ? (isStale ? 'dependency stale' : 'no cache entry — first run')
+        : 'cached — skip';
+      const marker = willRun ? 'RUN' : 'SKIP';
+
+      console.log(`    [${marker}] ${stepKey} — ${reason}`);
+    }
+  }
+
+  const totalSteps = conceptFiles.length * Object.keys(GENERATOR_META).length;
+  console.log(`\n  Total: ${totalSteps} step(s)`);
+}
+
+// --- Subcommand: --dry-run ---
+
+async function generateDryRun(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const projectDir = resolve(process.cwd());
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+  const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
+  const target = flags.target as string;
+
+  if (!target || !SUPPORTED_TARGETS.includes(target as Target)) {
+    console.error('Usage: copf generate --dry-run --target <lang>');
+    process.exit(1);
+  }
+
+  const meta = GENERATOR_META[target];
+  const conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
+
+  console.log('Dry Run — Changes that would be made:\n');
+
+  let addCount = 0;
+  let modifyCount = 0;
+  let removeCount = 0;
+
+  for (const file of conceptFiles) {
+    const source = readFileSync(file, 'utf-8');
+    let ast: ConceptAST;
+    try {
+      ast = parseConceptFile(source);
+    } catch { continue; }
+
+    const schemaStorage = createInMemoryStorage();
+    const schemaResult = await schemaGenHandler.generate(
+      { spec: relative(projectDir, file), ast },
+      schemaStorage,
+    );
+    if (schemaResult.variant !== 'ok') continue;
+
+    const manifest = schemaResult.manifest as ConceptManifest;
+    const codeStorage = createInMemoryStorage();
+    const codeResult = await meta.handler.generate(
+      { spec: relative(projectDir, file), manifest },
+      codeStorage,
+    );
+    if (codeResult.variant !== 'ok') continue;
+
+    const files = codeResult.files as { path: string; content: string }[];
+    const targetDir = join(projectDir, outDir, target);
+
+    for (const f of files) {
+      const filePath = join(targetDir, f.path);
+      const relPath = relative(projectDir, filePath);
+
+      if (!existsSync(filePath)) {
+        console.log(`  [ADD]    ${relPath}`);
+        addCount++;
+      } else {
+        const existing = readFileSync(filePath, 'utf-8');
+        if (existing !== f.content + '\n') {
+          console.log(`  [MODIFY] ${relPath}`);
+          modifyCount++;
+        }
+        // unchanged files not shown
+      }
+    }
+  }
+
+  console.log(`\n  ${addCount} add, ${modifyCount} modify, ${removeCount} remove`);
+}
+
+// --- Subcommand: --audit ---
+
+async function generateAudit(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const projectDir = resolve(process.cwd());
+  const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
+  const outputDir = resolve(projectDir, outDir);
+  const emitStorage = createInMemoryStorage();
+
+  const auditResult = await emitterHandler.audit(
+    { outputDir },
+    emitStorage,
+  );
+
+  const statuses = (auditResult.status as { path: string; state: string }[]) || [];
+
+  console.log('Audit — Generated File Status:\n');
+
+  const drifted = statuses.filter(s => s.state === 'drifted');
+  const missing = statuses.filter(s => s.state === 'missing');
+  const orphaned = statuses.filter(s => s.state === 'orphaned');
+  const current = statuses.filter(s => s.state === 'current');
+
+  if (current.length > 0) {
+    console.log(`  ${current.length} file(s) current`);
+  }
+  if (drifted.length > 0) {
+    console.log(`\n  DRIFTED (manually edited):`);
+    for (const s of drifted) {
+      console.log(`    ${relative(projectDir, s.path)}`);
+    }
+  }
+  if (missing.length > 0) {
+    console.log(`\n  MISSING (in manifest, not on disk):`);
+    for (const s of missing) {
+      console.log(`    ${relative(projectDir, s.path)}`);
+    }
+  }
+  if (orphaned.length > 0) {
+    console.log(`\n  ORPHANED (on disk, not in manifest):`);
+    for (const s of orphaned) {
+      console.log(`    ${relative(projectDir, s.path)}`);
+    }
+  }
+
+  if (drifted.length === 0 && missing.length === 0 && orphaned.length === 0) {
+    console.log('  All generated files are current. No drift detected.');
+  }
+}
+
+// --- Subcommand: --clean ---
+
+async function generateClean(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const projectDir = resolve(process.cwd());
+  const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
+  const outputDir = resolve(projectDir, outDir);
+  const emitStorage = createInMemoryStorage();
+
+  const manifestResult = await emitterHandler.manifest(
+    { outputDir },
+    emitStorage,
+  );
+  const manifestFiles = (manifestResult.files as { path: string }[]) || [];
+  const currentPaths = manifestFiles.map(f => f.path);
+
+  const cleanResult = await emitterHandler.clean(
+    { outputDir, currentManifest: currentPaths },
+    emitStorage,
+  );
+
+  const removed = (cleanResult.removed as string[]) || [];
+
+  if (removed.length === 0) {
+    console.log('No orphaned files found.');
+  } else {
+    console.log(`Removed ${removed.length} orphaned file(s):`);
+    for (const path of removed) {
+      console.log(`  ${relative(projectDir, path)}`);
+    }
+  }
+}
+
+// --- Subcommand: --summary ---
+
+async function generateSummary(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const planStorage = createInMemoryStorage();
+  const histResult = await generationPlanHandler.history({ limit: 1 }, planStorage);
+  const runs = (histResult.runs as { run: string }[]) || [];
+
+  if (runs.length === 0) {
+    console.log('No generation runs recorded in this session.');
+    return;
+  }
+
+  const runId = runs[0].run;
+  const summaryResult = await generationPlanHandler.summary(
+    { run: runId },
+    planStorage,
+  );
+
+  if (summaryResult.variant !== 'ok') {
+    console.log('No summary available for the last run.');
+    return;
+  }
+
+  console.log('Generation Summary');
+  console.log('==================\n');
+  console.log(`  Total steps:     ${summaryResult.total}`);
+  console.log(`  Executed:        ${summaryResult.executed}`);
+  console.log(`  Cached (skip):   ${summaryResult.cached}`);
+  console.log(`  Failed:          ${summaryResult.failed}`);
+  console.log(`  Files produced:  ${summaryResult.filesProduced}`);
+}
+
+// --- Subcommand: --history ---
+
+async function generateHistory(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const limit = typeof flags.limit === 'string' ? parseInt(flags.limit, 10) : 10;
+  const planStorage = createInMemoryStorage();
+
+  const histResult = await generationPlanHandler.history({ limit }, planStorage);
+  const runs = (histResult.runs as {
+    run: string;
+    startedAt: string;
+    completedAt: string | null;
+    total: number;
+    executed: number;
+    cached: number;
+    failed: number;
+  }[]) || [];
+
+  if (runs.length === 0) {
+    console.log('No generation runs recorded in this session.');
+    return;
+  }
+
+  console.log('Generation History');
+  console.log('==================\n');
+
+  for (const run of runs) {
+    const started = run.startedAt ? new Date(run.startedAt).toLocaleString() : '?';
+    const status = run.completedAt ? 'complete' : 'in progress';
+    console.log(
+      `  ${run.run.slice(0, 8)}  ${started}  ${run.executed} executed  ${run.cached} cached  ${run.failed} failed  [${status}]`,
+    );
+  }
+}
+
+// --- Subcommand: --status ---
+
+async function generateStatus(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const planStorage = createInMemoryStorage();
+  const histResult = await generationPlanHandler.history({ limit: 1 }, planStorage);
+  const runs = (histResult.runs as { run: string }[]) || [];
+
+  if (runs.length === 0) {
+    console.log('No generation runs recorded in this session.');
+    return;
+  }
+
+  const runId = runs[0].run;
+  const statusResult = await generationPlanHandler.status(
+    { run: runId },
+    planStorage,
+  );
+
+  const steps = (statusResult.steps as {
+    stepKey: string;
+    status: string;
+    duration: number;
+    cached: boolean;
+    filesProduced: number;
+  }[]) || [];
+
+  console.log('Generation Status');
+  console.log('=================\n');
+
+  for (const step of steps) {
+    const dur = step.duration > 0 ? ` (${step.duration}ms)` : '';
+    const files = step.filesProduced > 0 ? `, ${step.filesProduced} files` : '';
+    console.log(`  [${step.status.toUpperCase().padEnd(6)}] ${step.stepKey}${dur}${files}`);
+  }
+
+  if (steps.length === 0) {
+    console.log('  No steps recorded yet.');
+  }
+}
+
+// --- Subcommand: --generator-syncs ---
+
+async function generateSyncFiles(
+  flags: Record<string, string | boolean>,
+): Promise<void> {
+  const projectDir = resolve(process.cwd());
+  const outDir = resolve(projectDir, 'generated', 'syncs');
+  mkdirSync(outDir, { recursive: true });
+
+  let totalSyncs = 0;
+
+  for (const [_targetKey, meta] of Object.entries(GENERATOR_META)) {
+    const kebabName = meta.name.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+
+    // 1. Cache check sync
+    const cacheCheckSync = `sync CheckCacheBefore${meta.name} [eager]
+  purpose { Check cache before ${meta.name} runs. }
+when {
+  SchemaGen/generate: [ spec: ?spec ]
+    => ok(manifest: ?manifest)
+}
+where {
+  bind(hash(?manifest) as ?inputHash)
+  bind(concat("${meta.family}:${meta.name}:", ?spec) as ?stepKey)
+}
+then {
+  BuildCache/check: [
+    stepKey: ?stepKey;
+    inputHash: ?inputHash;
+    deterministic: ${meta.deterministic}
+  ]
+}
+`;
+    writeFileSync(join(outDir, `cache-check-before-${kebabName}.sync`), cacheCheckSync);
+
+    // 2. Generate on miss sync
+    const genOnMissSync = `sync ${meta.name}OnCacheMiss [eager]
+  purpose { Run ${meta.name} only on cache miss. }
+when {
+  SchemaGen/generate: [ spec: ?spec ]
+    => ok(manifest: ?manifest)
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => changed(previousHash: ?prev)
+}
+where {
+  bind(concat("${meta.family}:${meta.name}:", ?spec) as ?expectedKey)
+  guard(?stepKey == ?expectedKey)
+}
+then {
+  ${meta.name}/generate: [ spec: ?spec; manifest: ?manifest ]
+}
+`;
+    writeFileSync(join(outDir, `${kebabName}-on-miss.sync`), genOnMissSync);
+
+    // 3. Emit files sync
+    const emitSync = `sync Emit${meta.name}Files [eager]
+  purpose { Route ${meta.name} file output through Emitter. }
+when {
+  ${meta.name}/generate: [ spec: ?spec ]
+    => ok(files: ?files)
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}
+`;
+    writeFileSync(join(outDir, `emit-${kebabName}-files.sync`), emitSync);
+
+    // 4. Record cache sync
+    const recordCacheSync = `sync RecordCache${meta.name} [eager]
+  purpose { Record ${meta.name} success in BuildCache. }
+when {
+  ${meta.name}/generate: [ spec: ?spec ]
+    => ok(files: ?files)
+  Emitter/writeBatch: []
+    => ok(results: ?results)
+}
+where {
+  bind(hash(?files) as ?outputHash)
+  bind(concat("${meta.family}:${meta.name}:", ?spec) as ?stepKey)
+}
+then {
+  BuildCache/record: [
+    stepKey: ?stepKey;
+    inputHash: ?inputHash;
+    outputHash: ?outputHash;
+    sourceLocator: specLocator(?spec);
+    deterministic: ${meta.deterministic}
+  ]
+}
+`;
+    writeFileSync(join(outDir, `record-cache-${kebabName}.sync`), recordCacheSync);
+
+    // 5. Observer sync
+    const observeSync = `sync Observe${meta.name} [eager]
+  purpose { Record ${meta.name} completion in GenerationPlan. }
+when {
+  ${meta.name}/generate: [ spec: ?spec ]
+    => ok(files: ?files)
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: concat("${meta.family}:${meta.name}:", ?spec);
+    status: "done";
+    filesProduced: count(?files);
+    cached: false
+  ]
+}
+`;
+    writeFileSync(join(outDir, `observe-${kebabName}.sync`), observeSync);
+
+    totalSyncs += 5;
+    console.log(`  ${meta.name}: 5 sync files`);
+  }
+
+  console.log(`\n${totalSyncs} sync file(s) written to generated/syncs/`);
 }

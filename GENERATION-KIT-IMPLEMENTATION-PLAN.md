@@ -27,9 +27,19 @@ Before implementing, note what already exists:
 ### Key architectural observations
 
 1. **TypeScriptGen already returns `{ files }`** — it does NOT write to disk directly. This means the Emitter integration for framework generators is already partially compatible.
-2. **PluginRegistry lacks a `register` action** — the current spec only has discover/createInstance/getDefinitions/alterDefinitions/derivePlugins. The generation kit needs a `register` action that stores generator metadata (name, family, inputKind, outputKind, deterministic, pure).
+2. **PluginRegistry has a `register` action** — added during implementation. Stores generator metadata (name, type, metadata JSON).
 3. **Emitter exists but needs promotion and expansion** — the current interface kit Emitter handles write/format/clean/manifest. The generation kit version adds writeBatch, sourceMap, trace, affected, and audit.
-4. **No generation kit directory exists yet** — everything must be scaffolded from scratch.
+4. **Generation kit directory now exists** — scaffolded with 5 concepts, 14 syncs, 5 conformance tests + 1 integration test.
+
+### Cross-Concept Contamination Lesson (Caught During Implementation)
+
+Two violations of COPF Design Principle 2 (concept independence) were introduced and corrected:
+
+1. **Generator `register` actions (REVERTED).** TypeScriptGen, RustGen, SwiftGen, and SolidityGen were given `register` actions returning metadata. This baked plugin-system awareness into generators. **Fix:** Removed all `register` actions from generators. Generator metadata (name, family, inputKind, outputKind, deterministic, pure) lives statically in `kit.yaml` and syncs propagate it to PluginRegistry. Generators never interact with PluginRegistry.
+
+2. **GenerationPlan `plan` action (REMOVED).** Accepted `generators`, `staleSteps`, and `topology` as typed inputs — typed references to data owned by PluginRegistry, BuildCache, and KindSystem. **Fix:** Removed the `plan` action entirely. GenerationPlan is now purely passive (begin/recordStep/complete/status/summary/history). Planning queries are composed in the CLI layer, which queries each concept independently.
+
+**Principle:** Even receiving other concepts' data as input parameters violates independence if the parameter types or semantics are concept-specific. The test is: "Could this concept exist without the other concepts?" If parameter shapes only make sense when other specific concepts exist, that's contamination. Cross-concept data flows belong in syncs and the CLI/presentation layer — never in concept action signatures.
 
 ---
 
@@ -324,32 +334,21 @@ Create syncs from `copf-generation-kit.md` Part 2.3:
    - Store plugin definition with id=name, type, metadata (parsed JSON)
    - Return existing if name already registered (idempotent)
 
-### 4.6 Add `register` action to generator concepts
+### 4.6 Generator metadata in kit.yaml (NOT in concept actions)
 
-Update each generator concept spec and implementation to add a `register` action that returns static metadata:
+~~Update each generator concept spec and implementation to add a `register` action.~~
 
-**TypeScriptGen:**
-- name: "TypeScriptGen", family: "framework", inputKind: "ConceptManifest", outputKind: "TypeScriptFiles", deterministic: true, pure: true
+**CORRECTED:** Generator metadata lives in `kit.yaml` statically, NOT as concept actions. Adding `register` to generators violates concept independence (see "Cross-Concept Contamination Lesson" above). Syncs read kit.yaml metadata at bootstrap and wire it to PluginRegistry.
 
-**RustGen:**
-- name: "RustGen", family: "framework", inputKind: "ConceptManifest", outputKind: "RustFiles", deterministic: true, pure: true
+Generator metadata declared in kit.yaml:
+- TypeScriptGen: family=framework, inputKind=ConceptManifest, outputKind=TypeScriptFiles, deterministic=true, pure=true
+- RustGen: family=framework, inputKind=ConceptManifest, outputKind=RustFiles, deterministic=true, pure=true
+- SwiftGen: family=framework, inputKind=ConceptManifest, outputKind=SwiftFiles, deterministic=true, pure=true
+- SolidityGen: family=framework, inputKind=ConceptManifest, outputKind=SolidityFiles, deterministic=true, pure=true
 
-**SwiftGen:**
-- name: "SwiftGen", family: "framework", inputKind: "ConceptManifest", outputKind: "SwiftFiles", deterministic: true, pure: true
+### 4.7 Bootstrap registration syncs
 
-**SolidityGen:**
-- name: "SolidityGen", family: "framework", inputKind: "ConceptManifest", outputKind: "SolidityFiles", deterministic: true, pure: true
-
-Each is a ~10-line addition to the existing implementation.
-
-### 4.7 Write registration syncs (one per generator)
-
-Create per-generator registration syncs following the pattern from `copf-generation-kit.md` Part 3:
-
-For each generator (TypeScriptGen, RustGen, SwiftGen, SolidityGen):
-- `syncs/register-{name}.sync` — {Generator}/register → ok → PluginRegistry/register
-
-These live in the framework family's sync area (not in generation kit), since they name family-specific concepts.
+Kit bootstrap syncs read kit.yaml and call PluginRegistry/register for each generator declared in the manifest. No per-generator sync needed — a single bootstrap sync iterates all generator entries.
 
 ### 4.8 Register standard kind taxonomy at kit load time
 
@@ -417,12 +416,22 @@ Create `kits/generation/implementations/typescript/generation-plan.impl.ts`:
 - `activeRun` — singleton storing current run ID (or null)
 
 **Key implementation details:**
-- `plan`: query PluginRegistry/getDefinitions, KindSystem/graph, BuildCache/staleSteps. This action needs access to other concepts. In COPF, cross-concept queries happen through the sync engine or through query transports. For the implementation, GenerationPlan/plan would accept pre-fetched data as input (the sync that triggers it passes the needed data), OR it queries via storage if concept snapshots are available.
-  - **Design decision:** GenerationPlan/plan should receive `generators`, `staleSteps`, and `topology` as input parameters (pre-fetched by the sync that invokes it). This keeps the concept independent — it doesn't need to know about PluginRegistry, KindSystem, or BuildCache directly.
+
+~~**REMOVED:** `plan` action. Originally accepted `generators`, `staleSteps`, and `topology` as typed parameters — this leaked knowledge of PluginRegistry, BuildCache, and KindSystem into GenerationPlan (see "Cross-Concept Contamination Lesson").~~
+
+**CORRECTED:** GenerationPlan is purely passive. Planning queries are composed in the CLI layer:
+- CLI queries PluginRegistry/getDefinitions for registered generators
+- CLI queries KindSystem/graph for topology
+- CLI queries BuildCache/staleSteps for cache status
+- CLI composes the plan view from these three independent queries
+- No concept needs to know about the others
+
 - `begin`: create new run, store as activeRun
 - `recordStep`: append step to activeRun's steps array
 - `complete`: set completedAt, clear activeRun
+- `status`: return steps for a specific run
 - `summary`: aggregate from steps array
+- `history`: return recent runs with limit
 
 ### 5.3 Write observer syncs
 
@@ -553,12 +562,12 @@ These changes apply the generation kit infrastructure to each family. They can p
 ### Framework Family
 
 **Changes to existing files:**
-1. Add `register` action to TypeScriptGen, RustGen, SwiftGen, SolidityGen implementations (~10 lines each)
+1. ~~Add `register` action to generators~~ **REVERTED** — generator metadata is in kit.yaml, not in concept actions (see "Cross-Concept Contamination Lesson")
 2. TypeScriptGen already returns `{ files }` — no change needed for Emitter compatibility
 3. Verify RustGen, SwiftGen, SolidityGen also return `{ files }` — update if they write directly
 
-**New sync files (6 per generator × 4 generators = 24 syncs):**
-- Registration, cache-check pair, emit, cache-record, observer for each
+**New sync files (5 per generator × 4 generators = 20 syncs):**
+- Cache-check pair, emit, cache-record, observer for each (no per-generator registration sync needed — bootstrap sync handles all)
 - All mechanical, follow identical pattern — auto-generatable via `copf generate --generator-syncs`
 
 ### Interface Family
@@ -599,18 +608,20 @@ These changes apply the generation kit infrastructure to each family. They can p
 
 ### Existing files to modify
 
-| File | Changes |
-|---|---|
-| `kits/infrastructure/plugin-registry.concept` | Add `register` action |
-| `implementations/typescript/app/plugin-registry.impl.ts` | Add `register` method |
-| `implementations/typescript/framework/emitter.impl.ts` | Add writeBatch, trace, affected, audit, sourceMap |
-| `implementations/typescript/framework/typescript-gen.impl.ts` | Add `register` method (~10 lines) |
-| `implementations/typescript/framework/rust-gen.impl.ts` | Add `register` method (~10 lines) |
-| `implementations/typescript/framework/swift-gen.impl.ts` | Add `register` method (~10 lines) |
-| `implementations/typescript/framework/solidity-gen.impl.ts` | Add `register` method (~10 lines) |
-| `kits/interface/kit.yaml` | Import Emitter from generation kit |
-| `kits/deploy/kit.yaml` | Import generation kit concepts |
-| **Total modified files** | **9** |
+| File | Changes | Status |
+|---|---|---|
+| `kits/infrastructure/plugin-registry.concept` | Add `register` action | Done |
+| `implementations/typescript/app/plugin-registry.impl.ts` | Add `register` method | Done |
+| `implementations/typescript/framework/emitter.impl.ts` | Add writeBatch, trace, affected, audit, sourceMap | Done |
+| ~~`implementations/typescript/framework/typescript-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
+| ~~`implementations/typescript/framework/rust-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
+| ~~`implementations/typescript/framework/swift-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
+| ~~`implementations/typescript/framework/solidity-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
+| `kits/interface/kit.yaml` | Import Emitter from generation kit | Done |
+| `kits/deploy/kit.yaml` | Import generation kit concepts | Pending |
+| `tools/copf-cli/src/commands/generate.ts` | Add --plan, --force, --audit, --history, --summary, --status flags | Pending |
+| `tools/copf-cli/src/index.ts` | Add `impact`, `kinds` commands | Pending |
+| **Total modified files** | **7 done, 3 pending** |
 
 ---
 
