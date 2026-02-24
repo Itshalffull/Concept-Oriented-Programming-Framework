@@ -1,0 +1,14 @@
+# ObserveCacheHit — generation kit recommended sync
+sync ObserveCacheHit [eager]
+  purpose { Record cache hits in GenerationPlan. }
+when {
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => unchanged(lastRun: ?t)
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: ?stepKey;
+    status: "cached";
+    cached: true
+  ]
+}

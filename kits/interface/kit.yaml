@@ -20,10 +20,11 @@ concepts:
     params:
       G: { as: generator-plan-ref, description: "Reference to a generation plan" }
 
-  Emitter:
-    spec: ./concepts/emitter.concept
-    params:
-      E: { as: emitter-file-ref, description: "Reference to a generated file" }
+  # Emitter: imported from generation kit (see uses section)
+  # Emitter:
+  #   spec: ./concepts/emitter.concept
+  #   params:
+  #     E: { as: emitter-file-ref, description: "Reference to a generated file" }
 
   Surface:
     spec: ./concepts/surface.concept
@@ -214,3 +215,10 @@ syncs:
     - path: ./syncs/routing/inject-middleware-cli.sync
     - path: ./syncs/routing/inject-middleware-mcp.sync
     - path: ./syncs/routing/inject-middleware-claude-skills.sync
+
+uses:
+  - kit: generation
+    concepts:
+      - name: Emitter
+        params:
+          F: { as: emitter-file-ref, description: "Reference to a generated file" }

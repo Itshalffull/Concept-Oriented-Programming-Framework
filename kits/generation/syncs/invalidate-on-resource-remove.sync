@@ -1,0 +1,10 @@
+# InvalidateOnResourceRemove — generation kit recommended sync
+sync InvalidateOnResourceRemove [eager]
+  purpose { When a source file is deleted, invalidate its cache entries. }
+when {
+  Resource/remove: [ locator: ?loc ]
+    => ok(resource: ?r)
+}
+then {
+  BuildCache/invalidateBySource: [ sourceLocator: ?loc ]
+}

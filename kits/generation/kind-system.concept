@@ -1,0 +1,123 @@
+@version(1)
+concept KindSystem [K] {
+
+  purpose {
+    Define the taxonomy of intermediate representations and
+    artifacts in generation pipelines. Track which kinds can
+    transform into which others. Enable pipeline validation,
+    execution ordering, and cascading invalidation — without
+    any concept needing to know the full taxonomy.
+  }
+
+  state {
+    kinds: set K
+    name: K -> String
+    category: K -> String
+    edges: K -> set {
+      target: K
+      relation: String
+      transformName: option String
+    }
+  }
+
+  actions {
+    action define(name: String, category: String) {
+      -> ok(kind: K) {
+        Register a new kind in the taxonomy.
+
+        Categories:
+        "source" — raw input (files, configs, environment facts).
+          Examples: ConceptDSL, SyncDSL, InterfaceManifest, DeployManifest.
+        "model" — intermediate representation.
+          Examples: ConceptAST, ConceptManifest, Projection, DeployPlan.
+        "artifact" — terminal output (generated files, specs, tokens, images).
+          Examples: TypeScriptFiles, RustFiles, RestRoutes, OpenApiDoc.
+      }
+      -> exists(kind: K) {
+        Kind with this name already registered. Returns existing ref.
+        Idempotent — not an error.
+      }
+    }
+
+    action connect(from: K, to: K, relation: String, transformName: option String) {
+      -> ok() {
+        Declare that kind `from` can be transformed into kind `to`.
+
+        Relations:
+        "parses_to" — text source → structured AST.
+        "normalizes_to" — AST → canonical model.
+        "renders_to" — model → target-specific artifact.
+        "materializes_to" — artifact → written files.
+
+        transformName records which generator concept performs
+        this transform. Used for analysis, planning, and display
+        — not for dispatch (dispatch stays in syncs).
+      }
+      -> invalid(message: String) {
+        Edge would create a cycle in the kind graph,
+        or from/to kinds don't exist.
+      }
+    }
+
+    action route(from: K, to: K) {
+      -> ok(path: list { kind: K, relation: String, transform: option String }) {
+        Compute shortest valid transform chain from `from` to `to`.
+        Used by GenerationPlan for planning display and by
+        `copf kinds path` CLI command.
+      }
+      -> unreachable(message: String) {
+        No valid path exists between these kinds.
+      }
+    }
+
+    action validate(from: K, to: K) {
+      -> ok() {
+        Confirm that a direct edge exists from `from` to `to`.
+        Used by `copf check` to validate that sync chains form
+        valid pipelines.
+      }
+      -> invalid(message: String) {
+        No direct edge exists. Returns nearest valid target
+        kinds reachable from `from` as suggestions.
+      }
+    }
+
+    action dependents(kind: K) {
+      -> ok(downstream: list K) {
+        Return all kinds transitively reachable from this kind.
+        Used by BuildCache for cascading invalidation: "if
+        ConceptManifest changed, what other kinds are affected?"
+      }
+    }
+
+    action producers(kind: K) {
+      -> ok(transforms: list { fromKind: K, transformName: option String }) {
+        What transforms can produce this kind?
+        Used for discoverability and reverse dependency analysis.
+      }
+    }
+
+    action consumers(kind: K) {
+      -> ok(transforms: list { toKind: K, transformName: option String }) {
+        What transforms consume this kind?
+        Used for forward impact analysis.
+      }
+    }
+
+    action graph() {
+      -> ok(kinds: list { name: String, category: String }, edges: list { from: String, to: String, relation: String, transform: option String }) {
+        Return the full topology graph. Used by
+        `copf generate --plan` for dependency visualization.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "ConceptAST", category: "model") -> ok(kind: ast)
+    and   define(name: "ConceptManifest", category: "model") -> ok(kind: mfst)
+    and   connect(from: ast, to: mfst, relation: "normalizes_to", transformName: "SchemaGen") -> ok()
+    then  validate(from: ast, to: mfst) -> ok()
+    and   route(from: ast, to: mfst) -> ok(path: p)
+    and   dependents(kind: ast) -> ok(downstream: d)
+  }
+}

@@ -1,0 +1,13 @@
+# ObserveRunComplete — generation kit recommended sync
+sync ObserveRunComplete [eager]
+  purpose { Mark a generation run as complete when pipeline quiesces. }
+when {
+  SyncEngine/quiesced: []
+    => []
+}
+where {
+  GenerationPlan: { activeRun: ?run }
+}
+then {
+  GenerationPlan/complete: []
+}

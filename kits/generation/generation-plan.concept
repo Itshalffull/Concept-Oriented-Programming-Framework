@@ -1,0 +1,78 @@
+@version(1)
+concept GenerationPlan [R] {
+
+  purpose {
+    Track generation run lifecycle: begin, record step outcomes,
+    complete, and report. Purely passive — does not dispatch
+    generators or query other concepts. Observer syncs feed it
+    data; it stores and aggregates.
+  }
+
+  state {
+    runs: set R
+    startedAt: R -> DateTime
+    completedAt: R -> option DateTime
+    activeRun: option R
+    steps: R -> list {
+      stepKey: String
+      status: String
+      filesProduced: Int
+      duration: Int
+      cached: Bool
+    }
+  }
+
+  actions {
+    action begin() {
+      -> ok(run: R) {
+        Mark a new generation run as started. Sets activeRun.
+        Subsequent recordStep calls associate with this run.
+      }
+    }
+
+    action recordStep(stepKey: String, status: String, filesProduced: option Int, duration: option Int, cached: Bool) {
+      -> ok() {
+        Record a step's outcome. Called by observer syncs that
+        watch generator completions, cache hits, and errors.
+
+        Statuses: "running", "done", "cached", "failed", "skipped".
+
+        Observer syncs fire after generator completions — never
+        in the execution path. If GenerationPlan is unavailable,
+        generation proceeds normally; only status tracking is lost.
+      }
+    }
+
+    action complete() {
+      -> ok(run: R) {
+        Mark the active run as complete. Called when all pipeline
+        syncs have quiesced. Clears activeRun.
+      }
+    }
+
+    action status(run: R) {
+      -> ok(steps: list { stepKey: String, status: String, duration: Int, cached: Bool, filesProduced: Int }) {
+        Return current execution status for all steps in a run.
+      }
+    }
+
+    action summary(run: R) {
+      -> ok(total: Int, executed: Int, cached: Int, failed: Int, totalDuration: Int, filesProduced: Int) {
+        Return summary statistics for a completed run.
+      }
+    }
+
+    action history(limit: option Int) {
+      -> ok(runs: list { run: R, startedAt: DateTime, completedAt: option DateTime, total: Int, executed: Int, cached: Int, failed: Int }) {
+        Return recent generation runs.
+      }
+    }
+  }
+
+  invariant {
+    after begin() -> ok(run: r)
+    and   recordStep(stepKey: "step1", status: "done", filesProduced: 3, duration: 100, cached: false) -> ok()
+    then  status(run: r) -> ok(steps: s)
+    and   summary(run: r) -> ok(total: 1, executed: 1, cached: 0, failed: 0, totalDuration: 100, filesProduced: 3)
+  }
+}

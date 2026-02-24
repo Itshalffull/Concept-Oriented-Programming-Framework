@@ -1,0 +1,13 @@
+# CascadeInvalidation — generation kit recommended sync
+sync CascadeInvalidation [eager]
+  purpose { After direct invalidation, find downstream kinds via KindSystem. }
+when {
+  BuildCache/invalidateBySource: [ sourceLocator: ?loc ]
+    => ok(invalidated: ?steps)
+}
+where {
+  bind(kindFromSourceLocator(?loc) as ?kind)
+}
+then {
+  KindSystem/dependents: [ kind: ?kind ]
+}

@@ -1,0 +1,114 @@
+@version(1)
+concept BuildCache [E] {
+
+  purpose {
+    Track input/output hashes for generation steps.
+    Enable incremental rebuilds: skip generation when
+    inputs haven't changed since the last successful run.
+    Support cascading invalidation when upstream kinds change.
+  }
+
+  state {
+    entries: set E
+    stepKey: E -> String
+    inputHash: E -> String
+    outputHash: E -> String
+    outputRef: E -> option String
+    lastRun: E -> DateTime
+    sourceLocator: E -> option String
+    deterministic: E -> Bool
+  }
+
+  actions {
+    action check(stepKey: String, inputHash: String, deterministic: Bool) {
+      -> unchanged(lastRun: DateTime, outputRef: option String) {
+        The input hash matches the stored hash for this step key,
+        AND the transform is deterministic (so same input guarantees
+        same output). The generator can skip execution.
+
+        Returns outputRef if available — the caller can load the
+        cached output directly from .copf-cache/ without re-running.
+
+        If deterministic is false, this variant is never returned —
+        nondeterministic transforms always re-run.
+      }
+      -> changed(previousHash: option String) {
+        The input hash differs from stored, OR no entry exists,
+        OR the transform is nondeterministic. The generator should
+        execute. Returns previous hash if one existed.
+      }
+    }
+
+    action record(stepKey: String, inputHash: String, outputHash: String, outputRef: option String, sourceLocator: option String, deterministic: Bool) {
+      -> ok(entry: E) {
+        Record a successful generation. Store input hash, output hash,
+        timestamp, optional output reference path, and the source
+        locator that produced this step's input.
+
+        outputRef points to the cached output in .copf-cache/ so
+        future cache hits can retrieve the output without re-running.
+
+        sourceLocator tracks which Resource produced this step's input,
+        enabling Resource → BuildCache invalidation chains.
+      }
+    }
+
+    action invalidate(stepKey: String) {
+      -> ok() {
+        Force a step to re-run next time by clearing its entry.
+      }
+      -> notFound() {
+        No entry exists for this step key.
+      }
+    }
+
+    action invalidateBySource(sourceLocator: String) {
+      -> ok(invalidated: list String) {
+        Invalidate all cache entries whose sourceLocator matches.
+        Used when Resource/upsert reports a changed source —
+        all steps derived from that source are invalidated.
+        Returns list of invalidated step keys.
+      }
+    }
+
+    action invalidateByKind(kindName: String) {
+      -> ok(invalidated: list String) {
+        Invalidate all cache entries whose step key contains
+        generators that produce the given kind. Used for cascading:
+        KindSystem/dependents returns affected kinds, then
+        BuildCache invalidates all steps producing those kinds.
+        Returns list of invalidated step keys.
+      }
+    }
+
+    action invalidateAll() {
+      -> ok(cleared: Int) {
+        Clear all cache entries. Full rebuild on next run.
+      }
+    }
+
+    action status() {
+      -> ok(entries: list { stepKey: String, inputHash: String, lastRun: DateTime, stale: Bool }) {
+        Return current cache status for all entries.
+        An entry is stale if it has been invalidated since lastRun.
+      }
+    }
+
+    action staleSteps() {
+      -> ok(steps: list String) {
+        Return step keys for all stale entries — entries that
+        have been invalidated and need re-running.
+        Used by GenerationPlan/plan for planning display.
+      }
+    }
+  }
+
+  invariant {
+    after record(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".copf-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true) -> ok(entry: e)
+    then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> unchanged(lastRun: t, outputRef: ".copf-cache/ts/password")
+    and   check(stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true) -> changed(previousHash: "abc")
+
+    after invalidate(stepKey: "framework:TypeScriptGen:password") -> ok()
+    then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> changed(previousHash: "abc")
+  }
+}
