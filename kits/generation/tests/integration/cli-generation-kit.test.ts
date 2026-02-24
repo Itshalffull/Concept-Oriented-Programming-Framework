@@ -108,11 +108,19 @@ describe('CLI generation kit integration', () => {
     expect(content).toContain("command('audit')");
     expect(content).toContain("command('clean')");
     expect(content).toContain("command('impact')");
-    expect(content).toContain("command('kinds')");
+    expect(content).toContain("command('generator-syncs')");
 
-    // Should have --force flag on generate subcommand
+    // Kinds should have subcommands matching hand-written CLI
+    expect(content).toContain("command('kinds')");
+    expect(content).toContain("command('list')");
+    expect(content).toContain("command('path <from> <to>')");
+    expect(content).toContain("command('consumers <kind>')");
+    expect(content).toContain("command('producers <kind>')");
+
+    // Should have --force and --family flags on generate subcommand
     expect(content).toContain("'--force'");
     expect(content).toContain("'--dry-run'");
+    expect(content).toContain("'--family <name>'");
 
     // Command tree should include generation metadata
     expect(content).toContain("generation: {");

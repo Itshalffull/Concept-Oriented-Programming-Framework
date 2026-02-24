@@ -323,18 +323,70 @@ function buildGenerationSubcommands(
   lines.push(`  });`);
   lines.push('');
 
-  // --kinds subcommand
-  lines.push(`${conceptCamel}Command`);
+  // --kinds subcommand group (with list, path, consumers, producers)
+  lines.push(`const ${conceptCamel}KindsCommand = ${conceptCamel}Command`);
   lines.push(`  .command('kinds')`);
-  lines.push(`  .description('Show the IR kind taxonomy relevant to this generator')`);
+  lines.push(`  .description('Inspect the IR kind taxonomy');`);
+  lines.push('');
+
+  lines.push(`${conceptCamel}KindsCommand`);
+  lines.push(`  .command('list')`);
+  lines.push(`  .description('List all registered kinds')`);
   lines.push(`  .option('--json', 'Output as JSON')`);
   lines.push(`  .action(async (opts) => {`);
-  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
-  lines.push(`      method: 'kindSystemGraph',`);
-  lines.push(`      inputKind: '${genConfig.inputKind}',`);
-  lines.push(`      outputKind: '${genConfig.outputKind}',`);
-  lines.push(`    });`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'kindSystemGraph' });`);
   lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  lines.push(`${conceptCamel}KindsCommand`);
+  lines.push(`  .command('path <from> <to>')`);
+  lines.push(`  .description('Find shortest transform path between two kinds')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (from, to, opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'kindSystemRoute', from, to });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  lines.push(`${conceptCamel}KindsCommand`);
+  lines.push(`  .command('consumers <kind>')`);
+  lines.push(`  .description('Show what transforms consume this kind')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (kind, opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'kindSystemConsumers', kind });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  lines.push(`${conceptCamel}KindsCommand`);
+  lines.push(`  .command('producers <kind>')`);
+  lines.push(`  .description('Show what transforms produce this kind')`);
+  lines.push(`  .option('--json', 'Output as JSON')`);
+  lines.push(`  .action(async (kind, opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'kindSystemProducers', kind });`);
+  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`  });`);
+  lines.push('');
+
+  // --family filter on generate action (surfaced separately from generate subcommand)
+  lines.push(`// Add --family filter to the parent generate action`);
+  lines.push(`// This flag is detected by the generation pipeline, not by this subcommand`);
+  lines.push('');
+
+  // --generator-syncs subcommand
+  lines.push(`${conceptCamel}Command`);
+  lines.push(`  .command('generator-syncs')`);
+  lines.push(`  .description('Auto-generate per-generator sync files')`);
+  lines.push(`  .option('--family <name>', 'Filter by generation family')`);
+  lines.push(`  .option('--out <dir>', 'Output directory', 'generated/syncs')`);
+  lines.push(`  .action(async (opts) => {`);
+  lines.push(`    const result = await globalThis.kernel.handleRequest({`);
+  lines.push(`      method: 'generateSyncFiles',`);
+  lines.push(`      family: opts.family,`);
+  lines.push(`      outputDir: opts.out,`);
+  lines.push(`    });`);
+  lines.push(`    console.log(result);`);
   lines.push(`  });`);
 
   return lines.join('\n');
@@ -348,6 +400,7 @@ function buildGenerationSubcommands(
 function addGenerationFlags(lines: string[]): void {
   lines.push(`  .option('--force', 'Force full rebuild, bypass cache')`);
   lines.push(`  .option('--dry-run', 'Show changes without writing files')`);
+  lines.push(`  .option('--family <name>', 'Filter by generation family')`);
 }
 
 // --- Generate Command File ---
@@ -415,7 +468,8 @@ function generateCommandFile(
     ? `, { action: 'plan', command: 'plan' }, { action: 'status', command: 'status' }, ` +
       `{ action: 'summary', command: 'summary' }, { action: 'history', command: 'history' }, ` +
       `{ action: 'audit', command: 'audit' }, { action: 'clean', command: 'clean' }, ` +
-      `{ action: 'impact', command: 'impact' }, { action: 'kinds', command: 'kinds' }`
+      `{ action: 'impact', command: 'impact' }, { action: 'kinds', command: 'kinds' }, ` +
+      `{ action: 'generator-syncs', command: 'generator-syncs' }`
     : '';
 
   lines.push(`export const ${conceptCamel}CommandTree = {`);

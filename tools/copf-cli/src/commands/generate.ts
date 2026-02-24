@@ -735,7 +735,7 @@ async function generateStatus(
 
 // Interface target providers: targets, SDKs, and spec formats
 // These receive Projection input (from InterfaceGenerator) rather than ConceptManifest
-const INTERFACE_TARGET_META: {
+export const INTERFACE_TARGET_META: {
   name: string;
   family: string;
   inputKind: string;
@@ -766,7 +766,7 @@ function toKebabCase(name: string): string {
   return name.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
 }
 
-function generateFrameworkSyncs(outDir: string, meta: typeof GENERATOR_META[string]): number {
+export function generateFrameworkSyncs(outDir: string, meta: typeof GENERATOR_META[string]): number {
   const kebabName = toKebabCase(meta.name);
 
   // 1. Cache check sync
@@ -868,7 +868,7 @@ then {
   return 5;
 }
 
-function generateInterfaceSyncs(
+export function generateInterfaceSyncs(
   outDir: string,
   meta: typeof INTERFACE_TARGET_META[number],
 ): number {
