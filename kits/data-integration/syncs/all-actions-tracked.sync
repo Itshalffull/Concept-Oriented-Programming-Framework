@@ -1,0 +1,55 @@
+// Cross-cutting provenance — every data action generates a lineage record
+
+sync TrackCapture [eager]
+when {
+  Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
+    => [ itemId: ?itemId; content: ?content ]
+}
+then {
+  Provenance/record: [ entity: ?itemId; activity: "capture"; agent: "system"; inputs: ?url ]
+}
+
+sync TrackMapping [eager]
+when {
+  FieldMapping/apply: [ record: ?record; mappingId: ?mappingId ]
+    => [ mapped: ?mapped ]
+}
+then {
+  Provenance/record: [ entity: ?record; activity: "field_mapping"; agent: "system"; inputs: ?mappingId ]
+}
+
+sync TrackTransform [eager]
+when {
+  Transform/chain: [ value: ?value; transformIds: ?ids ]
+    => [ result: ?result ]
+}
+then {
+  Provenance/record: [ entity: ?value; activity: "transform"; agent: "system"; inputs: ?ids ]
+}
+
+sync TrackEnrichment [eager]
+when {
+  Enricher/enrich: [ itemId: ?itemId; enricherId: ?enricherId ]
+    => [ enrichmentId: ?eid; result: ?result; confidence: ?conf ]
+}
+then {
+  Provenance/record: [ entity: ?itemId; activity: "enrichment"; agent: ?enricherId; inputs: "" ]
+}
+
+sync TrackValidation [eager]
+when {
+  DataQuality/validate: [ item: ?item; rulesetId: ?rules ]
+    => [ valid: ?valid; score: ?score ]
+}
+then {
+  Provenance/record: [ entity: ?item; activity: "validation"; agent: "system"; inputs: ?rules ]
+}
+
+sync TrackStorage [eager]
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ]
+    => [ record: ?record ]
+}
+then {
+  Provenance/record: [ entity: ?record; activity: "storage"; agent: "system"; inputs: "" ]
+}

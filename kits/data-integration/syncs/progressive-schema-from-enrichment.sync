@@ -1,0 +1,10 @@
+// Enricher results feed into structure detection for progressive formalization
+
+sync EnrichmentFeedsStructure [eager]
+when {
+  Enricher/suggest: [ itemId: ?itemId ]
+    => [ suggestions: ?suggestions ]
+}
+then {
+  ProgressiveSchema/detectStructure: [ itemId: ?itemId ]
+}

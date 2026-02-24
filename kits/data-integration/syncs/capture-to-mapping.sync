@@ -1,0 +1,28 @@
+// Captured items enter the integration queue for field mapping
+
+sync CaptureEntersQueue [eager]
+when {
+  Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
+    => [ itemId: ?itemId; content: ?content ]
+}
+then {
+  Queue/enqueue: [ queue: "integration"; item: ?itemId; priority: 1 ]
+}
+
+sync CaptureImportEntersQueue [eager]
+when {
+  Capture/import: [ file: ?file; options: ?opts ]
+    => [ itemId: ?itemId; content: ?content ]
+}
+then {
+  Queue/enqueue: [ queue: "integration"; item: ?itemId; priority: 1 ]
+}
+
+sync QueueDispatchesMapping [eager]
+when {
+  Queue/claim: [ queue: "integration"; worker: ?worker ]
+    => [ item: ?itemId ]
+}
+then {
+  FieldMapping/apply: [ record: ?itemId; mappingId: "default" ]
+}

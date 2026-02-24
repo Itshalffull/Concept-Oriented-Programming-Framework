@@ -1,0 +1,72 @@
+@version(1)
+concept Enricher [E] {
+
+  purpose {
+    Augment data with additional information from AI models, APIs, or reference
+    data — attaching OCR text, captions, transcriptions, entity extractions,
+    classifications, and summaries with confidence scores and human review status.
+  }
+
+  state {
+    enrichments: set E
+    itemId: E -> String
+    pluginId: E -> String
+    result: E -> String
+    confidence: E -> String
+    status: E -> String
+    generatedAt: E -> String
+    triggers: E -> String
+  }
+
+  actions {
+    action enrich(itemId: String, enricherId: String) {
+      -> ok(enrichmentId: String, result: String, confidence: String) {
+        Item enriched by the plugin; result attached as a suggestion.
+      }
+      -> notfound(message: String) {
+        Item or enricher does not exist.
+      }
+      -> error(message: String) {
+        Enrichment failed.
+      }
+    }
+
+    action suggest(itemId: String) {
+      -> ok(suggestions: String) {
+        All applicable enrichers ran and returned suggestions with confidence scores.
+      }
+      -> notfound(message: String) {
+        Item does not exist.
+      }
+    }
+
+    action accept(itemId: String, enrichmentId: String) {
+      -> ok() {
+        Suggestion promoted to accepted.
+      }
+      -> notfound(message: String) {
+        Enrichment does not exist.
+      }
+    }
+
+    action reject(itemId: String, enrichmentId: String) {
+      -> ok() {
+        Suggestion marked rejected.
+      }
+      -> notfound(message: String) {
+        Enrichment does not exist.
+      }
+    }
+
+    action refreshStale(olderThan: String) {
+      -> ok(refreshed: Int) {
+        Stale enrichments re-run with updated models.
+      }
+    }
+  }
+
+  invariant {
+    after enrich(itemId: "item-1", enricherId: "auto_tag") -> ok(enrichmentId: "enr-1", result: "[\"tech\",\"ai\"]", confidence: "0.92")
+    then accept(itemId: "item-1", enrichmentId: "enr-1") -> ok()
+  }
+}

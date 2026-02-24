@@ -1,0 +1,19 @@
+// Enriched items proceed to validation
+
+sync EnrichmentToValidation [eager]
+when {
+  Enricher/suggest: [ itemId: ?itemId ]
+    => [ suggestions: ?suggestions ]
+}
+then {
+  Queue/enqueue: [ queue: "validation"; item: ?itemId; priority: 1 ]
+}
+
+sync QueueDispatchesValidation [eager]
+when {
+  Queue/claim: [ queue: "validation"; worker: ?worker ]
+    => [ item: ?item ]
+}
+then {
+  DataQuality/validate: [ item: ?item; rulesetId: "default" ]
+}

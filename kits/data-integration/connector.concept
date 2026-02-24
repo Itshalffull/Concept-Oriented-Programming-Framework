@@ -1,0 +1,82 @@
+@version(1)
+concept Connector [C] {
+
+  purpose {
+    Abstract away protocol differences so that captures, federation storage,
+    and sync operations interact with external data through a uniform interface
+    regardless of the underlying protocol (REST, SQL, GraphQL, file, etc.).
+  }
+
+  state {
+    connectors: set C
+    sourceId: C -> String
+    protocolId: C -> String
+    config: C -> String
+    status: C -> String
+  }
+
+  actions {
+    action configure(sourceId: String, protocolId: String, config: String) {
+      -> ok(connectorId: String) {
+        Connector instance created for the given source and protocol.
+      }
+      -> error(message: String) {
+        Configuration is invalid.
+      }
+    }
+
+    action read(connectorId: String, query: String, options: String) {
+      -> ok(data: String) {
+        Data read from the external system via the protocol provider.
+      }
+      -> notfound(message: String) {
+        Connector does not exist.
+      }
+      -> error(message: String) {
+        Read operation failed.
+      }
+    }
+
+    action write(connectorId: String, data: String, options: String) {
+      -> ok(created: Int, updated: Int, skipped: Int, errors: Int) {
+        Data written to the external system via the protocol provider.
+      }
+      -> notfound(message: String) {
+        Connector does not exist.
+      }
+      -> error(message: String) {
+        Write operation failed.
+      }
+    }
+
+    action test(connectorId: String) {
+      -> ok(message: String) {
+        Connector is reachable and operational.
+      }
+      -> notfound(message: String) {
+        Connector does not exist.
+      }
+      -> error(message: String) {
+        Connection test failed.
+      }
+    }
+
+    action discover(connectorId: String) {
+      -> ok(streams: String) {
+        Remote schema discovered from the external system.
+      }
+      -> notfound(message: String) {
+        Connector does not exist.
+      }
+      -> error(message: String) {
+        Discovery failed.
+      }
+    }
+  }
+
+  invariant {
+    after configure(sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}") -> ok(connectorId: "conn-1")
+    then test(connectorId: "conn-1") -> ok(message: "connected")
+    and  read(connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}") -> ok(data: "[{\"id\":1}]")
+  }
+}

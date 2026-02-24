@@ -1,0 +1,19 @@
+// Transformed items proceed to enrichment
+
+sync TransformToEnrichment [eager]
+when {
+  Transform/chain: [ value: ?value; transformIds: ?ids ]
+    => [ result: ?result ]
+}
+then {
+  Queue/enqueue: [ queue: "enrichment"; item: ?result; priority: 1 ]
+}
+
+sync QueueDispatchesEnrichment [eager]
+when {
+  Queue/claim: [ queue: "enrichment"; worker: ?worker ]
+    => [ item: ?itemId ]
+}
+then {
+  Enricher/suggest: [ itemId: ?itemId ]
+}
