@@ -1,0 +1,15 @@
+# Route GitOps/emit to ArgoCDProvider on cache miss — Section 3.8
+
+sync ArgoCDOnCacheMiss [eager]
+when {
+  GitOps/emit: [ plan: ?plan; controller: "argocd"; repo: ?repo; path: ?path ]
+    => [ manifest: ?m; files: ?files ]
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => [ previousHash: ?prev ]
+}
+where {
+  filter(?stepKey == ?plan)
+}
+then {
+  ArgoCDProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+}

@@ -1,0 +1,10 @@
+# Route TerraformProvider file output through Emitter — Section 3.8
+
+sync EmitTerraformFiles [eager]
+when {
+  TerraformProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

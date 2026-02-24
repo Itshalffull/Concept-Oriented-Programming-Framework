@@ -1,0 +1,15 @@
+# Record PulumiProvider completion in GenerationPlan — Section 3.8
+
+sync ObservePulumi [eager]
+when {
+  PulumiProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: ?plan;
+    status: "done";
+    filesProduced: 1;
+    cached: false
+  ]
+}

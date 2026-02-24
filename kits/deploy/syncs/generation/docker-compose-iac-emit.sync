@@ -1,0 +1,10 @@
+# Route DockerComposeIacProvider file output through Emitter — Section 3.8
+
+sync EmitDockerComposeIacFiles [eager]
+when {
+  DockerComposeIacProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

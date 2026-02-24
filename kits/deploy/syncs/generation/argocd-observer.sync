@@ -1,0 +1,15 @@
+# Record ArgoCDProvider completion in GenerationPlan — Section 3.8
+
+sync ObserveArgoCD [eager]
+when {
+  ArgoCDProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+    => [ files: ?files ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: ?plan;
+    status: "done";
+    filesProduced: 1;
+    cached: false
+  ]
+}

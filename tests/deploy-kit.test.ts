@@ -922,7 +922,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(44);
+    expect(syncPaths.length).toBe(68);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);

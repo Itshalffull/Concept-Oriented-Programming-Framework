@@ -12,10 +12,10 @@ export const dockerComposeIacProviderHandler: ConceptHandler = {
     const composeFileId = `compose-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['docker-compose.yml'];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, composeFileId, {
       composeFile: composeFileId,
       plan,
-      files: JSON.stringify(files),
       status: 'generated',
       createdAt: new Date().toISOString(),
     });

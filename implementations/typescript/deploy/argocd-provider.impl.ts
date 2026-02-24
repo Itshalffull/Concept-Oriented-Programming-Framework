@@ -14,12 +14,12 @@ export const argoCDProviderHandler: ConceptHandler = {
     const applicationId = `app-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['application.yaml'];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, applicationId, {
       application: applicationId,
       plan,
       repo,
       path,
-      files: JSON.stringify(files),
       syncStatus: 'OutOfSync',
       healthStatus: 'Missing',
       status: 'emitted',

@@ -1,0 +1,10 @@
+# Route PulumiProvider file output through Emitter — Section 3.8
+
+sync EmitPulumiFiles [eager]
+when {
+  PulumiProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

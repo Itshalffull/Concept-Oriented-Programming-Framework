@@ -1,0 +1,18 @@
+# Record DockerComposeIacProvider success in BuildCache — Section 3.8
+
+sync RecordCacheDockerComposeIac [eager]
+when {
+  DockerComposeIacProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    outputHash: ?plan;
+    sourceLocator: ?plan;
+    deterministic: false
+  ]
+}
