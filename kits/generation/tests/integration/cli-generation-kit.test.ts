@@ -1,10 +1,10 @@
 // ============================================================
 // CLI Generation Kit Integration Tests
 //
-// Validates that CliTarget generates generation-kit-aware
-// subcommands when a concept is declared as a generator.
-// Tests both the ConceptManifest.generation field path and
-// the manifest YAML generation.generators path.
+// Validates that CliTarget generates correct CLI subcommands
+// from generation kit concept actions. CLI surface for generation
+// kit concepts is driven by the devtools interface manifest
+// (concept-overrides), not hardcoded in the provider.
 //
 // See copf-generation-kit.md Part 6 (CLI Integration).
 // ============================================================
@@ -21,22 +21,75 @@ function makeProjection(manifest: ConceptManifest, name: string): string {
   });
 }
 
-const MINIMAL_MANIFEST: ConceptManifest = {
-  uri: 'urn:copf/TestGen',
-  name: 'TestGen',
-  typeParams: [],
+// Emitter manifest — matches the emitter.concept spec
+const EMITTER_MANIFEST: ConceptManifest = {
+  uri: 'urn:copf/Emitter',
+  name: 'Emitter',
+  typeParams: ['F'],
   relations: [],
   actions: [
     {
-      name: 'generate',
-      description: 'Generate test output',
+      name: 'write',
+      description: 'Write a single generated file with content-addressed deduplication.',
       params: [
-        { name: 'spec', type: { kind: 'primitive', primitive: 'String' } },
-        { name: 'manifest', type: { kind: 'primitive', primitive: 'String' } },
+        { name: 'path', type: { kind: 'primitive', primitive: 'String' } },
+        { name: 'content', type: { kind: 'primitive', primitive: 'String' } },
       ],
       variants: [
-        { tag: 'ok', fields: [{ name: 'files', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+        { tag: 'ok', fields: [{ name: 'written', type: { kind: 'primitive', primitive: 'Bool' }, optional: false }] },
         { tag: 'error', fields: [{ name: 'message', type: { kind: 'primitive', primitive: 'String' }, optional: false }] },
+      ],
+    },
+    {
+      name: 'writeBatch',
+      description: 'Atomically write a batch of generated files.',
+      params: [
+        { name: 'files', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'results', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+      ],
+    },
+    {
+      name: 'audit',
+      description: 'Check generated files for drift from expected output.',
+      params: [
+        { name: 'outputDir', type: { kind: 'primitive', primitive: 'String' } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'status', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+      ],
+    },
+    {
+      name: 'clean',
+      description: 'Remove orphaned generated files.',
+      params: [
+        { name: 'outputDir', type: { kind: 'primitive', primitive: 'String' } },
+        { name: 'currentManifest', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'removed', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+      ],
+    },
+    {
+      name: 'trace',
+      description: 'Show which sources produced an output file.',
+      params: [
+        { name: 'outputPath', type: { kind: 'primitive', primitive: 'String' } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'sources', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+        { tag: 'notFound', fields: [{ name: 'path', type: { kind: 'primitive', primitive: 'String' }, optional: false }] },
+      ],
+    },
+    {
+      name: 'affected',
+      description: 'Show what outputs are affected by a source file change.',
+      params: [
+        { name: 'sourcePath', type: { kind: 'primitive', primitive: 'String' } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'outputs', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
       ],
     },
   ],
@@ -44,15 +97,70 @@ const MINIMAL_MANIFEST: ConceptManifest = {
   graphqlSchema: '',
   jsonSchemas: { invocations: {}, completions: {} },
   capabilities: [],
-  purpose: 'Test code generator',
+  purpose: 'Manage generated file output with content-addressed writes and source traceability.',
 };
 
-describe('CLI generation kit integration', () => {
-  it('should generate standard CLI without generation subcommands', async () => {
+// KindSystem manifest — matches the kind-system.concept spec
+const KIND_SYSTEM_MANIFEST: ConceptManifest = {
+  uri: 'urn:copf/KindSystem',
+  name: 'KindSystem',
+  typeParams: ['K'],
+  relations: [],
+  actions: [
+    {
+      name: 'graph',
+      description: 'Show the full kind taxonomy graph.',
+      params: [],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'kinds', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+      ],
+    },
+    {
+      name: 'route',
+      description: 'Find shortest transform path between two kinds.',
+      params: [
+        { name: 'from', type: { kind: 'primitive', primitive: 'String' } },
+        { name: 'to', type: { kind: 'primitive', primitive: 'String' } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'path', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+        { tag: 'unreachable', fields: [{ name: 'message', type: { kind: 'primitive', primitive: 'String' }, optional: false }] },
+      ],
+    },
+    {
+      name: 'consumers',
+      description: 'Show what transforms consume a given kind.',
+      params: [
+        { name: 'kind', type: { kind: 'primitive', primitive: 'String' } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'transforms', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+      ],
+    },
+    {
+      name: 'producers',
+      description: 'Show what transforms produce a given kind.',
+      params: [
+        { name: 'kind', type: { kind: 'primitive', primitive: 'String' } },
+      ],
+      variants: [
+        { tag: 'ok', fields: [{ name: 'transforms', type: { kind: 'list', inner: { kind: 'primitive', primitive: 'String' } }, optional: false }] },
+      ],
+    },
+  ],
+  invariants: [],
+  graphqlSchema: '',
+  jsonSchemas: { invocations: {}, completions: {} },
+  capabilities: [],
+  purpose: 'Model the pipeline topology as a directed acyclic graph of IR kinds.',
+};
+
+describe('CLI generation kit — manifest-driven commands', () => {
+  it('generates CLI subcommands from Emitter concept actions', async () => {
     const storage = createInMemoryStorage();
     const result = await cliTargetHandler.generate(
       {
-        projection: makeProjection(MINIMAL_MANIFEST, 'TestGen'),
+        projection: makeProjection(EMITTER_MANIFEST, 'Emitter'),
         overrides: '{}',
       },
       storage,
@@ -60,27 +168,70 @@ describe('CLI generation kit integration', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files.length).toBeGreaterThanOrEqual(1);
-
     const commandFile = files.find(f => f.path.includes('.command.ts'));
     expect(commandFile).toBeDefined();
-    expect(commandFile!.content).toContain("command('generate')");
-    expect(commandFile!.content).not.toContain("command('plan')");
-    expect(commandFile!.content).not.toContain("command('audit')");
-    expect(commandFile!.content).not.toContain('Generation Kit Integration');
+    const content = commandFile!.content;
+
+    // Each action in the concept spec becomes a CLI subcommand
+    expect(content).toContain("command('write')");
+    expect(content).toContain("command('write-batch')");
+    expect(content).toContain("command('audit')");
+    expect(content).toContain("command('clean')");
+    expect(content).toContain("command('trace')");
+    expect(content).toContain("command('affected')");
   });
 
-  it('should generate generation-kit-aware CLI via manifest YAML', async () => {
+  it('generates CLI subcommands from KindSystem concept actions', async () => {
     const storage = createInMemoryStorage();
+    const result = await cliTargetHandler.generate(
+      {
+        projection: makeProjection(KIND_SYSTEM_MANIFEST, 'KindSystem'),
+        overrides: '{}',
+      },
+      storage,
+    );
+
+    expect(result.variant).toBe('ok');
+    const files = result.files as { path: string; content: string }[];
+    const commandFile = files.find(f => f.path.includes('.command.ts'));
+    expect(commandFile).toBeDefined();
+    const content = commandFile!.content;
+
+    expect(content).toContain("command('graph')");
+    expect(content).toContain("command('route')");
+    expect(content).toContain("command('consumers')");
+    expect(content).toContain("command('producers')");
+  });
+
+  it('applies CLI overrides from manifest YAML (positional args, custom commands)', async () => {
+    const storage = createInMemoryStorage();
+
+    // Simulate what the devtools manifest provides
     const manifestYaml = {
-      generation: {
-        generators: {
-          TestGen: {
-            family: 'framework',
-            inputKind: 'ConceptManifest',
-            outputKind: 'TestFiles',
-            deterministic: true,
-            pure: true,
+      concepts: {
+        Emitter: {
+          cli: {
+            'command-group': 'emitter',
+            actions: {
+              trace: {
+                description: 'Show which sources produced an output file',
+                args: {
+                  outputPath: { positional: true },
+                },
+              },
+              affected: {
+                description: 'Show what outputs change if a source changes',
+                args: {
+                  sourcePath: { positional: true },
+                },
+              },
+              audit: {
+                description: 'Check generated files for drift',
+                args: {
+                  outputDir: { positional: true },
+                },
+              },
+            },
           },
         },
       },
@@ -88,7 +239,7 @@ describe('CLI generation kit integration', () => {
 
     const result = await cliTargetHandler.generate(
       {
-        projection: makeProjection(MINIMAL_MANIFEST, 'TestGen'),
+        projection: makeProjection(EMITTER_MANIFEST, 'Emitter'),
         overrides: '{}',
         manifestYaml: JSON.stringify(manifestYaml),
       },
@@ -97,54 +248,23 @@ describe('CLI generation kit integration', () => {
 
     const files = result.files as { path: string; content: string }[];
     const commandFile = files.find(f => f.path.includes('.command.ts'));
-    expect(commandFile).toBeDefined();
     const content = commandFile!.content;
 
-    // Should have generation kit subcommands
-    expect(content).toContain("command('plan')");
-    expect(content).toContain("command('status')");
-    expect(content).toContain("command('summary')");
-    expect(content).toContain("command('history')");
-    expect(content).toContain("command('audit')");
-    expect(content).toContain("command('clean')");
-    expect(content).toContain("command('impact')");
-    expect(content).toContain("command('generator-syncs')");
+    // Command group should be 'emitter' (from manifest override)
+    expect(content).toContain("Command('emitter')");
 
-    // Kinds should have subcommands matching hand-written CLI
-    expect(content).toContain("command('kinds')");
-    expect(content).toContain("command('list')");
-    expect(content).toContain("command('path <from> <to>')");
-    expect(content).toContain("command('consumers <kind>')");
-    expect(content).toContain("command('producers <kind>')");
+    // outputPath should be positional in trace
+    expect(content).toContain("argument('<outputPath>'");
 
-    // Should have --force and --family flags on generate subcommand
-    expect(content).toContain("'--force'");
-    expect(content).toContain("'--dry-run'");
-    expect(content).toContain("'--family <name>'");
-
-    // Command tree should include generation metadata
-    expect(content).toContain("generation: {");
-    expect(content).toContain("family: 'framework'");
-    expect(content).toContain("inputKind: 'ConceptManifest'");
-    expect(content).toContain("outputKind: 'TestFiles'");
+    // sourcePath should be positional in affected
+    expect(content).toContain("argument('<sourcePath>'");
   });
 
-  it('should generate generation-kit-aware CLI via ConceptManifest.generation', async () => {
+  it('command tree lists all actions without generation-specific metadata', async () => {
     const storage = createInMemoryStorage();
-    const manifestWithGen: ConceptManifest = {
-      ...MINIMAL_MANIFEST,
-      generation: {
-        family: 'interface',
-        inputKind: 'Projection',
-        outputKind: 'CliCommands',
-        deterministic: true,
-        pure: true,
-      },
-    };
-
     const result = await cliTargetHandler.generate(
       {
-        projection: makeProjection(manifestWithGen, 'TestGen'),
+        projection: makeProjection(EMITTER_MANIFEST, 'Emitter'),
         overrides: '{}',
       },
       storage,
@@ -154,40 +274,17 @@ describe('CLI generation kit integration', () => {
     const commandFile = files.find(f => f.path.includes('.command.ts'));
     const content = commandFile!.content;
 
-    expect(content).toContain("command('plan')");
-    expect(content).toContain("command('audit')");
-    expect(content).toContain("family: 'interface'");
-    expect(content).toContain("inputKind: 'Projection'");
-    expect(content).toContain("outputKind: 'CliCommands'");
-  });
+    // Command tree should list all actions
+    expect(content).toContain('emitterCommandTree');
+    expect(content).toContain("action: 'write'");
+    expect(content).toContain("action: 'audit'");
+    expect(content).toContain("action: 'clean'");
+    expect(content).toContain("action: 'trace'");
+    expect(content).toContain("action: 'affected'");
 
-  it('should not duplicate generation subcommands with regular actions', async () => {
-    const storage = createInMemoryStorage();
-    const manifestWithGen: ConceptManifest = {
-      ...MINIMAL_MANIFEST,
-      generation: {
-        family: 'framework',
-        inputKind: 'ConceptManifest',
-        outputKind: 'TestFiles',
-        deterministic: true,
-        pure: true,
-      },
-    };
-
-    const result = await cliTargetHandler.generate(
-      {
-        projection: makeProjection(manifestWithGen, 'TestGen'),
-        overrides: '{}',
-      },
-      storage,
-    );
-
-    const files = result.files as { path: string; content: string }[];
-    const commandFile = files.find(f => f.path.includes('.command.ts'));
-    const content = commandFile!.content;
-
-    // Count occurrences of plan command — should appear exactly once
-    const planMatches = content.match(/\.command\('plan'\)/g);
-    expect(planMatches).toHaveLength(1);
+    // Should NOT have generation-specific metadata (that was the old hardcoded approach)
+    expect(content).not.toContain('generation: {');
+    expect(content).not.toContain("family: '");
+    expect(content).not.toContain("inputKind: '");
   });
 });

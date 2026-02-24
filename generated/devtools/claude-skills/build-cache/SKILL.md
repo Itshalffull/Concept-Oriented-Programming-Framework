@@ -1,0 +1,110 @@
+---
+name: build-cache
+description: Track input output hashes for generation steps 
+ Enable incremental rebuilds : skip generation when 
+ inputs haven t changed since the last successful run 
+ Support cascading invalidation when upstream kinds change
+argument-hint: $ARGUMENTS
+allowed-tools: Read, Grep, Glob, Bash
+---
+
+# BuildCache
+
+Manage incremental build cache for **$ARGUMENTS** with hash-based invalidation and per-step granularity.
+
+
+> **When to use:** Use when checking cache validity, recording generation results, or invalidating stale entries for incremental rebuilds.
+
+
+## Design Principles
+
+- **Hash-Based Invalidation:** Cache validity is determined solely by comparing input hashes — no timestamps or file watchers.
+- **Per-Step Granularity:** Each generator+concept pair has its own cache entry, enabling partial rebuilds.
+
+## Step-by-Step Process
+
+### Step 1: Check Cache
+
+Compare input hash against cached entry to determine if regeneration is needed.
+
+**Arguments:** `$0` **stepKey** (string), `$1` **inputHash** (string), `$2` **deterministic** (bool)
+
+**Checklist:**
+- [ ] Step key uniquely identifies this generation step?
+- [ ] Input hash is deterministic?
+
+**Examples:**
+*Check if step is cached*
+```typescript
+const result = await buildCacheHandler.check(
+  { stepKey: 'framework:TypeScriptGen:article', inputHash: hash, deterministic: true },
+  storage,
+);
+if (result.variant === 'unchanged') { /* skip generation */ }
+```
+
+### Step 2: Record Result
+
+Store generation result with input/output hashes for future cache lookups.
+
+**Arguments:** `$0` **stepKey** (string), `$1` **inputHash** (string), `$2` **outputHash** (string), `$3` **outputRef** (string?), `$4` **sourceLocator** (string?), `$5` **deterministic** (bool)
+
+**Checklist:**
+- [ ] Output hash computed from actual files written?
+- [ ] Source locator recorded for invalidation?
+
+### Step 3: Cache Status
+
+Show all cache entries with staleness indicators.
+
+**Checklist:**
+- [ ] Stale entries identified?
+
+**Examples:**
+*Show cache status*
+```bash
+copf build-cache status
+```
+
+### Step 4: List Stale Entries
+
+List step keys that need regeneration because their inputs have changed.
+
+**Checklist:**
+- [ ] All step keys evaluated?
+
+**Examples:**
+*List stale cache entries*
+```bash
+copf build-cache stale-steps
+```
+
+## References
+
+- [BuildCache design and invalidation strategy](references/build-cache-architecture.md)
+## Quick Reference
+
+| Action | Command | Purpose |
+|--------|---------|---------|
+| check | `copf build-cache check` | Check if step is cached |
+| record | `copf build-cache record` | Record generation result |
+| status | `copf build-cache status` | Show all cache entries |
+| staleSteps | `copf build-cache stale-steps` | List stale entries |
+| invalidate | `copf build-cache invalidate` | Invalidate one step |
+| invalidateBySource | `copf build-cache invalidate-by-source` | Invalidate by source file |
+| invalidateByKind | `copf build-cache invalidate-by-kind` | Invalidate by IR kind |
+| invalidateAll | `copf build-cache invalidate-all` | Clear entire cache |
+
+
+## Validation
+
+*Show cache status:*
+```bash
+npx tsx tools/copf-cli/src/index.ts generate --status
+```
+## Related Skills
+
+| Skill | When to Use |
+| --- | --- |
+| `/file-emission` | Emitter writes files after cache miss |
+| `/incremental-caching` | Self-referential: cache checks gate generation |

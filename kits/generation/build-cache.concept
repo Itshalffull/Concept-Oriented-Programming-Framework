@@ -107,7 +107,9 @@ concept BuildCache [E] {
     after record(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".copf-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true) -> ok(entry: e)
     then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> unchanged(lastRun: t, outputRef: ".copf-cache/ts/password")
     and   check(stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true) -> changed(previousHash: "abc")
+  }
 
+  invariant {
     after invalidate(stepKey: "framework:TypeScriptGen:password") -> ok()
     then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> changed(previousHash: "abc")
   }

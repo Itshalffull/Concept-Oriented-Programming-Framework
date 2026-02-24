@@ -996,9 +996,9 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli.name).toBe('copf');
     });
 
-    it('manifest lists exactly 11 concept specs', () => {
+    it('manifest lists exactly 16 concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(11);
+      expect(concepts.length).toBe(16);
     });
   });
 });
