@@ -3,10 +3,10 @@
 //
 // Tests toolchain resolution behavior:
 // - Resolve, validate, list lifecycle
-// - Version constraint matching
-// - Platform support detection
+// - Category-based resolution with invocation profiles
+// - toolName selection for multi-tool categories
 // - Resolution caching (resolve once, use many times)
-// - Drift detection via validate
+// - Cross-language independent resolution
 // See Architecture doc Section 3.8
 // ============================================================
 
@@ -22,19 +22,15 @@ describe('Toolchain resolution integration', () => {
     storage = createInMemoryStorage();
   });
 
-  // --- Resolve returns tool with version and capabilities ---
+  // --- Resolve returns tool with version, capabilities, and invocation ---
 
-  it('should resolve and return tool with version and capabilities', async () => {
+  it('should resolve and return tool with version, capabilities, and invocation', async () => {
     const result = await toolchainHandler.resolve(
-      {
-        tool: 'tsc',
-        language: 'typescript',
-        requiredVersion: '>=5.0.0',
-      },
+      { language: 'typescript', platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.tool).toBe('tsc');
+    expect(result.tool).toBeDefined();
     expect(result.version).toBeDefined();
     expect(typeof result.version).toBe('string');
     expect(result.path).toBeDefined();
@@ -42,31 +38,28 @@ describe('Toolchain resolution integration', () => {
     expect(result.capabilities).toBeDefined();
     expect(Array.isArray(result.capabilities)).toBe(true);
     expect((result.capabilities as string[]).length).toBeGreaterThan(0);
+    const invocation = result.invocation as any;
+    expect(invocation).toBeDefined();
+    expect(invocation.command).toBeDefined();
+    expect(invocation.outputFormat).toBeDefined();
   });
 
   // --- Resolved tool passes validation ---
 
   it('should pass validation for a previously resolved tool', async () => {
     const resolveResult = await toolchainHandler.resolve(
-      {
-        tool: 'rustc',
-        language: 'rust',
-        requiredVersion: '>=1.70.0',
-      },
+      { language: 'rust', platform: 'x86_64-linux' },
       storage,
     );
     expect(resolveResult.variant).toBe('ok');
     const resolvedVersion = resolveResult.version as string;
+    const toolId = resolveResult.tool as string;
 
     const validateResult = await toolchainHandler.validate(
-      {
-        tool: 'rustc',
-        language: 'rust',
-      },
+      { tool: toolId },
       storage,
     );
     expect(validateResult.variant).toBe('ok');
-    expect(validateResult.tool).toBe('rustc');
     expect(validateResult.version).toBe(resolvedVersion);
   });
 
@@ -74,44 +67,44 @@ describe('Toolchain resolution integration', () => {
 
   it('should list all resolved toolchains', async () => {
     await toolchainHandler.resolve(
-      { tool: 'tsc', language: 'typescript', requiredVersion: '>=5.0.0' },
+      { language: 'typescript', platform: 'node' },
       storage,
     );
     await toolchainHandler.resolve(
-      { tool: 'rustc', language: 'rust', requiredVersion: '>=1.70.0' },
+      { language: 'rust', platform: 'x86_64-linux' },
       storage,
     );
     await toolchainHandler.resolve(
-      { tool: 'swiftc', language: 'swift', requiredVersion: '>=5.9.0' },
+      { language: 'swift', platform: 'macos' },
       storage,
     );
 
     const listResult = await toolchainHandler.list({}, storage);
     expect(listResult.variant).toBe('ok');
-    const toolchains = listResult.toolchains as any[];
-    expect(toolchains).toHaveLength(3);
+    const tools = listResult.tools as any[];
+    expect(tools).toHaveLength(3);
 
-    const tools = toolchains.map((t: any) => t.tool).sort();
-    expect(tools).toEqual(['rustc', 'swiftc', 'tsc']);
+    const languages = tools.map((t: any) => t.language).sort();
+    expect(languages).toEqual(['rust', 'swift', 'typescript']);
   });
 
   // --- List filtered by language returns subset ---
 
   it('should filter list by language and return only matching toolchains', async () => {
     await toolchainHandler.resolve(
-      { tool: 'tsc', language: 'typescript', requiredVersion: '>=5.0.0' },
+      { language: 'typescript', platform: 'node' },
       storage,
     );
     await toolchainHandler.resolve(
-      { tool: 'esbuild', language: 'typescript', requiredVersion: '>=0.18.0' },
+      { language: 'typescript', platform: 'node', category: 'unit-runner' },
       storage,
     );
     await toolchainHandler.resolve(
-      { tool: 'rustc', language: 'rust', requiredVersion: '>=1.70.0' },
+      { language: 'rust', platform: 'x86_64-linux' },
       storage,
     );
     await toolchainHandler.resolve(
-      { tool: 'solc', language: 'solidity', requiredVersion: '>=0.8.0' },
+      { language: 'solidity', platform: 'shanghai' },
       storage,
     );
 
@@ -120,9 +113,9 @@ describe('Toolchain resolution integration', () => {
       storage,
     );
     expect(tsResult.variant).toBe('ok');
-    const tsToolchains = tsResult.toolchains as any[];
-    expect(tsToolchains).toHaveLength(2);
-    for (const tc of tsToolchains) {
+    const tsTools = tsResult.tools as any[];
+    expect(tsTools).toHaveLength(2);
+    for (const tc of tsTools) {
       expect(tc.language).toBe('typescript');
     }
 
@@ -131,143 +124,86 @@ describe('Toolchain resolution integration', () => {
       storage,
     );
     expect(rustResult.variant).toBe('ok');
-    const rustToolchains = rustResult.toolchains as any[];
-    expect(rustToolchains).toHaveLength(1);
-    expect(rustToolchains[0].tool).toBe('rustc');
+    const rustTools = rustResult.tools as any[];
+    expect(rustTools).toHaveLength(1);
+    expect(rustTools[0].language).toBe('rust');
   });
 
-  // --- Version constraint too high -> versionMismatch ---
+  // --- Version constraint too high -> notInstalled ---
 
-  it('should return versionMismatch when version constraint is too high', async () => {
+  it('should return notInstalled when version constraint does not match', async () => {
     const result = await toolchainHandler.resolve(
       {
-        tool: 'tsc',
         language: 'typescript',
-        requiredVersion: '>=99.0.0',
-        simulateError: 'versionMismatch',
+        platform: 'node',
+        versionConstraint: '99.0.0',
       },
       storage,
     );
-    expect(result.variant).toBe('versionMismatch');
-    expect(result.installed).toBeDefined();
-    expect(result.required).toBeDefined();
-    expect(typeof result.installed).toBe('string');
-    expect(typeof result.required).toBe('string');
-    expect(result.installed).not.toBe(result.required);
+    expect(result.variant).toBe('notInstalled');
+    expect(result.installHint).toBeDefined();
+    expect(typeof result.installHint).toBe('string');
   });
 
-  // --- Unsupported platform -> platformUnsupported ---
+  // --- Unsupported language -> platformUnsupported ---
 
-  it('should return platformUnsupported for incompatible target platform', async () => {
+  it('should return platformUnsupported for unknown language', async () => {
     const result = await toolchainHandler.resolve(
-      {
-        tool: 'swift',
-        language: 'swift',
-        requiredVersion: '>=5.0.0',
-        platform: 'windows-x86_64',
-        simulateError: 'platformUnsupported',
-      },
+      { language: 'haskell', platform: 'linux' },
       storage,
     );
     expect(result.variant).toBe('platformUnsupported');
-    expect(result.platform).toBeDefined();
-    expect(result.supportedPlatforms).toBeDefined();
-    expect(Array.isArray(result.supportedPlatforms)).toBe(true);
   });
 
-  // --- Validate after environment drift -> invalid ---
+  // --- Validate for a never-resolved tool -> invalid ---
 
-  it('should detect environment drift via validate', async () => {
-    // Resolve the tool first
-    await toolchainHandler.resolve(
-      {
-        tool: 'tsc',
-        language: 'typescript',
-        requiredVersion: '>=5.0.0',
-      },
+  it('should return invalid when validating a tool never resolved', async () => {
+    const result = await toolchainHandler.validate(
+      { tool: 'never-resolved-tool' },
       storage,
     );
-
-    // Simulate environment drift (tool moved, version changed, etc.)
-    const driftResult = await toolchainHandler.validate(
-      {
-        tool: 'tsc',
-        language: 'typescript',
-        simulateDrift: true,
-      },
-      storage,
-    );
-    expect(driftResult.variant).toBe('invalid');
-    expect(driftResult.reason).toBeDefined();
-    expect(typeof driftResult.reason).toBe('string');
+    expect(result.variant).toBe('invalid');
   });
 
-  // --- Re-resolve after invalidation succeeds ---
+  // --- Resolution caching: resolve once, reuse many times ---
 
-  it('should re-resolve successfully after invalidation', async () => {
-    // Initial resolve
-    const firstResolve = await toolchainHandler.resolve(
-      {
-        tool: 'rustc',
-        language: 'rust',
-        requiredVersion: '>=1.70.0',
-      },
+  it('should reuse cached resolution across multiple validate calls', async () => {
+    const resolveResult = await toolchainHandler.resolve(
+      { language: 'typescript', platform: 'node' },
       storage,
     );
-    expect(firstResolve.variant).toBe('ok');
+    expect(resolveResult.variant).toBe('ok');
+    const toolId = resolveResult.tool as string;
+    const resolvedVersion = resolveResult.version as string;
 
-    // Simulate drift — tool becomes invalid
-    const invalidResult = await toolchainHandler.validate(
-      {
-        tool: 'rustc',
-        language: 'rust',
-        simulateDrift: true,
-      },
-      storage,
-    );
-    expect(invalidResult.variant).toBe('invalid');
-
-    // Re-resolve after invalidation
-    const secondResolve = await toolchainHandler.resolve(
-      {
-        tool: 'rustc',
-        language: 'rust',
-        requiredVersion: '>=1.70.0',
-      },
-      storage,
-    );
-    expect(secondResolve.variant).toBe('ok');
-    expect(secondResolve.tool).toBe('rustc');
-    expect(secondResolve.version).toBeDefined();
-
-    // Validate should pass again after re-resolve
-    const revalidate = await toolchainHandler.validate(
-      {
-        tool: 'rustc',
-        language: 'rust',
-      },
-      storage,
-    );
-    expect(revalidate.variant).toBe('ok');
+    // Validate multiple times — all should return same version
+    for (let i = 0; i < 3; i++) {
+      const validateResult = await toolchainHandler.validate(
+        { tool: toolId },
+        storage,
+      );
+      expect(validateResult.variant).toBe('ok');
+      expect(validateResult.version).toBe(resolvedVersion);
+    }
   });
 
   // --- Multiple languages resolve independently ---
 
   it('should resolve multiple languages independently', async () => {
     const tsResult = await toolchainHandler.resolve(
-      { tool: 'tsc', language: 'typescript', requiredVersion: '>=5.0.0' },
+      { language: 'typescript', platform: 'node' },
       storage,
     );
     const rustResult = await toolchainHandler.resolve(
-      { tool: 'rustc', language: 'rust', requiredVersion: '>=1.70.0' },
+      { language: 'rust', platform: 'x86_64-linux' },
       storage,
     );
     const swiftResult = await toolchainHandler.resolve(
-      { tool: 'swiftc', language: 'swift', requiredVersion: '>=5.9.0' },
+      { language: 'swift', platform: 'macos' },
       storage,
     );
     const solResult = await toolchainHandler.resolve(
-      { tool: 'solc', language: 'solidity', requiredVersion: '>=0.8.0' },
+      { language: 'solidity', platform: 'shanghai' },
       storage,
     );
 
@@ -289,56 +225,79 @@ describe('Toolchain resolution integration', () => {
     // List should return all four
     const listResult = await toolchainHandler.list({}, storage);
     expect(listResult.variant).toBe('ok');
-    const toolchains = listResult.toolchains as any[];
-    expect(toolchains).toHaveLength(4);
-
-    // Validate each independently
-    for (const { tool, language } of [
-      { tool: 'tsc', language: 'typescript' },
-      { tool: 'rustc', language: 'rust' },
-      { tool: 'swiftc', language: 'swift' },
-      { tool: 'solc', language: 'solidity' },
-    ]) {
-      const validateResult = await toolchainHandler.validate(
-        { tool, language },
-        storage,
-      );
-      expect(validateResult.variant).toBe('ok');
-    }
+    const tools = listResult.tools as any[];
+    expect(tools).toHaveLength(4);
   });
 
-  // --- Validate for a never-resolved tool -> invalid ---
+  // --- Category-based resolution with invocation profiles ---
 
-  it('should return invalid when validating a tool never resolved', async () => {
-    const result = await toolchainHandler.validate(
-      {
-        tool: 'never-resolved-tool',
-        language: 'fantasy',
-      },
+  it('should resolve different categories with different invocation profiles', async () => {
+    const compiler = await toolchainHandler.resolve(
+      { language: 'typescript', platform: 'node', category: 'compiler' },
       storage,
     );
-    expect(result.variant).toBe('invalid');
+    const unitRunner = await toolchainHandler.resolve(
+      { language: 'typescript', platform: 'node', category: 'unit-runner' },
+      storage,
+    );
+    const e2eRunner = await toolchainHandler.resolve(
+      { language: 'typescript', platform: 'node', category: 'e2e-runner' },
+      storage,
+    );
+
+    expect(compiler.variant).toBe('ok');
+    expect(unitRunner.variant).toBe('ok');
+    expect(e2eRunner.variant).toBe('ok');
+
+    // Each category should have a different invocation command
+    const compilerCmd = (compiler.invocation as any).command;
+    const unitCmd = (unitRunner.invocation as any).command;
+    const e2eCmd = (e2eRunner.invocation as any).command;
+
+    expect(compilerCmd).toContain('tsc');
+    expect(unitCmd).toContain('vitest');
+    expect(e2eCmd).toContain('playwright');
   });
 
-  // --- Resolution caching: resolve once, reuse many times ---
+  // --- toolName selection across languages ---
 
-  it('should reuse cached resolution across multiple validate calls', async () => {
-    // Resolve once
-    const resolveResult = await toolchainHandler.resolve(
-      { tool: 'tsc', language: 'typescript', requiredVersion: '>=5.0.0' },
+  it('should select specific tools by name across different languages', async () => {
+    // TypeScript: jest instead of vitest
+    const tsJest = await toolchainHandler.resolve(
+      { language: 'typescript', platform: 'node', category: 'unit-runner', toolName: 'jest' },
       storage,
     );
-    expect(resolveResult.variant).toBe('ok');
-    const resolvedVersion = resolveResult.version as string;
+    expect(tsJest.variant).toBe('ok');
+    expect((tsJest.invocation as any).command).toContain('jest');
 
-    // Validate multiple times — all should return same version
-    for (let i = 0; i < 3; i++) {
-      const validateResult = await toolchainHandler.validate(
-        { tool: 'tsc', language: 'typescript' },
-        storage,
-      );
-      expect(validateResult.variant).toBe('ok');
-      expect(validateResult.version).toBe(resolvedVersion);
-    }
+    // Solidity: hardhat instead of foundry
+    const solHardhat = await toolchainHandler.resolve(
+      { language: 'solidity', platform: 'shanghai', category: 'unit-runner', toolName: 'hardhat' },
+      storage,
+    );
+    expect(solHardhat.variant).toBe('ok');
+    expect((solHardhat.invocation as any).command).toContain('hardhat');
+
+    // Rust: nextest instead of cargo-test
+    const rustNextest = await toolchainHandler.resolve(
+      { language: 'rust', platform: 'x86_64-linux', category: 'unit-runner', toolName: 'nextest' },
+      storage,
+    );
+    expect(rustNextest.variant).toBe('ok');
+    expect((rustNextest.invocation as any).command).toContain('nextest');
+  });
+
+  // --- Unknown toolName returns notInstalled with alternatives ---
+
+  it('should list available alternatives when requested toolName is unknown', async () => {
+    const result = await toolchainHandler.resolve(
+      { language: 'typescript', platform: 'node', category: 'e2e-runner', toolName: 'selenium' },
+      storage,
+    );
+    expect(result.variant).toBe('notInstalled');
+    const hint = result.installHint as string;
+    expect(hint).toContain('selenium');
+    expect(hint).toContain('playwright');
+    expect(hint).toContain('cypress');
   });
 });

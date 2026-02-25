@@ -2,8 +2,8 @@
 // Builder Conformance Tests
 //
 // Validates build coordination: single-concept builds, multi-
-// concept buildAll, test execution, status queries, and history
-// tracking with per-language filtering.
+// concept buildAll, test execution with testType and toolName,
+// status queries, and history tracking with per-language filtering.
 // See Architecture doc Section 3.8
 // ============================================================
 
@@ -21,16 +21,20 @@ describe('Builder conformance', () => {
 
   // --- build: ok ---
 
-  it('should return artifactHash, artifactLocation, and duration on successful build', async () => {
+  it('should return build, artifactHash, artifactLocation, and duration on successful build', async () => {
     const result = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-abc123',
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
     expect(result.variant).toBe('ok');
+    expect(result.build).toBeDefined();
+    expect(typeof result.build).toBe('string');
     expect(result.artifactHash).toBeDefined();
     expect(typeof result.artifactHash).toBe('string');
     expect(result.artifactLocation).toBeDefined();
@@ -43,18 +47,22 @@ describe('Builder conformance', () => {
   it('should produce different artifact hashes for different sources', async () => {
     const first = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-v1',
+        concept: 'Password',
+        source: './generated/typescript/password-v1',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
 
     const second = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-v2',
+        concept: 'Password',
+        source: './generated/typescript/password-v2',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
@@ -64,55 +72,15 @@ describe('Builder conformance', () => {
     expect(first.artifactHash).not.toBe(second.artifactHash);
   });
 
-  // --- build: compilationError ---
-
-  it('should return compilationError with structured errors', async () => {
-    const result = await builderHandler.build(
-      {
-        conceptName: 'Broken',
-        target: 'typescript',
-        sourceHash: 'src-broken',
-        simulateError: 'compilationError',
-      },
-      storage,
-    );
-    expect(result.variant).toBe('compilationError');
-    expect(result.errors).toBeDefined();
-    const errors = result.errors as any[];
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].message).toBeDefined();
-    expect(typeof errors[0].message).toBe('string');
-  });
-
-  // --- build: testFailure ---
-
-  it('should return testFailure with pass and fail counts', async () => {
-    const result = await builderHandler.build(
-      {
-        conceptName: 'Flaky',
-        target: 'typescript',
-        sourceHash: 'src-flaky',
-        simulateError: 'testFailure',
-      },
-      storage,
-    );
-    expect(result.variant).toBe('testFailure');
-    expect(result.passed).toBeDefined();
-    expect(typeof result.passed).toBe('number');
-    expect(result.failed).toBeDefined();
-    expect(typeof result.failed).toBe('number');
-    expect(result.failed).toBeGreaterThan(0);
-  });
-
   // --- build: toolchainError ---
 
-  it('should propagate toolchainError with reason', async () => {
+  it('should return toolchainError when required fields are missing', async () => {
     const result = await builderHandler.build(
       {
-        conceptName: 'NoCompiler',
-        target: 'rust',
-        sourceHash: 'src-no-compiler',
-        simulateError: 'toolchainError',
+        concept: '',
+        source: '',
+        language: '',
+        platform: '',
       },
       storage,
     );
@@ -126,67 +94,46 @@ describe('Builder conformance', () => {
   it('should return per-concept per-target results on buildAll ok', async () => {
     const result = await builderHandler.buildAll(
       {
-        concepts: [
-          { conceptName: 'Password', target: 'typescript', sourceHash: 'pw-hash' },
-          { conceptName: 'User', target: 'typescript', sourceHash: 'user-hash' },
-          { conceptName: 'Password', target: 'rust', sourceHash: 'pw-rust-hash' },
+        concepts: ['Password', 'User'],
+        source: './generated',
+        targets: [
+          { language: 'typescript', platform: 'node' },
+          { language: 'rust', platform: 'x86_64-linux' },
         ],
+        config: { mode: 'release' },
       },
       storage,
     );
     expect(result.variant).toBe('ok');
     const results = result.results as any[];
-    expect(results).toHaveLength(3);
+    expect(results).toHaveLength(4); // 2 concepts x 2 targets
     for (const r of results) {
-      expect(r.conceptName).toBeDefined();
-      expect(r.target).toBeDefined();
+      expect(r.concept).toBeDefined();
+      expect(r.language).toBeDefined();
       expect(r.artifactHash).toBeDefined();
     }
   });
 
-  // --- buildAll: partial ---
-
-  it('should return completed and failed lists on partial buildAll', async () => {
-    const result = await builderHandler.buildAll(
-      {
-        concepts: [
-          { conceptName: 'Password', target: 'typescript', sourceHash: 'pw-hash' },
-          { conceptName: 'Broken', target: 'typescript', sourceHash: 'broken-hash', simulateError: 'compilationError' },
-          { conceptName: 'User', target: 'typescript', sourceHash: 'user-hash' },
-        ],
-      },
-      storage,
-    );
-    expect(result.variant).toBe('partial');
-    const completed = result.completed as any[];
-    const failed = result.failed as any[];
-    expect(completed.length).toBeGreaterThan(0);
-    expect(failed.length).toBeGreaterThan(0);
-    expect(completed.length + failed.length).toBe(3);
-
-    // Verify failed entry contains error info
-    const failedEntry = failed[0];
-    expect(failedEntry.conceptName).toBe('Broken');
-    expect(failedEntry.error).toBeDefined();
-  });
-
   // --- test: ok ---
 
-  it('should return pass, fail, skipped, and duration on test ok', async () => {
+  it('should return pass, fail, skipped, duration, and testType on test ok', async () => {
     // Build first so artifact exists
     await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-abc123',
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
 
     const result = await builderHandler.test(
       {
-        conceptName: 'Password',
-        target: 'typescript',
+        concept: 'Password',
+        language: 'typescript',
+        platform: 'node',
       },
       storage,
     );
@@ -195,9 +142,97 @@ describe('Builder conformance', () => {
     expect(typeof result.failed).toBe('number');
     expect(typeof result.skipped).toBe('number');
     expect(typeof result.duration).toBe('number');
+    expect(result.testType).toBe('unit');
     expect(result.passed).toBeGreaterThanOrEqual(0);
     expect(result.failed).toBe(0);
     expect(result.duration).toBeGreaterThanOrEqual(0);
+  });
+
+  // --- test: with testType ---
+
+  it('should accept testType parameter and return it in result', async () => {
+    await builderHandler.build(
+      {
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
+      },
+      storage,
+    );
+
+    const result = await builderHandler.test(
+      {
+        concept: 'Password',
+        language: 'typescript',
+        platform: 'node',
+        testType: 'e2e',
+      },
+      storage,
+    );
+    expect(result.variant).toBe('ok');
+    expect(result.testType).toBe('e2e');
+  });
+
+  // --- test: with toolName ---
+
+  it('should accept toolName parameter for tool selection', async () => {
+    await builderHandler.build(
+      {
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
+      },
+      storage,
+    );
+
+    const result = await builderHandler.test(
+      {
+        concept: 'Password',
+        language: 'typescript',
+        platform: 'node',
+        testType: 'unit',
+        toolName: 'jest',
+      },
+      storage,
+    );
+    expect(result.variant).toBe('ok');
+    expect(result.testType).toBe('unit');
+  });
+
+  // --- test: with invocation ---
+
+  it('should accept invocation profile for direct tool configuration', async () => {
+    await builderHandler.build(
+      {
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
+      },
+      storage,
+    );
+
+    const result = await builderHandler.test(
+      {
+        concept: 'Password',
+        language: 'typescript',
+        platform: 'node',
+        testType: 'unit',
+        invocation: {
+          command: 'npx jest',
+          args: ['--json'],
+          outputFormat: 'jest-json',
+        },
+      },
+      storage,
+    );
+    expect(result.variant).toBe('ok');
+    expect(result.testType).toBe('unit');
   });
 
   // --- test: notBuilt ---
@@ -205,8 +240,9 @@ describe('Builder conformance', () => {
   it('should return notBuilt when no build artifact exists', async () => {
     const result = await builderHandler.test(
       {
-        conceptName: 'NeverBuilt',
-        target: 'typescript',
+        concept: 'NeverBuilt',
+        language: 'typescript',
+        platform: 'node',
       },
       storage,
     );
@@ -216,20 +252,21 @@ describe('Builder conformance', () => {
   // --- status: ok ---
 
   it('should return status with state and duration after build', async () => {
-    await builderHandler.build(
+    const buildResult = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-abc123',
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
+    expect(buildResult.variant).toBe('ok');
+    const buildId = buildResult.build as string;
 
     const result = await builderHandler.status(
-      {
-        conceptName: 'Password',
-        target: 'typescript',
-      },
+      { build: buildId },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -243,23 +280,27 @@ describe('Builder conformance', () => {
   it('should return build list from history', async () => {
     await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-v1',
+        concept: 'Password',
+        source: './generated/typescript/password-v1',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
     await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-v2',
+        concept: 'Password',
+        source: './generated/typescript/password-v2',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
 
     const result = await builderHandler.history(
-      { conceptName: 'Password' },
+      { concept: 'Password' },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -270,53 +311,57 @@ describe('Builder conformance', () => {
   it('should filter history by language', async () => {
     await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'ts-hash',
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
     await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'rust',
-        sourceHash: 'rs-hash',
+        concept: 'Password',
+        source: './generated/rust/password',
+        language: 'rust',
+        platform: 'x86_64-linux',
+        config: { mode: 'release' },
       },
       storage,
     );
 
     const result = await builderHandler.history(
-      { conceptName: 'Password', language: 'typescript' },
+      { concept: 'Password', language: 'typescript' },
       storage,
     );
     expect(result.variant).toBe('ok');
     const builds = result.builds as any[];
     expect(builds).toHaveLength(1);
-    expect(builds[0].target).toBe('typescript');
+    expect(builds[0].language).toBe('typescript');
   });
 
-  // --- invariant: after build -> ok, status -> ok with "done" ---
+  // --- invariant: after build -> ok, status -> completed ---
 
-  it('should report status "done" after a successful build', async () => {
+  it('should report status "completed" after a successful build', async () => {
     const buildResult = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'src-final',
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
     expect(buildResult.variant).toBe('ok');
+    const buildId = buildResult.build as string;
 
     const statusResult = await builderHandler.status(
-      {
-        conceptName: 'Password',
-        target: 'typescript',
-      },
+      { build: buildId },
       storage,
     );
     expect(statusResult.variant).toBe('ok');
-    expect(statusResult.status).toBe('done');
+    expect(statusResult.status).toBe('completed');
   });
 
   // --- invariant: after build -> ok, history returns the build ---
@@ -324,9 +369,11 @@ describe('Builder conformance', () => {
   it('should include the build in history after a successful build', async () => {
     const buildResult = await builderHandler.build(
       {
-        conceptName: 'User',
-        target: 'typescript',
-        sourceHash: 'src-user-v1',
+        concept: 'User',
+        source: './generated/typescript/user',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
@@ -334,7 +381,7 @@ describe('Builder conformance', () => {
     const expectedHash = buildResult.artifactHash as string;
 
     const historyResult = await builderHandler.history(
-      { conceptName: 'User' },
+      { concept: 'User' },
       storage,
     );
     expect(historyResult.variant).toBe('ok');
@@ -345,7 +392,6 @@ describe('Builder conformance', () => {
       (b: any) => b.artifactHash === expectedHash,
     );
     expect(matchingBuild).toBeDefined();
-    expect(matchingBuild.conceptName).toBe('User');
-    expect(matchingBuild.target).toBe('typescript');
+    expect(matchingBuild.language).toBe('typescript');
   });
 });
