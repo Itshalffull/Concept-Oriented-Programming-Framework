@@ -79,7 +79,7 @@ concept Builder [B] {
       }
     }
 
-    action test(concept: String, language: String, platform: String, testFilter: option list String, testType: option String) {
+    action test(concept: String, language: String, platform: String, testFilter: option list String, testType: option String, toolName: option String) {
       -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
         Run tests only (no compilation — assumes already built).
         Used for re-running tests after a build. If testFilter
@@ -94,12 +94,21 @@ concept Builder [B] {
         tells the provider exactly how to run the tool and
         parse its output.
 
+        toolName optionally selects a specific tool within the
+        category when multiple alternatives exist. Sourced from
+        the deploy manifest build section. Examples:
+        - toolName: "jest" selects jest over vitest for unit-runner
+        - toolName: "cypress" selects cypress over playwright for e2e-runner
+        - toolName: "hardhat" selects hardhat over foundry for solidity unit-runner
+
         Examples:
         - test(testType: "unit") → Toolchain/resolve(category: "unit-runner")
             → vitest: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json" }
+        - test(testType: "unit", toolName: "jest") → Toolchain/resolve(category: "unit-runner", toolName: "jest")
+            → jest: { command: "npx jest", args: ["--json"], outputFormat: "jest-json" }
         - test(testType: "e2e") → Toolchain/resolve(category: "e2e-runner")
             → playwright: { command: "npx playwright test", args: ["--reporter=json"], outputFormat: "playwright-json" }
-        - test(testType: "ui") → Toolchain/resolve(category: "ui-runner")
+        - test(testType: "e2e", toolName: "cypress") → Toolchain/resolve(category: "e2e-runner", toolName: "cypress")
             → cypress: { command: "npx cypress run", args: ["--reporter", "json"], outputFormat: "cypress-json" }
       }
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {

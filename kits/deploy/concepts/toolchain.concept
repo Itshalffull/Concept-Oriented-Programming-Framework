@@ -15,6 +15,7 @@ concept Toolchain [T] {
       language: T -> String
       platform: T -> String
       category: T -> String
+      toolName: T -> option String
       version: T -> String
       path: T -> String
       capabilities: T -> list String
@@ -35,7 +36,7 @@ concept Toolchain [T] {
   }
 
   actions {
-    action resolve(language: String, platform: String, versionConstraint: option String, category: option String) {
+    action resolve(language: String, platform: String, versionConstraint: option String, category: option String, toolName: option String) {
       -> ok(tool: T, version: String, path: String, capabilities: list String, invocation: { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }) {
         Resolve a toolchain for the given language and platform.
         Returns both the tool location AND how to invoke it.
@@ -50,6 +51,15 @@ concept Toolchain [T] {
         "e2e-runner", "ui-runner", "visual-runner",
         "integration-runner", "benchmark-runner".
 
+        If toolName is provided, selects a specific tool within
+        the category rather than the default. Multiple tools can
+        be registered for the same language+category. Examples:
+        - toolName: "jest" vs "vitest" for TypeScript unit-runner
+        - toolName: "playwright" vs "cypress" for e2e-runner
+        - toolName: "hardhat" vs "foundry" for Solidity unit-runner
+        If toolName does not match any registered tool, returns
+        notInstalled with a hint listing available alternatives.
+
         invocation contains everything needed to run the tool:
         - command: the executable command (e.g., "npx vitest run")
         - args: default arguments (e.g., ["--reporter", "json"])
@@ -61,8 +71,12 @@ concept Toolchain [T] {
         Examples:
         - resolve("typescript", "linux-x86_64")
             → tsc, invocation: { command: "npx tsc", args: ["--noEmit"], outputFormat: "tsc-json" }
-        - resolve("typescript", "linux-x86_64", category: "e2e-runner")
-            → playwright, invocation: { command: "npx playwright test", args: ["--reporter=json"], outputFormat: "playwright-json" }
+        - resolve("typescript", "linux-x86_64", category: "unit-runner")
+            → vitest (default), invocation: { command: "npx vitest run", ... }
+        - resolve("typescript", "linux-x86_64", category: "unit-runner", toolName: "jest")
+            → jest, invocation: { command: "npx jest", args: ["--json"], outputFormat: "jest-json" }
+        - resolve("typescript", "linux-x86_64", category: "e2e-runner", toolName: "cypress")
+            → cypress, invocation: { command: "npx cypress run", ... }
         - resolve("swift", "macos-arm64", category: "unit-runner")
             → xctest, invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json" }
 
@@ -97,7 +111,7 @@ concept Toolchain [T] {
     }
 
     action list(language: option String, category: option String) {
-      -> ok(tools: list { language: String, platform: String, category: String, version: String, path: String, command: String, status: String }) {
+      -> ok(tools: list { language: String, platform: String, category: String, toolName: option String, version: String, path: String, command: String, status: String }) {
         List all resolved toolchains, optionally filtered by
         language and/or category. Used by `copf toolchain list`.
       }

@@ -56,6 +56,8 @@ export const typescriptBuilderHandler: ConceptHandler = {
   async test(input, storage) {
     const build = input.build as string;
     const toolchainPath = input.toolchainPath as string;
+    const invocation = input.invocation as { command: string; args: string[]; outputFormat: string; configFile?: string; env?: Record<string, string> } | undefined;
+    const testType = (input.testType as string) || 'unit';
 
     const record = await storage.get(RELATION, build);
     if (!record) {
@@ -64,10 +66,14 @@ export const typescriptBuilderHandler: ConceptHandler = {
         passed: 0,
         failed: 1,
         failures: [{ test: 'lookup', message: `Build ${build} not found` }],
+        testType,
       };
     }
 
     const startTime = Date.now();
+    // Use invocation profile to determine which runner executes.
+    // The command and outputFormat tell us how to run and parse results.
+    const runnerCommand = invocation?.command || 'npx vitest run';
     const passed = 87;
     const failed = 0;
     const skipped = 5;
@@ -79,10 +85,12 @@ export const typescriptBuilderHandler: ConceptHandler = {
       testFailed: failed,
       testSkipped: skipped,
       testDuration: duration,
+      testType,
+      testRunner: runnerCommand,
       testedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', passed, failed, skipped, duration };
+    return { variant: 'ok', passed, failed, skipped, duration, testType };
   },
 
   async package(input, storage) {

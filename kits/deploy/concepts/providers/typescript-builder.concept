@@ -47,12 +47,16 @@ concept TypeScriptBuilder [N] {
       }
     }
 
-    action test(build: N, toolchainPath: String) {
-      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
-        Run jest/vitest against the built output.
-        Auto-detects test runner from project config.
+    action test(build: N, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }, testType: option String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
+        Run tests against the built output using the resolved
+        invocation profile. If invocation is provided, uses it
+        to determine the test command, args, and output format.
+        Otherwise falls back to auto-detection.
+        testType indicates which runner category was used
+        (e.g., "unit", "e2e", "integration").
       }
-      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed.
       }
     }
@@ -82,6 +86,9 @@ concept TypeScriptBuilder [N] {
   invariant {
     after build(source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: { mode: "release" })
       -> ok(build: n, artifactPath: ".copf-artifacts/typescript/password", artifactHash: "sha256:def")
-    then test(build: n, toolchainPath: "/usr/local/bin/tsc") -> ok(passed: 8, failed: 0, skipped: 0, duration: 900)
+    then test(build: n, toolchainPath: "/usr/local/bin/tsc",
+              invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json", configFile: "vitest.config.ts", env: null },
+              testType: "unit")
+      -> ok(passed: 8, failed: 0, skipped: 0, duration: 900, testType: "unit")
   }
 }

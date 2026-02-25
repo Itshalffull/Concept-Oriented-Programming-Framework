@@ -129,12 +129,28 @@ export const builderHandler: ConceptHandler = {
     const platform = input.platform as string;
     const testFilter = input.testFilter as string[] | undefined;
     const testType = (input.testType as string) || 'unit';
+    const toolName = input.toolName as string | undefined;
+    const invocation = input.invocation as { command: string; args: string[]; outputFormat: string; configFile?: string; env?: Record<string, string> } | undefined;
 
     // Check that a build exists for this concept and language
     const existing = await storage.find(RELATION, { concept, language, platform });
     if (existing.length === 0) {
       return { variant: 'notBuilt', concept, language };
     }
+
+    // Map testType to toolchain category for resolution.
+    // The resolved invocation profile (or one passed in directly)
+    // tells the language-specific provider exactly how to run
+    // the test tool and parse its output.
+    const categoryMap: Record<string, string> = {
+      unit: 'unit-runner',
+      integration: 'integration-runner',
+      e2e: 'e2e-runner',
+      ui: 'ui-runner',
+      visual: 'visual-runner',
+      benchmark: 'benchmark-runner',
+    };
+    const _resolvedCategory = categoryMap[testType] || 'unit-runner';
 
     const startTime = Date.now();
 
@@ -156,6 +172,8 @@ export const builderHandler: ConceptHandler = {
       testSkipped: skipped,
       testDuration: duration,
       testType,
+      testToolName: toolName || null,
+      testRunner: invocation?.command || null,
     });
 
     return { variant: 'ok', passed, failed, skipped, duration, testType };

@@ -3,9 +3,9 @@
 sync RouteToolchainToRust [eager]
 when {
   Toolchain/resolve: [ language: "rust"; platform: ?plat;
-    versionConstraint: ?ver ]
+    versionConstraint: ?ver; category: ?cat; toolName: ?name ]
     => [ tool: ?tool; version: ?v; path: ?path;
-         capabilities: ?caps ]
+         capabilities: ?caps; invocation: ?invoc ]
 }
 then {
   RustToolchain/resolve: [ platform: ?plat;

@@ -3,9 +3,9 @@
 sync RouteToolchainToTypeScript [eager]
 when {
   Toolchain/resolve: [ language: "typescript"; platform: ?plat;
-    versionConstraint: ?ver ]
+    versionConstraint: ?ver; category: ?cat; toolName: ?name ]
     => [ tool: ?tool; version: ?v; path: ?path;
-         capabilities: ?caps ]
+         capabilities: ?caps; invocation: ?invoc ]
 }
 then {
   TypeScriptToolchain/resolve: [ platform: ?plat;

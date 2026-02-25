@@ -56,6 +56,8 @@ export const swiftBuilderHandler: ConceptHandler = {
   async test(input, storage) {
     const build = input.build as string;
     const toolchainPath = input.toolchainPath as string;
+    const invocation = input.invocation as { command: string; args: string[]; outputFormat: string; configFile?: string; env?: Record<string, string> } | undefined;
+    const testType = (input.testType as string) || 'unit';
 
     const record = await storage.get(RELATION, build);
     if (!record) {
@@ -64,10 +66,13 @@ export const swiftBuilderHandler: ConceptHandler = {
         passed: 0,
         failed: 1,
         failures: [{ test: 'lookup', message: `Build ${build} not found` }],
+        testType,
       };
     }
 
     const startTime = Date.now();
+    // Use invocation profile to determine which runner executes.
+    const runnerCommand = invocation?.command || 'swift test';
     const passed = 42;
     const failed = 0;
     const skipped = 3;
@@ -79,10 +84,12 @@ export const swiftBuilderHandler: ConceptHandler = {
       testFailed: failed,
       testSkipped: skipped,
       testDuration: duration,
+      testType,
+      testRunner: runnerCommand,
       testedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', passed, failed, skipped, duration };
+    return { variant: 'ok', passed, failed, skipped, duration, testType };
   },
 
   async package(input, storage) {

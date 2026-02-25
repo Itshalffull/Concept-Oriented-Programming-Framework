@@ -45,11 +45,15 @@ concept RustBuilder [R] {
       }
     }
 
-    action test(build: R, toolchainPath: String) {
-      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
-        Run `cargo test`. Parses test harness output.
+    action test(build: R, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }, testType: option String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
+        Run tests using the resolved invocation profile. If
+        invocation is provided, uses it to determine the test
+        command (cargo test vs nextest) and output parser.
+        Otherwise defaults to `cargo test`.
+        testType indicates which runner category was used.
       }
-      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed.
       }
     }
@@ -80,6 +84,9 @@ concept RustBuilder [R] {
   invariant {
     after build(source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: { mode: "release" })
       -> ok(build: r, artifactPath: ".copf-artifacts/rust/password", artifactHash: "sha256:ghi")
-    then test(build: r, toolchainPath: "/usr/local/bin/rustc") -> ok(passed: 15, failed: 0, skipped: 0, duration: 2100)
+    then test(build: r, toolchainPath: "/usr/local/bin/rustc",
+              invocation: { command: "cargo test", args: ["--", "--format=json"], outputFormat: "cargo-test-json", configFile: "Cargo.toml", env: null },
+              testType: "unit")
+      -> ok(passed: 15, failed: 0, skipped: 0, duration: 2100, testType: "unit")
   }
 }

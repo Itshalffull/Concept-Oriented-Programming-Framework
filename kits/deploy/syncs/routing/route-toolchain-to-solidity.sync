@@ -3,9 +3,9 @@
 sync RouteToolchainToSolidity [eager]
 when {
   Toolchain/resolve: [ language: "solidity"; platform: ?plat;
-    versionConstraint: ?ver ]
+    versionConstraint: ?ver; category: ?cat; toolName: ?name ]
     => [ tool: ?tool; version: ?v; path: ?path;
-         capabilities: ?caps ]
+         capabilities: ?caps; invocation: ?invoc ]
 }
 then {
   SolidityToolchain/resolve: [ platform: ?plat;

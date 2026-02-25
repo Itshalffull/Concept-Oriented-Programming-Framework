@@ -3,9 +3,9 @@
 sync RouteToolchainToSwift [eager]
 when {
   Toolchain/resolve: [ language: "swift"; platform: ?plat;
-    versionConstraint: ?ver ]
+    versionConstraint: ?ver; category: ?cat; toolName: ?name ]
     => [ tool: ?tool; version: ?v; path: ?path;
-         capabilities: ?caps ]
+         capabilities: ?caps; invocation: ?invoc ]
 }
 then {
   SwiftToolchain/resolve: [ platform: ?plat;
