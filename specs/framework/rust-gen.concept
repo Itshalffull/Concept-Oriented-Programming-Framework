@@ -23,6 +23,16 @@ concept RustGen [S] {
         If the manifest contains types not mappable to Rust.
       }
     }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "RustGen"
+        inputKind: "ConceptManifest"
+        outputKind: "RustSource"
+        capabilities: ["types", "handler", "adapter", "conformance-tests"]
+      }
+    }
   }
 
   invariant {

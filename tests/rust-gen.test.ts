@@ -43,12 +43,14 @@ describe('RustGen Type Mapping', () => {
     const ast = parseConceptFile(source);
 
     expect(ast.name).toBe('RustGen');
-    expect(ast.actions).toHaveLength(1);
-    expect(ast.actions[0].name).toBe('generate');
-    expect(ast.actions[0].params.map(p => p.name)).toContain('manifest');
-    expect(ast.actions[0].params.map(p => p.name)).toContain('spec');
-    expect(ast.actions[0].variants.map(v => v.name)).toContain('ok');
-    expect(ast.actions[0].variants.map(v => v.name)).toContain('error');
+    expect(ast.actions).toHaveLength(2);
+    expect(ast.actions.map(a => a.name)).toContain('generate');
+    expect(ast.actions.map(a => a.name)).toContain('register');
+    const generateAction = ast.actions.find(a => a.name === 'generate')!;
+    expect(generateAction.params.map(p => p.name)).toContain('manifest');
+    expect(generateAction.params.map(p => p.name)).toContain('spec');
+    expect(generateAction.variants.map(v => v.name)).toContain('ok');
+    expect(generateAction.variants.map(v => v.name)).toContain('error');
   });
 
   it('Password concept generates correct Rust type definitions', async () => {

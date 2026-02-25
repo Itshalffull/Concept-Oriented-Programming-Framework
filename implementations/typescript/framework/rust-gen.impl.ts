@@ -463,6 +463,16 @@ function generateRustStepCode(
 // --- Handler ---
 
 export const rustGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'RustGen',
+      inputKind: 'ConceptManifest',
+      outputKind: 'RustSource',
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+    };
+  },
+
   async generate(input, storage) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
