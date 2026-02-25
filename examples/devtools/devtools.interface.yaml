@@ -83,6 +83,7 @@ workflows:
         - "Actions have at least one variant?"
         - "Invariants reference valid actions?"
         - "Type parameters declared and used?"
+        - "Variant descriptions explain outcomes, not just echo variant names?"
     design-principles:
       - title: "Spec as Source of Truth"
         rule: "The .concept file is the single authoritative definition — all generated code, tests, and documentation derive from it."
@@ -140,8 +141,8 @@ workflows:
           ```
           actions {
             action create(name: String, email: String) {
-              -> ok(item: T) { Created successfully. }
-              -> duplicate(name: String) { Name already taken. }
+              -> ok(item: T) { New item registered with the provided name and email. }
+              -> duplicate(name: String) { Another item already has this name. }
             }
           }
           ```
@@ -255,14 +256,28 @@ workflows:
           concept User [U] {
             purpose { Manage user identity and profile information. }
             state { users: set U; name: U -> String }
-            actions { action create(name: String) { -> ok(user: U) { Created. } } }
+            actions { action create(name: String) { -> ok(user: U) { New user registered. } } }
+          }
+      - title: "Terse or echo variant descriptions"
+        description: "Variant descriptions that echo the variant name or use a single generic word — they tell the reader nothing about the actual outcome."
+        bad: |
+          action create(name: String) {
+            -> ok(user: U) { Created. }
+            -> duplicate(name: String) { Name taken. }
+            -> error(message: String) { Failed. }
+          }
+        good: |
+          action create(name: String) {
+            -> ok(user: U) { New user registered and ready for authentication setup. }
+            -> duplicate(name: String) { A user with this name already exists. }
+            -> error(message: String) { Creation failed due to a storage or validation error. }
           }
       - title: "Untyped action parameters"
         description: "Action parameters lack types — generated code will use 'any'."
         bad: |
           action create(name, email) { -> ok(user: U) { Created. } }
         good: |
-          action create(name: String, email: String) { -> ok(user: U) { Created. } }
+          action create(name: String, email: String) { -> ok(user: U) { New user registered. } }
 
   # ─── SpecParser: concept-designer ──────────────────
   concept-designer:
@@ -283,6 +298,8 @@ workflows:
         rule: "A concept never references another concept's types or calls another concept's actions directly — use type parameters and syncs."
       - title: "Sufficiency & Necessity"
         rule: "Every state field is needed by at least one action, and every action can be served from the declared state."
+      - title: "Description Quality"
+        rule: "Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true."
     references:
       - path: references/jackson-methodology.md
         label: "Jackson's full methodology"
@@ -411,6 +428,20 @@ workflows:
           concept Order [O, U] {
             state { customer: O -> U }
           }
+      - title: "Echo descriptions"
+        description: "Variant descriptions that just restate the variant name in slightly different words — they add no information for the reader."
+        bad: |
+          action publish(item: T) {
+            -> ok(item: T) { Published. }
+            -> notFound() { Not found. }
+            -> unauthorized() { Unauthorized. }
+          }
+        good: |
+          action publish(item: T) {
+            -> ok(item: T) { Item is now publicly visible and indexed for search. }
+            -> notFound() { No item exists with the given identifier. }
+            -> unauthorized() { Current user lacks publish permission for this item. }
+          }
     validation-commands:
       - label: "Validate the new concept spec"
         command: "npx tsx tools/copf-cli/src/index.ts check"
@@ -452,6 +483,7 @@ workflows:
         - "Variable bindings are consistent across when/where/then?"
         - "Where-clause queries are well-formed?"
         - "Sync mode (eager vs eventual) matches intent?"
+        - "Purpose clause explains the causal chain, not just the sync name?"
     design-principles:
       - title: "Completion Chaining"
         rule: "Syncs compose through completions, never by referencing other syncs — each sync reacts to what happened, not who caused it."
@@ -459,6 +491,8 @@ workflows:
         rule: "Syncs wire concepts together without the concepts knowing about each other — concepts never import or reference each other."
       - title: "Pattern Exhaustiveness"
         rule: "Every when-clause variant that a sync matches should be explicitly listed — don't rely on fallthrough behavior."
+      - title: "Purpose Clause Quality"
+        rule: "Every sync must have a purpose clause that explains the causal chain — 'When X happens, do Y because Z'. Never just restate the sync name or omit the purpose entirely."
     references:
       - path: references/sync-design.md
         label: "Sync language and patterns"
@@ -623,6 +657,20 @@ workflows:
           sync GoodChain [eager] {
             when { ConceptA/create => ok[item: ?x] }
             then { ConceptB/process[item: ?x] }
+          }
+      - title: "Missing or restated purpose"
+        description: "Sync has no purpose clause, or the purpose just restates the sync name — readers can't understand why the sync exists."
+        bad: |
+          sync CreateProfile [eager] {
+            when { User/create => ok[user: ?u] }
+            then { Profile/create[owner: ?u] }
+          }
+        good: |
+          sync CreateProfile [eager]
+            purpose: "Initialize an empty profile automatically when a new user registers"
+          {
+            when { User/create => ok[user: ?u] }
+            then { Profile/create[owner: ?u] }
           }
       - title: "Overly broad pattern match"
         description: "Sync matches all variants of an action instead of the specific one it needs."
@@ -3076,6 +3124,7 @@ workflows:
         - "Every action has at least one variant?"
         - "register() action is included for PluginRegistry?"
         - "Annotations (@category, @visibility) are present?"
+        - "Variant descriptions explain outcomes, not just echo variant names?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
@@ -3088,6 +3137,8 @@ workflows:
         rule: "Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state."
       - title: "Invariant Completeness"
         rule: "Key properties are captured as formal invariants documenting what must be true after each action."
+      - title: "Description Quality"
+        rule: "Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true."
     references:
       - path: references/concept-spec-guide.md
         label: "Concept specification writing guide"
@@ -3123,10 +3174,10 @@ workflows:
 
           ```
           action create(name: String, email: String) {
-            description { Create a new user. }
-            -> ok(user: U) { User created. }
-            -> duplicate(email: String) { Email already registered. }
-            -> error(message: String) { Creation failed. }
+            description { Create a new user with the given name and email. }
+            -> ok(user: U) { New user registered and ready for authentication setup. }
+            -> duplicate(email: String) { Another user is already registered with this email address. }
+            -> error(message: String) { Creation failed due to a storage or validation error. }
           }
           ```
 
@@ -3202,9 +3253,21 @@ workflows:
           }
         good: |
           action create(name: String) {
+            -> ok(user: U) { New user registered and ready for profile setup. }
+            -> duplicate(name: String) { A user with this name already exists. }
+            -> error(message: String) { Creation failed due to a storage or validation error. }
+          }
+      - title: "Terse or echo descriptions"
+        description: "Variant descriptions that echo the variant name or use a single generic word — they tell the reader nothing about the actual outcome."
+        bad: |
+          action create(name: String) {
             -> ok(user: U) { Created. }
-            -> duplicate(name: String) { Name taken. }
             -> error(message: String) { Failed. }
+          }
+        good: |
+          action create(name: String) {
+            -> ok(user: U) { New user registered and ready for authentication setup. }
+            -> error(message: String) { Creation failed due to a storage or validation error. }
           }
 
   # ─── SyncScaffoldGen: sync-scaffold ────────────────
@@ -3238,6 +3301,8 @@ workflows:
         rule: "Syncs reference concepts by name but concepts never know about syncs. The sync is the only place where concept names appear together."
       - title: "Pattern Completeness"
         rule: "The when clause must match specific action completions (concept/action with variant). The then clause invokes specific actions."
+      - title: "Purpose Clause Quality"
+        rule: "Every sync must have a purpose clause that explains the causal chain — 'When X happens, do Y because Z'. Never just restate the sync name or omit the purpose entirely."
     references:
       - path: references/sync-rule-guide.md
         label: "Sync rule writing guide"
@@ -3251,7 +3316,7 @@ workflows:
 
           ```
           sync SyncName [eager]
-            purpose { Why this sync exists. }
+            purpose: "Why this sync exists — explain the causal chain."
           when {
             SourceConcept/action: [
               field: ?var
@@ -3327,6 +3392,17 @@ workflows:
       - name: sync-validator
         description: "Validate compiled syncs"
     anti-patterns:
+      - title: "Missing or restated purpose"
+        description: "Sync has no purpose clause, or the purpose just restates the sync name — readers can't understand why the sync exists."
+        bad: |
+          sync CreateProfile [eager]
+          when { ... }
+          then { Profile/create: [owner: ?u] }
+        good: |
+          sync CreateProfile [eager]
+            purpose: "Initialize an empty profile automatically when a new user registers"
+          when { ... }
+          then { Profile/create: [owner: ?u] }
       - title: "Sync with imperative logic"
         description: "Sync tries to express conditionals or loops instead of pattern matching."
         bad: |
