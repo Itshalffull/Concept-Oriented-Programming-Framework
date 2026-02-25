@@ -1,0 +1,176 @@
+kit:
+  name: versioning
+  version: 0.1.0
+  description: >
+    Version control, change tracking, and history management. Provides
+    content-addressed storage, DAG-based history, pluggable diff and merge
+    algorithms, bitemporal versioning, ordered change streams, schema
+    evolution, and retention policy enforcement.
+
+concepts:
+  ContentHash:
+    spec: ./content-hash.concept
+    params:
+      C: { as: content, description: "Content being stored and hashed" }
+
+  Ref:
+    spec: ./ref.concept
+    params:
+      R: { as: ref-entry, description: "Mutable reference entry" }
+
+  DAGHistory:
+    spec: ./dag-history.concept
+    params:
+      N: { as: node, description: "History DAG node" }
+
+  Patch:
+    spec: ./patch.concept
+    params:
+      P: { as: patch, description: "Patch object" }
+
+  Diff:
+    spec: ./diff.concept
+    params:
+      C: { as: content, description: "Content being diffed" }
+
+  Merge:
+    spec: ./merge.concept
+    params:
+      C: { as: content, description: "Content being merged" }
+
+  Branch:
+    spec: ./branch.concept
+    params:
+      B: { as: branch, description: "Branch entry" }
+
+  TemporalVersion:
+    spec: ./temporal-version.concept
+    params:
+      V: { as: version, description: "Version record" }
+
+  SchemaEvolution:
+    spec: ./schema-evolution.concept
+    params:
+      S: { as: schema-version, description: "Schema version entry" }
+
+  ChangeStream:
+    spec: ./change-stream.concept
+    params:
+      E: { as: event, description: "Change event" }
+
+  RetentionPolicy:
+    spec: ./retention-policy.concept
+    params:
+      R: { as: policy, description: "Retention policy entry" }
+
+  # --- Diff providers ---
+
+  MyersDiff:
+    spec: ./providers/myers-diff.concept
+    params:
+      C: { as: content, description: "Content being diffed" }
+    optional: true
+
+  PatienceDiff:
+    spec: ./providers/patience-diff.concept
+    params:
+      C: { as: content, description: "Content being diffed" }
+    optional: true
+
+  HistogramDiff:
+    spec: ./providers/histogram-diff.concept
+    params:
+      C: { as: content, description: "Content being diffed" }
+    optional: true
+
+  TreeDiff:
+    spec: ./providers/tree-diff.concept
+    params:
+      C: { as: content, description: "Content being diffed" }
+    optional: true
+
+  # --- Merge providers ---
+
+  ThreeWayMerge:
+    spec: ./providers/three-way-merge.concept
+    params:
+      C: { as: content, description: "Content being merged" }
+    optional: true
+
+  RecursiveMerge:
+    spec: ./providers/recursive-merge.concept
+    params:
+      C: { as: content, description: "Content being merged" }
+    optional: true
+
+  LatticeMerge:
+    spec: ./providers/lattice-merge.concept
+    params:
+      C: { as: content, description: "Content being merged" }
+    optional: true
+
+  SemanticMerge:
+    spec: ./providers/semantic-merge.concept
+    params:
+      C: { as: content, description: "Content being merged" }
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/required/content-hash-dag-history.sync
+      description: "ContentHash/store creates a DAGHistory node with content reference"
+
+    - path: ./syncs/required/ref-branch.sync
+      description: "Branch create/advance atomically updates the corresponding Ref"
+
+    - path: ./syncs/required/merge-dag-history.sync
+      description: "Merge/finalize creates a merge node in DAGHistory with both parents"
+
+    - path: ./syncs/required/patch-diff.sync
+      description: "Patch/create invokes Diff/diff to produce the edit script"
+
+    - path: ./syncs/required/temporal-version-content-hash.sync
+      description: "TemporalVersion/record verifies the referenced content hash exists"
+
+  recommended:
+    - path: ./syncs/recommended/change-stream-dag-history.sync
+      description: "ChangeStream/append creates a DAGHistory node for stream events"
+
+    - path: ./syncs/recommended/schema-evolution-change-stream.sync
+      description: "SchemaEvolution/register appends a schema-change event to ChangeStream"
+
+    - path: ./syncs/recommended/retention-policy-temporal-version.sync
+      description: "TemporalVersion deletion blocked by RetentionPolicy/checkDisposition"
+
+    - path: ./syncs/recommended/retention-policy-dag-history.sync
+      description: "DAGHistory pruning blocked by RetentionPolicy/checkDisposition"
+
+  integration:
+    - path: ./syncs/integration/myers-diff-activation.sync
+      description: "MyersDiff provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/patience-diff-activation.sync
+      description: "PatienceDiff provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/histogram-diff-activation.sync
+      description: "HistogramDiff provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/tree-diff-activation.sync
+      description: "TreeDiff provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/three-way-merge-activation.sync
+      description: "ThreeWayMerge provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/recursive-merge-activation.sync
+      description: "RecursiveMerge provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/lattice-merge-activation.sync
+      description: "LatticeMerge provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/semantic-merge-activation.sync
+      description: "SemanticMerge provider self-registers with PluginRegistry"
+
+uses:
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

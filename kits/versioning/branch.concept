@@ -1,0 +1,110 @@
+@version(1)
+concept Branch [B] {
+
+  purpose {
+    Named parallel lines of development with lifecycle management.
+    Branches are mutable pointers over immutable DAG history —
+    advancing the head, protecting against direct writes, and
+    tracking upstream relationships.
+  }
+
+  state {
+    branches: set B;
+    name: B -> String;
+    head: B -> String;
+    protected: B -> Bool;
+    upstream: B -> option B;
+    created: B -> String;
+    archived: set B
+  }
+
+  actions {
+    action create(name: String, fromNode: String) {
+      -> ok(branch: B) {
+        Branch created with head pointing at fromNode.
+      }
+      -> exists(message: String) {
+        Branch name already in use.
+      }
+      -> unknownNode(message: String) {
+        fromNode not found in DAGHistory.
+      }
+    }
+
+    action advance(branch: B, newNode: String) {
+      -> ok() {
+        Branch head moved forward to newNode.
+      }
+      -> notFound(message: String) {
+        Branch not found.
+      }
+      -> protected(message: String) {
+        Branch is protected. Direct advance rejected.
+      }
+      -> unknownNode(message: String) {
+        newNode not found in DAGHistory.
+      }
+    }
+
+    action delete(branch: B) {
+      -> ok() {
+        Branch removed.
+      }
+      -> notFound(message: String) {
+        Branch not found.
+      }
+      -> protected(message: String) {
+        Protected branch cannot be deleted.
+      }
+    }
+
+    action protect(branch: B) {
+      -> ok() {
+        Branch marked as protected.
+      }
+      -> notFound(message: String) {
+        Branch not found.
+      }
+    }
+
+    action setUpstream(branch: B, upstream: B) {
+      -> ok() {
+        Upstream tracking branch set.
+      }
+      -> notFound(message: String) {
+        Branch or upstream not found.
+      }
+    }
+
+    action divergencePoint(b1: B, b2: B) {
+      -> ok(nodeId: String) {
+        Returns the DAGHistory node where the two branches diverged.
+      }
+      -> noDivergence(message: String) {
+        One is a direct ancestor of the other. No divergence point.
+      }
+      -> notFound(message: String) {
+        b1 or b2 not found.
+      }
+    }
+
+    action archive(branch: B) {
+      -> ok() {
+        Branch archived. Remains queryable but excluded from active listings.
+      }
+      -> notFound(message: String) {
+        Branch not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: n, fromNode: f) -> ok(branch: b)
+    then advance(branch: b, newNode: n2) -> ok()
+  }
+
+  invariant {
+    after protect(branch: b) -> ok()
+    then advance(branch: b, newNode: _) -> protected(message: _)
+  }
+}

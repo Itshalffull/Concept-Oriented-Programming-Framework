@@ -1,0 +1,93 @@
+@version(1)
+concept Patch [P] {
+
+  purpose {
+    Represent a change as a first-class, invertible, composable object.
+    Patches have algebraic properties — they can be applied, inverted,
+    composed sequentially, and commuted when independent.
+  }
+
+  state {
+    patches: set P;
+    base: P -> String;
+    target: P -> String;
+    effect: P -> Bytes;
+    dependencies: P -> set P;
+    created: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(base: String, target: String, effect: Bytes) {
+      -> ok(patchId: P) {
+        Patch object created from base and target content hashes
+        with the given edit script.
+      }
+      -> invalidEffect(message: String) {
+        Effect bytes are not a valid edit script.
+      }
+    }
+
+    action apply(patchId: P, content: Bytes) {
+      -> ok(result: Bytes) {
+        Edit script applied to content. Returns transformed result.
+      }
+      -> incompatibleContext(message: String) {
+        Content does not match patch base context. Cannot apply.
+      }
+      -> notFound(message: String) {
+        patchId not found.
+      }
+    }
+
+    action invert(patchId: P) {
+      -> ok(inversePatchId: P) {
+        Returns a new patch that undoes this patch.
+        Base and target are swapped.
+      }
+      -> notFound(message: String) {
+        patchId not found.
+      }
+    }
+
+    action compose(first: P, second: P) {
+      -> ok(composedId: P) {
+        Returns a new patch equivalent to applying first then second.
+      }
+      -> nonSequential(message: String) {
+        first.target does not equal second.base.
+        Cannot compose non-sequential patches.
+      }
+      -> notFound(message: String) {
+        first or second not found.
+      }
+    }
+
+    action commute(p1: P, p2: P) {
+      -> ok(p1Prime: P, p2Prime: P) {
+        Returns reordered patches such that applying p2Prime then
+        p1Prime produces the same result as applying p1 then p2.
+      }
+      -> cannotCommute(message: String) {
+        Patches affect overlapping regions. Commutativity impossible.
+      }
+      -> notFound(message: String) {
+        p1 or p2 not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(base: b, target: t, effect: e) -> ok(patchId: p)
+    then apply(patchId: p, content: b) -> ok(result: t)
+  }
+
+  invariant {
+    after invert(patchId: p) -> ok(inversePatchId: inv)
+    then apply(patchId: p, content: b) -> ok(result: t)
+    and  apply(patchId: inv, content: t) -> ok(result: b)
+  }
+}

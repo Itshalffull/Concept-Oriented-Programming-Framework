@@ -1,0 +1,62 @@
+@version(1)
+concept Diff [C] {
+
+  purpose {
+    Compute the minimal representation of differences between
+    two content states, using a pluggable algorithm selected
+    by content type and context.
+  }
+
+  state {
+    providers: set P;
+    provider_name: P -> String;
+    provider_content_types: P -> list String;
+    default_provider: option P;
+    cache: set E;
+    cache_key: E -> { hashA: String, hashB: String, provider: String };
+    cache_result: E -> Bytes
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action registerProvider(name: String, contentTypes: list String) {
+      -> ok(provider: P) {
+        Registers a new diff algorithm provider for the given content types.
+      }
+      -> duplicate(message: String) {
+        A provider with that name already exists.
+      }
+    }
+
+    action diff(contentA: C, contentB: C, algorithm: option String) {
+      -> identical() {
+        Contents are byte-identical. No edit script needed.
+      }
+      -> diffed(editScript: Bytes, distance: Int) {
+        Returns the minimal edit script transforming A into B
+        and the edit distance. Provider selected by algorithm
+        param, content type, or default.
+      }
+      -> noProvider(message: String) {
+        No registered provider handles this content type.
+      }
+    }
+
+    action patch(content: C, editScript: Bytes) {
+      -> ok(result: C) {
+        Applies edit script to content, producing transformed result.
+      }
+      -> incompatible(message: String) {
+        Edit script does not apply cleanly to this content.
+      }
+    }
+  }
+
+  invariant {
+    after diff(contentA: a, contentB: b, algorithm: _) -> diffed(editScript: es, distance: _)
+    then patch(content: a, editScript: es) -> ok(result: b)
+  }
+}

@@ -1,0 +1,84 @@
+@version(1)
+concept Ref [R] {
+
+  purpose {
+    Provide mutable, human-readable names for immutable content-addressed
+    objects. The only mutable state in the versioning system is naming —
+    all content and history are immutable once created.
+  }
+
+  state {
+    refs: set R;
+    name: R -> String;
+    target: R -> String;
+    reflog: list { name: String, oldHash: String, newHash: String, timestamp: String, agent: String }
+  }
+
+  actions {
+    action create(name: String, hash: String) {
+      -> ok(ref: R) {
+        Named reference created pointing to the given hash.
+      }
+      -> exists(message: String) {
+        A ref with this name already exists.
+      }
+      -> invalidHash(message: String) {
+        Hash does not exist in ContentHash store.
+      }
+    }
+
+    action update(name: String, newHash: String, expectedOldHash: String) {
+      -> ok() {
+        Reference atomically updated via compare-and-swap.
+        Old value recorded in reflog.
+      }
+      -> notFound(message: String) {
+        No ref with that name.
+      }
+      -> conflict(current: String) {
+        Current hash differs from expectedOldHash.
+        Compare-and-swap failed.
+      }
+    }
+
+    action delete(name: String) {
+      -> ok() {
+        Reference removed. Reflog entry added.
+      }
+      -> notFound(message: String) {
+        No ref with that name.
+      }
+      -> protected(message: String) {
+        Ref is protected and cannot be deleted.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(hash: String) {
+        Returns the current hash target of the named ref.
+      }
+      -> notFound(message: String) {
+        No ref with that name.
+      }
+    }
+
+    action log(name: String) {
+      -> ok(entries: list { oldHash: String, newHash: String, timestamp: String, agent: String }) {
+        Returns the mutation history for this ref.
+      }
+      -> notFound(message: String) {
+        No ref with that name.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: n, hash: h) -> ok(ref: r)
+    then resolve(name: n) -> ok(hash: h)
+  }
+
+  invariant {
+    after update(name: n, newHash: h2, expectedOldHash: h1) -> ok()
+    then resolve(name: n) -> ok(hash: h2)
+  }
+}

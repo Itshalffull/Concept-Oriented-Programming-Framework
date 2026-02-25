@@ -1,0 +1,95 @@
+@version(1)
+concept DAGHistory [N] {
+
+  purpose {
+    Organize versions into a directed acyclic graph supporting branching,
+    merging, and topological traversal. Nodes reference content by hash
+    and track parent relationships for full history reconstruction.
+  }
+
+  state {
+    nodes: set N;
+    parents: N -> set N;
+    contentRef: N -> String;
+    metadata: N -> Bytes;
+    created: N -> String;
+    roots: set N
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action append(parents: set N, contentRef: String, metadata: Bytes) {
+      -> ok(nodeId: N) {
+        New node appended to DAG with given parents.
+        Node becomes a root if parents set is empty.
+      }
+      -> unknownParent(message: String) {
+        One or more parent IDs not found in the DAG.
+      }
+    }
+
+    action ancestors(nodeId: N) {
+      -> ok(nodes: list N) {
+        Topologically ordered list of all ancestor nodes.
+      }
+      -> notFound(message: String) {
+        nodeId not in DAG.
+      }
+    }
+
+    action commonAncestor(a: N, b: N) {
+      -> found(nodeId: N) {
+        Nearest common ancestor of nodes a and b.
+      }
+      -> none(message: String) {
+        No common ancestor exists — disjoint DAG histories.
+      }
+      -> notFound(message: String) {
+        a or b not in DAG.
+      }
+    }
+
+    action descendants(nodeId: N) {
+      -> ok(nodes: list N) {
+        All descendant nodes in topological order.
+      }
+      -> notFound(message: String) {
+        nodeId not in DAG.
+      }
+    }
+
+    action between(from: N, to: N) {
+      -> ok(path: list N) {
+        Nodes on the path from ancestor to descendant, inclusive.
+      }
+      -> noPath(message: String) {
+        No directed path between the two nodes.
+      }
+      -> notFound(message: String) {
+        from or to not in DAG.
+      }
+    }
+
+    action getNode(nodeId: N) {
+      -> ok(parents: set N, contentRef: String, metadata: Bytes) {
+        Returns the full data for the given node.
+      }
+      -> notFound(message: String) {
+        nodeId not in DAG.
+      }
+    }
+  }
+
+  invariant {
+    after append(parents: {}, contentRef: "abc123", metadata: "") -> ok(nodeId: n)
+    then getNode(nodeId: n) -> ok(parents: {}, contentRef: "abc123", metadata: "")
+  }
+
+  invariant {
+    after append(parents: {p1}, contentRef: "def456", metadata: "") -> ok(nodeId: n)
+    then ancestors(nodeId: n) -> ok(nodes: path)
+  }
+}

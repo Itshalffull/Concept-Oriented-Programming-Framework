@@ -1,0 +1,82 @@
+@version(1)
+concept ContentHash [C] {
+
+  purpose {
+    Identify content by cryptographic digest, enabling deduplication,
+    integrity verification, and immutable references. All versioned
+    content is stored once and referenced by hash.
+  }
+
+  state {
+    objects: set C;
+    digest: C -> String;
+    size: C -> Int;
+    created: C -> String;
+    algorithm: C -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires crypto
+  }
+
+  actions {
+    action store(content: Bytes) {
+      -> ok(hash: String) {
+        Content stored and digest computed. Returns hex-encoded hash.
+      }
+      -> alreadyExists(hash: String) {
+        Identical content already in store. Returns existing digest.
+        Idempotent — not an error.
+      }
+    }
+
+    action retrieve(hash: String) {
+      -> ok(content: Bytes) {
+        Content returned for the given digest.
+      }
+      -> notFound(message: String) {
+        No object with that digest exists in the store.
+      }
+    }
+
+    action verify(hash: String, content: Bytes) {
+      -> valid() {
+        Content matches the stored digest.
+      }
+      -> corrupt(expected: String, actual: String) {
+        Digest mismatch — content was modified after storage.
+      }
+      -> notFound(message: String) {
+        Hash not in store.
+      }
+    }
+
+    action delete(hash: String) {
+      -> ok() {
+        Object removed from store.
+      }
+      -> notFound(message: String) {
+        Hash not in store.
+      }
+      -> referenced(message: String) {
+        Object is referenced by other records and cannot be deleted.
+      }
+    }
+  }
+
+  invariant {
+    after store(content: c) -> ok(hash: h)
+    then retrieve(hash: h) -> ok(content: c)
+  }
+
+  invariant {
+    after store(content: c) -> ok(hash: h)
+    then verify(hash: h, content: c) -> valid()
+  }
+
+  invariant {
+    after store(content: c) -> ok(hash: h)
+    then store(content: c) -> alreadyExists(hash: h)
+  }
+}

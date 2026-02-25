@@ -1,0 +1,83 @@
+@version(1)
+concept Merge [C] {
+
+  purpose {
+    Combine two divergent versions of content that share a common
+    ancestor, producing a unified result or identifying conflicts.
+    Strategy is selected by content type and configuration.
+  }
+
+  state {
+    strategies: set S;
+    strategy_name: S -> String;
+    strategy_content_types: S -> list String;
+    default_strategy: option S;
+    active_merges: set M;
+    merge_state: M -> {
+      base: C,
+      ours: C,
+      theirs: C,
+      conflicts: list {
+        region: Bytes,
+        ours_content: Bytes,
+        theirs_content: Bytes,
+        status: String
+      },
+      result: option C
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action registerStrategy(name: String, contentTypes: list String) {
+      -> ok(strategy: S) {
+        Registers a merge strategy provider.
+      }
+      -> duplicate(message: String) {
+        Strategy name already registered.
+      }
+    }
+
+    action merge(base: C, ours: C, theirs: C, strategy: option String) {
+      -> clean(result: C) {
+        All changes merged without conflicts.
+      }
+      -> conflicts(mergeId: M, conflictCount: Int) {
+        Merge produced conflicts requiring resolution.
+        Use resolveConflict to handle each, then finalize.
+      }
+      -> noStrategy(message: String) {
+        No strategy registered for this content type.
+      }
+    }
+
+    action resolveConflict(mergeId: M, conflictIndex: Int, resolution: Bytes) {
+      -> ok(remaining: Int) {
+        Conflict resolved. Returns count of remaining conflicts.
+      }
+      -> invalidIndex(message: String) {
+        Conflict index out of range.
+      }
+      -> alreadyResolved(message: String) {
+        This conflict was already resolved.
+      }
+    }
+
+    action finalize(mergeId: M) {
+      -> ok(result: C) {
+        All conflicts resolved. Returns merged content.
+      }
+      -> unresolvedConflicts(count: Int) {
+        Cannot finalize — conflicts remain.
+      }
+    }
+  }
+
+  invariant {
+    after merge(base: b, ours: o, theirs: t, strategy: _) -> clean(result: r)
+    then finalize(mergeId: _) -> ok(result: r)
+  }
+}
