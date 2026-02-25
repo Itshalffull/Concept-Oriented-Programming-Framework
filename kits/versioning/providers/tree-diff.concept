@@ -1,0 +1,38 @@
+@version(1)
+concept TreeDiff [C] {
+
+  purpose {
+    Compute structure-aware diffs for tree-shaped content such as XML,
+    JSON, and ASTs. Uses Zhang-Shasha tree edit distance to preserve
+    structural relationships lost by line-oriented diffs.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "tree", category: "diff",
+        contentTypes: ["application/json", "application/xml", "text/xml"]
+      }
+    }
+
+    action compute(contentA: Bytes, contentB: Bytes) {
+      -> ok(editScript: Bytes, distance: Int) {
+        Structural edit script preserving tree relationships
+        and tree edit distance.
+      }
+      -> unsupportedContent(message: String) {
+        Content is not a valid tree structure.
+      }
+    }
+  }
+
+  invariant {
+    after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
+    then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
+  }
+}

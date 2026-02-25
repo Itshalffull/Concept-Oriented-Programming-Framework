@@ -1,0 +1,37 @@
+@version(1)
+concept MyersDiff [C] {
+
+  purpose {
+    Compute line-level diffs using Myers' O(ND) algorithm. Optimal
+    for text files — minimizes edit distance by preferring deletions
+    before insertions. The default diff provider for general text.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "myers", category: "diff",
+        contentTypes: ["text/plain", "text/*", "application/octet-stream"]
+      }
+    }
+
+    action compute(contentA: Bytes, contentB: Bytes) {
+      -> ok(editScript: Bytes, distance: Int) {
+        Myers edit script and edit distance.
+      }
+      -> unsupportedContent(message: String) {
+        Content type not supported by this provider.
+      }
+    }
+  }
+
+  invariant {
+    after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
+    then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
+  }
+}

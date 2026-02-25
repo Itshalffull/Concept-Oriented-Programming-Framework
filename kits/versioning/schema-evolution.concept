@@ -1,0 +1,80 @@
+@version(1)
+concept SchemaEvolution [S] {
+
+  purpose {
+    Manage versioned structural definitions with compatibility guarantees.
+    Supports backward, forward, and full compatibility modes with
+    upcast transformations between schema versions.
+  }
+
+  state {
+    schemas: set S;
+    subject: S -> String;
+    version: S -> Int;
+    schema: S -> Bytes;
+    compatibility: S -> String;
+    subjects: String -> list S
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(subject: String, schema: Bytes, compatibility: String) {
+      -> ok(version: Int, schemaId: S) {
+        Schema registered for subject. Version auto-incremented.
+      }
+      -> incompatible(reasons: list String) {
+        New schema violates the compatibility mode of the subject.
+      }
+      -> invalidCompatibility(message: String) {
+        Compatibility mode is not one of the allowed values.
+      }
+    }
+
+    action check(oldSchema: Bytes, newSchema: Bytes, mode: String) {
+      -> compatible() {
+        newSchema is compatible with oldSchema under the given mode.
+      }
+      -> incompatible(reasons: list String) {
+        Specific fields or types violate the compatibility constraint.
+      }
+    }
+
+    action upcast(data: Bytes, fromVersion: Int, toVersion: Int, subject: String) {
+      -> ok(transformed: Bytes) {
+        Data transformed from fromVersion schema to toVersion schema.
+      }
+      -> noPath(message: String) {
+        No upcast path exists between these versions.
+      }
+      -> notFound(message: String) {
+        Subject or version not found.
+      }
+    }
+
+    action resolve(readerSchema: Bytes, writerSchema: Bytes) {
+      -> ok(resolved: Bytes) {
+        Merged schema allowing reader to consume writer-serialized data.
+      }
+      -> incompatible(reasons: list String) {
+        Schemas cannot be reconciled.
+      }
+    }
+
+    action getSchema(subject: String, version: Int) {
+      -> ok(schema: Bytes, compatibility: String) {
+        Returns the schema at the specified version.
+      }
+      -> notFound(message: String) {
+        Subject or version not found.
+      }
+    }
+  }
+
+  invariant {
+    after register(subject: s, schema: sc, compatibility: "full") -> ok(version: v, schemaId: sid)
+    then check(oldSchema: prev, newSchema: sc, mode: "full") -> compatible()
+  }
+}

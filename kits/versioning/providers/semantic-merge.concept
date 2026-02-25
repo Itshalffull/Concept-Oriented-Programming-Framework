@@ -1,0 +1,40 @@
+@version(1)
+concept SemanticMerge [C] {
+
+  purpose {
+    Merge source code files using AST-level understanding. Resolves
+    conflicts that are semantically non-conflicting at the text level,
+    such as independently added imports or reordered function definitions.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "semantic", category: "merge",
+        contentTypes: ["text/x-python", "text/typescript", "text/javascript", "text/x-java"]
+      }
+    }
+
+    action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
+      -> clean(result: Bytes) {
+        AST-aware merge resolved all changes without conflict.
+      }
+      -> conflicts(regions: list Bytes) {
+        Structural conflicts that cannot be resolved at AST level.
+      }
+      -> unsupportedContent(message: String) {
+        Language not supported or content is not valid source code.
+      }
+    }
+  }
+
+  invariant {
+    after execute(base: b, ours: b, theirs: t) -> clean(result: t)
+    then execute(base: b, ours: o, theirs: b) -> clean(result: o)
+  }
+}

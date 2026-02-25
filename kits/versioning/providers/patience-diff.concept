@@ -1,0 +1,37 @@
+@version(1)
+concept PatienceDiff [C] {
+
+  purpose {
+    Compute diffs using the Patience diff algorithm. Produces more
+    human-readable diffs by aligning unique lines first. Better than
+    Myers for refactored or moved code blocks.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "patience", category: "diff",
+        contentTypes: ["text/plain", "text/*"]
+      }
+    }
+
+    action compute(contentA: Bytes, contentB: Bytes) {
+      -> ok(editScript: Bytes, distance: Int) {
+        Patience edit script and edit distance.
+      }
+      -> unsupportedContent(message: String) {
+        Content type not supported by this provider.
+      }
+    }
+  }
+
+  invariant {
+    after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
+    then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
+  }
+}

@@ -1,0 +1,83 @@
+@version(1)
+concept ChangeStream [E] {
+
+  purpose {
+    Ordered, resumable stream of atomic change events from a data source.
+    Events are immutable once appended. Consumers track their position
+    independently via acknowledged offsets, enabling replay and
+    exactly-once processing.
+  }
+
+  state {
+    events: set E;
+    eventType: E -> String;
+    before: E -> option Bytes;
+    after: E -> option Bytes;
+    source: E -> String;
+    timestamp: E -> String;
+    offset: E -> Int;
+    consumers: String -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action append(type: String, before: option Bytes, after: option Bytes, source: String) {
+      -> ok(offset: Int, eventId: E) {
+        Event appended with monotonically increasing offset.
+      }
+      -> invalidType(message: String) {
+        Event type not recognized.
+      }
+    }
+
+    action subscribe(fromOffset: option Int) {
+      -> ok(subscriptionId: String) {
+        Subscription created from the given offset, or from stream head.
+      }
+    }
+
+    action read(subscriptionId: String, maxCount: Int) {
+      -> ok(events: list E) {
+        Returns up to maxCount events from current subscription position.
+      }
+      -> notFound(message: String) {
+        Subscription not found.
+      }
+      -> endOfStream() {
+        No more events available at this time.
+      }
+    }
+
+    action acknowledge(consumer: String, offset: Int) {
+      -> ok() {
+        Consumer's acknowledged offset recorded.
+      }
+      -> notFound(message: String) {
+        Consumer not found.
+      }
+    }
+
+    action replay(from: Int, to: option Int) {
+      -> ok(events: list E) {
+        Returns all events in the offset range.
+        Immutable replay — always returns the same events.
+      }
+      -> invalidRange(message: String) {
+        from offset exceeds available range.
+      }
+    }
+  }
+
+  invariant {
+    after append(type: "insert", before: _, after: _, source: "db") -> ok(offset: n1, eventId: e1)
+    then append(type: "update", before: _, after: _, source: "db") -> ok(offset: n2, eventId: e2)
+  }
+
+  invariant {
+    after append(type: t, before: b, after: a, source: s) -> ok(offset: n, eventId: e)
+    then replay(from: n, to: n) -> ok(events: evts)
+  }
+}

@@ -1,0 +1,82 @@
+@version(1)
+concept TemporalVersion [V] {
+
+  purpose {
+    Track content versions with bitemporal semantics — when recorded
+    (system time) and when valid (application time). Enables time-travel
+    queries across both dimensions independently.
+  }
+
+  state {
+    versions: set V;
+    contentHash: V -> String;
+    systemFrom: V -> String;
+    systemTo: V -> option String;
+    validFrom: V -> option String;
+    validTo: V -> option String;
+    metadata: V -> Bytes;
+    current: option V
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(contentHash: String, validFrom: option String, validTo: option String, metadata: Bytes) {
+      -> ok(versionId: V) {
+        Version recorded with current system timestamp as systemFrom.
+      }
+      -> invalidHash(message: String) {
+        contentHash not found in ContentHash store.
+      }
+    }
+
+    action asOf(systemTime: option String, validTime: option String) {
+      -> ok(versionId: V, contentHash: String) {
+        Returns the version active at the given system and/or valid time.
+      }
+      -> notFound(message: String) {
+        No version active at the specified times.
+      }
+    }
+
+    action between(start: String, end: String, dimension: String) {
+      -> ok(versions: list V) {
+        Returns all versions active within the range on the
+        given dimension — "system" or "valid".
+      }
+      -> invalidDimension(message: String) {
+        Dimension must be "system" or "valid".
+      }
+    }
+
+    action current() {
+      -> ok(versionId: V, contentHash: String) {
+        Returns the currently active version.
+      }
+      -> empty(message: String) {
+        No versions recorded yet.
+      }
+    }
+
+    action supersede(versionId: V, contentHash: String) {
+      -> ok(newVersionId: V) {
+        Creates a new version. Sets systemTo on the old version.
+      }
+      -> notFound(message: String) {
+        versionId not found.
+      }
+    }
+  }
+
+  invariant {
+    after record(contentHash: h, validFrom: vf, validTo: _, metadata: _) -> ok(versionId: v)
+    then asOf(systemTime: _, validTime: vf) -> ok(versionId: v, contentHash: h)
+  }
+
+  invariant {
+    after record(contentHash: h, validFrom: _, validTo: _, metadata: _) -> ok(versionId: v)
+    then current() -> ok(versionId: v, contentHash: h)
+  }
+}

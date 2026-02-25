@@ -1,0 +1,99 @@
+@version(1)
+concept RetentionPolicy [R] {
+
+  purpose {
+    Govern how long versions and records must be kept and when they may
+    be disposed, including legal hold suspension of normal disposition.
+    A record under active legal hold can never be disposed regardless
+    of retention period expiration.
+  }
+
+  state {
+    policies: set R;
+    recordType: R -> String;
+    retentionPeriod: R -> Int;
+    unit: R -> String;
+    dispositionAction: R -> String;
+    holds: set H;
+    hold_name: H -> String;
+    hold_scope: H -> String;
+    hold_reason: H -> String;
+    hold_issuer: H -> String;
+    hold_issued: H -> String;
+    hold_released: H -> option String;
+    dispositionLog: list { record: String, policy: String, disposedAt: String, disposedBy: String }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action setRetention(recordType: String, period: Int, unit: String, dispositionAction: String) {
+      -> ok(policyId: R) {
+        Retention policy created for the given record type.
+      }
+      -> alreadyExists(message: String) {
+        A policy already exists for this record type.
+      }
+    }
+
+    action applyHold(name: String, scope: String, reason: String, issuer: String) {
+      -> ok(holdId: H) {
+        Legal hold applied. All records matching scope pattern are held.
+      }
+    }
+
+    action releaseHold(holdId: H, releasedBy: String, reason: String) {
+      -> ok() {
+        Hold released. Records revert to normal retention rules.
+      }
+      -> notFound(message: String) {
+        Hold not found.
+      }
+      -> alreadyReleased(message: String) {
+        Hold was already released.
+      }
+    }
+
+    action checkDisposition(record: String) {
+      -> disposable(policyId: R) {
+        Record has passed its retention period and has no active holds.
+      }
+      -> retained(reason: String, until: String) {
+        Record is within its retention period.
+      }
+      -> held(holdNames: list String) {
+        Record matches one or more active legal holds.
+      }
+    }
+
+    action dispose(record: String, disposedBy: String) {
+      -> ok() {
+        Record disposed per its policy. Disposition logged.
+      }
+      -> retained(reason: String) {
+        Retention period not yet elapsed.
+      }
+      -> held(holdNames: list String) {
+        Active holds prevent disposition.
+      }
+    }
+
+    action auditLog(record: option String) {
+      -> ok(entries: list { record: String, policy: String, disposedAt: String, disposedBy: String }) {
+        Returns disposition log, filtered to specific record if provided.
+      }
+    }
+  }
+
+  invariant {
+    after applyHold(name: "litigation-2024", scope: "matter:123/*", reason: "pending case", issuer: "legal") -> ok(holdId: h)
+    then dispose(record: "matter:123/doc-1", disposedBy: "system") -> held(holdNames: ["litigation-2024"])
+  }
+
+  invariant {
+    after setRetention(recordType: "audit", period: 7, unit: "years", dispositionAction: "archive") -> ok(policyId: p)
+    then checkDisposition(record: "audit:recent") -> retained(reason: _, until: _)
+  }
+}

@@ -1,0 +1,38 @@
+@version(1)
+concept LatticeMerge [C] {
+
+  purpose {
+    Merge CRDT-based content using lattice join semantics. Always
+    produces a clean result — lattice joins are conflict-free by
+    construction. Suitable for OR-Sets, G-Counters, LWW registers,
+    and similar convergent data types.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "lattice", category: "merge",
+        contentTypes: ["application/crdt+json"]
+      }
+    }
+
+    action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
+      -> clean(result: Bytes) {
+        Lattice join computed. Always conflict-free.
+      }
+      -> unsupportedContent(message: String) {
+        Content is not a recognized CRDT lattice type.
+      }
+    }
+  }
+
+  invariant {
+    after execute(base: b, ours: o, theirs: t) -> clean(result: r)
+    then execute(base: b, ours: t, theirs: o) -> clean(result: r)
+  }
+}

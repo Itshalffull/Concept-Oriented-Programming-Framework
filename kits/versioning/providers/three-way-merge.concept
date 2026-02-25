@@ -1,0 +1,40 @@
+@version(1)
+concept ThreeWayMerge [C] {
+
+  purpose {
+    Merge two divergent text files relative to a common base using
+    classic three-way merge. Standard algorithm used in Git, POSIX
+    merge, and most version control systems.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "three-way", category: "merge",
+        contentTypes: ["text/plain", "text/*"]
+      }
+    }
+
+    action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
+      -> clean(result: Bytes) {
+        All changes merged without conflict.
+      }
+      -> conflicts(regions: list Bytes) {
+        Conflict markers with ours/theirs alternatives for each region.
+      }
+      -> unsupportedContent(message: String) {
+        Content type not supported by this provider.
+      }
+    }
+  }
+
+  invariant {
+    after execute(base: b, ours: b, theirs: t) -> clean(result: t)
+    then execute(base: b, ours: o, theirs: b) -> clean(result: o)
+  }
+}

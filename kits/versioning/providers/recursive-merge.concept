@@ -1,0 +1,40 @@
+@version(1)
+concept RecursiveMerge [C] {
+
+  purpose {
+    Merge using Git's recursive strategy — repeatedly finding virtual
+    common ancestors for criss-cross merge scenarios. Produces better
+    results than three-way merge for complex branch histories.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, contentTypes: list String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "recursive", category: "merge",
+        contentTypes: ["text/plain", "text/*"]
+      }
+    }
+
+    action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
+      -> clean(result: Bytes) {
+        All changes merged without conflict.
+      }
+      -> conflicts(regions: list Bytes) {
+        Conflict regions from recursive merge passes.
+      }
+      -> unsupportedContent(message: String) {
+        Content type not supported by this provider.
+      }
+    }
+  }
+
+  invariant {
+    after execute(base: b, ours: b, theirs: t) -> clean(result: t)
+    then execute(base: b, ours: o, theirs: b) -> clean(result: o)
+  }
+}
