@@ -5,13 +5,14 @@
 sync UpdateCoverageMappings [eager]
   purpose { Record test coverage for future test selection. }
 when {
-  Builder/test: [ concept: ?concept; language: ?lang ]
-    => ok(passed: ?p; failed: ?f; duration: ?d)
+  Builder/test: [ concept: ?concept; language: ?lang; testType: ?tt ]
+    => ok(passed: ?p; failed: ?f; duration: ?d; testType: ?testType)
 }
 then {
   TestSelection/record: [
     testId: concat(?concept, ":", ?lang);
     language: ?lang;
+    testType: ?testType;
     coveredSources: sourcesFor(?concept);
     duration: ?d;
     passed: equals(?f, 0)

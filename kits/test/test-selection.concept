@@ -14,6 +14,7 @@ concept TestSelection [M] {
     coverage {
       testId: M -> String
       language: M -> String
+      testType: M -> String
       coveredSources: M -> list String
       lastExecuted: M -> DateTime
       avgDuration: M -> Int
@@ -28,10 +29,13 @@ concept TestSelection [M] {
   }
 
   actions {
-    action analyze(changedSources: list String) {
-      -> ok(affectedTests: list { testId: String, language: String, relevance: Float, reason: String }) {
+    action analyze(changedSources: list String, testType: option String) {
+      -> ok(affectedTests: list { testId: String, language: String, testType: String, relevance: Float, reason: String }) {
         Given changed source files, compute which tests are
         affected using stored source-to-test coverage mappings.
+        If testType is provided, only return tests of that type.
+        Otherwise returns all affected tests across all types.
+
         Relevance score (0-1) based on:
         - Direct coverage (test exercises changed code): 1.0
         - Transitive dependency: 0.5-0.9
@@ -46,8 +50,8 @@ concept TestSelection [M] {
       }
     }
 
-    action select(affectedTests: list { testId: String, language: String, relevance: Float }, budget: option { maxDuration: Int, maxTests: Int }) {
-      -> ok(selected: list { testId: String, language: String, priority: Int }, estimatedDuration: Int, confidence: Float) {
+    action select(affectedTests: list { testId: String, language: String, testType: String, relevance: Float }, budget: option { maxDuration: Int, maxTests: Int }) {
+      -> ok(selected: list { testId: String, language: String, testType: String, priority: Int }, estimatedDuration: Int, confidence: Float) {
         From the affected tests, select the subset to run
         within the given budget. Prioritized by:
         1. Recent failure history (tests that failed recently)
@@ -63,12 +67,14 @@ concept TestSelection [M] {
       }
     }
 
-    action record(testId: String, language: String, coveredSources: list String, duration: Int, passed: Bool) {
+    action record(testId: String, language: String, testType: String, coveredSources: list String, duration: Int, passed: Bool) {
       -> ok(mapping: M) {
         Update source-to-test coverage mapping after a test
-        execution. This is how mappings are built — instrumenting
-        test runs to collect file-level coverage, then storing
-        the test-to-source mapping.
+        execution. testType indicates which runner produced the
+        coverage data (e.g., "unit", "e2e", "integration").
+        This is how mappings are built — instrumenting test runs
+        to collect file-level coverage, then storing the
+        test-to-source mapping.
       }
     }
 
@@ -87,7 +93,7 @@ concept TestSelection [M] {
   }
 
   invariant {
-    after record(testId: "test_password_hash", language: "typescript", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true)
+    after record(testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true)
       -> ok(mapping: m)
     then analyze(changedSources: ["./specs/password.concept"])
       -> ok(affectedTests: ts)

@@ -127,6 +127,8 @@ export const builderHandler: ConceptHandler = {
     const concept = input.concept as string;
     const language = input.language as string;
     const platform = input.platform as string;
+    const testFilter = input.testFilter as string[] | undefined;
+    const testType = (input.testType as string) || 'unit';
 
     // Check that a build exists for this concept and language
     const existing = await storage.find(RELATION, { concept, language, platform });
@@ -136,9 +138,10 @@ export const builderHandler: ConceptHandler = {
 
     const startTime = Date.now();
 
-    // Simulate test execution
-    const passed = Math.floor(Math.random() * 50) + 10;
-    const skipped = Math.floor(Math.random() * 5);
+    // Simulate test execution — count varies by filter and type
+    const baseCount = testFilter ? testFilter.length : Math.floor(Math.random() * 50) + 10;
+    const passed = baseCount;
+    const skipped = testFilter ? 0 : Math.floor(Math.random() * 5);
     const failed = 0;
     const duration = Date.now() - startTime;
 
@@ -152,9 +155,10 @@ export const builderHandler: ConceptHandler = {
       testFailed: failed,
       testSkipped: skipped,
       testDuration: duration,
+      testType,
     });
 
-    return { variant: 'ok', passed, failed, skipped, duration };
+    return { variant: 'ok', passed, failed, skipped, duration, testType };
   },
 
   async status(input, storage) {

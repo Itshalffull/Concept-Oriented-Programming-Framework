@@ -15,6 +15,7 @@ concept FlakyTest [F] {
       testId: F -> String
       language: F -> String
       builder: F -> String
+      testType: F -> String
       results: F -> list { passed: Bool, timestamp: DateTime, duration: Int }
       flipCount: F -> Int
       lastFlipAt: F -> option DateTime
@@ -36,9 +37,11 @@ concept FlakyTest [F] {
   }
 
   actions {
-    action record(testId: String, language: String, builder: String, passed: Bool, duration: Int) {
+    action record(testId: String, language: String, builder: String, testType: String, passed: Bool, duration: Int) {
       -> ok(test: F) {
-        Record a test result. Updates reliability history.
+        Record a test result. testType indicates which runner
+        produced the result (e.g., "unit", "e2e", "integration").
+        Updates reliability history per testId+language+testType.
         If the result differs from the previous result
         (pass to fail or fail to pass), increments flipCount.
       }
@@ -86,15 +89,16 @@ concept FlakyTest [F] {
       }
     }
 
-    action report() {
+    action report(testType: option String) {
       -> ok(summary: {
         totalTracked: Int,
         currentlyFlaky: Int,
         quarantined: Int,
         stabilized: Int,
-        topFlaky: list { testId: String, language: String, flipCount: Int, owner: option String }
+        topFlaky: list { testId: String, language: String, testType: String, flipCount: Int, owner: option String }
       }) {
-        Return flaky test dashboard data.
+        Return flaky test dashboard data. If testType is
+        provided, only include tests of that type.
         stabilized: tests that were quarantined but have
         been passing consistently (candidates for release).
       }
@@ -112,9 +116,9 @@ concept FlakyTest [F] {
   }
 
   invariant {
-    after record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", passed: true, duration: 50) -> ok(test: f)
-    and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", passed: false, duration: 5001) -> ok(test: f)
-    and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", passed: true, duration: 48) -> ok(test: f)
+    after record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 50) -> ok(test: f)
+    and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: false, duration: 5001) -> ok(test: f)
+    and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 48) -> ok(test: f)
     then isQuarantined(testId: "test_timing") depends on policy.autoQuarantine
   }
 }

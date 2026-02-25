@@ -53,10 +53,11 @@ export const flakyTestHandler: ConceptHandler = {
     const testId = input.testId as string;
     const language = input.language as string;
     const builder = input.builder as string;
+    const testType = (input.testType as string) || 'unit';
     const passed = input.passed as boolean;
     const duration = input.duration as number;
 
-    const testKey = `${testId}:${language}`;
+    const testKey = `${testId}:${language}:${testType}`;
     const existing = await storage.get(TESTS, testKey);
     const now = new Date().toISOString();
     const policy = await getPolicy(storage);
@@ -113,6 +114,7 @@ export const flakyTestHandler: ConceptHandler = {
       testId,
       language,
       builder,
+      testType,
       results: JSON.stringify(results),
       flipCount: windowFlipCount,
       lastFlipAt,
@@ -132,6 +134,7 @@ export const flakyTestHandler: ConceptHandler = {
           testId,
           language,
           builder,
+          testType,
           results: JSON.stringify(results),
           flipCount: windowFlipCount,
           lastFlipAt,
@@ -170,7 +173,7 @@ export const flakyTestHandler: ConceptHandler = {
       return { variant: 'alreadyQuarantined', test: test.id as string };
     }
 
-    const testKey = `${testId}:${test.language as string}`;
+    const testKey = `${testId}:${test.language as string}:${(test.testType as string) || 'unit'}`;
     const now = new Date().toISOString();
 
     await storage.put(TESTS, testKey, {
@@ -198,7 +201,7 @@ export const flakyTestHandler: ConceptHandler = {
       return { variant: 'notQuarantined', test: test.id as string };
     }
 
-    const testKey = `${testId}:${test.language as string}`;
+    const testKey = `${testId}:${test.language as string}:${(test.testType as string) || 'unit'}`;
 
     await storage.put(TESTS, testKey, {
       ...test,
@@ -233,7 +236,8 @@ export const flakyTestHandler: ConceptHandler = {
     return { variant: 'no', test: test.id as string };
   },
 
-  async report(_input, storage) {
+  async report(input, storage) {
+    const testTypeFilter = input.testType as string | undefined;
     const allTests = await storage.find(TESTS);
     const policy = await getPolicy(storage);
 
@@ -245,11 +249,14 @@ export const flakyTestHandler: ConceptHandler = {
     const topFlaky: Array<{
       testId: string;
       language: string;
+      testType: string;
       flipCount: number;
       owner: string | null;
     }> = [];
 
     for (const test of allTests) {
+      const testTestType = (test.testType as string) || 'unit';
+      if (testTypeFilter && testTestType !== testTypeFilter) continue;
       totalTracked++;
       const flipCount = test.flipCount as number;
       const isQuarantined = test.quarantined as boolean;
@@ -274,6 +281,7 @@ export const flakyTestHandler: ConceptHandler = {
         topFlaky.push({
           testId: test.testId as string,
           language: test.language as string,
+          testType: (test.testType as string) || 'unit',
           flipCount,
           owner: test.owner as string | null,
         });

@@ -14,6 +14,7 @@ then {
   Builder/test: [
     concept: ?concept;
     language: ?lang;
-    testFilter: ?tests
+    testFilter: pluck(?tests, "testId");
+    testType: firstOf(pluck(?tests, "testType"))
   ]
 }

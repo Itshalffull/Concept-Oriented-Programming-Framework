@@ -27,13 +27,24 @@ concept Toolchain [T] {
   }
 
   actions {
-    action resolve(language: String, platform: String, versionConstraint: option String) {
+    action resolve(language: String, platform: String, versionConstraint: option String, category: option String) {
       -> ok(tool: T, version: String, path: String, capabilities: list String) {
         Resolve a toolchain for the given language and platform.
         Completion arrives after the provider concept finishes
         actual resolution (checking PATH, version validation,
         download if configured). Toolchain records the result
         in its registry.
+
+        If category is provided, resolves a tool for that
+        specific purpose rather than the default compiler.
+        Categories: "compiler" (default), "unit-runner",
+        "e2e-runner", "ui-runner", "visual-runner",
+        "integration-runner", "benchmark-runner".
+
+        Examples:
+        - resolve("typescript", "linux-x86_64") → tsc
+        - resolve("typescript", "linux-x86_64", category: "e2e-runner") → playwright
+        - resolve("typescript", "linux-x86_64", category: "ui-runner") → cypress
 
         Capabilities describe what the tool supports:
         "incremental", "wasm-target", "cross-compile",

@@ -31,10 +31,13 @@ export const testSelectionHandler: ConceptHandler = {
       };
     }
 
+    const testType = input.testType as string | undefined;
+
     // Find tests whose covered sources overlap with changed sources
     const affectedTests: Array<{
       testId: string;
       language: string;
+      testType: string;
       relevance: number;
       reason: string;
     }> = [];
@@ -45,6 +48,10 @@ export const testSelectionHandler: ConceptHandler = {
       const coveredSources = JSON.parse(mapping.coveredSources as string) as string[];
       const testId = mapping.testId as string;
       const language = mapping.language as string;
+      const mappingTestType = (mapping.testType as string) || 'unit';
+
+      // Filter by testType if specified
+      if (testType && mappingTestType !== testType) continue;
 
       // Check direct coverage
       const directHit = coveredSources.some(s => changedSet.has(s));
@@ -52,6 +59,7 @@ export const testSelectionHandler: ConceptHandler = {
         affectedTests.push({
           testId,
           language,
+          testType: mappingTestType,
           relevance: 1.0,
           reason: 'direct-coverage',
         });
@@ -66,6 +74,7 @@ export const testSelectionHandler: ConceptHandler = {
         affectedTests.push({
           testId,
           language,
+          testType: mappingTestType,
           relevance: 0.7,
           reason: 'transitive-dep',
         });
@@ -88,6 +97,7 @@ export const testSelectionHandler: ConceptHandler = {
     const affectedTests = input.affectedTests as Array<{
       testId: string;
       language: string;
+      testType: string;
       relevance: number;
     }>;
     const budget = input.budget as { maxDuration?: number; maxTests?: number } | null | undefined;
@@ -101,7 +111,7 @@ export const testSelectionHandler: ConceptHandler = {
 
     // Look up historical durations
     let totalEstimatedDuration = 0;
-    const selected: Array<{ testId: string; language: string; priority: number }> = [];
+    const selected: Array<{ testId: string; language: string; testType: string; priority: number }> = [];
 
     for (let i = 0; i < sorted.length; i++) {
       const test = sorted[i];
@@ -138,6 +148,7 @@ export const testSelectionHandler: ConceptHandler = {
       selected.push({
         testId: test.testId,
         language: test.language,
+        testType: test.testType || 'unit',
         priority: i + 1,
       });
       totalEstimatedDuration += avgDuration;
@@ -162,6 +173,7 @@ export const testSelectionHandler: ConceptHandler = {
   async record(input, storage) {
     const testId = input.testId as string;
     const language = input.language as string;
+    const testType = (input.testType as string) || 'unit';
     const coveredSources = input.coveredSources as string[];
     const duration = input.duration as number;
     const passed = input.passed as boolean;
@@ -188,6 +200,7 @@ export const testSelectionHandler: ConceptHandler = {
       id: mappingId,
       testId,
       language,
+      testType,
       coveredSources: JSON.stringify(coveredSources),
       avgDuration,
       failureRate,

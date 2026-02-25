@@ -78,18 +78,33 @@ concept Builder [B] {
       }
     }
 
-    action test(concept: String, language: String, platform: String, testFilter: option list String) {
-      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
+    action test(concept: String, language: String, platform: String, testFilter: option list String, testType: option String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
         Run tests only (no compilation — assumes already built).
         Used for re-running tests after a build. If testFilter
         is provided, only run the specified tests (from
         TestSelection). Otherwise run the full suite.
+
+        testType selects which test runner and suite to execute:
+        "unit" (default), "integration", "e2e", "ui", "visual",
+        "benchmark". Each type resolves a different toolchain
+        via Toolchain/resolve with the matching category.
+
+        Examples:
+        - test(testType: "unit") → vitest / cargo test / XCTest
+        - test(testType: "e2e") → Playwright / cargo nextest
+        - test(testType: "ui") → Cypress / XCUITest
       }
-      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
-        Some tests failed.
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
+        Some tests failed. testType indicates which runner was used.
       }
       -> notBuilt(concept: String, language: String) {
         No build artifact found — must build first.
+      }
+      -> runnerNotFound(language: String, testType: String, installHint: String) {
+        No test runner resolved for this language and test type.
+        Propagated from Toolchain when no matching category tool
+        is available.
       }
     }
 

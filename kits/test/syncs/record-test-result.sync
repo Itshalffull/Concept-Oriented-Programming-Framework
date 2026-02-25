@@ -5,14 +5,15 @@
 sync RecordTestResult [eager]
   purpose { Track every test result for flaky detection. }
 when {
-  Builder/test: [ concept: ?concept; language: ?lang ]
-    => ok(passed: ?p; failed: ?f; skipped: ?s; duration: ?d)
+  Builder/test: [ concept: ?concept; language: ?lang; testType: ?tt ]
+    => ok(passed: ?p; failed: ?f; skipped: ?s; duration: ?d; testType: ?testType)
 }
 then {
   FlakyTest/record: [
     testId: concat(?concept, ":", ?lang, ":suite");
     language: ?lang;
     builder: concat(?lang, "Builder");
+    testType: ?testType;
     passed: equals(?f, 0);
     duration: ?d
   ]

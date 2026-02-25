@@ -10,9 +10,14 @@ export const toolchainHandler: ConceptHandler = {
     const language = input.language as string;
     const platform = input.platform as string;
     const versionConstraint = input.versionConstraint as string | undefined;
+    const category = (input.category as string) || 'compiler';
 
     // Check if a matching toolchain is already registered
-    const existing = await storage.find(RELATION, { language, platform });
+    const query: Record<string, unknown> = { language, platform };
+    if (category !== 'compiler') {
+      query.category = category;
+    }
+    const existing = await storage.find(RELATION, query);
 
     if (existing.length > 0) {
       const rec = existing[0];
@@ -37,36 +42,51 @@ export const toolchainHandler: ConceptHandler = {
       };
     }
 
-    // Determine default toolchain info based on language
-    const toolchainDefaults: Record<string, { path: string; version: string; capabilities: string[] }> = {
+    // Determine default toolchain info based on language and category
+    const toolchainDefaults: Record<string, Record<string, { path: string; version: string; capabilities: string[] }>> = {
       swift: {
-        path: '/usr/bin/swiftc',
-        version: '5.10.1',
-        capabilities: ['compile', 'test', 'cross-compile', 'macros', 'swift-testing'],
+        compiler: { path: '/usr/bin/swiftc', version: '5.10.1', capabilities: ['compile', 'test', 'cross-compile', 'macros', 'swift-testing'] },
+        'unit-runner': { path: '/usr/bin/xctest', version: '5.10.1', capabilities: ['xctest', 'swift-testing', 'parallel', 'filter'] },
+        'ui-runner': { path: '/usr/bin/xcuitest', version: '5.10.1', capabilities: ['xcuitest', 'accessibility', 'screenshots'] },
+        'e2e-runner': { path: '/usr/bin/xctest', version: '5.10.1', capabilities: ['xctest', 'host-app', 'network'] },
       },
       typescript: {
-        path: '/usr/local/bin/tsc',
-        version: '5.4.0',
-        capabilities: ['compile', 'typecheck', 'bundle', 'sourcemap'],
+        compiler: { path: '/usr/local/bin/tsc', version: '5.4.0', capabilities: ['compile', 'typecheck', 'bundle', 'sourcemap'] },
+        'unit-runner': { path: '/usr/local/bin/vitest', version: '1.6.0', capabilities: ['vitest', 'jest-compat', 'parallel', 'coverage', 'filter'] },
+        'e2e-runner': { path: '/usr/local/bin/playwright', version: '1.44.0', capabilities: ['playwright', 'chromium', 'firefox', 'webkit', 'parallel'] },
+        'ui-runner': { path: '/usr/local/bin/cypress', version: '13.8.0', capabilities: ['cypress', 'component', 'e2e', 'screenshots', 'video'] },
+        'visual-runner': { path: '/usr/local/bin/storybook', version: '8.1.0', capabilities: ['storybook', 'chromatic', 'visual-diff'] },
+        'integration-runner': { path: '/usr/local/bin/vitest', version: '1.6.0', capabilities: ['vitest', 'integration', 'database', 'api'] },
       },
       rust: {
-        path: '/usr/local/bin/rustc',
-        version: '1.77.0',
-        capabilities: ['compile', 'link', 'test', 'bench', 'clippy'],
+        compiler: { path: '/usr/local/bin/rustc', version: '1.77.0', capabilities: ['compile', 'link', 'test', 'bench', 'clippy'] },
+        'unit-runner': { path: '/usr/local/bin/cargo', version: '1.77.0', capabilities: ['cargo-test', 'parallel', 'filter', 'coverage'] },
+        'e2e-runner': { path: '/usr/local/bin/cargo-nextest', version: '0.9.72', capabilities: ['nextest', 'parallel', 'retry', 'partition'] },
+        'benchmark-runner': { path: '/usr/local/bin/cargo', version: '1.77.0', capabilities: ['cargo-bench', 'criterion'] },
       },
       solidity: {
-        path: '/usr/local/bin/solc',
-        version: '0.8.25',
-        capabilities: ['compile', 'optimizer', 'via-ir', 'foundry-tests'],
+        compiler: { path: '/usr/local/bin/solc', version: '0.8.25', capabilities: ['compile', 'optimizer', 'via-ir', 'foundry-tests'] },
+        'unit-runner': { path: '/usr/local/bin/forge', version: '0.2.0', capabilities: ['forge-test', 'fuzz', 'invariant', 'gas-report'] },
+        'e2e-runner': { path: '/usr/local/bin/forge', version: '0.2.0', capabilities: ['forge-test', 'fork', 'mainnet', 'anvil'] },
       },
     };
 
-    const defaults = toolchainDefaults[language];
-    if (!defaults) {
+    const langDefaults = toolchainDefaults[language];
+    if (!langDefaults) {
       return {
         variant: 'platformUnsupported',
         language,
         platform,
+      };
+    }
+
+    const defaults = langDefaults[category];
+    if (!defaults) {
+      return {
+        variant: 'notInstalled',
+        language,
+        platform,
+        installHint: `No ${category} runner available for ${language}. Install a compatible test runner.`,
       };
     }
 
@@ -76,7 +96,7 @@ export const toolchainHandler: ConceptHandler = {
         variant: 'notInstalled',
         language,
         platform,
-        installHint: `Install ${language} ${versionConstraint} for ${platform}`,
+        installHint: `Install ${language} ${category} ${versionConstraint} for ${platform}`,
       };
     }
 
@@ -86,6 +106,7 @@ export const toolchainHandler: ConceptHandler = {
       tool: toolId,
       language,
       platform,
+      category,
       version: defaults.version,
       path: defaults.path,
       capabilities: JSON.stringify(defaults.capabilities),
