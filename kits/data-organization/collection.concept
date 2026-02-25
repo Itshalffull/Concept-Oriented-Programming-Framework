@@ -1,8 +1,9 @@
-@version(1)
+@version(2)
 concept Collection [C] {
   purpose {
-    Organize content into queryable sets that can be concrete (manually curated)
-    or virtual (computed from a query).
+    Organize content into concrete, manually curated sets.
+    Virtual/computed collections are expressed as Query
+    subscriptions via VirtualCollectionQuery sync.
   }
 
   state {
@@ -10,7 +11,6 @@ concept Collection [C] {
     type: C -> String;
     schema: C -> String;
     members: C -> set String;
-    query: C -> String;
     templates: C -> String
   }
 
@@ -37,16 +37,6 @@ concept Collection [C] {
 
     action setSchema(collection: C, schema: String) {
       -> ok() { Schema updated for the collection. }
-      -> notfound() { Collection does not exist. }
-    }
-
-    action createVirtual(collection: C, query: String) {
-      -> ok() { Virtual collection created with the given query. }
-      -> exists() { Collection already exists. }
-    }
-
-    action materialize(collection: C) {
-      -> ok(members: String) { Virtual collection materialized into concrete members. }
       -> notfound() { Collection does not exist. }
     }
   }

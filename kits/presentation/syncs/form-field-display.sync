@@ -1,0 +1,11 @@
+# FormBuilder consumes DisplayMode field configurations via sync
+# rather than maintaining its own widget/field mapping.
+
+sync FormFieldDisplay [eager]
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => [ definition: ?definition ]
+}
+then {
+  DisplayMode/configureFieldForm: [ entity: ?form; schema: ?schema ]
+}

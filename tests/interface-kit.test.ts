@@ -61,9 +61,9 @@ describe('Orchestration Concepts', () => {
     const ast = readConcept('generator.concept');
     expect(ast.name).toBe('Generator');
     expect(ast.typeParams).toEqual(['G']);
-    expect(ast.version).toBe(1);
-    expect(ast.actions).toHaveLength(4);
-    expect(ast.actions.map(a => a.name)).toEqual(['plan', 'generate', 'status', 'regenerate']);
+    expect(ast.version).toBe(2);
+    expect(ast.actions).toHaveLength(3);
+    expect(ast.actions.map(a => a.name)).toEqual(['plan', 'generate', 'regenerate']);
     // plan has 4 variants: ok, noTargetsConfigured, missingProvider, projectionFailed
     expect(ast.actions[0].variants).toHaveLength(4);
     // generate has 3 variants: ok, partial, blocked
@@ -71,23 +71,11 @@ describe('Orchestration Concepts', () => {
     expect(ast.invariants).toHaveLength(1);
   });
 
-  it('parses Emitter', () => {
-    const ast = readConcept('emitter.concept');
-    expect(ast.name).toBe('Emitter');
-    expect(ast.typeParams).toEqual(['E']);
-    expect(ast.version).toBe(1);
-    expect(ast.actions).toHaveLength(4);
-    expect(ast.actions.map(a => a.name)).toEqual(['write', 'format', 'clean', 'manifest']);
-    // write has 2 variants: ok, directoryError
-    expect(ast.actions[0].variants).toHaveLength(2);
-    // format has 3 variants: ok, formatterUnavailable, formatError
-    expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants).toHaveLength(1);
-  });
+  // Emitter: imported from generation kit (see kit.yaml uses section)
 
-  it('parses Surface', () => {
-    const ast = readConcept('surface.concept');
-    expect(ast.name).toBe('Surface');
+  it('parses ApiSurface', () => {
+    const ast = readConcept('api-surface.concept');
+    expect(ast.name).toBe('ApiSurface');
     expect(ast.typeParams).toEqual(['S']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(2);
@@ -125,9 +113,9 @@ describe('Orchestration Concepts', () => {
     expect(ast.invariants).toHaveLength(1);
   });
 
-  it('parses Workflow', () => {
-    const ast = readConcept('workflow.concept');
-    expect(ast.name).toBe('Workflow');
+  it('parses ActionGuide', () => {
+    const ast = readConcept('action-guide.concept');
+    expect(ast.name).toBe('ActionGuide');
     expect(ast.typeParams).toEqual(['W']);
     expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(2);
@@ -364,9 +352,10 @@ describe('SDK Provider Concepts', () => {
 describe('Bulk Concept Validation', () => {
 
   const allConcepts = [
-    'projection.concept', 'generator.concept', 'emitter.concept',
-    'surface.concept', 'middleware.concept', 'grouping.concept',
-    'workflow.concept', 'annotation.concept',
+    'projection.concept', 'generator.concept',
+    'api-surface.concept', 'middleware.concept', 'grouping.concept',
+    'action-guide.concept', 'annotation.concept',
+    'enrichment-renderer.concept',
     'target.concept', 'sdk.concept', 'spec.concept',
   ];
 
@@ -527,12 +516,12 @@ describe('Core Syncs', () => {
     expect(syncs[0].then[0].concept).toContain('Grouping');
   });
 
-  it('parses WorkflowBeforeRender', () => {
+  it('parses ActionGuideBeforeRender', () => {
     const syncs = readSync('workflow-before-render.sync');
     expect(syncs).toHaveLength(1);
-    expect(syncs[0].name).toBe('WorkflowBeforeRender');
+    expect(syncs[0].name).toBe('ActionGuideBeforeRender');
     expect(syncs[0].annotations).toContain('eager');
-    expect(syncs[0].then[0].concept).toContain('Workflow');
+    expect(syncs[0].then[0].concept).toContain('ActionGuide');
   });
 
   it('parses AnnotateBeforeGenerate', () => {
@@ -759,7 +748,7 @@ describe('Kit YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(26);
+    expect(specPaths.length).toBe(25);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);

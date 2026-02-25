@@ -215,14 +215,14 @@ concepts:
             target: { type: string, description: "Target type to compose" }
           examples:
             - description: Compose REST surface from per-concept outputs
-              command: copf-interface surface compose my-kit --target rest
+              command: copf-interface api-surface compose my-kit --target rest
         entrypoint:
           command: entrypoint
           args:
             surface: { positional: true }
           examples:
             - description: View composed entrypoint content
-              command: copf-interface surface entrypoint surface-001 --json
+              command: copf-interface api-surface entrypoint surface-001 --json
     mcp:
       actions:
         compose:
@@ -230,7 +230,7 @@ concepts:
           description: "Merge per-concept outputs into a unified API surface"
         entrypoint:
           type: resource-template
-          uriTemplate: "copf-interface://surfaces/{surface}/entrypoint"
+          uriTemplate: "copf-interface://api-surfaces/{surface}/entrypoint"
 
   Middleware:
     cli:
@@ -311,7 +311,7 @@ concepts:
             steps: { type: string, description: "Comma-separated ordered action names" }
           examples:
             - description: Define a workflow for SpecParser
-              command: copf-interface workflow define SpecParser --steps parse
+              command: copf-interface action-guide define SpecParser --steps parse
         render:
           command: render
           args:
@@ -320,7 +320,7 @@ concepts:
             format: { type: string, description: "Output format (skill-md, cli-help, rest-guide)" }
           examples:
             - description: Render workflow as skill markdown
-              command: copf-interface workflow render wf-001 --format skill-md
+              command: copf-interface action-guide render wf-001 --format skill-md
     mcp:
       actions:
         define:
@@ -374,7 +374,7 @@ concepts:
           examples:
             - description: Register a renderer for design principles
               command: >-
-                copf-interface renderer register
+                copf-interface enrichment-renderer register
                 --key design-principles --format skill-md --order 50 --pattern list
         render:
           command: render
@@ -383,19 +383,19 @@ concepts:
             content: { type: string, description: "JSON enrichment content" }
           examples:
             - description: Render enrichment content as skill markdown
-              command: copf-interface renderer render --format skill-md --content '{"checklists":{"parse":["Valid?"]}}'
+              command: copf-interface enrichment-renderer render --format skill-md --content '{"checklists":{"parse":["Valid?"]}}'
         listHandlers:
           command: list-handlers
           flags:
             format: { type: string, description: "Format to list handlers for" }
           examples:
             - description: List registered handlers for skill-md format
-              command: copf-interface renderer list-handlers --format skill-md
+              command: copf-interface enrichment-renderer list-handlers --format skill-md
         listPatterns:
           command: list-patterns
           examples:
             - description: List all available render patterns
-              command: copf-interface renderer list-patterns --json
+              command: copf-interface enrichment-renderer list-patterns --json
     mcp:
       actions:
         register:
@@ -406,10 +406,10 @@ concepts:
           description: "Render enrichment content using registered handlers for a format"
         listHandlers:
           type: resource-template
-          uriTemplate: "copf-interface://renderer/handlers/{format}"
+          uriTemplate: "copf-interface://enrichment-renderer/handlers/{format}"
         listPatterns:
           type: resource
-          uriTemplate: "copf-interface://renderer/patterns"
+          uriTemplate: "copf-interface://enrichment-renderer/patterns"
 
   # ── Coordination Concepts ──────────────────────────
 
@@ -1561,7 +1561,7 @@ annotations:
         - label: Compose REST surface
           language: bash
           code: |
-            copf-interface surface compose my-kit --target rest
+            copf-interface api-surface compose my-kit --target rest
 
   Middleware:
     concept:
@@ -1630,7 +1630,7 @@ annotations:
         - label: Define a workflow
           language: bash
           code: |
-            copf-interface workflow define SpecParser --steps parse
+            copf-interface action-guide define SpecParser --steps parse
 
   Annotation:
     concept:
@@ -1679,7 +1679,7 @@ annotations:
         - label: Register a handler for design principles
           language: bash
           code: |
-            copf-interface renderer register \
+            copf-interface enrichment-renderer register \
               --key design-principles --format skill-md \
               --order 50 --pattern list
 

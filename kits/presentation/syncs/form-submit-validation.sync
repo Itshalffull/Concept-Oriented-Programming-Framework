@@ -1,0 +1,12 @@
+# FormBuilder delegates validation to Validator.
+# When a form submission arrives, Validator checks the data
+# against constraints before processing continues.
+
+sync FormSubmitValidation [eager]
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => [ definition: ?definition ]
+}
+then {
+  Validator/registerConstraint: [ validator: ?form; constraint: ?schema ]
+}

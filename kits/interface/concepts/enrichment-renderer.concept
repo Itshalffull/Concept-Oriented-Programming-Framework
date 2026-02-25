@@ -1,5 +1,5 @@
 @version(2)
-concept Renderer [R] {
+concept EnrichmentRenderer [R] {
 
   purpose {
     Render opaque enrichment JSON into formatted output strings
@@ -10,6 +10,8 @@ concept Renderer [R] {
     are the small code surface shipped once; handlers are pure
     data that can live in YAML manifests. New enrichment kinds
     need only a YAML entry — zero code changes.
+    Renamed from Renderer to avoid collision with
+    kits/presentation/renderer.concept (cache-aware rendering pipeline).
     See Architecture doc Section 1.8.
   }
 

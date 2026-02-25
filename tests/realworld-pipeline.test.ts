@@ -22,10 +22,24 @@ import { typescriptGenHandler } from '../implementations/typescript/framework/ty
 import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
+const KITS_DIR = resolve(__dirname, '..', 'kits');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 
-function readSpec(category: string, name: string): string {
-  return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
+// Tag and Comment were superseded by richer kit versions.
+// Map concept name → { dir, file } for reading from the correct location.
+const SPEC_LOCATIONS: Record<string, { dir: string; file: string }> = {
+  profile:  { dir: resolve(SPECS_DIR, 'app'), file: 'profile.concept' },
+  article:  { dir: resolve(SPECS_DIR, 'app'), file: 'article.concept' },
+  comment:  { dir: resolve(KITS_DIR, 'content'), file: 'comment.concept' },
+  tag:      { dir: resolve(KITS_DIR, 'classification'), file: 'tag.concept' },
+  favorite: { dir: resolve(SPECS_DIR, 'app'), file: 'favorite.concept' },
+  follow:   { dir: resolve(SPECS_DIR, 'app'), file: 'follow.concept' },
+};
+
+function readSpec(_category: string, name: string): string {
+  const loc = SPEC_LOCATIONS[name];
+  if (!loc) throw new Error(`Unknown spec: ${name}`);
+  return readFileSync(resolve(loc.dir, loc.file), 'utf-8');
 }
 
 // Helper: run SchemaGen on an AST and return the manifest
@@ -39,7 +53,7 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
   return result.manifest as ConceptManifest;
 }
 
-// All 6 new RealWorld concept names
+// All 6 RealWorld concept names (comment and tag now from kit versions)
 const REALWORLD_SPECS = ['profile', 'article', 'comment', 'tag', 'favorite', 'follow'];
 
 // All 5 new RealWorld sync files

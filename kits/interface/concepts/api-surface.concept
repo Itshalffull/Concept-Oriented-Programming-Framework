@@ -1,5 +1,5 @@
 @version(1)
-concept Surface [S] {
+concept ApiSurface [S] {
 
   purpose {
     Compose generated interfaces from multiple concepts into
@@ -8,6 +8,9 @@ concept Surface [S] {
     a merged schema with shared types. For CLI: a command tree
     with concept subcommands. For MCP: a combined tool set.
     For SDKs: a single client with concept-namespaced methods.
+    Renamed from Surface to avoid collision with
+    concept-interface/kits/coif-render/surface.concept
+    (runtime rendering target for DOM, terminal, etc.).
   }
 
   state {

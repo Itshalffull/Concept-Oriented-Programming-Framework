@@ -1,4 +1,5 @@
-// Comment flow: create and delete comments with JWT authentication
+// Comment flow: add and delete comments with JWT authentication
+// Uses content kit Comment concept (addComment, delete actions)
 
 sync CreateCommentAuth [eager]
 when {
@@ -23,10 +24,10 @@ where {
   bind(uuid() as ?comment)
 }
 then {
-  Comment/create: [
+  Comment/addComment: [
     comment: ?comment;
-    body: ?body;
-    target: ?article;
+    entity: ?article;
+    content: ?body;
     author: ?author ]
 }
 
@@ -34,7 +35,7 @@ sync CreateCommentResponse [eager]
 when {
   Web/request: [ method: "create_comment" ]
     => [ request: ?request ]
-  Comment/create: []
+  Comment/addComment: []
     => [ comment: ?comment ]
 }
 then {

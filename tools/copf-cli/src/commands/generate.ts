@@ -766,11 +766,14 @@ function toKebabCase(name: string): string {
   return name.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
 }
 
-export function generateFrameworkSyncs(outDir: string, meta: typeof GENERATOR_META[string]): number {
+export async function generateFrameworkSyncs(outDir: string, meta: typeof GENERATOR_META[string], emitStorage: ReturnType<typeof createInMemoryStorage>): Promise<number> {
   const kebabName = toKebabCase(meta.name);
 
-  // 1. Cache check sync
-  const cacheCheckSync = `sync CheckCacheBefore${meta.name} [eager]
+  const syncFiles: { path: string; content: string }[] = [
+    // 1. Cache check sync
+    {
+      path: `cache-check-before-${kebabName}.sync`,
+      content: `sync CheckCacheBefore${meta.name} [eager]
   purpose { Check cache before ${meta.name} runs. }
 when {
   SchemaGen/generate: [ spec: ?spec ]
@@ -787,11 +790,12 @@ then {
     deterministic: ${meta.deterministic}
   ]
 }
-`;
-  writeFileSync(join(outDir, `cache-check-before-${kebabName}.sync`), cacheCheckSync);
-
-  // 2. Generate on miss sync
-  const genOnMissSync = `sync ${meta.name}OnCacheMiss [eager]
+`,
+    },
+    // 2. Generate on miss sync
+    {
+      path: `${kebabName}-on-miss.sync`,
+      content: `sync ${meta.name}OnCacheMiss [eager]
   purpose { Run ${meta.name} only on cache miss. }
 when {
   SchemaGen/generate: [ spec: ?spec ]
@@ -806,11 +810,12 @@ where {
 then {
   ${meta.name}/generate: [ spec: ?spec; manifest: ?manifest ]
 }
-`;
-  writeFileSync(join(outDir, `${kebabName}-on-miss.sync`), genOnMissSync);
-
-  // 3. Emit files sync
-  const emitSync = `sync Emit${meta.name}Files [eager]
+`,
+    },
+    // 3. Emit files sync
+    {
+      path: `emit-${kebabName}-files.sync`,
+      content: `sync Emit${meta.name}Files [eager]
   purpose { Route ${meta.name} file output through Emitter. }
 when {
   ${meta.name}/generate: [ spec: ?spec ]
@@ -819,11 +824,12 @@ when {
 then {
   Emitter/writeBatch: [ files: ?files ]
 }
-`;
-  writeFileSync(join(outDir, `emit-${kebabName}-files.sync`), emitSync);
-
-  // 4. Record cache sync
-  const recordCacheSync = `sync RecordCache${meta.name} [eager]
+`,
+    },
+    // 4. Record cache sync
+    {
+      path: `record-cache-${kebabName}.sync`,
+      content: `sync RecordCache${meta.name} [eager]
   purpose { Record ${meta.name} success in BuildCache. }
 when {
   ${meta.name}/generate: [ spec: ?spec ]
@@ -844,11 +850,12 @@ then {
     deterministic: ${meta.deterministic}
   ]
 }
-`;
-  writeFileSync(join(outDir, `record-cache-${kebabName}.sync`), recordCacheSync);
-
-  // 5. Observer sync
-  const observeSync = `sync Observe${meta.name} [eager]
+`,
+    },
+    // 5. Observer sync
+    {
+      path: `observe-${kebabName}.sync`,
+      content: `sync Observe${meta.name} [eager]
   purpose { Record ${meta.name} completion in GenerationPlan. }
 when {
   ${meta.name}/generate: [ spec: ?spec ]
@@ -862,20 +869,35 @@ then {
     cached: false
   ]
 }
-`;
-  writeFileSync(join(outDir, `observe-${kebabName}.sync`), observeSync);
+`,
+    },
+  ];
 
-  return 5;
+  // Route through Emitter for content-addressed writes
+  for (const sf of syncFiles) {
+    const filePath = join(outDir, sf.path);
+    mkdirSync(join(filePath, '..'), { recursive: true });
+    await emitterHandler.write(
+      { path: filePath, content: sf.content, target: 'sync-gen', concept: meta.name },
+      emitStorage,
+    );
+  }
+
+  return syncFiles.length;
 }
 
-export function generateInterfaceSyncs(
+export async function generateInterfaceSyncs(
   outDir: string,
   meta: typeof INTERFACE_TARGET_META[number],
-): number {
+  emitStorage: ReturnType<typeof createInMemoryStorage>,
+): Promise<number> {
   const kebabName = toKebabCase(meta.name);
 
-  // 1. Cache check sync — triggered by InterfaceGenerator dispatching a projection
-  const cacheCheckSync = `sync CheckCacheBefore${meta.name} [eager]
+  const syncFiles: { path: string; content: string }[] = [
+    // 1. Cache check sync — triggered by InterfaceGenerator dispatching a projection
+    {
+      path: `cache-check-before-${kebabName}.sync`,
+      content: `sync CheckCacheBefore${meta.name} [eager]
   purpose { Check cache before ${meta.name} runs. }
 when {
   InterfaceGenerator/generate: [ projection: ?projection ]
@@ -892,11 +914,12 @@ then {
     deterministic: ${meta.deterministic}
   ]
 }
-`;
-  writeFileSync(join(outDir, `cache-check-before-${kebabName}.sync`), cacheCheckSync);
-
-  // 2. Generate on miss sync
-  const genOnMissSync = `sync ${meta.name}OnCacheMiss [eager]
+`,
+    },
+    // 2. Generate on miss sync
+    {
+      path: `${kebabName}-on-miss.sync`,
+      content: `sync ${meta.name}OnCacheMiss [eager]
   purpose { Run ${meta.name} only on cache miss. }
 when {
   InterfaceGenerator/generate: [ projection: ?projection ]
@@ -911,11 +934,12 @@ where {
 then {
   ${meta.name}/generate: [ projection: ?projection ]
 }
-`;
-  writeFileSync(join(outDir, `${kebabName}-on-miss.sync`), genOnMissSync);
-
-  // 3. Emit files sync
-  const emitSync = `sync Emit${meta.name}Files [eager]
+`,
+    },
+    // 3. Emit files sync
+    {
+      path: `emit-${kebabName}-files.sync`,
+      content: `sync Emit${meta.name}Files [eager]
   purpose { Route ${meta.name} file output through Emitter. }
 when {
   ${meta.name}/generate: [ projection: ?projection ]
@@ -924,11 +948,12 @@ when {
 then {
   Emitter/writeBatch: [ files: ?files ]
 }
-`;
-  writeFileSync(join(outDir, `emit-${kebabName}-files.sync`), emitSync);
-
-  // 4. Record cache sync
-  const recordCacheSync = `sync RecordCache${meta.name} [eager]
+`,
+    },
+    // 4. Record cache sync
+    {
+      path: `record-cache-${kebabName}.sync`,
+      content: `sync RecordCache${meta.name} [eager]
   purpose { Record ${meta.name} success in BuildCache. }
 when {
   ${meta.name}/generate: [ projection: ?projection ]
@@ -949,11 +974,12 @@ then {
     deterministic: ${meta.deterministic}
   ]
 }
-`;
-  writeFileSync(join(outDir, `record-cache-${kebabName}.sync`), recordCacheSync);
-
-  // 5. Observer sync
-  const observeSync = `sync Observe${meta.name} [eager]
+`,
+    },
+    // 5. Observer sync
+    {
+      path: `observe-${kebabName}.sync`,
+      content: `sync Observe${meta.name} [eager]
   purpose { Record ${meta.name} completion in GenerationPlan. }
 when {
   ${meta.name}/generate: [ projection: ?projection ]
@@ -967,10 +993,21 @@ then {
     cached: false
   ]
 }
-`;
-  writeFileSync(join(outDir, `observe-${kebabName}.sync`), observeSync);
+`,
+    },
+  ];
 
-  return 5;
+  // Route through Emitter for content-addressed writes
+  for (const sf of syncFiles) {
+    const filePath = join(outDir, sf.path);
+    mkdirSync(join(filePath, '..'), { recursive: true });
+    await emitterHandler.write(
+      { path: filePath, content: sf.content, target: 'sync-gen', concept: meta.name },
+      emitStorage,
+    );
+  }
+
+  return syncFiles.length;
 }
 
 async function generateSyncFiles(
@@ -980,6 +1017,7 @@ async function generateSyncFiles(
   const outDir = resolve(projectDir, 'generated', 'syncs');
   mkdirSync(outDir, { recursive: true });
 
+  const emitStorage = createInMemoryStorage();
   const filterFamily = flags.family as string | undefined;
   let totalSyncs = 0;
 
@@ -987,7 +1025,7 @@ async function generateSyncFiles(
   if (!filterFamily || filterFamily === 'framework') {
     console.log('Framework generators:');
     for (const [_targetKey, meta] of Object.entries(GENERATOR_META)) {
-      totalSyncs += generateFrameworkSyncs(outDir, meta);
+      totalSyncs += await generateFrameworkSyncs(outDir, meta, emitStorage);
       console.log(`  ${meta.name}: 5 sync files`);
     }
   }
@@ -996,7 +1034,7 @@ async function generateSyncFiles(
   if (!filterFamily || filterFamily === 'interface') {
     console.log('Interface target providers:');
     for (const meta of INTERFACE_TARGET_META) {
-      totalSyncs += generateInterfaceSyncs(outDir, meta);
+      totalSyncs += await generateInterfaceSyncs(outDir, meta, emitStorage);
       console.log(`  ${meta.name}: 5 sync files`);
     }
   }

@@ -1,0 +1,12 @@
+# DataQuality delegates rule evaluation to Validator.
+# DataQuality adds pipeline-specific wrapping (scoring, gating)
+# while Validator handles the underlying constraint checking.
+
+sync DataQualityValidation [eager]
+when {
+  DataQuality/validate: [ item: ?item; rulesetId: ?rulesetId ]
+    => []
+}
+then {
+  Validator/validate: [ validator: ?rulesetId; data: ?item ]
+}

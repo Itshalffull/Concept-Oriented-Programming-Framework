@@ -1,28 +1,34 @@
 @category("devtools")
 @visibility("public")
+@version(2)
 concept DevServer [D] {
 
   purpose {
-    Run a local development server that watches concept specs
-    and syncs for changes, re-compiles on save, and serves
-    the generated artifacts.
+    Coordinate the local development server lifecycle: start,
+    stop, and query status. File watching is delegated to
+    Resource (change detection), recompilation is triggered by
+    syncs (Resource changes → generation pipeline), and output
+    is written through Emitter (content-addressed writes).
   }
 
   state {
     sessions: set D
     port: D -> Int
     status: D -> String
+    watchDirs: D -> list String
   }
 
   actions {
-    action start(port: Int, specs: String, syncs: String) {
+    action start(port: Int, watchDirs: list String) {
       description {
         Start the development server on the specified port.
-        Watch the specs and syncs directories for changes.
-        Auto-recompile when files are modified.
+        Registers watch directories with Resource for change
+        detection. Recompilation is handled by syncs that
+        react to Resource change events.
       }
       -> ok(session: D, port: Int, url: String) {
-        Development server started and watching for changes.
+        Development server started. Resource is tracking
+        the specified directories for changes.
       }
       -> portInUse(port: Int) {
         The specified port is already in use.
@@ -31,7 +37,8 @@ concept DevServer [D] {
 
     action stop(session: D) {
       description {
-        Stop a running development server session.
+        Stop a running development server session and
+        unregister watched resources.
       }
       -> ok(session: D) {
         Server stopped cleanly.
@@ -52,7 +59,7 @@ concept DevServer [D] {
   }
 
   invariant {
-    after start(port: 3000, specs: "./specs", syncs: "./syncs")
+    after start(port: 3000, watchDirs: ["./specs", "./syncs"])
       -> ok(session: d, port: 3000, url: "http://localhost:3000")
     then stop(session: d) -> ok(session: d)
   }

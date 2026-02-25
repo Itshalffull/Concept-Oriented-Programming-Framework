@@ -1,10 +1,11 @@
-@version(1)
+@version(2)
 concept TypeSystem [T] {
 
   purpose {
-    Define self-describing type hierarchies with introspection,
-    validation, and serialization. Types compose into complex
-    structures with constraints.
+    Define self-describing type hierarchies with introspection
+    and serialization. Types compose into complex structures
+    with constraints. Validation is delegated to Validator
+    via TypeConstraintRegistration sync.
   }
 
   state {
@@ -27,15 +28,6 @@ concept TypeSystem [T] {
     action resolve(type: T) {
       -> ok(type: T, schema: String) {
         Resolve the type to its full schema including inherited fields.
-      }
-      -> notfound(message: String) {
-        The type does not exist.
-      }
-    }
-
-    action validate(type: T, value: String) {
-      -> ok(valid: Bool) {
-        Check if a value conforms to the type's schema and constraints.
       }
       -> notfound(message: String) {
         The type does not exist.

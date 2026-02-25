@@ -1,15 +1,16 @@
-@version(1)
+@version(2)
 concept Relation [R] {
 
   purpose {
-    Define typed, labeled, bidirectional connections between entities with cardinality constraints and rollup aggregation.
+    Define typed, labeled, bidirectional connections between entities
+    with cardinality constraints. Rollup aggregation is delegated to
+    Formula via RelationRollupComputation sync.
   }
 
   state {
     relations: set R
     links: R -> set String
     definition: R -> String
-    rollups: R -> String
   }
 
   actions {
@@ -46,26 +47,6 @@ concept Relation [R] {
       -> ok(related: String) {
         Returns all entities connected to the given entity within the
         relation, traversing in both directions.
-      }
-      -> notfound(relation: R, entity: String) {
-        The relation or entity was not found.
-      }
-    }
-
-    action defineRollup(relation: R, formula: String) {
-      -> ok(relation: R, formula: String) {
-        An aggregation formula is registered for the relation,
-        enabling computed values (sum, count, avg) across linked entities.
-      }
-      -> notfound(relation: R) {
-        The relation was not found.
-      }
-    }
-
-    action computeRollup(relation: R, entity: String) {
-      -> ok(value: String) {
-        Evaluates the rollup formula against all entities linked to
-        this entity and returns the computed aggregate value.
       }
       -> notfound(relation: R, entity: String) {
         The relation or entity was not found.

@@ -1,0 +1,17 @@
+# Resource changes trigger the generation pipeline.
+# When a concept-spec or sync-rule resource changes,
+# the compiler pipeline (SpecParser → SchemaGen → generators)
+# handles recompilation. Output flows through Emitter.
+
+sync DevServerRecompile [eager]
+  purpose { Trigger recompilation when watched resources change. }
+when {
+  Resource/upsert: [ locator: ?loc; kind: ?kind ]
+    => changed(resource: ?r; previousDigest: ?old)
+}
+where {
+  ?kind in ["concept-spec", "sync-rule"]
+}
+then {
+  SpecParser/parse: [ source: ?loc ]
+}

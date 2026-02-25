@@ -1,0 +1,26 @@
+# Bridge between Relation (typed, bidirectional) and
+# Reference/Backlink (lightweight, schema-less).
+# When a typed Relation link is created, mirror it as a
+# Reference entry so the lightweight link system stays
+# consistent. The existing bidirectional-links.sync then
+# keeps Backlink in sync with Reference automatically.
+
+sync MirrorRelationToReference [eager]
+  purpose { Create a Reference entry when a Relation link is established. }
+when {
+  Relation/link: [ relation: ?rel; source: ?src; target: ?tgt ]
+    => ok(relation: ?rel; source: ?src; target: ?tgt)
+}
+then {
+  Reference/addRef: [ source: ?src; target: ?tgt ]
+}
+
+sync MirrorRelationUnlinkToReference [eager]
+  purpose { Remove Reference entry when a Relation link is removed. }
+when {
+  Relation/unlink: [ relation: ?rel; source: ?src; target: ?tgt ]
+    => ok(relation: ?rel; source: ?src; target: ?tgt)
+}
+then {
+  Reference/removeRef: [ source: ?src; target: ?tgt ]
+}

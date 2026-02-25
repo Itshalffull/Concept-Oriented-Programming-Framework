@@ -1,0 +1,11 @@
+# Validation failures can trigger Transform to attempt coercion
+# before rejecting. Coercion is transformation, not validation.
+
+sync CoercionFallback [eager]
+when {
+  Validator/validate: [ validator: ?validator; data: ?data ]
+    => [ valid: false; errors: ?errors ]
+}
+then {
+  Transform/apply: [ record: ?data; transform: ?validator ]
+}

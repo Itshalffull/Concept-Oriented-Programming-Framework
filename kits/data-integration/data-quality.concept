@@ -1,10 +1,12 @@
-@version(1)
+@version(2)
 concept DataQuality [D] {
 
   purpose {
     Gate data flow with configurable validation rules, quarantine invalid items
     for review, profile datasets for statistical understanding, and reconcile
-    values against external knowledge bases.
+    values against external knowledge bases. Rule evaluation delegates to
+    Validator via DataQualityValidation sync. Deduplication extracted as
+    a separate concern (DataDeduplication sync).
   }
 
   state {
@@ -56,11 +58,6 @@ concept DataQuality [D] {
       }
     }
 
-    action deduplicate(query: String, strategy: String) {
-      -> ok(clusters: String) {
-        Duplicate clusters identified by the given strategy.
-      }
-    }
   }
 
   invariant {

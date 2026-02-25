@@ -20,14 +20,10 @@ concepts:
     params:
       G: { as: generator-plan-ref, description: "Reference to a generation plan" }
 
-  # Emitter: imported from generation kit (see uses section)
-  # Emitter:
-  #   spec: ./concepts/emitter.concept
-  #   params:
-  #     E: { as: emitter-file-ref, description: "Reference to a generated file" }
+  # Emitter: imported from generation kit (see uses section below)
 
-  Surface:
-    spec: ./concepts/surface.concept
+  ApiSurface:
+    spec: ./concepts/api-surface.concept
     params:
       S: { as: surface-ref, description: "Reference to a composed API surface" }
 
@@ -41,8 +37,8 @@ concepts:
     params:
       G: { as: grouping-ref, description: "Reference to a concept grouping result" }
 
-  Workflow:
-    spec: ./concepts/workflow.concept
+  ActionGuide:
+    spec: ./concepts/action-guide.concept
     params:
       W: { as: workflow-ref, description: "Reference to an ordered action sequence" }
 
@@ -51,8 +47,8 @@ concepts:
     params:
       N: { as: annotation-ref, description: "Reference to concept/action metadata" }
 
-  Renderer:
-    spec: ./concepts/renderer.concept
+  EnrichmentRenderer:
+    spec: ./concepts/enrichment-renderer.concept
     params:
       R: { as: renderer-handler-ref, description: "Reference to a registered render handler" }
 

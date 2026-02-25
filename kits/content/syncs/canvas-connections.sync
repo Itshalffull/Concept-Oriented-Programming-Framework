@@ -1,0 +1,12 @@
+# Canvas node connections are delegated to Graph.
+# When Canvas adds a node, Graph tracks the edge topology.
+# Spatial layout is Canvas's concern; connectivity is Graph's.
+
+sync CanvasConnections [eager]
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node ]
+    => []
+}
+then {
+  Graph/addNode: [ graph: ?canvas; node: ?node ]
+}

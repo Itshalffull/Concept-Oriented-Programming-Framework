@@ -1,0 +1,15 @@
+# EventBus dispatches connect to AutomationRule execution.
+# Condition evaluation uses the sync engine's evaluateWhere
+# pattern rather than duplicating it in AutomationRule.evaluate.
+
+sync AutomationConditionEval [eager]
+when {
+  EventBus/dispatch: [ event: ?event ]
+    => [ event: ?event ]
+}
+where {
+  AutomationRule: { ?rule trigger: ?event; enabled: true }
+}
+then {
+  AutomationRule/execute: [ rule: ?rule; context: ?event ]
+}

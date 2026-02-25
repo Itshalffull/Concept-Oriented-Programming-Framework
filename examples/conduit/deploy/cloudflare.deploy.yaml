@@ -80,7 +80,7 @@ concepts:
         storage: durable-objects
         queryMode: lite
   Comment:
-    spec: specs/app/comment.concept
+    spec: kits/content/comment.concept
     implementations:
       - language: typescript
         path: implementations/typescript/app/comment.impl.ts
@@ -88,7 +88,7 @@ concepts:
         storage: durable-objects
         queryMode: lite
   Tag:
-    spec: specs/app/tag.concept
+    spec: kits/classification/tag.concept
     implementations:
       - language: typescript
         path: implementations/typescript/app/tag.impl.ts

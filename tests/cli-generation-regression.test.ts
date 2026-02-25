@@ -323,52 +323,18 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf compile --cache → cache-compiler compile ----
+  // ---- copf compile --cache → build-cache check ----
+  // CacheCompiler superseded by generation kit BuildCache concept
 
-  describe('compile --cache → CacheCompiler parity', () => {
-    it('generated group "cache-compiler" exists', () => {
-      expect(generatedCommands.has('cache-compiler')).toBe(true);
+  describe('compile --cache → BuildCache parity', () => {
+    it('generated group "build-cache" exists', () => {
+      expect(generatedCommands.has('build-cache')).toBe(true);
     });
 
-    it('has exactly 1 subcommand', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      expect(cmd.subcommands.length).toBe(1);
-    });
-
-    it('subcommand is named "compile"', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      const sub = getGeneratedSubcommand(cmd, 'compile');
+    it('has a "check" subcommand', () => {
+      const cmd = generatedCommands.get('build-cache')!;
+      const sub = getGeneratedSubcommand(cmd, 'check');
       expect(sub).toBeDefined();
-    });
-
-    it('generated has --specs flag matching handmade --specs flag', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      const sub = getGeneratedSubcommand(cmd, 'compile')!;
-      expect(sub.requiredOptions).toContain('specs');
-    });
-
-    it('generated has --syncs flag matching handmade --syncs flag', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      const sub = getGeneratedSubcommand(cmd, 'compile')!;
-      expect(sub.requiredOptions).toContain('syncs');
-    });
-
-    it('generated has --implementations flag matching handmade --implementations flag', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      const sub = getGeneratedSubcommand(cmd, 'compile')!;
-      expect(sub.requiredOptions).toContain('implementations');
-    });
-
-    it('has --json flag', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      const sub = getGeneratedSubcommand(cmd, 'compile')!;
-      expect(sub.hasJsonFlag).toBe(true);
-    });
-
-    it('has no positional args (handmade also has none)', () => {
-      const cmd = generatedCommands.get('cache-compiler')!;
-      const sub = getGeneratedSubcommand(cmd, 'compile')!;
-      expect(sub.positionalArgs).toEqual([]);
     });
   });
 
@@ -865,7 +831,7 @@ describe('CLI Generation Regression', () => {
       SpecParser: 'spec-parser',
       SchemaGen: 'schema-gen',
       SyncCompiler: 'sync-compiler',
-      CacheCompiler: 'cache-compiler',
+      BuildCache: 'build-cache',
       DevServer: 'dev-server',
       DeploymentValidator: 'deployment-validator',
       FlowTrace: 'flow-trace',
@@ -904,8 +870,8 @@ describe('CLI Generation Regression', () => {
       const missing: string[] = [];
       const handmadeConcepts = [
         'ProjectScaffold', 'SpecParser', 'SchemaGen', 'SyncCompiler',
-        'CacheCompiler', 'DevServer', 'DeploymentValidator', 'FlowTrace',
-        'Migration', 'KitManager',
+        'BuildCache', 'DevServer', 'DeploymentValidator', 'FlowTrace',
+        'KitManager',
       ];
 
       for (const concept of handmadeConcepts) {

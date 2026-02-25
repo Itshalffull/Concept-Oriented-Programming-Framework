@@ -1,7 +1,13 @@
+// Uses deploy kit Telemetry concept (configure, deployMarker, analyze actions)
+// Action records are published as deploy markers for observability tracking
 sync ExportTelemetry [eager]
 when {
   ActionLog/append: [] => [ id: ?id; record: ?record ]
 }
 then {
-  Telemetry/export: [ record: ?record ]
+  Telemetry/deployMarker: [
+    kit: ?record;
+    version: "1.0.0";
+    environment: "runtime";
+    status: "logged" ]
 }

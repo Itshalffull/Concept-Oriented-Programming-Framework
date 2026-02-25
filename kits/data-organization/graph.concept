@@ -1,15 +1,15 @@
-@version(1)
+@version(2)
 concept Graph [G] {
   purpose {
-    Visualize entity networks with force-directed layouts, filtering,
-    and depth-limited neighborhood exploration.
+    Model entity networks as a pure data structure with
+    depth-limited neighborhood exploration and filtering.
+    Visualization layout is delegated via GraphVisualization sync.
   }
 
   state {
     graphs: set G;
     nodes: G -> set String;
-    edges: G -> set String;
-    layout: G -> String
+    edges: G -> set String
   }
 
   actions {
@@ -31,11 +31,6 @@ concept Graph [G] {
     action removeEdge(graph: G, source: String, target: String) {
       -> ok() { Edge removed between source and target nodes. }
       -> notfound() { Graph or referenced edge does not exist. }
-    }
-
-    action computeLayout(graph: G) {
-      -> ok(layout: String) { Force-directed layout computed for the graph. }
-      -> notfound() { Graph does not exist. }
     }
 
     action getNeighbors(graph: G, node: String, depth: Int) {

@@ -1,5 +1,5 @@
 // ============================================================
-// Renderer Concept Handler — Template-Driven
+// EnrichmentRenderer Concept Handler — Template-Driven (formerly Renderer)
 //
 // Patterns are the small code surface (shipped once).
 // Handlers are pure data: pattern name + template config.

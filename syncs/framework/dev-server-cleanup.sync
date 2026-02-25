@@ -1,0 +1,12 @@
+# When DevServer stops, unregister watched resources
+# so Resource no longer tracks them for changes.
+
+sync DevServerCleanup [eager]
+  purpose { Unregister watched resources when server stops. }
+when {
+  DevServer/stop: [ session: ?session ]
+    => ok(session: ?session)
+}
+then {
+  Resource/remove: [ locator: ?session ]
+}

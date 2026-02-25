@@ -1,0 +1,14 @@
+# Canvas file embedding is delegated to FileManagement.
+# File attachment is a media concern, not a canvas concern.
+
+sync CanvasFileEmbed [eager]
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node ]
+    => []
+}
+where {
+  Canvas: { ?node file: ?file }
+}
+then {
+  FileManagement/attach: [ entity: ?node; file: ?file ]
+}

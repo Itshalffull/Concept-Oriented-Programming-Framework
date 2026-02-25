@@ -1,14 +1,15 @@
-@version(1)
+@version(2)
 concept Canvas [V] {
 
   purpose {
-    Arrange content cards in a free-form 2D spatial layout with connections and grouping.
+    Arrange content cards in a free-form 2D spatial layout with grouping.
+    Node connections are delegated to Graph via CanvasConnections sync.
+    File embedding is delegated to FileManagement via CanvasFileEmbed sync.
   }
 
   state {
     canvases: set V
     nodes: V -> String
-    edges: V -> String
     positions: V -> String
   }
 
@@ -31,15 +32,6 @@ concept Canvas [V] {
       }
     }
 
-    action connectNodes(canvas: V, from: String, to: String) {
-      -> ok() {
-        Creates a directional edge between two nodes on the canvas.
-      }
-      -> notfound(message: String) {
-        The canvas or one of the nodes does not exist.
-      }
-    }
-
     action groupNodes(canvas: V, nodes: String, group: String) {
       -> ok() {
         Combines the specified nodes into a named group.
@@ -48,20 +40,10 @@ concept Canvas [V] {
         The canvas or one of the nodes does not exist.
       }
     }
-
-    action embedFile(canvas: V, node: String, file: String) {
-      -> ok() {
-        Embeds an external file into the specified node on the canvas.
-      }
-      -> notfound(message: String) {
-        The canvas or node does not exist.
-      }
-    }
   }
 
   invariant {
     after addNode(canvas: v, node: "a", x: 0, y: 0) -> ok()
     then moveNode(canvas: v, node: "a", x: 100, y: 200) -> ok()
-    and connectNodes(canvas: v, from: "a", to: "b") -> ok()
   }
 }

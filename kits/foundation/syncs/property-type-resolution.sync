@@ -1,0 +1,15 @@
+# Property queries TypeSystem for type info when setting values.
+# Type definitions go through TypeSystem.registerType rather than
+# Property.defineType (which was removed).
+
+sync PropertyTypeResolution [eager]
+when {
+  Property/set: [ entity: ?entity; key: ?key; value: ?value ]
+    => []
+}
+where {
+  TypeSystem: { ?key schema: ?schema }
+}
+then {
+  Validator/validate: [ validator: ?key; data: ?value ]
+}

@@ -399,3 +399,61 @@ Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `-
 11. Place in appropriate kit directory or `specs/` for framework concepts.
 12. Write syncs in separate `.sync` files to wire to other concepts.
 13. Update `kit.yaml` with the concept entry and param mapping.
+
+---
+
+## 10. Architecture Notes
+
+### 10.1 Three-Tier Dispatch Model
+
+COPF has three distinct layers for event/action routing, each at a different abstraction level:
+
+| Tier | Concept | Layer | Purpose | Authored by |
+|------|---------|-------|---------|-------------|
+| 1 | **SyncEngine** | Framework | Evaluates declarative sync rules on action completions. Routes via `when`/`where`/`then` pattern matching. The fundamental wiring mechanism. | Framework (built-in) |
+| 2 | **EventBus** | Infrastructure | Application-level pub/sub with subscriber management, priority ordering, dead-letter queues, and event history. | Developer |
+| 3 | **AutomationRule** | Automation | User-configurable event-condition-action rules with enable/disable toggles. Condition evaluation delegates to SyncEngine's `evaluateWhere` via the `AutomationConditionEval` sync. | End user |
+
+**When to use each:**
+- **SyncEngine (syncs)**: For structural concept wiring defined at design time. Every cross-concept delegation uses syncs.
+- **EventBus**: When you need subscriber management, priority ordering, dead-letter handling, or event history that syncs don't provide. Application-level pub/sub where the set of listeners is dynamic.
+- **AutomationRule**: When end users need to configure their own event-condition-action rules at runtime (e.g., "when order placed and total > $100, send VIP notification").
+
+### 10.2 Linking Concepts: Reference/Backlink vs Relation
+
+The linking kit provides three concepts at two complexity levels:
+
+**Lightweight (schema-less):**
+- **Reference** — Forward links: `addRef(source, target)`, `removeRef`, `getRefs`
+- **Backlink** — Reverse index: `getBacklinks`, `reindex`
+- Wired together by `bidirectional-links.sync` (Reference changes trigger Backlink reindex)
+
+**Typed (schema-aware):**
+- **Relation** — Typed, labeled, bidirectional connections with cardinality constraints: `defineRelation(schema)`, `link`, `unlink`, `getRelated`
+
+**Bridge:** The `relation-reference-bridge.sync` mirrors Relation links as Reference entries, so Backlink stays consistent automatically. This means:
+- Use **Reference/Backlink** when you need simple, untyped "this points to that" links
+- Use **Relation** when you need typed relationships with cardinality constraints, labels, and directionality
+- Both systems stay in sync via the bridge sync — a Relation link automatically appears in Reference/Backlink queries
+
+### 10.3 DataQuality vs Validator Scope Boundaries
+
+Both concepts deal with "checking correctness" but at different points in the data lifecycle:
+
+| Concept | Scope | When it runs | What it returns |
+|---------|-------|-------------|----------------|
+| **Validator** (`kits/infrastructure/`) | Write-time constraint enforcement | On CRUD operations, form submissions, property changes | Pass/fail with field-level error messages |
+| **DataQuality** (`kits/data-integration/`) | Pipeline-level data assessment | During ETL/integration flows | Quality scores, quarantine decisions, pipeline gate verdicts |
+
+**Delegation:** DataQuality delegates rule evaluation to Validator via the `DataQualityValidation` sync. DataQuality adds pipeline-specific wrapping (scoring, gating, quarantine) while Validator handles the underlying constraint checking.
+
+**Coercion:** Validation failures can trigger Transform (`kits/data-integration/`) to attempt coercion before rejecting, via the `CoercionFallback` sync in `kits/infrastructure/syncs/`.
+
+### 10.4 Concept Overlap Prevention Guidelines
+
+When designing new concepts, check for these common overlap patterns:
+
+1. **Action already exists elsewhere** — Before adding a `validate`, `transform`, `render`, or `compute` action, check if an existing concept already provides it. Delegate via sync instead.
+2. **"And" in purpose** — If your purpose statement uses "and" to connect unrelated concerns, consider splitting or delegating. Exception: when the "and" connects tightly cohesive facets of a single concern (e.g., Widget's "state machine and anatomy and a11y").
+3. **Naming collision** — Search existing concepts before naming. If a name is taken, use a qualifier that reflects the concept's specific domain (e.g., EnrichmentRenderer vs Renderer, ApiSurface vs Surface).
+4. **Cross-layer bleeding** — Data structure concepts should not contain visualization logic. Validation concepts should not contain transformation logic. Use syncs to bridge layers.

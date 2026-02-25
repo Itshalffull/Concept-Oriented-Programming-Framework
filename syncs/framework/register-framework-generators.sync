@@ -1,0 +1,210 @@
+# ============================================================
+# Framework Generator Registration
+#
+# Wire each framework generator's register() action to
+# PluginRegistry, enabling the generation kit's existing
+# syncs (RegisterGeneratorKinds, EnsureKindsDefined) to
+# populate the KindSystem taxonomy automatically.
+#
+# Flow: Generator/register → PluginRegistry/register
+#       → (generation kit) → KindSystem/define + connect
+# ============================================================
+
+# --- Code generators ---
+
+sync RegisterSchemaGen [eager]
+  purpose { Register SchemaGen as a generator plugin. }
+when {
+  SchemaGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterTypeScriptGen [eager]
+  purpose { Register TypeScriptGen as a generator plugin. }
+when {
+  TypeScriptGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterRustGen [eager]
+  purpose { Register RustGen as a generator plugin. }
+when {
+  RustGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterSolidityGen [eager]
+  purpose { Register SolidityGen as a generator plugin. }
+when {
+  SolidityGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterSwiftGen [eager]
+  purpose { Register SwiftGen as a generator plugin. }
+when {
+  SwiftGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+# --- Scaffold generators ---
+
+sync RegisterConceptScaffoldGen [eager]
+  purpose { Register ConceptScaffoldGen as a generator plugin. }
+when {
+  ConceptScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterHandlerScaffoldGen [eager]
+  purpose { Register HandlerScaffoldGen as a generator plugin. }
+when {
+  HandlerScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterSyncScaffoldGen [eager]
+  purpose { Register SyncScaffoldGen as a generator plugin. }
+when {
+  SyncScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterKitScaffoldGen [eager]
+  purpose { Register KitScaffoldGen as a generator plugin. }
+when {
+  KitScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterDeployScaffoldGen [eager]
+  purpose { Register DeployScaffoldGen as a generator plugin. }
+when {
+  DeployScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterInterfaceScaffoldGen [eager]
+  purpose { Register InterfaceScaffoldGen as a generator plugin. }
+when {
+  InterfaceScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterStorageAdapterScaffoldGen [eager]
+  purpose { Register StorageAdapterScaffoldGen as a generator plugin. }
+when {
+  StorageAdapterScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterTransportAdapterScaffoldGen [eager]
+  purpose { Register TransportAdapterScaffoldGen as a generator plugin. }
+when {
+  TransportAdapterScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterCoifComponentScaffoldGen [eager]
+  purpose { Register CoifComponentScaffoldGen as a generator plugin. }
+when {
+  CoifComponentScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}
+
+sync RegisterCoifThemeScaffoldGen [eager]
+  purpose { Register CoifThemeScaffoldGen as a generator plugin. }
+when {
+  CoifThemeScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}

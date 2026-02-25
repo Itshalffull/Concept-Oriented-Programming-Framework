@@ -231,7 +231,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
     it('all app concept files: both paths produce identical ASTs', async () => {
       const conceptFiles = [
         'password.concept', 'echo.concept', 'user.concept',
-        'article.concept', 'comment.concept',
+        'article.concept',
       ];
 
       for (const file of conceptFiles) {

@@ -1,5 +1,5 @@
 // ============================================================
-// Surface Concept Implementation
+// ApiSurface Concept Implementation (formerly Surface)
 //
 // Composes per-concept generated interfaces into cohesive,
 // unified API surfaces per target. Merges routes, schemas,

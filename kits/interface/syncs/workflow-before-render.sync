@@ -1,13 +1,13 @@
-# Generator triggers workflow definition before rendering target output.
-# Workflow organizes actions into ordered, annotated sequences that
+# Generator triggers action guide definition before rendering target output.
+# ActionGuide organizes actions into ordered, annotated sequences that
 # each target renders in its natural format.
 # Architecture doc: Interface Kit
 
-sync WorkflowBeforeRender [eager]
+sync ActionGuideBeforeRender [eager]
 when {
   Generator/generate: [ plan: ?plan ]
     => [ plan: ?plan ]
 }
 then {
-  Workflow/define: [ concept: ?concept; steps: ?steps; config: ?config ]
+  ActionGuide/define: [ concept: ?concept; steps: ?steps; config: ?config ]
 }

@@ -1,9 +1,10 @@
-@version(1)
+@version(2)
 concept Validator [V] {
 
   purpose {
     Enforce runtime constraints at write time by validating data against
-    schema rules, field rules, and custom validators.
+    schema rules, field rules, and custom validators. Coercion is
+    delegated to Transform via CoercionFallback sync.
   }
 
   state {
@@ -41,15 +42,6 @@ concept Validator [V] {
     action validateField(validator: V, field: String, value: String) {
       -> ok(valid: Bool, errors: String) {
         Validate a single field value against its registered rules.
-      }
-    }
-
-    action coerce(validator: V, data: String) {
-      -> ok(coerced: String) {
-        Attempt to coerce the data into a valid form according to the validator rules.
-      }
-      -> error(message: String) {
-        The data could not be coerced into a valid form.
       }
     }
 

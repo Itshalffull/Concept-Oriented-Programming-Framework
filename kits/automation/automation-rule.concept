@@ -1,9 +1,11 @@
-@version(1)
+@version(2)
 concept AutomationRule [R] {
 
   purpose {
     Define user-configurable event-condition-action rules that fire
-    automatically when conditions are met.
+    automatically when conditions are met. Condition evaluation is
+    delegated to the sync engine via AutomationConditionEval sync;
+    EventBus dispatches trigger AutomationRule.execute.
   }
 
   state {
@@ -42,15 +44,6 @@ concept AutomationRule [R] {
       }
     }
 
-    action evaluate(rule: R, event: String) {
-      -> ok(matched: Bool) {
-        Returns whether the event satisfies the rule trigger and conditions.
-      }
-      -> notfound(message: String) {
-        The rule was not found.
-      }
-    }
-
     action execute(rule: R, context: String) {
       -> ok(result: String) {
         The rule's action sequence ran against the given context and returned a result.
@@ -65,6 +58,5 @@ concept AutomationRule [R] {
     after define(rule: r, trigger: "on_save", conditions: "status == draft",
            actions: "notify_reviewer")                                     -> ok()
     then  enable(rule: r)                                                  -> ok()
-    and   evaluate(rule: r, event: "on_save")                              -> ok(matched: true)
   }
 }

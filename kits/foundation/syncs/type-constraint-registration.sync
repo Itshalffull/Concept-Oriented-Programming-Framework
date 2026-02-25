@@ -1,0 +1,11 @@
+# TypeSystem publishes type constraints to Validator.
+# When a type is registered, its constraints become validation rules.
+
+sync TypeConstraintRegistration [eager]
+when {
+  TypeSystem/registerType: [ type: ?type; schema: ?schema; constraints: ?constraints ]
+    => [ type: ?type ]
+}
+then {
+  Validator/registerConstraint: [ validator: ?type; constraint: ?constraints ]
+}

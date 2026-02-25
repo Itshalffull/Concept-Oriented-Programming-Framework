@@ -51,7 +51,8 @@
       "mcp__playwright__browser_evaluate",
       "Skill(decompose-feature)",
       "Skill(decompose-feature:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(grep:*)"
     ]
   }
 }

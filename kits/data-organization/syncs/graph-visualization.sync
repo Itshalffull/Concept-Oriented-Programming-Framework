@@ -1,0 +1,12 @@
+# Graph visualization layout is handled by the rendering layer,
+# not the data structure. Graph data connects to Layout (COIF)
+# or a dedicated visualization target for force-directed rendering.
+
+sync GraphVisualization [eager]
+when {
+  Graph/addEdge: [ graph: ?graph; source: ?source; target: ?target ]
+    => []
+}
+then {
+  Layout/arrange: [ container: ?graph; algorithm: "force-directed" ]
+}

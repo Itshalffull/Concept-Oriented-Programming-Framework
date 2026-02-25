@@ -50,6 +50,7 @@ then {
 }
 
 // --- List Tags ---
+// Uses classification kit Tag concept (getByTag action)
 
 sync HandleListTags [eager]
 when {
@@ -57,15 +58,15 @@ when {
     => [ request: ?request ]
 }
 then {
-  Tag/list: []
+  Tag/getByTag: [ tag: "*" ]
 }
 
 sync ListTagsResponse [eager]
 when {
   Web/request: [ method: "list_tags" ]
     => [ request: ?request ]
-  Tag/list: []
-    => [ tags: ?tags ]
+  Tag/getByTag: []
+    => [ entities: ?tags ]
 }
 then {
   Web/respond: [
@@ -105,22 +106,16 @@ then {
 }
 
 // --- List Comments for Article ---
+// Uses content kit Comment concept (addComment/delete actions)
+// Comment listing uses a Query sync for retrieval by entity
 
 sync HandleListComments [eager]
 when {
   Web/request: [ method: "list_comments"; article: ?article ]
     => [ request: ?request ]
 }
-then {
-  Comment/list: [ target: ?article ]
-}
-
-sync ListCommentsResponse [eager]
-when {
-  Web/request: [ method: "list_comments" ]
-    => [ request: ?request ]
-  Comment/list: []
-    => [ comments: ?comments ]
+where {
+  Comment: { ?comments author: ?_ ; parent: null }
 }
 then {
   Web/respond: [

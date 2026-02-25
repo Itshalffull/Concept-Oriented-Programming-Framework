@@ -1,11 +1,11 @@
-@version(1)
+@version(2)
 concept Generator [G] {
 
   purpose {
     Orchestrate multi-target interface generation from concept
-    projections. Plans which targets and SDK languages to generate,
-    coordinates the generation pipeline, tracks output files,
-    and manages generation history for incremental regeneration.
+    projections. Plans which targets and SDK languages to generate
+    and coordinates the generation pipeline. History tracking is
+    handled by GenerationPlan; file output by Emitter.
   }
 
   state {
@@ -16,20 +16,6 @@ concept Generator [G] {
       specFormats: G -> list String
       outputDir: G -> String
       formatting: G -> String
-    }
-    execution {
-      status: G -> String
-      startedAt: G -> option DateTime
-      completedAt: G -> option DateTime
-      filesGenerated: G -> Int
-      filesUnchanged: G -> Int
-    }
-    history: G -> list {
-      generatedAt: DateTime
-      kitVersion: String
-      targets: list String
-      filesGenerated: Int
-      breaking: Bool
     }
   }
 
@@ -67,12 +53,6 @@ concept Generator [G] {
       }
     }
 
-    action status(plan: G) {
-      -> ok(plan: G, phase: String, progress: Float, activeTargets: list String) {
-        Current execution status.
-      }
-    }
-
     action regenerate(plan: G, targets: list String) {
       -> ok(plan: G, filesRegenerated: Int) {
         Regenerate only the specified targets. Uses cached
@@ -84,6 +64,5 @@ concept Generator [G] {
   invariant {
     after plan(kit: "test-kit", interfaceManifest: "valid-manifest") -> ok(plan: g, targets: t, concepts: c, estimatedFiles: 10)
     then generate(plan: g) -> ok(plan: g, filesGenerated: 10, filesUnchanged: 0, duration: 500)
-    and status(plan: g) -> ok(plan: g, phase: "complete", progress: 1.0, activeTargets: a)
   }
 }

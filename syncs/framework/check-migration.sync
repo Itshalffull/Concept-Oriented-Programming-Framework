@@ -1,3 +1,4 @@
+// Uses deploy kit Migration concept (plan action with expand/contract pattern)
 sync CheckMigrationOnRegister [eager]
 when {
   Registry/register: [ uri: ?uri ] => [ concept: ?c ]
@@ -6,5 +7,5 @@ where {
   SchemaGen: { ?uri manifest: ?specVersion }
 }
 then {
-  Migration/check: [ concept: ?c; specVersion: ?specVersion ]
+  Migration/plan: [ concept: ?c; fromVersion: 0; toVersion: ?specVersion ]
 }

@@ -1,0 +1,13 @@
+# DevServer delegates file watching to Resource.
+# When DevServer starts, register each watch directory
+# with Resource for content-digest change detection.
+
+sync DevServerResourceWatch [eager]
+  purpose { Register watch directories as Resource entries on server start. }
+when {
+  DevServer/start: [ watchDirs: ?dirs ]
+    => ok(session: ?session)
+}
+then {
+  Resource/upsert: [ locator: ?dirs; kind: "watch-directory"; digest: "initial" ]
+}

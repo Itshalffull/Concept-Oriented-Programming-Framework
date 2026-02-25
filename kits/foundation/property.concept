@@ -1,15 +1,14 @@
-@version(1)
+@version(2)
 concept Property [P] {
 
   purpose {
     Attach typed key-value metadata to content entities.
-    Each property has a registered type that determines its
-    widget, formatter, and validation rules.
+    Type definitions are managed by TypeSystem; Property
+    queries TypeSystem for type info via PropertyTypeResolution sync.
   }
 
   state {
     properties: P -> String
-    typeRegistry: set String
     closedValues: P -> String
   }
 
@@ -38,15 +37,6 @@ concept Property [P] {
       }
       -> notfound(message: String) {
         The property does not exist on this entity.
-      }
-    }
-
-    action defineType(name: String, schema: String) {
-      -> ok(name: String) {
-        Register a property type with its schema definition.
-      }
-      -> exists(message: String) {
-        The type is already registered.
       }
     }
 

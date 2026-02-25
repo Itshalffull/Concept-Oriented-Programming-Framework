@@ -1,0 +1,12 @@
+# FormBuilder delegates widget management to PluginRegistry.
+# Widget registration and discovery go through the plugin system
+# with plugin type "widget".
+
+sync WidgetDiscovery [eager]
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => [ definition: ?definition ]
+}
+then {
+  PluginRegistry/discover: [ type: "widget"; context: ?schema ]
+}

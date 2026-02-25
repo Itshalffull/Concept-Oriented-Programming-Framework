@@ -1,0 +1,12 @@
+# Virtual/computed collections are expressed as Query subscriptions.
+# Query results update Collection membership rather than Collection
+# maintaining its own query engine.
+
+sync VirtualCollectionQuery [eager]
+when {
+  Query/subscribe: [ query: ?query ]
+    => [ results: ?results ]
+}
+then {
+  Collection/addMember: [ collection: ?query; member: ?results ]
+}

@@ -1,0 +1,12 @@
+# Relation link changes trigger Formula recomputation.
+# Rollup aggregation (sum, count, avg) across linked entities
+# is handled by Formula rather than duplicated in Relation.
+
+sync RelationRollupComputation [eager]
+when {
+  Relation/link: [ relation: ?relation; source: ?source; target: ?target ]
+    => [ relation: ?relation ]
+}
+then {
+  Formula/compute: [ entity: ?source; relation: ?relation ]
+}

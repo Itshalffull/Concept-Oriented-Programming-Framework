@@ -19,11 +19,14 @@ import {
   generateInterfaceSyncs,
   INTERFACE_TARGET_META,
 } from '../../../../tools/copf-cli/src/commands/generate.js';
+import { createInMemoryStorage } from '../../../../kernel/src/index.js';
 
 let tempDir: string;
+let emitStorage: ReturnType<typeof createInMemoryStorage>;
 
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), 'copf-syncs-'));
+  emitStorage = createInMemoryStorage();
 });
 
 afterEach(() => {
@@ -44,8 +47,8 @@ describe('Framework generator sync auto-generation', () => {
     handler: {} as never, // not used by sync generation
   };
 
-  it('generates 5 sync files per framework generator', () => {
-    const count = generateFrameworkSyncs(tempDir, frameworkMeta);
+  it('generates 5 sync files per framework generator', async () => {
+    const count = await generateFrameworkSyncs(tempDir, frameworkMeta, emitStorage);
     expect(count).toBe(5);
 
     const files = readdirSync(tempDir).sort();
@@ -58,8 +61,8 @@ describe('Framework generator sync auto-generation', () => {
     ]);
   });
 
-  it('cache-check sync triggers on SchemaGen/generate', () => {
-    generateFrameworkSyncs(tempDir, frameworkMeta);
+  it('cache-check sync triggers on SchemaGen/generate', async () => {
+    await generateFrameworkSyncs(tempDir, frameworkMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'cache-check-before-type-script-gen.sync'),
       'utf-8',
@@ -70,8 +73,8 @@ describe('Framework generator sync auto-generation', () => {
     expect(content).toContain('deterministic: true');
   });
 
-  it('on-miss sync gates generation on cache miss', () => {
-    generateFrameworkSyncs(tempDir, frameworkMeta);
+  it('on-miss sync gates generation on cache miss', async () => {
+    await generateFrameworkSyncs(tempDir, frameworkMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'type-script-gen-on-miss.sync'),
       'utf-8',
@@ -82,8 +85,8 @@ describe('Framework generator sync auto-generation', () => {
     expect(content).toContain('TypeScriptGen/generate');
   });
 
-  it('emit sync routes files through Emitter', () => {
-    generateFrameworkSyncs(tempDir, frameworkMeta);
+  it('emit sync routes files through Emitter', async () => {
+    await generateFrameworkSyncs(tempDir, frameworkMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'emit-type-script-gen-files.sync'),
       'utf-8',
@@ -93,8 +96,8 @@ describe('Framework generator sync auto-generation', () => {
     expect(content).toContain('Emitter/writeBatch');
   });
 
-  it('record-cache sync stores result after emit', () => {
-    generateFrameworkSyncs(tempDir, frameworkMeta);
+  it('record-cache sync stores result after emit', async () => {
+    await generateFrameworkSyncs(tempDir, frameworkMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'record-cache-type-script-gen.sync'),
       'utf-8',
@@ -104,8 +107,8 @@ describe('Framework generator sync auto-generation', () => {
     expect(content).toContain('BuildCache/record');
   });
 
-  it('observer sync records step in GenerationPlan', () => {
-    generateFrameworkSyncs(tempDir, frameworkMeta);
+  it('observer sync records step in GenerationPlan', async () => {
+    await generateFrameworkSyncs(tempDir, frameworkMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'observe-type-script-gen.sync'),
       'utf-8',
@@ -123,8 +126,8 @@ describe('Framework generator sync auto-generation', () => {
 describe('Interface target provider sync auto-generation', () => {
   const restMeta = INTERFACE_TARGET_META.find(m => m.name === 'RestTarget')!;
 
-  it('generates 5 sync files per interface provider', () => {
-    const count = generateInterfaceSyncs(tempDir, restMeta);
+  it('generates 5 sync files per interface provider', async () => {
+    const count = await generateInterfaceSyncs(tempDir, restMeta, emitStorage);
     expect(count).toBe(5);
 
     const files = readdirSync(tempDir).sort();
@@ -137,8 +140,8 @@ describe('Interface target provider sync auto-generation', () => {
     ]);
   });
 
-  it('cache-check sync triggers on InterfaceGenerator/generate', () => {
-    generateInterfaceSyncs(tempDir, restMeta);
+  it('cache-check sync triggers on InterfaceGenerator/generate', async () => {
+    await generateInterfaceSyncs(tempDir, restMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'cache-check-before-rest-target.sync'),
       'utf-8',
@@ -149,8 +152,8 @@ describe('Interface target provider sync auto-generation', () => {
     expect(content).toContain('BuildCache/check');
   });
 
-  it('on-miss sync uses projection input (not manifest)', () => {
-    generateInterfaceSyncs(tempDir, restMeta);
+  it('on-miss sync uses projection input (not manifest)', async () => {
+    await generateInterfaceSyncs(tempDir, restMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'rest-target-on-miss.sync'),
       'utf-8',
@@ -161,8 +164,8 @@ describe('Interface target provider sync auto-generation', () => {
     expect(content).not.toContain('manifest: ?manifest');
   });
 
-  it('emit sync routes files through Emitter', () => {
-    generateInterfaceSyncs(tempDir, restMeta);
+  it('emit sync routes files through Emitter', async () => {
+    await generateInterfaceSyncs(tempDir, restMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'emit-rest-target-files.sync'),
       'utf-8',
@@ -171,8 +174,8 @@ describe('Interface target provider sync auto-generation', () => {
     expect(content).toContain('Emitter/writeBatch');
   });
 
-  it('observer sync uses conceptOf(projection) for step key', () => {
-    generateInterfaceSyncs(tempDir, restMeta);
+  it('observer sync uses conceptOf(projection) for step key', async () => {
+    await generateInterfaceSyncs(tempDir, restMeta, emitStorage);
     const content = readFileSync(
       join(tempDir, 'observe-rest-target.sync'),
       'utf-8',
@@ -188,12 +191,12 @@ describe('Interface target provider sync auto-generation', () => {
 // ============================================================
 
 describe('All interface providers produce valid sync files', () => {
-  it('generates syncs for all 14 interface target providers', () => {
+  it('generates syncs for all 14 interface target providers', async () => {
     expect(INTERFACE_TARGET_META).toHaveLength(14);
 
     let totalFiles = 0;
     for (const meta of INTERFACE_TARGET_META) {
-      const count = generateInterfaceSyncs(tempDir, meta);
+      const count = await generateInterfaceSyncs(tempDir, meta, emitStorage);
       totalFiles += count;
     }
 
@@ -214,9 +217,9 @@ describe('All interface providers produce valid sync files', () => {
     expect(specs).toHaveLength(2);
   });
 
-  it('all generated syncs are valid sync DSL (have required sections)', () => {
+  it('all generated syncs are valid sync DSL (have required sections)', async () => {
     for (const meta of INTERFACE_TARGET_META) {
-      generateInterfaceSyncs(tempDir, meta);
+      await generateInterfaceSyncs(tempDir, meta, emitStorage);
     }
 
     const files = readdirSync(tempDir);
