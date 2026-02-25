@@ -5,6 +5,18 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const dockerComposeIacProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'DockerComposeIacProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'DockerComposeYaml',
+      capabilities: JSON.stringify(['yaml', 'services', 'networks']),
+      providerKey: 'docker-compose',
+      providerType: 'iac',
+    };
+  },
+
   async generate(input, storage) {
     const plan = input.plan as string;
 

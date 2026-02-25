@@ -328,6 +328,17 @@ function generateSchemaFile(
 // --- Concept Handler ---
 
 export const graphqlTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'GraphqlTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'GraphQLSchema',
+      capabilities: JSON.stringify(['sdl', 'resolvers', 'hierarchical']),
+      targetKey: 'graphql',
+      providerType: 'target',
+    };
+  },
 
   /**
    * Generate GraphQL schema and resolver files from a ConceptManifest

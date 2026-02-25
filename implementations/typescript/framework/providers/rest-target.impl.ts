@@ -276,6 +276,18 @@ function generateRestHelpMd(
 // --- Concept Handler ---
 
 export const restTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'RestTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'RestRoutes',
+      capabilities: JSON.stringify(['hono-routes', 'api-docs', 'hierarchical']),
+      targetKey: 'rest',
+      providerType: 'target',
+    };
+  },
+
   /**
    * Generate Hono route files from a ConceptManifest projection.
    *

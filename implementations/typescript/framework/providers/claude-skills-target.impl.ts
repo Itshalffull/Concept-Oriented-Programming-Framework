@@ -565,6 +565,18 @@ function generateCommandRunner(
 // --- Concept Handler ---
 
 export const claudeSkillsTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'ClaudeSkillsTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'ClaudeSkills',
+      capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment']),
+      targetKey: 'claude-skills',
+      providerType: 'target',
+    };
+  },
+
   /**
    * Generate Claude Code SKILL.md files and TypeScript command runners.
    *

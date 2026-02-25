@@ -693,6 +693,18 @@ function assembleOpenApiDocument(
 // --- Concept Handler ---
 
 export const openapiTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'OpenapiTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'OpenApiSpec',
+      capabilities: JSON.stringify(['openapi-3.1', 'yaml']),
+      targetKey: 'openapi',
+      providerType: 'spec',
+    };
+  },
+
   /**
    * Generate an OpenAPI 3.1 YAML document from all concept projections.
    *

@@ -254,6 +254,18 @@ function generatePackageSwift(packageName: string, projections: ProjectionEntry[
 // --- Concept Handler ---
 
 export const swiftSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'SwiftSdkTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'SwiftSdk',
+      capabilities: JSON.stringify(['client', 'types', 'package']),
+      targetKey: 'swift',
+      providerType: 'sdk',
+    };
+  },
+
   /**
    * Generate Swift SDK client files from ConceptManifest projections.
    *

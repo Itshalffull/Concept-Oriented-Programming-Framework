@@ -73,30 +73,53 @@ export function estimateFileCount(manifest: InterfaceManifest): number {
   return targetFiles + sdkFiles + specFiles + entrypointFiles;
 }
 
-// --- Known Targets and Provider Map ---
+// --- Provider Discovery via register() ---
+//
+// Provider mappings are built dynamically from each provider's register()
+// action metadata rather than hardcoded. Each provider declares a targetKey
+// and providerType ('target' | 'sdk' | 'spec') in its register() response,
+// which is used to build the dispatch maps at factory initialization time.
+// This follows the same self-describing pattern used by framework generators
+// (SchemaGen, TypeScriptGen, etc.) and keeps concepts independent — the
+// provider never imports or calls PluginRegistry directly.
 
-const TARGET_PROVIDERS: Record<string, string> = {
-  rest: 'RestTarget',
-  graphql: 'GraphqlTarget',
-  grpc: 'GrpcTarget',
-  cli: 'CliTarget',
-  mcp: 'McpTarget',
-  'claude-skills': 'ClaudeSkillsTarget',
-};
+/** Resolved provider mapping built from register() metadata. */
+interface ProviderMapping {
+  targetProviders: Record<string, string>;
+  sdkProviders: Record<string, string>;
+  specProviders: Record<string, string>;
+}
 
-const SDK_PROVIDERS: Record<string, string> = {
-  typescript: 'TsSdkTarget',
-  python: 'PySdkTarget',
-  go: 'GoSdkTarget',
-  rust: 'RustSdkTarget',
-  java: 'JavaSdkTarget',
-  swift: 'SwiftSdkTarget',
-};
+/**
+ * Build target/SDK/spec dispatch maps by calling register() on each provider.
+ * Providers that lack register() are skipped (backward-compatible).
+ */
+async function discoverProviderMappings(
+  providers: Record<string, ConceptHandler>,
+): Promise<ProviderMapping> {
+  const targetProviders: Record<string, string> = {};
+  const sdkProviders: Record<string, string> = {};
+  const specProviders: Record<string, string> = {};
 
-const SPEC_PROVIDERS: Record<string, string> = {
-  openapi: 'OpenapiTarget',
-  asyncapi: 'AsyncapiTarget',
-};
+  for (const [name, handler] of Object.entries(providers)) {
+    if (!handler.register) continue;
+    try {
+      const meta = await handler.register({}, null as unknown as ConceptStorage);
+      if (meta.variant !== 'ok' || !meta.targetKey) continue;
+      const key = meta.targetKey as string;
+      const type = meta.providerType as string;
+      switch (type) {
+        case 'target': targetProviders[key] = name; break;
+        case 'sdk':    sdkProviders[key] = name;    break;
+        case 'spec':   specProviders[key] = name;   break;
+      }
+    } catch {
+      // Skip providers whose register() fails
+    }
+  }
+
+  return { targetProviders, sdkProviders, specProviders };
+}
 
 // --- Provider Handler Registry ---
 
@@ -106,12 +129,20 @@ export type ProviderRegistry = Record<string, ConceptHandler>;
 
 /**
  * Create an interface generator handler with access to provider handlers.
- * The factory captures provider references in a closure so that
- * generate() can dispatch to target/SDK/spec providers directly.
+ * The factory discovers provider mappings from register() metadata,
+ * replacing hardcoded dispatch maps with dynamic discovery.
  */
 export function createInterfaceGeneratorHandler(
   providers: ProviderRegistry,
 ): ConceptHandler {
+  // Provider mappings are resolved lazily on first use and cached.
+  let mappingsCache: ProviderMapping | null = null;
+  async function getMappings(): Promise<ProviderMapping> {
+    if (!mappingsCache) {
+      mappingsCache = await discoverProviderMappings(providers);
+    }
+    return mappingsCache;
+  }
   return {
     async plan(
       input: Record<string, unknown>,
@@ -139,8 +170,9 @@ export function createInterfaceGeneratorHandler(
         return { variant: 'noTargetsConfigured', kit };
       }
 
+      const mappings = await getMappings();
       for (const target of manifest.targets) {
-        if (!TARGET_PROVIDERS[target]) {
+        if (!mappings.targetProviders[target]) {
           return { variant: 'missingProvider', target };
         }
       }
@@ -218,8 +250,9 @@ export function createInterfaceGeneratorHandler(
         + plan.specFormats.length;
 
       // --- Generate per target x concept ---
+      const genMappings = await getMappings();
       for (const target of plan.targets) {
-        const providerName = TARGET_PROVIDERS[target];
+        const providerName = genMappings.targetProviders[target];
         const handler = providerName ? providers[providerName] : undefined;
 
         if (!handler?.generate) {
@@ -271,7 +304,7 @@ export function createInterfaceGeneratorHandler(
 
       // --- Generate per SDK language x concept ---
       for (const lang of plan.sdkLanguages) {
-        const providerName = SDK_PROVIDERS[lang];
+        const providerName = genMappings.sdkProviders[lang];
         const handler = providerName ? providers[providerName] : undefined;
 
         if (!handler?.generate) {
@@ -318,7 +351,7 @@ export function createInterfaceGeneratorHandler(
 
       // --- Generate spec documents ---
       for (const format of plan.specFormats) {
-        const providerName = SPEC_PROVIDERS[format];
+        const providerName = genMappings.specProviders[format];
         const handler = providerName ? providers[providerName] : undefined;
 
         if (!handler?.generate) {
@@ -440,8 +473,32 @@ export function createInterfaceGeneratorHandler(
 }
 
 // --- Backward-compatible static export (for existing tests) ---
+// Includes stub providers with register() metadata so that plan()
+// can validate target names via discoverProviderMappings().
 
-export const interfaceGeneratorHandler: ConceptHandler = createInterfaceGeneratorHandler({});
+function stubProvider(meta: Record<string, unknown>): ConceptHandler {
+  return {
+    async register() { return { variant: 'ok', ...meta }; },
+    async generate() { return { variant: 'ok', files: [], filesGenerated: 0 }; },
+  };
+}
+
+export const interfaceGeneratorHandler: ConceptHandler = createInterfaceGeneratorHandler({
+  RestTarget: stubProvider({ name: 'RestTarget', inputKind: 'InterfaceProjection', outputKind: 'RestRoutes', capabilities: '[]', targetKey: 'rest', providerType: 'target' }),
+  GraphqlTarget: stubProvider({ name: 'GraphqlTarget', inputKind: 'InterfaceProjection', outputKind: 'GraphQLSchema', capabilities: '[]', targetKey: 'graphql', providerType: 'target' }),
+  GrpcTarget: stubProvider({ name: 'GrpcTarget', inputKind: 'InterfaceProjection', outputKind: 'GrpcProto', capabilities: '[]', targetKey: 'grpc', providerType: 'target' }),
+  CliTarget: stubProvider({ name: 'CliTarget', inputKind: 'InterfaceProjection', outputKind: 'CliCommands', capabilities: '[]', targetKey: 'cli', providerType: 'target' }),
+  McpTarget: stubProvider({ name: 'McpTarget', inputKind: 'InterfaceProjection', outputKind: 'McpTools', capabilities: '[]', targetKey: 'mcp', providerType: 'target' }),
+  ClaudeSkillsTarget: stubProvider({ name: 'ClaudeSkillsTarget', inputKind: 'InterfaceProjection', outputKind: 'ClaudeSkills', capabilities: '[]', targetKey: 'claude-skills', providerType: 'target' }),
+  TsSdkTarget: stubProvider({ name: 'TsSdkTarget', inputKind: 'InterfaceProjection', outputKind: 'TypeScriptSdk', capabilities: '[]', targetKey: 'typescript', providerType: 'sdk' }),
+  PySdkTarget: stubProvider({ name: 'PySdkTarget', inputKind: 'InterfaceProjection', outputKind: 'PythonSdk', capabilities: '[]', targetKey: 'python', providerType: 'sdk' }),
+  GoSdkTarget: stubProvider({ name: 'GoSdkTarget', inputKind: 'InterfaceProjection', outputKind: 'GoSdk', capabilities: '[]', targetKey: 'go', providerType: 'sdk' }),
+  RustSdkTarget: stubProvider({ name: 'RustSdkTarget', inputKind: 'InterfaceProjection', outputKind: 'RustSdk', capabilities: '[]', targetKey: 'rust', providerType: 'sdk' }),
+  JavaSdkTarget: stubProvider({ name: 'JavaSdkTarget', inputKind: 'InterfaceProjection', outputKind: 'JavaSdk', capabilities: '[]', targetKey: 'java', providerType: 'sdk' }),
+  SwiftSdkTarget: stubProvider({ name: 'SwiftSdkTarget', inputKind: 'InterfaceProjection', outputKind: 'SwiftSdk', capabilities: '[]', targetKey: 'swift', providerType: 'sdk' }),
+  OpenapiTarget: stubProvider({ name: 'OpenapiTarget', inputKind: 'InterfaceProjection', outputKind: 'OpenApiSpec', capabilities: '[]', targetKey: 'openapi', providerType: 'spec' }),
+  AsyncapiTarget: stubProvider({ name: 'AsyncapiTarget', inputKind: 'InterfaceProjection', outputKind: 'AsyncApiSpec', capabilities: '[]', targetKey: 'asyncapi', providerType: 'spec' }),
+});
 
 // --- Manifest Helpers ---
 
