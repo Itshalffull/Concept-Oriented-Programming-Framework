@@ -1,0 +1,20 @@
+# Register MyersDiff with PluginRegistry as a diff provider
+
+sync RegisterMyersDiff [eager]
+when {
+  MyersDiff/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "diff";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "MyersDiff";
+      action: "compute";
+      contentTypes: ?types
+    }
+  ]
+}

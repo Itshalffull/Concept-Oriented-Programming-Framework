@@ -1,0 +1,20 @@
+# Register LatticeMerge with PluginRegistry as a merge provider
+
+sync RegisterLatticeMerge [eager]
+when {
+  LatticeMerge/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "merge";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "LatticeMerge";
+      action: "execute";
+      contentTypes: ?types
+    }
+  ]
+}

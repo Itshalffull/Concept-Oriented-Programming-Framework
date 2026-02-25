@@ -1,0 +1,21 @@
+# Register TreeDiff with PluginRegistry as a diff provider
+# Integration sync — only fires when TreeDiff is loaded
+
+sync RegisterTreeDiff [eager]
+when {
+  TreeDiff/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "diff";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "TreeDiff";
+      action: "compute";
+      contentTypes: ?types
+    }
+  ]
+}

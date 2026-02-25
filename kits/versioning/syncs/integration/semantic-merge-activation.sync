@@ -1,0 +1,21 @@
+# Register SemanticMerge with PluginRegistry as a merge provider
+# Integration sync — only fires when SemanticMerge is loaded
+
+sync RegisterSemanticMerge [eager]
+when {
+  SemanticMerge/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "merge";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "SemanticMerge";
+      action: "execute";
+      contentTypes: ?types
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Every stored content object gets a corresponding DAG root node,
+# establishing the link between content-addressed identity and version history.
+
+sync ContentHashCreatesDAGNode [eager]
+when {
+  ContentHash/store: [ content: ?content ]
+    => [ ok(hash: ?hash) ]
+}
+then {
+  DAGHistory/append: [ parents: {}; contentRef: ?hash; metadata: "" ]
+}

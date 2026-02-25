@@ -1,0 +1,20 @@
+# Register ThreeWayMerge with PluginRegistry as a merge provider
+
+sync RegisterThreeWayMerge [eager]
+when {
+  ThreeWayMerge/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "merge";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "ThreeWayMerge";
+      action: "execute";
+      contentTypes: ?types
+    }
+  ]
+}

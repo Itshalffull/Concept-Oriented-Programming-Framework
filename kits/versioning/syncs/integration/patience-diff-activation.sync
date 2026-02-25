@@ -1,0 +1,20 @@
+# Register PatienceDiff with PluginRegistry as a diff provider
+
+sync RegisterPatienceDiff [eager]
+when {
+  PatienceDiff/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "diff";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "PatienceDiff";
+      action: "compute";
+      contentTypes: ?types
+    }
+  ]
+}

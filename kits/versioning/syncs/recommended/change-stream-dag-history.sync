@@ -1,0 +1,10 @@
+# Stream events create version nodes in the DAG for full history traversal.
+
+sync ChangeStreamEventCreatesNode [eager]
+when {
+  ChangeStream/append: [ type: ?type; before: ?before; after: ?after; source: ?source ]
+    => [ ok(offset: ?offset, eventId: ?eventId) ]
+}
+then {
+  DAGHistory/append: [ parents: {}; contentRef: ?source; metadata: ?eventId ]
+}

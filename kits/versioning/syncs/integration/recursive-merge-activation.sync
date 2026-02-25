@@ -1,0 +1,20 @@
+# Register RecursiveMerge with PluginRegistry as a merge provider
+
+sync RegisterRecursiveMerge [eager]
+when {
+  RecursiveMerge/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "merge";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "RecursiveMerge";
+      action: "execute";
+      contentTypes: ?types
+    }
+  ]
+}

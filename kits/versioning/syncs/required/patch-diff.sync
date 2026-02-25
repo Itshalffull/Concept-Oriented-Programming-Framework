@@ -1,0 +1,11 @@
+# Patches are produced from diffs — creating a patch invokes
+# the Diff concept to compute and validate the edit script.
+
+sync PatchCreateInvokesDiff [eager]
+when {
+  Patch/create: [ base: ?base; target: ?target; effect: ?effect ]
+    => [ ok(patchId: ?patchId) ]
+}
+then {
+  Diff/diff: [ contentA: ?base; contentB: ?target; algorithm: "" ]
+}

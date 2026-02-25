@@ -1,0 +1,11 @@
+# Retention prevents pruning of history nodes within the retention window.
+# Any attempt to remove DAG nodes must be checked against active policies.
+
+sync RetentionBlocksHistoryPruning [eager]
+when {
+  DAGHistory/getNode: [ nodeId: ?nodeId ]
+    => [ ok(parents: ?parents, contentRef: ?ref, metadata: ?meta) ]
+}
+then {
+  RetentionPolicy/checkDisposition: [ record: ?nodeId ]
+}

@@ -1,0 +1,11 @@
+# A TemporalVersion must reference an existing content hash.
+# The retrieve call confirms the hash exists in the store.
+
+sync TemporalVersionVerifiesHash [eager]
+when {
+  TemporalVersion/record: [ contentHash: ?hash; validFrom: ?vf; validTo: ?vt; metadata: ?meta ]
+    => [ ok(versionId: ?v) ]
+}
+then {
+  ContentHash/retrieve: [ hash: ?hash ]
+}

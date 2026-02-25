@@ -1,0 +1,15 @@
+# A finalized merge creates a merge commit node in the DAG with
+# both parent lineages, preserving the merge relationship in history.
+
+sync MergeResultCreatesDAGNode [eager]
+when {
+  Merge/finalize: [ mergeId: ?mergeId ]
+    => [ ok(result: ?result) ]
+}
+then {
+  DAGHistory/append: [
+    parents: { ?oursNode, ?theirsNode };
+    contentRef: ?result;
+    metadata: ?mergeId
+  ]
+}

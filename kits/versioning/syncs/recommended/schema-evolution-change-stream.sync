@@ -1,0 +1,10 @@
+# Schema registration events feed the change stream for audit and replay.
+
+sync SchemaRegistrationAppendsEvent [eager]
+when {
+  SchemaEvolution/register: [ subject: ?subject; schema: ?schema; compatibility: ?mode ]
+    => [ ok(version: ?version, schemaId: ?sid) ]
+}
+then {
+  ChangeStream/append: [ type: "schema.registered"; before: ""; after: ?schema; source: ?subject ]
+}

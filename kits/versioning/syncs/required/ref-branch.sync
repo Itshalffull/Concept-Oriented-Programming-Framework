@@ -1,0 +1,20 @@
+# Branch heads are Refs — every branch mutation must atomically
+# update or create the corresponding named reference.
+
+sync BranchCreatesMirrorRef [eager]
+when {
+  Branch/create: [ name: ?name; fromNode: ?fromNode ]
+    => [ ok(branch: ?branch) ]
+}
+then {
+  Ref/create: [ name: ?name; hash: ?fromNode ]
+}
+
+sync BranchAdvanceUpdatesRef [eager]
+when {
+  Branch/advance: [ branch: ?branch; newNode: ?newNode ]
+    => [ ok ]
+}
+then {
+  Ref/update: [ name: ?branch; newHash: ?newNode; expectedOldHash: ?oldHead ]
+}

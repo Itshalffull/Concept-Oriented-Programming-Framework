@@ -1,0 +1,11 @@
+# Before a version is superseded, retention policy must be checked.
+# If the version is held, the supersede is blocked.
+
+sync RetentionBlocksVersionDeletion [eager]
+when {
+  TemporalVersion/supersede: [ versionId: ?v; contentHash: ?hash ]
+    => [ ok(newVersionId: ?nv) ]
+}
+then {
+  RetentionPolicy/checkDisposition: [ record: ?v ]
+}

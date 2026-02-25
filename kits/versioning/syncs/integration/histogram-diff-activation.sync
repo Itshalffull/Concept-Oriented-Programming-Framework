@@ -1,0 +1,20 @@
+# Register HistogramDiff with PluginRegistry as a diff provider
+
+sync RegisterHistogramDiff [eager]
+when {
+  HistogramDiff/register: []
+    => [ ok(name: ?name, category: ?category, contentTypes: ?types) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "diff";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "HistogramDiff";
+      action: "compute";
+      contentTypes: ?types
+    }
+  ]
+}
