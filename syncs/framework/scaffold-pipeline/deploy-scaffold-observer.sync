@@ -1,0 +1,16 @@
+# Record DeployScaffoldGen completion in GenerationPlan
+
+sync ObserveDeployScaffold [eager]
+  purpose { Track DeployScaffoldGen run in GenerationPlan. }
+when {
+  DeployScaffoldGen/generate: [ appName: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "DeployScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

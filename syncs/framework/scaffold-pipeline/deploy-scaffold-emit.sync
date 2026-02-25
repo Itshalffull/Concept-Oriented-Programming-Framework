@@ -1,0 +1,11 @@
+# Route DeployScaffoldGen file output through Emitter
+
+sync EmitDeployScaffoldFiles [eager]
+  purpose { Write generated deploy manifest through Emitter. }
+when {
+  DeployScaffoldGen/generate: [ appName: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

@@ -4,33 +4,50 @@
 
 import { Command } from 'commander';
 
-export const transportAdapterScaffoldGenCommand = new Command('transport-adapter-scaffold-gen')
+export const transportAdapterScaffoldGenCommand = new Command('scaffold')
   .description('Generate transport adapter for a communication protocol.');
 
 transportAdapterScaffoldGenCommand
+  .command('transport')
+  .description('Scaffold a transport adapter with invoke, query, and health methods.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-p, --protocol <value>', 'Protocol type (http|websocket|worker|in-process)')
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold transport --name ApiTransport --protocol http  # Generate an HTTP adapter')
+  .addHelpText('after', '  copf scaffold transport --name RealtimeTransport --protocol websocket --base-url ws://localhost:3000  # Generate a WebSocket adapter')
+  .addHelpText('after', '  copf scaffold transport --name TestTransport --protocol in-process  # Generate an in-process adapter for tests')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+transportAdapterScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-p, --protocol <value>', 'Protocol type (http|websocket|worker|in-process)')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+transportAdapterScaffoldGenCommand
   .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track TransportConfig → TransportAdapter transformations.')
+  .description('Return static metadata for PluginRegistry 
+ name : TransportAdapterScaffoldGen 
+ inputKind : TransportConfig 
+ outputKind : TransportAdapter 
+ capabilities : [ http , websocket , worker , in-process ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
-transportAdapterScaffoldGenCommand
-  .command('transport')
-  .description('Scaffold a transport adapter with invoke, query, and health methods.')
-  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
-  .requiredOption('-p, --protocol <protocol>', 'Protocol type')
-  .option('--base-url <base-url>', 'Base URL (for http/websocket)')
-  .option('-o, --output <output>', 'Output directory')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
 export const transportAdapterScaffoldGenCommandTree = {
-  group: 'transport-adapter-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate transport adapter for a communication protocol.',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'transport' }],
+  commands: [{ action: 'generate', command: 'transport' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

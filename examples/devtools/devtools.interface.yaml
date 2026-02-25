@@ -2503,10 +2503,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track KitConfig → KitManifest transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track KitConfig → KitManifest transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Kit Manifest"
-        prose: "Generate a kit.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs."
+        prose: "Generate a kit.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: kit-scaffold-emit.sync routes files through Emitter, kit-scaffold-record-cache.sync records output in BuildCache, and kit-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Kit name is kebab-case?"
@@ -2515,6 +2518,9 @@ workflows:
         - "Syncs are grouped by tier (required/recommended/integration)?"
         - "Type parameter `as` tags are kebab-case with -ref suffix?"
         - "Dependencies use semver constraints?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Convention Over Configuration"
         rule: "Generated kit.yaml follows the standard layout — concepts at top, syncs by tier, uses for external references. Tools work without extra configuration."
@@ -2716,10 +2722,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track DeployConfig → DeployManifest transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track DeployConfig → DeployManifest transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Deploy Manifest"
-        prose: "Generate a deploy.yaml manifest with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings."
+        prose: "Generate a deploy.yaml manifest with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings. Sync rules then cascade: deploy-scaffold-emit.sync routes files through Emitter, deploy-scaffold-record-cache.sync records output in BuildCache, and deploy-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "App name is valid?"
@@ -2728,6 +2737,9 @@ workflows:
         - "Every listed concept has a runtime assignment?"
         - "IaC provider is set (terraform, cloudformation, pulumi, docker-compose)?"
         - "Build section specifies compiler and test runner?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Declarative Over Imperative"
         rule: "The deploy manifest declares intent (what runs where) — the framework resolves transport, storage, and engine assignments."
@@ -2883,10 +2895,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track InterfaceConfig → InterfaceManifest transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track InterfaceConfig → InterfaceManifest transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Interface Manifest"
-        prose: "Generate an interface.yaml manifest with target configurations (REST, GraphQL, gRPC, CLI, MCP, Claude Skills), SDK settings, spec outputs, and per-concept overrides."
+        prose: "Generate an interface.yaml manifest with target configurations (REST, GraphQL, gRPC, CLI, MCP, Claude Skills), SDK settings, spec outputs, and per-concept overrides. Sync rules then cascade: interface-scaffold-emit.sync routes files through Emitter, interface-scaffold-record-cache.sync records output in BuildCache, and interface-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Interface name is valid?"
@@ -2895,6 +2910,9 @@ workflows:
         - "SDK package names are unique per language?"
         - "Per-concept overrides reference valid concepts?"
         - "Grouping strategy is set?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Target Independence"
         rule: "Each target (REST, GraphQL, CLI, etc.) generates independently — they share concept specs but produce separate output trees."
@@ -3042,10 +3060,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ConceptConfig → ConceptSpec transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track ConceptConfig → ConceptSpec transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Concept Spec"
-        prose: "Generate a .concept specification file with purpose block, typed state declarations, action signatures with variants, and a register() action for PluginRegistry discovery."
+        prose: "Generate a .concept specification file with purpose block, typed state declarations, action signatures with variants, and a register() action for PluginRegistry discovery. Sync rules then cascade: concept-scaffold-emit.sync routes files through Emitter, concept-scaffold-record-cache.sync records output in BuildCache, and concept-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Concept name is PascalCase?"
@@ -3055,6 +3076,9 @@ workflows:
         - "Every action has at least one variant?"
         - "register() action is included for PluginRegistry?"
         - "Annotations (@category, @visibility) are present?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Singularity"
         rule: "Each concept serves exactly one purpose — if the purpose has 'and', it's two concepts."
@@ -3189,10 +3213,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track SyncConfig → SyncSpec transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track SyncConfig → SyncSpec transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Sync Rule"
-        prose: "Generate a .sync file with when clause (trigger pattern), optional where clause (guard conditions), and then clause (effect actions)."
+        prose: "Generate a .sync file with when clause (trigger pattern), optional where clause (guard conditions), and then clause (effect actions). Sync rules then cascade: sync-scaffold-emit.sync routes files through Emitter, sync-scaffold-record-cache.sync records output in BuildCache, and sync-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Sync name is PascalCase?"
@@ -3201,6 +3228,9 @@ workflows:
         - "Variable bindings in where clause use ?prefix?"
         - "Then clause references a valid concept/action?"
         - "Purpose statement explains why the sync exists?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Declarative Wiring"
         rule: "Syncs declare what happens when — they never contain imperative logic, loops, or conditionals beyond pattern matching."
@@ -3318,10 +3348,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track HandlerConfig → HandlerImpl transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track HandlerConfig → HandlerImpl transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Handler Implementation"
-        prose: "Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test."
+        prose: "Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: handler-scaffold-emit.sync routes files through Emitter, handler-scaffold-record-cache.sync records output in BuildCache, and handler-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Handler export name follows convention (camelCase + 'Handler')?"
@@ -3331,6 +3364,9 @@ workflows:
         - "Storage operations use correct relation names?"
         - "Error handling catches and wraps exceptions?"
         - "Conformance test covers register() and each action?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "One Handler per Action"
         rule: "Each action in the concept spec maps to exactly one async method in the handler."
@@ -3461,10 +3497,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track StorageConfig → StorageAdapter transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track StorageConfig → StorageAdapter transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Storage Adapter"
-        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods."
+        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods. Sync rules then cascade: storage-adapter-scaffold-emit.sync routes files through Emitter, storage-adapter-scaffold-record-cache.sync records output in BuildCache, and storage-adapter-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Backend is valid (sqlite, postgresql, redis, dynamodb, memory)?"
@@ -3473,6 +3512,9 @@ workflows:
         - "Constructor accepts backend-specific configuration?"
         - "Find method supports criteria-based filtering?"
         - "Proper serialization (JSON.stringify/parse) for non-native types?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Interface Compliance"
         rule: "Every adapter must implement all five ConceptStorage methods — put, get, find, del, delMany. No optional methods."
@@ -3586,10 +3628,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track TransportConfig → TransportAdapter transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track TransportConfig → TransportAdapter transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Transport Adapter"
-        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods."
+        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods. Sync rules then cascade: transport-adapter-scaffold-emit.sync routes files through Emitter, transport-adapter-scaffold-record-cache.sync records output in BuildCache, and transport-adapter-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Protocol is valid (http, websocket, worker, in-process)?"
@@ -3598,6 +3643,9 @@ workflows:
         - "WebSocket adapter manages connection lifecycle?"
         - "Worker adapter handles message passing?"
         - "In-process adapter dispatches to registered handlers?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Protocol Transparency"
         rule: "Concept handlers call invoke/query without knowing the transport. Swapping from HTTP to WebSocket requires no handler changes."
@@ -3710,10 +3758,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ComponentConfig → CoifComponent transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track ComponentConfig → CoifComponent transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate COIF Component"
-        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and kit manifest."
+        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and kit manifest. Sync rules then cascade: coif-component-scaffold-emit.sync routes files through Emitter, coif-component-scaffold-record-cache.sync records output in BuildCache, and coif-component-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Component name is PascalCase?"
@@ -3723,6 +3774,9 @@ workflows:
         - "Anatomy lists all parts and slots?"
         - "Machine implementation has spawn, send, connect, destroy actions?"
         - "Kit manifest declares dependencies on coif-core and coif-component?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Behavior-Rendering Separation"
         rule: "Widget specs define behavior (states, transitions, guards). Rendering is handled by framework adapters. They agree only on part names (anatomy)."
@@ -3888,10 +3942,13 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ThemeConfig → CoifTheme transformations."
+        prose: "Self-register with PluginRegistry so KindSystem can track ThemeConfig → CoifTheme transformations. Registration is also handled automatically by register-generator-kinds.sync."
+      - action: preview
+        title: "Preview Changes"
+        prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate COIF Theme"
-        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests."
+        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests. Sync rules then cascade: coif-theme-scaffold-emit.sync routes files through Emitter, coif-theme-scaffold-record-cache.sync records output in BuildCache, and coif-theme-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Theme name is kebab-case?"
@@ -3902,6 +3959,9 @@ workflows:
         - "Motion respects prefers-reduced-motion?"
         - "Elevation scale covers 0-5 levels?"
         - "Light and dark themes are generated (if mode=both)?"
+        - "All files written through Emitter (not directly to disk)?"
+        - "Source provenance attached to each file?"
+        - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Token-Based Design"
         rule: "Every visual value is a named design token — no hardcoded colors, sizes, or shadows anywhere in component code."
@@ -6555,6 +6615,10 @@ concept-overrides:
   # They share a common pattern: --name for the output name,
   # type-specific flags for configuration, and --output for
   # the target directory.
+  #
+  # Pipeline integration: Each generator exposes preview and generate
+  # actions. Sync rules automatically cascade from generate to wire
+  # Emitter/writeBatch, BuildCache/record, and GenerationPlan/recordStep.
 
   KitScaffoldGen:
     cli:
@@ -6562,6 +6626,20 @@ concept-overrides:
       subcommand: kit
       description: "Generate kit manifest (kit.yaml) and directory structure."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Kit name (kebab-case)"
+            concepts:
+              type: string
+              required: false
+              short: c
+              description: "Comma-separated PascalCase concept names"
         generate:
           command: kit
           description: "Scaffold a new COPF kit with kit.yaml, concept stubs, and sync directories."
@@ -6612,6 +6690,14 @@ concept-overrides:
       subcommand: deploy
       description: "Generate deployment manifest (deploy.yaml)."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            app:
+              type: string
+              required: true
+              description: "Application name"
         generate:
           command: deploy
           description: "Scaffold a deploy.yaml with runtimes, infrastructure, and concept assignments."
@@ -6659,6 +6745,20 @@ concept-overrides:
       subcommand: interface
       description: "Generate interface manifest (interface.yaml)."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Interface name"
+            targets:
+              type: string
+              required: false
+              short: t
+              description: "Comma-separated targets"
         generate:
           command: interface
           description: "Scaffold an interface.yaml with targets, SDKs, and concept overrides."
@@ -6712,6 +6812,15 @@ concept-overrides:
       subcommand: concept
       description: "Generate concept specification (.concept) file."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase concept name"
         generate:
           command: concept
           description: "Scaffold a .concept file with state, actions, and register()."
@@ -6759,6 +6868,15 @@ concept-overrides:
       subcommand: sync
       description: "Generate synchronization rule (.sync) file."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase sync name"
         generate:
           command: sync
           description: "Scaffold a .sync file with when/where/then clauses."
@@ -6804,6 +6922,15 @@ concept-overrides:
       subcommand: handler
       description: "Generate TypeScript concept handler (.impl.ts) and conformance test."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            concept:
+              type: string
+              required: true
+              short: c
+              description: "PascalCase concept name"
         generate:
           command: handler
           description: "Scaffold a .impl.ts handler with register(), typed actions, and a conformance test."
@@ -6843,6 +6970,21 @@ concept-overrides:
       subcommand: storage
       description: "Generate ConceptStorage adapter for a persistence backend."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Adapter class name (PascalCase)"
+            backend:
+              type: string
+              required: true
+              short: b
+              description: "Backend type"
+              choices: [sqlite, postgresql, redis, dynamodb, memory]
         generate:
           command: storage
           description: "Scaffold a ConceptStorage adapter with put, get, find, del, and delMany methods."
@@ -6877,6 +7019,21 @@ concept-overrides:
       subcommand: transport
       description: "Generate transport adapter for a communication protocol."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Adapter class name (PascalCase)"
+            protocol:
+              type: string
+              required: true
+              short: p
+              description: "Protocol type"
+              choices: [http, websocket, worker, in-process]
         generate:
           command: transport
           description: "Scaffold a transport adapter with invoke, query, and health methods."
@@ -6916,6 +7073,20 @@ concept-overrides:
       subcommand: component
       description: "Generate COIF headless component (widget, anatomy, machine, kit)."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase component name"
+            parts:
+              type: string
+              required: false
+              short: p
+              description: "Comma-separated anatomy part names"
         generate:
           command: component
           description: "Scaffold a complete COIF headless component with FSM, anatomy, and machine."
@@ -6971,6 +7142,15 @@ concept-overrides:
       subcommand: theme
       description: "Generate COIF design system theme (palette, typography, motion, elevation)."
       actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Theme name (kebab-case)"
         generate:
           command: theme
           description: "Scaffold a complete design system theme with WCAG-compliant tokens."

@@ -1,0 +1,16 @@
+# Record ConceptScaffoldGen completion in GenerationPlan
+
+sync ObserveConceptScaffold [eager]
+  purpose { Track ConceptScaffoldGen run in GenerationPlan. }
+when {
+  ConceptScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "ConceptScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

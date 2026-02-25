@@ -28,6 +28,19 @@ schemaGenCommand
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
+schemaGenCommand
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : SchemaGen 
+ inputKind : ConceptAST 
+ outputKind : ConceptManifest 
+ capabilities : [ graphql , json-schema , invariants ]')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
 export const schemaGenCommandTree = {
   group: 'schema-gen',
   description: 'Transform parsed concept ASTs into rich , language neutral 
@@ -35,5 +48,5 @@ export const schemaGenCommandTree = {
  generator needs : relation schemas ( after merge grouping ) , 
  fully typed action signatures , structured invariants with 
  test values , GraphQL schema fragments , and JSON Schemas',
-  commands: [{ action: 'generate', command: 'generate' }],
+  commands: [{ action: 'generate', command: 'generate' }, { action: 'register', command: 'register' }],
 };

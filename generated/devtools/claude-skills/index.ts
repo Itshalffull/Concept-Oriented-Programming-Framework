@@ -16,7 +16,6 @@ import { ResourceModule } from './Resource/Resource.module';
 import { KindSystemModule } from './KindSystem/KindSystem.module';
 import { GenerationPlanModule } from './GenerationPlan/GenerationPlan.module';
 import { BuilderModule } from './Builder/Builder.module';
-import { ToolchainModule } from './Toolchain/Toolchain.module';
 import { KitScaffoldGenModule } from './KitScaffoldGen/KitScaffoldGen.module';
 import { DeployScaffoldGenModule } from './DeployScaffoldGen/DeployScaffoldGen.module';
 import { InterfaceScaffoldGenModule } from './InterfaceScaffoldGen/InterfaceScaffoldGen.module';
@@ -28,4 +27,4 @@ import { TransportAdapterScaffoldGenModule } from './TransportAdapterScaffoldGen
 import { CoifComponentScaffoldGenModule } from './CoifComponentScaffoldGen/CoifComponentScaffoldGen.module';
 import { CoifThemeScaffoldGenModule } from './CoifThemeScaffoldGen/CoifThemeScaffoldGen.module';
 
-export const modules = [SpecParserModule, SchemaGenModule, SyncParserModule, SyncCompilerModule, FlowTraceModule, DeploymentValidatorModule, MigrationModule, ProjectScaffoldModule, DevServerModule, CacheCompilerModule, KitManagerModule, EmitterModule, BuildCacheModule, ResourceModule, KindSystemModule, GenerationPlanModule, BuilderModule, ToolchainModule, KitScaffoldGenModule, DeployScaffoldGenModule, InterfaceScaffoldGenModule, ConceptScaffoldGenModule, SyncScaffoldGenModule, HandlerScaffoldGenModule, StorageAdapterScaffoldGenModule, TransportAdapterScaffoldGenModule, CoifComponentScaffoldGenModule, CoifThemeScaffoldGenModule];
+export const modules = [SpecParserModule, SchemaGenModule, SyncParserModule, SyncCompilerModule, FlowTraceModule, DeploymentValidatorModule, MigrationModule, ProjectScaffoldModule, DevServerModule, CacheCompilerModule, KitManagerModule, EmitterModule, BuildCacheModule, ResourceModule, KindSystemModule, GenerationPlanModule, BuilderModule, KitScaffoldGenModule, DeployScaffoldGenModule, InterfaceScaffoldGenModule, ConceptScaffoldGenModule, SyncScaffoldGenModule, HandlerScaffoldGenModule, StorageAdapterScaffoldGenModule, TransportAdapterScaffoldGenModule, CoifComponentScaffoldGenModule, CoifThemeScaffoldGenModule];

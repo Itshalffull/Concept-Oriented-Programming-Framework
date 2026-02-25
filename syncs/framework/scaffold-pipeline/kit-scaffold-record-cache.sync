@@ -1,0 +1,19 @@
+# Record KitScaffoldGen success in BuildCache
+
+sync RecordCacheKitScaffold [eager]
+  purpose { Cache KitScaffoldGen output for incremental rebuilds. }
+when {
+  KitScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "KitScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

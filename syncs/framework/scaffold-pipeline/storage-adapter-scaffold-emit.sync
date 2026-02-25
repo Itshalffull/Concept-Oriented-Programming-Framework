@@ -1,0 +1,11 @@
+# Route StorageAdapterScaffoldGen file output through Emitter
+
+sync EmitStorageAdapterScaffoldFiles [eager]
+  purpose { Write generated storage adapter through Emitter. }
+when {
+  StorageAdapterScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

@@ -30,6 +30,22 @@ concept CoifComponentScaffoldGen [W] {
       }
     }
 
+    action preview(name: String, parts: list String, states: list String,
+                    events: list String) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses
+        Emitter content-addressing to classify each file as
+        new, changed, or unchanged.
+      }
+      -> cached() {
+        BuildCache reports inputs unchanged since the last
+        successful run. No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
     action register() {
       -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
         Return static metadata for PluginRegistry.

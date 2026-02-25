@@ -1,0 +1,19 @@
+# Record TransportAdapterScaffoldGen success in BuildCache
+
+sync RecordCacheTransportAdapterScaffold [eager]
+  purpose { Cache TransportAdapterScaffoldGen output for incremental rebuilds. }
+when {
+  TransportAdapterScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "TransportAdapterScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

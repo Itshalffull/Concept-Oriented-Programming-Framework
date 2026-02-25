@@ -12,4 +12,4 @@ export async function handleSchemaGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const schemaGenSkillCommands = ['generate'];
+export const schemaGenSkillCommands = ['generate', 'register'];

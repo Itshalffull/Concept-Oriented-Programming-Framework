@@ -4,38 +4,57 @@
 
 import { Command } from 'commander';
 
-export const coifThemeScaffoldGenCommand = new Command('coif-theme-scaffold-gen')
+export const coifThemeScaffoldGenCommand = new Command('scaffold')
   .description('Generate COIF design system theme (palette, typography, motion, elevation).');
 
 coifThemeScaffoldGenCommand
+  .command('theme')
+  .description('Scaffold a complete design system theme with WCAG-compliant tokens.')
+  .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
+  .requiredOption('--primary-color <primaryColor>', 'Primary Color')
+  .requiredOption('--font-family <fontFamily>', 'Font Family')
+  .requiredOption('--base-size <baseSize>', 'Base Size')
+  .option('-m, --mode <value>', 'Theme mode (light|dark|both)', 'both')
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold theme --name ocean  # Generate a theme with defaults')
+  .addHelpText('after', '  copf scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18  # Generate a custom theme')
+  .addHelpText('after', '  copf scaffold theme --name print --mode light  # Generate a light-only theme')
+  .addHelpText('after', '  copf scaffold theme --name midnight --mode dark --primary '#6366f1'  # Generate a dark theme')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifThemeScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
+  .requiredOption('--primary-color <primaryColor>', 'Primary Color')
+  .requiredOption('--font-family <fontFamily>', 'Font Family')
+  .requiredOption('--base-size <baseSize>', 'Base Size')
+  .requiredOption('--mode <mode>', 'Mode')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifThemeScaffoldGenCommand
   .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track ThemeConfig → CoifTheme transformations.')
+  .description('Return static metadata for PluginRegistry 
+ name : CoifThemeScaffoldGen 
+ inputKind : ThemeConfig 
+ outputKind : CoifTheme 
+ capabilities : [ palette , typography , motion , elevation , wcag ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
-coifThemeScaffoldGenCommand
-  .command('theme')
-  .description('Scaffold a complete design system theme with WCAG-compliant tokens.')
-  .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
-  .option('-p, --primary <primary>', 'Primary color hue (0-360) or hex value')
-  .option('--secondary <secondary>', 'Secondary color hue or hex value')
-  .option('-f, --font <font>', 'Primary font family stack')
-  .option('--base-size <base-size>', 'Base font size in pixels')
-  .option('--scale <scale>', 'Modular ratio for type scale')
-  .option('--border-radius <border-radius>', 'Default border radius')
-  .option('-m, --mode <mode>', 'Theme mode')
-  .option('-o, --output <output>', 'Output directory')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
 export const coifThemeScaffoldGenCommandTree = {
-  group: 'coif-theme-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate COIF design system theme (palette, typography, motion, elevation).',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'theme' }],
+  commands: [{ action: 'generate', command: 'theme' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

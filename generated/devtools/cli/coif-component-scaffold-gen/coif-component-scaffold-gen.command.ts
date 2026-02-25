@@ -4,36 +4,54 @@
 
 import { Command } from 'commander';
 
-export const coifComponentScaffoldGenCommand = new Command('coif-component-scaffold-gen')
+export const coifComponentScaffoldGenCommand = new Command('scaffold')
   .description('Generate COIF headless component (widget, anatomy, machine, kit).');
 
 coifComponentScaffoldGenCommand
+  .command('component')
+  .description('Scaffold a complete COIF headless component with FSM, anatomy, and machine.')
+  .requiredOption('-n, --name <name>', 'PascalCase component name')
+  .option('-p, --parts <parts>', 'Comma-separated anatomy part names', 'root,trigger,content')
+  .option('-s, --states <states>', 'Comma-separated FSM state names', 'idle,active')
+  .option('-e, --events <events>', 'Comma-separated FSM event names', 'open,close')
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape  # Generate a dialog component')
+  .addHelpText('after', '  copf scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur  # Generate a tabs component')
+  .addHelpText('after', '  copf scaffold component --name Card --parts root,header,body,footer --slots header,footer  # Generate with slots')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifComponentScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'PascalCase component name')
+  .option('-p, --parts <parts>', 'Comma-separated anatomy part names')
+  .requiredOption('--states <states>', 'States')
+  .requiredOption('--events <events>', 'Events')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifComponentScaffoldGenCommand
   .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track ComponentConfig → CoifComponent transformations.')
+  .description('Return static metadata for PluginRegistry 
+ name : CoifComponentScaffoldGen 
+ inputKind : ComponentConfig 
+ outputKind : CoifComponent 
+ capabilities : [ widget , anatomy , machine , slots ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
-coifComponentScaffoldGenCommand
-  .command('component')
-  .description('Scaffold a complete COIF headless component with FSM, anatomy, and machine.')
-  .requiredOption('-n, --name <name>', 'PascalCase component name')
-  .option('-p, --parts <parts>', 'Comma-separated anatomy part names')
-  .option('--slots <slots>', 'Comma-separated slot names')
-  .option('-s, --states <states>', 'Comma-separated FSM state names')
-  .option('-e, --events <events>', 'Comma-separated FSM event names')
-  .option('--role <role>', 'ARIA role for accessibility')
-  .option('-o, --output <output>', 'Output directory')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
 export const coifComponentScaffoldGenCommandTree = {
-  group: 'coif-component-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate COIF headless component (widget, anatomy, machine, kit).',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'component' }],
+  commands: [{ action: 'generate', command: 'component' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -1,0 +1,19 @@
+# Record CoifThemeScaffoldGen success in BuildCache
+
+sync RecordCacheCoifThemeScaffold [eager]
+  purpose { Cache CoifThemeScaffoldGen output for incremental rebuilds. }
+when {
+  CoifThemeScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "CoifThemeScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

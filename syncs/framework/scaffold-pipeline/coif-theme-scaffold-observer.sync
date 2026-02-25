@@ -1,0 +1,16 @@
+# Record CoifThemeScaffoldGen completion in GenerationPlan
+
+sync ObserveCoifThemeScaffold [eager]
+  purpose { Track CoifThemeScaffoldGen run in GenerationPlan. }
+when {
+  CoifThemeScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "CoifThemeScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}
