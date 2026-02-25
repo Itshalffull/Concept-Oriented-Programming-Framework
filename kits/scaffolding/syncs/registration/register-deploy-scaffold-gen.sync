@@ -1,0 +1,21 @@
+# Register DeployScaffoldGen with PluginRegistry
+
+sync RegisterDeployScaffoldGen [eager]
+when {
+  DeployScaffoldGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "DeployScaffoldGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

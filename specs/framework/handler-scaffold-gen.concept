@@ -1,0 +1,42 @@
+@category("devtools")
+@visibility("public")
+concept HandlerScaffoldGen [H] {
+
+  purpose {
+    Generate TypeScript concept handler (.impl.ts) implementation
+    scaffolds from provided configuration including concept name,
+    action signatures, and storage patterns. Optionally generates
+    a conformance test file.
+  }
+
+  state {
+    handlers: set H
+    conceptName: H -> String
+  }
+
+  actions {
+    action generate(conceptName: String, actions: list ActionDef) {
+      description {
+        Generate a handler implementation with register(), typed
+        action methods, input extraction, storage patterns, and
+        an optional conformance test.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Handler scaffold and optional test generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "HandlerScaffoldGen"
+        inputKind: "HandlerConfig"
+        outputKind: "HandlerImpl"
+        capabilities: ["impl-ts", "conformance-test", "storage-patterns"]
+      }
+    }
+  }
+}

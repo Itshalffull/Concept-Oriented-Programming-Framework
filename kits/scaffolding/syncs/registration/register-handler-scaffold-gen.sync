@@ -1,0 +1,21 @@
+# Register HandlerScaffoldGen with PluginRegistry
+
+sync RegisterHandlerScaffoldGen [eager]
+when {
+  HandlerScaffoldGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "HandlerScaffoldGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

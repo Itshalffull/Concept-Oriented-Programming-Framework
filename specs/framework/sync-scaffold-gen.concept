@@ -1,0 +1,40 @@
+@category("devtools")
+@visibility("public")
+concept SyncScaffoldGen [S] {
+
+  purpose {
+    Generate synchronization rule (.sync) file scaffolds from
+    provided configuration including trigger patterns, guard
+    conditions, and effect actions.
+  }
+
+  state {
+    specs: set S
+    name: S -> String
+  }
+
+  actions {
+    action generate(name: String, trigger: Trigger, effects: list Effect) {
+      description {
+        Generate a well-formed .sync file with when/where/then
+        clauses from the provided trigger and effect configurations.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Sync rule scaffold generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "SyncScaffoldGen"
+        inputKind: "SyncConfig"
+        outputKind: "SyncSpec"
+        capabilities: ["sync-spec", "when-clause", "where-clause", "then-clause"]
+      }
+    }
+  }
+}
