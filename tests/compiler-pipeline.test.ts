@@ -364,10 +364,8 @@ describe('Pipeline Integration', () => {
     const rustFiles = rustResult.files as { path: string; content: string }[];
     expect(rustFiles.length).toBe(4); // types, handler, adapter, conformance
 
-    // Both outputs stored correctly
-    const storedTs = await tsStorage.find('outputs');
-    expect(storedTs.length).toBe(1);
-    const storedRust = await rustStorage.find('outputs');
-    expect(storedRust.length).toBe(1);
+    // Generators return files directly; BuildCache handles storage
+    expect(tsFiles.length).toBeGreaterThan(0);
+    expect(rustFiles.length).toBeGreaterThan(0);
   });
 });
