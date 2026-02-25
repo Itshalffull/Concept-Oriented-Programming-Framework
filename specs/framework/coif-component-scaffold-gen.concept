@@ -1,0 +1,43 @@
+@category("devtools")
+@visibility("public")
+concept CoifComponentScaffoldGen [W] {
+
+  purpose {
+    Generate COIF headless component scaffolds including widget
+    specifications, anatomy definitions, machine implementations,
+    and kit manifests. Follows the Zag.js/Ark UI pattern where
+    behavior and rendering agree on part names.
+  }
+
+  state {
+    components: set W
+    name: W -> String
+  }
+
+  actions {
+    action generate(name: String, parts: list String, states: list String,
+                    events: list String) {
+      description {
+        Generate a complete COIF component scaffold with widget
+        concept, anatomy concept, machine implementation, and
+        kit manifest.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Component scaffold generated with widget, anatomy, and machine.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "CoifComponentScaffoldGen"
+        inputKind: "ComponentConfig"
+        outputKind: "CoifComponent"
+        capabilities: ["widget", "anatomy", "machine", "slots"]
+      }
+    }
+  }
+}

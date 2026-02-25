@@ -1,0 +1,42 @@
+@category("devtools")
+@visibility("public")
+concept ConceptScaffoldGen [C] {
+
+  purpose {
+    Generate concept specification (.concept) file scaffolds from
+    provided configuration including name, type parameters, state
+    fields, actions, and invariants.
+  }
+
+  state {
+    specs: set C
+    name: C -> String
+  }
+
+  actions {
+    action generate(name: String, typeParam: String, purpose: String,
+                    stateFields: list StateField, actions: list ActionDef) {
+      description {
+        Generate a well-formed .concept file with state declarations,
+        typed action signatures, variant returns, and a register()
+        action for PluginRegistry discovery.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Concept spec scaffold generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "ConceptScaffoldGen"
+        inputKind: "ConceptConfig"
+        outputKind: "ConceptSpec"
+        capabilities: ["concept-spec", "state-fields", "actions", "invariants"]
+      }
+    }
+  }
+}

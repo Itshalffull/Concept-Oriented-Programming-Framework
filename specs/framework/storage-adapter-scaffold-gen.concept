@@ -1,0 +1,41 @@
+@category("devtools")
+@visibility("public")
+concept StorageAdapterScaffoldGen [A] {
+
+  purpose {
+    Generate ConceptStorage adapter implementation scaffolds for
+    various persistence backends: SQLite, PostgreSQL, Redis,
+    DynamoDB, and in-memory.
+  }
+
+  state {
+    adapters: set A
+    name: A -> String
+    backend: A -> String
+  }
+
+  actions {
+    action generate(name: String, backend: String) {
+      description {
+        Generate a complete ConceptStorage adapter with put, get,
+        find, del, and delMany methods for the specified backend.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Storage adapter scaffold generated.
+      }
+      -> error(message: String) {
+        Generation failed. Invalid backend or configuration.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "StorageAdapterScaffoldGen"
+        inputKind: "StorageConfig"
+        outputKind: "StorageAdapter"
+        capabilities: ["sqlite", "postgresql", "redis", "dynamodb", "memory"]
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+@category("devtools")
+@visibility("public")
+concept InterfaceScaffoldGen [I] {
+
+  purpose {
+    Generate interface manifest (interface.yaml) scaffolds with
+    target configurations, SDK settings, spec output options,
+    and per-concept overrides.
+  }
+
+  state {
+    manifests: set I
+    name: I -> String
+  }
+
+  actions {
+    action generate(name: String, targets: list String, sdks: list String) {
+      description {
+        Generate an interface.yaml manifest with target-specific
+        defaults, SDK configurations, and concept overrides.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Interface manifest generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "InterfaceScaffoldGen"
+        inputKind: "InterfaceConfig"
+        outputKind: "InterfaceManifest"
+        capabilities: ["interface-yaml", "target-config", "sdk-config"]
+      }
+    }
+  }
+}
