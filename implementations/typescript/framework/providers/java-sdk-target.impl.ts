@@ -267,6 +267,18 @@ function generatePomXml(groupId: string, artifactId: string): string {
 // --- Concept Handler ---
 
 export const javaSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'JavaSdkTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'JavaSdk',
+      capabilities: JSON.stringify(['client', 'types', 'pom']),
+      targetKey: 'java',
+      providerType: 'sdk',
+    };
+  },
+
   /**
    * Generate Java SDK client files from ConceptManifest projections.
    *

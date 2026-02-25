@@ -4,6 +4,18 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const argocdProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'ArgoCDProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'ArgoCDManifest',
+      capabilities: JSON.stringify(['application-crd', 'kustomization', 'sync-wave']),
+      providerKey: 'argocd',
+      providerType: 'gitops',
+    };
+  },
+
   async emit(input, storage) {
     const plan = input.plan as string;
     const repo = input.repo as string;

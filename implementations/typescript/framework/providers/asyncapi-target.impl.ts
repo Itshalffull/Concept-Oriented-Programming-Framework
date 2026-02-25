@@ -534,6 +534,18 @@ function assembleAsyncApiDocument(
 // --- Concept Handler ---
 
 export const asyncapiTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'AsyncapiTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'AsyncApiSpec',
+      capabilities: JSON.stringify(['asyncapi-3.0', 'yaml', 'channels']),
+      targetKey: 'asyncapi',
+      providerType: 'spec',
+    };
+  },
+
   /**
    * Generate an AsyncAPI 3.0 YAML document from all concept projections.
    *

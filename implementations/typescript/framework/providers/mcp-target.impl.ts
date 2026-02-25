@@ -263,6 +263,17 @@ function generateMcpHelpMd(
 // --- Concept Handler ---
 
 export const mcpTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'McpTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'McpTools',
+      capabilities: JSON.stringify(['tools', 'resources', 'resource-templates', 'hierarchical']),
+      targetKey: 'mcp',
+      providerType: 'target',
+    };
+  },
 
   /**
    * Generate MCP tool/resource definition files for one or more concepts.

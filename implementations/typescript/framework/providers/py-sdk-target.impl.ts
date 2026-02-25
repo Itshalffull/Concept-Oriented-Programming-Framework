@@ -217,6 +217,18 @@ function generateInitPy(projections: ProjectionEntry[]): string {
 // --- Concept Handler ---
 
 export const pySdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'PySdkTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'PythonSdk',
+      capabilities: JSON.stringify(['client', 'types', 'pyproject']),
+      targetKey: 'python',
+      providerType: 'sdk',
+    };
+  },
+
   /**
    * Generate Python SDK client files from ConceptManifest projections.
    *

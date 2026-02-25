@@ -263,6 +263,18 @@ function generateGoMainClient(projections: ProjectionEntry[], goPackage: string)
 // --- Concept Handler ---
 
 export const goSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'GoSdkTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'GoSdk',
+      capabilities: JSON.stringify(['client', 'types', 'go-mod']),
+      targetKey: 'go',
+      providerType: 'sdk',
+    };
+  },
+
   /**
    * Generate Go SDK client files from ConceptManifest projections.
    *

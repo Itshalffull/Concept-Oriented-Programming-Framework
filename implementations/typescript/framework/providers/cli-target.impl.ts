@@ -322,6 +322,17 @@ function generateCliHelpMd(
 // --- Concept Handler ---
 
 export const cliTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'CliTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'CliCommands',
+      capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical']),
+      targetKey: 'cli',
+      providerType: 'target',
+    };
+  },
 
   /**
    * Generate Commander.js command files for one or more concepts.

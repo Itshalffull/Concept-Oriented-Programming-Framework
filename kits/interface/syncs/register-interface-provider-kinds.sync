@@ -1,0 +1,30 @@
+# RegisterInterfaceProviderKinds — interface kit registration sync
+#
+# Auto-populate KindSystem edges from interface provider registrations
+# (targets, SDKs, specs). Mirrors the generation kit's
+# RegisterGeneratorKinds sync for the interface generation pipeline.
+# See generation kit syncs: register-generator-kinds.sync
+
+sync RegisterInterfaceProviderKinds [eager]
+  purpose { Auto-populate KindSystem edges from interface provider registrations. }
+when {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: ?meta
+  ] => ok(plugin: ?p)
+}
+where {
+  bind(?meta.inputKind as ?inputKind)
+  bind(?meta.outputKind as ?outputKind)
+  bind(?meta.name as ?transformName)
+  bind(?meta.providerType as ?providerType)
+  any(?providerType = "target"; ?providerType = "sdk"; ?providerType = "spec")
+}
+then {
+  KindSystem/connect: [
+    from: ?inputKind;
+    to: ?outputKind;
+    relation: "renders_to";
+    transformName: ?transformName
+  ]
+}

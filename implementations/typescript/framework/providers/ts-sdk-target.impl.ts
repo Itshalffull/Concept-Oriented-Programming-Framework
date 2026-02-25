@@ -225,6 +225,18 @@ function generateIndexTs(projections: ProjectionEntry[]): string {
 // --- Concept Handler ---
 
 export const tsSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'TsSdkTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'TypeScriptSdk',
+      capabilities: JSON.stringify(['client', 'types', 'tests']),
+      targetKey: 'typescript',
+      providerType: 'sdk',
+    };
+  },
+
   /**
    * Generate TypeScript SDK client files from ConceptManifest projections.
    *
