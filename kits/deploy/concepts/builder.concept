@@ -78,10 +78,12 @@ concept Builder [B] {
       }
     }
 
-    action test(concept: String, language: String, platform: String) {
+    action test(concept: String, language: String, platform: String, testFilter: option list String) {
       -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
         Run tests only (no compilation — assumes already built).
-        Used for re-running tests after a build.
+        Used for re-running tests after a build. If testFilter
+        is provided, only run the specified tests (from
+        TestSelection). Otherwise run the full suite.
       }
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
         Some tests failed.

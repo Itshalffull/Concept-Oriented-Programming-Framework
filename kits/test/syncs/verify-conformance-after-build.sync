@@ -1,0 +1,19 @@
+# Check spec conformance after build completes — Architecture doc Section 3.8
+# After a concept is built for a language, run conformance
+# verification against the spec-derived test vectors.
+
+sync VerifyConformanceAfterBuild [eager]
+  purpose { Check spec conformance after build completes. }
+when {
+  Builder/build: [ concept: ?concept; language: ?lang ]
+    => ok(build: ?b; artifactLocation: ?loc)
+  Conformance/generate: [ concept: ?concept ]
+    => ok(suite: ?suite)
+}
+then {
+  Conformance/verify: [
+    suite: ?suite;
+    language: ?lang;
+    artifactLocation: ?loc
+  ]
+}

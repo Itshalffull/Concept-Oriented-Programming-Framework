@@ -1,0 +1,96 @@
+@version(1)
+concept ContractTest [P] {
+
+  purpose {
+    Verify cross-target interoperability for concepts that
+    generate code in multiple languages. Maintain contract
+    definitions derived from concept specs. Track which
+    producer-consumer pairs have been verified. Gate deployment
+    on contract verification passing.
+  }
+
+  state {
+    contracts: set P
+    registry {
+      concept: P -> String
+      specVersion: P -> String
+      producerLanguage: P -> String
+      consumerLanguage: P -> String
+      status: P -> String
+      lastVerified: P -> option DateTime
+    }
+    definitions {
+      actions: P -> list {
+        actionName: String
+        inputSchema: String
+        outputVariants: list { name: String, schema: String }
+        transport: String
+      }
+    }
+  }
+
+  actions {
+    action generate(concept: String, specPath: String) {
+      -> ok(contract: P, definition: { actions: list { actionName: String, inputSchema: String, outputVariants: list String } }) {
+        Generate a contract definition from the concept spec.
+        The contract captures the wire-level interface: action
+        signatures, input/output schemas, and expected variants.
+        Language-independent — the same contract applies to
+        every target implementation.
+      }
+      -> specError(concept: String, message: String) {
+        Spec couldn't be parsed or has no cross-target actions.
+      }
+    }
+
+    action verify(contract: P, producerArtifact: String, producerLanguage: String, consumerArtifact: String, consumerLanguage: String) {
+      -> ok(contract: P, passed: Int, total: Int) {
+        Run contract verification: the consumer sends requests
+        to the producer and checks that responses match the
+        contract definition. Tests serialization round-trips,
+        variant handling, error propagation, and edge cases.
+      }
+      -> incompatible(contract: P, failures: list { action: String, issue: String, producerBehavior: String, consumerExpectation: String }) {
+        Contract verification failed. Returns per-action
+        incompatibilities with what each side produced/expected.
+      }
+      -> producerUnavailable(language: String, reason: String) {
+        Producer artifact couldn't be loaded or started.
+      }
+      -> consumerUnavailable(language: String, reason: String) {
+        Consumer artifact couldn't be loaded or started.
+      }
+    }
+
+    action matrix(concepts: option list String) {
+      -> ok(matrix: list {
+        concept: String,
+        pairs: list { producer: String, consumer: String, status: String, lastVerified: option DateTime }
+      }) {
+        Return cross-target verification matrix.
+        Shows which language pairs have been verified
+        for which concepts.
+      }
+    }
+
+    action canDeploy(concept: String, language: String) {
+      -> ok(safe: Bool, verifiedAgainst: list String) {
+        Check if deploying this concept in this language is
+        safe — all contract pairs involving this language have
+        been verified for the current spec version.
+      }
+      -> unverified(missingPairs: list { counterpart: String, lastVerified: option DateTime }) {
+        Some contract pairs are unverified or stale.
+        Deployment may be unsafe.
+      }
+    }
+  }
+
+  invariant {
+    after generate(concept: "password", specPath: "./specs/password.concept")
+      -> ok(contract: p, definition: d)
+    and  verify(contract: p, producerArtifact: ".copf-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".copf-artifacts/ts/password", consumerLanguage: "typescript")
+      -> ok(contract: p, passed: 8, total: 8)
+    then canDeploy(concept: "password", language: "typescript") -> ok(safe: true, verifiedAgainst: ["rust"])
+  }
+}

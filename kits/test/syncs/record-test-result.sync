@@ -1,0 +1,19 @@
+# Track every test result for flaky detection — Architecture doc Section 3.8
+# Every test result from every builder is recorded in FlakyTest
+# for reliability tracking and flaky test detection.
+
+sync RecordTestResult [eager]
+  purpose { Track every test result for flaky detection. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang ]
+    => ok(passed: ?p; failed: ?f; skipped: ?s; duration: ?d)
+}
+then {
+  FlakyTest/record: [
+    testId: concat(?concept, ":", ?lang, ":suite");
+    language: ?lang;
+    builder: concat(?lang, "Builder");
+    passed: equals(?f, 0);
+    duration: ?d
+  ]
+}

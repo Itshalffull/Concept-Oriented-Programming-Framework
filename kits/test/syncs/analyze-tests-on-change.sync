@@ -1,0 +1,13 @@
+# Determine affected tests when source changes — Architecture doc Section 3.8
+# When a resource is upserted with a new digest, TestSelection
+# analyzes which tests are affected by the change.
+
+sync AnalyzeTestsOnChange [eager]
+  purpose { Determine affected tests when source changes. }
+when {
+  Resource/upsert: [ locator: ?loc ]
+    => changed(resource: ?r; previousDigest: ?prev)
+}
+then {
+  TestSelection/analyze: [ changedSources: [?loc] ]
+}

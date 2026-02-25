@@ -1,0 +1,19 @@
+# Run only selected tests instead of full suite — Architecture doc Section 3.8
+# Builder's test action receives selected test IDs from
+# TestSelection instead of running all tests.
+
+sync RunSelectedTests [eager]
+  purpose { Run only selected tests instead of full suite. }
+when {
+  Builder/build: [ concept: ?concept; language: ?lang ]
+    => ok(build: ?b; artifactHash: ?hash)
+  TestSelection/select: []
+    => ok(selected: ?tests; estimatedDuration: ?dur)
+}
+then {
+  Builder/test: [
+    concept: ?concept;
+    language: ?lang;
+    testFilter: ?tests
+  ]
+}

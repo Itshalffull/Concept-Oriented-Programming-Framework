@@ -1,0 +1,98 @@
+# kits/test/kit.yaml
+kit:
+  name: test
+  version: 0.1.0
+  description: >
+    Cross-layer testing coordination for COPF. Five concepts that span
+    generation, build, and deploy: snapshot testing for generated output
+    stability, conformance testing for spec fidelity, test selection for
+    change-aware test optimization, cross-target contract testing for
+    interoperability verification, and flaky test management for
+    reliability tracking and quarantine.
+
+concepts:
+  Snapshot:
+    spec: ./snapshot.concept
+    params:
+      S: { as: snapshot-ref, description: "Reference to a snapshot baseline" }
+
+  Conformance:
+    spec: ./conformance.concept
+    params:
+      C: { as: conformance-suite-ref, description: "Reference to a conformance test suite" }
+
+  TestSelection:
+    spec: ./test-selection.concept
+    params:
+      M: { as: mapping-ref, description: "Reference to a test-to-source coverage mapping" }
+
+  ContractTest:
+    spec: ./contract-test.concept
+    params:
+      P: { as: contract-ref, description: "Reference to a cross-target contract" }
+
+  FlakyTest:
+    spec: ./flaky-test.concept
+    params:
+      F: { as: flaky-ref, description: "Reference to a tracked test with reliability history" }
+
+syncs:
+  required:
+    # Generation layer syncs
+    - path: ./syncs/compare-snapshot-after-emit.sync
+      description: "Emitter/writeBatch → Snapshot/compare"
+
+    - path: ./syncs/regenerate-conformance-on-spec-change.sync
+      description: "Resource/changed → Conformance/generate"
+
+    # Build layer syncs
+    - path: ./syncs/analyze-tests-on-change.sync
+      description: "Resource/changed → TestSelection/analyze"
+
+    - path: ./syncs/record-test-result.sync
+      description: "Builder/test → FlakyTest/record"
+
+    - path: ./syncs/update-coverage-mappings.sync
+      description: "Builder/test → TestSelection/record"
+
+  recommended:
+    - path: ./syncs/verify-conformance-after-build.sync
+      name: VerifyConformanceAfterBuild
+      description: "Builder/build → ok → Conformance/verify"
+
+    - path: ./syncs/verify-contracts-after-multi-build.sync
+      name: VerifyContractsAfterMultiBuild
+      description: "Builder/buildAll → ok → ContractTest/verify"
+
+    - path: ./syncs/check-quarantine-on-failure.sync
+      name: CheckQuarantineOnFailure
+      description: "Builder/test → testFailure → FlakyTest/isQuarantined"
+
+    - path: ./syncs/run-selected-tests.sync
+      name: RunSelectedTests
+      description: "TestSelection/select → Builder/test with filter"
+
+    # Deploy layer gates
+    - path: ./syncs/check-contracts-before-deploy.sync
+      name: CheckContractsBeforeDeploy
+      description: "DeployPlan/execute → ContractTest/canDeploy"
+
+    - path: ./syncs/check-conformance-before-deploy.sync
+      name: CheckConformanceBeforeDeploy
+      description: "DeployPlan/execute → Conformance/matrix"
+
+uses:
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+  - kit: generation
+    concepts:
+      - name: Emitter
+      - name: Resource
+
+  - kit: deploy
+    concepts:
+      - name: Builder
+      - name: Artifact
+      - name: DeployPlan
