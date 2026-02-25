@@ -1,0 +1,124 @@
+@version(1)
+concept FlakyTest [F] {
+
+  purpose {
+    Detect, track, and quarantine unreliable tests.
+    Maintain per-test reliability history across all
+    languages and builders. Apply quarantine policies
+    so flaky tests don't block other developers.
+    Notify owners. Monitor for stabilization.
+  }
+
+  state {
+    tests: set F
+    history {
+      testId: F -> String
+      language: F -> String
+      builder: F -> String
+      testType: F -> String
+      results: F -> list { passed: Bool, timestamp: DateTime, duration: Int }
+      flipCount: F -> Int
+      lastFlipAt: F -> option DateTime
+    }
+    quarantine {
+      quarantined: F -> Bool
+      quarantinedAt: F -> option DateTime
+      quarantinedBy: F -> option String
+      reason: F -> option String
+      owner: F -> option String
+      notifiedAt: F -> option DateTime
+    }
+    policy {
+      flipThreshold: Int
+      flipWindow: String
+      autoQuarantine: Bool
+      retryCount: Int
+    }
+  }
+
+  actions {
+    action record(testId: String, language: String, builder: String, testType: String, passed: Bool, duration: Int) {
+      -> ok(test: F) {
+        Record a test result. testType indicates which runner
+        produced the result (e.g., "unit", "e2e", "integration").
+        Updates reliability history per testId+language+testType.
+        If the result differs from the previous result
+        (pass to fail or fail to pass), increments flipCount.
+      }
+      -> flakyDetected(test: F, flipCount: Int, recentResults: list Bool) {
+        The test has exceeded the flip threshold within
+        the configured window. This test is flaky.
+        If autoQuarantine is enabled, automatically quarantines.
+      }
+    }
+
+    action quarantine(testId: String, reason: String, owner: option String) {
+      -> ok(test: F) {
+        Manually quarantine a test. Quarantined tests still
+        run but their failures don't block builds or deploys.
+        Results are still recorded for monitoring.
+      }
+      -> alreadyQuarantined(test: F) {
+        Test is already quarantined.
+      }
+      -> notFound(testId: String) {
+        No history for this test ID.
+      }
+    }
+
+    action release(testId: String) {
+      -> ok(test: F) {
+        Release a test from quarantine. It will block builds
+        again if it fails. Used when a flaky test is fixed.
+      }
+      -> notQuarantined(test: F) {
+        Test wasn't quarantined.
+      }
+    }
+
+    action isQuarantined(testId: String) {
+      -> yes(test: F, reason: String, owner: option String, quarantinedAt: DateTime) {
+        Test is quarantined. Callers should treat failures
+        as warnings, not errors.
+      }
+      -> no(test: F) {
+        Test is not quarantined. Failures are real.
+      }
+      -> unknown(testId: String) {
+        No history for this test.
+      }
+    }
+
+    action report(testType: option String) {
+      -> ok(summary: {
+        totalTracked: Int,
+        currentlyFlaky: Int,
+        quarantined: Int,
+        stabilized: Int,
+        topFlaky: list { testId: String, language: String, testType: String, flipCount: Int, owner: option String }
+      }) {
+        Return flaky test dashboard data. If testType is
+        provided, only include tests of that type.
+        stabilized: tests that were quarantined but have
+        been passing consistently (candidates for release).
+      }
+    }
+
+    action setPolicy(flipThreshold: option Int, flipWindow: option String, autoQuarantine: option Bool, retryCount: option Int) {
+      -> ok() {
+        Update flaky detection policy.
+        flipThreshold: number of flips to trigger detection (default: 3)
+        flipWindow: time window for flips (default: "7d")
+        autoQuarantine: automatically quarantine detected flaky tests (default: false)
+        retryCount: number of retries before declaring failure (default: 1)
+      }
+    }
+  }
+
+  invariant {
+    after record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 50) -> ok(test: f)
+    and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: false, duration: 5001) -> ok(test: f)
+    and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 48) -> ok(test: f)
+    then isQuarantined(testId: "test_timing") depends on policy.autoQuarantine
+  }
+}

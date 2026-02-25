@@ -1,0 +1,17 @@
+# Start builds once toolchain is resolved — Architecture doc Section 3.8
+# After Toolchain resolves a language+platform, Builder begins
+# compilation for each concept targeting that language. The resolved
+# invocation profile is captured and made available for downstream
+# syncs that route to language-specific providers.
+
+sync BuildAfterToolchain [eager]
+when {
+  Toolchain/resolve: [ language: ?lang; platform: ?plat;
+    category: ?cat; toolName: ?name ]
+    => [ tool: ?tool; version: ?ver; path: ?path;
+         capabilities: ?caps; invocation: ?invoc ]
+}
+then {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: ?lang; platform: ?plat; config: ?cfg ]
+}

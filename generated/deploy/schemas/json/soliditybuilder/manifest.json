@@ -1,0 +1,984 @@
+{
+  "uri": "urn:copf/SolidityBuilder",
+  "name": "SolidityBuilder",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "contractsPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "outputDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "optimizer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "optimizerRuns",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "evmVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "builds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "build",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run solc Generate both bytecode and ABI \n Mode mapping : \n debug -> no optimizer \n release -> optimizer enabled with configured runs \n Executor strategy ( from deploy manifest ) : \n local -> invoke solc directly on host \n remote -> send source to remote build endpoint \n container -> run solc in Docker container \n Always produces ABI alongside bytecode ABI is \n essential for client generation"
+        },
+        {
+          "tag": "compilationError",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "solc reported errors"
+        },
+        {
+          "tag": "pragmaMismatch",
+          "fields": [
+            {
+              "name": "required",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "installed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Contract s Solidity pragma doesn t match compiler"
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "skipped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Run Foundry ( forge test ) or Hardhat ( npx hardhat test ) \n Auto detects from project config"
+        },
+        {
+          "tag": "testFailure",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "test",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some tests failed Includes gas usage in test output"
+        }
+      ]
+    },
+    {
+      "name": "package",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Package built artifact Formats : \n abi-bundle -> ABI JSON bytecode for deployment \n hardhat-artifacts -> Hardhat compatible artifact dir \n foundry-out -> Foundry compatible output"
+        },
+        {
+          "tag": "formatUnsupported",
+          "fields": [
+            {
+              "name": "format",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested format not available"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : SolidityBuilder \n language : solidity \n capabilities : [ abi-bundle , hardhat-artifacts , \n foundry-out ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, test behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "./generated/solidity/password"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/solc"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "evm-shanghai"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "mode",
+                    "value": {
+                      "kind": "literal",
+                      "value": "release"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "value": {
+                "kind": "literal",
+                "value": ".copf-artifacts/solidity/password"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "value": {
+                "kind": "literal",
+                "value": "sha256:jkl"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "test",
+          "inputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/solc"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": 6
+              }
+            },
+            {
+              "name": "failed",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "skipped",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 800
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SolidityBuilderState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype SolidityBuilderEntry {\n  l: ID!\n  contractsPath: String!\n  outputDir: String!\n  optimizer: Boolean!\n  optimizerRuns: Int!\n  evmVersion: String!\n}\n\nextend type Query {\n  soliditybuilder_entry(l: ID!): SolidityBuilderEntry\n  soliditybuilder_entries: [SolidityBuilderEntry!]!\n}\n\ntype SolidityBuilderBuilds {\n  l: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:copf/SolidityBuilder/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SolidityBuilder"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "features"
+                ]
+              }
+            },
+            "required": [
+              "source",
+              "toolchainPath",
+              "platform",
+              "config"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:copf/SolidityBuilder/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SolidityBuilder"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "toolchainPath"
+            ]
+          }
+        }
+      },
+      "package": {
+        "$id": "urn:copf/SolidityBuilder/package/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SolidityBuilder"
+          },
+          "action": {
+            "const": "package"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "format"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/SolidityBuilder/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SolidityBuilder"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:copf/SolidityBuilder/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "type": "string"
+                },
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "build",
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "compilationError": {
+          "$id": "urn:copf/SolidityBuilder/build/completion/compilationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "compilationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        },
+        "pragmaMismatch": {
+          "$id": "urn:copf/SolidityBuilder/build/completion/pragmaMismatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "pragmaMismatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "required": {
+                  "type": "string"
+                },
+                "installed": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "required",
+                "installed"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:copf/SolidityBuilder/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "skipped",
+                "duration"
+              ]
+            }
+          }
+        },
+        "testFailure": {
+          "$id": "urn:copf/SolidityBuilder/test/completion/testFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "testFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "test": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "test",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        }
+      },
+      "package": {
+        "ok": {
+          "$id": "urn:copf/SolidityBuilder/package/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "formatUnsupported": {
+          "$id": "urn:copf/SolidityBuilder/package/completion/formatUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "formatUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "format"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/SolidityBuilder/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityBuilder"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compile , test , and package Solidity concept implementations \n Owns Solidity specific build logic : solc invocation , ABI \n generation , Foundry Hardhat test execution , and deployment \n artifact packaging Supports local , remote , and container based \n execution strategies configured via the deploy manifest \n executor section"
+}

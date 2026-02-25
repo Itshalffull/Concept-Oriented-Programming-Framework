@@ -1,0 +1,13 @@
+# Gate deployment on cross-target contract verification — Architecture doc Section 3.8
+# Before deploying a concept, verify that its contracts with
+# all language pairs are satisfied for the current spec version.
+
+sync CheckContractsBeforeDeploy [eager]
+  purpose { Gate deployment on cross-target contract verification. }
+when {
+  DeployPlan/execute: [ plan: ?plan ]
+    => ok(plan: ?plan; duration: ?dur; nodesDeployed: ?n)
+}
+then {
+  ContractTest/canDeploy: [ concept: ?concept; language: ?lang ]
+}

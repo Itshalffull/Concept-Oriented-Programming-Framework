@@ -1,0 +1,20 @@
+# Record test coverage for future test selection — Architecture doc Section 3.8
+# After tests run, record the coverage data to improve future
+# test selection accuracy.
+
+sync UpdateCoverageMappings [eager]
+  purpose { Record test coverage for future test selection. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; testType: ?tt ]
+    => ok(passed: ?p; failed: ?f; duration: ?d; testType: ?testType)
+}
+then {
+  TestSelection/record: [
+    testId: concat(?concept, ":", ?lang);
+    language: ?lang;
+    testType: ?testType;
+    coveredSources: sourcesFor(?concept);
+    duration: ?d;
+    passed: equals(?f, 0)
+  ]
+}

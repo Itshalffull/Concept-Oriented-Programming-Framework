@@ -1,0 +1,101 @@
+@version(1)
+concept TestSelection [M] {
+
+  purpose {
+    Select the minimum set of tests to run given a code change.
+    Maintain source-to-test mappings from runtime coverage data.
+    Prioritize tests by historical failure probability, change
+    proximity, and execution cost. Enable confident defect
+    detection while minimizing total test execution time.
+  }
+
+  state {
+    mappings: set M
+    coverage {
+      testId: M -> String
+      language: M -> String
+      testType: M -> String
+      coveredSources: M -> list String
+      lastExecuted: M -> DateTime
+      avgDuration: M -> Int
+      failureRate: M -> Float
+    }
+    selections {
+      changeId: M -> String
+      selectedTests: M -> list String
+      confidence: M -> Float
+      estimatedDuration: M -> Int
+    }
+  }
+
+  actions {
+    action analyze(changedSources: list String, testType: option String) {
+      -> ok(affectedTests: list { testId: String, language: String, testType: String, relevance: Float, reason: String }) {
+        Given changed source files, compute which tests are
+        affected using stored source-to-test coverage mappings.
+        If testType is provided, only return tests of that type.
+        Otherwise returns all affected tests across all types.
+
+        Relevance score (0-1) based on:
+        - Direct coverage (test exercises changed code): 1.0
+        - Transitive dependency: 0.5-0.9
+        - Historical co-failure: variable
+
+        Reason explains why each test was selected:
+        "direct-coverage", "transitive-dep", "co-failure-history".
+      }
+      -> noMappings(message: String) {
+        No coverage mappings available — first run or
+        mappings expired. All tests should run.
+      }
+    }
+
+    action select(affectedTests: list { testId: String, language: String, testType: String, relevance: Float }, budget: option { maxDuration: Int, maxTests: Int }) {
+      -> ok(selected: list { testId: String, language: String, testType: String, priority: Int }, estimatedDuration: Int, confidence: Float) {
+        From the affected tests, select the subset to run
+        within the given budget. Prioritized by:
+        1. Recent failure history (tests that failed recently)
+        2. Relevance score (higher = more likely affected)
+        3. Execution cost (faster tests first for quick signal)
+
+        If no budget specified, returns all affected tests.
+      }
+      -> budgetInsufficient(selected: list { testId: String }, missedTests: Int, confidence: Float) {
+        Budget too small to achieve target confidence.
+        Returns what fits, plus how many were dropped
+        and the reduced confidence.
+      }
+    }
+
+    action record(testId: String, language: String, testType: String, coveredSources: list String, duration: Int, passed: Bool) {
+      -> ok(mapping: M) {
+        Update source-to-test coverage mapping after a test
+        execution. testType indicates which runner produced the
+        coverage data (e.g., "unit", "e2e", "integration").
+        This is how mappings are built — instrumenting test runs
+        to collect file-level coverage, then storing the
+        test-to-source mapping.
+      }
+    }
+
+    action statistics() {
+      -> ok(stats: {
+        totalMappings: Int,
+        avgSelectionRatio: Float,
+        avgConfidence: Float,
+        lastUpdated: DateTime
+      }) {
+        Return selection effectiveness statistics.
+        Selection ratio: what fraction of tests are typically
+        selected (lower = more efficient).
+      }
+    }
+  }
+
+  invariant {
+    after record(testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true)
+      -> ok(mapping: m)
+    then analyze(changedSources: ["./specs/password.concept"])
+      -> ok(affectedTests: ts)
+  }
+}

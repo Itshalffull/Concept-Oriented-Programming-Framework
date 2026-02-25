@@ -1,0 +1,19 @@
+# Register SwiftToolchain with PluginRegistry — Architecture doc Section 3.8
+
+sync RegisterSwiftToolchain [eager]
+when {
+  SwiftToolchain/register: []
+    => [ name: ?name; language: ?lang; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "toolchain";
+    name: ?name;
+    metadata: {
+      language: ?lang;
+      concept: "SwiftToolchain";
+      action: "resolve";
+      capabilities: ?caps
+    }
+  ]
+}

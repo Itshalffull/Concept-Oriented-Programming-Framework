@@ -1,0 +1,16 @@
+# Compare generated output against approved golden files — Architecture doc Section 3.8
+# After Emitter writes generated files, Snapshot compares them
+# against approved baselines for output stability checking.
+
+sync CompareSnapshotAfterEmit [eager]
+  purpose { Compare generated output against approved golden files. }
+when {
+  Emitter/writeBatch: []
+    => ok(results: ?results)
+}
+then {
+  Snapshot/compare: [
+    outputPath: ?results.path;
+    currentContent: ?results.contentHash
+  ]
+}

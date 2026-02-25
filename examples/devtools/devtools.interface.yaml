@@ -42,6 +42,9 @@ concepts:
   - kits/generation/resource.concept
   - kits/generation/kind-system.concept
   - kits/generation/generation-plan.concept
+  # Deploy kit build concepts
+  - kits/deploy/concepts/builder.concept
+  - kits/deploy/concepts/toolchain.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -1079,6 +1082,261 @@ workflows:
         description: "Validate specs before debugging runtime issues"
       - name: dev-workflow
         description: "Run the dev server to generate flow IDs for tracing"
+
+  # ─── Builder: build-orchestration ─────────────────
+  build-orchestration:
+    concept: Builder
+    steps:
+      - action: build
+        title: "Build Concept"
+        prose: "Compile, test, and package a concept implementation for a language and platform. Routes to language-specific providers."
+      - action: buildAll
+        title: "Build All Targets"
+        prose: "Build multiple concepts across multiple target languages and platforms in parallel."
+      - action: test
+        title: "Run Tests"
+        prose: "Run tests only for a previously built concept — no recompilation."
+      - action: status
+        title: "Build Status"
+        prose: "Check the current status of a build: pending, compiling, testing, packaging, done, or failed."
+      - action: history
+        title: "Build History"
+        prose: "Show build history for a concept, optionally filtered by language."
+    checklists:
+      build:
+        - "Toolchain resolved for language+platform?"
+        - "Source directory exists and is non-empty?"
+        - "Config mode is valid (debug/release/skip-tests)?"
+        - "Artifact hash is content-addressed?"
+      buildAll:
+        - "All target languages have resolved toolchains?"
+        - "Independent targets build in parallel?"
+        - "Partial results reported if some builds fail?"
+      test:
+        - "Build artifact exists for this concept+language?"
+        - "Test runner detected for language?"
+      status:
+        - "Build reference is valid?"
+      history:
+        - "Language filter is valid (if provided)?"
+    design-principles:
+      - title: "Coordination, Not Compilation"
+        rule: "Builder coordinates — it never compiles directly. Language-specific provider concepts own compilation logic."
+      - title: "Content-Addressed Artifacts"
+        rule: "Build outputs are stored in Artifact with content-addressed hashes. Same inputs always produce same artifact."
+      - title: "Executor Transparency"
+        rule: "Builder doesn't know whether builds run locally, remotely, or in containers. Execution strategy is a provider-internal concern."
+    references:
+      - path: references/build-pipeline.md
+        label: "Build pipeline architecture"
+        tier: reference
+        content: |
+          # Build Pipeline Architecture
+
+          The build layer bridges generated source and deployable artifacts.
+
+          ## Pipeline Flow
+
+          1. DeployPlan/execute — triggers build phase
+          2. Toolchain/resolve — find compiler for language+platform
+          3. Builder/build — compile, test, package (routed to provider)
+          4. Artifact/store — content-addressed artifact storage
+          5. Runtime/deploy — deploy the stored artifact
+
+          ## Execution Strategies
+
+          Builder providers support three executor types configured in
+          the deploy manifest:
+
+          | Type | Description |
+          |------|-------------|
+          | `local` | Invoke compiler directly on host |
+          | `remote` | Send source to remote build service |
+          | `container` | Run build in Docker container |
+
+          ## Deploy Manifest Build Section
+
+          ```yaml
+          build:
+            targets:
+              - language: swift
+                platform: linux-arm64
+                mode: release
+                config:
+                  version: ">=5.10"
+                  package-format: framework
+
+            executor:
+              swift:
+                type: remote
+                endpoint: https://build.internal/swift
+          ```
+
+          ## DAG Integration
+
+          Build nodes insert before deploy nodes in the DAG:
+
+          ```
+          resolve-toolchain → build-concept → store-artifact → deploy-concept
+          ```
+
+          Independent language targets build in parallel. Toolchain
+          resolution happens once per language, shared across concepts.
+    validation-commands:
+      - label: "Build all targets"
+        command: "copf build ./app.deploy.yaml"
+      - label: "Build specific language"
+        command: "copf build ./app.deploy.yaml --language swift"
+      - label: "Dry run (show build plan)"
+        command: "copf build ./app.deploy.yaml --plan"
+      - label: "Run tests only"
+        command: "copf build test --concept password --language swift"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | build | `copf build` | Compile, test, package one concept |
+        | buildAll | `copf build` (all targets) | Build all concepts for all targets |
+        | test | `copf build test` | Run tests only (no compile) |
+        | status | `copf build status` | Check build status |
+        | history | `copf build history` | Show build history |
+    related-workflows:
+      - name: toolchain-management
+        description: "Resolve toolchains before building"
+      - name: deployment-config
+        description: "Deploy built artifacts"
+    anti-patterns:
+      - title: "Building without toolchain resolution"
+        description: "Calling Builder/build before Toolchain/resolve — compilation will fail."
+        bad: |
+          # Skip toolchain resolution
+          Builder/build(concept: "password", language: "swift", ...)
+        good: |
+          # Resolve first, then build
+          Toolchain/resolve(language: "swift", platform: "linux-arm64")
+          # -> ok(tool, version, path)
+          Builder/build(concept: "password", language: "swift", ...)
+      - title: "Monolithic build action"
+        description: "Putting compilation, testing, and packaging logic in Builder instead of provider concepts."
+        bad: |
+          # Builder implementation knows about swiftc flags
+          if (language === "swift") { exec("swiftc -c release ..."); }
+        good: |
+          # Builder routes to SwiftBuilder which owns swift-specific logic
+          SwiftBuilder/build(source, toolchainPath, platform, config)
+
+  # ─── Toolchain: toolchain-management ────────────────
+  toolchain-management:
+    concept: Toolchain
+    steps:
+      - action: resolve
+        title: "Resolve Toolchain"
+        prose: "Find and validate a compiler toolchain for a language and platform. Routes to language-specific providers."
+      - action: validate
+        title: "Validate Toolchain"
+        prose: "Verify a previously resolved toolchain is still valid — tool exists at path, version matches."
+      - action: list
+        title: "List Toolchains"
+        prose: "List all resolved toolchains, optionally filtered by language."
+      - action: capabilities
+        title: "Show Capabilities"
+        prose: "Return detailed capabilities for a resolved tool."
+    checklists:
+      resolve:
+        - "Language is supported (swift/typescript/rust/solidity)?"
+        - "Platform identifier is valid?"
+        - "Version constraint parseable?"
+        - "Provider registered for this language?"
+      validate:
+        - "Tool reference is valid?"
+        - "Tool still exists at recorded path?"
+        - "Version hasn't changed since resolution?"
+      list:
+        - "Language filter is valid (if provided)?"
+      capabilities:
+        - "Tool reference is valid?"
+    design-principles:
+      - title: "Resolution Caching"
+        rule: "Resolve once per language+platform, reuse across all concept builds. Toolchain resolution is shared."
+      - title: "Drift Detection"
+        rule: "Validate before build to catch environment drift — tools may be uninstalled, upgraded, or moved between resolves."
+      - title: "Provider Routing"
+        rule: "Toolchain never knows about swiftc, tsc, or rustc — it routes to SwiftToolchain, TypeScriptToolchain, etc."
+    references:
+      - path: references/toolchain-resolution.md
+        label: "Toolchain resolution and validation"
+        tier: reference
+        content: |
+          # Toolchain Resolution
+
+          Toolchain resolves compilers for the build layer.
+
+          ## Resolution Flow
+
+          1. Toolchain/resolve(language, platform, versionConstraint)
+          2. → Routes to language provider (SwiftToolchain, etc.)
+          3. Provider checks PATH, validates version, detects capabilities
+          4. Returns: tool ref, version, path, capability list
+
+          ## Capabilities
+
+          Capabilities describe what a resolved tool supports:
+
+          | Language | Example Capabilities |
+          |----------|---------------------|
+          | Swift | macros, swift-testing, typed-throws, cross-compile |
+          | TypeScript | esm, cjs, declaration-maps, composite-projects |
+          | Rust | wasm-target, proc-macros, incremental |
+          | Solidity | optimizer, via-ir, foundry-tests, hardhat-tests |
+
+          ## Validation
+
+          `validate(tool)` re-checks a previously resolved tool:
+          - File exists at recorded path
+          - Version matches what was resolved
+          - Not corrupted or partially uninstalled
+
+          Used before builds to catch environment drift without
+          full re-resolution.
+
+          ## Commands
+
+          | Command | Purpose |
+          |---------|---------|
+          | `copf toolchain list` | Show all resolved toolchains |
+          | `copf toolchain resolve swift` | Resolve Swift toolchain |
+          | `copf toolchain validate` | Re-validate all toolchains |
+    validation-commands:
+      - label: "List resolved toolchains"
+        command: "copf toolchain list"
+      - label: "Resolve a specific toolchain"
+        command: "copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'"
+      - label: "Validate all toolchains"
+        command: "copf toolchain validate"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Action | Command | Purpose |
+        |--------|---------|---------|
+        | resolve | `copf toolchain resolve <lang>` | Find compiler for language |
+        | validate | `copf toolchain validate` | Re-check resolved tools |
+        | list | `copf toolchain list` | Show all toolchains |
+        | capabilities | `copf toolchain capabilities` | Show tool capabilities |
+    related-workflows:
+      - name: build-orchestration
+        description: "Builder uses resolved toolchains"
+      - name: deployment-config
+        description: "Deploy manifest configures build targets"
+    anti-patterns:
+      - title: "Hardcoded tool paths"
+        description: "Builder uses hardcoded paths to compilers instead of resolving through Toolchain."
+        bad: |
+          SwiftBuilder/build(toolchainPath: "/usr/bin/swiftc", ...)
+        good: |
+          Toolchain/resolve(language: "swift", platform: "linux-arm64")
+          # -> ok(tool, version, path: "/usr/bin/swiftc", capabilities)
+          SwiftBuilder/build(toolchainPath: ?path, ...)
 
   # ─── DeploymentValidator: deployment-config ────────
   deployment-config:
@@ -2659,6 +2917,192 @@ annotations:
             const result = await flowTraceHandler.build(
               { flowId: 'abc-123' }, storage
             );
+
+  Builder:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when compiling, testing, and packaging concept implementations
+        across languages. Coordinates build operations and routes to
+        language-specific providers (SwiftBuilder, TypeScriptBuilder,
+        RustBuilder, SolidityBuilder).
+      intro-template: >
+        Build concept **$ARGUMENTS** for the configured language targets,
+        routing to the appropriate provider and storing content-addressed
+        artifacts.
+      companion-docs:
+        - path: examples/build-all-targets.md
+          label: "Multi-target build walkthrough"
+          content: |
+            # Walkthrough: Building All Targets
+
+            This walkthrough shows how to build a concept for multiple
+            language targets using the deploy manifest.
+
+            ## Step 1: Configure Build Targets
+
+            ```yaml
+            # app.deploy.yaml
+            build:
+              targets:
+                - language: swift
+                  platform: linux-arm64
+                  mode: release
+                  config:
+                    version: ">=5.10"
+                    package-format: framework
+
+                - language: typescript
+                  platform: node-20
+                  mode: release
+                  config:
+                    version: ">=5.7"
+                    bundler: esbuild
+                    package-format: npm
+            ```
+
+            ## Step 2: Build
+
+            ```bash
+            copf build ./app.deploy.yaml
+            ```
+
+            The build layer:
+            1. Resolves toolchains (once per language)
+            2. Builds each concept for each target (in parallel)
+            3. Stores artifacts in content-addressed storage
+
+            ## Step 3: Check Results
+
+            ```bash
+            copf build history --concept password
+            ```
+
+            ## Executor Strategies
+
+            Configure how builds execute in the manifest:
+
+            ```yaml
+            executor:
+              swift:
+                type: local        # Direct invocation
+              typescript:
+                type: container    # Docker-based
+              rust:
+                type: remote       # Remote build service
+                endpoint: https://build.internal/rust
+            ```
+    build:
+      examples:
+        - label: "Build a concept"
+          language: bash
+          code: "copf build ./app.deploy.yaml --concept password --language swift"
+        - label: "Build all targets"
+          language: bash
+          code: "copf build ./app.deploy.yaml"
+    buildAll:
+      examples:
+        - label: "Build all concepts for all targets"
+          language: bash
+          code: "copf build ./app.deploy.yaml"
+    test:
+      examples:
+        - label: "Run tests for a concept"
+          language: bash
+          code: "copf build test --concept password --language swift"
+    history:
+      examples:
+        - label: "Show build history"
+          language: bash
+          code: "copf build history --concept password"
+
+  Toolchain:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Bash]
+      argument-template: "$ARGUMENTS"
+      trigger-description: >
+        Use when resolving, validating, or listing compiler toolchains
+        for the build layer. Routes resolution to language-specific
+        providers (SwiftToolchain, TypeScriptToolchain, RustToolchain,
+        SolidityToolchain).
+      intro-template: >
+        Resolve toolchain for **$ARGUMENTS**, validating compiler
+        availability, version constraints, and platform capabilities.
+      companion-docs:
+        - path: examples/resolve-toolchains.md
+          label: "Toolchain resolution walkthrough"
+          content: |
+            # Walkthrough: Resolving Toolchains
+
+            This walkthrough shows how toolchain resolution works
+            for a multi-language build.
+
+            ## Step 1: List Installed Toolchains
+
+            ```bash
+            copf toolchain list
+            ```
+            ```
+            Language     Platform       Version   Path                  Status
+            swift        linux-arm64    5.10.1    /usr/bin/swiftc       ok
+            typescript   node-20        5.7.2     /usr/local/bin/tsc    ok
+            rust         linux-x86_64   1.78.0    /usr/local/bin/rustc  ok
+            solidity     evm-shanghai   0.8.25    /usr/local/bin/solc   ok
+            ```
+
+            ## Step 2: Resolve with Constraints
+
+            ```bash
+            copf toolchain resolve swift --platform linux-arm64 --version ">=5.10"
+            ```
+            ```
+            Resolved: swift 5.10.1
+            Path: /usr/bin/swiftc
+            Capabilities: macros, swift-testing, cross-compile
+            ```
+
+            ## Step 3: Validate Before Build
+
+            ```bash
+            copf toolchain validate
+            ```
+
+            Checks all previously resolved toolchains are still
+            valid (exist at path, version unchanged).
+
+            ## Capability-Based Decisions
+
+            Builder checks capabilities to determine build modes:
+            - "incremental" → enable incremental compilation
+            - "wasm-target" → WASM output available
+            - "cross-compile" → cross-platform builds supported
+    resolve:
+      examples:
+        - label: "Resolve Swift toolchain"
+          language: bash
+          code: "copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'"
+        - label: "Resolve programmatically"
+          language: typescript
+          code: |
+            import { toolchainHandler } from './toolchain.impl';
+            const result = await toolchainHandler.resolve(
+              { language: 'swift', platform: 'linux-arm64', versionConstraint: '>=5.10' },
+              storage,
+            );
+    validate:
+      examples:
+        - label: "Validate all toolchains"
+          language: bash
+          code: "copf toolchain validate"
+    list:
+      examples:
+        - label: "List all resolved toolchains"
+          language: bash
+          code: "copf toolchain list"
+        - label: "List by language"
+          language: bash
+          code: "copf toolchain list --language swift"
 
   DeploymentValidator:
     concept:

@@ -1,0 +1,92 @@
+@version(1)
+concept SolidityBuilder [L] {
+
+  purpose {
+    Compile, test, and package Solidity concept implementations.
+    Owns Solidity-specific build logic: solc invocation, ABI
+    generation, Foundry/Hardhat test execution, and deployment
+    artifact packaging. Supports local, remote, and container-based
+    execution strategies configured via the deploy manifest
+    executor section.
+  }
+
+  state {
+    builds: set L
+    config {
+      contractsPath: L -> String
+      outputDir: L -> String
+      optimizer: L -> Bool
+      optimizerRuns: L -> Int
+      evmVersion: L -> String
+    }
+  }
+
+  actions {
+    action build(source: String, toolchainPath: String, platform: String, config: { mode: String, features: option list String }) {
+      -> ok(build: L, artifactPath: String, artifactHash: String) {
+        Run solc. Generate both bytecode and ABI.
+        Mode mapping:
+        "debug" -> no optimizer
+        "release" -> optimizer enabled with configured runs
+
+        Executor strategy (from deploy manifest):
+        "local" -> invoke solc directly on host
+        "remote" -> send source to remote build endpoint
+        "container" -> run solc in Docker container
+
+        Always produces ABI alongside bytecode — ABI is
+        essential for client generation.
+      }
+      -> compilationError(errors: list { file: String, line: Int, message: String }) {
+        solc reported errors.
+      }
+      -> pragmaMismatch(required: String, installed: String) {
+        Contract's Solidity pragma doesn't match compiler.
+      }
+    }
+
+    action test(build: L, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }, testType: option String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
+        Run tests using the resolved invocation profile. If
+        invocation is provided, uses it to determine whether to
+        run Foundry (`forge test`) or Hardhat (`npx hardhat test`)
+        and how to parse output. Otherwise auto-detects.
+        testType indicates which runner category was used.
+      }
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
+        Some tests failed. Includes gas usage in test output.
+      }
+    }
+
+    action package(build: L, format: String) {
+      -> ok(artifactPath: String, artifactHash: String) {
+        Package built artifact. Formats:
+        "abi-bundle" -> ABI JSON + bytecode for deployment
+        "hardhat-artifacts" -> Hardhat-compatible artifact dir
+        "foundry-out" -> Foundry-compatible output
+      }
+      -> formatUnsupported(format: String) {
+        Requested format not available.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "SolidityBuilder"
+        language: "solidity"
+        capabilities: ["abi-bundle", "hardhat-artifacts",
+        "foundry-out"]
+      }
+    }
+  }
+
+  invariant {
+    after build(source: "./generated/solidity/password", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: { mode: "release" })
+      -> ok(build: l, artifactPath: ".copf-artifacts/solidity/password", artifactHash: "sha256:jkl")
+    then test(build: l, toolchainPath: "/usr/local/bin/solc",
+              invocation: { command: "forge test", args: ["--json", "--gas-report"], outputFormat: "forge-test-json", configFile: "foundry.toml", env: null },
+              testType: "unit")
+      -> ok(passed: 6, failed: 0, skipped: 0, duration: 800, testType: "unit")
+  }
+}

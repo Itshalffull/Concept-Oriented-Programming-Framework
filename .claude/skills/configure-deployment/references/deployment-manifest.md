@@ -19,11 +19,14 @@ concepts:
 syncs:
   - <SyncDeployment>
 
+build:                   # Optional per-language build tooling preferences
+  <name>: <BuildConfig>
+
 engine:                  # Optional global engine settings
   <EngineConfig>
 ```
 
-All three top-level sections (`app`, `runtimes`, `concepts`) are required. `syncs` defaults to empty. `engine` is optional.
+All three top-level sections (`app`, `runtimes`, `concepts`) are required. `syncs` defaults to empty. `build` and `engine` are optional.
 
 ## TypeScript Types
 
@@ -37,6 +40,19 @@ interface DeploymentManifest {
   runtimes: Record<string, RuntimeConfig>;
   concepts: Record<string, ConceptDeployment>;
   syncs: SyncDeployment[];
+  build?: Record<string, BuildConfig>;
+}
+
+interface BuildConfig {
+  compiler?: string;
+  testRunner?: string;
+  testTypes?: string[];
+  e2eRunner?: string;
+  uiRunner?: string;
+  visualRunner?: string;
+  integrationRunner?: string;
+  benchmarkRunner?: string;
+  versionConstraint?: string;
 }
 
 interface RuntimeConfig {
@@ -196,6 +212,91 @@ syncs:
 ### Annotation Defaults
 
 If no annotations are specified, the sync is treated as **eager** (synchronous, all concepts must be reachable).
+
+## Build Section (Optional)
+
+Per-language tooling preferences for compilation, testing, and packaging. Each entry is keyed by language name and specifies which tools to use for that language. When these values are set, Toolchain/resolve uses the `toolName` parameter to select the specified tool instead of the default.
+
+```yaml
+build:
+  typescript:
+    compiler: tsc                  # Compiler tool name (default: tsc)
+    testRunner: jest               # Unit test runner (default: vitest)
+    testTypes:                     # Which test types to run in pipelines
+      - unit
+      - integration
+      - e2e
+    e2eRunner: playwright          # E2E test runner (default: playwright)
+    versionConstraint: ">=5.4"     # Compiler version constraint
+  solidity:
+    compiler: hardhat              # Use Hardhat instead of Foundry (default: foundry)
+    testRunner: hardhat            # Use Hardhat test runner (default: foundry)
+    testTypes:
+      - unit
+      - e2e
+  rust:
+    testRunner: nextest            # Use cargo-nextest instead of cargo test
+    testTypes:
+      - unit
+      - benchmark
+    benchmarkRunner: criterion     # Benchmark runner (default: criterion)
+```
+
+### Build Fields
+
+| Field | Required | Type | Default | Description |
+|-------|----------|------|---------|-------------|
+| `compiler` | No | string | language default | Compiler tool name passed as `toolName` to Toolchain/resolve(category: "compiler") |
+| `testRunner` | No | string | language default | Unit test runner name passed as `toolName` to Toolchain/resolve(category: "unit-runner") |
+| `testTypes` | No | string[] | `["unit"]` | Which test categories to execute during build pipelines |
+| `e2eRunner` | No | string | language default | E2E runner name passed as `toolName` to Toolchain/resolve(category: "e2e-runner") |
+| `uiRunner` | No | string | language default | UI test runner name |
+| `visualRunner` | No | string | language default | Visual regression runner name |
+| `integrationRunner` | No | string | language default | Integration test runner name |
+| `benchmarkRunner` | No | string | language default | Benchmark runner name |
+| `versionConstraint` | No | string | — | Version constraint for the compiler |
+
+### Test Types
+
+| Type | Category | Description |
+|------|----------|-------------|
+| `unit` | `unit-runner` | Unit tests (default, always included) |
+| `integration` | `integration-runner` | Integration tests (database, API) |
+| `e2e` | `e2e-runner` | End-to-end tests |
+| `ui` | `ui-runner` | UI component tests |
+| `visual` | `visual-runner` | Visual regression tests |
+| `benchmark` | `benchmark-runner` | Performance benchmarks |
+
+### Tool Resolution Flow
+
+When the deploy plan executes, the `build` section is used as follows:
+
+1. For each concept implementation, the `language` field determines which `build.<language>` config applies
+2. **Compilation**: Toolchain/resolve(language, platform, category: "compiler", toolName: build.compiler)
+3. **Testing**: For each entry in `testTypes`, Toolchain/resolve(language, platform, category: "<type>-runner", toolName: build.<type>Runner or build.testRunner)
+4. The resolved invocation profiles are passed to the language-specific Builder provider
+
+### Available Tools Per Language
+
+| Language | Category | Available Tools | Default |
+|----------|----------|----------------|---------|
+| TypeScript | compiler | `tsc` | `tsc` |
+| TypeScript | unit-runner | `vitest`, `jest` | `vitest` |
+| TypeScript | e2e-runner | `playwright`, `cypress` | `playwright` |
+| TypeScript | ui-runner | `storybook` | `storybook` |
+| TypeScript | visual-runner | `chromatic` | `chromatic` |
+| TypeScript | integration-runner | `vitest` | `vitest` |
+| Swift | compiler | `swiftc` | `swiftc` |
+| Swift | unit-runner | `xctest` | `xctest` |
+| Swift | ui-runner | `xcuitest` | `xcuitest` |
+| Swift | e2e-runner | `swift-e2e` | `swift-e2e` |
+| Rust | compiler | `rustc` | `rustc` |
+| Rust | unit-runner | `cargo-test`, `nextest` | `cargo-test` |
+| Rust | e2e-runner | `nextest` | `nextest` |
+| Rust | benchmark-runner | `criterion` | `criterion` |
+| Solidity | compiler | `foundry`, `hardhat`, `solc` | `foundry` |
+| Solidity | unit-runner | `foundry`, `hardhat` | `foundry` |
+| Solidity | e2e-runner | `foundry` | `foundry` |
 
 ## Engine Section (Optional)
 

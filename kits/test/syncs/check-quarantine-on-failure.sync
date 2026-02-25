@@ -1,0 +1,13 @@
+# Don't block build for quarantined (flaky) tests — Architecture doc Section 3.8
+# When a test fails, check if it's quarantined before blocking
+# the build. Quarantined test failures become warnings.
+
+sync CheckQuarantineOnFailure [eager]
+  purpose { Don't block build for quarantined (flaky) tests. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang ]
+    => testFailure(failures: ?failures)
+}
+then {
+  FlakyTest/isQuarantined: [ testId: ?failures.test ]
+}

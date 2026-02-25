@@ -1,0 +1,16 @@
+# Regenerate conformance vectors when concept spec changes — Architecture doc Section 3.8
+# When a concept spec resource is upserted with a new digest,
+# Conformance regenerates test vectors from the updated spec.
+
+sync RegenerateConformanceOnSpecChange [eager]
+  purpose { Regenerate conformance vectors when concept spec changes. }
+when {
+  Resource/upsert: [ locator: ?loc; kind: "concept-spec" ]
+    => changed(resource: ?r; previousDigest: ?prev)
+}
+where {
+  bind(conceptNameFromLocator(?loc) as ?concept)
+}
+then {
+  Conformance/generate: [ concept: ?concept; specPath: ?loc ]
+}

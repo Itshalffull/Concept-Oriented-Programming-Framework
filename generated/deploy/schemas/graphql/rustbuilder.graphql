@@ -1,0 +1,23 @@
+type RustBuilderState {
+  """All rs in this concept"""
+  rs: [ID!]!
+}
+
+type RustBuilderEntry {
+  r: ID!
+  manifestPath: String!
+  targetDir: String!
+  profile: String!
+  features: [String!]!
+  targetTriple: String!
+}
+
+extend type Query {
+  rustbuilder_entry(r: ID!): RustBuilderEntry
+  rustbuilder_entries: [RustBuilderEntry!]!
+}
+
+type RustBuilderBuilds {
+  r: ID!
+  value: ID!
+}

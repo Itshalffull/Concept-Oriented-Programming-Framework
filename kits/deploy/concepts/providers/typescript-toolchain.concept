@@ -1,0 +1,56 @@
+@version(1)
+concept TypeScriptToolchain [N] {
+
+  purpose {
+    Resolve TypeScript compiler and bundler toolchains. Owns
+    TypeScript-specific resolution: tsc version, Node.js version,
+    bundler detection (esbuild, webpack, vite), and tsconfig
+    target validation.
+  }
+
+  state {
+    toolchains: set N
+    config {
+      tscPath: N -> String
+      tscVersion: N -> String
+      nodePath: N -> String
+      nodeVersion: N -> String
+      bundler: N -> option { name: String, path: String, version: String }
+      packageManager: N -> String
+    }
+  }
+
+  actions {
+    action resolve(platform: String, versionConstraint: option String) {
+      -> ok(toolchain: N, tscPath: String, version: String, capabilities: list String) {
+        Locate tsc (global or project-local in node_modules/.bin).
+        Detect Node.js version and bundler. Return capabilities:
+        "esm", "cjs", "declaration-maps", "composite-projects",
+        "bundler-resolution", etc.
+      }
+      -> notInstalled(installHint: String) {
+        tsc not found. Hint: "npm install -g typescript" or
+        "npx tsc" for project-local.
+      }
+      -> nodeVersionMismatch(installed: String, required: String) {
+        Node.js version too old for requested TypeScript features.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "TypeScriptToolchain"
+        language: "typescript"
+        capabilities: ["bundler-detection", "package-manager",
+        "node-version-check"]
+      }
+    }
+  }
+
+  invariant {
+    after resolve(platform: "node-20", versionConstraint: ">=5.7")
+      -> ok(toolchain: n, tscPath: "/usr/local/bin/tsc", version: "5.7.2", capabilities: ["esm", "declaration-maps"])
+    then register() -> ok(name: "TypeScriptToolchain", language: "typescript", capabilities: caps)
+  }
+}

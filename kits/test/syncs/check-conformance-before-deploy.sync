@@ -1,0 +1,13 @@
+# Gate deployment on conformance passing — Architecture doc Section 3.8
+# Before deploying, verify conformance passes for all concepts
+# in the deployment plan across all configured target languages.
+
+sync CheckConformanceBeforeDeploy [eager]
+  purpose { Gate deployment on conformance passing. }
+when {
+  DeployPlan/execute: [ plan: ?plan ]
+    => ok(plan: ?plan; duration: ?dur; nodesDeployed: ?n)
+}
+then {
+  Conformance/matrix: [ concepts: conceptsInPlan(?plan) ]
+}

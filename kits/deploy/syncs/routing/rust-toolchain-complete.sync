@@ -1,0 +1,12 @@
+# RustToolchain resolution completion propagates back to Toolchain — Architecture doc Section 3.8
+
+sync RustToolchainComplete [eager]
+when {
+  RustToolchain/resolve: [ platform: ?plat ]
+    => [ toolchain: ?r; rustcPath: ?path; version: ?ver;
+         capabilities: ?caps ]
+}
+then {
+  Toolchain/resolve: [ language: "rust"; platform: ?plat;
+    versionConstraint: ?constraint ]
+}

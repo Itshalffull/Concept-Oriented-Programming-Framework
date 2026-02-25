@@ -1,0 +1,94 @@
+@version(1)
+concept TypeScriptBuilder [N] {
+
+  purpose {
+    Compile, test, and package TypeScript concept implementations.
+    Owns TypeScript-specific build logic: tsc invocation, bundler
+    integration (esbuild/webpack/vite), test runner integration
+    (jest/vitest), and npm package generation. Supports local,
+    remote, and container-based execution strategies configured
+    via the deploy manifest executor section.
+  }
+
+  state {
+    builds: set N
+    config {
+      projectPath: N -> String
+      outDir: N -> String
+      tsconfigTarget: N -> String
+      moduleFormat: N -> String
+      bundler: N -> option String
+    }
+  }
+
+  actions {
+    action build(source: String, toolchainPath: String, platform: String, config: { mode: String, features: option list String }) {
+      -> ok(build: N, artifactPath: String, artifactHash: String) {
+        Run tsc for type-checking + bundler for output.
+        Platform determines module format:
+        "node-20" -> ESM with Node.js target
+        "browser" -> ESM with bundler, tree-shaking
+        "cjs" -> CommonJS for legacy compatibility
+
+        Mode determines optimization:
+        "debug" -> source maps, no minification
+        "release" -> minification, dead code elimination
+
+        Executor strategy (from deploy manifest):
+        "local" -> invoke tsc/bundler directly on host
+        "remote" -> send source to remote build endpoint
+        "container" -> run build in Docker container
+      }
+      -> typeError(errors: list { file: String, line: Int, message: String }) {
+        tsc reported type errors.
+      }
+      -> bundleError(reason: String) {
+        Bundler (esbuild/webpack) failed.
+      }
+    }
+
+    action test(build: N, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }, testType: option String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
+        Run tests against the built output using the resolved
+        invocation profile. If invocation is provided, uses it
+        to determine the test command, args, and output format.
+        Otherwise falls back to auto-detection.
+        testType indicates which runner category was used
+        (e.g., "unit", "e2e", "integration").
+      }
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
+        Some tests failed.
+      }
+    }
+
+    action package(build: N, format: String) {
+      -> ok(artifactPath: String, artifactHash: String) {
+        Package built artifact. Formats:
+        "npm" -> npm-publishable tarball (with package.json)
+        "bundle" -> single-file bundle for deployment
+        "docker" -> Dockerfile + built output
+      }
+      -> formatUnsupported(format: String) {
+        Requested format not available.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "TypeScriptBuilder"
+        language: "typescript"
+        capabilities: ["npm", "bundle", "docker"]
+      }
+    }
+  }
+
+  invariant {
+    after build(source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: { mode: "release" })
+      -> ok(build: n, artifactPath: ".copf-artifacts/typescript/password", artifactHash: "sha256:def")
+    then test(build: n, toolchainPath: "/usr/local/bin/tsc",
+              invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json", configFile: "vitest.config.ts", env: null },
+              testType: "unit")
+      -> ok(passed: 8, failed: 0, skipped: 0, duration: 900, testType: "unit")
+  }
+}

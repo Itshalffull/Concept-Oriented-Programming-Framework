@@ -1,0 +1,58 @@
+@version(1)
+concept SwiftToolchain [S] {
+
+  purpose {
+    Resolve Swift compiler toolchains. Owns Swift-specific
+    resolution: Xcode toolchains vs standalone swiftc, Swift
+    Package Manager detection, platform SDK paths, and
+    cross-compilation target validation.
+  }
+
+  state {
+    toolchains: set S
+    config {
+      swiftcPath: S -> String
+      swiftVersion: S -> String
+      sdkPath: S -> option String
+      xcodeVersion: S -> option String
+      spmPath: S -> option String
+      supportedTargets: S -> list String
+    }
+  }
+
+  actions {
+    action resolve(platform: String, versionConstraint: option String) {
+      -> ok(toolchain: S, swiftcPath: String, version: String, capabilities: list String) {
+        Locate swiftc on the system. Check version against
+        constraint. Detect Xcode vs standalone installation.
+        Resolve platform SDK path for cross-compilation.
+        Return capabilities based on Swift version:
+        5.9+ has "macros", 5.10+ has "swift-testing",
+        6.0+ has "typed-throws".
+      }
+      -> notInstalled(installHint: String) {
+        swiftc not found. Hint: "Install via Xcode or
+        download from swift.org/download"
+      }
+      -> xcodeRequired(reason: String) {
+        Platform target requires Xcode (e.g., iOS, watchOS).
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "SwiftToolchain"
+        language: "swift"
+        capabilities: ["xcode-detection", "cross-compile",
+        "sdk-resolution"]
+      }
+    }
+  }
+
+  invariant {
+    after resolve(platform: "linux-arm64", versionConstraint: ">=5.10")
+      -> ok(toolchain: s, swiftcPath: "/usr/bin/swiftc", version: "5.10.1", capabilities: ["macros", "swift-testing"])
+    then register() -> ok(name: "SwiftToolchain", language: "swift", capabilities: caps)
+  }
+}

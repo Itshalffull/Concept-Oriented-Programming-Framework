@@ -1,0 +1,21 @@
+# Store built artifacts in content-addressed Artifact — Architecture doc Section 3.8
+# After Builder completes compilation, store the result in Artifact
+# for downstream deployment and content-addressed deduplication.
+
+sync StoreAfterBuild [eager]
+when {
+  Builder/build: [ concept: ?concept; language: ?lang; platform: ?plat ]
+    => [ build: ?b; artifactHash: ?hash;
+         artifactLocation: ?loc; duration: ?dur ]
+}
+then {
+  Artifact/store: [
+    hash: ?hash;
+    location: ?loc;
+    concept: ?concept;
+    language: ?lang;
+    platform: ?plat;
+    metadata: { toolchainVersion: ?ver; buildMode: ?mode;
+      duration: ?dur }
+  ]
+}

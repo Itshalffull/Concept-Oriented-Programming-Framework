@@ -1,0 +1,13 @@
+# Verify cross-target contracts after all targets build — Architecture doc Section 3.8
+# After builds complete for multiple languages of the same concept,
+# run contract verification between language pairs.
+
+sync VerifyContractsAfterMultiBuild [eager]
+  purpose { Verify cross-target contracts after all targets build. }
+when {
+  Builder/buildAll: [ concepts: ?concepts ]
+    => ok(results: ?results)
+}
+then {
+  ContractTest/generate: [ concept: ?concepts; specPath: ?specPath ]
+}
