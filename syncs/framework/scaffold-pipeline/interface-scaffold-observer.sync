@@ -1,0 +1,16 @@
+# Record InterfaceScaffoldGen completion in GenerationPlan
+
+sync ObserveInterfaceScaffold [eager]
+  purpose { Track InterfaceScaffoldGen run in GenerationPlan. }
+when {
+  InterfaceScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "InterfaceScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

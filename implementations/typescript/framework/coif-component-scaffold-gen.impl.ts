@@ -295,20 +295,6 @@ export const coifComponentScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async plan() {
-    return {
-      variant: 'ok',
-      inputKind: 'ComponentConfig',
-      outputKind: 'CoifComponent',
-      description: 'Generate headless component scaffolds including widget spec, anatomy definition, machine behavior, and slot composition.',
-      pipeline: JSON.stringify([
-        'Resource/upsert', 'BuildCache/check',
-        'CoifComponentScaffoldGen/generate', 'Emitter/writeBatch',
-        'GenerationPlan/recordStep',
-      ]),
-    };
-  },
-
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
     const result = await coifComponentScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;

@@ -26,19 +26,6 @@ concept KitScaffoldGen [K] {
       }
     }
 
-    action plan() {
-      -> ok(inputKind: String, outputKind: String, description: String,
-            pipeline: list String) {
-        Return generation pipeline metadata describing how this
-        generator participates in the Resource → KindSystem →
-        BuildCache → Emitter flow.
-
-        pipeline: ["Resource/upsert", "BuildCache/check",
-                    "KitScaffoldGen/generate", "Emitter/writeBatch",
-                    "GenerationPlan/recordStep"]
-      }
-    }
-
     action preview(name: String, description: String, concepts: list String) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing. Uses

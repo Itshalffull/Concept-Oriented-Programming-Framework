@@ -273,20 +273,6 @@ export const transportAdapterScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async plan() {
-    return {
-      variant: 'ok',
-      inputKind: 'TransportConfig',
-      outputKind: 'TransportAdapter',
-      description: 'Generate ConceptTransport adapter implementations for various communication protocols.',
-      pipeline: JSON.stringify([
-        'Resource/upsert', 'BuildCache/check',
-        'TransportAdapterScaffoldGen/generate', 'Emitter/writeBatch',
-        'GenerationPlan/recordStep',
-      ]),
-    };
-  },
-
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
     const result = await transportAdapterScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;

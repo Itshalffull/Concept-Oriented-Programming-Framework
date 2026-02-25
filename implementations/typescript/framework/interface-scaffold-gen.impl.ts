@@ -197,20 +197,6 @@ export const interfaceScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async plan() {
-    return {
-      variant: 'ok',
-      inputKind: 'InterfaceConfig',
-      outputKind: 'InterfaceManifest',
-      description: 'Generate interface manifest (interface.yaml) with target configs, SDK settings, and per-concept overrides.',
-      pipeline: JSON.stringify([
-        'Resource/upsert', 'BuildCache/check',
-        'InterfaceScaffoldGen/generate', 'Emitter/writeBatch',
-        'GenerationPlan/recordStep',
-      ]),
-    };
-  },
-
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
     const result = await interfaceScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;

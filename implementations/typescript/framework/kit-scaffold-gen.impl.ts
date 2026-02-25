@@ -166,20 +166,6 @@ export const kitScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async plan() {
-    return {
-      variant: 'ok',
-      inputKind: 'KitConfig',
-      outputKind: 'KitManifest',
-      description: 'Generate kit manifest (kit.yaml) and directory structure.',
-      pipeline: JSON.stringify([
-        'Resource/upsert', 'BuildCache/check',
-        'KitScaffoldGen/generate', 'Emitter/writeBatch',
-        'GenerationPlan/recordStep',
-      ]),
-    };
-  },
-
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
     const result = await kitScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;

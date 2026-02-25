@@ -2503,28 +2503,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track KitConfig → KitManifest transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track KitConfig → KitManifest transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Kit Manifest"
-        prose: "Generate a kit.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a kit.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: kit-scaffold-emit.sync routes files through Emitter, kit-scaffold-record-cache.sync records output in BuildCache, and kit-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Kit name is kebab-case?"
         - "Version is valid semver?"
@@ -2736,28 +2722,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track DeployConfig → DeployManifest transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track DeployConfig → DeployManifest transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Deploy Manifest"
-        prose: "Generate a deploy.yaml manifest with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a deploy.yaml manifest with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings. Sync rules then cascade: deploy-scaffold-emit.sync routes files through Emitter, deploy-scaffold-record-cache.sync records output in BuildCache, and deploy-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "App name is valid?"
         - "Every runtime has a type and transport?"
@@ -2923,28 +2895,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track InterfaceConfig → InterfaceManifest transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track InterfaceConfig → InterfaceManifest transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Interface Manifest"
-        prose: "Generate an interface.yaml manifest with target configurations (REST, GraphQL, gRPC, CLI, MCP, Claude Skills), SDK settings, spec outputs, and per-concept overrides."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate an interface.yaml manifest with target configurations (REST, GraphQL, gRPC, CLI, MCP, Claude Skills), SDK settings, spec outputs, and per-concept overrides. Sync rules then cascade: interface-scaffold-emit.sync routes files through Emitter, interface-scaffold-record-cache.sync records output in BuildCache, and interface-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Interface name is valid?"
         - "At least one target is specified?"
@@ -3102,28 +3060,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track ConceptConfig → ConceptSpec transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track ConceptConfig → ConceptSpec transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Concept Spec"
-        prose: "Generate a .concept specification file with purpose block, typed state declarations, action signatures with variants, and a register() action for PluginRegistry discovery."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a .concept specification file with purpose block, typed state declarations, action signatures with variants, and a register() action for PluginRegistry discovery. Sync rules then cascade: concept-scaffold-emit.sync routes files through Emitter, concept-scaffold-record-cache.sync records output in BuildCache, and concept-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Concept name is PascalCase?"
         - "Type parameter is a single capital letter?"
@@ -3269,28 +3213,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track SyncConfig → SyncSpec transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track SyncConfig → SyncSpec transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Sync Rule"
-        prose: "Generate a .sync file with when clause (trigger pattern), optional where clause (guard conditions), and then clause (effect actions)."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a .sync file with when clause (trigger pattern), optional where clause (guard conditions), and then clause (effect actions). Sync rules then cascade: sync-scaffold-emit.sync routes files through Emitter, sync-scaffold-record-cache.sync records output in BuildCache, and sync-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Sync name is PascalCase?"
         - "Tier annotation matches intended behavior ([eager], [required], [recommended])?"
@@ -3418,28 +3348,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track HandlerConfig → HandlerImpl transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track HandlerConfig → HandlerImpl transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Handler Implementation"
-        prose: "Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: handler-scaffold-emit.sync routes files through Emitter, handler-scaffold-record-cache.sync records output in BuildCache, and handler-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Handler export name follows convention (camelCase + 'Handler')?"
         - "register() returns correct name, inputKind, outputKind?"
@@ -3581,28 +3497,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track StorageConfig → StorageAdapter transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track StorageConfig → StorageAdapter transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Storage Adapter"
-        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods. Sync rules then cascade: storage-adapter-scaffold-emit.sync routes files through Emitter, storage-adapter-scaffold-record-cache.sync records output in BuildCache, and storage-adapter-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Backend is valid (sqlite, postgresql, redis, dynamodb, memory)?"
         - "Adapter class implements ConceptStorage interface?"
@@ -3726,28 +3628,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track TransportConfig → TransportAdapter transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track TransportConfig → TransportAdapter transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Transport Adapter"
-        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods. Sync rules then cascade: transport-adapter-scaffold-emit.sync routes files through Emitter, transport-adapter-scaffold-record-cache.sync records output in BuildCache, and transport-adapter-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Protocol is valid (http, websocket, worker, in-process)?"
         - "Adapter implements invoke(), query(), and health()?"
@@ -3870,28 +3758,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track ComponentConfig → CoifComponent transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track ComponentConfig → CoifComponent transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate COIF Component"
-        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and kit manifest."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and kit manifest. Sync rules then cascade: coif-component-scaffold-emit.sync routes files through Emitter, coif-component-scaffold-record-cache.sync records output in BuildCache, and coif-component-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Component name is PascalCase?"
         - "Parts list defines all structural elements?"
@@ -4068,28 +3942,14 @@ workflows:
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track ThemeConfig → CoifTheme transformations. Registers inputKind → outputKind for pipeline validation."
-      - action: plan
-        title: "Track Input via Resource"
-        prose: "Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped."
-      - action: plan
-        title: "Check BuildCache"
-        prose: "Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator."
+        prose: "Self-register with PluginRegistry so KindSystem can track ThemeConfig → CoifTheme transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate COIF Theme"
-        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests."
-      - action: generate
-        title: "Emit via Emitter & Record in GenerationPlan"
-        prose: "Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting."
+        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests. Sync rules then cascade: coif-theme-scaffold-emit.sync routes files through Emitter, coif-theme-scaffold-record-cache.sync records output in BuildCache, and coif-theme-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
-      plan:
-        - "Input configuration serialized deterministically?"
-        - "Resource locator uniquely identifies this scaffold request?"
-        - "Cache hit returns previous output reference?"
-        - "Cache miss triggers full generation?"
       generate:
         - "Theme name is kebab-case?"
         - "Primary color generates full 50-950 scale?"
@@ -6756,11 +6616,9 @@ concept-overrides:
   # type-specific flags for configuration, and --output for
   # the target directory.
   #
-  # Pipeline integration: Each generator exposes plan and preview
-  # actions that integrate with the generation kit concepts
-  # (Resource, KindSystem, BuildCache, Emitter, GenerationPlan).
-  # The generate action writes files through Emitter/writeBatch
-  # with source traceability, and records steps in GenerationPlan.
+  # Pipeline integration: Each generator exposes preview and generate
+  # actions. Sync rules automatically cascade from generate to wire
+  # Emitter/writeBatch, BuildCache/record, and GenerationPlan/recordStep.
 
   KitScaffoldGen:
     cli:
@@ -6768,9 +6626,6 @@ concept-overrides:
       subcommand: kit
       description: "Generate kit manifest (kit.yaml) and directory structure."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → KitScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -6835,9 +6690,6 @@ concept-overrides:
       subcommand: deploy
       description: "Generate deployment manifest (deploy.yaml)."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → DeployScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -6893,9 +6745,6 @@ concept-overrides:
       subcommand: interface
       description: "Generate interface manifest (interface.yaml)."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → InterfaceScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -6963,9 +6812,6 @@ concept-overrides:
       subcommand: concept
       description: "Generate concept specification (.concept) file."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → ConceptScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -7022,9 +6868,6 @@ concept-overrides:
       subcommand: sync
       description: "Generate synchronization rule (.sync) file."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → SyncScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -7079,9 +6922,6 @@ concept-overrides:
       subcommand: handler
       description: "Generate TypeScript concept handler (.impl.ts) and conformance test."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → HandlerScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -7130,9 +6970,6 @@ concept-overrides:
       subcommand: storage
       description: "Generate ConceptStorage adapter for a persistence backend."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → StorageAdapterScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -7182,9 +7019,6 @@ concept-overrides:
       subcommand: transport
       description: "Generate transport adapter for a communication protocol."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → TransportAdapterScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -7239,9 +7073,6 @@ concept-overrides:
       subcommand: component
       description: "Generate COIF headless component (widget, anatomy, machine, kit)."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → CoifComponentScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."
@@ -7311,9 +7142,6 @@ concept-overrides:
       subcommand: theme
       description: "Generate COIF design system theme (palette, typography, motion, elevation)."
       actions:
-        plan:
-          command: plan
-          description: "Show generation pipeline: Resource → KindSystem → BuildCache → CoifThemeScaffoldGen/generate → Emitter → GenerationPlan."
         preview:
           command: preview
           description: "Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change."

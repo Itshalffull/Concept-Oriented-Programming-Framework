@@ -12,4 +12,4 @@ export async function handleStorageAdapterScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const storageAdapterScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];
+export const storageAdapterScaffoldGenSkillCommands = ['generate', 'preview', 'register'];

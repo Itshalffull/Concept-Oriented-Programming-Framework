@@ -1,0 +1,19 @@
+# Record InterfaceScaffoldGen success in BuildCache
+
+sync RecordCacheInterfaceScaffold [eager]
+  purpose { Cache InterfaceScaffoldGen output for incremental rebuilds. }
+when {
+  InterfaceScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "InterfaceScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

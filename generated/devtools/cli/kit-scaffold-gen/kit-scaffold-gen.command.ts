@@ -4,42 +4,8 @@
 
 import { Command } from 'commander';
 
-export const kitScaffoldGenCommand = new Command('kit-scaffold-gen')
+export const kitScaffoldGenCommand = new Command('scaffold')
   .description('Generate kit manifest (kit.yaml) and directory structure.');
-
-kitScaffoldGenCommand
-  .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track KitConfig → KitManifest transformations.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-kitScaffoldGenCommand
-  .command('plan')
-  .description('Show generation pipeline: Resource → KindSystem → BuildCache → KitScaffoldGen/generate → Emitter → GenerationPlan.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-kitScaffoldGenCommand
-  .command('preview')
-  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
-  .requiredOption('-n, --name <name>', 'Kit name (kebab-case)')
-  .option('-d, --description <description>', 'Kit description')
-  .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
-  .option('--syncs <syncs>', 'Comma-separated sync declarations (Name:tier)')
-  .option('--dependencies <dependencies>', 'Comma-separated kit dependencies')
-  .option('--domain', 'Include infrastructure section for domain kit')
-  .option('-o, --output <output>', 'Output directory (default: ./kits/<name>)')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
 
 kitScaffoldGenCommand
   .command('kit')
@@ -47,25 +13,43 @@ kitScaffoldGenCommand
   .requiredOption('-n, --name <name>', 'Kit name (kebab-case)')
   .option('-d, --description <description>', 'Kit description')
   .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
-  .option('--syncs <syncs>', 'Comma-separated sync declarations (Name:tier)')
-  .option('--dependencies <dependencies>', 'Comma-separated kit dependencies')
-  .option('--domain', 'Include infrastructure section for domain kit')
-  .option('-o, --output <output>', 'Output directory (default: ./kits/<name>)')
-  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
-  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold kit --name auth --concepts User,Session,Password  # Scaffold a basic kit')
+  .addHelpText('after', '  copf scaffold kit --name web3 --concepts Token,Wallet --domain  # Scaffold a domain kit with infrastructure')
+  .addHelpText('after', '  copf scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended  # Scaffold with syncs')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
+kitScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Kit name (kebab-case)')
+  .requiredOption('--description <description>', 'Description')
+  .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+kitScaffoldGenCommand
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : KitScaffoldGen 
+ inputKind : KitConfig 
+ outputKind : KitManifest 
+ capabilities : [ kit-yaml , directory-structure ]')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
 export const kitScaffoldGenCommandTree = {
-  group: 'kit-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate kit manifest (kit.yaml) and directory structure.',
-  commands: [
-    { action: 'register', command: 'register' },
-    { action: 'plan', command: 'plan' },
-    { action: 'preview', command: 'preview' },
-    { action: 'generate', command: 'kit' },
-  ],
+  commands: [{ action: 'generate', command: 'kit' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

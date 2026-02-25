@@ -9,7 +9,7 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
+import { toKebabCase, toCamelCase, generateFileHeader, generateMarkdownFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.impl.js';
 
@@ -297,6 +297,7 @@ function generateCliHelpMd(
   const lines: string[] = [];
   const kebab = toKebabCase(conceptName);
 
+  lines.push(generateMarkdownFileHeader('cli', conceptName));
   lines.push(`# copf ${kebab} — Help`);
   lines.push('');
 

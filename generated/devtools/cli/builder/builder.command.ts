@@ -5,11 +5,34 @@
 import { Command } from 'commander';
 
 export const builderCommand = new Command('builder')
-  .description('Use when compiling, testing, and packaging concept implementations across languages. Coordinates build operations and routes to language-specific providers (SwiftBuilder, TypeScriptBuilder, RustBuilder, SolidityBuilder).');
+  .description('Coordinate compilation , testing , and packaging across 
+ languages Owns the build registry : what was built , for 
+ what language and platform , with what toolchain , and what 
+ the result was Provider agnostic DeployPlan invokes 
+ Builder actions , and integration syncs route to the 
+ active language provider concept');
 
 builderCommand
   .command('build')
-  .description('Compile, test, and package a concept implementation for a language and platform. Routes to language-specific providers.')
+  .description('Compile , test , and package the concept implementation 
+ for the specified language and platform Completion 
+ arrives after the provider concept finishes actual 
+ compilation Builder records the result in its registry 
+ The provider : 
+ 1 Resolves Toolchain for the language platform ( returns 
+ invocation profile with command , args , outputFormat ) 
+ 2 Compiles the source using the invocation profile 
+ 3 Runs tests ( unless config mode skip-tests ) 
+ 4 Packages the output 
+ 5 Returns content addressed artifact 
+ If an artifact with matching input hash already exists 
+ in Artifact , returns it without rebuilding ( cache hit 
+ through Artifact s content addressing )')
+  .requiredOption('--concept <concept>', 'Concept')
+  .requiredOption('--source <source>', 'Source')
+  .requiredOption('--language <language>', 'Language')
+  .requiredOption('--platform <platform>', 'Platform')
+  .requiredOption('--config <config>', 'Config')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'build', ...opts });
@@ -17,8 +40,14 @@ builderCommand
   });
 
 builderCommand
-  .command('buildAll')
-  .description('Build multiple concepts across multiple target languages and platforms in parallel.')
+  .command('build-all')
+  .description('Build multiple concepts across multiple targets 
+ Independent targets build in parallel Returns 
+ per concept , per target results')
+  .requiredOption('--concepts <concepts>', 'Concepts')
+  .requiredOption('--source <source>', 'Source')
+  .requiredOption('--targets <targets>', 'Targets')
+  .requiredOption('--config <config>', 'Config')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'buildAll', ...opts });
@@ -27,7 +56,38 @@ builderCommand
 
 builderCommand
   .command('test')
-  .description('Run tests only for a previously built concept — no recompilation.')
+  .description('Run tests only ( no compilation assumes already built ) 
+ Used for re running tests after a build If testFilter 
+ is provided , only run the specified tests ( from 
+ TestSelection ) Otherwise run the full suite 
+ testType selects which test runner and suite to execute : 
+ unit ( default ) , integration , e2e , ui , visual , 
+ benchmark Each type resolves a different toolchain 
+ via Toolchain resolve with the matching category The 
+ resolved invocation profile ( command , args , outputFormat ) 
+ tells the provider exactly how to run the tool and 
+ parse its output 
+ toolName optionally selects a specific tool within the 
+ category when multiple alternatives exist Sourced from 
+ the deploy manifest build section Examples : 
+ toolName : jest selects jest over vitest for unit runner 
+ toolName : cypress selects cypress over playwright for e2e runner 
+ toolName : hardhat selects hardhat over foundry for solidity unit runner 
+ Examples : 
+ test ( testType : unit ) Toolchain resolve ( category : unit-runner ) 
+ vitest : { command : npx vitest run , args : [ --reporter=json ] , outputFormat : vitest-json } 
+ test ( testType : unit , toolName : jest ) Toolchain resolve ( category : unit-runner , toolName : jest ) 
+ jest : { command : npx jest , args : [ --json ] , outputFormat : jest-json } 
+ test ( testType : e2e ) Toolchain resolve ( category : e2e-runner ) 
+ playwright : { command : npx playwright test , args : [ --reporter=json ] , outputFormat : playwright-json } 
+ test ( testType : e2e , toolName : cypress ) Toolchain resolve ( category : e2e-runner , toolName : cypress ) 
+ cypress : { command : npx cypress run , args : [ --reporter , json ] , outputFormat : cypress-json }')
+  .requiredOption('--concept <concept>', 'Concept')
+  .requiredOption('--language <language>', 'Language')
+  .requiredOption('--platform <platform>', 'Platform')
+  .requiredOption('--test-filter <testFilter>', 'Test Filter')
+  .requiredOption('--test-type <testType>', 'Test Type')
+  .requiredOption('--tool-name <toolName>', 'Tool Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'test', ...opts });
@@ -36,7 +96,9 @@ builderCommand
 
 builderCommand
   .command('status')
-  .description('Check the current status of a build: pending, compiling, testing, packaging, done, or failed.')
+  .description('Current build status Statuses : pending , compiling , 
+ testing , packaging , done , failed')
+  .requiredOption('--build <build>', 'Build')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'status', ...opts });
@@ -45,7 +107,10 @@ builderCommand
 
 builderCommand
   .command('history')
-  .description('Show build history for a concept, optionally filtered by language.')
+  .description('Build history for a concept , optionally filtered by 
+ language Used by copf build history')
+  .requiredOption('--concept <concept>', 'Concept')
+  .requiredOption('--language <language>', 'Language')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'history', ...opts });
@@ -54,6 +119,11 @@ builderCommand
 
 export const builderCommandTree = {
   group: 'builder',
-  description: 'Use when compiling, testing, and packaging concept implementations across languages. Coordinates build operations and routes to language-specific providers (SwiftBuilder, TypeScriptBuilder, RustBuilder, SolidityBuilder).',
-  commands: [{ action: 'build', command: 'build' }, { action: 'buildAll', command: 'buildAll' }, { action: 'test', command: 'test' }, { action: 'status', command: 'status' }, { action: 'history', command: 'history' }],
+  description: 'Coordinate compilation , testing , and packaging across 
+ languages Owns the build registry : what was built , for 
+ what language and platform , with what toolchain , and what 
+ the result was Provider agnostic DeployPlan invokes 
+ Builder actions , and integration syncs route to the 
+ active language provider concept',
+  commands: [{ action: 'build', command: 'build' }, { action: 'buildAll', command: 'build-all' }, { action: 'test', command: 'test' }, { action: 'status', command: 'status' }, { action: 'history', command: 'history' }],
 };

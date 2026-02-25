@@ -4,24 +4,24 @@
 
 import { Command } from 'commander';
 
-export const conceptScaffoldGenCommand = new Command('concept-scaffold-gen')
+export const conceptScaffoldGenCommand = new Command('scaffold')
   .description('Generate concept specification (.concept) file.');
 
 conceptScaffoldGenCommand
-  .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track ConceptConfig → ConceptSpec transformations.')
+  .command('concept')
+  .description('Scaffold a .concept file with state, actions, and register().')
+  .requiredOption('-n, --name <name>', 'PascalCase concept name')
+  .requiredOption('--type-param <typeParam>', 'Type Param')
+  .option('--purpose <purpose>', 'Purpose description')
+  .requiredOption('--state-fields <stateFields>', 'State Fields')
+  .option('-a, --actions <actions>', 'Comma-separated action names')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold concept --name User --actions create,update,delete  # Scaffold a basic concept')
+  .addHelpText('after', '  copf scaffold concept --name Article --param A --category domain  # Scaffold with custom type parameter')
+  .addHelpText('after', '  copf scaffold concept --name Bookmark --purpose 'Save and organize references.'  # Scaffold with purpose')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-conceptScaffoldGenCommand
-  .command('plan')
-  .description('Show generation pipeline: Resource → KindSystem → BuildCache → ConceptScaffoldGen/generate → Emitter → GenerationPlan.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
@@ -29,11 +29,10 @@ conceptScaffoldGenCommand
   .command('preview')
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'PascalCase concept name')
-  .option('-p, --param <param>', 'Type parameter letter (default: T)')
-  .option('--purpose <purpose>', 'Purpose description')
-  .option('--category <category>', 'Annotation category (domain, devtools, etc.)')
-  .option('-a, --actions <actions>', 'Comma-separated action names')
-  .option('-o, --output <output>', 'Output directory (default: ./specs/app)')
+  .requiredOption('--type-param <typeParam>', 'Type Param')
+  .requiredOption('--purpose <purpose>', 'Purpose')
+  .requiredOption('--state-fields <stateFields>', 'State Fields')
+  .requiredOption('--actions <actions>', 'Actions')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
@@ -41,29 +40,20 @@ conceptScaffoldGenCommand
   });
 
 conceptScaffoldGenCommand
-  .command('concept')
-  .description('Scaffold a .concept file with state, actions, and register().')
-  .requiredOption('-n, --name <name>', 'PascalCase concept name')
-  .option('-p, --param <param>', 'Type parameter letter (default: T)')
-  .option('--purpose <purpose>', 'Purpose description')
-  .option('--category <category>', 'Annotation category (domain, devtools, etc.)')
-  .option('-a, --actions <actions>', 'Comma-separated action names')
-  .option('-o, --output <output>', 'Output directory (default: ./specs/app)')
-  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
-  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : ConceptScaffoldGen 
+ inputKind : ConceptConfig 
+ outputKind : ConceptSpec 
+ capabilities : [ concept-spec , state-fields , actions , invariants ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
 export const conceptScaffoldGenCommandTree = {
-  group: 'concept-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate concept specification (.concept) file.',
-  commands: [
-    { action: 'register', command: 'register' },
-    { action: 'plan', command: 'plan' },
-    { action: 'preview', command: 'preview' },
-    { action: 'generate', command: 'concept' },
-  ],
+  commands: [{ action: 'generate', command: 'concept' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -58,6 +58,7 @@ function generateProtoFile(
   const conceptPascal = toPascalCase(manifest.name);
   const lines: string[] = [];
 
+  lines.push(generateFileHeader('grpc', manifest.name));
   lines.push('syntax = "proto3";');
   lines.push(`package ${packageName};`);
   lines.push('');

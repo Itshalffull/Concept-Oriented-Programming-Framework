@@ -21,6 +21,7 @@ import {
   toCamelCase,
   toPascalCase,
   generateFileHeader,
+  generateMarkdownFileHeader,
   buildConceptGroups,
   getHierarchicalTrait,
   type ConceptGroup,
@@ -200,6 +201,10 @@ function generateSkillMd(
 
   lines.push('---');
   lines.push('');
+
+  // Generated-file notice (HTML comment, invisible in rendered markdown)
+  const headerConceptName = group.concepts.length === 1 ? (conceptName || group.name) : group.name;
+  lines.push(generateMarkdownFileHeader('claude-skills', headerConceptName));
 
   // --- Markdown Body ---
   if (group.concepts.length === 1 && workflow) {
@@ -673,7 +678,8 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
       if (companionDocs) {
         for (const doc of companionDocs) {
           if (doc.content && doc.path) {
-            files.push({ path: `${kebab}/${doc.path}`, content: doc.content });
+            const mdHeader = doc.path.endsWith('.md') ? generateMarkdownFileHeader('claude-skills', name) : '';
+            files.push({ path: `${kebab}/${doc.path}`, content: mdHeader + doc.content });
           }
         }
       }
@@ -684,7 +690,8 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
         const refDocs = filterByTier(references, 'reference');
         for (const ref of refDocs) {
           if (ref.content && ref.path) {
-            files.push({ path: `${kebab}/${ref.path}`, content: ref.content });
+            const mdHeader = ref.path.endsWith('.md') ? generateMarkdownFileHeader('claude-skills', name) : '';
+            files.push({ path: `${kebab}/${ref.path}`, content: mdHeader + ref.content });
           }
         }
       }

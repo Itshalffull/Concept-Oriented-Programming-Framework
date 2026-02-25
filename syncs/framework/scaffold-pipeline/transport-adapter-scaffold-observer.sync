@@ -1,0 +1,16 @@
+# Record TransportAdapterScaffoldGen completion in GenerationPlan
+
+sync ObserveTransportAdapterScaffold [eager]
+  purpose { Track TransportAdapterScaffoldGen run in GenerationPlan. }
+when {
+  TransportAdapterScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "TransportAdapterScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

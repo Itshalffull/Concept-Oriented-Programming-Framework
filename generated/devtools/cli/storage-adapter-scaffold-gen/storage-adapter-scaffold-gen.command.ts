@@ -4,24 +4,21 @@
 
 import { Command } from 'commander';
 
-export const storageAdapterScaffoldGenCommand = new Command('storage-adapter-scaffold-gen')
+export const storageAdapterScaffoldGenCommand = new Command('scaffold')
   .description('Generate ConceptStorage adapter for a persistence backend.');
 
 storageAdapterScaffoldGenCommand
-  .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track StorageConfig → StorageAdapter transformations.')
+  .command('storage')
+  .description('Scaffold a ConceptStorage adapter with put, get, find, del, and delMany methods.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-b, --backend <value>', 'Backend type (sqlite|postgresql|redis|dynamodb|memory)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold storage --name AppStorage --backend postgresql  # Generate a PostgreSQL adapter')
+  .addHelpText('after', '  copf scaffold storage --name CacheStorage --backend redis  # Generate a Redis adapter')
+  .addHelpText('after', '  copf scaffold storage --name TestStorage --backend memory  # Generate an in-memory adapter for tests')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-storageAdapterScaffoldGenCommand
-  .command('plan')
-  .description('Show generation pipeline: Resource → KindSystem → BuildCache → StorageAdapterScaffoldGen/generate → Emitter → GenerationPlan.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
@@ -29,8 +26,7 @@ storageAdapterScaffoldGenCommand
   .command('preview')
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
-  .requiredOption('-b, --backend <backend>', 'Backend type')
-  .option('-o, --output <output>', 'Output directory')
+  .option('-b, --backend <value>', 'Backend type (sqlite|postgresql|redis|dynamodb|memory)')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
@@ -38,26 +34,20 @@ storageAdapterScaffoldGenCommand
   });
 
 storageAdapterScaffoldGenCommand
-  .command('storage')
-  .description('Scaffold a ConceptStorage adapter with put, get, find, del, and delMany methods.')
-  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
-  .requiredOption('-b, --backend <backend>', 'Backend type')
-  .option('-o, --output <output>', 'Output directory')
-  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
-  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : StorageAdapterScaffoldGen 
+ inputKind : StorageConfig 
+ outputKind : StorageAdapter 
+ capabilities : [ sqlite , postgresql , redis , dynamodb , memory ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
 export const storageAdapterScaffoldGenCommandTree = {
-  group: 'storage-adapter-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate ConceptStorage adapter for a persistence backend.',
-  commands: [
-    { action: 'register', command: 'register' },
-    { action: 'plan', command: 'plan' },
-    { action: 'preview', command: 'preview' },
-    { action: 'generate', command: 'storage' },
-  ],
+  commands: [{ action: 'generate', command: 'storage' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

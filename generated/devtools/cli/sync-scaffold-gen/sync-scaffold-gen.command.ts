@@ -4,24 +4,21 @@
 
 import { Command } from 'commander';
 
-export const syncScaffoldGenCommand = new Command('sync-scaffold-gen')
+export const syncScaffoldGenCommand = new Command('scaffold')
   .description('Generate synchronization rule (.sync) file.');
 
 syncScaffoldGenCommand
-  .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track SyncConfig → SyncSpec transformations.')
+  .command('sync')
+  .description('Scaffold a .sync file with when/where/then clauses.')
+  .requiredOption('-n, --name <name>', 'PascalCase sync name')
+  .requiredOption('--trigger <trigger>', 'Trigger')
+  .requiredOption('--effects <effects>', 'Effects')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold sync --name CreateProfile --from User/create --to Profile/init  # Scaffold a sync between two concepts')
+  .addHelpText('after', '  copf scaffold sync --name ValidateOrder --tier required  # Scaffold a required sync')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-syncScaffoldGenCommand
-  .command('plan')
-  .description('Show generation pipeline: Resource → KindSystem → BuildCache → SyncScaffoldGen/generate → Emitter → GenerationPlan.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
@@ -29,11 +26,8 @@ syncScaffoldGenCommand
   .command('preview')
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'PascalCase sync name')
-  .option('--from <from>', 'Trigger source (Concept/action)')
-  .option('--to <to>', 'Effect target (Concept/action)')
-  .option('-t, --tier <tier>', 'Sync tier (required, recommended)')
-  .option('--eager', 'Fire immediately (default: true)')
-  .option('-o, --output <output>', 'Output directory (default: ./syncs)')
+  .requiredOption('--trigger <trigger>', 'Trigger')
+  .requiredOption('--effects <effects>', 'Effects')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
@@ -41,29 +35,20 @@ syncScaffoldGenCommand
   });
 
 syncScaffoldGenCommand
-  .command('sync')
-  .description('Scaffold a .sync file with when/where/then clauses.')
-  .requiredOption('-n, --name <name>', 'PascalCase sync name')
-  .option('--from <from>', 'Trigger source (Concept/action)')
-  .option('--to <to>', 'Effect target (Concept/action)')
-  .option('-t, --tier <tier>', 'Sync tier (required, recommended)')
-  .option('--eager', 'Fire immediately (default: true)')
-  .option('-o, --output <output>', 'Output directory (default: ./syncs)')
-  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
-  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : SyncScaffoldGen 
+ inputKind : SyncConfig 
+ outputKind : SyncSpec 
+ capabilities : [ sync-spec , when-clause , where-clause , then-clause ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
 export const syncScaffoldGenCommandTree = {
-  group: 'sync-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate synchronization rule (.sync) file.',
-  commands: [
-    { action: 'register', command: 'register' },
-    { action: 'plan', command: 'plan' },
-    { action: 'preview', command: 'preview' },
-    { action: 'generate', command: 'sync' },
-  ],
+  commands: [{ action: 'generate', command: 'sync' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

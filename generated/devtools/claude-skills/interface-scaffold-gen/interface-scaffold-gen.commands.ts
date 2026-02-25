@@ -12,4 +12,4 @@ export async function handleInterfaceScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const interfaceScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];
+export const interfaceScaffoldGenSkillCommands = ['generate', 'preview', 'register'];

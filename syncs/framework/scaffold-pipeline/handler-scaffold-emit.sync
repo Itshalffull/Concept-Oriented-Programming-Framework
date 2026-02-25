@@ -1,0 +1,11 @@
+# Route HandlerScaffoldGen file output through Emitter
+
+sync EmitHandlerScaffoldFiles [eager]
+  purpose { Write generated handler implementation through Emitter. }
+when {
+  HandlerScaffoldGen/generate: [ conceptName: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

@@ -29,19 +29,6 @@ concept HandlerScaffoldGen [H] {
       }
     }
 
-    action plan() {
-      -> ok(inputKind: String, outputKind: String, description: String,
-            pipeline: list String) {
-        Return generation pipeline metadata describing how this
-        generator participates in the Resource → KindSystem →
-        BuildCache → Emitter flow.
-
-        pipeline: ["Resource/upsert", "BuildCache/check",
-                    "HandlerScaffoldGen/generate", "Emitter/writeBatch",
-                    "GenerationPlan/recordStep"]
-      }
-    }
-
     action preview(conceptName: String, actions: list ActionDef) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing. Uses

@@ -1,0 +1,11 @@
+# Route SyncScaffoldGen file output through Emitter
+
+sync EmitSyncScaffoldFiles [eager]
+  purpose { Write generated sync rule through Emitter. }
+when {
+  SyncScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

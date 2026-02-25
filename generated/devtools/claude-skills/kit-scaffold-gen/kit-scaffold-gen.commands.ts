@@ -12,4 +12,4 @@ export async function handleKitScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const kitScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];
+export const kitScaffoldGenSkillCommands = ['generate', 'preview', 'register'];

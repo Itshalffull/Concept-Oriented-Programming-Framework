@@ -1,0 +1,19 @@
+# Record DeployScaffoldGen success in BuildCache
+
+sync RecordCacheDeployScaffold [eager]
+  purpose { Cache DeployScaffoldGen output for incremental rebuilds. }
+when {
+  DeployScaffoldGen/generate: [ appName: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "DeployScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

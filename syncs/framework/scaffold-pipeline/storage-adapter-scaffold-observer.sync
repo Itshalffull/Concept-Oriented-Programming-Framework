@@ -1,0 +1,16 @@
+# Record StorageAdapterScaffoldGen completion in GenerationPlan
+
+sync ObserveStorageAdapterScaffold [eager]
+  purpose { Track StorageAdapterScaffoldGen run in GenerationPlan. }
+when {
+  StorageAdapterScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "StorageAdapterScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

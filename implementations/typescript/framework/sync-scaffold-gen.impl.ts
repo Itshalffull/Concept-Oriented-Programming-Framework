@@ -160,20 +160,6 @@ export const syncScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async plan() {
-    return {
-      variant: 'ok',
-      inputKind: 'SyncConfig',
-      outputKind: 'SyncSpec',
-      description: 'Generate well-formed .sync rule files with when, where, and then clauses.',
-      pipeline: JSON.stringify([
-        'Resource/upsert', 'BuildCache/check',
-        'SyncScaffoldGen/generate', 'Emitter/writeBatch',
-        'GenerationPlan/recordStep',
-      ]),
-    };
-  },
-
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
     const result = await syncScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;

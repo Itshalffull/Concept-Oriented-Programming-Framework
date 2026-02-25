@@ -29,19 +29,6 @@ concept ConceptScaffoldGen [C] {
       }
     }
 
-    action plan() {
-      -> ok(inputKind: String, outputKind: String, description: String,
-            pipeline: list String) {
-        Return generation pipeline metadata describing how this
-        generator participates in the Resource → KindSystem →
-        BuildCache → Emitter flow.
-
-        pipeline: ["Resource/upsert", "BuildCache/check",
-                    "ConceptScaffoldGen/generate", "Emitter/writeBatch",
-                    "GenerationPlan/recordStep"]
-      }
-    }
-
     action preview(name: String, typeParam: String, purpose: String,
                     stateFields: list StateField, actions: list ActionDef) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {

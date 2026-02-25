@@ -1,0 +1,11 @@
+# Route InterfaceScaffoldGen file output through Emitter
+
+sync EmitInterfaceScaffoldFiles [eager]
+  purpose { Write generated interface manifest through Emitter. }
+when {
+  InterfaceScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

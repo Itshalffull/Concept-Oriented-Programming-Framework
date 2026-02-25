@@ -4,35 +4,28 @@
 
 import { Command } from 'commander';
 
-export const handlerScaffoldGenCommand = new Command('handler-scaffold-gen')
+export const handlerScaffoldGenCommand = new Command('scaffold')
   .description('Generate TypeScript concept handler (.impl.ts) and conformance test.');
 
 handlerScaffoldGenCommand
-  .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track HandlerConfig → HandlerImpl transformations.')
+  .command('handler')
+  .description('Scaffold a .impl.ts handler with register(), typed actions, and a conformance test.')
+  .requiredOption('--concept-name <conceptName>', 'Concept Name')
+  .option('-a, --actions <actions>', 'Comma-separated action signatures (name:param1:Type1,name:param2:Type2)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String  # Scaffold a handler')
+  .addHelpText('after', '  copf scaffold handler --concept Bookmark --input-kind BookmarkInput --output-kind BookmarkResult  # Scaffold with kind metadata')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-handlerScaffoldGenCommand
-  .command('plan')
-  .description('Show generation pipeline: Resource → KindSystem → BuildCache → HandlerScaffoldGen/generate → Emitter → GenerationPlan.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
 handlerScaffoldGenCommand
   .command('preview')
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
-  .requiredOption('-c, --concept <concept>', 'PascalCase concept name')
-  .option('-a, --actions <actions>', 'Comma-separated action signatures (name:param1:Type1,name:param2:Type2)')
-  .option('--input-kind <input-kind>', 'KindSystem input kind')
-  .option('--output-kind <output-kind>', 'KindSystem output kind')
-  .option('-o, --output <output>', 'Output directory (default: ./implementations/typescript)')
+  .requiredOption('--concept-name <conceptName>', 'Concept Name')
+  .requiredOption('--actions <actions>', 'Actions')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
@@ -40,28 +33,20 @@ handlerScaffoldGenCommand
   });
 
 handlerScaffoldGenCommand
-  .command('handler')
-  .description('Scaffold a .impl.ts handler with register(), typed actions, and a conformance test.')
-  .requiredOption('-c, --concept <concept>', 'PascalCase concept name')
-  .option('-a, --actions <actions>', 'Comma-separated action signatures (name:param1:Type1,name:param2:Type2)')
-  .option('--input-kind <input-kind>', 'KindSystem input kind')
-  .option('--output-kind <output-kind>', 'KindSystem output kind')
-  .option('-o, --output <output>', 'Output directory (default: ./implementations/typescript)')
-  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
-  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : HandlerScaffoldGen 
+ inputKind : HandlerConfig 
+ outputKind : HandlerImpl 
+ capabilities : [ impl-ts , conformance-test , storage-patterns ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
 export const handlerScaffoldGenCommandTree = {
-  group: 'handler-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate TypeScript concept handler (.impl.ts) and conformance test.',
-  commands: [
-    { action: 'register', command: 'register' },
-    { action: 'plan', command: 'plan' },
-    { action: 'preview', command: 'preview' },
-    { action: 'generate', command: 'handler' },
-  ],
+  commands: [{ action: 'generate', command: 'handler' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

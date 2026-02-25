@@ -4,24 +4,21 @@
 
 import { Command } from 'commander';
 
-export const interfaceScaffoldGenCommand = new Command('interface-scaffold-gen')
+export const interfaceScaffoldGenCommand = new Command('scaffold')
   .description('Generate interface manifest (interface.yaml).');
 
 interfaceScaffoldGenCommand
-  .command('register')
-  .description('Self-register with PluginRegistry so the scaffolding kit\'s KindSystem can track InterfaceConfig → InterfaceManifest transformations.')
+  .command('interface')
+  .description('Scaffold an interface.yaml with targets, SDKs, and concept overrides.')
+  .requiredOption('-n, --name <name>', 'Interface name')
+  .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)', 'rest')
+  .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)', 'typescript')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  copf scaffold interface --name my-api --targets rest,graphql --sdks typescript,python  # Scaffold a REST + GraphQL interface')
+  .addHelpText('after', '  copf scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills  # Scaffold a full-stack interface')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
-  });
-
-interfaceScaffoldGenCommand
-  .command('plan')
-  .description('Show generation pipeline: Resource → KindSystem → BuildCache → InterfaceScaffoldGen/generate → Emitter → GenerationPlan.')
-  .option('--json', 'Output as JSON')
-  .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
@@ -29,12 +26,8 @@ interfaceScaffoldGenCommand
   .command('preview')
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'Interface name')
-  .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)')
-  .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)')
-  .option('-c, --concepts <concepts>', 'Comma-separated concept names for per-concept overrides')
-  .option('--openapi', 'Generate OpenAPI spec (default: true)')
-  .option('--asyncapi', 'Generate AsyncAPI spec (default: false)')
-  .option('-o, --output <output>', 'Output directory')
+  .option('-t, --targets <targets>', 'Comma-separated targets')
+  .requiredOption('--sdks <sdks>', 'Sdks')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
@@ -42,30 +35,20 @@ interfaceScaffoldGenCommand
   });
 
 interfaceScaffoldGenCommand
-  .command('interface')
-  .description('Scaffold an interface.yaml with targets, SDKs, and concept overrides.')
-  .requiredOption('-n, --name <name>', 'Interface name')
-  .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)')
-  .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)')
-  .option('-c, --concepts <concepts>', 'Comma-separated concept names for per-concept overrides')
-  .option('--openapi', 'Generate OpenAPI spec (default: true)')
-  .option('--asyncapi', 'Generate AsyncAPI spec (default: false)')
-  .option('-o, --output <output>', 'Output directory')
-  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
-  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .command('register')
+  .description('Return static metadata for PluginRegistry 
+ name : InterfaceScaffoldGen 
+ inputKind : InterfaceConfig 
+ outputKind : InterfaceManifest 
+ capabilities : [ interface-yaml , target-config , sdk-config ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
+    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
 
 export const interfaceScaffoldGenCommandTree = {
-  group: 'interface-scaffold-gen',
+  group: 'scaffold',
   description: 'Generate interface manifest (interface.yaml).',
-  commands: [
-    { action: 'register', command: 'register' },
-    { action: 'plan', command: 'plan' },
-    { action: 'preview', command: 'preview' },
-    { action: 'generate', command: 'interface' },
-  ],
+  commands: [{ action: 'generate', command: 'interface' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

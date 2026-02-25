@@ -12,4 +12,4 @@ export async function handleConceptScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const conceptScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];
+export const conceptScaffoldGenSkillCommands = ['generate', 'preview', 'register'];
