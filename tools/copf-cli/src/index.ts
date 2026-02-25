@@ -2,35 +2,17 @@
 // ============================================================
 // COPF CLI — Entry Point
 //
-// Routes commands to their handlers per Section 12 of the
-// architecture doc.
+// Routes commands to their handlers. Generated concept commands
+// are imported from the generated Commander.js command tree.
+// The `interface` command is the generation infrastructure and
+// is the only non-generated command handler.
 //
 // Usage:
-//   copf init <name>
-//   copf check
-//   copf generate --target <lang> [--concept <name>]
-//   copf compile-syncs
-//   copf test [concept] [--integration]
-//   copf dev
-//   copf deploy --manifest <file>
-//   copf kit <subcommand> [args...]
 //   copf interface <subcommand> [args...]
+//   copf <concept-command> <action> [options]
 // ============================================================
 
-import { initCommand } from './commands/init.js';
-import { checkCommand } from './commands/check.js';
-import { generateCommand } from './commands/generate.js';
-import { compileSyncsCommand } from './commands/compile-syncs.js';
-import { testCommand } from './commands/test.js';
-import { deployCommand } from './commands/deploy.js';
-import { kitCommand } from './commands/kit.js';
-import { devCommand } from './commands/dev.js';
-import { traceCommand } from './commands/trace.js';
-import { migrateCommand } from './commands/migrate.js';
-import { compileCacheCommand } from './commands/compile-cache.js';
 import { interfaceCommand } from './commands/interface.js';
-import { impactCommand } from './commands/impact.js';
-import { kindsCommand } from './commands/kinds.js';
 
 const VERSION = '0.1.0';
 
@@ -72,53 +54,19 @@ function printHelp(): void {
 Usage: copf <command> [options]
 
 Commands:
-  init <name>                    Initialize a new COPF project
-  check                          Parse and validate all concept specs
-    --pattern <name> <concept>     Validate concept against a convention pattern
-  generate --target <lang>       Generate schemas + code for all concepts
-    --target typescript|rust       Target language
-    --concept <Name>               Generate for a single concept only
-    --force                        Force full rebuild (invalidate all caches)
-    --plan                         Show what would run without executing
-    --dry-run                      Show file changes without writing
-    --summary                      Show post-run statistics
-    --history                      Show recent generation runs
-    --status                       Show status of current/last run
-    --audit                        Check generated files for drift
-    --clean                        Remove orphaned generated files
-    --family <name>                Filter by generation family
-    --generator-syncs              Auto-generate per-generator sync files
-  compile --cache                Build pre-compiled artifacts to .copf-cache/
-  compile-syncs                  Compile syncs and validate against manifests
-  test [concept]                 Run conformance tests for a concept
-    --integration                  Run full integration tests
-  dev                            Start the development server
-  deploy --manifest <file>       Deploy according to manifest
-  trace <flow-id>                Render a flow trace for debugging
-    --failed                       Show only failed/unfired branches
-    --gates                        Show only gate steps and downstream chains
-    --json                         Output as JSON for tooling
-  impact <path>                  Show what regenerates if a source file changes
-  kinds <subcommand>             Kind system queries
-    list                           Show all registered IR/artifact kinds
-    path <from> <to>               Find shortest transform path between kinds
-    consumers <kind>               What transforms consume this kind
-    producers <kind>               What transforms produce this kind
-  migrate <concept>              Run schema migration for a concept
-    --check                        Report version status for all concepts
-    --all                          Migrate all concepts needing migration
-  kit <subcommand>               Kit management
-    init <name>                    Scaffold a new kit directory
-    validate <path>                Validate kit manifest, syncs, and cross-kit concept references
-    test <path>                    Run kit conformance + integration tests
-    list                           Show kits used by the current app
-    check-overrides                Verify app overrides reference valid syncs
   interface <subcommand>          Interface generation
     generate                       Generate all configured interfaces
     plan                           Show generation plan without executing
     validate                       Validate interface manifest and projections
     files                          List generated output files
     clean                          Remove orphaned generated files
+
+All other commands (check, generate, deploy, etc.) are generated from
+concept specs via the interface generation pipeline. Run:
+
+  copf interface generate --manifest examples/devtools/devtools.interface.yaml
+
+to regenerate CLI commands into tools/copf-cli/src/commands/.
 
 Options:
   --help                         Show this help message
@@ -141,53 +89,8 @@ export async function main(argv: string[] = process.argv): Promise<void> {
 
   try {
     switch (parsed.command) {
-      case 'init':
-        await initCommand(parsed.positional, parsed.flags);
-        break;
-      case 'check':
-        await checkCommand(parsed.positional, parsed.flags);
-        break;
-      case 'generate':
-        await generateCommand(parsed.positional, parsed.flags);
-        break;
-      case 'compile':
-        if (parsed.flags.cache) {
-          await compileCacheCommand(parsed.positional, parsed.flags);
-        } else {
-          console.error('Usage: copf compile --cache');
-          console.error('  --cache   Build pre-compiled artifacts to .copf-cache/');
-          process.exit(1);
-        }
-        break;
-      case 'compile-syncs':
-        await compileSyncsCommand(parsed.positional, parsed.flags);
-        break;
-      case 'test':
-        await testCommand(parsed.positional, parsed.flags);
-        break;
-      case 'dev':
-        await devCommand(parsed.positional, parsed.flags);
-        break;
-      case 'trace':
-        await traceCommand(parsed.positional, parsed.flags);
-        break;
-      case 'migrate':
-        await migrateCommand(parsed.positional, parsed.flags);
-        break;
-      case 'deploy':
-        await deployCommand(parsed.positional, parsed.flags);
-        break;
-      case 'kit':
-        await kitCommand(parsed.positional, parsed.flags);
-        break;
       case 'interface':
         await interfaceCommand(parsed.positional, parsed.flags);
-        break;
-      case 'impact':
-        await impactCommand(parsed.positional, parsed.flags);
-        break;
-      case 'kinds':
-        await kindsCommand(parsed.positional, parsed.flags);
         break;
       default:
         console.error(`Unknown command: ${parsed.command}`);

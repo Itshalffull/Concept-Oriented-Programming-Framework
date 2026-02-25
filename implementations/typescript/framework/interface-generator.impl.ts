@@ -24,6 +24,9 @@ export interface InterfaceManifest {
   outputDir: string;
   formatting: string;
   manifestYaml: Record<string, unknown>;
+  /** Per-target output directory overrides. When set, files for a target
+   *  are written to this directory instead of `<outputDir>/<target>/`. */
+  targetOutputDirs?: Record<string, string>;
 }
 
 /** A generated file from a provider. */

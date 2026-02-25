@@ -124,6 +124,21 @@ function yamlToInterfaceManifest(
   const specs = yaml.specs as Record<string, unknown> || {};
   const output = yaml.output as Record<string, unknown> || {};
 
+  // Parse per-target output-dir overrides
+  const targetOutputDirs: Record<string, string> = {};
+  for (const [targetName, targetConfig] of Object.entries(targets)) {
+    const config = targetConfig as Record<string, unknown> | undefined;
+    if (config?.['output-dir'] && typeof config['output-dir'] === 'string') {
+      targetOutputDirs[targetName] = config['output-dir'];
+    }
+  }
+  for (const [lang, sdkConfig] of Object.entries(sdk)) {
+    const config = sdkConfig as Record<string, unknown> | undefined;
+    if (config?.['output-dir'] && typeof config['output-dir'] === 'string') {
+      targetOutputDirs[`sdk/${lang}`] = config['output-dir'];
+    }
+  }
+
   return {
     kit: (iface.name as string) || '',
     version: String(iface.version || '1.0.0'),
@@ -136,6 +151,7 @@ function yamlToInterfaceManifest(
     outputDir: (output.dir as string) || './generated/interfaces',
     formatting: 'prettier',
     manifestYaml: yaml,
+    targetOutputDirs: Object.keys(targetOutputDirs).length > 0 ? targetOutputDirs : undefined,
   };
 }
 
@@ -334,12 +350,38 @@ async function interfaceGenerate(
   }
 
   // 6. Write files to disk
-  const outputDir = resolve(projectDir, manifest.outputDir);
+  // Resolve per-target output directories: if a target has an output-dir
+  // override, files for that target are written there (with the target
+  // prefix stripped from the path). Otherwise, files go to the global
+  // output dir with the target prefix preserved.
+  const globalOutputDir = resolve(projectDir, manifest.outputDir);
+  const targetDirs = manifest.targetOutputDirs || {};
   let writtenCount = 0;
   let skippedCount = 0;
 
   for (const file of allFiles) {
-    const filePath = join(outputDir, file.path);
+    // file.path looks like "cli/concept/file.ts" or "sdk/typescript/file.ts"
+    const segments = file.path.split('/');
+    const targetPrefix = segments[0];
+    // For SDK paths like "sdk/typescript/...", the key is "sdk/typescript"
+    const sdkKey = targetPrefix === 'sdk' && segments.length > 2
+      ? `${segments[0]}/${segments[1]}`
+      : undefined;
+
+    let filePath: string;
+    if (sdkKey && targetDirs[sdkKey]) {
+      // SDK with custom output dir: strip "sdk/<lang>/" prefix
+      const restPath = segments.slice(2).join('/');
+      filePath = join(resolve(projectDir, targetDirs[sdkKey]), restPath);
+    } else if (targetDirs[targetPrefix]) {
+      // Target with custom output dir: strip target prefix
+      const restPath = segments.slice(1).join('/');
+      filePath = join(resolve(projectDir, targetDirs[targetPrefix]), restPath);
+    } else {
+      // Default: use global output dir with full path
+      filePath = join(globalOutputDir, file.path);
+    }
+
     const dir = dirname(filePath);
     mkdirSync(dir, { recursive: true });
 
@@ -368,16 +410,18 @@ async function interfaceGenerate(
     }
   }
 
-  console.log(`  Output: ${relative(projectDir, outputDir)}/`);
-
-  // Print per-target breakdown
+  // Print per-target output locations
   const byTarget = new Map<string, number>();
   for (const file of allFiles) {
     const target = file.path.split('/')[0];
     byTarget.set(target, (byTarget.get(target) || 0) + 1);
   }
   for (const [target, count] of byTarget) {
-    console.log(`    ${target}: ${count} file(s)`);
+    const customDir = targetDirs[target];
+    const outputLabel = customDir
+      ? relative(projectDir, resolve(projectDir, customDir))
+      : `${relative(projectDir, globalOutputDir)}/${target}`;
+    console.log(`    ${target}: ${count} file(s) → ${outputLabel}/`);
   }
 }
 
@@ -413,7 +457,12 @@ async function interfacePlan(
   const targetList = Object.keys(targets);
   if (targetList.length > 0) {
     console.log('  Targets:');
-    for (const t of targetList) console.log(`    - ${t}`);
+    for (const t of targetList) {
+      const tConfig = targets[t] as Record<string, unknown> | undefined;
+      const customDir = tConfig?.['output-dir'] as string | undefined;
+      const suffix = customDir ? ` → ${customDir}` : '';
+      console.log(`    - ${t}${suffix}`);
+    }
   } else {
     console.log('  Targets: (none configured)');
   }

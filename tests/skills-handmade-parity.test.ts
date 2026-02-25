@@ -1,11 +1,8 @@
 // ============================================================
-// Claude Skills Handmade-vs-Generated Parity Tests
+// Claude Skills Convention Tests
 //
 // Verifies that generated Claude skills (from ClaudeSkillsTarget)
-// follow the same structural conventions established by the
-// handmade skills in .claude/skills/. The handmade skills are
-// the reference standard; the generated skills should match their
-// conventions for:
+// follow structural conventions for:
 //   - Frontmatter field coverage and format
 //   - Markdown structure (H1, description paragraph, steps)
 //   - Content quality (no truncated descriptions, valid tools)
@@ -20,8 +17,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { resolve, join } from 'path';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
-const HANDMADE_SKILLS_DIR = resolve(PROJECT_ROOT, '.claude/skills');
-const GENERATED_SKILLS_DIR = resolve(PROJECT_ROOT, 'generated/devtools/claude-skills');
+const SKILLS_DIR = resolve(PROJECT_ROOT, '.claude/skills');
 
 // ---- Types ----
 
@@ -196,125 +192,58 @@ const VALID_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'WebFetch'
 
 // ---- Tests ----
 
-describe('Claude Skills Handmade-vs-Generated Parity', () => {
-  let handmadeSkills: SkillStructure[];
-  let generatedSkills: SkillStructure[];
+describe('Claude Skills Convention Tests', () => {
+  let skills: SkillStructure[];
 
   beforeAll(() => {
-    const handmadeDirs = listSkillDirs(HANDMADE_SKILLS_DIR);
-    handmadeSkills = handmadeDirs
-      .map(d => analyzeSkill(HANDMADE_SKILLS_DIR, d))
-      .filter((s): s is SkillStructure => s !== null);
-
-    const generatedDirs = listSkillDirs(GENERATED_SKILLS_DIR);
-    generatedSkills = generatedDirs
-      .map(d => analyzeSkill(GENERATED_SKILLS_DIR, d))
+    const dirs = listSkillDirs(SKILLS_DIR);
+    skills = dirs
+      .map(d => analyzeSkill(SKILLS_DIR, d))
       .filter((s): s is SkillStructure => s !== null);
   });
 
   // ================================================================
-  // Baseline: Handmade skills are the reference standard
+  // Frontmatter field conventions
   // ================================================================
 
-  describe('Handmade skill conventions (reference standard)', () => {
-    it('handmade skills directory exists with skills', () => {
-      expect(handmadeSkills.length).toBeGreaterThan(0);
+  describe('Frontmatter field conventions', () => {
+    it('skills directory exists with skills', () => {
+      expect(skills.length).toBeGreaterThan(0);
     });
 
-    it('all handmade skills have exactly 4 frontmatter fields', () => {
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        if (skill.frontmatterFieldCount !== 4) {
-          failures.push(`${skill.name}: has ${skill.frontmatterFieldCount} fields (${skill.frontmatterFields.join(', ')})`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have the canonical frontmatter fields', () => {
-      const canonical = ['name', 'description', 'allowed-tools', 'argument-hint'];
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        for (const field of canonical) {
-          if (!skill.frontmatterFields.includes(field)) {
-            failures.push(`${skill.name}: missing field "${field}"`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have an H1 heading', () => {
-      const failures = handmadeSkills.filter(s => !s.h1).map(s => s.name);
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have a Related Skills section', () => {
-      const failures = handmadeSkills.filter(s => !s.hasRelatedSkills).map(s => s.name);
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills use $ARGUMENTS in body', () => {
-      const failures = handmadeSkills.filter(s => !s.hasDollarArguments).map(s => s.name);
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have code blocks', () => {
-      const failures = handmadeSkills.filter(s => !s.hasCodeBlocks).map(s => s.name);
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have reference links', () => {
-      const failures = handmadeSkills.filter(s => !s.hasReferences).map(s => s.name);
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have numbered steps', () => {
-      const failures = handmadeSkills.filter(s => !s.hasSteps).map(s => s.name);
-      expect(failures).toEqual([]);
-    });
-  });
-
-  // ================================================================
-  // Frontmatter field parity
-  // ================================================================
-
-  describe('Frontmatter field parity', () => {
-    it('every generated skill has the "name" frontmatter field', () => {
-      const failures = generatedSkills.filter(s => !s.frontmatter.name).map(s => s.name);
+    it('every skill has the "name" frontmatter field', () => {
+      const failures = skills.filter(s => !s.frontmatter.name).map(s => s.name);
       expect(failures, `Missing "name" field: ${failures.join(', ')}`).toEqual([]);
     });
 
-    it('every generated skill has the "description" frontmatter field', () => {
-      const failures = generatedSkills.filter(s => !s.frontmatter.description).map(s => s.name);
+    it('every skill has the "description" frontmatter field', () => {
+      const failures = skills.filter(s => !s.frontmatter.description).map(s => s.name);
       expect(failures, `Missing "description" field: ${failures.join(', ')}`).toEqual([]);
     });
 
-    it('every generated skill has the "allowed-tools" frontmatter field', () => {
+    it('every skill has the "allowed-tools" frontmatter field', () => {
       // SyncParser is a known exception: it has no workflow or tool-permissions
       // annotation in the manifest, so the generator omits allowed-tools.
-      // This is a tracked parity gap — if additional concepts start missing
-      // allowed-tools, this test will catch the regression.
       const knownExceptions = new Set(['sync-parser']);
-      const failures = generatedSkills
+      const failures = skills
         .filter(s => !s.frontmatter['allowed-tools'] && !knownExceptions.has(s.name))
         .map(s => s.name);
       expect(failures, `Missing "allowed-tools" field: ${failures.join(', ')}`).toEqual([]);
     });
 
-    it('every generated skill has the "argument-hint" frontmatter field', () => {
-      const failures = generatedSkills.filter(s => !s.frontmatter['argument-hint']).map(s => s.name);
+    it('every skill has the "argument-hint" frontmatter field', () => {
+      const failures = skills.filter(s => !s.frontmatter['argument-hint']).map(s => s.name);
       expect(failures, `Missing "argument-hint" field: ${failures.join(', ')}`).toEqual([]);
     });
 
-    it('generated skills have the same 4 canonical frontmatter fields as handmade', () => {
+    it('skills have the 4 canonical frontmatter fields', () => {
       // SyncParser is a known exception: missing allowed-tools (no annotation)
       const knownExceptions: Record<string, string[]> = {
         'sync-parser': ['allowed-tools'],
       };
       const canonical = ['name', 'description', 'allowed-tools', 'argument-hint'];
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         const allowed = knownExceptions[skill.name] || [];
         const missing = canonical.filter(f => !skill.frontmatterFields.includes(f) && !allowed.includes(f));
         if (missing.length > 0) {
@@ -324,10 +253,10 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       expect(failures, `Field coverage gaps:\n  ${failures.join('\n  ')}`).toEqual([]);
     });
 
-    it('no generated skill has extra frontmatter fields beyond the 4 canonical', () => {
+    it('no skill has extra frontmatter fields beyond the 4 canonical', () => {
       const canonical = new Set(['name', 'description', 'allowed-tools', 'argument-hint']);
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         const extra = skill.frontmatterFields.filter(f => !canonical.has(f));
         if (extra.length > 0) {
           failures.push(`${skill.name}: extra fields [${extra.join(', ')}]`);
@@ -338,13 +267,13 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
   });
 
   // ================================================================
-  // Frontmatter value format parity
+  // Frontmatter value format conventions
   // ================================================================
 
-  describe('Frontmatter value format parity', () => {
-    it('generated "name" field matches the skill directory name (like handmade)', () => {
+  describe('Frontmatter value format conventions', () => {
+    it('"name" field matches the skill directory name', () => {
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         if (skill.frontmatter.name !== skill.name) {
           failures.push(`${skill.name}: name="${skill.frontmatter.name}"`);
         }
@@ -352,9 +281,9 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       expect(failures).toEqual([]);
     });
 
-    it('generated "description" is a non-empty string (like handmade)', () => {
+    it('"description" is a non-empty string', () => {
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         const desc = skill.frontmatter.description || '';
         if (desc.length < 10) {
           failures.push(`${skill.name}: description too short (${desc.length} chars)`);
@@ -363,9 +292,9 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       expect(failures).toEqual([]);
     });
 
-    it('generated "allowed-tools" contains only valid Claude tool names', () => {
+    it('"allowed-tools" contains only valid Claude tool names', () => {
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         const tools = skill.frontmatter['allowed-tools'];
         if (!tools) continue;
         const toolList = tools.split(',').map(t => t.trim());
@@ -378,33 +307,9 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       expect(failures, `Invalid tools:\n  ${failures.join('\n  ')}`).toEqual([]);
     });
 
-    it('handmade "allowed-tools" all use same full toolset', () => {
-      // Validates the handmade convention: all have Read, Grep, Glob, Edit, Write, Bash
-      const expectedTools = 'Read, Grep, Glob, Edit, Write, Bash';
+    it('"argument-hint" is non-empty', () => {
       const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        if (skill.frontmatter['allowed-tools'] !== expectedTools) {
-          failures.push(`${skill.name}: "${skill.frontmatter['allowed-tools']}"`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('handmade "argument-hint" uses quoted placeholder format', () => {
-      // All handmade skills use "<something>" format
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        const hint = skill.frontmatter['argument-hint'] || '';
-        if (!hint.startsWith('"') || !hint.endsWith('"')) {
-          failures.push(`${skill.name}: "${hint}" (expected quoted format)`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('generated "argument-hint" is non-empty', () => {
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         const hint = skill.frontmatter['argument-hint'] || '';
         if (hint.length === 0) {
           failures.push(skill.name);
@@ -412,321 +317,11 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       }
       expect(failures).toEqual([]);
     });
-  });
 
-  // ================================================================
-  // Markdown structure parity
-  // ================================================================
-
-  describe('Markdown structure parity', () => {
-    it('every generated skill has an H1 heading (like handmade)', () => {
-      const failures = generatedSkills.filter(s => !s.h1).map(s => s.name);
-      expect(failures, `Missing H1: ${failures.join(', ')}`).toEqual([]);
-    });
-
-    it('every generated skill has a description paragraph after H1 (like handmade)', () => {
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        if (!skill.descriptionAfterH1 || skill.descriptionAfterH1.length < 5) {
-          failures.push(`${skill.name}: no description paragraph after H1`);
-        }
-      }
-      expect(failures, `Missing description:\n  ${failures.join('\n  ')}`).toEqual([]);
-    });
-
-    it('every generated skill has at least one H2 heading (like handmade)', () => {
-      const failures = generatedSkills.filter(s => s.h2Headings.length === 0).map(s => s.name);
-      expect(failures, `No H2 headings: ${failures.join(', ')}`).toEqual([]);
-    });
-
-    it('generated skills with steps use numbered "Step N:" format (like handmade)', () => {
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        if (!skill.hasSteps) continue;
-        // Check that steps use "Step N:" format, not just numbered headings
-        const stepPattern = /^#{2,3} Step \d+: .+$/m;
-        const hasStepFormat = stepPattern.test(skill.body);
-        if (!hasStepFormat) {
-          failures.push(`${skill.name}: steps don't use "Step N: Title" format`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('handmade steps are sequentially numbered from 1', () => {
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        const stepMatches = [...skill.body.matchAll(/^#{2,3} Step (\d+):/gm)];
-        for (let i = 0; i < stepMatches.length; i++) {
-          const num = parseInt(stepMatches[i][1], 10);
-          if (num !== i + 1) {
-            failures.push(`${skill.name}: step ${i + 1} numbered as ${num}`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('generated steps are sequentially numbered from 1', () => {
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        const stepMatches = [...skill.body.matchAll(/^#{2,3} Step (\d+):/gm)];
-        for (let i = 0; i < stepMatches.length; i++) {
-          const num = parseInt(stepMatches[i][1], 10);
-          if (num !== i + 1) {
-            failures.push(`${skill.name}: step ${i + 1} numbered as ${num}`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-  });
-
-  // ================================================================
-  // Content quality parity
-  // ================================================================
-
-  describe('Content quality parity', () => {
-    it('generated descriptions do not end with truncated words', () => {
-      // Handmade descriptions are well-formed sentences; generated should be too
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        const desc = skill.frontmatter.description || '';
-        // Truncated descriptions often end mid-word without period
-        if (desc.length > 0 && /\s\w$/.test(desc) && !desc.endsWith('.')) {
-          // Only flag if the last "word" is very short (likely truncated)
-          const lastWord = desc.split(/\s+/).pop() || '';
-          if (lastWord.length <= 2) {
-            failures.push(`${skill.name}: description may be truncated: "...${desc.slice(-30)}"`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('generated H1 headings are not empty', () => {
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        if (skill.h1 !== null && skill.h1.trim().length === 0) {
-          failures.push(skill.name);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('handmade descriptions are complete sentences', () => {
-      // Verify handmade descriptions are well-formed (our reference standard)
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        const desc = skill.frontmatter.description || '';
-        if (desc.length < 20) {
-          failures.push(`${skill.name}: description too short`);
-        }
-        if (!desc.endsWith('.')) {
-          failures.push(`${skill.name}: description doesn't end with period`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('both handmade and generated use consistent checklist format', () => {
-      // Both should use "- [ ] " format for checklists
-      const checklistPattern = /^- \[ \] /m;
-      const badChecklistPattern = /^- \[\] |^- \[x\] |^- \[ \]/m; // Without space or with x
-
-      const failures: string[] = [];
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        if (!skill.hasChecklists) continue;
-        // Verify the format is consistent
-        const lines = skill.body.split('\n');
-        for (const line of lines) {
-          // If line looks like a checklist but uses wrong format
-          if (/^- \[\]/.test(line) && !checklistPattern.test(line)) {
-            failures.push(`${skill.name}: bad checklist format: "${line.trim()}"`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-  });
-
-  // ================================================================
-  // Feature coverage comparison
-  // ================================================================
-
-  describe('Feature coverage comparison', () => {
-    it('every generated skill has steps or commands sections (like handmade has steps)', () => {
-      // All handmade skills have steps; generated should have either steps or a Commands section
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        const hasCommands = skill.body.includes('## Commands');
-        if (!skill.hasSteps && !hasCommands) {
-          failures.push(`${skill.name}: no steps or commands section`);
-        }
-      }
-      expect(failures, `No steps/commands:\n  ${failures.join('\n  ')}`).toEqual([]);
-    });
-
-    it('every generated skill has code blocks or command examples', () => {
-      // All handmade skills have code blocks; check generated coverage
-      const failures = generatedSkills
-        .filter(s => !s.hasCodeBlocks)
-        .map(s => s.name);
-      // Only flag if a significant portion lack code blocks
-      // (some simple generated skills may legitimately have none)
-      expect(
-        failures.length,
-        `${failures.length} generated skills lack code examples: ${failures.join(', ')}`,
-      ).toBeLessThan(generatedSkills.length);
-    });
-
-    it('handmade skills have supporting material directories', () => {
-      // Verify handmade convention: examples/ and references/ dirs exist
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        if (!skill.hasExamplesDir) {
-          failures.push(`${skill.name}: missing examples/`);
-        }
-        if (!skill.hasReferencesDir) {
-          failures.push(`${skill.name}: missing references/`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('all handmade skills have at least 7 numbered steps', () => {
-      // Handmade skills are comprehensive with 7-14 steps
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        if (skill.stepCount < 7) {
-          failures.push(`${skill.name}: only ${skill.stepCount} steps`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('generated skills have at least 1 step or command per concept', () => {
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        const hasCommands = /^### \w+/m.test(skill.body);
-        if (skill.stepCount === 0 && !hasCommands) {
-          failures.push(skill.name);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-  });
-
-  // ================================================================
-  // Cross-set structural consistency
-  // ================================================================
-
-  describe('Cross-set structural consistency', () => {
-    it('both sets use the same frontmatter delimiter format', () => {
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        const content = readFileSync(skill.path, 'utf-8');
-        expect(content, `${skill.name} should start with ---`).toMatch(/^---\n/);
-        expect(content, `${skill.name} should have closing ---`).toMatch(/\n---\n/);
-      }
-    });
-
-    it('both sets use H1 for the main skill title', () => {
-      const failures: string[] = [];
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        if (!skill.h1) {
-          failures.push(skill.name);
-        }
-      }
-      expect(failures, `Missing H1 title: ${failures.join(', ')}`).toEqual([]);
-    });
-
-    it('both sets have a description paragraph immediately after H1', () => {
-      const failures: string[] = [];
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        if (!skill.descriptionAfterH1) {
-          failures.push(skill.name);
-        }
-      }
-      expect(failures, `Missing post-H1 description: ${failures.join(', ')}`).toEqual([]);
-    });
-
-    it('both sets have valid YAML in frontmatter (parseable)', () => {
-      const failures: string[] = [];
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        if (skill.frontmatterFieldCount === 0) {
-          failures.push(`${skill.name}: unparseable frontmatter`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('code blocks use recognized language identifiers in both sets', () => {
-      const knownLanguages = new Set([
-        'typescript', 'ts', 'javascript', 'js', 'bash', 'sh',
-        'yaml', 'yml', 'json', 'sync', 'concept', 'sql',
-        'swift', 'rust', 'go', 'python', 'kotlin', 'csharp',
-        'graphql', 'toml', 'xml', 'html', 'css', 'markdown', 'md',
-        '', // unlabeled code blocks are ok
-      ]);
-      const failures: string[] = [];
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        for (const lang of skill.codeBlockLanguages) {
-          if (!knownLanguages.has(lang)) {
-            failures.push(`${skill.name}: unknown language "${lang}"`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('no skill in either set has duplicate H1 headings outside code blocks', () => {
-      const failures: string[] = [];
-      const allSkills = [...handmadeSkills, ...generatedSkills];
-      for (const skill of allSkills) {
-        // Strip code blocks before counting H1 headings
-        const bodyNoCode = skill.body.replace(/```[\s\S]*?```/g, '');
-        const h1Matches = bodyNoCode.match(/^# .+$/gm);
-        if (h1Matches && h1Matches.length > 1) {
-          failures.push(`${skill.name}: ${h1Matches.length} H1 headings`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-  });
-
-  // ================================================================
-  // Convention drift detection
-  // ================================================================
-
-  describe('Convention drift detection', () => {
-    it('generated frontmatter field names match handmade field names exactly', () => {
-      // Extract the canonical field set from handmade skills
-      const handmadeFieldSets = handmadeSkills.map(s => s.frontmatterFields.sort().join(','));
-      const canonicalFields = handmadeFieldSets[0]; // They should all be the same
-
-      // SyncParser is a known exception: missing allowed-tools
-      const knownExceptions = new Set(['sync-parser']);
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        if (knownExceptions.has(skill.name)) continue;
-        const fields = skill.frontmatterFields.sort().join(',');
-        if (fields !== canonicalFields) {
-          failures.push(`${skill.name}: [${fields}] vs canonical [${canonicalFields}]`);
-        }
-      }
-      expect(failures, `Field set drift:\n  ${failures.join('\n  ')}`).toEqual([]);
-    });
-
-    it('generated "name" values are kebab-case (matching handmade convention)', () => {
+    it('"name" values are kebab-case', () => {
       const kebabPattern = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         if (!kebabPattern.test(skill.frontmatter.name || '')) {
           failures.push(`${skill.name}: "${skill.frontmatter.name}" is not kebab-case`);
         }
@@ -734,37 +329,10 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       expect(failures).toEqual([]);
     });
 
-    it('handmade "name" values are kebab-case', () => {
-      const kebabPattern = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
-      const failures: string[] = [];
-      for (const skill of handmadeSkills) {
-        if (!kebabPattern.test(skill.frontmatter.name || '')) {
-          failures.push(`${skill.name}: "${skill.frontmatter.name}" is not kebab-case`);
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('generated step headings use the same "Step N: Title" format as handmade', () => {
-      // Both sets should use "Step N: Title" not "Step N - Title" or other formats
-      const stepPattern = /^#{2,3} Step \d+: [A-Z]/m;
-      const failures: string[] = [];
-      for (const skill of generatedSkills) {
-        if (!skill.hasSteps) continue;
-        const stepLines = skill.body.match(/^#{2,3} Step \d+.*/gm) || [];
-        for (const line of stepLines) {
-          if (!stepPattern.test(line)) {
-            failures.push(`${skill.name}: non-standard step format: "${line}"`);
-          }
-        }
-      }
-      expect(failures).toEqual([]);
-    });
-
-    it('generated allowed-tools is a comma-separated list (matching handmade format)', () => {
+    it('"allowed-tools" is a comma-separated list', () => {
       const csvPattern = /^[A-Z][a-zA-Z]+(, [A-Z][a-zA-Z]+)*$/;
       const failures: string[] = [];
-      for (const skill of generatedSkills) {
+      for (const skill of skills) {
         const tools = skill.frontmatter['allowed-tools'];
         if (tools && !csvPattern.test(tools)) {
           failures.push(`${skill.name}: "${tools}" is not comma-separated format`);
@@ -775,40 +343,223 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
   });
 
   // ================================================================
-  // Statistical parity metrics
+  // Markdown structure conventions
   // ================================================================
 
-  describe('Statistical parity metrics', () => {
-    it('generated skills exist', () => {
-      expect(generatedSkills.length).toBeGreaterThan(0);
+  describe('Markdown structure conventions', () => {
+    it('every skill has an H1 heading', () => {
+      const failures = skills.filter(s => !s.h1).map(s => s.name);
+      expect(failures, `Missing H1: ${failures.join(', ')}`).toEqual([]);
     });
 
-    it('handmade skills exist', () => {
-      expect(handmadeSkills.length).toBeGreaterThan(0);
+    it('every skill has a description paragraph after H1', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        if (!skill.descriptionAfterH1 || skill.descriptionAfterH1.length < 5) {
+          failures.push(`${skill.name}: no description paragraph after H1`);
+        }
+      }
+      expect(failures, `Missing description:\n  ${failures.join('\n  ')}`).toEqual([]);
     });
 
-    it('generated skills count is within expected range', () => {
-      // Generated from 28 concepts in the manifest
-      expect(generatedSkills.length).toBeGreaterThanOrEqual(26);
-      expect(generatedSkills.length).toBeLessThanOrEqual(32);
+    it('every skill has at least one H2 heading', () => {
+      const failures = skills.filter(s => s.h2Headings.length === 0).map(s => s.name);
+      expect(failures, `No H2 headings: ${failures.join(', ')}`).toEqual([]);
     });
 
-    it('handmade skills count is within expected range', () => {
-      // 9 handmade skills
-      expect(handmadeSkills.length).toBeGreaterThanOrEqual(8);
-      expect(handmadeSkills.length).toBeLessThanOrEqual(12);
+    it('skills with steps use numbered "Step N:" format', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        if (!skill.hasSteps) continue;
+        const stepPattern = /^#{2,3} Step \d+: .+$/m;
+        const hasStepFormat = stepPattern.test(skill.body);
+        if (!hasStepFormat) {
+          failures.push(`${skill.name}: steps don't use "Step N: Title" format`);
+        }
+      }
+      expect(failures).toEqual([]);
     });
 
-    it('average generated step count is at least 1', () => {
-      const totalSteps = generatedSkills.reduce((sum, s) => sum + s.stepCount, 0);
-      const avg = totalSteps / generatedSkills.length;
+    it('steps are sequentially numbered from 1', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        const stepMatches = [...skill.body.matchAll(/^#{2,3} Step (\d+):/gm)];
+        for (let i = 0; i < stepMatches.length; i++) {
+          const num = parseInt(stepMatches[i][1], 10);
+          if (num !== i + 1) {
+            failures.push(`${skill.name}: step ${i + 1} numbered as ${num}`);
+          }
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+
+    it('uses the same frontmatter delimiter format', () => {
+      for (const skill of skills) {
+        const content = readFileSync(skill.path, 'utf-8');
+        expect(content, `${skill.name} should start with ---`).toMatch(/^---\n/);
+        expect(content, `${skill.name} should have closing ---`).toMatch(/\n---\n/);
+      }
+    });
+
+    it('no skill has duplicate H1 headings outside code blocks', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        const bodyNoCode = skill.body.replace(/```[\s\S]*?```/g, '');
+        const h1Matches = bodyNoCode.match(/^# .+$/gm);
+        if (h1Matches && h1Matches.length > 1) {
+          failures.push(`${skill.name}: ${h1Matches.length} H1 headings`);
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+
+    it('step headings use "Step N: Title" format with capitalized title', () => {
+      const stepPattern = /^#{2,3} Step \d+: [A-Z]/m;
+      const failures: string[] = [];
+      for (const skill of skills) {
+        if (!skill.hasSteps) continue;
+        const stepLines = skill.body.match(/^#{2,3} Step \d+.*/gm) || [];
+        for (const line of stepLines) {
+          if (!stepPattern.test(line)) {
+            failures.push(`${skill.name}: non-standard step format: "${line}"`);
+          }
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+  });
+
+  // ================================================================
+  // Content quality conventions
+  // ================================================================
+
+  describe('Content quality conventions', () => {
+    it('descriptions do not end with truncated words', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        const desc = skill.frontmatter.description || '';
+        if (desc.length > 0 && /\s\w$/.test(desc) && !desc.endsWith('.')) {
+          const lastWord = desc.split(/\s+/).pop() || '';
+          if (lastWord.length <= 2) {
+            failures.push(`${skill.name}: description may be truncated: "...${desc.slice(-30)}"`);
+          }
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+
+    it('H1 headings are not empty', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        if (skill.h1 !== null && skill.h1.trim().length === 0) {
+          failures.push(skill.name);
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+
+    it('checklist items use consistent "- [ ] " format', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        if (!skill.hasChecklists) continue;
+        const lines = skill.body.split('\n');
+        for (const line of lines) {
+          if (/^- \[\]/.test(line) && !/^- \[ \] /.test(line)) {
+            failures.push(`${skill.name}: bad checklist format: "${line.trim()}"`);
+          }
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+
+    it('code blocks use recognized language identifiers', () => {
+      const knownLanguages = new Set([
+        'typescript', 'ts', 'javascript', 'js', 'bash', 'sh',
+        'yaml', 'yml', 'json', 'sync', 'concept', 'sql',
+        'swift', 'rust', 'go', 'python', 'kotlin', 'csharp',
+        'graphql', 'toml', 'xml', 'html', 'css', 'markdown', 'md',
+        '', // unlabeled code blocks are ok
+      ]);
+      const failures: string[] = [];
+      for (const skill of skills) {
+        for (const lang of skill.codeBlockLanguages) {
+          if (!knownLanguages.has(lang)) {
+            failures.push(`${skill.name}: unknown language "${lang}"`);
+          }
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+
+    it('valid YAML in frontmatter (parseable)', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        if (skill.frontmatterFieldCount === 0) {
+          failures.push(`${skill.name}: unparseable frontmatter`);
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+  });
+
+  // ================================================================
+  // Feature coverage
+  // ================================================================
+
+  describe('Feature coverage', () => {
+    it('every skill has steps or commands sections', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        const hasCommands = skill.body.includes('## Commands');
+        if (!skill.hasSteps && !hasCommands) {
+          failures.push(`${skill.name}: no steps or commands section`);
+        }
+      }
+      expect(failures, `No steps/commands:\n  ${failures.join('\n  ')}`).toEqual([]);
+    });
+
+    it('every skill has code blocks or command examples', () => {
+      const failures = skills
+        .filter(s => !s.hasCodeBlocks)
+        .map(s => s.name);
+      expect(
+        failures.length,
+        `${failures.length} skills lack code examples: ${failures.join(', ')}`,
+      ).toBeLessThan(skills.length);
+    });
+
+    it('every skill has at least 1 step or command', () => {
+      const failures: string[] = [];
+      for (const skill of skills) {
+        const hasCommands = /^### \w+/m.test(skill.body);
+        if (skill.stepCount === 0 && !hasCommands) {
+          failures.push(skill.name);
+        }
+      }
+      expect(failures).toEqual([]);
+    });
+  });
+
+  // ================================================================
+  // Statistical metrics
+  // ================================================================
+
+  describe('Statistical metrics', () => {
+    it('skills exist', () => {
+      expect(skills.length).toBeGreaterThan(0);
+    });
+
+    it('skills count is within expected range', () => {
+      // Generated from 28 concepts in the manifest (minus parse failures)
+      expect(skills.length).toBeGreaterThanOrEqual(26);
+      expect(skills.length).toBeLessThanOrEqual(32);
+    });
+
+    it('average step count is at least 1', () => {
+      const totalSteps = skills.reduce((sum, s) => sum + s.stepCount, 0);
+      const avg = totalSteps / skills.length;
       expect(avg).toBeGreaterThanOrEqual(1);
-    });
-
-    it('every handmade skill has more steps than the shortest generated skill', () => {
-      // Handmade should be more comprehensive
-      const minHandmade = Math.min(...handmadeSkills.map(s => s.stepCount));
-      expect(minHandmade).toBeGreaterThanOrEqual(7);
     });
   });
 });

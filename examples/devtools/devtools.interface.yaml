@@ -17,9 +17,11 @@ targets:
   claude-skills:
     name: copf-devtools
     grouping: per-concept
+    output-dir: ./.claude/skills
 
   cli:
     name: copf
+    output-dir: ./tools/copf-cli/src/commands
 
 # ─── CONCEPT SPECS ───────────────────────────────────
 # Framework concepts that map to CLI commands and skills.
