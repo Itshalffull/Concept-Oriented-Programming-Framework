@@ -17,12 +17,36 @@ transportAdapterScaffoldGenCommand
   });
 
 transportAdapterScaffoldGenCommand
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → TransportAdapterScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+transportAdapterScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .requiredOption('-p, --protocol <protocol>', 'Protocol type')
+  .option('--base-url <base-url>', 'Base URL (for http/websocket)')
+  .option('-o, --output <output>', 'Output directory')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+transportAdapterScaffoldGenCommand
   .command('transport')
   .description('Scaffold a transport adapter with invoke, query, and health methods.')
   .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
   .requiredOption('-p, --protocol <protocol>', 'Protocol type')
   .option('--base-url <base-url>', 'Base URL (for http/websocket)')
   .option('-o, --output <output>', 'Output directory')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
@@ -32,5 +56,10 @@ transportAdapterScaffoldGenCommand
 export const transportAdapterScaffoldGenCommandTree = {
   group: 'transport-adapter-scaffold-gen',
   description: 'Generate transport adapter for a communication protocol.',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'transport' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'transport' },
+  ],
 };

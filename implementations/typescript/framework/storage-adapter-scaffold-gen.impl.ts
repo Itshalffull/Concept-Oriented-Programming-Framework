@@ -334,4 +334,30 @@ export const storageAdapterScaffoldGenHandler: ConceptHandler = {
       return { variant: 'error', message };
     }
   },
+
+  async plan() {
+    return {
+      variant: 'ok',
+      inputKind: 'StorageConfig',
+      outputKind: 'StorageAdapter',
+      description: 'Generate ConceptStorage adapter implementations for various persistence backends.',
+      pipeline: JSON.stringify([
+        'Resource/upsert', 'BuildCache/check',
+        'StorageAdapterScaffoldGen/generate', 'Emitter/writeBatch',
+        'GenerationPlan/recordStep',
+      ]),
+    };
+  },
+
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await storageAdapterScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
+  },
 };

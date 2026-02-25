@@ -169,4 +169,30 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
       return { variant: 'error', message };
     }
   },
+
+  async plan() {
+    return {
+      variant: 'ok',
+      inputKind: 'ConceptConfig',
+      outputKind: 'ConceptSpec',
+      description: 'Generate well-formed .concept spec files with purpose, state fields, actions, and invariants.',
+      pipeline: JSON.stringify([
+        'Resource/upsert', 'BuildCache/check',
+        'ConceptScaffoldGen/generate', 'Emitter/writeBatch',
+        'GenerationPlan/recordStep',
+      ]),
+    };
+  },
+
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await conceptScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
+  },
 };

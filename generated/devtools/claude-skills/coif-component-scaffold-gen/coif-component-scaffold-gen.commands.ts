@@ -12,4 +12,4 @@ export async function handleCoifComponentScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const coifComponentScaffoldGenSkillCommands = ['register', 'generate'];
+export const coifComponentScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];

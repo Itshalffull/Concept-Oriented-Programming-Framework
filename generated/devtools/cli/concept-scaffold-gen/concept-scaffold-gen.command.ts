@@ -17,6 +17,30 @@ conceptScaffoldGenCommand
   });
 
 conceptScaffoldGenCommand
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → ConceptScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+conceptScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'PascalCase concept name')
+  .option('-p, --param <param>', 'Type parameter letter (default: T)')
+  .option('--purpose <purpose>', 'Purpose description')
+  .option('--category <category>', 'Annotation category (domain, devtools, etc.)')
+  .option('-a, --actions <actions>', 'Comma-separated action names')
+  .option('-o, --output <output>', 'Output directory (default: ./specs/app)')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+conceptScaffoldGenCommand
   .command('concept')
   .description('Scaffold a .concept file with state, actions, and register().')
   .requiredOption('-n, --name <name>', 'PascalCase concept name')
@@ -25,6 +49,8 @@ conceptScaffoldGenCommand
   .option('--category <category>', 'Annotation category (domain, devtools, etc.)')
   .option('-a, --actions <actions>', 'Comma-separated action names')
   .option('-o, --output <output>', 'Output directory (default: ./specs/app)')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
@@ -34,5 +60,10 @@ conceptScaffoldGenCommand
 export const conceptScaffoldGenCommandTree = {
   group: 'concept-scaffold-gen',
   description: 'Generate concept specification (.concept) file.',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'concept' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'concept' },
+  ],
 };

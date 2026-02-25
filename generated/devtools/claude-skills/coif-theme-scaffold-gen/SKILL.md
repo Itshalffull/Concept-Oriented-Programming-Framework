@@ -18,11 +18,22 @@ Scaffold a COIF design system theme **$ARGUMENTS** with palette tokens, typograp
 - **Reduced Motion Respect:** All motion durations collapse to 0ms when prefers-reduced-motion is active. This is built into the motion token system, not opt-in.
 - **Theme Layering:** Themes are layered: base + variants. Multiple variants can be active simultaneously, resolved by priority then activation order.
 
+## Generation Pipeline
+
+This scaffold generator participates in the COPF generation pipeline. The full flow is:
+
+1. **Register** -- Generator self-registers with PluginRegistry and KindSystem (ThemeConfig → CoifTheme).
+2. **Track Input** -- Scaffold configuration is recorded as a Resource for change detection.
+3. **Check Cache** -- BuildCache determines if regeneration is needed based on input hash.
+4. **Preview** -- Dry-run via Emitter content-addressing shows what files would change.
+5. **Generate** -- The actual theme tokens, palettes, and manifests are produced.
+6. **Emit & Record** -- Files are written through Emitter with provenance; the run is recorded in GenerationPlan.
+
 ## Step-by-Step Process
 
 ### Step 1: Register Generator
 
-Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ThemeConfig → CoifTheme transformations.
+Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ThemeConfig → CoifTheme transformations. Registers inputKind → outputKind transformation in KindSystem for pipeline validation.
 
 **Examples:**
 *Register the theme scaffold generator*
@@ -31,7 +42,39 @@ const result = await coifThemeScaffoldGenHandler.register({}, storage);
 
 ```
 
-### Step 2: Generate COIF Theme
+### Step 2: Track Input via Resource
+
+Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped.
+
+**Pipeline:** `Resource/upsert(locator, kind: "ThemeConfig", digest)`
+
+**Checklist:**
+- [ ] Input configuration serialized deterministically?
+- [ ] Resource locator uniquely identifies this scaffold request?
+
+### Step 3: Check BuildCache
+
+Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator.
+
+**Pipeline:** `BuildCache/check(stepKey: "CoifThemeScaffoldGen", inputHash, deterministic: true)`
+
+**Checklist:**
+- [ ] Cache hit returns previous output reference?
+- [ ] Cache miss triggers full generation?
+
+### Step 4: Preview Changes
+
+Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written -- this step shows what *would* happen.
+
+**Pipeline:** `CoifThemeScaffoldGen/preview(...) → Emitter content-hash comparison`
+
+**Examples:**
+*Preview scaffold changes*
+```bash
+copf scaffold theme preview --name ocean
+```
+
+### Step 5: Generate COIF Theme
 
 Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests.
 
@@ -58,6 +101,17 @@ copf scaffold theme --name print --mode light
 - [ ] Motion respects prefers-reduced-motion?
 - [ ] Elevation scale covers 0-5 levels?
 - [ ] Light and dark themes are generated (if mode=both)?
+
+### Step 6: Emit via Emitter & Record in GenerationPlan
+
+Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting.
+
+**Pipeline:** `Emitter/writeBatch(files, sources) → GenerationPlan/recordStep(stepKey, status: "done")`
+
+**Checklist:**
+- [ ] All files written through Emitter (not directly to disk)?
+- [ ] Source provenance attached to each file?
+- [ ] Generation step recorded in GenerationPlan?
 
 ## References
 
@@ -145,4 +199,9 @@ npx vitest run tests/scaffold-generators.test.ts
 | --- | --- |
 | coif-component-scaffold | Generate components to use the theme tokens |
 | kit-scaffold | Generate kit manifests for theme packages |
+| `/emitter` | Write scaffold files with content-addressing and source traceability |
+| `/build-cache` | Skip unchanged scaffolds via incremental build cache |
+| `/resource` | Track scaffold input configurations for change detection |
+| `/generation-plan` | Monitor scaffold generation runs and status |
+| `/kind-system` | Validate scaffold input/output kind transformations |
 

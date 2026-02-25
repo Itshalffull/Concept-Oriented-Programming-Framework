@@ -12,4 +12,4 @@ export async function handleSyncScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const syncScaffoldGenSkillCommands = ['register', 'generate'];
+export const syncScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];

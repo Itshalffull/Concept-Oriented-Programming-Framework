@@ -17,11 +17,34 @@ storageAdapterScaffoldGenCommand
   });
 
 storageAdapterScaffoldGenCommand
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → StorageAdapterScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+storageAdapterScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .requiredOption('-b, --backend <backend>', 'Backend type')
+  .option('-o, --output <output>', 'Output directory')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+storageAdapterScaffoldGenCommand
   .command('storage')
   .description('Scaffold a ConceptStorage adapter with put, get, find, del, and delMany methods.')
   .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
   .requiredOption('-b, --backend <backend>', 'Backend type')
   .option('-o, --output <output>', 'Output directory')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
@@ -31,5 +54,10 @@ storageAdapterScaffoldGenCommand
 export const storageAdapterScaffoldGenCommandTree = {
   group: 'storage-adapter-scaffold-gen',
   description: 'Generate ConceptStorage adapter for a persistence backend.',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'storage' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'storage' },
+  ],
 };

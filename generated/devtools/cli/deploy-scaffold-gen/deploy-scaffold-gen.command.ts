@@ -17,6 +17,30 @@ deployScaffoldGenCommand
   });
 
 deployScaffoldGenCommand
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → DeployScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+deployScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('--app <app>', 'Application name')
+  .option('-v, --version <version>', 'Semver version (default: 0.1.0)')
+  .option('-r, --runtimes <runtimes>', 'Runtime declarations (name:type:transport:storage, comma-separated)')
+  .option('-c, --concepts <concepts>', 'Concept assignments (Name:runtime, comma-separated)')
+  .option('--iac <iac>', 'IaC provider (terraform, cloudformation, pulumi, docker-compose)')
+  .option('-o, --output <output>', 'Output directory (default: ./deploy)')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+deployScaffoldGenCommand
   .command('deploy')
   .description('Scaffold a deploy.yaml with runtimes, infrastructure, and concept assignments.')
   .requiredOption('--app <app>', 'Application name')
@@ -25,6 +49,8 @@ deployScaffoldGenCommand
   .option('-c, --concepts <concepts>', 'Concept assignments (Name:runtime, comma-separated)')
   .option('--iac <iac>', 'IaC provider (terraform, cloudformation, pulumi, docker-compose)')
   .option('-o, --output <output>', 'Output directory (default: ./deploy)')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
@@ -34,5 +60,10 @@ deployScaffoldGenCommand
 export const deployScaffoldGenCommandTree = {
   group: 'deploy-scaffold-gen',
   description: 'Generate deployment manifest (deploy.yaml).',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'deploy' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'deploy' },
+  ],
 };

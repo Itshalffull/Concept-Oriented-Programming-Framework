@@ -17,8 +17,17 @@ interfaceScaffoldGenCommand
   });
 
 interfaceScaffoldGenCommand
-  .command('interface')
-  .description('Scaffold an interface.yaml with targets, SDKs, and concept overrides.')
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → InterfaceScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+interfaceScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'Interface name')
   .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)')
   .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)')
@@ -28,6 +37,24 @@ interfaceScaffoldGenCommand
   .option('-o, --output <output>', 'Output directory')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+interfaceScaffoldGenCommand
+  .command('interface')
+  .description('Scaffold an interface.yaml with targets, SDKs, and concept overrides.')
+  .requiredOption('-n, --name <name>', 'Interface name')
+  .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)')
+  .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)')
+  .option('-c, --concepts <concepts>', 'Comma-separated concept names for per-concept overrides')
+  .option('--openapi', 'Generate OpenAPI spec (default: true)')
+  .option('--asyncapi', 'Generate AsyncAPI spec (default: false)')
+  .option('-o, --output <output>', 'Output directory')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
@@ -35,5 +62,10 @@ interfaceScaffoldGenCommand
 export const interfaceScaffoldGenCommandTree = {
   group: 'interface-scaffold-gen',
   description: 'Generate interface manifest (interface.yaml).',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'interface' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'interface' },
+  ],
 };

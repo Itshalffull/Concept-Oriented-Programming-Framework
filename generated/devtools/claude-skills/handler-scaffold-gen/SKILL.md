@@ -18,11 +18,22 @@ Scaffold a TypeScript handler for concept **$ARGUMENTS** with typed actions, sto
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
 - **Input Extraction:** Extract inputs with `as` casts at the top of each method. Validate required fields before processing.
 
+## Generation Pipeline
+
+This scaffold generator participates in the COPF generation pipeline. The full flow is:
+
+1. **Register** -- Generator self-registers with PluginRegistry and KindSystem (HandlerConfig → HandlerImpl).
+2. **Track Input** -- Scaffold configuration is recorded as a Resource for change detection.
+3. **Check Cache** -- BuildCache determines if regeneration is needed based on input hash.
+4. **Preview** -- Dry-run via Emitter content-addressing shows what files would change.
+5. **Generate** -- The actual handler implementation and conformance test are produced.
+6. **Emit & Record** -- Files are written through Emitter with provenance; the run is recorded in GenerationPlan.
+
 ## Step-by-Step Process
 
 ### Step 1: Register Generator
 
-Self-register with PluginRegistry so the scaffolding kit's KindSystem can track HandlerConfig → HandlerImpl transformations.
+Self-register with PluginRegistry so the scaffolding kit's KindSystem can track HandlerConfig → HandlerImpl transformations. Registers inputKind → outputKind transformation in KindSystem for pipeline validation.
 
 **Examples:**
 *Register the handler scaffold generator*
@@ -31,7 +42,39 @@ const result = await handlerScaffoldGenHandler.register({}, storage);
 
 ```
 
-### Step 2: Generate Handler Implementation
+### Step 2: Track Input via Resource
+
+Register the scaffold configuration as a tracked resource using Resource/upsert. This enables change detection -- if the same configuration is provided again, Resource reports it as unchanged and downstream steps can be skipped.
+
+**Pipeline:** `Resource/upsert(locator, kind: "HandlerConfig", digest)`
+
+**Checklist:**
+- [ ] Input configuration serialized deterministically?
+- [ ] Resource locator uniquely identifies this scaffold request?
+
+### Step 3: Check BuildCache
+
+Query BuildCache/check to determine if this scaffold needs regeneration. If the input hash matches the last successful run and the transform is deterministic, the cached output can be reused without re-running the generator.
+
+**Pipeline:** `BuildCache/check(stepKey: "HandlerScaffoldGen", inputHash, deterministic: true)`
+
+**Checklist:**
+- [ ] Cache hit returns previous output reference?
+- [ ] Cache miss triggers full generation?
+
+### Step 4: Preview Changes
+
+Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written -- this step shows what *would* happen.
+
+**Pipeline:** `HandlerScaffoldGen/preview(...) → Emitter content-hash comparison`
+
+**Examples:**
+*Preview scaffold changes*
+```bash
+copf scaffold handler preview --concept User --actions create,update,delete
+```
+
+### Step 5: Generate Handler Implementation
 
 Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test.
 
@@ -53,6 +96,17 @@ copf scaffold handler --concept Article
 - [ ] Storage operations use correct relation names?
 - [ ] Error handling catches and wraps exceptions?
 - [ ] Conformance test covers register() and each action?
+
+### Step 6: Emit via Emitter & Record in GenerationPlan
+
+Write generated files through Emitter/writeBatch with source provenance tracking. Then record the step outcome in GenerationPlan/recordStep for run history and status reporting.
+
+**Pipeline:** `Emitter/writeBatch(files, sources) → GenerationPlan/recordStep(stepKey, status: "done")`
+
+**Checklist:**
+- [ ] All files written through Emitter (not directly to disk)?
+- [ ] Source provenance attached to each file?
+- [ ] Generation step recorded in GenerationPlan?
 
 ## References
 
@@ -123,4 +177,9 @@ npx vitest run tests/scaffold-generators.test.ts
 | concept-scaffold | Generate concept specs before implementing handlers |
 | implementation-builder | Use SchemaGen for more advanced handler generation |
 | concept-validator | Validate concept specs before generating handlers |
+| `/emitter` | Write scaffold files with content-addressing and source traceability |
+| `/build-cache` | Skip unchanged scaffolds via incremental build cache |
+| `/resource` | Track scaffold input configurations for change detection |
+| `/generation-plan` | Monitor scaffold generation runs and status |
+| `/kind-system` | Validate scaffold input/output kind transformations |
 

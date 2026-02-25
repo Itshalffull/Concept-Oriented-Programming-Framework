@@ -12,4 +12,4 @@ export async function handleCoifThemeScaffoldGenSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const coifThemeScaffoldGenSkillCommands = ['register', 'generate'];
+export const coifThemeScaffoldGenSkillCommands = ['register', 'plan', 'preview', 'generate'];

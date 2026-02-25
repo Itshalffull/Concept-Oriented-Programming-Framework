@@ -348,4 +348,30 @@ export const coifThemeScaffoldGenHandler: ConceptHandler = {
       return { variant: 'error', message };
     }
   },
+
+  async plan() {
+    return {
+      variant: 'ok',
+      inputKind: 'ThemeConfig',
+      outputKind: 'CoifTheme',
+      description: 'Generate theme scaffolds including palette config, typography scale, motion definitions, elevation scale, and theme manifest.',
+      pipeline: JSON.stringify([
+        'Resource/upsert', 'BuildCache/check',
+        'CoifThemeScaffoldGen/generate', 'Emitter/writeBatch',
+        'GenerationPlan/recordStep',
+      ]),
+    };
+  },
+
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await coifThemeScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
+  },
 };

@@ -17,6 +17,30 @@ syncScaffoldGenCommand
   });
 
 syncScaffoldGenCommand
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → SyncScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+syncScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'PascalCase sync name')
+  .option('--from <from>', 'Trigger source (Concept/action)')
+  .option('--to <to>', 'Effect target (Concept/action)')
+  .option('-t, --tier <tier>', 'Sync tier (required, recommended)')
+  .option('--eager', 'Fire immediately (default: true)')
+  .option('-o, --output <output>', 'Output directory (default: ./syncs)')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+syncScaffoldGenCommand
   .command('sync')
   .description('Scaffold a .sync file with when/where/then clauses.')
   .requiredOption('-n, --name <name>', 'PascalCase sync name')
@@ -25,6 +49,8 @@ syncScaffoldGenCommand
   .option('-t, --tier <tier>', 'Sync tier (required, recommended)')
   .option('--eager', 'Fire immediately (default: true)')
   .option('-o, --output <output>', 'Output directory (default: ./syncs)')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
@@ -34,5 +60,10 @@ syncScaffoldGenCommand
 export const syncScaffoldGenCommandTree = {
   group: 'sync-scaffold-gen',
   description: 'Generate synchronization rule (.sync) file.',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'sync' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'sync' },
+  ],
 };

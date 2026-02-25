@@ -28,6 +28,34 @@ concept TransportAdapterScaffoldGen [T] {
       }
     }
 
+    action plan() {
+      -> ok(inputKind: String, outputKind: String, description: String,
+            pipeline: list String) {
+        Return generation pipeline metadata describing how this
+        generator participates in the Resource → KindSystem →
+        BuildCache → Emitter flow.
+
+        pipeline: ["Resource/upsert", "BuildCache/check",
+                    "TransportAdapterScaffoldGen/generate", "Emitter/writeBatch",
+                    "GenerationPlan/recordStep"]
+      }
+    }
+
+    action preview(name: String, protocol: String) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses
+        Emitter content-addressing to classify each file as
+        new, changed, or unchanged.
+      }
+      -> cached() {
+        BuildCache reports inputs unchanged since the last
+        successful run. No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
     action register() {
       -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
         Return static metadata for PluginRegistry.

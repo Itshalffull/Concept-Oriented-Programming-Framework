@@ -17,8 +17,17 @@ coifComponentScaffoldGenCommand
   });
 
 coifComponentScaffoldGenCommand
-  .command('component')
-  .description('Scaffold a complete COIF headless component with FSM, anatomy, and machine.')
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → CoifComponentScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifComponentScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'PascalCase component name')
   .option('-p, --parts <parts>', 'Comma-separated anatomy part names')
   .option('--slots <slots>', 'Comma-separated slot names')
@@ -28,6 +37,24 @@ coifComponentScaffoldGenCommand
   .option('-o, --output <output>', 'Output directory')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifComponentScaffoldGenCommand
+  .command('component')
+  .description('Scaffold a complete COIF headless component with FSM, anatomy, and machine.')
+  .requiredOption('-n, --name <name>', 'PascalCase component name')
+  .option('-p, --parts <parts>', 'Comma-separated anatomy part names')
+  .option('--slots <slots>', 'Comma-separated slot names')
+  .option('-s, --states <states>', 'Comma-separated FSM state names')
+  .option('-e, --events <events>', 'Comma-separated FSM event names')
+  .option('--role <role>', 'ARIA role for accessibility')
+  .option('-o, --output <output>', 'Output directory')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
@@ -35,5 +62,10 @@ coifComponentScaffoldGenCommand
 export const coifComponentScaffoldGenCommandTree = {
   group: 'coif-component-scaffold-gen',
   description: 'Generate COIF headless component (widget, anatomy, machine, kit).',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'component' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'component' },
+  ],
 };

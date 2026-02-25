@@ -152,4 +152,30 @@ export const deployScaffoldGenHandler: ConceptHandler = {
       return { variant: 'error', message };
     }
   },
+
+  async plan() {
+    return {
+      variant: 'ok',
+      inputKind: 'DeployConfig',
+      outputKind: 'DeployManifest',
+      description: 'Generate deployment manifest (deploy.yaml) with runtime configs and infrastructure settings.',
+      pipeline: JSON.stringify([
+        'Resource/upsert', 'BuildCache/check',
+        'DeployScaffoldGen/generate', 'Emitter/writeBatch',
+        'GenerationPlan/recordStep',
+      ]),
+    };
+  },
+
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await deployScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
+  },
 };

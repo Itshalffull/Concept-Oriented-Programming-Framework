@@ -17,8 +17,17 @@ coifThemeScaffoldGenCommand
   });
 
 coifThemeScaffoldGenCommand
-  .command('theme')
-  .description('Scaffold a complete design system theme with WCAG-compliant tokens.')
+  .command('plan')
+  .description('Show generation pipeline: Resource → KindSystem → BuildCache → CoifThemeScaffoldGen/generate → Emitter → GenerationPlan.')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'plan', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifThemeScaffoldGenCommand
+  .command('preview')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
   .option('-p, --primary <primary>', 'Primary color hue (0-360) or hex value')
   .option('--secondary <secondary>', 'Secondary color hue or hex value')
@@ -30,6 +39,26 @@ coifThemeScaffoldGenCommand
   .option('-o, --output <output>', 'Output directory')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
+    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
+    console.log(opts.json ? JSON.stringify(result) : result);
+  });
+
+coifThemeScaffoldGenCommand
+  .command('theme')
+  .description('Scaffold a complete design system theme with WCAG-compliant tokens.')
+  .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
+  .option('-p, --primary <primary>', 'Primary color hue (0-360) or hex value')
+  .option('--secondary <secondary>', 'Secondary color hue or hex value')
+  .option('-f, --font <font>', 'Primary font family stack')
+  .option('--base-size <base-size>', 'Base font size in pixels')
+  .option('--scale <scale>', 'Modular ratio for type scale')
+  .option('--border-radius <border-radius>', 'Default border radius')
+  .option('-m, --mode <mode>', 'Theme mode')
+  .option('-o, --output <output>', 'Output directory')
+  .option('--dry-run', 'Preview changes without writing (uses Emitter content-addressing)')
+  .option('--incremental', 'Skip if BuildCache reports inputs unchanged')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
   });
@@ -37,5 +66,10 @@ coifThemeScaffoldGenCommand
 export const coifThemeScaffoldGenCommandTree = {
   group: 'coif-theme-scaffold-gen',
   description: 'Generate COIF design system theme (palette, typography, motion, elevation).',
-  commands: [{ action: 'register', command: 'register' }, { action: 'generate', command: 'theme' }],
+  commands: [
+    { action: 'register', command: 'register' },
+    { action: 'plan', command: 'plan' },
+    { action: 'preview', command: 'preview' },
+    { action: 'generate', command: 'theme' },
+  ],
 };

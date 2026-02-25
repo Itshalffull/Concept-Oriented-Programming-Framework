@@ -222,4 +222,30 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
       return { variant: 'error', message };
     }
   },
+
+  async plan() {
+    return {
+      variant: 'ok',
+      inputKind: 'HandlerConfig',
+      outputKind: 'HandlerImpl',
+      description: 'Generate TypeScript concept handler implementations with action methods and conformance tests.',
+      pipeline: JSON.stringify([
+        'Resource/upsert', 'BuildCache/check',
+        'HandlerScaffoldGen/generate', 'Emitter/writeBatch',
+        'GenerationPlan/recordStep',
+      ]),
+    };
+  },
+
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await handlerScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
+  },
 };
