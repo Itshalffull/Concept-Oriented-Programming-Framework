@@ -1,3 +1,6 @@
+# Group-scoped access checks for collaborative actions
+
+# When a user flags an entity, verify they have the required permission in the group
 sync FlagWithinGroup [eager]
 when {
   Flag/flag: [ flagging: ?flagging; flagType: ?type; entity: ?entity; user: ?user ]

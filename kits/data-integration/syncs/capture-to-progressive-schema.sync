@@ -1,5 +1,6 @@
 // Captured items trigger structure detection for progressive formalization
 
+# When a web clip is captured, detect implicit structure for progressive formalization
 sync CaptureTriggersDetection [eager]
 when {
   Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
@@ -9,6 +10,7 @@ then {
   ProgressiveSchema/detectStructure: [ itemId: ?itemId ]
 }
 
+# When a file import completes, detect implicit structure for progressive formalization
 sync ImportTriggersDetection [eager]
 when {
   Capture/import: [ file: ?file; options: ?opts ]

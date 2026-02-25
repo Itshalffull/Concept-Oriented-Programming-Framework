@@ -16,6 +16,7 @@ Scaffold a concept spec for **<source>** with state declarations, typed action s
 - **Independence:** A concept never references another concept's types or calls another concept's actions. Use type parameters and syncs.
 - **Sufficiency & Necessity:** Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state.
 - **Invariant Completeness:** Key properties are captured as formal invariants documenting what must be true after each action.
+- **Description Quality:** Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true.
 **generate:**
 - [ ] Concept name is PascalCase?
 - [ ] Type parameter is a single capital letter?
@@ -24,6 +25,7 @@ Scaffold a concept spec for **<source>** with state declarations, typed action s
 - [ ] Every action has at least one variant?
 - [ ] register() action is included for PluginRegistry?
 - [ ] Annotations (@category, @visibility) are present?
+- [ ] Variant descriptions explain outcomes, not just echo variant names?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
@@ -81,9 +83,30 @@ action create(name: String) {
 **Good:**
 ```
 action create(name: String) {
+  -> ok(user: U) { New user registered and ready for profile setup. }
+  -> duplicate(name: String) { A user with this name already exists. }
+  -> error(message: String) { Creation failed due to a storage or validation error. }
+}
+
+```
+
+### Terse or echo descriptions
+Variant descriptions that echo the variant name or use a single generic word — they tell the reader nothing about the actual outcome.
+
+**Bad:**
+```
+action create(name: String) {
   -> ok(user: U) { Created. }
-  -> duplicate(name: String) { Name taken. }
   -> error(message: String) { Failed. }
+}
+
+```
+
+**Good:**
+```
+action create(name: String) {
+  -> ok(user: U) { New user registered and ready for authentication setup. }
+  -> error(message: String) { Creation failed due to a storage or validation error. }
 }
 
 ```

@@ -1,3 +1,6 @@
+// Infrastructure cross-cutting coordination: validation, caching, discovery, and URL aliasing
+
+// Validate event payloads against registered constraints before dispatching to subscribers
 sync ValidateOnDispatch [eager]
 when {
   EventBus/dispatch: [ event: ?event; data: ?data ]
@@ -7,6 +10,7 @@ then {
   Validator/validate: [ validator: ?event; data: ?data ]
 }
 
+// Invalidate cached entries when configuration is re-imported to prevent stale data
 sync CacheInvalidateOnConfig [eager]
 when {
   ConfigSync/import: [ config: ?config; data: ?data ]
@@ -16,6 +20,7 @@ then {
   Cache/invalidateByTags: [ tags: ?config ]
 }
 
+// Broadcast discovered plugins as events so other subsystems can react to new extensions
 sync PluginDiscovery [eager]
 when {
   PluginRegistry/discover: [ type: ?type ]
@@ -25,6 +30,7 @@ then {
   EventBus/dispatch: [ event: ?type; data: ?plugins ]
 }
 
+// Cache generated URL aliases so subsequent lookups avoid re-computation
 sync PathautoOnCreate [eager]
 when {
   Pathauto/generateAlias: [ pattern: ?pattern; entity: ?entity ]

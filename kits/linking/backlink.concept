@@ -13,19 +13,22 @@ concept Backlink [B] {
   actions {
     action getBacklinks(entity: B) {
       -> ok(sources: String) {
-        Return all source entities that link to this entity.
+        Returns all source entities that have formal forward references
+        pointing to this entity, enabling reverse navigation.
       }
     }
 
     action getUnlinkedMentions(entity: B) {
       -> ok(mentions: String) {
-        Return mentions of this entity that are not formal links.
+        Returns text mentions of this entity that have not been
+        converted into formal links, useful for suggesting new connections.
       }
     }
 
     action reindex() {
       -> ok(count: Int) {
-        Rebuild the reverse index and return the number of backlinks indexed.
+        Scans all forward references and rebuilds the reverse index
+        from scratch. Returns the total number of backlinks indexed.
       }
     }
   }

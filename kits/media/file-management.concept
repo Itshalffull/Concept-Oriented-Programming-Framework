@@ -15,27 +15,46 @@ concept FileManagement [F] {
 
   actions {
     action upload(file: F, data: String, mimeType: String) {
-      -> ok(file: F) { File uploaded successfully. }
-      -> error(message: String) { Upload failed or file already exists. }
+      -> ok(file: F) {
+        File stored with the given data and MIME type, ready for usage tracking.
+      }
+      -> error(message: String) {
+        Upload failed due to storage error or duplicate file identity.
+      }
     }
 
     action addUsage(file: F, entity: String) {
-      -> ok() { Usage reference added to file. }
-      -> notfound(message: String) { File does not exist. }
+      -> ok() {
+        Entity registered as a consumer of the file, incrementing its reference count.
+      }
+      -> notfound(message: String) {
+        The target file does not exist in storage.
+      }
     }
 
     action removeUsage(file: F, entity: String) {
-      -> ok() { Usage reference removed from file. }
-      -> notfound(message: String) { File does not exist. }
+      -> ok() {
+        Entity removed as a consumer of the file, decrementing its reference count.
+        When no usages remain, the file becomes eligible for garbage collection.
+      }
+      -> notfound(message: String) {
+        The target file does not exist in storage.
+      }
     }
 
     action garbageCollect() {
-      -> ok(removed: Int) { Unreferenced files removed successfully. }
+      -> ok(removed: Int) {
+        All files with zero usage references have been deleted from storage.
+      }
     }
 
     action getFile(file: F) {
-      -> ok(data: String, mimeType: String) { File data retrieved. }
-      -> notfound(message: String) { File does not exist. }
+      -> ok(data: String, mimeType: String) {
+        Returns the file content and its MIME type for downstream consumption.
+      }
+      -> notfound(message: String) {
+        The target file does not exist in storage.
+      }
     }
   }
 

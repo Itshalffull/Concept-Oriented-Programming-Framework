@@ -33,7 +33,7 @@ concept Artifact [A] {
         same hash already exists, return it without rebuilding.
       }
       -> compilationError(concept: String, errors: list String) {
-        Spec or implementation has errors.
+        The concept spec or implementation contains syntax or type errors preventing compilation.
       }
     }
 

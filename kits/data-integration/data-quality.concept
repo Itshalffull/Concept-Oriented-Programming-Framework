@@ -46,13 +46,13 @@ concept DataQuality [D] {
 
     action profile(datasetQuery: String) {
       -> ok(profile: String) {
-        Statistical overview of the dataset.
+        Returns completeness, distribution, and anomaly statistics for the dataset.
       }
     }
 
     action reconcile(field: String, knowledgeBase: String) {
       -> ok(matches: String) {
-        Matching results against the external knowledge base.
+        Returns candidate matches from the knowledge base for the given field value.
       }
     }
 

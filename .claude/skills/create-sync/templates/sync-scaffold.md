@@ -8,6 +8,7 @@ Extract token from request, verify with JWT.
 
 ```
 sync TODO_ActionAuth [eager]
+  purpose: "TODO: describe what this auth gate protects"
 when {
   Web/request: [ method: "TODO_method"; token: ?token ]
     => [ request: ?request ]
@@ -23,6 +24,7 @@ After auth, create a new entity with `uuid()`.
 
 ```
 sync PerformTODO_Action [eager]
+  purpose: "TODO: describe what action is performed after auth"
 when {
   Web/request: [
     method: "TODO_method";
@@ -50,6 +52,7 @@ After auth, act on an existing entity from the request.
 
 ```
 sync PerformTODO_Action [eager]
+  purpose: "TODO: describe what action is performed after auth"
 when {
   Web/request: [
     method: "TODO_method";
@@ -72,6 +75,7 @@ Return data after action completes. Query concept state for display fields.
 
 ```
 sync TODO_ActionResponse [eager]
+  purpose: "TODO: describe what data is returned to the client"
 when {
   Web/request: [ method: "TODO_method" ]
     => [ request: ?request ]
@@ -97,6 +101,7 @@ Return data directly from the action completion.
 
 ```
 sync TODO_ActionResponse [eager]
+  purpose: "TODO: describe what data is returned to the client"
 when {
   Web/request: [ method: "TODO_method" ]
     => [ request: ?request ]
@@ -116,6 +121,7 @@ Handle action failure with error output.
 
 ```
 sync TODO_ActionError [eager]
+  purpose: "TODO: describe the error condition being handled"
 when {
   Web/request: [ method: "TODO_method" ]
     => [ request: ?request ]
@@ -136,6 +142,7 @@ Match on boolean output for success path.
 
 ```
 sync TODO_Success [eager]
+  purpose: "TODO: describe the success path and what triggers it"
 when {
   Web/request: [ method: "TODO_method" ]
     => []
@@ -153,6 +160,7 @@ Match on boolean output for error path.
 
 ```
 sync TODO_Failure [eager]
+  purpose: "TODO: describe the failure condition being handled"
 when {
   Web/request: [ method: "TODO_method" ]
     => [ request: ?request ]
@@ -173,6 +181,7 @@ When parent is deleted, delete all children.
 
 ```
 sync CascadeDeleteTODO_Children [eager]
+  purpose: "TODO: describe why child entities must be removed with the parent"
 when {
   TODO_Parent/delete: [ TODO_parent_id: ?parent ]
     => [ TODO_parent_id: ?parent ]
@@ -191,6 +200,7 @@ Query concept state to find an entity, then act on it.
 
 ```
 sync TODO_SyncName [eager]
+  purpose: "TODO: describe the lookup and subsequent action"
 when {
   Web/request: [ method: "TODO_method"; TODO_lookup_field: ?lookup ]
     => [ request: ?request ]
@@ -209,6 +219,7 @@ One action triggers another automatically.
 
 ```
 sync TODO_SyncName [eager]
+  purpose: "TODO: describe the side effect and why it follows the trigger"
 when {
   TODO_Concept/TODO_action: []
     => [ TODO_field: ?value ]
@@ -224,6 +235,7 @@ Processing pipeline — output of one stage feeds input of next.
 
 ```
 sync TODO_StageName [eager]
+  purpose: "TODO: describe this pipeline stage and what it feeds into"
 when {
   TODO_PriorConcept/TODO_priorAction: [ TODO_key: ?key ]
     => [ TODO_output: ?output ]
@@ -239,6 +251,7 @@ Wait for multiple completions before responding.
 
 ```
 sync TODO_FullResponse [eager]
+  purpose: "TODO: describe the composite response being assembled"
 when {
   Web/request: [ method: "TODO_method" ]
     => [ request: ?request ]
@@ -267,6 +280,7 @@ Replicate data to a remote runtime (may be offline).
 
 ```
 sync TODO_Replicate [eventual] [idempotent]
+  purpose: "TODO: describe what data is replicated and why"
 when {
   TODO_LocalRuntime.TODO_Concept/TODO_action: []
     => [ TODO_field: ?value1; TODO_field: ?value2 ]
@@ -283,8 +297,8 @@ then {
 Structural invariant sync for a concept kit.
 
 ```
-// Required: TODO describe what breaks without this sync
 sync TODO_SyncName [required]
+  purpose: "TODO: describe what data integrity breaks without this sync"
 when {
   TODO_Parent/TODO_action: [ TODO_id: ?entity ]
     => [ TODO_id: ?entity ]
@@ -302,8 +316,8 @@ then {
 Useful default sync that apps can override or disable.
 
 ```
-// Recommended: TODO describe what this does and how to customize
 sync TODO_SyncName [recommended]
+  purpose: "TODO: describe the default behavior and how to customize"
 when {
   Web/request: [ method: "TODO_method"; TODO_field: ?field ]
     => []
@@ -325,6 +339,7 @@ then {
 
 | TODO Marker | Replace With | Example |
 |-------------|-------------|---------|
+| `purpose: "TODO:..."` | Descriptive purpose string | `purpose: "Verify JWT token before article creation"` |
 | `TODO_SyncName` | Sync name in PascalCase | `CreateArticleAuth` |
 | `TODO_method` | Web request method string | `"create_article"` |
 | `TODO_Concept` | Concept name in PascalCase | `Article` |

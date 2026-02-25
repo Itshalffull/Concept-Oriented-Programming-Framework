@@ -35,25 +35,25 @@ concept DataSource [D] {
         Source does not exist.
       }
       -> error(message: String) {
-        Connection failed.
+        The source is unreachable or credentials were rejected.
       }
     }
 
     action discover(sourceId: String) {
       -> ok(rawSchema: String) {
-        Source schema introspected and returned.
+        Available streams and fields introspected from the source.
       }
       -> notfound(message: String) {
         Source does not exist.
       }
       -> error(message: String) {
-        Discovery failed.
+        The source does not support introspection or the query failed.
       }
     }
 
     action healthCheck(sourceId: String) {
       -> ok(status: String) {
-        Health check completed.
+        Returns the current reachability and latency status of the source.
       }
       -> notfound(message: String) {
         Source does not exist.

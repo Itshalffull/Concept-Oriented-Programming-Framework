@@ -8,9 +8,12 @@ Complete formal grammar for `.sync` files, with examples for every construct.
 SyncFile        = (SyncDecl NL)*
 
 SyncDecl        = "sync" Name Annotation* NL
+                  PurposeClause?
                   WhenClause
                   WhereClause?
                   ThenClause
+
+PurposeClause   = "purpose" ":" StringLit NL
 
 Annotation      = "[" AnnotationName "]"
 AnnotationName  = "eager" | "eventual" | "local" | "idempotent"
@@ -68,16 +71,38 @@ Comments are ignored by the parser.
 
 ```
 sync SyncName [annotation1] [annotation2]
+  purpose: "One-line description of what this sync does and why"
 when { ... }
 where { ... }    // optional
 then { ... }
 ```
 
 - **Name**: PascalCase identifier. Must be unique within the application.
+- **Purpose**: Optional but strongly recommended. A short string describing the sync's role.
 - **Annotations**: Zero or more bracketed keywords.
 - **When**: Required. At least one action pattern.
 - **Where**: Optional. Zero or more bind/query/filter expressions.
 - **Then**: Required. At least one action invocation.
+
+## Purpose Clause
+
+The `purpose` clause is an optional metadata field that describes what the sync does and why. It appears after annotations and before `when`:
+
+```
+sync CascadeDeleteComments [eager]
+  purpose: "Remove all comments when their parent article is deleted"
+when {
+  Article/delete: [ article: ?article ] => [ article: ?article ]
+}
+where {
+  Comment: { ?comment target: ?article }
+}
+then {
+  Comment/delete: [ comment: ?comment ]
+}
+```
+
+The purpose string is preserved in the parsed AST (`CompiledSync.purpose`) and available for tooling, documentation generation, and AI-assisted discovery. While comments (`#` or `//`) work for human readers, the `purpose` field is machine-readable.
 
 ## Annotations
 
@@ -310,6 +335,7 @@ All actions in `then` are dispatched (they don't depend on each other within the
 
 ```
 sync GenerateToken [eager]
+  purpose: "Issue a JWT token immediately after a new user registers"
 when {
   User/register: [] => [ user: ?user ]
 }
@@ -322,6 +348,7 @@ then {
 
 ```
 sync RegistrationResponse [eager]
+  purpose: "Return user profile and token after successful registration"
 when {
   Web/request: [ method: "register" ] => [ request: ?request ]
   User/register: [] => [ user: ?user ]

@@ -20,10 +20,12 @@ concept View [V] {
   actions {
     action create(view: V, dataSource: String, layout: String) {
       -> ok(view: V) {
-        A new view is created over the given data source with the specified layout.
+        A new view is created over the given data source with the specified layout
+        type (table, board, calendar, gallery, or list).
       }
       -> error(message: String) {
-        The view could not be created.
+        The view could not be created due to an invalid data source
+        or unsupported layout type.
       }
     }
 

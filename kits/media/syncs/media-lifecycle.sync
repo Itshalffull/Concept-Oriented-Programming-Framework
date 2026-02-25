@@ -1,3 +1,7 @@
+# Media lifecycle integration between file storage and asset management.
+# Coordinates upload, metadata extraction, and usage tracking.
+
+# Create a media asset and extract metadata when a file is uploaded
 sync ExtractMetadataOnUpload [eager]
 when {
   FileManagement/upload: [ file: ?file; data: ?data; mimeType: ?mime ]
@@ -7,6 +11,7 @@ then {
   MediaAsset/createMedia: [ asset: ?file; source: ?mime; file: ?file ]
 }
 
+# Register file usage when a media asset is created to prevent garbage collection
 sync TrackUsageOnCreate [eager]
 when {
   MediaAsset/createMedia: [ asset: ?asset; source: ?source; file: ?file ]

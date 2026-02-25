@@ -31,10 +31,10 @@ concept Name [T] {
 
 ```
 action create(name: String, email: String) {
-  description { Create a new user. }
-  -> ok(user: U) { User created. }
-  -> duplicate(email: String) { Email already registered. }
-  -> error(message: String) { Creation failed. }
+  description { Create a new user with the given name and email. }
+  -> ok(user: U) { New user registered and ready for authentication setup. }
+  -> duplicate(email: String) { Another user is already registered with this email address. }
+  -> error(message: String) { Creation failed due to a storage or validation error. }
 }
 ```
 

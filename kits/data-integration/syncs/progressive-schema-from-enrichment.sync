@@ -1,5 +1,6 @@
 // Enricher results feed into structure detection for progressive formalization
 
+# When enrichment suggestions arrive, re-detect structure to incorporate new fields
 sync EnrichmentFeedsStructure [eager]
 when {
   Enricher/suggest: [ itemId: ?itemId ]

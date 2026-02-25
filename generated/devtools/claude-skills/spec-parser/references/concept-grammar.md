@@ -48,8 +48,8 @@ state {
 ```
 actions {
   action create(name: String, email: String) {
-    -> ok(item: T) { Created successfully. }
-    -> duplicate(name: String) { Name already taken. }
+    -> ok(item: T) { New item registered with the provided name and email. }
+    -> duplicate(name: String) { Another item already has this name. }
   }
 }
 ```

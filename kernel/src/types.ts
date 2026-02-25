@@ -169,6 +169,7 @@ export interface ThenField {
 
 export interface CompiledSync {
   name: string;
+  purpose?: string;
   annotations?: string[];
   when: WhenPattern[];
   where: WhereEntry[];

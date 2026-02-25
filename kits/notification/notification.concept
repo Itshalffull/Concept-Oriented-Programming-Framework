@@ -16,37 +16,68 @@ concept Notification [N] {
 
   actions {
     action registerChannel(name: String, config: String) {
-      -> ok() { Channel registered successfully. }
-      -> exists(message: String) { Channel already registered. }
+      -> ok() {
+        Delivery channel registered with the given transport configuration
+        (email, SMS, push, in-app, webhook, etc.).
+      }
+      -> exists(message: String) {
+        A channel with this name is already registered.
+      }
     }
 
     action defineTemplate(notification: N, template: String) {
-      -> ok() { Template defined successfully. }
-      -> exists(message: String) { Template already exists for this notification type. }
+      -> ok() {
+        Notification template defined with placeholders for dynamic data
+        interpolation during delivery.
+      }
+      -> exists(message: String) {
+        A template already exists for this notification type.
+      }
     }
 
     action subscribe(user: String, eventType: String, channel: String) {
-      -> ok() { User subscribed to event type on channel. }
-      -> exists(message: String) { Subscription already exists. }
+      -> ok() {
+        User subscribed to receive notifications for the given event
+        type through the specified channel.
+      }
+      -> exists(message: String) {
+        This user-event-channel subscription already exists.
+      }
     }
 
     action unsubscribe(user: String, eventType: String, channel: String) {
-      -> ok() { User unsubscribed from event type on channel. }
-      -> notfound(message: String) { Subscription does not exist. }
+      -> ok() {
+        User unsubscribed from the event type on the given channel.
+        Future events of this type will not be delivered on this channel.
+      }
+      -> notfound(message: String) {
+        No matching subscription exists for this user-event-channel combination.
+      }
     }
 
     action notify(notification: N, user: String, template: String, data: String) {
-      -> ok() { Notification delivered to user inbox. }
-      -> error(message: String) { Delivery failed. }
+      -> ok() {
+        Notification rendered from the template with the provided data
+        and delivered to the user's inbox across subscribed channels.
+      }
+      -> error(message: String) {
+        Delivery failed due to a channel transport error or missing template.
+      }
     }
 
     action markRead(notification: N) {
-      -> ok() { Notification marked as read. }
-      -> notfound(message: String) { Notification does not exist. }
+      -> ok() {
+        Notification marked as read, removing it from the user's unread count.
+      }
+      -> notfound(message: String) {
+        No notification exists with this identifier.
+      }
     }
 
     action getUnread(user: String) {
-      -> ok(notifications: String) { Returns unread notifications for the user. }
+      -> ok(notifications: String) {
+        Returns all unread notifications for the user, ordered by delivery time.
+      }
     }
   }
 

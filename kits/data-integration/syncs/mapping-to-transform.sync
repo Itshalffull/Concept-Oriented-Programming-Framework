@@ -1,5 +1,6 @@
 // Mapped items proceed to the transform stage
 
+# When a field mapping is applied, queue the mapped record for transformation
 sync MappingToTransform [eager]
 when {
   FieldMapping/apply: [ record: ?record; mappingId: ?mappingId ]
@@ -9,6 +10,7 @@ then {
   Queue/enqueue: [ queue: "integration"; item: ?mapped; priority: 1 ]
 }
 
+# When a worker claims a transform queue item, run the default transform chain
 sync QueueDispatchesTransform [eager]
 when {
   Queue/claim: [ queue: "transform"; worker: ?worker ]

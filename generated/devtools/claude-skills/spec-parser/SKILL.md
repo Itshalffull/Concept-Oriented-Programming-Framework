@@ -35,6 +35,7 @@ Parse all .concept specs in the project and report syntax or structural errors.
 - [ ] Actions have at least one variant?
 - [ ] Invariants reference valid actions?
 - [ ] Type parameters declared and used?
+- [ ] Variant descriptions explain outcomes, not just echo variant names?
 
 **Examples:**
 *Parse a concept file*
@@ -85,7 +86,30 @@ concept User [U] {
 concept User [U] {
   purpose { Manage user identity and profile information. }
   state { users: set U; name: U -> String }
-  actions { action create(name: String) { -> ok(user: U) { Created. } } }
+  actions { action create(name: String) { -> ok(user: U) { New user registered. } } }
+}
+
+```
+
+### Terse or echo variant descriptions
+Variant descriptions that echo the variant name or use a single generic word — they tell the reader nothing about the actual outcome.
+
+**Bad:**
+```
+action create(name: String) {
+  -> ok(user: U) { Created. }
+  -> duplicate(name: String) { Name taken. }
+  -> error(message: String) { Failed. }
+}
+
+```
+
+**Good:**
+```
+action create(name: String) {
+  -> ok(user: U) { New user registered and ready for authentication setup. }
+  -> duplicate(name: String) { A user with this name already exists. }
+  -> error(message: String) { Creation failed due to a storage or validation error. }
 }
 
 ```
@@ -101,7 +125,7 @@ action create(name, email) { -> ok(user: U) { Created. } }
 
 **Good:**
 ```
-action create(name: String, email: String) { -> ok(user: U) { Created. } }
+action create(name: String, email: String) { -> ok(user: U) { New user registered. } }
 
 ```
 ## Validation

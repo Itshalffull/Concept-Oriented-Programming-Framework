@@ -1,3 +1,7 @@
+# View rendering pipeline connecting views, display modes, and form generation.
+# Coordinates layout rendering, mode-based display, and widget registration.
+
+# Render a view's layout tree when the view is first created
 sync RenderView [eager]
 when {
   View/create: [ view: ?view; dataSource: ?source; layout: ?layout ]
@@ -7,6 +11,7 @@ then {
   Renderer/render: [ renderer: ?view; tree: ?layout ]
 }
 
+# Apply display mode rendering when a view's layout changes
 sync FormFromView [eager]
 when {
   View/changeLayout: [ view: ?view; layout: ?layout ]
@@ -16,6 +21,7 @@ then {
   DisplayMode/renderInMode: [ mode: ?view; entity: ?layout ]
 }
 
+# Register form widgets when field form configuration is set on a display mode
 sync BuildFormFromSchema [eager]
 when {
   DisplayMode/configureFieldForm: [ mode: ?mode; field: ?field; config: ?config ]

@@ -15,17 +15,17 @@ concept ExpressionLanguage [E] {
 
   actions {
     action registerLanguage(name: String, grammar: String) {
-      -> ok() { Language grammar registered. }
+      -> ok() { Grammar added to the set of available parsing languages. }
       -> exists() { Language with this name already registered. }
     }
 
     action registerFunction(name: String, implementation: String) {
-      -> ok() { Function registered in the function registry. }
+      -> ok() { Function available for use in expressions. }
       -> exists() { Function with this name already registered. }
     }
 
     action registerOperator(name: String, implementation: String) {
-      -> ok() { Operator registered in the operator registry. }
+      -> ok() { Operator available for use in expressions. }
       -> exists() { Operator with this name already registered. }
     }
 

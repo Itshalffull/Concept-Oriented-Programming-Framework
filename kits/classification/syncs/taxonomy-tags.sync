@@ -1,5 +1,6 @@
 // Taxonomy and tag coordination
 
+# When an entity is tagged with a taxonomy term, mirror it as a flat tag
 sync TaxonomyTermAsTag [eager]
 when {
   Taxonomy/tagEntity: [ entity: ?entity; vocab: ?vocab; term: ?term ]
@@ -9,6 +10,7 @@ then {
   Tag/addTag: [ entity: ?entity; tag: ?vocab ]
 }
 
+# When a flat tag is removed, also remove the corresponding taxonomy association
 sync UntagRemovesFromTaxonomy [eager]
 when {
   Tag/removeTag: [ entity: ?entity; tag: ?tag ]

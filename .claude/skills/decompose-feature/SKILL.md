@@ -213,6 +213,10 @@ Before finalizing, verify:
 - [ ] Entity deletion cascades are handled by syncs
 - [ ] Success and failure response syncs exist for every flow
 - [ ] Sync files are grouped by domain (login, registration, articles, etc.)
+- [ ] Every concept purpose explains what/why/how concisely (1-3 sentences)
+- [ ] Every action variant has a clear description (not just echoing the name)
+- [ ] Every sync rule has a one-line comment explaining what it does
+- [ ] Every sync file has a header comment explaining the flow it covers
 
 ## Quick Reference: Concept Categories
 

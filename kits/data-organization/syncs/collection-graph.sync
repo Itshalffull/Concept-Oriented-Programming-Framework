@@ -1,3 +1,6 @@
+# Collection membership mirrored as graph nodes for visualization
+
+# When a member is added to a collection, add it as a node in the graph
 sync GraphFromCollection [eager]
 when {
   Collection/addMember: [ collection: ?coll; member: ?member ]
@@ -7,6 +10,7 @@ then {
   Graph/addNode: [ graph: ?coll; node: ?member ]
 }
 
+# When a member is removed from a collection, remove the corresponding graph node
 sync RemoveFromGraph [eager]
 when {
   Collection/removeMember: [ collection: ?coll; member: ?member ]

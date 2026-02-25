@@ -17,46 +17,51 @@ concept Component [C] {
   actions {
     action register(component: C, config: String) {
       -> ok() {
-        Component registered with the given configuration.
+        Component registered with its configuration, making it
+        discoverable for placement in layout regions.
       }
       -> exists(message: String) {
-        A component with this identity already exists.
+        A component with this identity is already registered.
       }
     }
 
     action render(component: C, context: String) {
       -> ok(output: String) {
-        Component rendered successfully and output returned.
+        Component rendered for the given page context (e.g. homepage,
+        article page), producing output suitable for its layout region.
       }
       -> notfound(message: String) {
-        The component was not found.
+        No component exists with this identifier.
       }
     }
 
     action place(component: C, region: String) {
       -> ok() {
-        Component assigned to the specified layout region.
+        Component assigned to the specified layout region (e.g. header,
+        sidebar, footer). Triggers visibility evaluation via sync.
       }
       -> notfound(message: String) {
-        The component was not found.
+        No component exists with this identifier.
       }
     }
 
     action setVisibility(component: C, visible: Bool) {
       -> ok() {
-        Component visibility updated.
+        Component visibility explicitly set, overriding conditional
+        placement rules.
       }
       -> notfound(message: String) {
-        The component was not found.
+        No component exists with this identifier.
       }
     }
 
     action evaluateVisibility(component: C, context: String) {
       -> ok(visible: Bool) {
-        Returns whether the component is visible given the context.
+        Evaluates the component's conditional placement rules
+        against the given context to determine visibility.
       }
       -> notfound(message: String) {
-        The component was not found.
+        No component exists with this identifier.
       }
     }
   }

@@ -60,7 +60,7 @@ concept SyncPair [S] {
         Conflict does not exist.
       }
       -> error(message: String) {
-        Resolution failed.
+        The resolver could not determine a winner or the records are incompatible.
       }
     }
 

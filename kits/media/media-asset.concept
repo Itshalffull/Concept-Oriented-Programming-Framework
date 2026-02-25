@@ -15,23 +15,43 @@ concept MediaAsset [M] {
 
   actions {
     action createMedia(asset: M, source: String, file: String) {
-      -> ok(asset: M) { Media asset created successfully. }
-      -> error(message: String) { Creation failed or asset already exists. }
+      -> ok(asset: M) {
+        Media asset created, wrapping the underlying file with the
+        specified source plugin for format-specific operations.
+      }
+      -> error(message: String) {
+        Creation failed due to an unsupported source type or duplicate asset identity.
+      }
     }
 
     action extractMetadata(asset: M) {
-      -> ok(metadata: String) { Metadata extracted from asset. }
-      -> notfound(message: String) { Asset does not exist. }
+      -> ok(metadata: String) {
+        Format-specific metadata extracted from the asset (dimensions,
+        duration, codec, EXIF data, etc.) using the source plugin.
+      }
+      -> notfound(message: String) {
+        No asset exists with this identifier.
+      }
     }
 
     action generateThumbnail(asset: M) {
-      -> ok(thumbnail: String) { Thumbnail generated for asset. }
-      -> notfound(message: String) { Asset does not exist. }
+      -> ok(thumbnail: String) {
+        A preview thumbnail generated from the asset content,
+        suitable for gallery views and teasers.
+      }
+      -> notfound(message: String) {
+        No asset exists with this identifier.
+      }
     }
 
     action getMedia(asset: M) {
-      -> ok(asset: M, metadata: String, thumbnail: String) { Asset retrieved with metadata and thumbnail. }
-      -> notfound(message: String) { Asset does not exist. }
+      -> ok(asset: M, metadata: String, thumbnail: String) {
+        Returns the full asset with extracted metadata and
+        generated thumbnail for display.
+      }
+      -> notfound(message: String) {
+        No asset exists with this identifier.
+      }
     }
   }
 

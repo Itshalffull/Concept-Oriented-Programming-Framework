@@ -1,5 +1,6 @@
 // Schema and namespace coordination
 
+# When a schema is defined, create a corresponding namespace node for scoped navigation
 sync NamespaceFromSchema [eager]
 when {
   Schema/defineSchema: [ schema: ?schema; fields: ?fields ]

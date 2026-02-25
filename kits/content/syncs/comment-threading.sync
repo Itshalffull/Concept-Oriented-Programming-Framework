@@ -1,3 +1,6 @@
+# Comment threading coordination
+
+# When a reply is created, auto-publish it so the thread stays visible
 sync CommentNotifyOnReply [eager]
 when {
   Comment/reply: [ comment: ?reply; parent: ?parent; content: ?content; author: ?author ]

@@ -23,7 +23,7 @@ concept Capture [C] {
         Content captured from the URL with source metadata.
       }
       -> error(message: String) {
-        Capture failed.
+        The URL was unreachable or the content type is unsupported.
       }
     }
 
@@ -32,7 +32,7 @@ concept Capture [C] {
         File imported with detected content type and metadata.
       }
       -> error(message: String) {
-        Import failed.
+        The file could not be read or its format is not recognized.
       }
     }
 
@@ -41,7 +41,7 @@ concept Capture [C] {
         Recurring capture subscription created.
       }
       -> error(message: String) {
-        Subscription creation failed.
+        The source is invalid or the schedule expression could not be parsed.
       }
     }
 
@@ -59,7 +59,7 @@ concept Capture [C] {
 
     action markReady(itemId: String) {
       -> ok() {
-        Item transitioned from new to processing.
+        Item marked ready and advanced from inbox to the processing pipeline.
       }
       -> notfound(message: String) {
         Item does not exist.

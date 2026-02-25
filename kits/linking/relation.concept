@@ -15,7 +15,8 @@ concept Relation [R] {
   actions {
     action defineRelation(relation: R, schema: String) {
       -> ok(relation: R) {
-        Define a new relation with the given schema.
+        A typed relation is registered with its label, directionality,
+        and cardinality constraints from the provided schema.
       }
       -> exists(relation: R) {
         A relation with this identity already exists.
@@ -24,7 +25,8 @@ concept Relation [R] {
 
     action link(relation: R, source: String, target: String) {
       -> ok(relation: R, source: String, target: String) {
-        Create a link between source and target within the relation.
+        A bidirectional link is created between source and target,
+        validated against the relation's cardinality constraints.
       }
       -> invalid(relation: R, message: String) {
         The link violates the relation schema or cardinality constraints.
@@ -33,7 +35,7 @@ concept Relation [R] {
 
     action unlink(relation: R, source: String, target: String) {
       -> ok(relation: R, source: String, target: String) {
-        Remove the link between source and target within the relation.
+        The link between source and target is removed from the relation.
       }
       -> notfound(relation: R, source: String, target: String) {
         No such link exists in the relation.
@@ -42,7 +44,8 @@ concept Relation [R] {
 
     action getRelated(relation: R, entity: String) {
       -> ok(related: String) {
-        Return all entities related to the given entity within the relation.
+        Returns all entities connected to the given entity within the
+        relation, traversing in both directions.
       }
       -> notfound(relation: R, entity: String) {
         The relation or entity was not found.
@@ -51,7 +54,8 @@ concept Relation [R] {
 
     action defineRollup(relation: R, formula: String) {
       -> ok(relation: R, formula: String) {
-        Define an aggregation rollup formula for the relation.
+        An aggregation formula is registered for the relation,
+        enabling computed values (sum, count, avg) across linked entities.
       }
       -> notfound(relation: R) {
         The relation was not found.
@@ -60,7 +64,8 @@ concept Relation [R] {
 
     action computeRollup(relation: R, entity: String) {
       -> ok(value: String) {
-        Compute and return the rollup aggregation value for the entity.
+        Evaluates the rollup formula against all entities linked to
+        this entity and returns the computed aggregate value.
       }
       -> notfound(relation: R, entity: String) {
         The relation or entity was not found.

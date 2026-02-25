@@ -15,6 +15,7 @@ Scaffold a sync rule **<source>** with trigger patterns, guard conditions, and e
 - **Declarative Wiring:** Syncs declare what happens when — they never contain imperative logic, loops, or conditionals beyond pattern matching.
 - **Concept Independence:** Syncs reference concepts by name but concepts never know about syncs. The sync is the only place where concept names appear together.
 - **Pattern Completeness:** The when clause must match specific action completions (concept/action with variant). The then clause invokes specific actions.
+- **Purpose Clause Quality:** Every sync must have a purpose clause that explains the causal chain — 'When X happens, do Y because Z'. Never just restate the sync name or omit the purpose entirely.
 **generate:**
 - [ ] Sync name is PascalCase?
 - [ ] Tier annotation matches intended behavior ([eager], [required], [recommended])?
@@ -44,6 +45,26 @@ Scaffold a sync rule **<source>** with trigger patterns, guard conditions, and e
 
 
 ## Anti-Patterns
+
+### Missing or restated purpose
+Sync has no purpose clause, or the purpose just restates the sync name — readers can't understand why the sync exists.
+
+**Bad:**
+```
+sync CreateProfile [eager]
+when { ... }
+then { Profile/create: [owner: ?u] }
+
+```
+
+**Good:**
+```
+sync CreateProfile [eager]
+  purpose: "Initialize an empty profile automatically when a new user registers"
+when { ... }
+then { Profile/create: [owner: ?u] }
+
+```
 
 ### Sync with imperative logic
 Sync tries to express conditionals or loops instead of pattern matching.

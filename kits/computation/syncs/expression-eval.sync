@@ -1,3 +1,6 @@
+# Expression language integration for formulas and tokens
+
+# When a formula is created, parse its expression using the expression language engine
 sync FormulaUsesExpressionLanguage [eager]
 when {
   Formula/create: [ formula: ?formula; expression: ?expr ]
@@ -7,6 +10,7 @@ then {
   ExpressionLanguage/parse: [ expression: ?formula; text: ?expr; language: "default" ]
 }
 
+# When a token replacement runs, parse the text through the token grammar
 sync TokenUsesExpressionLanguage [eager]
 when {
   Token/replace: [ text: ?text; context: ?context ]

@@ -1,5 +1,6 @@
 // Authorization and access control coordination
 
+// Delegate access control checks to role-based authorization for permission resolution
 sync CheckAccessViaRoles [eager]
 when {
   AccessControl/check: [ resource: ?resource; action: ?action; context: ?context ]

@@ -1,5 +1,6 @@
 // Cross-cutting provenance — every data action generates a lineage record
 
+# Record provenance when content is captured from a URL
 sync TrackCapture [eager]
 when {
   Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
@@ -9,6 +10,7 @@ then {
   Provenance/record: [ entity: ?itemId; activity: "capture"; agent: "system"; inputs: ?url ]
 }
 
+# Record provenance when a field mapping is applied to a record
 sync TrackMapping [eager]
 when {
   FieldMapping/apply: [ record: ?record; mappingId: ?mappingId ]
@@ -18,6 +20,7 @@ then {
   Provenance/record: [ entity: ?record; activity: "field_mapping"; agent: "system"; inputs: ?mappingId ]
 }
 
+# Record provenance when a transform chain processes a value
 sync TrackTransform [eager]
 when {
   Transform/chain: [ value: ?value; transformIds: ?ids ]
@@ -27,6 +30,7 @@ then {
   Provenance/record: [ entity: ?value; activity: "transform"; agent: "system"; inputs: ?ids ]
 }
 
+# Record provenance when an enricher augments an item
 sync TrackEnrichment [eager]
 when {
   Enricher/enrich: [ itemId: ?itemId; enricherId: ?enricherId ]
@@ -36,6 +40,7 @@ then {
   Provenance/record: [ entity: ?itemId; activity: "enrichment"; agent: ?enricherId; inputs: "" ]
 }
 
+# Record provenance when a data quality validation is performed
 sync TrackValidation [eager]
 when {
   DataQuality/validate: [ item: ?item; rulesetId: ?rules ]
@@ -45,6 +50,7 @@ then {
   Provenance/record: [ entity: ?item; activity: "validation"; agent: "system"; inputs: ?rules ]
 }
 
+# Record provenance when content is saved to storage
 sync TrackStorage [eager]
 when {
   ContentStorage/save: [ record: ?record; data: ?data ]
