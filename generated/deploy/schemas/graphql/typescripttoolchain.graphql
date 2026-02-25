@@ -1,0 +1,24 @@
+type TypeScriptToolchainState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type TypeScriptToolchainEntry {
+  n: ID!
+  tscPath: String!
+  tscVersion: String!
+  nodePath: String!
+  nodeVersion: String!
+  bundler: JSON!
+  packageManager: String!
+}
+
+extend type Query {
+  typescripttoolchain_entry(n: ID!): TypeScriptToolchainEntry
+  typescripttoolchain_entries: [TypeScriptToolchainEntry!]!
+}
+
+type TypeScriptToolchainToolchains {
+  n: ID!
+  value: ID!
+}

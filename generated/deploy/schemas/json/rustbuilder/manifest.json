@@ -1,0 +1,988 @@
+{
+  "uri": "urn:copf/RustBuilder",
+  "name": "RustBuilder",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "manifestPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "profile",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "features",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "targetTriple",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "builds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "build",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run cargo build with resolved toolchain \n Mode mapping : \n debug -> cargo build ( dev profile ) \n release -> cargo build release \n Executor strategy ( from deploy manifest ) : \n local -> invoke cargo directly on host \n remote -> send source to remote build endpoint \n container -> run cargo build in Docker container \n For WASM targets , uses wasm pack if available \n Feature flags passed through from config"
+        },
+        {
+          "tag": "compilationError",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "rustc reported errors"
+        },
+        {
+          "tag": "featureConflict",
+          "fields": [
+            {
+              "name": "conflicting",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Incompatible feature flags"
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "skipped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Run cargo test Parses test harness output"
+        },
+        {
+          "tag": "testFailure",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "test",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some tests failed"
+        }
+      ]
+    },
+    {
+      "name": "package",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Package built artifact Formats : \n crate -> cargo publishable crate \n binary -> standalone executable \n wasm-pack -> npm publishable WASM package \n docker -> Dockerfile binary"
+        },
+        {
+          "tag": "formatUnsupported",
+          "fields": [
+            {
+              "name": "format",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested format not available"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : RustBuilder \n language : rust \n capabilities : [ crate , binary , wasm-pack , docker ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, test behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "./generated/rust/password"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/rustc"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "linux-x86_64"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "mode",
+                    "value": {
+                      "kind": "literal",
+                      "value": "release"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "value": {
+                "kind": "literal",
+                "value": ".copf-artifacts/rust/password"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "value": {
+                "kind": "literal",
+                "value": "sha256:ghi"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "test",
+          "inputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/rustc"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": 15
+              }
+            },
+            {
+              "name": "failed",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "skipped",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 2100
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RustBuilderState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RustBuilderEntry {\n  r: ID!\n  manifestPath: String!\n  targetDir: String!\n  profile: String!\n  features: [String!]!\n  targetTriple: String!\n}\n\nextend type Query {\n  rustbuilder_entry(r: ID!): RustBuilderEntry\n  rustbuilder_entries: [RustBuilderEntry!]!\n}\n\ntype RustBuilderBuilds {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:copf/RustBuilder/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/RustBuilder"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "features"
+                ]
+              }
+            },
+            "required": [
+              "source",
+              "toolchainPath",
+              "platform",
+              "config"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:copf/RustBuilder/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/RustBuilder"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "toolchainPath"
+            ]
+          }
+        }
+      },
+      "package": {
+        "$id": "urn:copf/RustBuilder/package/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/RustBuilder"
+          },
+          "action": {
+            "const": "package"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "format"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/RustBuilder/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/RustBuilder"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:copf/RustBuilder/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "type": "string"
+                },
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "build",
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "compilationError": {
+          "$id": "urn:copf/RustBuilder/build/completion/compilationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "compilationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        },
+        "featureConflict": {
+          "$id": "urn:copf/RustBuilder/build/completion/featureConflict",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "featureConflict"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "conflicting": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "conflicting"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:copf/RustBuilder/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "skipped",
+                "duration"
+              ]
+            }
+          }
+        },
+        "testFailure": {
+          "$id": "urn:copf/RustBuilder/test/completion/testFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "testFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "test": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "test",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        }
+      },
+      "package": {
+        "ok": {
+          "$id": "urn:copf/RustBuilder/package/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "formatUnsupported": {
+          "$id": "urn:copf/RustBuilder/package/completion/formatUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "formatUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "format"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/RustBuilder/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/RustBuilder"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compile , test , and package Rust concept implementations \n Owns Rust specific build logic : cargo invocation , feature \n flag management , WASM compilation via wasm pack , and \n crate packaging Supports local , remote , and container based \n execution strategies configured via the deploy manifest \n executor section"
+}

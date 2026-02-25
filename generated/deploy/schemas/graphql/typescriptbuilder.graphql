@@ -1,0 +1,23 @@
+type TypeScriptBuilderState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type TypeScriptBuilderEntry {
+  n: ID!
+  projectPath: String!
+  outDir: String!
+  tsconfigTarget: String!
+  moduleFormat: String!
+  bundler: String!
+}
+
+extend type Query {
+  typescriptbuilder_entry(n: ID!): TypeScriptBuilderEntry
+  typescriptbuilder_entries: [TypeScriptBuilderEntry!]!
+}
+
+type TypeScriptBuilderBuilds {
+  n: ID!
+  value: ID!
+}

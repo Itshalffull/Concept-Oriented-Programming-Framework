@@ -1,0 +1,525 @@
+{
+  "uri": "urn:copf/SwiftToolchain",
+  "name": "SwiftToolchain",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "swiftcPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "swiftVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sdkPath",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "xcodeVersion",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "spmPath",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "supportedTargets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "toolchains",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "versionConstraint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "toolchain",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "swiftcPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Locate swiftc on the system Check version against \n constraint Detect Xcode vs standalone installation \n Resolve platform SDK path for cross compilation \n Return capabilities based on Swift version : \n 5.9 has macros , 5.10 has swift-testing , \n 6.0 has typed-throws"
+        },
+        {
+          "tag": "notInstalled",
+          "fields": [
+            {
+              "name": "installHint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "swiftc not found Hint : Install via Xcode or\n        download from swift.org/download"
+        },
+        {
+          "tag": "xcodeRequired",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Platform target requires Xcode ( e g , iOS , watchOS )"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : SwiftToolchain \n language : swift \n capabilities : [ xcode-detection , cross-compile , \n sdk-resolution ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, register behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "linux-arm64"
+              }
+            },
+            {
+              "name": "versionConstraint",
+              "value": {
+                "kind": "literal",
+                "value": ">=5.10"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "toolchain",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "swiftcPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/bin/swiftc"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "5.10.1"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "macros"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "swift-testing"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "SwiftToolchain"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "swift"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "caps"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "caps",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SwiftToolchainState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SwiftToolchainEntry {\n  s: ID!\n  swiftcPath: String!\n  swiftVersion: String!\n  sdkPath: String!\n  xcodeVersion: String!\n  spmPath: String!\n  supportedTargets: [String!]!\n}\n\nextend type Query {\n  swifttoolchain_entry(s: ID!): SwiftToolchainEntry\n  swifttoolchain_entries: [SwiftToolchainEntry!]!\n}\n\ntype SwiftToolchainToolchains {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:copf/SwiftToolchain/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SwiftToolchain"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "versionConstraint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "platform",
+              "versionConstraint"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/SwiftToolchain/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SwiftToolchain"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:copf/SwiftToolchain/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "toolchain": {
+                  "type": "string"
+                },
+                "swiftcPath": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "toolchain",
+                "swiftcPath",
+                "version",
+                "capabilities"
+              ]
+            }
+          }
+        },
+        "notInstalled": {
+          "$id": "urn:copf/SwiftToolchain/resolve/completion/notInstalled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notInstalled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "installHint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "installHint"
+              ]
+            }
+          }
+        },
+        "xcodeRequired": {
+          "$id": "urn:copf/SwiftToolchain/resolve/completion/xcodeRequired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "xcodeRequired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/SwiftToolchain/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftToolchain"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Resolve Swift compiler toolchains Owns Swift specific \n resolution : Xcode toolchains vs standalone swiftc , Swift \n Package Manager detection , platform SDK paths , and \n cross compilation target validation"
+}

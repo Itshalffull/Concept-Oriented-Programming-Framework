@@ -1,0 +1,976 @@
+{
+  "uri": "urn:copf/TypeScriptBuilder",
+  "name": "TypeScriptBuilder",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "projectPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "outDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tsconfigTarget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "moduleFormat",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "bundler",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "builds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "build",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run tsc for type checking bundler for output \n Platform determines module format : \n node-20 -> ESM with Node js target \n browser -> ESM with bundler , tree shaking \n cjs -> CommonJS for legacy compatibility \n Mode determines optimization : \n debug -> source maps , no minification \n release -> minification , dead code elimination \n Executor strategy ( from deploy manifest ) : \n local -> invoke tsc bundler directly on host \n remote -> send source to remote build endpoint \n container -> run build in Docker container"
+        },
+        {
+          "tag": "typeError",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "tsc reported type errors"
+        },
+        {
+          "tag": "bundleError",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Bundler ( esbuild webpack ) failed"
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "skipped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Run jest vitest against the built output \n Auto detects test runner from project config"
+        },
+        {
+          "tag": "testFailure",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "test",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some tests failed"
+        }
+      ]
+    },
+    {
+      "name": "package",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Package built artifact Formats : \n npm -> npm publishable tarball ( with package json ) \n bundle -> single file bundle for deployment \n docker -> Dockerfile built output"
+        },
+        {
+          "tag": "formatUnsupported",
+          "fields": [
+            {
+              "name": "format",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested format not available"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : TypeScriptBuilder \n language : typescript \n capabilities : [ npm , bundle , docker ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, test behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "./generated/typescript/password"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/tsc"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "node-20"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "mode",
+                    "value": {
+                      "kind": "literal",
+                      "value": "release"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "value": {
+                "kind": "literal",
+                "value": ".copf-artifacts/typescript/password"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "value": {
+                "kind": "literal",
+                "value": "sha256:def"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "test",
+          "inputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/tsc"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": 8
+              }
+            },
+            {
+              "name": "failed",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "skipped",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 900
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TypeScriptBuilderState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype TypeScriptBuilderEntry {\n  n: ID!\n  projectPath: String!\n  outDir: String!\n  tsconfigTarget: String!\n  moduleFormat: String!\n  bundler: String!\n}\n\nextend type Query {\n  typescriptbuilder_entry(n: ID!): TypeScriptBuilderEntry\n  typescriptbuilder_entries: [TypeScriptBuilderEntry!]!\n}\n\ntype TypeScriptBuilderBuilds {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:copf/TypeScriptBuilder/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeScriptBuilder"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "features"
+                ]
+              }
+            },
+            "required": [
+              "source",
+              "toolchainPath",
+              "platform",
+              "config"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:copf/TypeScriptBuilder/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeScriptBuilder"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "toolchainPath"
+            ]
+          }
+        }
+      },
+      "package": {
+        "$id": "urn:copf/TypeScriptBuilder/package/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeScriptBuilder"
+          },
+          "action": {
+            "const": "package"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "format"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/TypeScriptBuilder/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeScriptBuilder"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:copf/TypeScriptBuilder/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "type": "string"
+                },
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "build",
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "typeError": {
+          "$id": "urn:copf/TypeScriptBuilder/build/completion/typeError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "typeError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        },
+        "bundleError": {
+          "$id": "urn:copf/TypeScriptBuilder/build/completion/bundleError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "bundleError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:copf/TypeScriptBuilder/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "skipped",
+                "duration"
+              ]
+            }
+          }
+        },
+        "testFailure": {
+          "$id": "urn:copf/TypeScriptBuilder/test/completion/testFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "testFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "test": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "test",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        }
+      },
+      "package": {
+        "ok": {
+          "$id": "urn:copf/TypeScriptBuilder/package/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "formatUnsupported": {
+          "$id": "urn:copf/TypeScriptBuilder/package/completion/formatUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "formatUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "format"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/TypeScriptBuilder/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptBuilder"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compile , test , and package TypeScript concept implementations \n Owns TypeScript specific build logic : tsc invocation , bundler \n integration ( esbuild webpack vite ) , test runner integration \n ( jest vitest ) , and npm package generation Supports local , \n remote , and container based execution strategies configured \n via the deploy manifest executor section"
+}

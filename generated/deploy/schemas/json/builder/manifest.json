@@ -1,0 +1,1857 @@
+{
+  "uri": "urn:copf/Builder",
+  "name": "Builder",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "toolchainRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "startedAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "completedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "duration",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "artifactHash",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "artifactLocation",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "testsPassed",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "testsFailed",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "testsSkipped",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Int"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "warnings",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "errors",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "builds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "build",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactLocation",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Compile , test , and package the concept implementation \n for the specified language and platform Completion \n arrives after the provider concept finishes actual \n compilation Builder records the result in its registry \n The provider : \n 1 Resolves Toolchain for the language platform \n 2 Compiles the source \n 3 Runs tests ( unless config mode skip-tests ) \n 4 Packages the output \n 5 Returns content addressed artifact \n If an artifact with matching input hash already exists \n in Artifact , returns it without rebuilding ( cache hit \n through Artifact s content addressing )"
+        },
+        {
+          "tag": "compilationError",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Compilation failed Structured errors with file locations \n for IDE integration"
+        },
+        {
+          "tag": "testFailure",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "test",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Compilation succeeded but tests failed Returns \n pass fail counts and failure details"
+        },
+        {
+          "tag": "toolchainError",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Toolchain resolution failed before compilation started \n Propagated from Toolchain concept"
+        }
+      ]
+    },
+    {
+      "name": "buildAll",
+      "params": [
+        {
+          "name": "concepts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "targets",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "language",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "platform",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "concept",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "artifactHash",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "duration",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Build multiple concepts across multiple targets \n Independent targets build in parallel Returns \n per concept , per target results"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "completed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "concept",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "artifactHash",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "concept",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "error",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some builds succeeded , some failed"
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "skipped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Run tests only ( no compilation assumes already built ) \n Used for re running tests after a build"
+        },
+        {
+          "tag": "testFailure",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "test",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some tests failed"
+        },
+        {
+          "tag": "notBuilt",
+          "fields": [
+            {
+              "name": "concept",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No build artifact found must build first"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "build",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "option",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                }
+              }
+            }
+          ],
+          "prose": "Current build status Statuses : pending , compiling , \n testing , packaging , done , failed"
+        }
+      ]
+    },
+    {
+      "name": "history",
+      "params": [
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "builds",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "language",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "platform",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "artifactHash",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "duration",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "completedAt",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "testsPassed",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Build history for a concept , optionally filtered by \n language Used by copf build history"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, status, history behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "password"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "./generated/swift/password"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "swift"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "linux-arm64"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "mode",
+                    "value": {
+                      "kind": "literal",
+                      "value": "release"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "value": {
+                "kind": "literal",
+                "value": "sha256:abc"
+              }
+            },
+            {
+              "name": "artifactLocation",
+              "value": {
+                "kind": "literal",
+                "value": ".copf-artifacts/swift/password"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 3200
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "status",
+          "inputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "done"
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 3200
+              }
+            }
+          ]
+        },
+        {
+          "action": "history",
+          "inputs": [
+            {
+              "name": "concept",
+              "value": {
+                "kind": "literal",
+                "value": "password"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "swift"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "builds",
+              "value": {
+                "kind": "variable",
+                "name": "bs"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "bs",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BuilderState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BuilderEntry {\n  b: ID!\n  concept: String!\n  language: String!\n  platform: String!\n  config: JSON!\n  toolchainRef: String!\n  status: String!\n  startedAt: String!\n  completedAt: String!\n  duration: Int!\n  artifactHash: String!\n  artifactLocation: String!\n  testsPassed: Int!\n  testsFailed: Int!\n  testsSkipped: Int!\n  warnings: [String!]!\n  errors: [String!]!\n}\n\nextend type Query {\n  builder_entry(b: ID!): BuilderEntry\n  builder_entries: [BuilderEntry!]!\n}\n\ntype BuilderBuilds {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:copf/Builder/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Builder"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "features"
+                ]
+              }
+            },
+            "required": [
+              "concept",
+              "source",
+              "language",
+              "platform",
+              "config"
+            ]
+          }
+        }
+      },
+      "buildAll": {
+        "$id": "urn:copf/Builder/buildAll/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Builder"
+          },
+          "action": {
+            "const": "buildAll"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concepts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "source": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "language": {
+                      "type": "string"
+                    },
+                    "platform": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "language",
+                    "platform"
+                  ]
+                }
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "features"
+                ]
+              }
+            },
+            "required": [
+              "concepts",
+              "source",
+              "targets",
+              "config"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:copf/Builder/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Builder"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "concept",
+              "language",
+              "platform"
+            ]
+          }
+        }
+      },
+      "status": {
+        "$id": "urn:copf/Builder/status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Builder"
+          },
+          "action": {
+            "const": "status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build"
+            ]
+          }
+        }
+      },
+      "history": {
+        "$id": "urn:copf/Builder/history/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Builder"
+          },
+          "action": {
+            "const": "history"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "concept": {
+                "type": "string"
+              },
+              "language": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "concept",
+              "language"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:copf/Builder/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                },
+                "artifactLocation": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "build",
+                "artifactHash",
+                "artifactLocation",
+                "duration"
+              ]
+            }
+          }
+        },
+        "compilationError": {
+          "$id": "urn:copf/Builder/build/completion/compilationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "compilationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "concept",
+                "language",
+                "errors"
+              ]
+            }
+          }
+        },
+        "testFailure": {
+          "$id": "urn:copf/Builder/build/completion/testFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "testFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "test": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "test",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "concept",
+                "language",
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        },
+        "toolchainError": {
+          "$id": "urn:copf/Builder/build/completion/toolchainError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "toolchainError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "language",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "buildAll": {
+        "ok": {
+          "$id": "urn:copf/Builder/buildAll/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "buildAll"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "artifactHash": {
+                        "type": "string"
+                      },
+                      "duration": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "concept",
+                      "language",
+                      "artifactHash",
+                      "duration"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:copf/Builder/buildAll/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "buildAll"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "completed": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "artifactHash": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "concept",
+                      "language",
+                      "artifactHash"
+                    ]
+                  }
+                },
+                "failed": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "concept": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "error": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "concept",
+                      "language",
+                      "error"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "completed",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:copf/Builder/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "skipped",
+                "duration"
+              ]
+            }
+          }
+        },
+        "testFailure": {
+          "$id": "urn:copf/Builder/test/completion/testFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "testFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "test": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "test",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        },
+        "notBuilt": {
+          "$id": "urn:copf/Builder/test/completion/notBuilt",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "notBuilt"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "concept",
+                "language"
+              ]
+            }
+          }
+        }
+      },
+      "status": {
+        "ok": {
+          "$id": "urn:copf/Builder/status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "duration": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "build",
+                "status",
+                "duration"
+              ]
+            }
+          }
+        }
+      },
+      "history": {
+        "ok": {
+          "$id": "urn:copf/Builder/history/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Builder"
+            },
+            "action": {
+              "const": "history"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "builds": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "language": {
+                        "type": "string"
+                      },
+                      "platform": {
+                        "type": "string"
+                      },
+                      "artifactHash": {
+                        "type": "string"
+                      },
+                      "duration": {
+                        "type": "integer"
+                      },
+                      "completedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "testsPassed": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "language",
+                      "platform",
+                      "artifactHash",
+                      "duration",
+                      "completedAt",
+                      "testsPassed"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "builds"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordinate compilation , testing , and packaging across \n languages Owns the build registry : what was built , for \n what language and platform , with what toolchain , and what \n the result was Provider agnostic DeployPlan invokes \n Builder actions , and integration syncs route to the \n active language provider concept"
+}
