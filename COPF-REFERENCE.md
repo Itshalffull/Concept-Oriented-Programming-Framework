@@ -140,11 +140,11 @@ then {
 | JWT | T | Token generation and verification | generate, verify |
 | Profile | U | User bio and image metadata | update, get |
 | Article | A | Content creation and management | create, update, delete, get |
-| Comment | C | Threaded discussion on articles | add, delete, list |
 | Follow | U | Social follow relationships | follow, unfollow, isFollowing |
 | Favorite | F | Content bookmarking | favorite, unfavorite, count |
-| Tag | T | Content categorization labels | add, remove, list |
 | Echo | M | Simple request-response (test concept) | send |
+
+*Note: Tag and Comment were moved to their respective kits (Classification and Content).*
 
 ### 5.2 Framework Concepts (`specs/framework/`)
 
@@ -163,119 +163,298 @@ then {
 | ActionLog | Append-only record of all invocations and completions |
 | FlowTrace | Build debug trace trees from action log provenance |
 | DeploymentValidator | Validate deployment manifests pre-deploy |
-| Migration | Schema version migration (expand/migrate/contract) |
-| Telemetry | Collect and export observability data |
 | DevServer | Hot-reloading development server |
 | ProjectScaffold | Generate new COPF project structure |
+| KitManager | Kit lifecycle management (install, update, dependency resolution) |
 | *ScaffoldGen (x10) | Scaffold generators for concepts, syncs, kits, handlers, storage/transport adapters, deploy/interface manifests, COIF components/themes |
+
+*Note: Migration moved to Deploy Kit. Telemetry moved to Deploy Kit. CacheCompiler superseded by BuildCache in Generation Kit.*
 
 ### 5.3 Generation Kit (`kits/generation/`)
 
-| Concept | Purpose |
-|---------|---------|
-| Resource | Track input files with content hashing for change detection |
-| KindSystem | Define IR/artifact kinds and dependency edges between generators |
-| BuildCache | Incremental build cache with input/output hash tracking |
-| GenerationPlan | Orchestrate generation runs with step recording |
-| Emitter | Content-addressed file emission with formatting and orphan cleanup |
+Shared generation infrastructure for all COPF generation families. Provides input tracking, pipeline topology, incremental build caching, content-addressed file emission, and unified run reporting.
+
+| Concept | Purpose | Key Actions |
+|---------|---------|-------------|
+| Resource | Track input files with content hashing for change detection | upsert, remove, changed |
+| KindSystem | Define IR/artifact kinds and dependency edges between generators | define, connect, dependents |
+| BuildCache | Incremental build cache with input/output hash tracking | check, store, invalidateBySource, invalidateByKind |
+| GenerationPlan | Orchestrate generation runs with step recording | begin, recordStep, complete |
+| Emitter | Content-addressed file emission with formatting and orphan cleanup | write, format, clean |
+
+Uses: Infrastructure Kit (PluginRegistry).
 
 ### 5.4 Deploy Kit (`kits/deploy/`)
+
+Deployment orchestration with progressive delivery, migrations, health checks, and observability. Uses the coordination + provider pattern extensively for multi-cloud support.
 
 | Concept | Purpose |
 |---------|---------|
 | DeployPlan | Compute, validate, execute deployment DAGs |
 | Rollout | Progressive delivery (canary, blue-green, rolling) |
-| Migration | Schema migration lifecycle |
+| Migration | Schema migration lifecycle (expand/migrate/contract) |
 | Health | Health check verification |
 | Env | Environment management (dev/staging/prod) |
 | Telemetry | Deployment observability markers |
 | Artifact | Immutable content-addressed build artifacts |
-| Runtime | Coordination concept for runtime providers |
-| Secret | Coordination concept for secret providers |
-| IaC | Coordination concept for infrastructure-as-code |
-| GitOps | Coordination concept for GitOps providers |
-| Builder | Multi-language build coordination |
-| Toolchain | Language toolchain resolution |
-| **Providers (25+):** LambdaRuntime, EcsRuntime, CloudRunRuntime, K8sRuntime, DockerComposeRuntime, VercelRuntime, CloudflareRuntime, LocalRuntime, VaultProvider, AwsSmProvider, GcpSmProvider, EnvProvider, DotenvProvider, PulumiProvider, TerraformProvider, CloudFormationProvider, ArgoCDProvider, FluxProvider, TypeScript/Rust/Swift/Solidity Builder and Toolchain providers |
+| **Coordination:** Runtime, Secret, IaC, GitOps, Builder, Toolchain | Route to pluggable providers |
+| **Runtime providers (9):** | Lambda, ECS, CloudRun, GCF, Cloudflare, Vercel, K8s, DockerCompose, Local |
+| **Secret providers (5):** | Vault, AWS SM, GCP SM, Env, Dotenv |
+| **IaC providers (4):** | Pulumi, Terraform, CloudFormation, DockerCompose |
+| **GitOps providers (2):** | ArgoCD, Flux |
+| **Builder providers (4):** | TypeScript, Rust, Swift, Solidity |
+| **Toolchain providers (4):** | TypeScript, Rust, Swift, Solidity |
 
 ### 5.5 Interface Kit (`kits/interface/`)
 
+Multi-target interface generation. Generates REST APIs, GraphQL schemas, gRPC services, CLIs, MCP servers, SDKs, and spec documents from concept specs and an interface manifest.
+
 | Concept | Purpose |
 |---------|---------|
-| Projection | Enriched concept projection with metadata |
-| Generator | Interface generation planning |
-| Surface | Composed API surface aggregation |
-| Middleware | Cross-cutting middleware definitions |
-| Grouping | Concept grouping for API organization |
-| Workflow | Ordered action sequences |
-| Annotation | Concept/action metadata enrichment |
-| Renderer | Render handler registration |
-| Target | Target generation output coordination |
-| Sdk | SDK package generation coordination |
-| Spec | Spec document generation coordination |
-| **Providers (14):** RestTarget, GraphqlTarget, GrpcTarget, CliTarget, McpTarget, ClaudeSkillsTarget, OpenApiTarget, AsyncApiTarget, TsSdkTarget, PySdkTarget, GoSdkTarget, RustSdkTarget, JavaSdkTarget, SwiftSdkTarget |
+| Projection | Enrich concept specs with interface metadata (auth, pagination, rate limits) |
+| Generator | Plan and orchestrate interface generation runs |
+| ApiSurface | Compose projected concepts into a unified API surface |
+| Middleware | Define cross-cutting concerns (auth, logging, CORS) per target |
+| Grouping | Group concepts for API organization (REST resource groups, GraphQL namespaces) |
+| ActionGuide | Define ordered action sequences for documentation and SDK generation |
+| Annotation | Attach metadata to concepts/actions (deprecation, examples, descriptions) |
+| EnrichmentRenderer | Register custom render handlers for target-specific output enrichment |
+| **Coordination:** Target, Sdk, Spec | Route to target/SDK/spec providers |
+| **Target providers (6):** | Rest, GraphQL, gRPC, CLI, MCP, ClaudeSkills |
+| **Spec providers (2):** | OpenAPI, AsyncAPI |
+| **SDK providers (6):** | TypeScript, Python, Go, Rust, Java, Swift |
 
-### 5.6 Identity Kit (`kits/identity/`)
-Authentication, Authorization, AccessControl, Session
+Uses: Generation Kit (Emitter — shared file emission).
 
-### 5.7 Content Kit (`kits/content/`)
-Canvas, Comment, DailyNote, SyncedContent, Template, Version
+### 5.6 Scaffolding Kit (`kits/scaffolding/`)
 
-### 5.8 Foundation Kit (`kits/foundation/`)
-ContentNode, ContentParser, ContentStorage, Intent, Outline, PageAsRecord, Property, TypeSystem
+Code generation scaffolding for all artifact types. Each scaffold generator creates starter files for a specific artifact category.
 
-### 5.9 Infrastructure Kit (`kits/infrastructure/`)
-Cache, ConfigSync, EventBus, Pathauto, PluginRegistry, Validator
+| Concept | Scaffolds |
+|---------|-----------|
+| ConceptScaffoldGen | `.concept` spec files |
+| SyncScaffoldGen | `.sync` files |
+| KitScaffoldGen | Kit directory with `kit.yaml` |
+| HandlerScaffoldGen | TypeScript/Rust/Swift handler implementations |
+| StorageAdapterScaffoldGen | Storage adapter implementations |
+| TransportAdapterScaffoldGen | Transport adapter implementations |
+| DeployScaffoldGen | Deployment manifests |
+| InterfaceScaffoldGen | Interface manifests |
+| CoifComponentScaffoldGen | COIF component specs |
+| CoifThemeScaffoldGen | COIF theme definitions |
 
-### 5.10 Classification Kit (`kits/classification/`)
-Namespace, Schema, Tag, Taxonomy
+### 5.7 Framework Kit (`kits/framework/`)
 
-### 5.11 Automation Kit (`kits/automation/`)
-AutomationRule, Control, Queue, Workflow
+Core framework generation. SchemaGen is the coordination concept; language generators are optional providers.
 
-### 5.12 Data Integration Kit (`kits/data-integration/`)
-Capture, Connector, DataQuality, DataSource, Enricher, FieldMapping, ProgressiveSchema, Provenance, SyncPair, Transform
+| Concept | Purpose |
+|---------|---------|
+| SchemaGen | Transform ConceptAST into language-neutral ConceptManifest (coordination) |
+| TypeScriptGen | Generate TypeScript handler skeletons (provider) |
+| RustGen | Generate Rust trait definitions and handler skeletons (provider) |
+| SwiftGen | Generate Swift protocol definitions and handler skeletons (provider) |
+| SolidityGen | Generate Solidity contract interfaces and Foundry tests (provider) |
 
-### 5.13 Data Organization Kit (`kits/data-organization/`)
-Collection, Graph
+### 5.8 Test Kit (`kits/test/`)
 
-### 5.14 Computation Kit (`kits/computation/`)
-ExpressionLanguage, Formula, Token
+Cross-layer testing infrastructure for concept implementations.
 
-### 5.15 Collaboration Kit (`kits/collaboration/`)
-Flag, Group
+| Concept | Purpose |
+|---------|---------|
+| Conformance | Verify concept implementations match their spec contracts |
+| ContractTest | Cross-concept contract verification via sync chain testing |
+| Snapshot | Golden-file snapshot testing for generated outputs |
+| TestSelection | Intelligent test selection based on change impact |
+| FlakyTest | Flaky test detection and quarantine |
 
-### 5.16 Linking Kit (`kits/linking/`)
-Alias, Backlink, Reference, Relation
+### 5.9 Identity Kit (`kits/identity/`)
 
-### 5.17 Presentation Kit (`kits/presentation/`)
-DisplayMode, FormBuilder, Renderer, View
+Authentication, authorization, and session management.
 
-### 5.18 Query/Retrieval Kit (`kits/query-retrieval/`)
-ExposedFilter, Query, SearchIndex
+| Concept | Purpose |
+|---------|---------|
+| Authentication | Identity verification (login flows, MFA, OAuth) |
+| Authorization | Permission evaluation (role-based, attribute-based) |
+| AccessControl | Resource-level access policies |
+| Session | Session lifecycle management |
 
-### 5.19 Layout Kit (`kits/layout/`)
-Component
+### 5.10 Content Kit (`kits/content/`)
 
-### 5.20 Media Kit (`kits/media/`)
-FileManagement, MediaAsset
+Content management with rich editing, versioning, and collaboration.
 
-### 5.21 Notification Kit (`kits/notification/`)
-Notification
+| Concept | Purpose |
+|---------|---------|
+| Canvas | Block-based rich content editing |
+| Comment | Threaded discussion on content entities |
+| DailyNote | Date-keyed journal entries |
+| SyncedContent | Real-time collaborative content synchronization |
+| Template | Reusable content templates with variable substitution |
+| Version | Content version history tracking |
 
-### 5.22 Test Kit (`kits/test/`)
-Conformance, ContractTest, FlakyTest, Snapshot, TestSelection
+*Note: Version will be superseded by TemporalVersion (Versioning Kit). SyncedContent will be superseded by Replica + ConflictResolution (Collaboration Kit). See Section 6.5.*
 
-### 5.23 Web3 Kit (`kits/web3/`)
-ChainMonitor (@gate -- finality tracking), Content (IPFS storage), Wallet (signature verification)
+### 5.11 Foundation Kit (`kits/foundation/`)
 
-### 5.24 COIF Kits (`concept-interface/kits/`) -- Concept-Oriented Interface Format
+Core content models and type system.
 
-**coif-core:** DesignToken, Element, UISchema, Binding, Signal
-**coif-component:** Anatomy, Machine, Slot, Widget
-**coif-render:** Layout, Surface, Viewport, FrameworkAdapter, + 14 platform adapters (React, Vue, Svelte, Solid, SwiftUI, Compose, ReactNative, etc.)
-**coif-theme:** Elevation, Motion, Palette, Theme, Typography
-**coif-app:** Host, Navigator, Shell, Transport, PlatformAdapter, + 5 platform adapters (Browser, Desktop, Mobile, Terminal, Watch)
+| Concept | Purpose |
+|---------|---------|
+| ContentNode | Base file/content representation — every project file is a ContentNode |
+| ContentParser | Parsing dispatch for structured content |
+| ContentStorage | Raw file content storage backend |
+| Intent | User intent capture for action routing |
+| Outline | Hierarchical document structure |
+| PageAsRecord | Structured content pages with field-value records |
+| Property | Dynamic key-value property system with typed values |
+| TypeSystem | Application-level type definitions and validation |
+
+### 5.12 Infrastructure Kit (`kits/infrastructure/`)
+
+Core application infrastructure.
+
+| Concept | Purpose |
+|---------|---------|
+| Cache | Key-value caching with TTL and invalidation |
+| ConfigSync | Configuration synchronization across environments |
+| EventBus | Application-level pub/sub with priorities, dead-letter, and history |
+| Pathauto | Automatic URL/path generation from content |
+| PluginRegistry | Provider registration and resolution for coordination concepts |
+| Validator | Write-time constraint enforcement with field-level errors |
+
+### 5.13 Classification Kit (`kits/classification/`)
+
+Content organization and categorization.
+
+| Concept | Purpose |
+|---------|---------|
+| Namespace | Hierarchical namespace management |
+| Schema | Structural schema definitions for metadata |
+| Tag | Content categorization labels (tagging and folksonomy) |
+| Taxonomy | Hierarchical vocabulary with parent-child relationships |
+
+### 5.14 Automation Kit (`kits/automation/`)
+
+Automated workflows and user-configurable rules.
+
+| Concept | Purpose |
+|---------|---------|
+| AutomationRule | User-configurable event-condition-action rules |
+| Control | UI controls for automation management |
+| Queue | Queued action processing with priority and retry |
+| Workflow | Multi-step workflow orchestration with state transitions |
+
+### 5.15 Data Integration Kit (`kits/data-integration/`)
+
+ETL, data quality, provenance, and transformation.
+
+| Concept | Purpose |
+|---------|---------|
+| Capture | Change data capture from external sources |
+| Connector | Integration with external systems and APIs |
+| DataQuality | Pipeline-level data assessment with scoring and quarantine |
+| DataSource | Treating directories and file sets as data sources |
+| Enricher | Adding resolved types, cross-references, metadata |
+| FieldMapping | Type parameter binding and field mapping resolution |
+| ProgressiveSchema | Schema discovery as new data is parsed |
+| Provenance | W3C PROV-style data lineage tracking |
+| SyncPair | Bidirectional sync between external systems |
+| Transform | Data reshaping and transformation pipelines |
+
+*Note: Capture will be narrowed in scope (CDC adapter role) when ChangeStream ships. Provenance keeps its identity but defers content-region attribution to Attribution concept. See Section 6.5.*
+
+### 5.16 Data Organization Kit (`kits/data-organization/`)
+
+Graph and collection data structures.
+
+| Concept | Purpose |
+|---------|---------|
+| Collection | Ordered/filtered content collections |
+| Graph | Typed graph overlays with nodes, edges, and traversal |
+
+### 5.17 Computation Kit (`kits/computation/`)
+
+Expression evaluation and formula processing.
+
+| Concept | Purpose |
+|---------|---------|
+| ExpressionLanguage | Custom expression language parsing and evaluation |
+| Formula | Spreadsheet-style formula definitions and computation |
+| Token | Tokenization for expression parsing |
+
+### 5.18 Collaboration Kit (`kits/collaboration/`)
+
+Group collaboration features.
+
+| Concept | Purpose |
+|---------|---------|
+| Flag | Content flagging for review/moderation |
+| Group | User group management and membership |
+
+*Note: This kit will be significantly expanded by the new Collaboration Kit (Section 6.5) which adds CausalClock, Replica, ConflictResolution, Attribution, Signature, InlineAnnotation, and PessimisticLock.*
+
+### 5.19 Linking Kit (`kits/linking/`)
+
+Cross-entity references and relationships.
+
+| Concept | Purpose |
+|---------|---------|
+| Alias | Alternative names/URLs for entities |
+| Backlink | Reverse index of references (auto-populated via sync) |
+| Reference | Forward links between entities (schema-less) |
+| Relation | Typed, labeled, bidirectional relationships with cardinality |
+
+### 5.20 Presentation Kit (`kits/presentation/`)
+
+Display and form rendering.
+
+| Concept | Purpose |
+|---------|---------|
+| DisplayMode | Content display mode management (read/edit/preview) |
+| FormBuilder | Dynamic form generation from schemas |
+| Renderer | Content rendering pipeline |
+| View | Configurable content views with field selection and ordering |
+
+### 5.21 Query/Retrieval Kit (`kits/query-retrieval/`)
+
+Search and query execution.
+
+| Concept | Purpose |
+|---------|---------|
+| ExposedFilter | User-facing filter configuration |
+| Query | Query execution against the entity graph |
+| SearchIndex | Coordination point for search — providers register here |
+
+### 5.22 Other Domain Kits
+
+| Kit | Concepts | Purpose |
+|-----|----------|---------|
+| **Layout** (`kits/layout/`) | Component | UI component composition and layout |
+| **Media** (`kits/media/`) | FileManagement, MediaAsset | File upload, processing, and media management |
+| **Notification** (`kits/notification/`) | Notification | Multi-channel notification delivery |
+| **Web3** (`kits/web3/`) | ChainMonitor (@gate), Content, Wallet | Blockchain finality tracking, IPFS storage, signature verification |
+
+### 5.23 COIF Kits (`concept-interface/kits/`) -- Concept-Oriented Interface Format
+
+COIF provides a universal UI layer where headless component state machines produce props APIs that framework adapters render into platform-specific UI.
+
+**coif-core** — Foundation: design tokens, abstract elements, UI schemas, concept bindings, reactive signals.
+- DesignToken, Element, UISchema, Binding, Signal
+
+**coif-component** — Headless component state machines, anatomies, and slot composition. Widgets are behavioral specs without rendering.
+- Widget, Machine, Anatomy, Slot
+
+**coif-render** — Framework adapters that translate headless widget props into platform-specific bindings.
+- FrameworkAdapter, Surface, Layout, Viewport
+- 15 adapters: React, Solid, Vue, Svelte, Ink, Vanilla, SwiftUI, AppKit, Compose, ReactNative, NativeScript, GTK, WinUI, WatchKit, WearCompose
+
+**coif-theme** — Visual design system with WCAG accessibility enforcement.
+- Theme, Palette, Typography, Motion, Elevation
+
+**coif-app** — Application orchestration: navigation, lifecycle, network transport, platform composition.
+- Navigator, Host, Transport, Shell, PlatformAdapter
+- 5 platform adapters: Browser, Desktop, Mobile, Terminal, Watch
+
+**coif-integration** — Syncs-only kit bridging COPF domain concepts to COIF interface concepts. No new concepts.
 
 ---
 
@@ -323,11 +502,97 @@ uses:
 
 **Deploy flow:** `DeployPlan/plan -> validate -> Migration/run -> execute -> Rollout/begin -> Health/check -> Telemetry/analyze`
 
+**Interface generation pipeline:** `Projection/project -> ApiSurface/compose -> Generator/plan -> Target/dispatch -> Emitter/write`
+
 **Finality gate pattern:** `Contract/call -> ChainMonitor/awaitFinality -> [ok] -> downstream action; [reorged] -> compensating action`
 
 ### 6.4 Coordination + Provider Pattern
 
-Many kits use a coordination concept (e.g., `Runtime`, `Builder`, `Secret`) with multiple optional provider plugins (e.g., `LambdaRuntime`, `K8sRuntime`). Routing syncs dispatch to the correct provider based on configuration.
+Many kits use a coordination concept with multiple optional provider plugins. Routing syncs dispatch to the correct provider via PluginRegistry. Examples:
+
+| Coordination Concept | Providers | Selection Basis |
+|---------------------|-----------|-----------------|
+| Runtime (Deploy) | Lambda, ECS, CloudRun, K8s, etc. | Deployment target |
+| Target (Interface) | REST, GraphQL, gRPC, CLI, MCP | Interface manifest |
+| Diff (Versioning) | Myers, Patience, Histogram, Tree | Content type |
+| Merge (Versioning) | ThreeWay, Recursive, Lattice, Semantic | Content type + strategy |
+| ConflictResolution (Collab) | LWW, AddWins, Manual, MultiValue | Data type + domain policy |
+
+### 6.5 In-Progress Kit Additions (Separate Worktrees)
+
+Two major design documents are being implemented on separate worktrees:
+
+#### Code Representation & Semantic Query System (`kits/code-representation-design.md`)
+
+Adds 5 new kits that make every file in a COPF project a queryable node at syntactic, symbolic, and semantic levels:
+
+**Parse Kit** (`kits/parse/`) — Universal file parsing via Tree-sitter, structural identity, and pattern matching.
+- SyntaxTree: Lossless CST for any parsed file, wrapping Tree-sitter output
+- LanguageGrammar: Grammar definitions mapping extensions to parsers (coordination concept with ~15 grammar providers)
+- DefinitionUnit: Individual definitions (function, class, concept spec) as first-class entities
+- ContentDigest: Structural content hash for content-addressed identity
+- StructuralPattern: Reusable search/match patterns (coordination concept with Tree-sitter, ast-grep, Comby, Regex providers)
+- FileArtifact: Software-engineering metadata for project files (role, provenance, dependencies)
+
+**Symbol Kit** (`kits/symbol/`) — Cross-file identity, occurrence tracking, and scope resolution.
+- Symbol: Globally unique identifiers for named entities (`copf/concept/Article`, `ts/function/...`)
+- SymbolOccurrence: Where symbols appear with exact locations and semantic roles
+- ScopeGraph: Lexical scoping and name resolution model
+- SymbolRelationship: Typed semantic relationships (implements, extends, generates, tests)
+- Providers: TypeScript/Rust/Concept/Sync/Universal extractors; TypeScript/Concept/Sync scope providers
+
+**Semantic Kit** (`kits/semantic/`) — COPF-specific semantic entities as queryable nodes.
+- ConceptEntity: Parsed concept linked to generated artifacts and runtime behavior
+- ActionEntity: Action with full lifecycle tracing (spec → sync → implementation → interface)
+- VariantEntity: Action return variant as a first-class branching point in sync chains
+- StateField: State declaration traced through generation and storage
+- SyncEntity: Compiled sync rule as a queryable node connecting concepts
+
+**Analysis Kit** (`kits/analysis/`) — Program analysis overlays.
+- DependenceGraph: Data/control dependency edges (coordination concept with TypeScript/Rust/Concept/Sync/Datalog providers)
+- DataFlowPath: Traced data flow from source to sink (taint tracking, config propagation)
+- ProgramSlice: Minimal subgraph preserving behavior relative to a slicing criterion
+- AnalysisRule: Declarative analysis rules for custom queries, linting, architecture constraints
+
+**Discovery Kit** (`kits/discovery/`) — Search, embedding, and indexing.
+- SemanticEmbedding: Vector embeddings for similarity search and NL code search (coordination concept with CodeBERT, UniXcoder, OpenAI, Voyage providers)
+- Search index providers (Trigram, SuffixArray, SymbolIndex) register with existing SearchIndex
+
+Reuses 22 existing concepts directly (ContentNode, Graph, Reference, Provenance, FieldMapping, DataQuality, etc.). Several proposed concepts collapsed into existing ones (FlowGraph/CallGraph/ImportGraph → typed Graph instances; InvariantCoverage → DataQuality; TypeBinding → FieldMapping).
+
+#### Versioning & Collaboration System (`kits/versioning-kit-design.md`)
+
+Adds 2 new kits with 18 new concepts providing version control, change tracking, concurrent editing, and compliance.
+
+**Versioning Kit** (`kits/versioning/`) — Immutable storage primitives, change representation, and history.
+- ContentHash: Content-addressed identity via cryptographic digest (deduplication, integrity)
+- Ref: Mutable human-readable names for immutable content-addressed objects (compare-and-swap)
+- DAGHistory: Directed acyclic graph of versions (branching, merging, topological traversal)
+- Patch: First-class invertible, composable change objects (apply, invert, compose, commute)
+- Diff: Compute minimal differences between content states (coordination concept; Myers/Patience/Histogram/Tree providers)
+- Merge: Combine divergent versions with common ancestor (coordination concept; ThreeWay/Recursive/Lattice/Semantic providers)
+- Branch: Named parallel lines of development with lifecycle management
+- TemporalVersion: Bitemporal version tracking (system time + valid time). Supersedes Version.
+- SchemaEvolution: Versioned structural definitions with compatibility guarantees (forward/backward/full)
+- ChangeStream: Ordered, resumable stream of atomic change events. Downstream consumer for Capture.
+- RetentionPolicy: Retention periods, legal holds, and compliance-grade disposition logging
+
+**Collaboration Kit** (expands existing `kits/collaboration/`) — Distributed collaboration and concurrent editing.
+- CausalClock: Happens-before ordering via vector clocks (tick, merge, compare, dominates)
+- Replica: Locally-modifiable copy of shared state with peer synchronization (@gate)
+- ConflictResolution: Detect and resolve concurrent modifications (coordination concept; LWW/AddWins/Manual/MultiValue providers)
+- Attribution: Agent identity bound to content regions (blame, ownership, history)
+- Signature: Cryptographic proof of authorship, integrity, and temporal existence
+- InlineAnnotation: Embedded change markers for accept/reject review workflows (track changes)
+- PessimisticLock: Exclusive write access with queuing, expiration, and break-lock (@gate)
+
+**Supersession plan:**
+- Version (Content Kit) → TemporalVersion (Versioning Kit) — compatibility sync, then deprecate, then remove
+- SyncedContent (Content Kit) → Replica + ConflictResolution — facade sync, then deprecate, then remove
+- Capture (Data Integration) → narrowed scope (CDC adapter only); ChangeStream handles downstream streaming
+- Provenance (Data Integration) → keeps identity; Attribution handles content-region authorship
+
+**Design principles:** Snapshot-patch duality is a composition. Conflict detection and resolution are always separate concepts. Causality is the universal ordering primitive. Algorithms are providers (Diff, Merge, ConflictResolution). Mutable pointers (Ref, Branch) over immutable data (ContentHash, DAGHistory, Patch).
 
 ---
 
@@ -457,3 +722,13 @@ When designing new concepts, check for these common overlap patterns:
 2. **"And" in purpose** — If your purpose statement uses "and" to connect unrelated concerns, consider splitting or delegating. Exception: when the "and" connects tightly cohesive facets of a single concern (e.g., Widget's "state machine and anatomy and a11y").
 3. **Naming collision** — Search existing concepts before naming. If a name is taken, use a qualifier that reflects the concept's specific domain (e.g., EnrichmentRenderer vs Renderer, ApiSurface vs Surface).
 4. **Cross-layer bleeding** — Data structure concepts should not contain visualization logic. Validation concepts should not contain transformation logic. Use syncs to bridge layers.
+
+---
+
+## 11. Kit Summary
+
+**Current:** 23 kits with ~145 concepts across `kits/`, 34 framework/app specs in `specs/`, plus 6 COIF kits with ~43 concepts in `concept-interface/`.
+
+**In-progress (worktrees):**
+- Code Representation: +5 kits, +20 coordination concepts, +~35 providers
+- Versioning & Collaboration: +1 new kit (Versioning), expansion of Collaboration kit, +18 concepts, +~12 providers, −2 superseded concepts (Version, SyncedContent)
