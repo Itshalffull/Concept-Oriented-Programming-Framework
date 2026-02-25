@@ -463,10 +463,11 @@ describe('Self-Hosted Kernel: Refactored Pipeline', () => {
 
     // Verify the SchemaGen manifest describes itself
     expect(manifest.name).toBe('SchemaGen');
-    expect(manifest.actions).toHaveLength(1);
-    expect(manifest.actions[0].name).toBe('generate');
-    expect(manifest.actions[0].variants[0].tag).toBe('ok');
-    expect(manifest.actions[0].variants[0].fields[0].name).toBe('manifest');
+    expect(manifest.actions).toHaveLength(2);
+    const generateAction = manifest.actions.find(a => a.name === 'generate')!;
+    expect(generateAction).toBeDefined();
+    expect(generateAction.variants[0].tag).toBe('ok');
+    expect(generateAction.variants[0].fields[0].name).toBe('manifest');
 
     // Generate TypeScript from the manifest
     const genResult = await typescriptGenHandler.generate(

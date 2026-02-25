@@ -1,0 +1,21 @@
+# Register SwiftGen with PluginRegistry — Section 10.1
+
+sync RegisterSwiftGen [eager]
+when {
+  SwiftGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "SwiftGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

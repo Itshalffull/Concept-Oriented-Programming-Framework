@@ -303,6 +303,16 @@ function generateStepCode(
 // --- Handler ---
 
 export const typescriptGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'TypeScriptGen',
+      inputKind: 'ConceptManifest',
+      outputKind: 'TypeScriptSource',
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+    };
+  },
+
   async generate(input, storage) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;

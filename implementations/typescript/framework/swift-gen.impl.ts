@@ -414,6 +414,16 @@ function generateSwiftStepCode(
 // --- Handler ---
 
 export const swiftGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'SwiftGen',
+      inputKind: 'ConceptManifest',
+      outputKind: 'SwiftSource',
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+    };
+  },
+
   async generate(input, storage) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;

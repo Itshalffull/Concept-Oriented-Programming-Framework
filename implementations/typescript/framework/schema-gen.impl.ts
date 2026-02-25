@@ -477,6 +477,16 @@ function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
 // --- Handler ---
 
 export const schemaGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'SchemaGen',
+      inputKind: 'ConceptAST',
+      outputKind: 'ConceptManifest',
+      capabilities: JSON.stringify(['graphql', 'json-schema', 'invariants']),
+    };
+  },
+
   async generate(input, storage) {
     const spec = input.spec as string;
     const ast = input.ast as ConceptAST;
