@@ -16,51 +16,64 @@ targets:
     basePath: /api
     framework: hono
     versioning: none
+    outputDir: ./generated/interfaces/rest
 
   graphql:
     path: /graphql
     relay: true
     subscriptions: false
     federation: false
+    outputDir: ./generated/interfaces/graphql
 
   grpc:
     package: conduit.v1
     goPackage: github.com/conduit/proto
+    outputDir: ./generated/interfaces/grpc
 
   cli:
     name: conduit
     shell: bash,zsh,fish
+    outputDir: ./generated/interfaces/cli
 
   mcp:
     name: conduit-mcp
     transport: stdio
+    outputDir: ./generated/interfaces/mcp
 
   claude-skills:
     name: conduit
     progressive: true
+    outputDir: ./generated/interfaces/claude-skills
 
 # ─── SDK LANGUAGES ────────────────────────────────────
 sdk:
   typescript:
     packageName: "@conduit/client"
     moduleSystem: esm
+    outputDir: ./generated/interfaces/sdk/typescript
   python:
     packageName: conduit-client
     asyncSupport: true
+    outputDir: ./generated/interfaces/sdk/python
   go:
     modulePath: github.com/conduit/client-go
+    outputDir: ./generated/interfaces/sdk/go
   rust:
     crateName: conduit-client
+    outputDir: ./generated/interfaces/sdk/rust
   java:
     groupId: com.conduit
     artifactId: conduit-client
+    outputDir: ./generated/interfaces/sdk/java
   swift:
     packageName: ConduitClient
+    outputDir: ./generated/interfaces/sdk/swift
 
 # ─── SPECIFICATION DOCUMENTS ─────────────────────────
 specs:
   openapi: true
   asyncapi: true
+  outputDir: ./generated/interfaces/specs
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:

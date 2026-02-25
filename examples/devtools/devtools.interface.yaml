@@ -17,9 +17,11 @@ targets:
   claude-skills:
     name: copf-devtools
     grouping: per-concept
+    outputDir: ./.claude/skills
 
   cli:
     name: copf
+    outputDir: ./tools/copf-cli/src
 
 # ─── CONCEPT SPECS ───────────────────────────────────
 # Framework concepts that map to CLI commands and skills.
@@ -56,6 +58,16 @@ concepts:
   - specs/framework/transport-adapter-scaffold-gen.concept
   - specs/framework/coif-component-scaffold-gen.concept
   - specs/framework/coif-theme-scaffold-gen.concept
+  # Interface kit orchestration
+  - kits/interface/concepts/generator.concept
+  - kits/interface/concepts/projection.concept
+  - kits/interface/concepts/surface.concept
+  # Test kit
+  - kits/test/conformance.concept
+  - kits/test/test-selection.concept
+  - kits/test/flaky-test.concept
+  - kits/test/contract-test.concept
+  - kits/test/snapshot.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:

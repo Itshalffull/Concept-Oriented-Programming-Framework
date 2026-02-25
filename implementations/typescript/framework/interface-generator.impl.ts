@@ -24,6 +24,12 @@ export interface InterfaceManifest {
   outputDir: string;
   formatting: string;
   manifestYaml: Record<string, unknown>;
+  /** Per-target output directory overrides (target name → relative path). */
+  targetOutputDirs: Record<string, string>;
+  /** Per-SDK-language output directory overrides (language → relative path). */
+  sdkOutputDirs: Record<string, string>;
+  /** Output directory override for spec documents (openapi/asyncapi). */
+  specOutputDir: string | null;
 }
 
 /** A generated file from a provider. */

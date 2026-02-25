@@ -9,7 +9,7 @@
 //   copf interface clean             Remove orphaned generated files
 // ============================================================
 
-import { readFileSync, existsSync, readdirSync, statSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, statSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
 import { join, resolve, relative, dirname } from 'path';
 import { createHash } from 'crypto';
 import { parse as parseYaml } from 'yaml';
@@ -26,7 +26,26 @@ import { emitterHandler } from '../../../../implementations/typescript/framework
 import { surfaceHandler } from '../../../../implementations/typescript/framework/surface.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
 import type { ConceptManifest, ConceptAST } from '../../../../kernel/src/types.js';
-import { findFiles } from '../util.js';
+
+/** Recursively find files matching an extension under a directory. */
+function findFiles(dir: string, ext: string): string[] {
+  if (!existsSync(dir)) return [];
+  const results: string[] = [];
+  function walk(current: string): void {
+    let entries;
+    try { entries = readdirSync(current); } catch { return; }
+    for (const entry of entries) {
+      const fullPath = join(current, entry);
+      try {
+        const stat = statSync(fullPath);
+        if (stat.isDirectory()) walk(fullPath);
+        else if (entry.endsWith(ext)) results.push(fullPath);
+      } catch { /* skip inaccessible */ }
+    }
+  }
+  walk(dir);
+  return results.sort();
+}
 
 // --- Provider Imports ---
 // Lazy-loaded to avoid import errors if files don't exist yet
@@ -124,19 +143,137 @@ function yamlToInterfaceManifest(
   const specs = yaml.specs as Record<string, unknown> || {};
   const output = yaml.output as Record<string, unknown> || {};
 
+  // Extract per-target outputDir overrides
+  const targetOutputDirs: Record<string, string> = {};
+  for (const [name, config] of Object.entries(targets)) {
+    const cfg = config as Record<string, unknown> | null;
+    if (cfg?.outputDir && typeof cfg.outputDir === 'string') {
+      targetOutputDirs[name] = cfg.outputDir;
+    }
+  }
+
+  // Extract per-SDK outputDir overrides
+  const sdkOutputDirs: Record<string, string> = {};
+  for (const [lang, config] of Object.entries(sdk)) {
+    const cfg = config as Record<string, unknown> | null;
+    if (cfg?.outputDir && typeof cfg.outputDir === 'string') {
+      sdkOutputDirs[lang] = cfg.outputDir;
+    }
+  }
+
+  // Extract spec outputDir override
+  const specOutputDir = typeof specs.outputDir === 'string' ? specs.outputDir : null;
+
   return {
     kit: (iface.name as string) || '',
     version: String(iface.version || '1.0.0'),
     targets: Object.keys(targets),
     sdkLanguages: Object.keys(sdk),
     specFormats: Object.entries(specs)
-      .filter(([_, v]) => v === true)
+      .filter(([k, v]) => v === true && k !== 'outputDir')
       .map(([k]) => k),
     concepts: conceptNames,
     outputDir: (output.dir as string) || './generated/interfaces',
     formatting: 'prettier',
     manifestYaml: yaml,
+    targetOutputDirs,
+    sdkOutputDirs,
+    specOutputDir,
   };
+}
+
+// --- Output Path Resolution ---
+
+/**
+ * Resolve the absolute output path for a generated file.
+ * File paths from providers use the format: `target/concept/file.ts`,
+ * `sdk/lang/file.ts`, or `specs/file.yaml`.
+ *
+ * If a per-target/SDK/spec outputDir override exists, the file is routed
+ * to that directory with the target prefix stripped. Otherwise it falls
+ * back to the default outputDir.
+ */
+function resolveOutputPath(
+  filePath: string,
+  manifest: InterfaceManifest,
+  projectDir: string,
+): string {
+  const parts = filePath.split('/');
+  const prefix = parts[0];
+
+  // SDK files: sdk/<lang>/...
+  if (prefix === 'sdk' && parts.length >= 3) {
+    const lang = parts[1];
+    if (manifest.sdkOutputDirs[lang]) {
+      const rest = parts.slice(2).join('/');
+      return resolve(projectDir, manifest.sdkOutputDirs[lang], rest);
+    }
+  }
+
+  // Spec files: specs/...
+  if (prefix === 'specs' && manifest.specOutputDir) {
+    const rest = parts.slice(1).join('/');
+    return resolve(projectDir, manifest.specOutputDir, rest);
+  }
+
+  // Target files: <target>/...
+  if (manifest.targetOutputDirs[prefix]) {
+    const rest = parts.slice(1).join('/');
+    return resolve(projectDir, manifest.targetOutputDirs[prefix], rest);
+  }
+
+  // Fallback: default outputDir
+  return join(resolve(projectDir, manifest.outputDir), filePath);
+}
+
+// --- Generation Tracking Manifest ---
+
+interface GenManifestEntry {
+  path: string;
+  relativePath: string;
+  hash: string;
+  target: string;
+}
+
+interface GenManifest {
+  generatedAt: string;
+  files: GenManifestEntry[];
+  targetDirs: Record<string, string>;
+}
+
+function loadGenManifest(manifestPath: string): GenManifest | null {
+  if (!existsSync(manifestPath)) return null;
+  try {
+    return JSON.parse(readFileSync(manifestPath, 'utf-8')) as GenManifest;
+  } catch {
+    return null;
+  }
+}
+
+function saveGenManifest(manifestPath: string, manifest: GenManifest): void {
+  mkdirSync(dirname(manifestPath), { recursive: true });
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+}
+
+/**
+ * Remove files from a previous generation that are no longer produced.
+ * Uses the tracking manifest to find orphans across all output directories.
+ */
+function cleanOrphans(
+  oldManifest: GenManifest,
+  newPaths: Set<string>,
+  dryRun: boolean,
+): number {
+  let removed = 0;
+  for (const entry of oldManifest.files) {
+    if (!newPaths.has(entry.path) && existsSync(entry.path)) {
+      if (!dryRun) {
+        unlinkSync(entry.path);
+      }
+      removed++;
+    }
+  }
+  return removed;
 }
 
 // --- Subcommands ---
@@ -333,15 +470,31 @@ async function interfaceGenerate(
     }
   }
 
-  // 6. Write files to disk
-  const outputDir = resolve(projectDir, manifest.outputDir);
+  // 6. Load previous tracking manifest for orphan cleanup
+  const genManifestPath = resolve(dirname(manifestPath), '.copf-gen-manifest.json');
+  const oldGenManifest = loadGenManifest(genManifestPath);
+
+  // 7. Write files to disk using per-target output dirs
   let writtenCount = 0;
   let skippedCount = 0;
+  const newManifestEntries: GenManifestEntry[] = [];
+  const newAbsolutePaths = new Set<string>();
 
   for (const file of allFiles) {
-    const filePath = join(outputDir, file.path);
+    const filePath = resolveOutputPath(file.path, manifest, projectDir);
     const dir = dirname(filePath);
     mkdirSync(dir, { recursive: true });
+
+    const hash = createHash('sha256').update(file.content).digest('hex');
+    const target = file.path.split('/')[0];
+
+    newManifestEntries.push({
+      path: filePath,
+      relativePath: file.path,
+      hash,
+      target,
+    });
+    newAbsolutePaths.add(filePath);
 
     // Content-addressed skip: check if file exists with same content
     if (existsSync(filePath)) {
@@ -356,10 +509,40 @@ async function interfaceGenerate(
     writtenCount++;
   }
 
-  // 7. Print summary
+  // 8. Clean orphans from previous generation
+  let orphanCount = 0;
+  const cleanEnabled = (manifestYaml.output as Record<string, unknown>)?.clean !== false;
+  if (oldGenManifest && cleanEnabled) {
+    orphanCount = cleanOrphans(oldGenManifest, newAbsolutePaths, false);
+  }
+
+  // 9. Save new tracking manifest
+  const targetDirs: Record<string, string> = {};
+  for (const [target, dir] of Object.entries(manifest.targetOutputDirs)) {
+    targetDirs[target] = resolve(projectDir, dir);
+  }
+  for (const [lang, dir] of Object.entries(manifest.sdkOutputDirs)) {
+    targetDirs[`sdk/${lang}`] = resolve(projectDir, dir);
+  }
+  if (manifest.specOutputDir) {
+    targetDirs['specs'] = resolve(projectDir, manifest.specOutputDir);
+  }
+  // Include default output dir
+  targetDirs['_default'] = resolve(projectDir, manifest.outputDir);
+
+  saveGenManifest(genManifestPath, {
+    generatedAt: new Date().toISOString(),
+    files: newManifestEntries,
+    targetDirs,
+  });
+
+  // 10. Print summary
   console.log(`\nGeneration complete:`);
   console.log(`  ${allFiles.length} total file(s)`);
   console.log(`  ${writtenCount} written, ${skippedCount} unchanged`);
+  if (orphanCount > 0) {
+    console.log(`  ${orphanCount} orphaned file(s) removed`);
+  }
 
   if (errors.length > 0) {
     console.log(`  ${errors.length} error(s):`);
@@ -368,16 +551,23 @@ async function interfaceGenerate(
     }
   }
 
-  console.log(`  Output: ${relative(projectDir, outputDir)}/`);
-
-  // Print per-target breakdown
-  const byTarget = new Map<string, number>();
-  for (const file of allFiles) {
-    const target = file.path.split('/')[0];
-    byTarget.set(target, (byTarget.get(target) || 0) + 1);
+  // Print per-target breakdown with output directories
+  const byTarget = new Map<string, { count: number; dir: string }>();
+  for (const entry of newManifestEntries) {
+    const target = entry.target;
+    if (!byTarget.has(target)) {
+      const dir = dirname(entry.path);
+      byTarget.set(target, { count: 0, dir: relative(projectDir, dir) });
+    }
+    byTarget.get(target)!.count++;
   }
-  for (const [target, count] of byTarget) {
-    console.log(`    ${target}: ${count} file(s)`);
+  console.log(`\n  Output directories:`);
+  for (const [target, info] of byTarget) {
+    const customDir = manifest.targetOutputDirs[target]
+      || (target === 'sdk' ? '(per-language)' : null)
+      || (target === 'specs' && manifest.specOutputDir ? manifest.specOutputDir : null);
+    const dirLabel = customDir || manifest.outputDir;
+    console.log(`    ${target}: ${info.count} file(s) → ${dirLabel}`);
   }
 }
 
@@ -408,12 +598,16 @@ async function interfacePlan(
   console.log('========================\n');
   console.log(`  Name:       ${iface.name || '(auto-detect)'}`);
   console.log(`  Version:    ${iface.version || '1.0.0'}`);
-  console.log(`  Output dir: ${output.dir || 'generated/interfaces'}\n`);
+  console.log(`  Default output dir: ${output.dir || 'generated/interfaces'}\n`);
 
   const targetList = Object.keys(targets);
   if (targetList.length > 0) {
     console.log('  Targets:');
-    for (const t of targetList) console.log(`    - ${t}`);
+    for (const t of targetList) {
+      const cfg = targets[t] as Record<string, unknown> | null;
+      const customDir = cfg?.outputDir ? ` → ${cfg.outputDir}` : '';
+      console.log(`    - ${t}${customDir}`);
+    }
   } else {
     console.log('  Targets: (none configured)');
   }
@@ -421,24 +615,35 @@ async function interfacePlan(
   const sdkList = Object.keys(sdk);
   if (sdkList.length > 0) {
     console.log('  SDK languages:');
-    for (const l of sdkList) console.log(`    - ${l}`);
+    for (const l of sdkList) {
+      const cfg = sdk[l] as Record<string, unknown> | null;
+      const customDir = cfg?.outputDir ? ` → ${cfg.outputDir}` : '';
+      console.log(`    - ${l}${customDir}`);
+    }
   }
 
-  const specList = Object.entries(specs).filter(([_, v]) => v === true).map(([k]) => k);
+  const specList = Object.entries(specs).filter(([k, v]) => v === true && k !== 'outputDir').map(([k]) => k);
   if (specList.length > 0) {
-    console.log('  Spec formats:');
+    const specDir = typeof specs.outputDir === 'string' ? ` → ${specs.outputDir}` : '';
+    console.log(`  Spec formats:${specDir}`);
     for (const f of specList) console.log(`    - ${f}`);
   }
 
   // Find concepts
-  const specsDir = resolve(projectDir, 'specs', 'app');
+  const manifestConcepts = (yaml.concepts as string[] | undefined) || [];
+  const explicitPaths = manifestConcepts.filter(c => c.endsWith('.concept'));
   let conceptCount = 0;
-  if (existsSync(specsDir)) {
-    conceptCount = findFiles(specsDir, '.concept').length;
+  if (explicitPaths.length > 0) {
+    conceptCount = explicitPaths.filter(p => existsSync(resolve(projectDir, p))).length;
   } else {
-    const altDir = resolve(projectDir, 'specs');
-    if (existsSync(altDir)) {
-      conceptCount = findFiles(altDir, '.concept').length;
+    const specsDir = resolve(projectDir, 'specs', 'app');
+    if (existsSync(specsDir)) {
+      conceptCount = findFiles(specsDir, '.concept').length;
+    } else {
+      const altDir = resolve(projectDir, 'specs');
+      if (existsSync(altDir)) {
+        conceptCount = findFiles(altDir, '.concept').length;
+      }
     }
   }
   console.log(`\n  Concepts: ${conceptCount}`);
@@ -501,10 +706,33 @@ async function interfaceValidate(
     }
   }
 
-  const validFormats = ['openapi', 'asyncapi'];
+  const validFormats = ['openapi', 'asyncapi', 'outputDir'];
   for (const f of Object.keys(specs)) {
     if (!validFormats.includes(f)) {
-      warnings.push(`Unknown spec format: ${f}. Known formats: ${validFormats.join(', ')}`);
+      warnings.push(`Unknown spec format: ${f}. Known formats: openapi, asyncapi`);
+    }
+  }
+
+  // Check for overlapping output directories
+  const allOutputDirs: { name: string; dir: string }[] = [];
+  for (const [name, config] of Object.entries(targets)) {
+    const cfg = config as Record<string, unknown> | null;
+    if (cfg?.outputDir && typeof cfg.outputDir === 'string') {
+      allOutputDirs.push({ name: `target:${name}`, dir: resolve(projectDir, cfg.outputDir) });
+    }
+  }
+  for (const [lang, config] of Object.entries(sdk)) {
+    const cfg = config as Record<string, unknown> | null;
+    if (cfg?.outputDir && typeof cfg.outputDir === 'string') {
+      allOutputDirs.push({ name: `sdk:${lang}`, dir: resolve(projectDir, cfg.outputDir) });
+    }
+  }
+  for (let i = 0; i < allOutputDirs.length; i++) {
+    for (let j = i + 1; j < allOutputDirs.length; j++) {
+      const a = allOutputDirs[i], b = allOutputDirs[j];
+      if (a.dir === b.dir) {
+        errors.push(`Overlapping outputDir: ${a.name} and ${b.name} both resolve to ${a.dir}`);
+      }
     }
   }
 
@@ -528,12 +756,53 @@ async function interfaceFiles(
   flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
+
+  // Try to use tracking manifest first
+  const manifestPath = typeof flags.manifest === 'string'
+    ? resolve(projectDir, flags.manifest)
+    : resolve(projectDir, 'app.interface.yaml');
+  const genManifestPath = resolve(dirname(manifestPath), '.copf-gen-manifest.json');
+  const genManifest = loadGenManifest(genManifestPath);
+
+  if (genManifest) {
+    console.log(`Generated files (from tracking manifest):\n`);
+
+    // Group by target
+    const byTarget = new Map<string, GenManifestEntry[]>();
+    for (const entry of genManifest.files) {
+      const target = entry.target;
+      if (!byTarget.has(target)) byTarget.set(target, []);
+      byTarget.get(target)!.push(entry);
+    }
+
+    let totalFiles = 0;
+    let totalBytes = 0;
+
+    for (const [target, entries] of byTarget) {
+      const dir = genManifest.targetDirs[target] || genManifest.targetDirs['_default'] || '';
+      console.log(`  ${target}/ (${relative(projectDir, dir)})`);
+      for (const entry of entries.sort((a, b) => a.relativePath.localeCompare(b.relativePath))) {
+        const exists = existsSync(entry.path);
+        const size = exists ? statSync(entry.path).size : 0;
+        const status = exists ? '' : ' [MISSING]';
+        console.log(`    ${entry.relativePath} (${size} bytes, ${entry.hash.slice(0, 8)})${status}`);
+        totalFiles++;
+        totalBytes += size;
+      }
+    }
+
+    console.log(`\n${totalFiles} file(s), ${totalBytes} bytes total`);
+    console.log(`Generated at: ${genManifest.generatedAt}`);
+    return;
+  }
+
+  // Fallback: walk default output directory
   const outputDir = typeof flags.output === 'string'
     ? resolve(projectDir, flags.output)
     : resolve(projectDir, 'generated', 'interfaces');
 
   if (!existsSync(outputDir)) {
-    console.log('No generated output directory found.');
+    console.log('No generated output directory or tracking manifest found.');
     return;
   }
 
@@ -571,33 +840,68 @@ async function interfaceClean(
   flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
+  const dryRun = !!flags['dry-run'];
+
+  // Use tracking manifest for cross-directory cleanup
+  const manifestPath = typeof flags.manifest === 'string'
+    ? resolve(projectDir, flags.manifest)
+    : resolve(projectDir, 'app.interface.yaml');
+  const genManifestPath = resolve(dirname(manifestPath), '.copf-gen-manifest.json');
+  const genManifest = loadGenManifest(genManifestPath);
+
+  if (genManifest) {
+    console.log('Cleaning all generated files (from tracking manifest)');
+    if (dryRun) console.log('  (dry run — no files will be removed)\n');
+
+    let removed = 0;
+    for (const entry of genManifest.files) {
+      if (existsSync(entry.path)) {
+        console.log(`  ${dryRun ? 'would remove' : 'removing'}: ${relative(projectDir, entry.path)}`);
+        if (!dryRun) {
+          unlinkSync(entry.path);
+        }
+        removed++;
+      }
+    }
+
+    if (!dryRun) {
+      // Remove tracking manifest itself
+      unlinkSync(genManifestPath);
+    }
+
+    console.log(`\n${removed} file(s) ${dryRun ? 'would be' : ''} removed.`);
+    return;
+  }
+
+  // Fallback: clean single output directory
   const outputDir = typeof flags.output === 'string'
     ? resolve(projectDir, flags.output)
     : resolve(projectDir, 'generated', 'interfaces');
 
   if (!existsSync(outputDir)) {
-    console.log('No generated output directory found. Nothing to clean.');
+    console.log('No generated output directory or tracking manifest found. Nothing to clean.');
     return;
   }
 
-  const dryRun = !!flags['dry-run'];
-
-  console.log(`Cleaning orphaned files in ${relative(projectDir, outputDir)}/`);
+  console.log(`Cleaning files in ${relative(projectDir, outputDir)}/`);
   if (dryRun) console.log('  (dry run — no files will be removed)\n');
 
   let orphanCount = 0;
 
-  function findOrphans(dir: string): void {
+  function findAndRemove(dir: string): void {
     const entries = readdirSync(dir);
     for (const entry of entries) {
       const fullPath = join(dir, entry);
       const stat = statSync(fullPath);
       if (stat.isDirectory()) {
-        findOrphans(fullPath);
+        findAndRemove(fullPath);
+      } else {
+        if (!dryRun) unlinkSync(fullPath);
+        orphanCount++;
       }
     }
   }
 
-  findOrphans(outputDir);
-  console.log(`\n${orphanCount} orphaned file(s) ${dryRun ? 'would be' : ''} removed.`);
+  findAndRemove(outputDir);
+  console.log(`\n${orphanCount} file(s) ${dryRun ? 'would be' : ''} removed.`);
 }
