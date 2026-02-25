@@ -1,5 +1,6 @@
 // Captured items enter the integration queue for field mapping
 
+# When a web clip is captured, enqueue it for field mapping
 sync CaptureEntersQueue [eager]
 when {
   Capture/clip: [ url: ?url; mode: ?mode; metadata: ?meta ]
@@ -9,6 +10,7 @@ then {
   Queue/enqueue: [ queue: "integration"; item: ?itemId; priority: 1 ]
 }
 
+# When a file import completes, enqueue it for field mapping
 sync CaptureImportEntersQueue [eager]
 when {
   Capture/import: [ file: ?file; options: ?opts ]
@@ -18,6 +20,7 @@ then {
   Queue/enqueue: [ queue: "integration"; item: ?itemId; priority: 1 ]
 }
 
+# When a worker claims an integration queue item, apply the default field mapping
 sync QueueDispatchesMapping [eager]
 when {
   Queue/claim: [ queue: "integration"; worker: ?worker ]

@@ -1,5 +1,6 @@
 // Bidirectional sync — detect changes on both endpoints and propagate
 
+# When a sync pair propagates changes, log the event in provenance
 sync SyncPairDetect [eager]
 when {
   SyncPair/sync: [ pairId: ?pairId ]
@@ -9,6 +10,7 @@ then {
   Provenance/record: [ entity: ?pairId; activity: "sync"; agent: "system"; inputs: ?changes ]
 }
 
+# When conflicts are detected, attempt automatic resolution using the pair's policy
 sync SyncPairConflictResolve [eager]
 when {
   SyncPair/detectConflicts: [ pairId: ?pairId ]

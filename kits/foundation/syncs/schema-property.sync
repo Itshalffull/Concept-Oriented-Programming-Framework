@@ -1,5 +1,6 @@
 // Schema and property coordination
 
+// Validate the page schema against the type system when a page is created
 sync ApplySchemaToPage [eager]
 when {
   PageAsRecord/create: [ page: ?page; schema: ?schema ]
@@ -9,6 +10,7 @@ then {
   TypeSystem/validate: [ type: ?page; value: ?schema ]
 }
 
+// Type-check property values against the type system before storing
 sync PropertyTypeCheck [eager]
 when {
   Property/set: [ entity: ?entity; key: ?key; value: ?value ]

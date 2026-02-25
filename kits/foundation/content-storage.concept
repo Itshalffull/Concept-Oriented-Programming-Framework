@@ -24,7 +24,7 @@ concept ContentStorage [R] {
         Persist the record data to the backend.
       }
       -> error(message: String) {
-        Backend write failed.
+        The storage backend rejected the write due to a connection, permission, or capacity error.
       }
     }
 

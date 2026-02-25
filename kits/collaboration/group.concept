@@ -15,22 +15,22 @@ concept Group [G] {
 
   actions {
     action createGroup(group: G, name: String) {
-      -> ok() { Group created successfully. }
+      -> ok() { Isolated content space created with the given name. }
       -> exists(message: String) { Group already exists. }
     }
 
     action addMember(group: G, user: String, role: String) {
-      -> ok() { Member added to group with assigned role. }
+      -> ok() { User added to the group's membership with the specified role. }
       -> notfound(message: String) { Group does not exist. }
     }
 
     action assignGroupRole(group: G, user: String, role: String) {
-      -> ok() { Role assigned to member within group. }
+      -> ok() { The member's role within the group updated to the new value. }
       -> notfound(message: String) { Group or member does not exist. }
     }
 
     action addContent(group: G, content: String) {
-      -> ok() { Content added to group. }
+      -> ok() { Content entity placed under the group's access scope. }
       -> notfound(message: String) { Group does not exist. }
     }
 

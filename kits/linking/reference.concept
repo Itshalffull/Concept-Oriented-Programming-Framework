@@ -2,7 +2,8 @@
 concept Reference [R] {
 
   purpose {
-    Track forward associations from source to target entities.
+    Track forward associations from source to target entities, forming
+    the primary link graph that backlinks and alias resolution build upon.
   }
 
   state {
@@ -13,25 +14,28 @@ concept Reference [R] {
   actions {
     action addRef(source: R, target: String) {
       -> ok(source: R, target: String) {
-        Add a forward reference from source to target.
+        A forward reference from source to target is recorded in the link graph.
+        Triggers backlink reindexing and alias resolution via syncs.
       }
       -> exists(source: R, target: String) {
-        The reference already exists.
+        A reference from this source to this target already exists.
       }
     }
 
     action removeRef(source: R, target: String) {
       -> ok(source: R, target: String) {
-        Remove the forward reference from source to target.
+        The forward reference from source to target is removed from the link graph.
+        Triggers backlink reindexing via syncs.
       }
       -> notfound(source: R, target: String) {
-        No such reference exists.
+        No reference exists between this source and target.
       }
     }
 
     action getRefs(source: R) {
       -> ok(targets: String) {
-        Return all targets referenced by the source.
+        Returns all entities that the source references, enabling
+        forward traversal of the link graph.
       }
       -> notfound(source: R) {
         The source entity was not found.
@@ -40,7 +44,8 @@ concept Reference [R] {
 
     action resolveTarget(target: String) {
       -> ok(exists: Bool) {
-        Check whether the target entity exists.
+        Checks whether the referenced target entity exists,
+        useful for detecting broken links.
       }
     }
   }

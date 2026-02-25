@@ -21,7 +21,7 @@ concept Provenance [P] {
   actions {
     action record(entity: String, activity: String, agent: String, inputs: String) {
       -> ok(recordId: String) {
-        Provenance event logged.
+        Lineage event recorded with entity, activity, agent, and inputs.
       }
     }
 

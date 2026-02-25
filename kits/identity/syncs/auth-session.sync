@@ -1,5 +1,6 @@
 // Authentication and session lifecycle
 
+// Create a session automatically when a user logs in
 sync CreateSessionOnLogin [eager]
 when {
   Authentication/login: [ user: ?user ]
@@ -9,6 +10,7 @@ then {
   Session/create: [ session: ?user; userId: ?user; device: "default" ]
 }
 
+// Destroy all user sessions when they log out to prevent stale tokens
 sync DestroySessionOnLogout [eager]
 when {
   Authentication/logout: [ user: ?user ]
@@ -18,6 +20,7 @@ then {
   Session/destroyAll: [ userId: ?user ]
 }
 
+// Validate session status whenever a token is authenticated
 sync ValidateSessionOnAuth [eager]
 when {
   Authentication/authenticate: [ token: ?token ]

@@ -19,7 +19,7 @@ concept FieldMapping [F] {
   actions {
     action map(mappingId: String, sourceField: String, destField: String, transform: String) {
       -> ok() {
-        Mapping rule added.
+        Field translation rule added from source field to destination field.
       }
       -> notfound(message: String) {
         Mapping does not exist.
@@ -34,7 +34,7 @@ concept FieldMapping [F] {
         Mapping does not exist.
       }
       -> error(message: String) {
-        Mapping application failed.
+        A required field is missing or a transform within the mapping failed.
       }
     }
 

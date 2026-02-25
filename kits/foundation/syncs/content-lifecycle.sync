@@ -1,5 +1,6 @@
 // Content lifecycle: storage and parsing coordination
 
+// Persist new content nodes to the storage backend on creation
 sync PersistContentNode [eager]
 when {
   ContentNode/create: [ node: ?node; type: ?type; content: ?content ]
@@ -9,6 +10,7 @@ then {
   ContentStorage/save: [ record: ?node; data: ?content ]
 }
 
+// Parse newly created content into a structured AST for downstream extraction
 sync ParseOnCreate [eager]
 when {
   ContentNode/create: [ node: ?node; type: ?type; content: ?content ]
@@ -18,6 +20,7 @@ then {
   ContentParser/parse: [ content: ?node; text: ?content; format: ?type ]
 }
 
+// Propagate content updates to the storage backend
 sync UpdateStorage [eager]
 when {
   ContentNode/update: [ node: ?node; content: ?content ]
@@ -27,6 +30,7 @@ then {
   ContentStorage/save: [ record: ?node; data: ?content ]
 }
 
+// Remove content from the storage backend when the node is deleted
 sync DeleteFromStorage [eager]
 when {
   ContentNode/delete: [ node: ?node ]

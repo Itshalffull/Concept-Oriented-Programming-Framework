@@ -43,7 +43,7 @@ concept ProgressiveSchema [P] {
 
     action rejectSuggestion(itemId: String, suggestionId: String) {
       -> ok() {
-        Suggestion marked rejected.
+        Suggestion dismissed; the detected value will not be promoted to a property.
       }
       -> notfound(message: String) {
         Item or suggestion does not exist.

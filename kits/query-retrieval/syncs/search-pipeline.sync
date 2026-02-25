@@ -1,3 +1,7 @@
+# Search pipeline connecting queries, search indexes, and exposed filters.
+# Coordinates query execution through the search index and filter integration.
+
+# Delegate query execution to the search index for full-text search
 sync IndexOnQuery [eager]
 when {
   Query/execute: [ query: ?query ]
@@ -7,6 +11,7 @@ then {
   SearchIndex/search: [ index: ?query; query: ?results ]
 }
 
+# Apply exposed filter modifications to the bound query
 sync FilterModifiesQuery [eager]
 when {
   ExposedFilter/applyToQuery: [ exposedFilter: ?ef ]

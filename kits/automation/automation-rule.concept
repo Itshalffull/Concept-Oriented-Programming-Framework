@@ -17,7 +17,7 @@ concept AutomationRule [R] {
   actions {
     action define(rule: R, trigger: String, conditions: String, actions: String) {
       -> ok() {
-        Rule created with the given trigger, conditions, and actions.
+        Event-condition-action rule registered and ready to be enabled.
       }
       -> exists(message: String) {
         A rule with this identity already exists.
@@ -53,7 +53,7 @@ concept AutomationRule [R] {
 
     action execute(rule: R, context: String) {
       -> ok(result: String) {
-        The rule actions executed successfully with the given context.
+        The rule's action sequence ran against the given context and returned a result.
       }
       -> notfound(message: String) {
         The rule was not found.

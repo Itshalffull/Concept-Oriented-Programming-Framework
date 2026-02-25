@@ -27,7 +27,7 @@ concept Enricher [E] {
         Item or enricher does not exist.
       }
       -> error(message: String) {
-        Enrichment failed.
+        The enrichment plugin encountered an error or timed out.
       }
     }
 
@@ -42,7 +42,7 @@ concept Enricher [E] {
 
     action accept(itemId: String, enrichmentId: String) {
       -> ok() {
-        Suggestion promoted to accepted.
+        Enrichment result promoted from suggestion to accepted value on the item.
       }
       -> notfound(message: String) {
         Enrichment does not exist.
@@ -51,7 +51,7 @@ concept Enricher [E] {
 
     action reject(itemId: String, enrichmentId: String) {
       -> ok() {
-        Suggestion marked rejected.
+        Enrichment result marked rejected; it will not be applied to the item.
       }
       -> notfound(message: String) {
         Enrichment does not exist.

@@ -21,7 +21,7 @@ concept Connector [C] {
         Connector instance created for the given source and protocol.
       }
       -> error(message: String) {
-        Configuration is invalid.
+        The protocol ID is unknown or the config is malformed for the protocol.
       }
     }
 
@@ -33,7 +33,7 @@ concept Connector [C] {
         Connector does not exist.
       }
       -> error(message: String) {
-        Read operation failed.
+        The external system rejected the query or the connection timed out.
       }
     }
 
@@ -45,7 +45,7 @@ concept Connector [C] {
         Connector does not exist.
       }
       -> error(message: String) {
-        Write operation failed.
+        The external system rejected the write or the connection timed out.
       }
     }
 
@@ -57,7 +57,7 @@ concept Connector [C] {
         Connector does not exist.
       }
       -> error(message: String) {
-        Connection test failed.
+        The external system is unreachable or authentication was rejected.
       }
     }
 
@@ -69,7 +69,7 @@ concept Connector [C] {
         Connector does not exist.
       }
       -> error(message: String) {
-        Discovery failed.
+        The external system does not support schema introspection or the query failed.
       }
     }
   }

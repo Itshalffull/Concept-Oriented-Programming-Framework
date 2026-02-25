@@ -25,7 +25,7 @@ concept Transform [T] {
         Transform does not exist.
       }
       -> error(message: String) {
-        Transform failed.
+        The input value is incompatible with the transform's expected type or format.
       }
     }
 

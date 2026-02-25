@@ -1,5 +1,6 @@
 // Intent-driven concept discovery
 
+// Auto-create an intent record when a new type is registered, seeding discovery metadata
 sync IntentFromSchema [eager]
 when {
   TypeSystem/registerType: [ type: ?type; schema: ?schema ]

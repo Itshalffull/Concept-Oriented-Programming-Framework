@@ -15,12 +15,12 @@ concept Flag [F] {
 
   actions {
     action flag(flagging: F, flagType: String, entity: String, user: String) {
-      -> ok() { Flagging created successfully. }
+      -> ok() { Toggle recorded for the user-entity-type combination. }
       -> exists(message: String) { User has already flagged this entity with this type. }
     }
 
     action unflag(flagging: F) {
-      -> ok() { Flagging removed successfully. }
+      -> ok() { Toggle cleared and count decremented. }
       -> notfound(message: String) { Flagging does not exist. }
     }
 

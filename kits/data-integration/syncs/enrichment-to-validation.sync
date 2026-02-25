@@ -1,5 +1,6 @@
 // Enriched items proceed to validation
 
+# When enrichment suggestions are produced, queue the item for validation
 sync EnrichmentToValidation [eager]
 when {
   Enricher/suggest: [ itemId: ?itemId ]
@@ -9,6 +10,7 @@ then {
   Queue/enqueue: [ queue: "validation"; item: ?itemId; priority: 1 ]
 }
 
+# When a worker claims a validation queue item, run quality rules against it
 sync QueueDispatchesValidation [eager]
 when {
   Queue/claim: [ queue: "validation"; worker: ?worker ]

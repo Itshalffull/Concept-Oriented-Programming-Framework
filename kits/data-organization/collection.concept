@@ -16,7 +16,7 @@ concept Collection [C] {
 
   actions {
     action create(collection: C, type: String, schema: String) {
-      -> ok() { Collection created successfully. }
+      -> ok() { New collection initialized with the given type and schema. }
       -> exists() { Collection already exists. }
     }
 

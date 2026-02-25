@@ -1,3 +1,6 @@
+# Automatic versioning for content edits and template instantiations
+
+# When synced content is edited, snapshot the new state for version history
 sync VersionOnEdit [eager]
 when {
   SyncedContent/editOriginal: [ original: ?original; content: ?content ]
@@ -7,6 +10,7 @@ then {
   Version/snapshot: [ version: ?original; entity: ?original; data: ?content; author: "system" ]
 }
 
+# When a template is instantiated, record the produced content as a version snapshot
 sync TemplateInstantiateCreatesVersion [eager]
 when {
   Template/instantiate: [ template: ?template; values: ?values ]

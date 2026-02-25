@@ -1,3 +1,6 @@
+# Workflow, queue, and control automation coordination
+
+# When an automation rule executes, advance the linked workflow
 sync RuleTriggersWorkflow [eager]
 when {
   AutomationRule/execute: [ rule: ?rule; context: ?context ]
@@ -7,6 +10,7 @@ then {
   Workflow/transition: [ workflow: ?rule; entity: ?context; transition: ?result ]
 }
 
+# When a rule matches an event, enqueue it for deferred processing
 sync QueueDeferredActions [eager]
 when {
   AutomationRule/evaluate: [ rule: ?rule; event: ?event ]
@@ -16,6 +20,7 @@ then {
   Queue/enqueue: [ queue: ?rule; item: ?event; priority: 0 ]
 }
 
+# When a UI control fires its bound action, evaluate the corresponding automation rule
 sync ControlTriggersAction [eager]
 when {
   Control/triggerAction: [ control: ?control ]

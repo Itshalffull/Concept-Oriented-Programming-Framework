@@ -17,7 +17,7 @@ concept Workflow [W] {
   actions {
     action defineState(workflow: W, name: String, flags: String) {
       -> ok() {
-        State registered in the workflow.
+        Register a new named state in the workflow's state graph.
       }
       -> exists(message: String) {
         A state with this name already exists in the workflow.
@@ -26,7 +26,7 @@ concept Workflow [W] {
 
     action defineTransition(workflow: W, from: String, to: String, label: String, guard: String) {
       -> ok() {
-        Transition registered between the two states.
+        Register a guarded transition edge between the two states.
       }
       -> error(message: String) {
         One or both states do not exist, or the transition is invalid.
@@ -35,7 +35,7 @@ concept Workflow [W] {
 
     action transition(workflow: W, entity: String, transition: String) {
       -> ok(newState: String) {
-        Entity moved to the new state.
+        The guard condition passed and the entity advanced to the target state.
       }
       -> notfound(message: String) {
         The workflow or entity was not found.

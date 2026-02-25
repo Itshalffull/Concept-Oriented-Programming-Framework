@@ -1,5 +1,7 @@
-// Alias resolution for references
+# Resolve alias names when references are added.
+# Ensures forward references can target aliased entities.
 
+# When a reference is added, resolve the target name through the alias system
 sync ResolveAliasOnRef [eager]
 when {
   Reference/addRef: [ source: ?source; target: ?target ]

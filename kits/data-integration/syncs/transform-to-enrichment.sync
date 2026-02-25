@@ -1,5 +1,6 @@
 // Transformed items proceed to enrichment
 
+# When a transform chain completes, queue the result for enrichment
 sync TransformToEnrichment [eager]
 when {
   Transform/chain: [ value: ?value; transformIds: ?ids ]
@@ -9,6 +10,7 @@ then {
   Queue/enqueue: [ queue: "enrichment"; item: ?result; priority: 1 ]
 }
 
+# When a worker claims an enrichment queue item, run all applicable enrichers
 sync QueueDispatchesEnrichment [eager]
 when {
   Queue/claim: [ queue: "enrichment"; worker: ?worker ]

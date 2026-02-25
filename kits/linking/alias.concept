@@ -13,16 +13,17 @@ concept Alias [A] {
   actions {
     action addAlias(entity: A, name: String) {
       -> ok(entity: A, name: String) {
-        Add an alias name for the entity.
+        The name is registered as an alternative identifier for the entity.
+        Future resolve calls with this name will return this entity.
       }
       -> exists(entity: A, name: String) {
-        This alias already exists for the entity.
+        This alias name is already registered for the entity.
       }
     }
 
     action removeAlias(entity: A, name: String) {
       -> ok(entity: A, name: String) {
-        Remove the alias name from the entity.
+        The alias is deregistered. The name no longer resolves to the entity.
       }
       -> notfound(entity: A, name: String) {
         No such alias exists for the entity.
@@ -31,7 +32,8 @@ concept Alias [A] {
 
     action resolve(name: String) {
       -> ok(entity: A) {
-        Resolve the alias name to its associated entity.
+        The alias name resolves to its associated entity, enabling
+        name polymorphism across the system.
       }
       -> notfound(name: String) {
         No entity is associated with this alias name.

@@ -1,5 +1,7 @@
-// Bidirectional link maintenance
+# Maintain bidirectional links by reindexing backlinks on reference changes.
+# Keeps the reverse index consistent with forward references.
 
+# Rebuild backlink index when a new forward reference is added
 sync UpdateBacklinksOnRef [eager]
 when {
   Reference/addRef: [ source: ?source; target: ?target ]
@@ -9,6 +11,7 @@ then {
   Backlink/reindex: []
 }
 
+# Rebuild backlink index when a forward reference is removed
 sync RemoveBacklinksOnUnref [eager]
 when {
   Reference/removeRef: [ source: ?source; target: ?target ]
