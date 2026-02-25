@@ -43,8 +43,9 @@ concept Builder [B] {
         compilation. Builder records the result in its registry.
 
         The provider:
-        1. Resolves Toolchain for the language+platform
-        2. Compiles the source
+        1. Resolves Toolchain for the language+platform (returns
+           invocation profile with command, args, outputFormat)
+        2. Compiles the source using the invocation profile
         3. Runs tests (unless config.mode = "skip-tests")
         4. Packages the output
         5. Returns content-addressed artifact
@@ -88,12 +89,18 @@ concept Builder [B] {
         testType selects which test runner and suite to execute:
         "unit" (default), "integration", "e2e", "ui", "visual",
         "benchmark". Each type resolves a different toolchain
-        via Toolchain/resolve with the matching category.
+        via Toolchain/resolve with the matching category. The
+        resolved invocation profile (command, args, outputFormat)
+        tells the provider exactly how to run the tool and
+        parse its output.
 
         Examples:
-        - test(testType: "unit") → vitest / cargo test / XCTest
-        - test(testType: "e2e") → Playwright / cargo nextest
-        - test(testType: "ui") → Cypress / XCUITest
+        - test(testType: "unit") → Toolchain/resolve(category: "unit-runner")
+            → vitest: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json" }
+        - test(testType: "e2e") → Toolchain/resolve(category: "e2e-runner")
+            → playwright: { command: "npx playwright test", args: ["--reporter=json"], outputFormat: "playwright-json" }
+        - test(testType: "ui") → Toolchain/resolve(category: "ui-runner")
+            → cypress: { command: "npx cypress run", args: ["--reporter", "json"], outputFormat: "cypress-json" }
       }
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed. testType indicates which runner was used.
