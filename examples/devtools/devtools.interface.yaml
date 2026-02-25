@@ -59,7 +59,7 @@ concepts:
   # Interface kit orchestration
   - kits/interface/concepts/generator.concept
   - kits/interface/concepts/projection.concept
-  - kits/interface/concepts/surface.concept
+  - kits/interface/concepts/api-surface.concept
   # Test kit
   - kits/test/conformance.concept
   - kits/test/test-selection.concept
@@ -1588,111 +1588,6 @@ workflows:
             api-to-worker: { type: http, from: api, to: worker }
           syncs:
             - SendWelcome  # Now has a transport path
-
-  # ─── Migration: migration-runner ───────────────────
-  migration-runner:
-    concept: Migration
-    steps:
-      - action: plan
-        title: "Plan Migration"
-        prose: "Analyze schema changes and plan migration steps for concept state transitions."
-      - action: apply
-        title: "Apply Migration"
-        prose: "Execute the planned migration, transforming stored state to match the new schema."
-    checklists:
-      plan:
-        - "Schema diff shows expected changes?"
-        - "No data loss in state transformations?"
-        - "Rollback strategy identified?"
-      apply:
-        - "Backup created before applying?"
-        - "Migration ran to completion?"
-        - "Post-migration validation passed?"
-    design-principles:
-      - title: "Version Gating"
-        rule: "A concept cannot start until its storage schema matches its current spec version — the migration concept gates startup."
-      - title: "Reversible by Default"
-        rule: "Every migration step should have a corresponding rollback step — data transformations should be invertible."
-    references:
-      - path: references/migration-guide.md
-        label: "Migration planning and execution guide"
-        tier: reference
-        content: |
-          # Migration Planning and Execution Guide
-
-          When a concept's spec changes (new state fields, renamed actions,
-          changed types), stored data must be migrated to match.
-
-          ## Migration Workflow
-
-          1. **Detect** — Compare current spec version against stored schema version.
-          2. **Plan** — Generate migration steps from the schema diff.
-          3. **Dry-run** — Validate the plan against a copy of stored data.
-          4. **Apply** — Execute the migration, transforming stored state.
-          5. **Verify** — Confirm the new schema matches the updated spec.
-
-          ## Schema Diff Types
-
-          | Change | Migration Action | Risk |
-          |--------|-----------------|------|
-          | Add field (optional) | Set default value | Low |
-          | Add field (required) | Compute or prompt for value | Medium |
-          | Remove field | Drop column/key | Low (data loss) |
-          | Rename field | Copy + drop | Medium |
-          | Change type | Transform values | High |
-          | Add action | No migration needed | None |
-          | Remove action | No migration needed | None |
-
-          ## Rollback Strategy
-
-          Every migration step should be reversible:
-
-          ```yaml
-          migration:
-            steps:
-              - action: addField
-                concept: User
-                field: displayName
-                type: String
-                default: ""
-                rollback: removeField
-          ```
-
-          ## Commands
-
-          | Command | Purpose |
-          |---------|---------|
-          | `copf migrate --status` | Show current schema versions |
-          | `copf migrate --plan` | Preview planned migration steps |
-          | `copf migrate --dry-run` | Test migration without applying |
-          | `copf migrate --apply` | Execute the migration |
-
-          ## Safety Rules
-
-          - Always create a backup before applying.
-          - Run `--dry-run` before `--apply` on production data.
-          - Never skip schema versions — migrations are sequential.
-          - Version-gate startup: concepts refuse to start if schema is outdated.
-    validation-commands:
-      - label: "Check migration status"
-        command: "npx tsx tools/copf-cli/src/index.ts migrate --status"
-      - label: "Run migration dry-run"
-        command: "npx tsx tools/copf-cli/src/index.ts migrate --dry-run"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | plan | `copf migrate --plan` | Show planned migration steps |
-        | apply | `copf migrate --apply` | Execute migration |
-        | status | `copf migrate --status` | Check current schema versions |
-    related-workflows:
-      - name: concept-validator
-        description: "Validate the updated concept spec"
-      - name: implementation-builder
-        description: "Update the handler implementation after schema change"
-      - name: deployment-config
-        description: "Re-validate deployment after migration"
 
   # ─── ProjectScaffold: project-initializer ──────────
   project-initializer:
@@ -4902,82 +4797,6 @@ annotations:
         - path: references/transport-adapters.md
           label: "Transport adapter reference"
 
-  Migration:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when concept schemas have changed and stored state needs to
-        be migrated to match the new version. Covers migration planning,
-        dry-run validation, and execution.
-      intro-template: >
-        Plan and apply schema migration for **$ARGUMENTS**, transforming
-        stored state from the previous version to the current spec version.
-      companion-docs:
-        - path: examples/run-a-migration.md
-          label: "Migration execution walkthrough"
-          content: |
-            # Walkthrough: Running a Migration
-
-            This walkthrough shows how to migrate a concept after
-            adding a new required field.
-
-            ## The Change
-
-            Adding a `displayName` field to the User concept:
-
-            ```
-            state {
-              users: set U
-              name: U -> String
-              email: U -> String
-              displayName: U -> String   # NEW
-            }
-            ```
-
-            ## Step 1: Check Status
-
-            ```bash
-            copf migrate --status
-            ```
-            ```
-            User: v1 (stored) → v2 (spec) — MIGRATION NEEDED
-            Article: v1 (stored) → v1 (spec) — up to date
-            ```
-
-            ## Step 2: Plan
-
-            ```bash
-            copf migrate --plan
-            ```
-            ```
-            Migration plan for User v1 → v2:
-              1. ADD FIELD displayName (String)
-                 Default: compute from name field
-            ```
-
-            ## Step 3: Dry Run
-
-            ```bash
-            copf migrate --dry-run
-            ```
-
-            ## Step 4: Apply
-
-            ```bash
-            copf migrate --apply
-            ```
-    plan:
-      examples:
-        - label: "Plan a migration"
-          language: bash
-          code: "copf migrate --plan"
-    apply:
-      examples:
-        - label: "Apply migration"
-          language: bash
-          code: "copf migrate --apply"
-
   ProjectScaffold:
     concept:
       tool-permissions: [Read, Write, Bash]
@@ -5134,67 +4953,6 @@ annotations:
         - label: "Stop dev server"
           language: bash
           code: "copf dev stop"
-
-  BuildCache:
-    concept:
-      tool-permissions: [Read, Bash]
-      argument-template: "--cache"
-      trigger-description: >
-        Use when building pre-compiled artifacts for deployment or to
-        speed up startup. Checks, records, and invalidates content-addressed
-        cache entries for generation pipeline steps.
-      intro-template: >
-        Manage the generation build cache — check freshness, record outputs,
-        and invalidate stale entries for faster builds.
-      companion-docs:
-        - path: examples/build-for-production.md
-          label: "Production build walkthrough"
-          content: |
-            # Walkthrough: Building for Production
-
-            This walkthrough shows how to build a production-ready
-            cache from your concept specs and syncs.
-
-            ## Step 1: Validate Everything
-
-            ```bash
-            copf check           # Validate all specs
-            copf compile-syncs   # Validate all syncs
-            ```
-
-            ## Step 2: Build the Cache
-
-            ```bash
-            copf compile --cache --verbose
-            ```
-
-            ```
-            Building cache...
-            [cache] user.concept → manifests/user.manifest.json (new)
-            [cache] article.concept → manifests/article.manifest.json (new)
-            [cache] create-profile.sync → syncs/create-profile.compiled.js (new)
-            [cache] types → types/user.d.ts, types/article.d.ts (new)
-            Cache built: 4 manifests, 2 syncs, 4 type files
-            ```
-
-            ## Step 3: Deploy
-
-            Include `.copf-cache/` in your deployment:
-
-            ```dockerfile
-            COPY .copf-cache/ /app/.copf-cache/
-            ```
-
-            The runtime loads pre-compiled artifacts on startup,
-            skipping the parse/compile step entirely.
-    check:
-      examples:
-        - label: "Check cache freshness"
-          language: bash
-          code: "copf compile --cache"
-        - label: "Check with verbose output"
-          language: bash
-          code: "copf compile --cache --verbose"
 
   KitManager:
     concept:
@@ -5373,6 +5131,71 @@ annotations:
         - label: "List stale cache entries"
           language: bash
           code: "copf build-cache stale-steps"
+    cli:
+      command-group: build-cache
+      description: "Manage incremental build cache for generation pipeline."
+      actions:
+        check:
+          description: "Check if a generation step is cached"
+          flags:
+            stepKey:
+              type: string
+              required: true
+              short: k
+              description: "Unique step identifier (generator:concept)"
+            inputHash:
+              type: string
+              required: true
+              description: "Hash of current input"
+            deterministic:
+              type: boolean
+              required: false
+              description: "Whether generator is deterministic"
+        record:
+          description: "Record a generation result in the cache"
+        invalidate:
+          description: "Invalidate a single cache entry"
+          flags:
+            stepKey:
+              type: string
+              required: true
+              short: k
+              description: "Step key to invalidate"
+        invalidateBySource:
+          command: invalidate-by-source
+          description: "Invalidate all steps that used a source file"
+          args:
+            sourceLocator:
+              positional: true
+          examples:
+            - description: "Invalidate after concept change"
+              command: "copf build-cache invalidate-by-source specs/app/article.concept"
+        invalidateByKind:
+          command: invalidate-by-kind
+          description: "Invalidate all steps producing a given IR kind"
+          args:
+            kindName:
+              positional: true
+          examples:
+            - description: "Invalidate all TypeScript generation"
+              command: "copf build-cache invalidate-by-kind TypeScriptFiles"
+        invalidateAll:
+          command: invalidate-all
+          description: "Clear the entire build cache"
+          examples:
+            - description: "Full cache reset"
+              command: "copf build-cache invalidate-all"
+        status:
+          description: "Show all cache entries with staleness indicators"
+          examples:
+            - description: "View cache status"
+              command: "copf build-cache status"
+        staleSteps:
+          command: stale-steps
+          description: "List step keys that need regeneration"
+          examples:
+            - description: "Find stale entries"
+              command: "copf build-cache stale-steps"
 
   Resource:
     concept:
@@ -6445,73 +6268,6 @@ concept-overrides:
           examples:
             - description: "Audit generated directory"
               command: "copf emitter audit ./generated"
-
-  BuildCache:
-    cli:
-      command-group: build-cache
-      description: "Manage incremental build cache for generation pipeline."
-      actions:
-        check:
-          description: "Check if a generation step is cached"
-          flags:
-            stepKey:
-              type: string
-              required: true
-              short: k
-              description: "Unique step identifier (generator:concept)"
-            inputHash:
-              type: string
-              required: true
-              description: "Hash of current input"
-            deterministic:
-              type: boolean
-              required: false
-              description: "Whether generator is deterministic"
-        record:
-          description: "Record a generation result in the cache"
-        invalidate:
-          description: "Invalidate a single cache entry"
-          flags:
-            stepKey:
-              type: string
-              required: true
-              short: k
-              description: "Step key to invalidate"
-        invalidateBySource:
-          command: invalidate-by-source
-          description: "Invalidate all steps that used a source file"
-          args:
-            sourceLocator:
-              positional: true
-          examples:
-            - description: "Invalidate after concept change"
-              command: "copf build-cache invalidate-by-source specs/app/article.concept"
-        invalidateByKind:
-          command: invalidate-by-kind
-          description: "Invalidate all steps producing a given IR kind"
-          args:
-            kindName:
-              positional: true
-          examples:
-            - description: "Invalidate all TypeScript generation"
-              command: "copf build-cache invalidate-by-kind TypeScriptFiles"
-        invalidateAll:
-          command: invalidate-all
-          description: "Clear the entire build cache"
-          examples:
-            - description: "Full cache reset"
-              command: "copf build-cache invalidate-all"
-        status:
-          description: "Show all cache entries with staleness indicators"
-          examples:
-            - description: "View cache status"
-              command: "copf build-cache status"
-        staleSteps:
-          command: stale-steps
-          description: "List step keys that need regeneration"
-          examples:
-            - description: "Find stale entries"
-              command: "copf build-cache stale-steps"
 
   Resource:
     cli:
