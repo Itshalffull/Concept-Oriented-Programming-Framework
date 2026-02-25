@@ -1,0 +1,31 @@
+@version(1)
+concept TreeSitterSyncSpec [I] {
+
+  purpose {
+    Tree-sitter grammar provider for COPF sync spec files.
+    Uses the YAML WASM parser as an approximation for .sync
+    files until a custom Tree-sitter grammar is available.
+  }
+
+  state {
+    instances: set I
+    grammarRef: I -> String
+    wasmPath: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Load the YAML WASM parser and register it with
+        LanguageGrammar for .sync extensions.
+      }
+      -> loadError(message: String) {
+        Failed to load the WASM parser binary.
+      }
+    }
+  }
+}

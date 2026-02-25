@@ -1,0 +1,67 @@
+@version(1)
+concept DefinitionUnit [D] {
+
+  purpose {
+    An individual definition (function, type, concept spec, sync
+    rule, config block) as a first-class entity independent of
+    its containing file. Enables content-addressed identity and
+    structural diff across versions.
+  }
+
+  state {
+    units: set D
+    file: D -> String
+    symbol: D -> String
+    treeRange: D -> String
+    digest: D -> String
+    kind: D -> String
+    language: D -> String
+    children: D -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action extract(tree: String, startByte: Int, endByte: Int) {
+      -> ok(unit: D) {
+        Extract a definition-level node from a syntax tree at
+        the given byte range.
+      }
+      -> notADefinition(nodeType: String) {
+        The node at this range is not a definition-level construct.
+      }
+    }
+
+    action findBySymbol(symbol: String) {
+      -> ok(unit: D) {
+        Find the definition unit linked to a Symbol.
+      }
+      -> notfound() {
+        No definition unit is linked to this symbol.
+      }
+    }
+
+    action findByPattern(kind: String, language: String, namePattern: String) {
+      -> ok(units: String) {
+        Find definitions matching the given kind, language,
+        and name pattern as serialized JSON.
+      }
+    }
+
+    action diff(a: D, b: D) {
+      -> ok(changes: String) {
+        Structural diff between two definitions as serialized JSON.
+      }
+      -> same() {
+        The two definitions are structurally identical.
+      }
+    }
+  }
+
+  invariant {
+    after extract(tree: "t1", startByte: 0, endByte: 100) -> ok(unit: u)
+    then findBySymbol(symbol: "sym-u") -> notfound()
+  }
+}

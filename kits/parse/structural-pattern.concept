@@ -1,0 +1,62 @@
+@version(1)
+concept StructuralPattern [P] {
+
+  purpose {
+    Reusable structural search and match pattern over syntax
+    trees, supporting multiple pattern syntaxes. Acts as a
+    coordination concept with pattern engine providers.
+  }
+
+  state {
+    patterns: set P
+    name: P -> String
+    syntax: P -> String
+    source: P -> String
+    language: P -> String
+    compiled: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(syntax: String, source: String, language: String) {
+      -> ok(pattern: P) {
+        Create and optionally compile a structural pattern.
+        Syntax can be tree-sitter-query, ast-grep, comby, or regex.
+      }
+      -> invalidSyntax(message: String, position: Int) {
+        The pattern source has a syntax error.
+      }
+    }
+
+    action match(pattern: P, tree: String) {
+      -> ok(matches: String) {
+        Run the pattern against a syntax tree. Returns matches
+        as serialized JSON with byte ranges and captures.
+      }
+      -> noMatches() {
+        The pattern found no matches in the tree.
+      }
+      -> incompatibleLanguage(patternLang: String, treeLang: String) {
+        The pattern's language constraint doesn't match the tree's language.
+      }
+    }
+
+    action matchProject(pattern: P) {
+      -> ok(results: String) {
+        Search all project files matching the pattern.
+        Results as serialized JSON with file paths and match ranges.
+      }
+      -> noMatches() {
+        No matches found across the project.
+      }
+    }
+  }
+
+  invariant {
+    after create(syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript") -> ok(pattern: p)
+    then match(pattern: p, tree: "some-tree") -> ok(matches: m)
+  }
+}

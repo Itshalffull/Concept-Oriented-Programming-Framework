@@ -1,0 +1,12 @@
+// Extract definition-level nodes from parsed syntax trees.
+// Walks the tree to find function, class, type, concept-spec,
+// and sync-rule definitions and creates DefinitionUnit instances.
+
+sync DefinitionExtractionSync [eager]
+when {
+  SyntaxTree/parse: [ file: ?file; grammar: ?grammar ]
+    => [ tree: ?tree ]
+}
+then {
+  DefinitionUnit/extract: [ tree: ?tree; startByte: 0; endByte: ?treeLength ]
+}

@@ -1,0 +1,11 @@
+// Compute structural content hashes for extracted definitions.
+// Enables content-addressed identity independent of formatting.
+
+sync ContentDigestSync [eager]
+when {
+  DefinitionUnit/extract: [ tree: ?tree; startByte: ?start; endByte: ?end ]
+    => [ unit: ?unit ]
+}
+then {
+  ContentDigest/compute: [ unit: ?unit; algorithm: "structural-normalized" ]
+}

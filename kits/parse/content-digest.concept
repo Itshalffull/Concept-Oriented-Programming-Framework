@@ -1,0 +1,56 @@
+@version(1)
+concept ContentDigest [H] {
+
+  purpose {
+    Structural content hash for any DefinitionUnit, enabling
+    content-addressed identity independent of formatting and
+    local variable names.
+  }
+
+  state {
+    digests: set H
+    hash: H -> String
+    algorithm: H -> String
+    unit: H -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action compute(unit: String, algorithm: String) {
+      -> ok(digest: H) {
+        Compute a structural hash for the definition unit
+        using the specified algorithm.
+      }
+      -> unsupportedAlgorithm(algorithm: String) {
+        The requested hashing algorithm is not supported.
+      }
+    }
+
+    action lookup(hash: String) {
+      -> ok(units: String) {
+        Find all definition units that share this content hash,
+        returned as serialized JSON.
+      }
+      -> notfound() {
+        No definition units have this hash.
+      }
+    }
+
+    action equivalent(a: String, b: String) {
+      -> yes() {
+        The two definition units are structurally equivalent.
+      }
+      -> no(diffSummary: String) {
+        The units differ. Summary describes the differences.
+      }
+    }
+  }
+
+  invariant {
+    after compute(unit: "u1", algorithm: "structural-normalized") -> ok(digest: d)
+    then lookup(hash: "h") -> ok(units: u)
+  }
+}

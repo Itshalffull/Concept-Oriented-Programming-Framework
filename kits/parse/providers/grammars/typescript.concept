@@ -1,0 +1,31 @@
+@version(1)
+concept TreeSitterTypeScript [I] {
+
+  purpose {
+    Tree-sitter grammar provider for TypeScript and TSX files.
+    Registers the TypeScript WASM parser with LanguageGrammar
+    for .ts and .tsx extensions.
+  }
+
+  state {
+    instances: set I
+    grammarRef: I -> String
+    wasmPath: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Load the TypeScript WASM parser and register it with
+        LanguageGrammar for .ts and .tsx extensions.
+      }
+      -> loadError(message: String) {
+        Failed to load the WASM parser binary.
+      }
+    }
+  }
+}
