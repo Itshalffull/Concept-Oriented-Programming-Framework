@@ -1,0 +1,27 @@
+type ToolchainState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type ToolchainEntry {
+  t: ID!
+  language: String!
+  platform: String!
+  version: String!
+  path: String!
+  capabilities: [String!]!
+  resolvedAt: String!
+  status: String!
+  versionRange: String!
+  requiredCapabilities: [String!]!
+}
+
+extend type Query {
+  toolchain_entry(t: ID!): ToolchainEntry
+  toolchain_entries: [ToolchainEntry!]!
+}
+
+type ToolchainTools {
+  t: ID!
+  value: ID!
+}

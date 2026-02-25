@@ -1,0 +1,18 @@
+# Record ArgoCDProvider success in BuildCache — Section 3.8
+
+sync RecordCacheArgoCD [eager]
+when {
+  ArgoCDProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    outputHash: ?plan;
+    sourceLocator: ?plan;
+    deterministic: false
+  ]
+}

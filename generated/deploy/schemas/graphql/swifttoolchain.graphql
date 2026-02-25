@@ -1,0 +1,24 @@
+type SwiftToolchainState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SwiftToolchainEntry {
+  s: ID!
+  swiftcPath: String!
+  swiftVersion: String!
+  sdkPath: String!
+  xcodeVersion: String!
+  spmPath: String!
+  supportedTargets: [String!]!
+}
+
+extend type Query {
+  swifttoolchain_entry(s: ID!): SwiftToolchainEntry
+  swifttoolchain_entries: [SwiftToolchainEntry!]!
+}
+
+type SwiftToolchainToolchains {
+  s: ID!
+  value: ID!
+}

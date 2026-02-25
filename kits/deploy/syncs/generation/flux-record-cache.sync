@@ -1,0 +1,18 @@
+# Record FluxProvider success in BuildCache — Section 3.8
+
+sync RecordCacheFlux [eager]
+when {
+  FluxProvider/emit: [ plan: ?plan; repo: ?repo; path: ?path ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    outputHash: ?plan;
+    sourceLocator: ?plan;
+    deterministic: false
+  ]
+}

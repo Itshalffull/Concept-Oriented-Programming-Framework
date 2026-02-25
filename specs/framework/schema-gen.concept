@@ -27,6 +27,16 @@ concept SchemaGen [S] {
         If the AST contains unresolvable types or inconsistencies.
       }
     }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "SchemaGen"
+        inputKind: "ConceptAST"
+        outputKind: "ConceptManifest"
+        capabilities: ["graphql", "json-schema", "invariants"]
+      }
+    }
   }
 
   invariant {

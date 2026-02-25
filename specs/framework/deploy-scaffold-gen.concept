@@ -1,0 +1,55 @@
+@category("devtools")
+@visibility("public")
+concept DeployScaffoldGen [D] {
+
+  purpose {
+    Generate deployment manifest (deploy.yaml) scaffolds from
+    provided configuration including runtimes, concepts, and
+    infrastructure settings.
+  }
+
+  state {
+    manifests: set D
+    appName: D -> String
+  }
+
+  actions {
+    action generate(appName: String, runtimes: list Runtime, concepts: list ConceptAssignment) {
+      description {
+        Generate a deploy.yaml manifest with runtime configs,
+        infrastructure declarations, and concept assignments.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Deploy manifest generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action preview(appName: String, runtimes: list Runtime, concepts: list ConceptAssignment) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses
+        Emitter content-addressing to classify each file as
+        new, changed, or unchanged.
+      }
+      -> cached() {
+        BuildCache reports inputs unchanged since the last
+        successful run. No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "DeployScaffoldGen"
+        inputKind: "DeployConfig"
+        outputKind: "DeployManifest"
+        capabilities: ["deploy-yaml", "runtime-config", "infrastructure"]
+      }
+    }
+  }
+}

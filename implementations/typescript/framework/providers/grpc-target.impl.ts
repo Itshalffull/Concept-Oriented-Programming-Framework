@@ -58,6 +58,7 @@ function generateProtoFile(
   const conceptPascal = toPascalCase(manifest.name);
   const lines: string[] = [];
 
+  lines.push(generateFileHeader('grpc', manifest.name));
   lines.push('syntax = "proto3";');
   lines.push(`package ${packageName};`);
   lines.push('');
@@ -136,6 +137,17 @@ function generateProtoFile(
 // --- Concept Handler ---
 
 export const grpcTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'GrpcTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'GrpcProto',
+      capabilities: JSON.stringify(['proto3', 'service', 'hierarchical']),
+      targetKey: 'grpc',
+      providerType: 'target',
+    };
+  },
 
   /**
    * Generate proto3 service definitions for one or more concepts.

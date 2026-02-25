@@ -1,0 +1,15 @@
+# EnsureKindsDefined — generation kit required sync
+sync EnsureKindsDefined [eager]
+  purpose { Auto-define kinds referenced by generator registrations. }
+when {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: ?meta
+  ] => ok(plugin: ?p)
+}
+where {
+  bind(?meta.outputKind as ?outputKind)
+}
+then {
+  KindSystem/define: [ name: ?outputKind; category: "artifact" ]
+}

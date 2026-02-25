@@ -66,6 +66,41 @@ export const artifactHandler: ConceptHandler = {
     };
   },
 
+  async store(input, storage) {
+    const hash = input.hash as string;
+    const location = input.location as string;
+    const concept = input.concept as string;
+    const language = input.language as string;
+    const platform = input.platform as string;
+    const metadata = input.metadata as { toolchainVersion?: string; buildMode?: string; duration?: number } | undefined;
+
+    // Check for existing artifact with this hash (content-addressed)
+    const existing = await storage.find(RELATION, { hash });
+    if (existing.length > 0) {
+      return {
+        variant: 'alreadyExists',
+        artifact: existing[0].artifact as string,
+      };
+    }
+
+    const artifactId = `art-${hash}`;
+
+    await storage.put(RELATION, artifactId, {
+      artifact: artifactId,
+      hash,
+      location,
+      concept,
+      language,
+      platform,
+      toolchainVersion: metadata?.toolchainVersion || '',
+      buildMode: metadata?.buildMode || '',
+      duration: metadata?.duration || 0,
+      storedAt: new Date().toISOString(),
+    });
+
+    return { variant: 'ok', artifact: artifactId };
+  },
+
   async gc(input, storage) {
     const olderThan = input.olderThan as Date;
     const keepVersions = input.keepVersions as number;

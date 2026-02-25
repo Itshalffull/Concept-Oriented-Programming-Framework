@@ -13,11 +13,11 @@ export const iacHandler: ConceptHandler = {
     const outputId = `iac-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = [`${provider}/main.tf`, `${provider}/variables.tf`];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, outputId, {
       output: outputId,
       plan,
       provider,
-      files: JSON.stringify(files),
       fileCount: files.length,
       createdAt: new Date().toISOString(),
     });

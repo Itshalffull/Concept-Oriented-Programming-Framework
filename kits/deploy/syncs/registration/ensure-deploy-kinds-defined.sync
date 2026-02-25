@@ -1,0 +1,22 @@
+# EnsureDeployKindsDefined — deploy kit registration sync
+#
+# Auto-define artifact kinds referenced by deploy provider registrations.
+# Mirrors the generation kit's EnsureKindsDefined sync.
+# See generation kit syncs: ensure-kinds-defined.sync
+
+sync EnsureDeployKindsDefined [eager]
+  purpose { Auto-define kinds referenced by deploy provider registrations. }
+when {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: ?meta
+  ] => ok(plugin: ?p)
+}
+where {
+  bind(?meta.outputKind as ?outputKind)
+  bind(?meta.providerType as ?providerType)
+  any(?providerType = "iac"; ?providerType = "gitops")
+}
+then {
+  KindSystem/define: [ name: ?outputKind; category: "artifact" ]
+}

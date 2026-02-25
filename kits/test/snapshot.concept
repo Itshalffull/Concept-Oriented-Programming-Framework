@@ -1,0 +1,116 @@
+@version(1)
+concept Snapshot [S] {
+
+  purpose {
+    Manage golden-file baselines for generated output.
+    Compare current generator output against approved
+    snapshots. Detect unintended changes to generated
+    code structure, formatting, or content. Support a
+    human-in-the-loop approval workflow for intentional
+    changes.
+  }
+
+  state {
+    snapshots: set S
+    baseline {
+      path: S -> String
+      contentHash: S -> String
+      approvedAt: S -> DateTime
+      approvedBy: S -> option String
+    }
+    comparison {
+      currentHash: S -> option String
+      status: S -> String
+      diffSummary: S -> option String
+    }
+  }
+
+  actions {
+    action compare(outputPath: String, currentContent: String) {
+      -> unchanged(snapshot: S) {
+        Current output matches approved baseline exactly.
+        Content hash identical. No action needed.
+      }
+      -> changed(snapshot: S, diff: String, linesAdded: Int, linesRemoved: Int) {
+        Current output differs from approved baseline.
+        Returns unified diff. Requires approval before
+        the change is accepted.
+      }
+      -> new(path: String, contentHash: String) {
+        No baseline exists for this output path.
+        First generation — requires initial approval.
+      }
+    }
+
+    action approve(path: String, approver: option String) {
+      -> ok(snapshot: S) {
+        Current output becomes the new baseline.
+        Records approval timestamp and optional approver.
+        Future comparisons use this as the reference.
+      }
+      -> noChange(snapshot: S) {
+        Nothing to approve — current output already
+        matches baseline.
+      }
+    }
+
+    action approveAll(paths: option list String) {
+      -> ok(approved: Int) {
+        Approve all pending changes, optionally filtered
+        by path prefix. Used for bulk approval after
+        intentional generator changes.
+      }
+    }
+
+    action reject(path: String) {
+      -> ok(snapshot: S) {
+        Mark the current change as rejected. The output
+        should be reverted to match the baseline. Signals
+        that the generator change was unintentional.
+      }
+      -> noChange(snapshot: S) {
+        Nothing to reject.
+      }
+    }
+
+    action status(paths: option list String) {
+      -> ok(results: list {
+        path: String,
+        status: String,
+        linesChanged: option Int,
+        approvedAt: option DateTime
+      }) {
+        Return snapshot status for all tracked paths.
+        Statuses: "current", "changed", "new", "rejected".
+      }
+    }
+
+    action diff(path: String) {
+      -> ok(diff: String, linesAdded: Int, linesRemoved: Int) {
+        Return detailed unified diff between baseline and
+        current output.
+      }
+      -> noBaseline(path: String) {
+        No baseline exists for this path.
+      }
+      -> unchanged(path: String) {
+        No difference — output matches baseline.
+      }
+    }
+
+    action clean(outputDir: String) {
+      -> ok(removed: list String) {
+        Remove baselines for output files that no longer
+        exist (orphaned snapshots from deleted concepts).
+      }
+    }
+  }
+
+  invariant {
+    after compare(outputPath: "generated/ts/password.ts", currentContent: "...")
+      -> changed(snapshot: s, diff: "...", linesAdded: 5, linesRemoved: 3)
+    and  approve(path: "generated/ts/password.ts") -> ok(snapshot: s2)
+    then compare(outputPath: "generated/ts/password.ts", currentContent: "...")
+      -> unchanged(snapshot: s2)
+  }
+}

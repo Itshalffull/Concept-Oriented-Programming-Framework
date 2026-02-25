@@ -1,0 +1,528 @@
+{
+  "uri": "urn:copf/SolidityToolchain",
+  "name": "SolidityToolchain",
+  "typeParams": [
+    {
+      "name": "L",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "solcPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "solcVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "evmVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "foundryPath",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "hardhatPath",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "toolchains",
+      "source": "set-valued",
+      "keyField": {
+        "name": "l",
+        "paramRef": "L"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "L"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "versionConstraint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "toolchain",
+              "type": {
+                "kind": "param",
+                "paramRef": "L"
+              }
+            },
+            {
+              "name": "solcPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Locate solc Check version against Solidity pragma \n Detect Foundry Hardhat for test infrastructure \n Return capabilities : optimizer , via-ir , \n foundry-tests , hardhat-tests , etc"
+        },
+        {
+          "tag": "notInstalled",
+          "fields": [
+            {
+              "name": "installHint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "solc not found \n Hint : pip install solc-select && solc-select install 0.8.25"
+        },
+        {
+          "tag": "evmVersionUnsupported",
+          "fields": [
+            {
+              "name": "requested",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "supported",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Requested EVM version not supported by installed solc"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : SolidityToolchain \n language : solidity \n capabilities : [ solc-select , foundry-detection , \n hardhat-detection ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, register behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "evm-shanghai"
+              }
+            },
+            {
+              "name": "versionConstraint",
+              "value": {
+                "kind": "literal",
+                "value": ">=0.8.20"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "toolchain",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            },
+            {
+              "name": "solcPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/solc"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "0.8.25"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "optimizer"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "via-ir"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "SolidityToolchain"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "solidity"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "caps"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "caps",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SolidityToolchainState {\n  \"\"\"All ls in this concept\"\"\"\n  ls: [ID!]!\n}\n\ntype SolidityToolchainEntry {\n  l: ID!\n  solcPath: String!\n  solcVersion: String!\n  evmVersion: String!\n  foundryPath: String!\n  hardhatPath: String!\n}\n\nextend type Query {\n  soliditytoolchain_entry(l: ID!): SolidityToolchainEntry\n  soliditytoolchain_entries: [SolidityToolchainEntry!]!\n}\n\ntype SolidityToolchainToolchains {\n  l: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:copf/SolidityToolchain/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SolidityToolchain"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "versionConstraint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "platform",
+              "versionConstraint"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/SolidityToolchain/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SolidityToolchain"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:copf/SolidityToolchain/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "toolchain": {
+                  "type": "string"
+                },
+                "solcPath": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "toolchain",
+                "solcPath",
+                "version",
+                "capabilities"
+              ]
+            }
+          }
+        },
+        "notInstalled": {
+          "$id": "urn:copf/SolidityToolchain/resolve/completion/notInstalled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notInstalled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "installHint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "installHint"
+              ]
+            }
+          }
+        },
+        "evmVersionUnsupported": {
+          "$id": "urn:copf/SolidityToolchain/resolve/completion/evmVersionUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "evmVersionUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "requested": {
+                  "type": "string"
+                },
+                "supported": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "requested",
+                "supported"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/SolidityToolchain/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SolidityToolchain"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Resolve Solidity compiler toolchains Owns Solidity specific \n resolution : solc version management ( solc select ) , Foundry \n detection , Hardhat integration , and EVM version targeting"
+}

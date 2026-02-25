@@ -1,0 +1,10 @@
+# CleanOrphansAfterRun — generation kit recommended sync
+sync CleanOrphansAfterRun [eager]
+  purpose { Remove orphaned files after a complete generation run. }
+when {
+  GenerationPlan/complete: []
+    => ok(run: ?run)
+}
+then {
+  Emitter/clean: [ outputDir: "./generated"; currentManifest: currentPaths() ]
+}

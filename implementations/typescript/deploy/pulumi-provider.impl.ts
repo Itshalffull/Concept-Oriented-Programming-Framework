@@ -12,10 +12,10 @@ export const pulumiProviderHandler: ConceptHandler = {
     const stackId = `stack-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['index.ts', 'Pulumi.yaml', 'Pulumi.dev.yaml'];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, stackId, {
       stack: stackId,
       plan,
-      files: JSON.stringify(files),
       status: 'generated',
       createdAt: new Date().toISOString(),
     });

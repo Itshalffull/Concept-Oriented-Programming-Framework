@@ -1,0 +1,10 @@
+# FormatAfterWrite — generation kit required sync
+sync FormatAfterWrite [eager]
+  purpose { Apply language-specific formatting after each file write. }
+when {
+  Emitter/write: [ path: ?path ]
+    => ok(written: true)
+}
+then {
+  Emitter/format: [ path: ?path ]
+}

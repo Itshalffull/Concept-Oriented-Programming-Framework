@@ -1,0 +1,19 @@
+# Record StorageAdapterScaffoldGen success in BuildCache
+
+sync RecordCacheStorageAdapterScaffold [eager]
+  purpose { Cache StorageAdapterScaffoldGen output for incremental rebuilds. }
+when {
+  StorageAdapterScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "StorageAdapterScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

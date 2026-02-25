@@ -1,0 +1,19 @@
+# Record CoifComponentScaffoldGen success in BuildCache
+
+sync RecordCacheCoifComponentScaffold [eager]
+  purpose { Cache CoifComponentScaffoldGen output for incremental rebuilds. }
+when {
+  CoifComponentScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "CoifComponentScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

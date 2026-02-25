@@ -10,5 +10,21 @@ import { ProjectScaffoldModule } from './ProjectScaffold/ProjectScaffold.module'
 import { DevServerModule } from './DevServer/DevServer.module';
 import { CacheCompilerModule } from './CacheCompiler/CacheCompiler.module';
 import { KitManagerModule } from './KitManager/KitManager.module';
+import { EmitterModule } from './Emitter/Emitter.module';
+import { BuildCacheModule } from './BuildCache/BuildCache.module';
+import { ResourceModule } from './Resource/Resource.module';
+import { KindSystemModule } from './KindSystem/KindSystem.module';
+import { GenerationPlanModule } from './GenerationPlan/GenerationPlan.module';
+import { BuilderModule } from './Builder/Builder.module';
+import { KitScaffoldGenModule } from './KitScaffoldGen/KitScaffoldGen.module';
+import { DeployScaffoldGenModule } from './DeployScaffoldGen/DeployScaffoldGen.module';
+import { InterfaceScaffoldGenModule } from './InterfaceScaffoldGen/InterfaceScaffoldGen.module';
+import { ConceptScaffoldGenModule } from './ConceptScaffoldGen/ConceptScaffoldGen.module';
+import { SyncScaffoldGenModule } from './SyncScaffoldGen/SyncScaffoldGen.module';
+import { HandlerScaffoldGenModule } from './HandlerScaffoldGen/HandlerScaffoldGen.module';
+import { StorageAdapterScaffoldGenModule } from './StorageAdapterScaffoldGen/StorageAdapterScaffoldGen.module';
+import { TransportAdapterScaffoldGenModule } from './TransportAdapterScaffoldGen/TransportAdapterScaffoldGen.module';
+import { CoifComponentScaffoldGenModule } from './CoifComponentScaffoldGen/CoifComponentScaffoldGen.module';
+import { CoifThemeScaffoldGenModule } from './CoifThemeScaffoldGen/CoifThemeScaffoldGen.module';
 
-export const modules = [SpecParserModule, SchemaGenModule, SyncParserModule, SyncCompilerModule, FlowTraceModule, DeploymentValidatorModule, MigrationModule, ProjectScaffoldModule, DevServerModule, CacheCompilerModule, KitManagerModule];
+export const modules = [SpecParserModule, SchemaGenModule, SyncParserModule, SyncCompilerModule, FlowTraceModule, DeploymentValidatorModule, MigrationModule, ProjectScaffoldModule, DevServerModule, CacheCompilerModule, KitManagerModule, EmitterModule, BuildCacheModule, ResourceModule, KindSystemModule, GenerationPlanModule, BuilderModule, KitScaffoldGenModule, DeployScaffoldGenModule, InterfaceScaffoldGenModule, ConceptScaffoldGenModule, SyncScaffoldGenModule, HandlerScaffoldGenModule, StorageAdapterScaffoldGenModule, TransportAdapterScaffoldGenModule, CoifComponentScaffoldGenModule, CoifThemeScaffoldGenModule];

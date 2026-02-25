@@ -1,0 +1,21 @@
+# Register CoifThemeScaffoldGen with PluginRegistry
+
+sync RegisterCoifThemeScaffoldGen [eager]
+when {
+  CoifThemeScaffoldGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "CoifThemeScaffoldGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

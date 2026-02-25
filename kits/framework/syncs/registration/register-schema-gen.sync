@@ -1,0 +1,21 @@
+# Register SchemaGen with PluginRegistry — Section 10.1
+
+sync RegisterSchemaGen [eager]
+when {
+  SchemaGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "SchemaGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

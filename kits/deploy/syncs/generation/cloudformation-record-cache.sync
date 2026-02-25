@@ -1,0 +1,18 @@
+# Record CloudFormationProvider success in BuildCache — Section 3.8
+
+sync RecordCacheCloudFormation [eager]
+when {
+  CloudFormationProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    outputHash: ?plan;
+    sourceLocator: ?plan;
+    deterministic: false
+  ]
+}

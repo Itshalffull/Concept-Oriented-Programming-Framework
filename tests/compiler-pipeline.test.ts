@@ -222,11 +222,13 @@ describe('Pipeline Syncs', () => {
     const ast = parseConceptFile(tsGenSource);
 
     expect(ast.name).toBe('TypeScriptGen');
-    expect(ast.actions).toHaveLength(1);
-    expect(ast.actions[0].name).toBe('generate');
+    expect(ast.actions).toHaveLength(2);
+    expect(ast.actions.map(a => a.name)).toContain('generate');
+    expect(ast.actions.map(a => a.name)).toContain('register');
+    const generateAction = ast.actions.find(a => a.name === 'generate')!;
     // Takes manifest instead of ast + language
-    expect(ast.actions[0].params.map(p => p.name)).toContain('manifest');
-    expect(ast.actions[0].params.map(p => p.name)).not.toContain('language');
+    expect(generateAction.params.map(p => p.name)).toContain('manifest');
+    expect(generateAction.params.map(p => p.name)).not.toContain('language');
   });
 
   it('SchemaGen spec updated to produce ConceptManifest', async () => {
@@ -362,10 +364,8 @@ describe('Pipeline Integration', () => {
     const rustFiles = rustResult.files as { path: string; content: string }[];
     expect(rustFiles.length).toBe(4); // types, handler, adapter, conformance
 
-    // Both outputs stored correctly
-    const storedTs = await tsStorage.find('outputs');
-    expect(storedTs.length).toBe(1);
-    const storedRust = await rustStorage.find('outputs');
-    expect(storedRust.length).toBe(1);
+    // Generators return files directly; BuildCache handles storage
+    expect(tsFiles.length).toBeGreaterThan(0);
+    expect(rustFiles.length).toBeGreaterThan(0);
   });
 });

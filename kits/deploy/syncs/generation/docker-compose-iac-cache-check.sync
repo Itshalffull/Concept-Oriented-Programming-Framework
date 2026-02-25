@@ -1,0 +1,14 @@
+# Check BuildCache before DockerComposeIacProvider generates — Section 3.8
+
+sync CheckCacheBeforeDockerComposeIac [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "docker-compose" ]
+    => [ output: ?output; fileCount: ?count ]
+}
+then {
+  BuildCache/check: [
+    stepKey: ?plan;
+    inputHash: ?plan;
+    deterministic: false
+  ]
+}

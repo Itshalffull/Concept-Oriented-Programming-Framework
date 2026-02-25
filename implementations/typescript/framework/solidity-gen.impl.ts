@@ -395,6 +395,16 @@ function generateSolidityStepCode(step: InvariantStep): string[] {
 // --- Handler ---
 
 export const solidityGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'SolidityGen',
+      inputKind: 'ConceptManifest',
+      outputKind: 'SoliditySource',
+      capabilities: JSON.stringify(['contract', 'events', 'foundry-tests']),
+    };
+  },
+
   async generate(input, storage) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
@@ -413,9 +423,6 @@ export const solidityGenHandler: ConceptHandler = {
       if (foundryTest) {
         files.push({ path: `test/${manifest.name}.t.sol`, content: foundryTest });
       }
-
-      // Store the output keyed by spec reference
-      await storage.put('outputs', spec, { spec, files });
 
       return { variant: 'ok', files };
     } catch (err: unknown) {

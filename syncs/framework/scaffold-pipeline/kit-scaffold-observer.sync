@@ -1,0 +1,16 @@
+# Record KitScaffoldGen completion in GenerationPlan
+
+sync ObserveKitScaffold [eager]
+  purpose { Track KitScaffoldGen run in GenerationPlan. }
+when {
+  KitScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "KitScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

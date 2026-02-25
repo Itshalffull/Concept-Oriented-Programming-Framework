@@ -1,0 +1,56 @@
+@category("devtools")
+@visibility("public")
+concept TransportAdapterScaffoldGen [T] {
+
+  purpose {
+    Generate ConceptTransport adapter implementation scaffolds for
+    various communication protocols: HTTP, WebSocket, Worker,
+    and in-process.
+  }
+
+  state {
+    adapters: set T
+    name: T -> String
+    protocol: T -> String
+  }
+
+  actions {
+    action generate(name: String, protocol: String) {
+      description {
+        Generate a transport adapter with invoke, query, and
+        health methods for the specified protocol.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Transport adapter scaffold generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action preview(name: String, protocol: String) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses
+        Emitter content-addressing to classify each file as
+        new, changed, or unchanged.
+      }
+      -> cached() {
+        BuildCache reports inputs unchanged since the last
+        successful run. No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "TransportAdapterScaffoldGen"
+        inputKind: "TransportConfig"
+        outputKind: "TransportAdapter"
+        capabilities: ["http", "websocket", "worker", "in-process"]
+      }
+    }
+  }
+}

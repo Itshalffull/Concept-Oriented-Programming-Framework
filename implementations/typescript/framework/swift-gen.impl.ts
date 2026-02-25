@@ -414,6 +414,16 @@ function generateSwiftStepCode(
 // --- Handler ---
 
 export const swiftGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'SwiftGen',
+      inputKind: 'ConceptManifest',
+      outputKind: 'SwiftSource',
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+    };
+  },
+
   async generate(input, storage) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
@@ -434,9 +444,6 @@ export const swiftGenHandler: ConceptHandler = {
       if (conformanceTest) {
         files.push({ path: `${manifest.name}/ConformanceTests.swift`, content: conformanceTest });
       }
-
-      // Store the output keyed by spec reference
-      await storage.put('outputs', spec, { spec, files });
 
       return { variant: 'ok', files };
     } catch (err: unknown) {

@@ -1,0 +1,11 @@
+# Route ConceptScaffoldGen file output through Emitter
+
+sync EmitConceptScaffoldFiles [eager]
+  purpose { Write generated concept spec through Emitter. }
+when {
+  ConceptScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

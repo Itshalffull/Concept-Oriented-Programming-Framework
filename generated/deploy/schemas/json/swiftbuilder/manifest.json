@@ -1,0 +1,1004 @@
+{
+  "uri": "urn:copf/SwiftBuilder",
+  "name": "SwiftBuilder",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "packagePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "buildDir",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "configuration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "targetTriple",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "additionalFlags",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "list",
+              "inner": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "testSuite",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "xcresultPath",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "builds",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "build",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "mode",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "features",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  }
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "build",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Run swift build with the resolved toolchain \n Configuration maps from COPF modes : \n debug -> swift build ( default ) \n release -> swift build c release \n Executor strategy ( from deploy manifest ) : \n local -> invoke swiftc directly on host \n remote -> send source to remote build endpoint \n container -> run swift build in Docker container \n For cross compilation , passes triple to swiftc \n Packages result as framework or xcframework"
+        },
+        {
+          "tag": "compilationError",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "file",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "line",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "swiftc reported errors"
+        },
+        {
+          "tag": "linkerError",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compilation succeeded but linking failed \n Common for missing platform SDKs"
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "toolchainPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "skipped",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "duration",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Run swift test against the built product \n Parses XCTest swift testing output"
+        },
+        {
+          "tag": "testFailure",
+          "fields": [
+            {
+              "name": "passed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failures",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "test",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Some tests failed Parses failure messages from \n test runner output"
+        }
+      ]
+    },
+    {
+      "name": "package",
+      "params": [
+        {
+          "name": "build",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifactPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Package built artifact Formats : \n framework -> framework bundle \n xcframework -> multi platform xcframework \n binary -> standalone executable \n library -> dylib so a"
+        },
+        {
+          "tag": "formatUnsupported",
+          "fields": [
+            {
+              "name": "format",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Requested format not available for this target"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : SwiftBuilder \n language : swift \n capabilities : [ framework , xcframework , binary , \n library ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after build, test behaves correctly",
+      "setup": [
+        {
+          "action": "build",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "./generated/swift/password"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/bin/swiftc"
+              }
+            },
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "linux-arm64"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "mode",
+                    "value": {
+                      "kind": "literal",
+                      "value": "release"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "artifactPath",
+              "value": {
+                "kind": "literal",
+                "value": ".copf-artifacts/swift/password"
+              }
+            },
+            {
+              "name": "artifactHash",
+              "value": {
+                "kind": "literal",
+                "value": "sha256:abc"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "test",
+          "inputs": [
+            {
+              "name": "build",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "toolchainPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/bin/swiftc"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "passed",
+              "value": {
+                "kind": "literal",
+                "value": 12
+              }
+            },
+            {
+              "name": "failed",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "skipped",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "duration",
+              "value": {
+                "kind": "literal",
+                "value": 1500
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SwiftBuilderState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SwiftBuilderEntry {\n  s: ID!\n  packagePath: String!\n  buildDir: String!\n  configuration: String!\n  targetTriple: String!\n  additionalFlags: [String!]!\n  testSuite: String!\n  xcresultPath: String!\n}\n\nextend type Query {\n  swiftbuilder_entry(s: ID!): SwiftBuilderEntry\n  swiftbuilder_entries: [SwiftBuilderEntry!]!\n}\n\ntype SwiftBuilderBuilds {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "build": {
+        "$id": "urn:copf/SwiftBuilder/build/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SwiftBuilder"
+          },
+          "action": {
+            "const": "build"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "features"
+                ]
+              }
+            },
+            "required": [
+              "source",
+              "toolchainPath",
+              "platform",
+              "config"
+            ]
+          }
+        }
+      },
+      "test": {
+        "$id": "urn:copf/SwiftBuilder/test/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SwiftBuilder"
+          },
+          "action": {
+            "const": "test"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "toolchainPath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "toolchainPath"
+            ]
+          }
+        }
+      },
+      "package": {
+        "$id": "urn:copf/SwiftBuilder/package/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SwiftBuilder"
+          },
+          "action": {
+            "const": "package"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "build": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "build",
+              "format"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/SwiftBuilder/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/SwiftBuilder"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "build": {
+        "ok": {
+          "$id": "urn:copf/SwiftBuilder/build/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "type": "string"
+                },
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "build",
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "compilationError": {
+          "$id": "urn:copf/SwiftBuilder/build/completion/compilationError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "compilationError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "line": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "file",
+                      "line",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        },
+        "linkerError": {
+          "$id": "urn:copf/SwiftBuilder/build/completion/linkerError",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "build"
+            },
+            "variant": {
+              "const": "linkerError"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "test": {
+        "ok": {
+          "$id": "urn:copf/SwiftBuilder/test/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "duration": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "skipped",
+                "duration"
+              ]
+            }
+          }
+        },
+        "testFailure": {
+          "$id": "urn:copf/SwiftBuilder/test/completion/testFailure",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "test"
+            },
+            "variant": {
+              "const": "testFailure"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "passed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "test": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "test",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "passed",
+                "failed",
+                "failures"
+              ]
+            }
+          }
+        }
+      },
+      "package": {
+        "ok": {
+          "$id": "urn:copf/SwiftBuilder/package/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifactPath": {
+                  "type": "string"
+                },
+                "artifactHash": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifactPath",
+                "artifactHash"
+              ]
+            }
+          }
+        },
+        "formatUnsupported": {
+          "$id": "urn:copf/SwiftBuilder/package/completion/formatUnsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "package"
+            },
+            "variant": {
+              "const": "formatUnsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "format": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "format"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/SwiftBuilder/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/SwiftBuilder"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Compile , test , and package Swift concept implementations \n Owns Swift specific build logic : Swift Package Manager \n invocation , test runner integration , framework packaging , \n and XCFramework generation for multi platform Supports \n local , remote , and container based execution strategies \n configured via the deploy manifest executor section"
+}

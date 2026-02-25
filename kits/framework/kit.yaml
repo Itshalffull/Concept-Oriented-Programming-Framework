@@ -1,0 +1,80 @@
+# kits/framework/kit.yaml
+kit:
+  name: framework
+  version: 0.1.0
+  description: >
+    Core framework generation kit for COPF. Provides concept-to-code
+    generators that transform parsed concept ASTs into language-neutral
+    manifests and then into language-specific skeleton code. Each
+    generator self-registers with PluginRegistry so the generation kit's
+    KindSystem can auto-populate transformation edges.
+
+concepts:
+  # --- Coordination Concept ---
+  SchemaGen:
+    spec: ../../specs/framework/schema-gen.concept
+    params:
+      S: { as: spec-ref, description: "Reference to a concept specification" }
+
+  # --- Language Generator Providers (load what you need) ---
+  TypeScriptGen:
+    spec: ../../specs/framework/typescript-gen.concept
+    params:
+      S: { as: spec-ref, description: "Reference to a concept specification" }
+    optional: true
+
+  RustGen:
+    spec: ../../specs/framework/rust-gen.concept
+    params:
+      S: { as: spec-ref, description: "Reference to a concept specification" }
+    optional: true
+
+  SwiftGen:
+    spec: ../../specs/framework/swift-gen.concept
+    params:
+      S: { as: spec-ref, description: "Reference to a concept specification" }
+    optional: true
+
+  SolidityGen:
+    spec: ../../specs/framework/solidity-gen.concept
+    params:
+      S: { as: spec-ref, description: "Reference to a concept specification" }
+    optional: true
+
+syncs:
+  required:
+    # Registration syncs — each generator self-registers with PluginRegistry
+    - path: ./syncs/registration/register-schema-gen.sync
+      description: "SchemaGen/register → PluginRegistry/register"
+
+    - path: ./syncs/registration/register-typescript-gen.sync
+      description: "TypeScriptGen/register → PluginRegistry/register"
+
+    - path: ./syncs/registration/register-rust-gen.sync
+      description: "RustGen/register → PluginRegistry/register"
+
+    - path: ./syncs/registration/register-swift-gen.sync
+      description: "SwiftGen/register → PluginRegistry/register"
+
+    - path: ./syncs/registration/register-solidity-gen.sync
+      description: "SolidityGen/register → PluginRegistry/register"
+
+uses:
+  - kit: generation
+    concepts:
+      - name: Emitter
+        params:
+          F: { as: emitter-file-ref, description: "Reference to a generated file" }
+      - name: KindSystem
+        params:
+          K: { as: kind-ref, description: "Reference to an IR/artifact kind" }
+      - name: GenerationPlan
+        params:
+          R: { as: run-ref, description: "Reference to a generation run" }
+      - name: BuildCache
+        params:
+          E: { as: cache-entry-ref, description: "Reference to a cache entry" }
+
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

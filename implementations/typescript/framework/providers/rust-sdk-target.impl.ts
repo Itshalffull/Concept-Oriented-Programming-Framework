@@ -283,6 +283,18 @@ function generateLibRs(projections: ProjectionEntry[]): string {
 // --- Concept Handler ---
 
 export const rustSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'RustSdkTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'RustSdk',
+      capabilities: JSON.stringify(['client', 'types', 'cargo']),
+      targetKey: 'rust',
+      providerType: 'sdk',
+    };
+  },
+
   /**
    * Generate Rust SDK client files from ConceptManifest projections.
    *

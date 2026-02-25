@@ -4,6 +4,18 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const pulumiProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'PulumiProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'PulumiStack',
+      capabilities: JSON.stringify(['typescript', 'stack', 'config']),
+      providerKey: 'pulumi',
+      providerType: 'iac',
+    };
+  },
+
   async generate(input, storage) {
     const plan = input.plan as string;
 

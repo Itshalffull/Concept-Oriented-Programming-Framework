@@ -1,0 +1,21 @@
+# Register TypeScriptGen with PluginRegistry — Section 10.1
+
+sync RegisterTypeScriptGen [eager]
+when {
+  TypeScriptGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "TypeScriptGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

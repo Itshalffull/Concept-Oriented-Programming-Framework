@@ -21,6 +21,7 @@ import {
   toCamelCase,
   toPascalCase,
   generateFileHeader,
+  generateMarkdownFileHeader,
   buildConceptGroups,
   getHierarchicalTrait,
   type ConceptGroup,
@@ -201,6 +202,10 @@ function generateSkillMd(
   lines.push('---');
   lines.push('');
 
+  // Generated-file notice (HTML comment, invisible in rendered markdown)
+  const headerConceptName = group.concepts.length === 1 ? (conceptName || group.name) : group.name;
+  lines.push(generateMarkdownFileHeader('claude-skills', headerConceptName));
+
   // --- Markdown Body ---
   if (group.concepts.length === 1 && workflow) {
     renderWorkflowSkill(lines, manifest, workflow, annot, hierConfig);
@@ -320,11 +325,12 @@ function renderWorkflowSkill(
     }
 
     // Per-action enrichment from annotations (rendered by Renderer)
+    // Only examples are rendered inline per-step; references are rendered
+    // once in the post-step enrichment section to avoid duplicate headings.
     const actionAnnot = annot?.actions?.[step.action];
     if (actionAnnot) {
       const actionEnrichment: Record<string, unknown> = {};
       if (actionAnnot.examples) actionEnrichment.examples = actionAnnot.examples;
-      if (actionAnnot.references) actionEnrichment.references = actionAnnot.references;
       if (Object.keys(actionEnrichment).length > 0) {
         const { output } = renderContent(actionEnrichment, fmt);
         if (output) lines.push(output);
@@ -565,6 +571,18 @@ function generateCommandRunner(
 // --- Concept Handler ---
 
 export const claudeSkillsTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'ClaudeSkillsTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'ClaudeSkills',
+      capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment']),
+      targetKey: 'claude-skills',
+      providerType: 'target',
+    };
+  },
+
   /**
    * Generate Claude Code SKILL.md files and TypeScript command runners.
    *
@@ -661,7 +679,8 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
       if (companionDocs) {
         for (const doc of companionDocs) {
           if (doc.content && doc.path) {
-            files.push({ path: `${kebab}/${doc.path}`, content: doc.content });
+            const mdHeader = doc.path.endsWith('.md') ? generateMarkdownFileHeader('claude-skills', name) : '';
+            files.push({ path: `${kebab}/${doc.path}`, content: mdHeader + doc.content });
           }
         }
       }
@@ -672,7 +691,8 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
         const refDocs = filterByTier(references, 'reference');
         for (const ref of refDocs) {
           if (ref.content && ref.path) {
-            files.push({ path: `${kebab}/${ref.path}`, content: ref.content });
+            const mdHeader = ref.path.endsWith('.md') ? generateMarkdownFileHeader('claude-skills', name) : '';
+            files.push({ path: `${kebab}/${ref.path}`, content: mdHeader + ref.content });
           }
         }
       }

@@ -1,0 +1,15 @@
+# Route IaC/emit to TerraformProvider on cache miss — Section 3.8
+
+sync TerraformOnCacheMiss [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "terraform" ]
+    => [ output: ?output; fileCount: ?count ]
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => [ previousHash: ?prev ]
+}
+where {
+  filter(?stepKey == ?plan)
+}
+then {
+  TerraformProvider/generate: [ plan: ?plan ]
+}

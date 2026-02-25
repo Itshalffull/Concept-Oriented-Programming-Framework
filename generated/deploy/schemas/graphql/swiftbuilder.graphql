@@ -1,0 +1,25 @@
+type SwiftBuilderState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type SwiftBuilderEntry {
+  s: ID!
+  packagePath: String!
+  buildDir: String!
+  configuration: String!
+  targetTriple: String!
+  additionalFlags: [String!]!
+  testSuite: String!
+  xcresultPath: String!
+}
+
+extend type Query {
+  swiftbuilder_entry(s: ID!): SwiftBuilderEntry
+  swiftbuilder_entries: [SwiftBuilderEntry!]!
+}
+
+type SwiftBuilderBuilds {
+  s: ID!
+  value: ID!
+}

@@ -6,9 +6,10 @@ kit:
     Deployment orchestration for COPF applications. Provides
     deploy planning, progressive delivery, schema migrations,
     health verification, environment management, observability
-    injection, and immutable artifact management. Uses the
-    coordination + provider pattern for runtimes, secrets, and
-    infrastructure-as-code.
+    injection, immutable artifact management, and multi-language
+    build coordination. Uses the coordination + provider pattern
+    for runtimes, secrets, infrastructure-as-code, builders,
+    and toolchains.
 
 concepts:
   # --- Orchestration Concepts ---
@@ -68,7 +69,17 @@ concepts:
     params:
       G: { as: gitops-manifest-ref, description: "Reference to a GitOps manifest" }
 
-  # --- Runtime Provider Concepts ---
+  Builder:
+    spec: ./concepts/builder.concept
+    params:
+      B: { as: build-ref, description: "Reference to a build record" }
+
+  Toolchain:
+    spec: ./concepts/toolchain.concept
+    params:
+      T: { as: tool-ref, description: "Reference to a resolved toolchain" }
+
+  # --- Runtime Provider Plugins (load what you need) ---
   LambdaRuntime:
     spec: ./concepts/providers/lambda-runtime.concept
     params:
@@ -123,7 +134,7 @@ concepts:
       L: { as: local-process-ref, description: "Reference to a local process" }
     optional: true
 
-  # --- Secret Provider Concepts ---
+  # --- Secret Provider Plugins (load what you need) ---
   VaultProvider:
     spec: ./concepts/providers/vault-provider.concept
     params:
@@ -154,7 +165,7 @@ concepts:
       D: { as: dotenv-file-ref, description: "Reference to a .env file entry" }
     optional: true
 
-  # --- IaC Provider Concepts ---
+  # --- IaC Provider Plugins (file-generating; synced with generation kit) ---
   PulumiProvider:
     spec: ./concepts/providers/pulumi-provider.concept
     params:
@@ -179,7 +190,7 @@ concepts:
       I: { as: compose-iac-ref, description: "Reference to a Docker Compose IaC file" }
     optional: true
 
-  # --- GitOps Provider Concepts ---
+  # --- GitOps Provider Plugins (file-generating; synced with generation kit) ---
   ArgoCDProvider:
     spec: ./concepts/providers/argocd-provider.concept
     params:
@@ -190,6 +201,56 @@ concepts:
     spec: ./concepts/providers/flux-provider.concept
     params:
       F: { as: flux-kustomization-ref, description: "Reference to a Flux kustomization" }
+    optional: true
+
+  # --- Builder Provider Plugins (load what you need) ---
+  TypeScriptBuilder:
+    spec: ./concepts/providers/typescript-builder.concept
+    params:
+      N: { as: ts-build-ref, description: "Reference to a TypeScript build" }
+    optional: true
+
+  SwiftBuilder:
+    spec: ./concepts/providers/swift-builder.concept
+    params:
+      S: { as: swift-build-ref, description: "Reference to a Swift build" }
+    optional: true
+
+  RustBuilder:
+    spec: ./concepts/providers/rust-builder.concept
+    params:
+      R: { as: rust-build-ref, description: "Reference to a Rust build" }
+    optional: true
+
+  SolidityBuilder:
+    spec: ./concepts/providers/solidity-builder.concept
+    params:
+      L: { as: solidity-build-ref, description: "Reference to a Solidity build" }
+    optional: true
+
+  # --- Toolchain Provider Plugins (load what you need) ---
+  TypeScriptToolchain:
+    spec: ./concepts/providers/typescript-toolchain.concept
+    params:
+      N: { as: ts-toolchain-ref, description: "Reference to a TypeScript toolchain" }
+    optional: true
+
+  SwiftToolchain:
+    spec: ./concepts/providers/swift-toolchain.concept
+    params:
+      S: { as: swift-toolchain-ref, description: "Reference to a Swift toolchain" }
+    optional: true
+
+  RustToolchain:
+    spec: ./concepts/providers/rust-toolchain.concept
+    params:
+      R: { as: rust-toolchain-ref, description: "Reference to a Rust toolchain" }
+    optional: true
+
+  SolidityToolchain:
+    spec: ./concepts/providers/solidity-toolchain.concept
+    params:
+      L: { as: solidity-toolchain-ref, description: "Reference to a Solidity toolchain" }
     optional: true
 
 syncs:
@@ -295,64 +356,235 @@ syncs:
       description: >
         Create deploy plan after environment resolved.
 
-  # --- Routing Syncs (activate per loaded provider) ---
+    - path: ./syncs/build/toolchain-before-build.sync
+      name: ToolchainBeforeBuild
+      description: >
+        Resolve toolchain before Builder runs for each
+        configured build target language and platform.
+
+    - path: ./syncs/build/build-after-toolchain.sync
+      name: BuildAfterToolchain
+      description: >
+        Start builds once toolchain is resolved for a
+        language and platform.
+
+    - path: ./syncs/build/store-after-build.sync
+      name: StoreAfterBuild
+      description: >
+        Store built artifacts in content-addressed Artifact
+        after Builder completes compilation.
+
+  # --- Plugin Syncs (activate per loaded provider) ---
   integration:
-    # Runtime routing
+    # ─── Runtime Plugin: LambdaRuntime ───
     - path: ./syncs/routing/route-to-lambda.sync
       name: RouteLambda
     - path: ./syncs/routing/route-lambda-deploy.sync
       name: RouteLambdaDeploy
     - path: ./syncs/routing/lambda-provision-complete.sync
       name: LambdaProvisionComplete
+
+    # ─── Runtime Plugin: EcsRuntime ───
     - path: ./syncs/routing/route-to-ecs.sync
       name: RouteEcs
+
+    # ─── Runtime Plugin: CloudRunRuntime ───
     - path: ./syncs/routing/route-to-cloud-run.sync
       name: RouteCloudRun
+
+    # ─── Runtime Plugin: GcfRuntime ───
     - path: ./syncs/routing/route-to-gcf.sync
       name: RouteGcf
+
+    # ─── Runtime Plugin: CloudflareRuntime ───
     - path: ./syncs/routing/route-to-cloudflare.sync
       name: RouteCloudflare
+
+    # ─── Runtime Plugin: VercelRuntime ───
     - path: ./syncs/routing/route-to-vercel.sync
       name: RouteVercel
+
+    # ─── Runtime Plugin: K8sRuntime ───
     - path: ./syncs/routing/route-to-k8s.sync
       name: RouteK8s
+
+    # ─── Runtime Plugin: DockerComposeRuntime ───
     - path: ./syncs/routing/route-to-docker-compose.sync
       name: RouteDockerCompose
+
+    # ─── Runtime Plugin: LocalRuntime ───
     - path: ./syncs/routing/route-to-local.sync
       name: RouteLocal
 
-    # Secret routing
+    # ─── Secret Plugin: VaultProvider ───
     - path: ./syncs/routing/route-to-vault.sync
       name: RouteVault
-    - path: ./syncs/routing/route-to-aws-sm.sync
-      name: RouteAwsSm
     - path: ./syncs/routing/vault-resolved.sync
       name: VaultResolved
+
+    # ─── Secret Plugin: AwsSmProvider ───
+    - path: ./syncs/routing/route-to-aws-sm.sync
+      name: RouteAwsSm
+
+    # ─── Secret Plugin: GcpSmProvider ───
     - path: ./syncs/routing/route-to-gcp-sm.sync
       name: RouteGcpSm
+
+    # ─── Secret Plugin: EnvProvider ───
     - path: ./syncs/routing/route-to-env.sync
       name: RouteEnv
+
+    # ─── Secret Plugin: DotenvProvider ───
     - path: ./syncs/routing/route-to-dotenv.sync
       name: RouteDotenv
 
-    # IaC routing
-    - path: ./syncs/routing/route-to-pulumi.sync
-      name: RoutePulumi
-    - path: ./syncs/routing/route-to-terraform.sync
-      name: RouteTerraform
+    # ─── IaC Plugin: PulumiProvider ───
+    # Generation syncs (cache-check → on-miss → emit → record-cache → observer)
+    - path: ./syncs/generation/pulumi-cache-check.sync
+      name: CheckCacheBeforePulumi
+    - path: ./syncs/generation/pulumi-on-miss.sync
+      name: PulumiOnCacheMiss
+    - path: ./syncs/generation/pulumi-emit.sync
+      name: EmitPulumiFiles
+    - path: ./syncs/generation/pulumi-record-cache.sync
+      name: RecordCachePulumi
+    - path: ./syncs/generation/pulumi-observer.sync
+      name: ObservePulumi
+    # Apply/teardown routing (non-generation)
     - path: ./syncs/routing/route-pulumi-apply.sync
       name: RoutePulumiApply
     - path: ./syncs/routing/pulumi-apply-complete.sync
       name: PulumiApplyComplete
-    - path: ./syncs/routing/route-to-cloudformation.sync
-      name: RouteCloudFormation
-    - path: ./syncs/routing/route-to-docker-compose-iac.sync
-      name: RouteDockerComposeIac
 
-    # GitOps routing
-    - path: ./syncs/routing/route-to-argocd.sync
-      name: RouteArgoCD
-    - path: ./syncs/routing/route-to-flux.sync
-      name: RouteFlux
+    # ─── IaC Plugin: TerraformProvider ───
+    - path: ./syncs/generation/terraform-cache-check.sync
+      name: CheckCacheBeforeTerraform
+    - path: ./syncs/generation/terraform-on-miss.sync
+      name: TerraformOnCacheMiss
+    - path: ./syncs/generation/terraform-emit.sync
+      name: EmitTerraformFiles
+    - path: ./syncs/generation/terraform-record-cache.sync
+      name: RecordCacheTerraform
+    - path: ./syncs/generation/terraform-observer.sync
+      name: ObserveTerraform
+
+    # ─── IaC Plugin: CloudFormationProvider ───
+    - path: ./syncs/generation/cloudformation-cache-check.sync
+      name: CheckCacheBeforeCloudFormation
+    - path: ./syncs/generation/cloudformation-on-miss.sync
+      name: CloudFormationOnCacheMiss
+    - path: ./syncs/generation/cloudformation-emit.sync
+      name: EmitCloudFormationFiles
+    - path: ./syncs/generation/cloudformation-record-cache.sync
+      name: RecordCacheCloudFormation
+    - path: ./syncs/generation/cloudformation-observer.sync
+      name: ObserveCloudFormation
+
+    # ─── IaC Plugin: DockerComposeIacProvider ───
+    - path: ./syncs/generation/docker-compose-iac-cache-check.sync
+      name: CheckCacheBeforeDockerComposeIac
+    - path: ./syncs/generation/docker-compose-iac-on-miss.sync
+      name: DockerComposeIacOnCacheMiss
+    - path: ./syncs/generation/docker-compose-iac-emit.sync
+      name: EmitDockerComposeIacFiles
+    - path: ./syncs/generation/docker-compose-iac-record-cache.sync
+      name: RecordCacheDockerComposeIac
+    - path: ./syncs/generation/docker-compose-iac-observer.sync
+      name: ObserveDockerComposeIac
+
+    # ─── GitOps Plugin: ArgoCDProvider ───
+    - path: ./syncs/generation/argocd-cache-check.sync
+      name: CheckCacheBeforeArgoCD
+    - path: ./syncs/generation/argocd-on-miss.sync
+      name: ArgoCDOnCacheMiss
+    - path: ./syncs/generation/argocd-emit.sync
+      name: EmitArgoCDFiles
+    - path: ./syncs/generation/argocd-record-cache.sync
+      name: RecordCacheArgoCD
+    - path: ./syncs/generation/argocd-observer.sync
+      name: ObserveArgoCD
+
+    # ─── GitOps Plugin: FluxProvider ───
+    - path: ./syncs/generation/flux-cache-check.sync
+      name: CheckCacheBeforeFlux
+    - path: ./syncs/generation/flux-on-miss.sync
+      name: FluxOnCacheMiss
+    - path: ./syncs/generation/flux-emit.sync
+      name: EmitFluxFiles
+    - path: ./syncs/generation/flux-record-cache.sync
+      name: RecordCacheFlux
+    - path: ./syncs/generation/flux-observer.sync
+      name: ObserveFlux
+
+    # ─── Builder Plugin: TypeScriptBuilder ───
+    - path: ./syncs/routing/route-builder-to-typescript.sync
+      name: RouteBuilderTypeScript
+    - path: ./syncs/routing/typescript-builder-complete.sync
+      name: TypeScriptBuilderComplete
+    - path: ./syncs/registration/register-typescript-builder.sync
+      name: RegisterTypeScriptBuilder
+
+    # ─── Builder Plugin: SwiftBuilder ───
+    - path: ./syncs/routing/route-builder-to-swift.sync
+      name: RouteBuilderSwift
+    - path: ./syncs/routing/swift-builder-complete.sync
+      name: SwiftBuilderComplete
+    - path: ./syncs/registration/register-swift-builder.sync
+      name: RegisterSwiftBuilder
+
+    # ─── Builder Plugin: RustBuilder ───
+    - path: ./syncs/routing/route-builder-to-rust.sync
+      name: RouteBuilderRust
+    - path: ./syncs/routing/rust-builder-complete.sync
+      name: RustBuilderComplete
+    - path: ./syncs/registration/register-rust-builder.sync
+      name: RegisterRustBuilder
+
+    # ─── Builder Plugin: SolidityBuilder ───
+    - path: ./syncs/routing/route-builder-to-solidity.sync
+      name: RouteBuilderSolidity
+    - path: ./syncs/routing/solidity-builder-complete.sync
+      name: SolidityBuilderComplete
+    - path: ./syncs/registration/register-solidity-builder.sync
+      name: RegisterSolidityBuilder
+
+    # ─── Toolchain Plugin: TypeScriptToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-typescript.sync
+      name: RouteToolchainTypeScript
+    - path: ./syncs/routing/typescript-toolchain-complete.sync
+      name: TypeScriptToolchainComplete
+    - path: ./syncs/registration/register-typescript-toolchain.sync
+      name: RegisterTypeScriptToolchain
+
+    # ─── Toolchain Plugin: SwiftToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-swift.sync
+      name: RouteToolchainSwift
+    - path: ./syncs/routing/swift-toolchain-complete.sync
+      name: SwiftToolchainComplete
+    - path: ./syncs/registration/register-swift-toolchain.sync
+      name: RegisterSwiftToolchain
+
+    # ─── Toolchain Plugin: RustToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-rust.sync
+      name: RouteToolchainRust
+    - path: ./syncs/routing/rust-toolchain-complete.sync
+      name: RustToolchainComplete
+    - path: ./syncs/registration/register-rust-toolchain.sync
+      name: RegisterRustToolchain
+
+    # ─── Toolchain Plugin: SolidityToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-solidity.sync
+      name: RouteToolchainSolidity
+    - path: ./syncs/routing/solidity-toolchain-complete.sync
+      name: SolidityToolchainComplete
+    - path: ./syncs/registration/register-solidity-toolchain.sync
+      name: RegisterSolidityToolchain
+
+uses:
+  - kit: generation
+    concepts:
+      - name: Emitter
+      - name: BuildCache
+      - name: GenerationPlan
 
 dependencies: []

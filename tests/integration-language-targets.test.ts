@@ -349,7 +349,7 @@ describe('Language Target Integration — Language Idioms', () => {
 // ============================================================
 
 describe('Language Target Integration — Storage Persistence', () => {
-  it('each generator stores its output in storage', async () => {
+  it('each generator returns files without side-effecting storage', async () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);
 
@@ -360,12 +360,17 @@ describe('Language Target Integration — Storage Persistence', () => {
         storage,
       );
       expect(result.variant).toBe('ok');
+      expect(
+        (result.files as { path: string; content: string }[]).length,
+        `${gen.name} should return generated files`,
+      ).toBeGreaterThanOrEqual(1);
 
+      // Generators should not store outputs directly — BuildCache handles this
       const stored = await storage.find('outputs');
       expect(
         stored.length,
-        `${gen.name} should persist output to storage`,
-      ).toBeGreaterThanOrEqual(1);
+        `${gen.name} should not write to storage.outputs (BuildCache handles caching)`,
+      ).toBe(0);
     }
   });
 

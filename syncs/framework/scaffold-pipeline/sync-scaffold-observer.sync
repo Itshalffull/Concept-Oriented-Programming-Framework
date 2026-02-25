@@ -1,0 +1,16 @@
+# Record SyncScaffoldGen completion in GenerationPlan
+
+sync ObserveSyncScaffold [eager]
+  purpose { Track SyncScaffoldGen run in GenerationPlan. }
+when {
+  SyncScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files; filesGenerated: ?count ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: "SyncScaffoldGen";
+    status: "done";
+    filesProduced: ?count;
+    cached: false
+  ]
+}

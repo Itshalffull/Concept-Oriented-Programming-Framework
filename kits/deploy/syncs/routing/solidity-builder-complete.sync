@@ -1,0 +1,11 @@
+# SolidityBuilder build completion propagates back to Builder — Architecture doc Section 3.8
+
+sync SolidityBuilderComplete [eager]
+when {
+  SolidityBuilder/build: [ source: ?src; platform: ?plat ]
+    => [ build: ?l; artifactPath: ?path; artifactHash: ?hash ]
+}
+then {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: "solidity"; platform: ?plat; config: ?cfg ]
+}

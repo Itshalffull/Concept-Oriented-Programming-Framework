@@ -168,3 +168,14 @@ syncs:
   - path: syncs/app/echo.sync
     engine: engine
     annotations: [eager]
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: vitest
+    testTypes:
+      - unit
+      - integration
+      - e2e
+    e2eRunner: playwright
+    versionConstraint: ">=5.4"

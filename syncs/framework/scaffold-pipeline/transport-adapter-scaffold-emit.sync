@@ -1,0 +1,11 @@
+# Route TransportAdapterScaffoldGen file output through Emitter
+
+sync EmitTransportAdapterScaffoldFiles [eager]
+  purpose { Write generated transport adapter through Emitter. }
+when {
+  TransportAdapterScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+}
+then {
+  Emitter/writeBatch: [ files: ?files ]
+}

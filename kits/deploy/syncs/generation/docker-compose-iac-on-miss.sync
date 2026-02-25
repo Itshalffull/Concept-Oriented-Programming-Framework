@@ -1,0 +1,15 @@
+# Route IaC/emit to DockerComposeIacProvider on cache miss — Section 3.8
+
+sync DockerComposeIacOnCacheMiss [eager]
+when {
+  IaC/emit: [ plan: ?plan; provider: "docker-compose" ]
+    => [ output: ?output; fileCount: ?count ]
+  BuildCache/check: [ stepKey: ?stepKey ]
+    => [ previousHash: ?prev ]
+}
+where {
+  filter(?stepKey == ?plan)
+}
+then {
+  DockerComposeIacProvider/generate: [ plan: ?plan ]
+}

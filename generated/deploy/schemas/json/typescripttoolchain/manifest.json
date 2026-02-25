@@ -1,0 +1,552 @@
+{
+  "uri": "urn:copf/TypeScriptToolchain",
+  "name": "TypeScriptToolchain",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "tscPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tscVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "nodePath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "nodeVersion",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "bundler",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "version",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "packageManager",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "toolchains",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "versionConstraint",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "toolchain",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "tscPath",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Locate tsc ( global or project local in node_modules bin ) \n Detect Node js version and bundler Return capabilities : \n esm , cjs , declaration-maps , composite-projects , \n bundler-resolution , etc"
+        },
+        {
+          "tag": "notInstalled",
+          "fields": [
+            {
+              "name": "installHint",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "tsc not found Hint : npm install -g typescript or \n npx tsc for project local"
+        },
+        {
+          "tag": "nodeVersionMismatch",
+          "fields": [
+            {
+              "name": "installed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "required",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Node js version too old for requested TypeScript features"
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "capabilities",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Return static metadata for PluginRegistry \n name : TypeScriptToolchain \n language : typescript \n capabilities : [ bundler-detection , package-manager , \n node-version-check ]"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, register behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "platform",
+              "value": {
+                "kind": "literal",
+                "value": "node-20"
+              }
+            },
+            {
+              "name": "versionConstraint",
+              "value": {
+                "kind": "literal",
+                "value": ">=5.7"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "toolchain",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "tscPath",
+              "value": {
+                "kind": "literal",
+                "value": "/usr/local/bin/tsc"
+              }
+            },
+            {
+              "name": "version",
+              "value": {
+                "kind": "literal",
+                "value": "5.7.2"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "esm"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "declaration-maps"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "register",
+          "inputs": [],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "TypeScriptToolchain"
+              }
+            },
+            {
+              "name": "language",
+              "value": {
+                "kind": "literal",
+                "value": "typescript"
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "variable",
+                "name": "caps"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "caps",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TypeScriptToolchainState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype TypeScriptToolchainEntry {\n  n: ID!\n  tscPath: String!\n  tscVersion: String!\n  nodePath: String!\n  nodeVersion: String!\n  bundler: JSON!\n  packageManager: String!\n}\n\nextend type Query {\n  typescripttoolchain_entry(n: ID!): TypeScriptToolchainEntry\n  typescripttoolchain_entries: [TypeScriptToolchainEntry!]!\n}\n\ntype TypeScriptToolchainToolchains {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:copf/TypeScriptToolchain/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeScriptToolchain"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "versionConstraint": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "platform",
+              "versionConstraint"
+            ]
+          }
+        }
+      },
+      "register": {
+        "$id": "urn:copf/TypeScriptToolchain/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/TypeScriptToolchain"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:copf/TypeScriptToolchain/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "toolchain": {
+                  "type": "string"
+                },
+                "tscPath": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "toolchain",
+                "tscPath",
+                "version",
+                "capabilities"
+              ]
+            }
+          }
+        },
+        "notInstalled": {
+          "$id": "urn:copf/TypeScriptToolchain/resolve/completion/notInstalled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "notInstalled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "installHint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "installHint"
+              ]
+            }
+          }
+        },
+        "nodeVersionMismatch": {
+          "$id": "urn:copf/TypeScriptToolchain/resolve/completion/nodeVersionMismatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptToolchain"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "nodeVersionMismatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "installed": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "installed",
+                "required"
+              ]
+            }
+          }
+        }
+      },
+      "register": {
+        "ok": {
+          "$id": "urn:copf/TypeScriptToolchain/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/TypeScriptToolchain"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "capabilities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "language",
+                "capabilities"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Resolve TypeScript compiler and bundler toolchains Owns \n TypeScript specific resolution : tsc version , Node js version , \n bundler detection ( esbuild , webpack , vite ) , and tsconfig \n target validation"
+}

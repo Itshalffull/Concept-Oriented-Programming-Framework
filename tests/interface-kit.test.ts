@@ -46,7 +46,7 @@ describe('Orchestration Concepts', () => {
     const ast = readConcept('projection.concept');
     expect(ast.name).toBe('Projection');
     expect(ast.typeParams).toEqual(['P']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(4);
     expect(ast.actions.map(a => a.name)).toEqual(['project', 'validate', 'diff', 'inferResources']);
     // project has 4 variants: ok, annotationError, unresolvedReference, traitConflict
@@ -129,7 +129,7 @@ describe('Orchestration Concepts', () => {
     const ast = readConcept('workflow.concept');
     expect(ast.name).toBe('Workflow');
     expect(ast.typeParams).toEqual(['W']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(2);
     expect(ast.actions.map(a => a.name)).toEqual(['define', 'render']);
     // define has 3 variants: ok, invalidAction, emptySteps
@@ -146,7 +146,7 @@ describe('Orchestration Concepts', () => {
     const ast = readConcept('annotation.concept');
     expect(ast.name).toBe('Annotation');
     expect(ast.typeParams).toEqual(['N']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(2);
     expect(ast.actions.map(a => a.name)).toEqual(['annotate', 'resolve']);
     // annotate has 2 variants: ok, invalidScope
@@ -219,7 +219,7 @@ describe('Target Provider Concepts', () => {
     const ast = readProvider('rest-target.concept');
     expect(ast.name).toBe('RestTarget');
     expect(ast.typeParams).toEqual(['R']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.actions[0].variants.length).toBeGreaterThanOrEqual(1);
@@ -231,7 +231,7 @@ describe('Target Provider Concepts', () => {
     const ast = readProvider('graphql-target.concept');
     expect(ast.name).toBe('GraphqlTarget');
     expect(ast.typeParams).toEqual(['Q']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants).toHaveLength(1);
@@ -241,7 +241,7 @@ describe('Target Provider Concepts', () => {
     const ast = readProvider('grpc-target.concept');
     expect(ast.name).toBe('GrpcTarget');
     expect(ast.typeParams).toEqual(['G']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants).toHaveLength(1);
@@ -251,7 +251,7 @@ describe('Target Provider Concepts', () => {
     const ast = readProvider('cli-target.concept');
     expect(ast.name).toBe('CliTarget');
     expect(ast.typeParams).toEqual(['C']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants).toHaveLength(1);
@@ -261,7 +261,7 @@ describe('Target Provider Concepts', () => {
     const ast = readProvider('mcp-target.concept');
     expect(ast.name).toBe('McpTarget');
     expect(ast.typeParams).toEqual(['M']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants).toHaveLength(1);
@@ -278,7 +278,7 @@ describe('Spec Provider Concepts', () => {
     const ast = readProvider('openapi-target.concept');
     expect(ast.name).toBe('OpenApiTarget');
     expect(ast.typeParams).toEqual(['O']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants).toHaveLength(1);
@@ -288,7 +288,7 @@ describe('Spec Provider Concepts', () => {
     const ast = readProvider('asyncapi-target.concept');
     expect(ast.name).toBe('AsyncApiTarget');
     expect(ast.typeParams).toEqual(['A']);
-    expect(ast.version).toBe(1);
+    expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants).toHaveLength(1);
@@ -384,7 +384,7 @@ describe('Bulk Concept Validation', () => {
       const ast = readConcept(file);
       expect(ast.name, `${file} should have a name`).toBeTruthy();
       expect(ast.typeParams.length, `${file} should have type params`).toBeGreaterThan(0);
-      expect(ast.version, `${file} should have @version`).toBe(1);
+      expect(ast.version, `${file} should have @version`).toBeGreaterThanOrEqual(1);
       expect(ast.actions.length, `${file} should have actions`).toBeGreaterThan(0);
       expect(ast.state.length, `${file} should have state`).toBeGreaterThan(0);
     }
@@ -393,7 +393,7 @@ describe('Bulk Concept Validation', () => {
       const ast = readProvider(file);
       expect(ast.name, `${file} should have a name`).toBeTruthy();
       expect(ast.typeParams.length, `${file} should have type params`).toBeGreaterThan(0);
-      expect(ast.version, `${file} should have @version`).toBe(1);
+      expect(ast.version, `${file} should have @version`).toBeGreaterThanOrEqual(1);
       expect(ast.actions.length, `${file} should have actions`).toBeGreaterThan(0);
       expect(ast.state.length, `${file} should have state`).toBeGreaterThan(0);
     }
@@ -759,7 +759,7 @@ describe('Kit YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(24);
+    expect(specPaths.length).toBe(26);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);
@@ -768,7 +768,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(35);
+    expect(syncPaths.length).toBe(38);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);

@@ -37,6 +37,18 @@ concept Artifact [A] {
       }
     }
 
+    action store(hash: String, location: String, concept: String, language: String, platform: String, metadata: option { toolchainVersion: String, buildMode: String, duration: Int }) {
+      -> ok(artifact: A) {
+        Store a content-addressed artifact produced by Builder.
+        If artifact with same hash already exists, return it
+        (deduplication). Records language, platform, and build
+        metadata for provenance.
+      }
+      -> alreadyExists(artifact: A) {
+        Artifact with this hash already stored. Idempotent.
+      }
+    }
+
     action resolve(hash: String) {
       -> ok(artifact: A, location: String) {
         Look up artifact by content hash. For rollback the

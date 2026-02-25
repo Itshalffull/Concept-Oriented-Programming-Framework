@@ -13,10 +13,10 @@ export const cloudFormationProviderHandler: ConceptHandler = {
     const stackId = `stack-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['template.yaml', 'parameters.json'];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, stackId, {
       stack: stackId,
       plan,
-      files: JSON.stringify(files),
       requiredCapabilities: requiredCapabilities ? JSON.stringify(requiredCapabilities) : '',
       status: 'generated',
       createdAt: new Date().toISOString(),

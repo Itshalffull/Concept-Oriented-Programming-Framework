@@ -1,0 +1,19 @@
+# Record HandlerScaffoldGen success in BuildCache
+
+sync RecordCacheHandlerScaffold [eager]
+  purpose { Cache HandlerScaffoldGen output for incremental rebuilds. }
+when {
+  HandlerScaffoldGen/generate: [ conceptName: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "HandlerScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

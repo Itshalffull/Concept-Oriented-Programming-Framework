@@ -5,6 +5,18 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const cloudformationProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'CloudFormationProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'CloudFormationTemplate',
+      capabilities: JSON.stringify(['yaml', 'stack', 'parameters']),
+      providerKey: 'cloudformation',
+      providerType: 'iac',
+    };
+  },
+
   async generate(input, storage) {
     const plan = input.plan as string;
 

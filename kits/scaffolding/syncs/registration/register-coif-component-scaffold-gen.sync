@@ -1,0 +1,21 @@
+# Register CoifComponentScaffoldGen with PluginRegistry
+
+sync RegisterCoifComponentScaffoldGen [eager]
+when {
+  CoifComponentScaffoldGen/register: []
+    => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      inputKind: ?inputKind;
+      outputKind: ?outputKind;
+      concept: "CoifComponentScaffoldGen";
+      action: "generate";
+      capabilities: ?caps
+    }
+  ]
+}

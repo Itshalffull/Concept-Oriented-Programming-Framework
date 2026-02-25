@@ -12,10 +12,10 @@ export const terraformProviderHandler: ConceptHandler = {
     const workspaceId = `ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['main.tf', 'variables.tf', 'outputs.tf', 'providers.tf'];
 
+    // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, workspaceId, {
       workspace: workspaceId,
       plan,
-      files: JSON.stringify(files),
       status: 'generated',
       locked: false,
       lockId: '',

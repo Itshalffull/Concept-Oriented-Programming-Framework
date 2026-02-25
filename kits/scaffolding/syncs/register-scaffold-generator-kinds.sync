@@ -1,0 +1,40 @@
+# RegisterScaffoldGeneratorKinds — scaffolding kit registration sync
+#
+# Auto-populate KindSystem edges from scaffold generator registrations.
+# Mirrors the generation kit's RegisterGeneratorKinds sync.
+# See generation kit syncs: register-generator-kinds.sync
+
+sync RegisterScaffoldGeneratorKinds [eager]
+  purpose { Auto-populate KindSystem edges from scaffold generator registrations. }
+when {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: ?meta
+  ] => ok(plugin: ?p)
+}
+where {
+  bind(?meta.inputKind as ?inputKind)
+  bind(?meta.outputKind as ?outputKind)
+  bind(?meta.name as ?transformName)
+  bind(?meta.concept as ?concept)
+  any(
+    ?concept = "KitScaffoldGen";
+    ?concept = "DeployScaffoldGen";
+    ?concept = "InterfaceScaffoldGen";
+    ?concept = "ConceptScaffoldGen";
+    ?concept = "SyncScaffoldGen";
+    ?concept = "HandlerScaffoldGen";
+    ?concept = "StorageAdapterScaffoldGen";
+    ?concept = "TransportAdapterScaffoldGen";
+    ?concept = "CoifComponentScaffoldGen";
+    ?concept = "CoifThemeScaffoldGen"
+  )
+}
+then {
+  KindSystem/connect: [
+    from: ?inputKind;
+    to: ?outputKind;
+    relation: "scaffolds_to";
+    transformName: ?transformName
+  ]
+}

@@ -1,0 +1,19 @@
+# Record SyncScaffoldGen success in BuildCache
+
+sync RecordCacheSyncScaffold [eager]
+  purpose { Cache SyncScaffoldGen output for incremental rebuilds. }
+when {
+  SyncScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "SyncScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

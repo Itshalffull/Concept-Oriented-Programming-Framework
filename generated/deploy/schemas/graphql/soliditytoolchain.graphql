@@ -1,0 +1,23 @@
+type SolidityToolchainState {
+  """All ls in this concept"""
+  ls: [ID!]!
+}
+
+type SolidityToolchainEntry {
+  l: ID!
+  solcPath: String!
+  solcVersion: String!
+  evmVersion: String!
+  foundryPath: String!
+  hardhatPath: String!
+}
+
+extend type Query {
+  soliditytoolchain_entry(l: ID!): SolidityToolchainEntry
+  soliditytoolchain_entries: [SolidityToolchainEntry!]!
+}
+
+type SolidityToolchainToolchains {
+  l: ID!
+  value: ID!
+}

@@ -1,0 +1,19 @@
+# Record ConceptScaffoldGen success in BuildCache
+
+sync RecordCacheConceptScaffold [eager]
+  purpose { Cache ConceptScaffoldGen output for incremental rebuilds. }
+when {
+  ConceptScaffoldGen/generate: [ name: ?name ]
+    => [ files: ?files ]
+  Emitter/writeBatch: []
+    => [ results: ?results ]
+}
+then {
+  BuildCache/record: [
+    stepKey: "ConceptScaffoldGen";
+    inputHash: ?name;
+    outputHash: ?name;
+    sourceLocator: ?name;
+    deterministic: true
+  ]
+}

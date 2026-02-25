@@ -1,0 +1,135 @@
+@version(1)
+concept Toolchain [T] {
+
+  purpose {
+    Coordinate tool resolution across languages and platforms.
+    Owns the resolved-tool registry: what tools are available,
+    their versions, paths, and capabilities. Provider-agnostic —
+    Builder invokes Toolchain actions, and integration syncs
+    route to the active language provider concept.
+  }
+
+  state {
+    tools: set T
+    registry {
+      language: T -> String
+      platform: T -> String
+      category: T -> String
+      toolName: T -> option String
+      version: T -> String
+      path: T -> String
+      capabilities: T -> list String
+      resolvedAt: T -> DateTime
+      status: T -> String
+    }
+    invocation {
+      command: T -> String
+      args: T -> list String
+      outputFormat: T -> String
+      configFile: T -> option String
+      env: T -> option map String String
+    }
+    constraints {
+      versionRange: T -> option String
+      requiredCapabilities: T -> option list String
+    }
+  }
+
+  actions {
+    action resolve(language: String, platform: String, versionConstraint: option String, category: option String, toolName: option String) {
+      -> ok(tool: T, version: String, path: String, capabilities: list String, invocation: { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }) {
+        Resolve a toolchain for the given language and platform.
+        Returns both the tool location AND how to invoke it.
+        Completion arrives after the provider concept finishes
+        actual resolution (checking PATH, version validation,
+        download if configured). Toolchain records the result
+        in its registry.
+
+        If category is provided, resolves a tool for that
+        specific purpose rather than the default compiler.
+        Categories: "compiler" (default), "unit-runner",
+        "e2e-runner", "ui-runner", "visual-runner",
+        "integration-runner", "benchmark-runner".
+
+        If toolName is provided, selects a specific tool within
+        the category rather than the default. Multiple tools can
+        be registered for the same language+category. Examples:
+        - toolName: "jest" vs "vitest" for TypeScript unit-runner
+        - toolName: "playwright" vs "cypress" for e2e-runner
+        - toolName: "hardhat" vs "foundry" for Solidity unit-runner
+        If toolName does not match any registered tool, returns
+        notInstalled with a hint listing available alternatives.
+
+        invocation contains everything needed to run the tool:
+        - command: the executable command (e.g., "npx vitest run")
+        - args: default arguments (e.g., ["--reporter", "json"])
+        - outputFormat: how to parse output ("vitest-json",
+          "junit", "tap", "cargo-json", "xcode-json", etc.)
+        - configFile: expected config file if any
+        - env: environment variables to set
+
+        Examples:
+        - resolve("typescript", "linux-x86_64")
+            → tsc, invocation: { command: "npx tsc", args: ["--noEmit"], outputFormat: "tsc-json" }
+        - resolve("typescript", "linux-x86_64", category: "unit-runner")
+            → vitest (default), invocation: { command: "npx vitest run", ... }
+        - resolve("typescript", "linux-x86_64", category: "unit-runner", toolName: "jest")
+            → jest, invocation: { command: "npx jest", args: ["--json"], outputFormat: "jest-json" }
+        - resolve("typescript", "linux-x86_64", category: "e2e-runner", toolName: "cypress")
+            → cypress, invocation: { command: "npx cypress run", ... }
+        - resolve("swift", "macos-arm64", category: "unit-runner")
+            → xctest, invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json" }
+
+        Capabilities describe what the tool supports:
+        "incremental", "wasm-target", "cross-compile",
+        "remote-execution", "debug-symbols", etc.
+      }
+      -> notInstalled(language: String, platform: String, installHint: String) {
+        Tool not found. installHint suggests how to install
+        (e.g., "brew install swift", "rustup target add wasm32").
+      }
+      -> versionMismatch(language: String, installed: String, required: String) {
+        Tool found but wrong version. Returns both so the
+        user can decide whether to upgrade.
+      }
+      -> platformUnsupported(language: String, platform: String) {
+        This language's toolchain doesn't support the
+        requested target platform.
+      }
+    }
+
+    action validate(tool: T) {
+      -> ok(tool: T, version: String) {
+        Verify a previously resolved toolchain is still valid.
+        Tool exists at recorded path, version matches, not
+        corrupted. Used before build to catch environment drift.
+      }
+      -> invalid(tool: T, reason: String) {
+        Tool moved, uninstalled, or version changed since
+        last resolution. Re-resolve required.
+      }
+    }
+
+    action list(language: option String, category: option String) {
+      -> ok(tools: list { language: String, platform: String, category: String, toolName: option String, version: String, path: String, command: String, status: String }) {
+        List all resolved toolchains, optionally filtered by
+        language and/or category. Used by `copf toolchain list`.
+      }
+    }
+
+    action capabilities(tool: T) {
+      -> ok(capabilities: list String) {
+        Return detailed capabilities for a resolved tool.
+        Used by Builder to determine available build modes.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(language: "swift", platform: "linux-arm64", versionConstraint: ">=5.10")
+      -> ok(tool: t, version: "5.10.1", path: "/usr/bin/swiftc", capabilities: ["cross-compile"],
+             invocation: { command: "swiftc", args: ["-O"], outputFormat: "swift-diag", configFile: null, env: null })
+    then validate(tool: t) -> ok(tool: t, version: "5.10.1")
+    and  list(language: "swift") -> ok(tools: ts)
+  }
+}

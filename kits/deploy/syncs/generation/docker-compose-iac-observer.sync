@@ -1,0 +1,15 @@
+# Record DockerComposeIacProvider completion in GenerationPlan — Section 3.8
+
+sync ObserveDockerComposeIac [eager]
+when {
+  DockerComposeIacProvider/generate: [ plan: ?plan ]
+    => [ files: ?files ]
+}
+then {
+  GenerationPlan/recordStep: [
+    stepKey: ?plan;
+    status: "done";
+    filesProduced: 1;
+    cached: false
+  ]
+}

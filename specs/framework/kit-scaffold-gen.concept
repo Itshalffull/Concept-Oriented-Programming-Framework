@@ -1,0 +1,54 @@
+@category("devtools")
+@visibility("public")
+concept KitScaffoldGen [K] {
+
+  purpose {
+    Generate kit manifest (kit.yaml) scaffolds and directory
+    structures for new COPF kits from provided configuration.
+  }
+
+  state {
+    kits: set K
+    name: K -> String
+  }
+
+  actions {
+    action generate(name: String, description: String, concepts: list String) {
+      description {
+        Generate a kit.yaml manifest and directory structure
+        including stub concept specs and sync placeholders.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Kit scaffold generated with manifest and stubs.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action preview(name: String, description: String, concepts: list String) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses
+        Emitter content-addressing to classify each file as
+        new, changed, or unchanged.
+      }
+      -> cached() {
+        BuildCache reports inputs unchanged since the last
+        successful run. No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "KitScaffoldGen"
+        inputKind: "KitConfig"
+        outputKind: "KitManifest"
+        capabilities: ["kit-yaml", "directory-structure"]
+      }
+    }
+  }
+}

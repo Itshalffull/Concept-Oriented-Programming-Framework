@@ -9,7 +9,7 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
-import { toKebabCase, toCamelCase, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
+import { toKebabCase, toCamelCase, generateFileHeader, generateMarkdownFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.impl.js';
 
@@ -176,6 +176,7 @@ function buildSubcommand(
     addHierarchicalFlags(lines, action.name);
   }
 
+
   // Always add --json output flag
   lines.push(`  .option('--json', 'Output as JSON')`);
 
@@ -203,6 +204,18 @@ function buildSubcommand(
   return lines.join('\n');
 }
 
+// --- Generation Kit Subcommands ---
+
+/**
+ * When a concept is declared as a generator in the manifest's
+ * generation.generators section, emit extra subcommands that
+ * integrate with the COPF generation kit:
+ *   --plan, --force, --audit, --status, --summary, --history, --clean
+ *
+ * These use the same pattern as the handwritten CLI but dispatch
+ * through the kernel's generation kit concepts (GenerationPlan,
+ * BuildCache, Emitter, KindSystem).
+ */
 // --- Generate Command File ---
 
 function generateCommandFile(
@@ -253,6 +266,7 @@ function generateCommandFile(
     const cliName = cliConfig?.actions?.[a.name]?.command || toKebabCase(a.name);
     return `{ action: '${a.name}', command: '${cliName}' }`;
   });
+
   lines.push(`export const ${conceptCamel}CommandTree = {`);
   lines.push(`  group: '${groupName}',`);
   lines.push(`  description: '${groupDesc}',`);
@@ -283,6 +297,7 @@ function generateCliHelpMd(
   const lines: string[] = [];
   const kebab = toKebabCase(conceptName);
 
+  lines.push(generateMarkdownFileHeader('cli', conceptName));
   lines.push(`# copf ${kebab} — Help`);
   lines.push('');
 
@@ -308,6 +323,17 @@ function generateCliHelpMd(
 // --- Concept Handler ---
 
 export const cliTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'CliTarget',
+      inputKind: 'InterfaceProjection',
+      outputKind: 'CliCommands',
+      capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical']),
+      targetKey: 'cli',
+      providerType: 'target',
+    };
+  },
 
   /**
    * Generate Commander.js command files for one or more concepts.

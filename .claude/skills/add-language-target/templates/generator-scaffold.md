@@ -302,7 +302,7 @@ export const langGenHandler: ConceptHandler = {
         files.push({ path: `${lowerName}/conformance.<ext>`, content: conformanceTest });
       }
 
-      await storage.put('outputs', spec, { spec, files });
+      // Return files — BuildCache and Emitter handle caching and writing via syncs
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

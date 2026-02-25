@@ -4,6 +4,18 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const terraformProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'TerraformProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'TerraformHCL',
+      capabilities: JSON.stringify(['hcl', 'workspace', 'state']),
+      providerKey: 'terraform',
+      providerType: 'iac',
+    };
+  },
+
   async generate(input, storage) {
     const plan = input.plan as string;
 

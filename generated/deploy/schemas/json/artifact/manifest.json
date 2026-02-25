@@ -211,6 +211,109 @@
       ]
     },
     {
+      "name": "store",
+      "params": [
+        {
+          "name": "hash",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "location",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "concept",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "platform",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "toolchainVersion",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "buildMode",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "duration",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Store a content addressed artifact produced by Builder \n If artifact with same hash already exists , return it \n ( deduplication ) Records language , platform , and build \n metadata for provenance"
+        },
+        {
+          "tag": "alreadyExists",
+          "fields": [
+            {
+              "name": "artifact",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Artifact with this hash already stored Idempotent"
+        }
+      ]
+    },
+    {
       "name": "resolve",
       "params": [
         {
@@ -453,6 +556,72 @@
           }
         }
       },
+      "store": {
+        "$id": "urn:copf/Artifact/store/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:copf/Artifact"
+          },
+          "action": {
+            "const": "store"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "hash": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "concept": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "platform": {
+                "type": "string"
+              },
+              "metadata": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "toolchainVersion": {
+                        "type": "string"
+                      },
+                      "buildMode": {
+                        "type": "string"
+                      },
+                      "duration": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "toolchainVersion",
+                      "buildMode",
+                      "duration"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "hash",
+              "location",
+              "concept",
+              "language",
+              "platform",
+              "metadata"
+            ]
+          }
+        }
+      },
       "resolve": {
         "$id": "urn:copf/Artifact/resolve/invocation",
         "type": "object",
@@ -570,6 +739,60 @@
               "required": [
                 "concept",
                 "errors"
+              ]
+            }
+          }
+        }
+      },
+      "store": {
+        "ok": {
+          "$id": "urn:copf/Artifact/store/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "store"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifact"
+              ]
+            }
+          }
+        },
+        "alreadyExists": {
+          "$id": "urn:copf/Artifact/store/completion/alreadyExists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:copf/Artifact"
+            },
+            "action": {
+              "const": "store"
+            },
+            "variant": {
+              "const": "alreadyExists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "artifact"
               ]
             }
           }

@@ -5,6 +5,18 @@
 import type { ConceptHandler } from '@copf/kernel';
 
 export const fluxProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'FluxProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'FluxKustomization',
+      capabilities: JSON.stringify(['kustomization-crd', 'source', 'helm-release']),
+      providerKey: 'flux',
+      providerType: 'gitops',
+    };
+  },
+
   async emit(input, storage) {
     const plan = input.plan as string;
     const repo = input.repo as string;
