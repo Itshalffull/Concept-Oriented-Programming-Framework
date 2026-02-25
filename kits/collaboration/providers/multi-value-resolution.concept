@@ -1,0 +1,38 @@
+@version(1)
+concept MultiValueResolution [V] {
+
+  purpose {
+    Multi-value (keep-all) conflict resolution. Preserves both concurrent
+    values rather than selecting one. Suitable for systems where all
+    concurrent writes have equal validity, such as shopping cart contents
+    or collaborative annotation lists.
+  }
+
+  state {
+    cache: set V
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, priority: Int) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "multi-value", category: "conflict-resolution", priority: 30
+      }
+    }
+
+    action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
+      -> resolved(result: Bytes) {
+        Returns a serialized collection containing both v1 and v2.
+        All concurrent values are preserved.
+      }
+      -> cannotResolve(reason: String) {
+        Content type does not support multi-value representation.
+      }
+    }
+  }
+
+  invariant {
+    after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
+    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+  }
+}

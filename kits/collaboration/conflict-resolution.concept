@@ -1,0 +1,74 @@
+@version(1)
+concept ConflictResolution [V] {
+
+  purpose {
+    Detect and resolve incompatible concurrent modifications
+    using a pluggable strategy selected by data type and
+    domain policy.
+  }
+
+  state {
+    policies: set P;
+    policy_name: P -> String;
+    policy_priority: P -> Int;
+    pending: set C;
+    conflict_detail: C -> {
+      base: option V,
+      version1: V,
+      version2: V,
+      clock1: Bytes,
+      clock2: Bytes,
+      context: String
+    };
+    conflict_resolution: C -> option V
+  }
+
+  actions {
+    action registerPolicy(name: String, priority: Int) {
+      -> ok(policy: P) {
+        Registers a resolution policy provider.
+        Lower priority value means tried first.
+      }
+      -> duplicate(message: String) {
+        Policy name already exists.
+      }
+    }
+
+    action detect(base: option V, version1: V, version2: V, context: String) {
+      -> noConflict() {
+        Versions are compatible. No conflict detected.
+      }
+      -> detected(conflictId: C, detail: Bytes) {
+        Conflict detected. Detail describes the nature of the
+        incompatibility — overlapping regions, type mismatch, etc.
+      }
+    }
+
+    action resolve(conflictId: C, policyOverride: option String) {
+      -> resolved(result: V) {
+        Policy produced a resolution automatically.
+      }
+      -> requiresHuman(conflictId: C, options: list Bytes) {
+        No automatic policy could resolve. Returns candidate
+        resolutions for human selection.
+      }
+      -> noPolicy(message: String) {
+        No policy registered for this conflict type.
+      }
+    }
+
+    action manualResolve(conflictId: C, chosen: V) {
+      -> ok(result: V) {
+        Human-chosen resolution recorded.
+      }
+      -> notPending(message: String) {
+        Conflict not found or already resolved.
+      }
+    }
+  }
+
+  invariant {
+    after detect(base: _, version1: _, version2: _, context: _) -> noConflict()
+    then resolve(conflictId: _, policyOverride: _) -> resolved(result: _)
+  }
+}

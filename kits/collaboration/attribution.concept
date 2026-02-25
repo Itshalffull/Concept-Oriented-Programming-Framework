@@ -1,0 +1,62 @@
+@version(1)
+concept Attribution [A] {
+
+  purpose {
+    Bind agent identity to content regions, tracking who created or
+    modified each piece. Supports blame queries, per-region authorship
+    history, and CODEOWNERS-style ownership patterns.
+  }
+
+  state {
+    attributions: set A;
+    contentRef: A -> String;
+    region: A -> Bytes;
+    agent: A -> String;
+    timestamp: A -> String;
+    changeRef: A -> String;
+    ownership: String -> list { pattern: String, owners: list String }
+  }
+
+  actions {
+    action attribute(contentRef: String, region: Bytes, agent: String, changeRef: String) {
+      -> ok(attributionId: A) {
+        Attribution record created binding agent to content region.
+      }
+    }
+
+    action blame(contentRef: String) {
+      -> ok(map: list { region: Bytes, agent: String, changeRef: String }) {
+        Returns full blame map — each region mapped to its most recent author.
+      }
+    }
+
+    action history(contentRef: String, region: Bytes) {
+      -> ok(chain: list A) {
+        Full attribution chain for a specific region in chronological order.
+      }
+      -> notFound(message: String) {
+        No attributions found for this content and region.
+      }
+    }
+
+    action setOwnership(pattern: String, owners: list String) {
+      -> ok() {
+        CODEOWNERS-style ownership rule set for path pattern.
+      }
+    }
+
+    action queryOwners(path: String) {
+      -> ok(owners: list String) {
+        Returns owners matching the path against ownership patterns.
+      }
+      -> noMatch(message: String) {
+        No ownership pattern matches this path.
+      }
+    }
+  }
+
+  invariant {
+    after attribute(contentRef: c, region: r, agent: a, changeRef: ch) -> ok(attributionId: id)
+    then blame(contentRef: c) -> ok(map: m)
+  }
+}

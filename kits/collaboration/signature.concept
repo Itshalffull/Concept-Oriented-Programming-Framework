@@ -1,0 +1,76 @@
+@version(1)
+concept Signature [G] {
+
+  purpose {
+    Cryptographic proof of authorship, integrity, and temporal existence.
+    Provides signing, verification, and RFC 3161 timestamping against
+    a set of trusted signer identities.
+  }
+
+  state {
+    signatures: set G;
+    contentHash: G -> String;
+    signer: G -> String;
+    certificate: G -> Bytes;
+    timestamp: G -> Bytes;
+    valid: G -> Bool;
+    trustedSigners: set String
+  }
+
+  capabilities {
+    requires crypto
+    requires network
+  }
+
+  actions {
+    action sign(contentHash: String, identity: String) {
+      -> ok(signatureId: G) {
+        Signature created with certificate and timestamp attached.
+      }
+      -> unknownIdentity(message: String) {
+        Identity not in trusted signers set.
+      }
+      -> hashNotFound(message: String) {
+        contentHash not found in ContentHash store.
+      }
+    }
+
+    action verify(contentHash: String, signatureId: G) {
+      -> valid(identity: String, timestamp: String) {
+        Signature is cryptographically valid.
+      }
+      -> invalid(message: String) {
+        Signature does not match content hash.
+      }
+      -> expired(message: String) {
+        Certificate has expired.
+      }
+      -> untrustedSigner(signer: String) {
+        Signer not in the trusted set.
+      }
+    }
+
+    action timestamp(contentHash: String) {
+      -> ok(proof: Bytes) {
+        RFC 3161 timestamp token from a trusted timestamp authority.
+      }
+      -> unavailable(message: String) {
+        Timestamp authority is not reachable.
+      }
+    }
+
+    action addTrustedSigner(identity: String) {
+      -> ok() {
+        Identity added to trusted signer set.
+      }
+      -> alreadyTrusted(message: String) {
+        Already in the trusted set.
+      }
+    }
+  }
+
+  invariant {
+    after sign(contentHash: h, identity: id) -> ok(signatureId: sig)
+    then verify(contentHash: h, signatureId: sig) -> valid(identity: id, timestamp: _)
+  }
+}

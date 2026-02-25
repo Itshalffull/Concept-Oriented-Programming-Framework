@@ -1,0 +1,37 @@
+@version(1)
+concept LWWResolution [V] {
+
+  purpose {
+    Last-Writer-Wins conflict resolution. Uses causal timestamps to
+    select the most recent write. Default strategy for simple key-value
+    stores and LWW registers.
+  }
+
+  state {
+    cache: set V
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, priority: Int) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "lww", category: "conflict-resolution", priority: 10
+      }
+    }
+
+    action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
+      -> resolved(result: Bytes) {
+        Returns the value with the higher causal timestamp.
+      }
+      -> cannotResolve(reason: String) {
+        Timestamps are identical — exactly concurrent writes
+        with no ordering. Cannot determine winner.
+      }
+    }
+  }
+
+  invariant {
+    after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
+    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+  }
+}

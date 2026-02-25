@@ -1,0 +1,101 @@
+@version(1)
+@gate
+concept PessimisticLock [L] {
+
+  purpose {
+    Prevent conflicts by granting exclusive write access to a resource,
+    serializing edits rather than reconciling them after the fact.
+    Complementary to ConflictResolution — use locking for non-mergeable
+    content (binary files, legal documents) and resolution for mergeable
+    content (text, structured data). checkOut may complete after an
+    arbitrarily long wait if the resource is locked and the requester
+    is queued.
+  }
+
+  state {
+    locks: set L;
+    resource: L -> String;
+    holder: L -> String;
+    acquired: L -> String;
+    expires: L -> option String;
+    reason: L -> option String;
+    queue: String -> list { requester: String, requested: String }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action checkOut(resource: String, holder: String, duration: option Int, reason: option String) {
+      -> ok(lockId: L) {
+        Exclusive lock granted to holder.
+      }
+      -> alreadyLocked(holder: String, expires: option String) {
+        Resource held by another. Returns current holder info.
+      }
+      -> queued(position: Int) {
+        Requester added to wait queue at given position.
+      }
+    }
+
+    action checkIn(lockId: L) {
+      -> ok() {
+        Lock released. Next requester in queue is notified.
+      }
+      -> notFound(message: String) {
+        Lock not found.
+      }
+      -> notHolder(message: String) {
+        Caller is not the current lock holder.
+      }
+    }
+
+    action breakLock(lockId: L, breaker: String, reason: String) {
+      -> ok(previousHolder: String) {
+        Lock forcibly released. Reason is mandatory and recorded.
+      }
+      -> notFound(message: String) {
+        Lock not found.
+      }
+      -> unauthorized(message: String) {
+        Breaker lacks authority to break this lock.
+      }
+    }
+
+    action renew(lockId: L, additionalDuration: Int) {
+      -> ok(newExpires: String) {
+        Lock expiry extended by the additional duration.
+      }
+      -> notFound(message: String) {
+        Lock not found.
+      }
+      -> notHolder(message: String) {
+        Caller is not the current lock holder.
+      }
+    }
+
+    action queryLocks(resource: option String) {
+      -> ok(locks: list L) {
+        All active locks, optionally filtered to a specific resource.
+      }
+    }
+
+    action queryQueue(resource: String) {
+      -> ok(waiters: list { requester: String, requested: String }) {
+        Wait queue for the resource.
+      }
+    }
+  }
+
+  invariant {
+    after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
+    then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> alreadyLocked(holder: h, expires: _)
+  }
+
+  invariant {
+    after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
+    then checkIn(lockId: l) -> ok()
+    and  checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(lockId: _)
+  }
+}

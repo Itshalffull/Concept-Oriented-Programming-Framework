@@ -1,0 +1,35 @@
+@version(1)
+concept ManualResolution [V] {
+
+  purpose {
+    Manual conflict resolution that escalates to a human reviewer.
+    Returns candidate options rather than auto-resolving. Used as
+    the last-resort policy when no automatic strategy can make a
+    domain-safe decision.
+  }
+
+  state {
+    cache: set V
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, priority: Int) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "manual", category: "conflict-resolution", priority: 99
+      }
+    }
+
+    action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
+      -> cannotResolve(reason: String) {
+        Manual resolution always escalates to human review.
+        Never auto-resolves.
+      }
+    }
+  }
+
+  invariant {
+    after attemptResolve(base: _, v1: _, v2: _, context: _) -> cannotResolve(reason: _)
+    then register() -> ok(name: "manual", category: "conflict-resolution", priority: 99)
+  }
+}

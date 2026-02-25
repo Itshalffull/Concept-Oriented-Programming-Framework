@@ -1,0 +1,37 @@
+@version(1)
+concept AddWinsResolution [V] {
+
+  purpose {
+    Add-Wins (OR-Set semantics) conflict resolution. When elements are
+    concurrently added and removed, additions win. Suitable for set-like
+    data structures such as tags, permissions, and collection membership.
+  }
+
+  state {
+    cache: set V
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String, priority: Int) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "add-wins", category: "conflict-resolution", priority: 20
+      }
+    }
+
+    action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
+      -> resolved(result: Bytes) {
+        Returns the union of both versions — additions always win
+        over concurrent removals.
+      }
+      -> cannotResolve(reason: String) {
+        Content is not a set-like structure.
+      }
+    }
+  }
+
+  invariant {
+    after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
+    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+  }
+}

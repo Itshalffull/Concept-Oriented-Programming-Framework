@@ -1,0 +1,88 @@
+@version(1)
+@gate
+concept Replica [R] {
+
+  purpose {
+    Maintain an independent, locally-modifiable copy of shared state
+    that synchronizes with peers. Sync may complete after arbitrarily
+    long delay due to network partitions or offline operation.
+  }
+
+  state {
+    replicaId: String;
+    localState: Bytes;
+    pendingOps: list Bytes;
+    peers: set String;
+    syncState: String -> Bytes
+  }
+
+  capabilities {
+    requires network
+    requires persistent-storage
+  }
+
+  actions {
+    action localUpdate(op: Bytes) {
+      -> ok(newState: Bytes) {
+        Operation applied to local state and added to pending queue.
+      }
+      -> invalidOp(message: String) {
+        Operation is malformed or not applicable to current state.
+      }
+    }
+
+    action receiveRemote(op: Bytes, fromReplica: String) {
+      -> ok(newState: Bytes) {
+        Remote operation integrated into local state.
+      }
+      -> conflict(details: Bytes) {
+        Concurrent modification detected. Routes to ConflictResolution.
+      }
+      -> unknownReplica(message: String) {
+        fromReplica not in the known peers set.
+      }
+    }
+
+    action sync(peer: String) {
+      -> ok() {
+        Pending ops sent to peer. Remote ops received and integrated.
+      }
+      -> unreachable(message: String) {
+        Peer is not currently reachable.
+      }
+    }
+
+    action getState() {
+      -> ok(state: Bytes, clock: Bytes) {
+        Current local state with causal clock snapshot.
+      }
+    }
+
+    action fork() {
+      -> ok(newReplicaId: String) {
+        Creates a new replica ID for offline branching.
+      }
+    }
+
+    action addPeer(peerId: String) {
+      -> ok() {
+        Peer added to known peer set.
+      }
+      -> alreadyKnown(message: String) {
+        Peer already in the set.
+      }
+    }
+  }
+
+  invariant "convergence" {
+    after {
+      // After all replicas have received all updates (quiescence),
+      // all replicas return identical state from getState().
+      localUpdate(op: o) -> ok(newState: _)
+    }
+    then {
+      // Post-sync: all peers converge to the same state.
+      getState() -> ok(state: s, clock: _)
+    }
+  }
+}

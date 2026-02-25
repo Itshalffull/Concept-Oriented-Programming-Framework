@@ -1,0 +1,93 @@
+@version(1)
+concept InlineAnnotation [A] {
+
+  purpose {
+    Embed change markers directly within content structure, enabling
+    accept/reject review workflows where the document simultaneously
+    holds both before and after states. Content-type-agnostic — scope
+    is opaque bytes resolved by the content system.
+  }
+
+  state {
+    annotations: set A;
+    contentRef: A -> String;
+    changeType: A -> String;
+    scope: A -> Bytes;
+    author: A -> String;
+    timestamp: A -> String;
+    status: A -> String;
+    tracking: String -> Bool
+  }
+
+  actions {
+    action annotate(contentRef: String, changeType: String, scope: Bytes, author: String) {
+      -> ok(annotationId: A) {
+        Annotation embedded in content with status "pending".
+      }
+      -> trackingDisabled(message: String) {
+        Tracking is disabled for this document.
+      }
+      -> invalidChangeType(message: String) {
+        changeType not one of "insertion", "deletion", "formatting", "move".
+      }
+    }
+
+    action accept(annotationId: A) {
+      -> ok(cleanContent: Bytes) {
+        Annotation wrapper removed. Change content kept.
+      }
+      -> notFound(message: String) {
+        Annotation not found.
+      }
+      -> alreadyResolved(message: String) {
+        Annotation was already accepted or rejected.
+      }
+    }
+
+    action reject(annotationId: A) {
+      -> ok(cleanContent: Bytes) {
+        Annotation wrapper and change content removed.
+      }
+      -> notFound(message: String) {
+        Annotation not found.
+      }
+      -> alreadyResolved(message: String) {
+        Annotation was already accepted or rejected.
+      }
+    }
+
+    action acceptAll(contentRef: String) {
+      -> ok(cleanContent: Bytes, count: Int) {
+        All pending annotations accepted. Count returned.
+      }
+    }
+
+    action rejectAll(contentRef: String) {
+      -> ok(cleanContent: Bytes, count: Int) {
+        All pending annotations rejected. Count returned.
+      }
+    }
+
+    action toggleTracking(contentRef: String, enabled: Bool) {
+      -> ok() {
+        Tracking enabled or disabled for this document.
+      }
+    }
+
+    action listPending(contentRef: String) {
+      -> ok(annotations: list A) {
+        Returns all annotations with status "pending" for this content.
+      }
+    }
+  }
+
+  invariant {
+    after annotate(contentRef: c, changeType: "insertion", scope: s, author: a) -> ok(annotationId: id)
+    then accept(annotationId: id) -> ok(cleanContent: _)
+  }
+
+  invariant {
+    after toggleTracking(contentRef: c, enabled: false) -> ok()
+    then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> trackingDisabled(message: _)
+  }
+}

@@ -1,0 +1,60 @@
+@version(1)
+concept CausalClock [T] {
+
+  purpose {
+    Track happens-before ordering between events across distributed
+    participants. Vector clocks provide the universal ordering primitive
+    for OT delivery, CRDT consistency, DAG traversal, provenance chains,
+    and temporal queries.
+  }
+
+  state {
+    clocks: String -> list Int;
+    events: set T;
+    eventClock: T -> list Int;
+    eventReplica: T -> String
+  }
+
+  actions {
+    action tick(replicaId: String) {
+      -> ok(timestamp: T, clock: list Int) {
+        Increments this replica's position in the vector clock.
+        Returns the new timestamp event and clock snapshot.
+      }
+    }
+
+    action merge(localClock: list Int, remoteClock: list Int) {
+      -> ok(merged: list Int) {
+        Returns the component-wise maximum of the two clocks.
+      }
+      -> incompatible(message: String) {
+        Clocks have different dimensions.
+      }
+    }
+
+    action compare(a: T, b: T) {
+      -> before() {
+        a happened-before b.
+      }
+      -> after() {
+        b happened-before a.
+      }
+      -> concurrent() {
+        Neither happened before the other. Events are concurrent.
+      }
+    }
+
+    action dominates(a: T, b: T) {
+      -> ok(result: Bool) {
+        Returns whether a strictly dominates b —
+        a >= b component-wise and a != b.
+      }
+    }
+  }
+
+  invariant {
+    after tick(replicaId: r) -> ok(timestamp: t1, clock: _)
+    then tick(replicaId: r) -> ok(timestamp: t2, clock: _)
+    and  compare(a: t1, b: t2) -> before()
+  }
+}
