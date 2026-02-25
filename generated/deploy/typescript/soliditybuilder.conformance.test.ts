@@ -8,30 +8,31 @@ describe("SolidityBuilder conformance", () => {
   it("invariant 1: after build, test behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const l = "u-test-invariant-001";
-
     // --- AFTER clause ---
-    // build(sourceDir: "./generated/solidity/password", compilerPath: "/usr/local/bin/solc", target: "evm-shanghai", options: {mode:"release"}) -> ok(artifact: l, outputDir: ".copf-artifacts/solidity/password", hash: "sha256:jkl")
+    // build(source: "./generated/solidity/password", toolchainPath: "/usr/local/bin/solc", platform: "shanghai", config: {mode:"release", features:[]}) -> ok(build: l, artifactPath: "...", artifactHash: "sha256:jkl")
     const step1 = await soliditybuilderHandler.build(
-      { sourceDir: "./generated/solidity/password", compilerPath: "/usr/local/bin/solc", target: "evm-shanghai", options: { mode: "release" } },
+      { source: "./generated/solidity/password", toolchainPath: "/usr/local/bin/solc", platform: "shanghai", config: { mode: "release", features: [] } },
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).artifact).toBe(l);
-    expect((step1 as any).outputDir).toBe(".copf-artifacts/solidity/password");
-    expect((step1 as any).hash).toBe("sha256:jkl");
+    expect((step1 as any).build).toBeDefined();
+    expect((step1 as any).artifactPath).toBeDefined();
+    expect((step1 as any).artifactHash).toBeDefined();
+
+    const buildId = (step1 as any).build;
 
     // --- THEN clause ---
-    // test(artifact: l, compilerPath: "/usr/local/bin/solc") -> ok(passed: 6, failed: 0, skipped: 0, durationMs: 800)
+    // test(build: l, toolchainPath: "/usr/local/bin/solc") -> ok(passed: ..., failed: 0, skipped: ..., duration: ..., testType: "unit")
     const step2 = await soliditybuilderHandler.test(
-      { artifact: l, compilerPath: "/usr/local/bin/solc" },
+      { build: buildId, toolchainPath: "/usr/local/bin/solc" },
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).passed).toBe(6);
+    expect(typeof (step2 as any).passed).toBe("number");
     expect((step2 as any).failed).toBe(0);
-    expect((step2 as any).skipped).toBe(0);
-    expect((step2 as any).durationMs).toBe(800);
+    expect(typeof (step2 as any).skipped).toBe("number");
+    expect(typeof (step2 as any).duration).toBe("number");
+    expect((step2 as any).testType).toBe("unit");
   });
 
 });

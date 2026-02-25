@@ -32,9 +32,11 @@ describe('Build routing integration', () => {
   it('should route swift build to SwiftBuilder', async () => {
     const coordinatorResult = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'swift',
-        sourceHash: 'pw-swift-src',
+        concept: 'Password',
+        source: './generated/swift/password',
+        language: 'swift',
+        platform: 'linux-arm64',
+        config: { mode: 'release' },
       },
       storage,
     );
@@ -42,7 +44,12 @@ describe('Build routing integration', () => {
 
     // Verify SwiftBuilder produces same-shaped output
     const providerResult = await swiftBuilderHandler.build(
-      { sourcePath: './src/Password.swift', target: 'debug' },
+      {
+        source: './src/Password.swift',
+        toolchainPath: '/usr/bin/swiftc',
+        platform: 'linux-arm64',
+        config: { mode: 'debug', features: [] },
+      },
       storage,
     );
     expect(providerResult.variant).toBe('ok');
@@ -53,9 +60,11 @@ describe('Build routing integration', () => {
   it('should route typescript build to TypeScriptBuilder', async () => {
     const coordinatorResult = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'typescript',
-        sourceHash: 'pw-ts-src',
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
       },
       storage,
     );
@@ -63,7 +72,12 @@ describe('Build routing integration', () => {
 
     // Verify TypeScriptBuilder produces same-shaped output
     const providerResult = await typescriptBuilderHandler.build(
-      { sourcePath: './src/password.ts', target: 'es2022' },
+      {
+        source: './src/password.ts',
+        toolchainPath: '/usr/local/bin/tsc',
+        platform: 'node',
+        config: { mode: 'release', features: [] },
+      },
       storage,
     );
     expect(providerResult.variant).toBe('ok');
@@ -74,9 +88,11 @@ describe('Build routing integration', () => {
   it('should route rust build to RustBuilder', async () => {
     const coordinatorResult = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'rust',
-        sourceHash: 'pw-rust-src',
+        concept: 'Password',
+        source: './generated/rust/password',
+        language: 'rust',
+        platform: 'x86_64-linux',
+        config: { mode: 'release' },
       },
       storage,
     );
@@ -84,7 +100,12 @@ describe('Build routing integration', () => {
 
     // Verify RustBuilder produces same-shaped output
     const providerResult = await rustBuilderHandler.build(
-      { sourcePath: './src/password.rs', target: 'debug' },
+      {
+        source: './src/password.rs',
+        toolchainPath: '/usr/local/bin/rustc',
+        platform: 'x86_64-linux',
+        config: { mode: 'debug', features: [] },
+      },
       storage,
     );
     expect(providerResult.variant).toBe('ok');
@@ -95,9 +116,11 @@ describe('Build routing integration', () => {
   it('should route solidity build to SolidityBuilder', async () => {
     const coordinatorResult = await builderHandler.build(
       {
-        conceptName: 'Token',
-        target: 'solidity',
-        sourceHash: 'token-sol-src',
+        concept: 'Token',
+        source: './generated/solidity/token',
+        language: 'solidity',
+        platform: 'shanghai',
+        config: { mode: 'release' },
       },
       storage,
     );
@@ -105,7 +128,12 @@ describe('Build routing integration', () => {
 
     // Verify SolidityBuilder produces same-shaped output
     const providerResult = await solidityBuilderHandler.build(
-      { sourcePath: './contracts/Token.sol', target: 'paris' },
+      {
+        source: './contracts/Token.sol',
+        toolchainPath: '/usr/local/bin/solc',
+        platform: 'shanghai',
+        config: { mode: 'release', features: [] },
+      },
       storage,
     );
     expect(providerResult.variant).toBe('ok');
@@ -117,32 +145,52 @@ describe('Build routing integration', () => {
 
   it('should produce language-appropriate artifact format for each provider', async () => {
     const swiftResult = await swiftBuilderHandler.build(
-      { sourcePath: './src/Main.swift', target: 'debug' },
+      {
+        source: './src/Main.swift',
+        toolchainPath: '/usr/bin/swiftc',
+        platform: 'linux-arm64',
+        config: { mode: 'debug', features: [] },
+      },
       storage,
     );
     expect(swiftResult.variant).toBe('ok');
-    expect((swiftResult.artifactPath as string)).toMatch(/\.swift|\.build|\.o/);
+    expect((swiftResult.artifactPath as string)).toMatch(/\.swift|\.build|build\/swift/);
 
     const tsResult = await typescriptBuilderHandler.build(
-      { sourcePath: './src/index.ts', target: 'es2022' },
+      {
+        source: './src/index.ts',
+        toolchainPath: '/usr/local/bin/tsc',
+        platform: 'node',
+        config: { mode: 'release', features: [] },
+      },
       storage,
     );
     expect(tsResult.variant).toBe('ok');
-    expect((tsResult.artifactPath as string)).toMatch(/\.js|dist|\.tsbuildinfo/);
+    expect((tsResult.artifactPath as string)).toMatch(/\.js|dist|build\/typescript/);
 
     const rustResult = await rustBuilderHandler.build(
-      { sourcePath: './src/lib.rs', target: 'debug' },
+      {
+        source: './src/lib.rs',
+        toolchainPath: '/usr/local/bin/rustc',
+        platform: 'x86_64-linux',
+        config: { mode: 'debug', features: [] },
+      },
       storage,
     );
     expect(rustResult.variant).toBe('ok');
-    expect((rustResult.artifactPath as string)).toMatch(/target|\.rlib|\.so|\.d/);
+    expect((rustResult.artifactPath as string)).toMatch(/target|build\/rust/);
 
     const solResult = await solidityBuilderHandler.build(
-      { sourcePath: './contracts/Token.sol', target: 'paris' },
+      {
+        source: './contracts/Token.sol',
+        toolchainPath: '/usr/local/bin/solc',
+        platform: 'shanghai',
+        config: { mode: 'release', features: [] },
+      },
       storage,
     );
     expect(solResult.variant).toBe('ok');
-    expect((solResult.artifactPath as string)).toMatch(/\.json|artifacts|out/);
+    expect((solResult.artifactPath as string)).toMatch(/\.json|artifacts|build\/solidity/);
   });
 
   // --- Provider registration metadata ---
@@ -184,10 +232,10 @@ describe('Build routing integration', () => {
   it('should return toolchainError for unknown language', async () => {
     const result = await builderHandler.build(
       {
-        conceptName: 'Password',
-        target: 'cobol',
-        sourceHash: 'pw-cobol-src',
-        simulateError: 'toolchainError',
+        concept: 'Password',
+        source: './generated/cobol/password',
+        language: '',
+        platform: '',
       },
       storage,
     );
@@ -199,20 +247,27 @@ describe('Build routing integration', () => {
   // --- Cross-language build coordination ---
 
   it('should build same concept across all four languages independently', async () => {
-    const languages = ['swift', 'typescript', 'rust', 'solidity'];
+    const languages = [
+      { language: 'swift', platform: 'linux-arm64' },
+      { language: 'typescript', platform: 'node' },
+      { language: 'rust', platform: 'x86_64-linux' },
+      { language: 'solidity', platform: 'shanghai' },
+    ];
     const results: Record<string, any> = {};
 
-    for (const lang of languages) {
+    for (const { language, platform } of languages) {
       const result = await builderHandler.build(
         {
-          conceptName: 'Password',
-          target: lang,
-          sourceHash: `pw-src-${lang}`,
+          concept: 'Password',
+          source: `./generated/${language}/password`,
+          language,
+          platform,
+          config: { mode: 'release' },
         },
         storage,
       );
       expect(result.variant).toBe('ok');
-      results[lang] = result;
+      results[language] = result;
     }
 
     // All artifact hashes should be distinct
@@ -222,7 +277,7 @@ describe('Build routing integration', () => {
 
     // History should show all four builds
     const historyResult = await builderHandler.history(
-      { conceptName: 'Password' },
+      { concept: 'Password' },
       storage,
     );
     expect(historyResult.variant).toBe('ok');
@@ -233,32 +288,44 @@ describe('Build routing integration', () => {
   it('should filter build history by language after multi-language build', async () => {
     // Build Password for typescript and rust
     await builderHandler.build(
-      { conceptName: 'Password', target: 'typescript', sourceHash: 'ts-src' },
+      {
+        concept: 'Password',
+        source: './generated/typescript/password',
+        language: 'typescript',
+        platform: 'node',
+        config: { mode: 'release' },
+      },
       storage,
     );
     await builderHandler.build(
-      { conceptName: 'Password', target: 'rust', sourceHash: 'rs-src' },
+      {
+        concept: 'Password',
+        source: './generated/rust/password',
+        language: 'rust',
+        platform: 'x86_64-linux',
+        config: { mode: 'release' },
+      },
       storage,
     );
 
     // Filter by typescript
     const tsHistory = await builderHandler.history(
-      { conceptName: 'Password', language: 'typescript' },
+      { concept: 'Password', language: 'typescript' },
       storage,
     );
     expect(tsHistory.variant).toBe('ok');
     const tsBuilds = tsHistory.builds as any[];
     expect(tsBuilds).toHaveLength(1);
-    expect(tsBuilds[0].target).toBe('typescript');
+    expect(tsBuilds[0].language).toBe('typescript');
 
     // Filter by rust
     const rustHistory = await builderHandler.history(
-      { conceptName: 'Password', language: 'rust' },
+      { concept: 'Password', language: 'rust' },
       storage,
     );
     expect(rustHistory.variant).toBe('ok');
     const rustBuilds = rustHistory.builds as any[];
     expect(rustBuilds).toHaveLength(1);
-    expect(rustBuilds[0].target).toBe('rust');
+    expect(rustBuilds[0].language).toBe('rust');
   });
 });

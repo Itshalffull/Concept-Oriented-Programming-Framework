@@ -37,19 +37,8 @@ async function runBuildPipeline(
   config: { mode: string; features?: string[] },
 ): Promise<{ cached: boolean; artifactHash: string | null }> {
   // Step 1: Toolchain/resolve — find the compiler
-  const toolName = language === 'typescript' ? 'tsc'
-    : language === 'rust' ? 'rustc'
-    : language === 'swift' ? 'swiftc'
-    : language === 'solidity' ? 'solc'
-    : language;
-
   const resolveResult = await toolchainHandler.resolve(
-    {
-      tool: toolName,
-      language,
-      requiredVersion: '>=1.0.0',
-      platform,
-    },
+    { language, platform },
     toolchainStorage,
   );
 
@@ -59,11 +48,7 @@ async function runBuildPipeline(
 
   // Step 2: Builder/build — compile the concept
   const buildResult = await builderHandler.build(
-    {
-      conceptName: concept,
-      target: language,
-      sourceHash: source,
-    },
+    { concept, source, language, platform, config },
     builderStorage,
   );
 
@@ -111,7 +96,7 @@ describe('Build pipeline integration', () => {
   it('should execute full pipeline on first build', async () => {
     const result = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'src-v1', 'typescript', 'linux-x86_64',
+      'Password', 'src-v1', 'typescript', 'node',
       { mode: 'release' },
     );
 
@@ -125,7 +110,7 @@ describe('Build pipeline integration', () => {
     // First build
     const first = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'src-v1', 'typescript', 'linux-x86_64',
+      'Password', 'src-v1', 'typescript', 'node',
       { mode: 'release' },
     );
     expect(first.cached).toBe(false);
@@ -133,7 +118,7 @@ describe('Build pipeline integration', () => {
     // Second build — same source hash produces same artifact hash
     const second = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'src-v1', 'typescript', 'linux-x86_64',
+      'Password', 'src-v1', 'typescript', 'node',
       { mode: 'release' },
     );
 
@@ -145,14 +130,14 @@ describe('Build pipeline integration', () => {
     // First build
     const first = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'src-v1', 'typescript', 'linux-x86_64',
+      'Password', 'src-v1', 'typescript', 'node',
       { mode: 'release' },
     );
 
     // Second build — different source hash
     const second = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'src-v2', 'typescript', 'linux-x86_64',
+      'Password', 'src-v2', 'typescript', 'node',
       { mode: 'release' },
     );
 
@@ -163,13 +148,13 @@ describe('Build pipeline integration', () => {
   it('should build multiple concepts independently per language', async () => {
     const passwordResult = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'pw-src', 'typescript', 'linux-x86_64',
+      'Password', 'pw-src', 'typescript', 'node',
       { mode: 'release' },
     );
 
     const userResult = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'User', 'user-src', 'typescript', 'linux-x86_64',
+      'User', 'user-src', 'typescript', 'node',
       { mode: 'release' },
     );
 
@@ -181,13 +166,13 @@ describe('Build pipeline integration', () => {
   it('should build multiple languages independently per concept', async () => {
     const tsResult = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'pw-src-ts', 'typescript', 'linux-x86_64',
+      'Password', 'pw-src-ts', 'typescript', 'node',
       { mode: 'release' },
     );
 
     const rustResult = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'pw-src-rs', 'rust', 'linux-x86_64',
+      'Password', 'pw-src-rs', 'rust', 'x86_64-linux',
       { mode: 'release' },
     );
 
@@ -200,44 +185,33 @@ describe('Build pipeline integration', () => {
     // Build two concepts for the same language
     await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'pw-src', 'typescript', 'linux-x86_64',
+      'Password', 'pw-src', 'typescript', 'node',
       { mode: 'release' },
     );
     await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'User', 'user-src', 'typescript', 'linux-x86_64',
+      'User', 'user-src', 'typescript', 'node',
       { mode: 'release' },
     );
 
-    // The toolchain list should only have one resolved entry for typescript
+    // The toolchain list should only have one resolved entry for typescript compiler
     const listResult = await toolchainHandler.list(
       { language: 'typescript' },
       toolchainStorage,
     );
     expect(listResult.variant).toBe('ok');
-    const toolchains = listResult.toolchains as any[];
+    const tools = listResult.tools as any[];
     // Same tool resolved once, reused for both concepts
-    expect(toolchains).toHaveLength(1);
-    expect(toolchains[0].tool).toBe('tsc');
+    expect(tools).toHaveLength(1);
+    expect(tools[0].language).toBe('typescript');
+    expect(tools[0].category).toBe('compiler');
   });
 
-  it('should stop pipeline before store when build fails', async () => {
-    // Trigger a build failure using simulateError
-    const buildResult = await builderHandler.build(
-      {
-        conceptName: 'Broken',
-        target: 'typescript',
-        sourceHash: 'src-broken',
-        simulateError: 'compilationError',
-      },
-      builderStorage,
-    );
-    expect(buildResult.variant).toBe('compilationError');
-
-    // Run the pipeline with the failing concept
+  it('should stop pipeline before store when toolchain fails', async () => {
+    // Run the pipeline with an unknown language — toolchain resolution fails
     const result = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Broken', 'src-broken', 'unknown', 'linux-x86_64',
+      'Broken', 'src-broken', 'haskell', 'linux',
       { mode: 'release' },
     );
 
@@ -255,14 +229,14 @@ describe('Build pipeline integration', () => {
   it('should produce retrievable artifact by hash after full pipeline', async () => {
     const result = await runBuildPipeline(
       toolchainStorage, builderStorage, artifactStorage,
-      'Password', 'src-v1', 'typescript', 'linux-x86_64',
+      'Password', 'src-v1', 'typescript', 'node',
       { mode: 'release' },
     );
     expect(result.artifactHash).toBeDefined();
 
     // Verify the build is recorded in builder history
     const historyResult = await builderHandler.history(
-      { conceptName: 'Password' },
+      { concept: 'Password' },
       builderStorage,
     );
     expect(historyResult.variant).toBe('ok');
