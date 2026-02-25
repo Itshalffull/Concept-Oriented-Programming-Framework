@@ -121,12 +121,12 @@ describe('Orchestration Concepts', () => {
     expect(ast.name).toBe('Artifact');
     expect(ast.typeParams).toEqual(['A']);
     expect(ast.version).toBe(1);
-    expect(ast.actions).toHaveLength(3);
-    expect(ast.actions.map(a => a.name)).toEqual(['build', 'resolve', 'gc']);
+    expect(ast.actions).toHaveLength(4);
+    expect(ast.actions.map(a => a.name)).toEqual(['build', 'store', 'resolve', 'gc']);
     // build has 2 variants: ok, compilationError
     expect(ast.actions[0].variants).toHaveLength(2);
     // resolve has 2 variants: ok, notfound
-    expect(ast.actions[1].variants).toHaveLength(2);
+    expect(ast.actions[2].variants).toHaveLength(2);
     expect(ast.invariants).toHaveLength(1);
   });
 });
@@ -913,7 +913,7 @@ describe('Kit YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(31);
+    expect(specPaths.length).toBe(41);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);
@@ -922,7 +922,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(68);
+    expect(syncPaths.length).toBe(95);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);
