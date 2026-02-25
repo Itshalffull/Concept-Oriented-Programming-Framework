@@ -346,6 +346,7 @@ kits:
 - **Infrastructure goes in `infrastructure/` only** — never mix pre-conceptual code with concepts, syncs, or implementations
 - **Prefer framework kits over domain kits** — only add infrastructure when concepts literally can't function without it
 - **Gate concepts follow the async gate convention** — `@gate` annotation, ok/non-ok variants, pending state
+- **Description quality is mandatory** — Every concept must have a clear purpose (1-3 sentences, what/why/how), every action variant must have a meaningful description, and every sync must have a one-line comment. See the `create-concept` and `create-sync` skills for the full description quality rules.
 
 ## Examples
 

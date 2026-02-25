@@ -15,6 +15,7 @@ A **synchronization** (sync) is the only coordination mechanism between concepts
 
 ```
 sync SyncName [eager]
+  purpose: "One-line description of what this sync does and why"
 when {
   Concept/action: [ input-fields ] => [ output-fields ]
 }
@@ -163,7 +164,38 @@ Multiple annotations allowed: `sync MySync [eager] [idempotent]`
 
 For kit syncs, also add tier annotations: `[required]` or `[recommended]`. See the `create-concept-kit` skill.
 
-### Step 7: Place the Sync File
+### Step 7: Write Descriptions (Mandatory)
+
+Every sync MUST have a `purpose` clause. This is not optional — undocumented syncs are incomplete.
+
+**Use the `purpose:` metadata field** (preferred over comments). The purpose clause is machine-readable and preserved in the parsed AST, making it available for tooling, documentation generation, and AI-assisted discovery:
+
+```
+sync CommentNotifyOnReply [eager]
+  purpose: "Auto-publish replies so they appear immediately after creation"
+when { ... }
+then { ... }
+
+sync RuleTriggersWorkflow [eager]
+  purpose: "When an automation rule fires, advance the linked workflow to its next state"
+when { ... }
+then { ... }
+```
+
+**File-level comments** are also encouraged. Each `.sync` file should start with a 1-2 line comment explaining the flow or domain it covers:
+```
+# Article CRUD syncs — authenticate, perform operations, and return responses
+```
+
+**Description quality rules:**
+1. **Explain the causal chain** — "When X happens, do Y because Z" (the "because Z" can be implicit if obvious)
+2. **Don't just restate the sync name** — The purpose must add context beyond what `sync NameHere` already tells you
+   - BAD: `purpose: "Validates before executing"`
+   - GOOD: `purpose: "Run validation checks on a deploy plan before allowing execution"`
+3. **Keep it to one sentence** — If you need more, the sync is probably too complex and should be split
+4. **Reference the domain concept** — Use terms the domain expert would use, not implementation jargon
+
+### Step 8: Place the Sync File
 
 ```
 syncs/
@@ -180,7 +212,7 @@ syncs/
 - Kit syncs go under `kits/<kit-name>/syncs/`
 - Multiple syncs per file is normal and encouraged for related flows
 
-### Step 8: Validate
+### Step 9: Validate
 
 ```bash
 # Parse and validate all sync files against concept specs

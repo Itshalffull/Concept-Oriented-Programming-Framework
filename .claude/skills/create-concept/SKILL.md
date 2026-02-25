@@ -94,6 +94,28 @@ Actions are the concept's API. Each action:
 4. **Queries return the data** — `-> ok(following: Bool)` returns the queried value
 5. **Prose in variants** — Describe the *condition* for each variant, not the implementation
 
+**Description quality rules (mandatory):**
+
+Every variant description MUST be a clear, concise explanation of *when this outcome occurs and what it means*. 1-2 sentences. Apply these checks:
+
+1. **Don't echo the action name** — The description must add information beyond what the action/variant name already conveys.
+   - BAD: `-> ok() { State registered. }` (just echoes "defineState")
+   - GOOD: `-> ok() { Add a new named state to the workflow's state graph with the given flags. }`
+
+2. **Don't be vague** — Avoid generic phrases like "failed", "error occurred", "operation succeeded".
+   - BAD: `-> error(message: String) { Capture failed. }`
+   - GOOD: `-> error(message: String) { The URL was unreachable or returned an unsupported content type. }`
+
+3. **Explain the "why" for non-ok variants** — Error/failure variants should explain what condition triggers them.
+   - BAD: `-> notfound(message: String) { Not found. }`
+   - GOOD: `-> notfound(message: String) { No session exists with this identifier. }`
+
+4. **Don't over-explain ok variants** — For the happy path, describe what the action accomplishes, not how it works internally.
+   - BAD: `-> ok(token: String) { This function generates a cryptographically secure random token using the crypto module, stores it in the sessions map indexed by session ID, sets the expiration timestamp to current time plus the configured TTL, and marks the session as valid in the isValid map. }`
+   - GOOD: `-> ok(token: String) { Create a new session for the given user and device, generate a token, and set the expiration. }`
+
+5. **One sentence is often enough** — Don't pad descriptions. If "No session exists with this identifier." fully explains the variant, stop there.
+
 ### Step 5: Write the Operational Principle (Invariants)
 
 Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns, anti-patterns, and detailed guidance.
@@ -314,19 +336,20 @@ concept Name [T] {
   actions {
     action create(item: T, property: String) {
       -> ok(item: T) {
-        What happens on success.
+        Add a new item with the given property value.
       }
       -> error(message: String) {
-        When this variant is returned.
+        An item with this identifier already exists, or the
+        property value violates a constraint.
       }
     }
 
     action get(item: T) {
       -> ok(item: T, property: String) {
-        Returns the item's data.
+        Return the item and its current property value.
       }
       -> notfound(message: String) {
-        If the item does not exist.
+        No item exists with this identifier.
       }
     }
   }
