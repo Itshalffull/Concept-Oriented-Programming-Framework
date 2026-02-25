@@ -501,55 +501,6 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf migrate <concept> → migration check/complete ----
-
-  describe('migrate → Migration parity', () => {
-    it('generated group "migration" exists', () => {
-      expect(generatedCommands.has('migration')).toBe(true);
-    });
-
-    it('has exactly 2 subcommands (check, complete)', () => {
-      const cmd = generatedCommands.get('migration')!;
-      expect(cmd.subcommands.length).toBe(2);
-    });
-
-    it('has subcommand "check" (maps to handmade "migrate" default mode)', () => {
-      const cmd = generatedCommands.get('migration')!;
-      expect(getGeneratedSubcommand(cmd, 'check')).toBeDefined();
-    });
-
-    it('has subcommand "complete"', () => {
-      const cmd = generatedCommands.get('migration')!;
-      expect(getGeneratedSubcommand(cmd, 'complete')).toBeDefined();
-    });
-
-    it('check has --concept matching handmade positional concept arg', () => {
-      const cmd = generatedCommands.get('migration')!;
-      const sub = getGeneratedSubcommand(cmd, 'check')!;
-      expect(sub.requiredOptions).toContain('concept');
-    });
-
-    it('check has --spec-version as required option', () => {
-      const cmd = generatedCommands.get('migration')!;
-      const sub = getGeneratedSubcommand(cmd, 'check')!;
-      expect(sub.requiredOptions).toContain('spec-version');
-    });
-
-    it('complete has --concept and --version as required options', () => {
-      const cmd = generatedCommands.get('migration')!;
-      const sub = getGeneratedSubcommand(cmd, 'complete')!;
-      expect(sub.requiredOptions).toContain('concept');
-      expect(sub.requiredOptions).toContain('version');
-    });
-
-    it('all subcommands have --json flag', () => {
-      const cmd = generatedCommands.get('migration')!;
-      for (const sub of cmd.subcommands) {
-        expect(sub.hasJsonFlag, `migration ${sub.name} should have --json`).toBe(true);
-      }
-    });
-  });
-
   // ---- copf kit <sub> → kit-manager <sub> ----
 
   describe('kit → KitManager parity', () => {
@@ -835,7 +786,6 @@ describe('CLI Generation Regression', () => {
       DevServer: 'dev-server',
       DeploymentValidator: 'deployment-validator',
       FlowTrace: 'flow-trace',
-      Migration: 'migration',
       KitManager: 'kit-manager',
     };
 
@@ -972,9 +922,9 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli.name).toBe('copf');
     });
 
-    it('manifest lists exactly 36 concept specs', () => {
+    it('manifest lists exactly 34 concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(36);
+      expect(concepts.length).toBe(34);
     });
   });
 });

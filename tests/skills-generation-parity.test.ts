@@ -73,8 +73,13 @@ interface SkillFrontmatter {
 
 // ---- Parsing Helpers ----
 
+/** Normalize CRLF to LF so regex patterns work on Windows-generated files. */
+function normalizeLF(text: string): string {
+  return text.replace(/\r\n/g, '\n');
+}
+
 function parseSkillFrontmatter(content: string): SkillFrontmatter | null {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  const match = normalizeLF(content).match(/^---\n([\s\S]*?)\n---/);
   if (!match) return null;
   const yaml = match[1];
   const fm: Record<string, string> = {};
@@ -89,7 +94,8 @@ function parseSkillFrontmatter(content: string): SkillFrontmatter | null {
   return fm as unknown as SkillFrontmatter;
 }
 
-function extractSteps(content: string): Array<{ number: number; title: string }> {
+function extractSteps(rawContent: string): Array<{ number: number; title: string }> {
+  const content = normalizeLF(rawContent);
   const steps: Array<{ number: number; title: string }> = [];
   // Matches both ## Step N and ### Step N heading levels
   const regex = /^#{2,3} Step (\d+): (.+)$/gm;
@@ -100,7 +106,8 @@ function extractSteps(content: string): Array<{ number: number; title: string }>
   return steps;
 }
 
-function extractChecklists(content: string): string[] {
+function extractChecklists(rawContent: string): string[] {
+  const content = normalizeLF(rawContent);
   const items: string[] = [];
   const regex = /^- \[ \] (.+)$/gm;
   let match;
@@ -110,7 +117,8 @@ function extractChecklists(content: string): string[] {
   return items;
 }
 
-function extractCodeBlocks(content: string): Array<{ language: string; code: string }> {
+function extractCodeBlocks(rawContent: string): Array<{ language: string; code: string }> {
+  const content = normalizeLF(rawContent);
   const blocks: Array<{ language: string; code: string }> = [];
   const regex = /```(\w+)\n([\s\S]*?)```/g;
   let match;
@@ -120,7 +128,8 @@ function extractCodeBlocks(content: string): Array<{ language: string; code: str
   return blocks;
 }
 
-function extractReferences(content: string): Array<{ label: string; path: string }> {
+function extractReferences(rawContent: string): Array<{ label: string; path: string }> {
+  const content = normalizeLF(rawContent);
   const refs: Array<{ label: string; path: string }> = [];
   const regex = /- \[([^\]]+)\]\(([^)]+)\)/g;
   let match;
@@ -161,23 +170,23 @@ function toCamel(name: string): string {
 }
 
 /**
- * Get the first workflow per concept, matching the implementation's
- * getWorkflowForConcept() which returns the first match. When multiple
- * workflows map to the same concept (e.g. concept-validator and
- * concept-designer both map to SpecParser), only the first is used.
+ * Get the most specific workflow per concept. When multiple workflows map
+ * to the same concept (e.g. cache-build and incremental-caching both map
+ * to BuildCache), the workflow with the most steps is selected — it
+ * represents the most detailed guide and matches what the generator emits.
+ * Ties are broken by keeping the first occurrence.
  */
-function getFirstWorkflowPerConcept(
+function getPrimaryWorkflowPerConcept(
   workflows: Record<string, WorkflowConfig>,
 ): WorkflowConfig[] {
-  const seen = new Set<string>();
-  const result: WorkflowConfig[] = [];
+  const best = new Map<string, WorkflowConfig>();
   for (const wf of Object.values(workflows)) {
-    if (!seen.has(wf.concept)) {
-      seen.add(wf.concept);
-      result.push(wf);
+    const existing = best.get(wf.concept);
+    if (!existing || wf.steps.length > existing.steps.length) {
+      best.set(wf.concept, wf);
     }
   }
-  return result;
+  return Array.from(best.values());
 }
 
 // ---- Tests ----
@@ -185,6 +194,8 @@ function getFirstWorkflowPerConcept(
 describe('Claude Skills Generation Parity', () => {
   let manifest: ManifestYaml;
   let conceptNames: string[];
+  /** Concepts that have annotation entries — only these are expected to produce generated skills. */
+  let annotatedConceptNames: string[];
 
   beforeAll(() => {
     const source = readFileSync(DEVTOOLS_MANIFEST, 'utf-8');
@@ -193,6 +204,13 @@ describe('Claude Skills Generation Parity', () => {
       const fileName = path.split('/').pop()?.replace('.concept', '') || '';
       return fileName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
     });
+    // Only concepts with annotations in the manifest are expected to have
+    // generated SKILL.md and .commands.ts files. Kit concepts added to the
+    // manifest without annotations (e.g. Generator, Projection, ApiSurface,
+    // Conformance, TestSelection, FlakyTest, ContractTest, Snapshot) do not
+    // produce skill output until annotations are added.
+    const annotationKeys = new Set(Object.keys(manifest.annotations));
+    annotatedConceptNames = conceptNames.filter(n => annotationKeys.has(n));
   });
 
   // ================================================================
@@ -208,9 +226,9 @@ describe('Claude Skills Generation Parity', () => {
       expect(existsSync(resolve(GENERATED_SKILLS_DIR, 'index.ts'))).toBe(true);
     });
 
-    it('every manifest concept has a generated SKILL.md', () => {
+    it('every annotated concept has a generated SKILL.md', () => {
       const missing: string[] = [];
-      for (const name of conceptNames) {
+      for (const name of annotatedConceptNames) {
         const kebab = toKebab(name);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
         if (!existsSync(skillPath)) {
@@ -220,9 +238,9 @@ describe('Claude Skills Generation Parity', () => {
       expect(missing, `Missing SKILL.md:\n  ${missing.join('\n  ')}`).toEqual([]);
     });
 
-    it('every manifest concept has a generated .commands.ts', () => {
+    it('every annotated concept has a generated .commands.ts', () => {
       const missing: string[] = [];
-      for (const name of conceptNames) {
+      for (const name of annotatedConceptNames) {
         const kebab = toKebab(name);
         const tsPath = resolve(GENERATED_SKILLS_DIR, kebab, `${kebab}.commands.ts`);
         if (!existsSync(tsPath)) {
@@ -245,13 +263,13 @@ describe('Claude Skills Generation Parity', () => {
       }
     });
 
-    it('generated skills count matches manifest concept count', () => {
+    it('generated skills count matches annotated concept count', () => {
       let count = 0;
-      for (const name of conceptNames) {
+      for (const name of annotatedConceptNames) {
         const kebab = toKebab(name);
         if (existsSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'))) count++;
       }
-      expect(count).toBe(manifest.concepts.length);
+      expect(count).toBe(annotatedConceptNames.length);
     });
   });
 
@@ -357,7 +375,7 @@ describe('Claude Skills Generation Parity', () => {
   describe('Workflow step parity', () => {
     it('every workflow concept has the correct number of steps', () => {
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
         if (!existsSync(skillPath)) continue;
@@ -371,7 +389,7 @@ describe('Claude Skills Generation Parity', () => {
 
     it('workflow step titles match generated step titles', () => {
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
         if (!existsSync(skillPath)) continue;
@@ -395,7 +413,7 @@ describe('Claude Skills Generation Parity', () => {
       // so generated prose may come from the concept spec rather than
       // the workflow definition. We verify prose exists after each step heading.
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
         if (!existsSync(skillPath)) continue;
@@ -449,7 +467,7 @@ describe('Claude Skills Generation Parity', () => {
   describe('Checklist parity', () => {
     it('workflow checklists appear in generated skill', () => {
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         if (!wf.checklists) continue;
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
@@ -468,7 +486,7 @@ describe('Claude Skills Generation Parity', () => {
 
     it('checklist item count matches manifest for workflow concepts', () => {
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         if (!wf.checklists) continue;
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
@@ -541,7 +559,7 @@ describe('Claude Skills Generation Parity', () => {
   describe('Reference parity', () => {
     it('workflow references appear in generated skill', () => {
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         if (!wf.references) continue;
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
@@ -559,7 +577,7 @@ describe('Claude Skills Generation Parity', () => {
 
     it('reference link paths match manifest reference paths', () => {
       const failures: string[] = [];
-      for (const wf of getFirstWorkflowPerConcept(manifest.workflows)) {
+      for (const wf of getPrimaryWorkflowPerConcept(manifest.workflows)) {
         if (!wf.references) continue;
         const kebab = toKebab(wf.concept);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
@@ -881,21 +899,7 @@ describe('Claude Skills Generation Parity', () => {
     });
   });
 
-  describe('Migration skill', () => {
-    const kebab = 'migration';
-
-    it('has 2 workflow steps', () => {
-      const steps = extractSteps(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));
-      expect(steps.length).toBe(2);
-      expect(steps[0].title).toBe('Plan Migration');
-      expect(steps[1].title).toBe('Apply Migration');
-    });
-
-    it('.commands.ts exports ["check", "complete"]', () => {
-      const parsed = parseCommandsTs(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, `${kebab}.commands.ts`), 'utf-8'));
-      expect(parsed.commands.sort()).toEqual(['check', 'complete'].sort());
-    });
-  });
+  // Migration concept was removed — no generated skill to test.
 
   describe('ProjectScaffold skill', () => {
     const kebab = 'project-scaffold';
@@ -977,7 +981,7 @@ describe('Claude Skills Generation Parity', () => {
         const kebab = toKebab(name);
         const skillPath = resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md');
         if (!existsSync(skillPath)) continue;
-        if (!readFileSync(skillPath, 'utf-8').startsWith('---\n')) failures.push(kebab);
+        if (!normalizeLF(readFileSync(skillPath, 'utf-8')).startsWith('---\n')) failures.push(kebab);
       }
       expect(failures).toEqual([]);
     });

@@ -63,11 +63,11 @@ interface SkillStructure {
 // ---- Parsing Helpers ----
 
 function parseFrontmatter(content: string): { fm: SkillFrontmatter; raw: string } | null {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return null;
   const raw = match[1];
   const fm: Record<string, string> = {};
-  const lines = raw.split('\n');
+  const lines = raw.split(/\r?\n/);
   let currentKey = '';
   let currentValue = '';
   for (const line of lines) {
@@ -85,7 +85,7 @@ function parseFrontmatter(content: string): { fm: SkillFrontmatter; raw: string 
 }
 
 function getBodyAfterFrontmatter(content: string): string {
-  const match = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n([\s\S]*)$/);
   return match ? match[1] : content;
 }
 
@@ -132,7 +132,7 @@ function hasRelatedSkillsSection(body: string): boolean {
 }
 
 function getDescriptionAfterH1(body: string): string | null {
-  const match = body.match(/^# .+\n\n(.+)/m);
+  const match = body.match(/^# .+\r?\n\r?\n(.+)/m);
   return match ? match[1].trim() : null;
 }
 
@@ -627,8 +627,8 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
       const allSkills = [...handmadeSkills, ...generatedSkills];
       for (const skill of allSkills) {
         const content = readFileSync(skill.path, 'utf-8');
-        expect(content, `${skill.name} should start with ---`).toMatch(/^---\n/);
-        expect(content, `${skill.name} should have closing ---`).toMatch(/\n---\n/);
+        expect(content, `${skill.name} should start with ---`).toMatch(/^---\r?\n/);
+        expect(content, `${skill.name} should have closing ---`).toMatch(/\r?\n---\r?\n/);
       }
     });
 
