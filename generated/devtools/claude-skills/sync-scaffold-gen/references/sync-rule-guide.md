@@ -9,7 +9,7 @@ How to write well-formed `.sync` files.
 
 ```
 sync SyncName [eager]
-  purpose { Why this sync exists. }
+  purpose: "Why this sync exists — explain the causal chain."
 when {
   SourceConcept/action: [
     field: ?var

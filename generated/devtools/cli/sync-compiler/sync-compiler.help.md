@@ -15,11 +15,13 @@ Compile sync rules in **<source>** into executable registrations for the sync en
 - **Completion Chaining:** Syncs compose through completions, never by referencing other syncs — each sync reacts to what happened, not who caused it.
 - **Concept Independence:** Syncs wire concepts together without the concepts knowing about each other — concepts never import or reference each other.
 - **Pattern Exhaustiveness:** Every when-clause variant that a sync matches should be explicitly listed — don't rely on fallthrough behavior.
+- **Purpose Clause Quality:** Every sync must have a purpose clause that explains the causal chain — 'When X happens, do Y because Z'. Never just restate the sync name or omit the purpose entirely.
 **compile:**
 - [ ] Sync references valid concept actions?
 - [ ] Variable bindings are consistent across when/where/then?
 - [ ] Where-clause queries are well-formed?
 - [ ] Sync mode (eager vs eventual) matches intent?
+- [ ] Purpose clause explains the causal chain, not just the sync name?
 ## References
 
 - [Sync language and patterns](references/sync-design.md)
@@ -61,6 +63,29 @@ sync BadChain [eager] {
 sync GoodChain [eager] {
   when { ConceptA/create => ok[item: ?x] }
   then { ConceptB/process[item: ?x] }
+}
+
+```
+
+### Missing or restated purpose
+Sync has no purpose clause, or the purpose just restates the sync name — readers can't understand why the sync exists.
+
+**Bad:**
+```
+sync CreateProfile [eager] {
+  when { User/create => ok[user: ?u] }
+  then { Profile/create[owner: ?u] }
+}
+
+```
+
+**Good:**
+```
+sync CreateProfile [eager]
+  purpose: "Initialize an empty profile automatically when a new user registers"
+{
+  when { User/create => ok[user: ?u] }
+  then { Profile/create[owner: ?u] }
 }
 
 ```
