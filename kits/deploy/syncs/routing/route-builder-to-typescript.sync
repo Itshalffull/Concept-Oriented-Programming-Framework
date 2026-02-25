@@ -1,0 +1,13 @@
+# Route Builder/build to TypeScriptBuilder — Architecture doc Section 3.8
+
+sync RouteBuilderToTypeScript [eager]
+when {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: "typescript"; platform: ?plat; config: ?cfg ]
+    => [ build: ?b; artifactHash: ?hash;
+         artifactLocation: ?loc; duration: ?dur ]
+}
+then {
+  TypeScriptBuilder/build: [ source: ?src; toolchainPath: ?toolPath;
+    platform: ?plat; config: ?cfg ]
+}

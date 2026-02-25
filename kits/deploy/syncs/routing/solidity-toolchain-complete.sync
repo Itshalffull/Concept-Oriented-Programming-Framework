@@ -1,0 +1,12 @@
+# SolidityToolchain resolution completion propagates back to Toolchain — Architecture doc Section 3.8
+
+sync SolidityToolchainComplete [eager]
+when {
+  SolidityToolchain/resolve: [ platform: ?plat ]
+    => [ toolchain: ?l; solcPath: ?path; version: ?ver;
+         capabilities: ?caps ]
+}
+then {
+  Toolchain/resolve: [ language: "solidity"; platform: ?plat;
+    versionConstraint: ?constraint ]
+}

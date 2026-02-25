@@ -1,0 +1,13 @@
+# Resolve toolchain before Builder runs — Architecture doc Section 3.8
+# DeployPlan execution triggers toolchain resolution for each
+# configured build target language and platform.
+
+sync ToolchainBeforeBuild [eager]
+when {
+  DeployPlan/execute: [ plan: ?plan ]
+    => [ plan: ?plan; duration: ?dur; nodesDeployed: ?count ]
+}
+then {
+  Toolchain/resolve: [ language: ?lang; platform: ?plat;
+    versionConstraint: ?ver ]
+}

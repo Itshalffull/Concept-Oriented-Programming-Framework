@@ -1,0 +1,115 @@
+@version(1)
+concept Builder [B] {
+
+  purpose {
+    Coordinate compilation, testing, and packaging across
+    languages. Owns the build registry: what was built, for
+    what language and platform, with what toolchain, and what
+    the result was. Provider-agnostic — DeployPlan invokes
+    Builder actions, and integration syncs route to the
+    active language provider concept.
+  }
+
+  state {
+    builds: set B
+    registry {
+      concept: B -> String
+      language: B -> String
+      platform: B -> String
+      config: B -> { mode: String, features: option list String }
+      toolchainRef: B -> String
+      status: B -> String
+      startedAt: B -> DateTime
+      completedAt: B -> option DateTime
+      duration: B -> option Int
+    }
+    results {
+      artifactHash: B -> option String
+      artifactLocation: B -> option String
+      testsPassed: B -> option Int
+      testsFailed: B -> option Int
+      testsSkipped: B -> option Int
+      warnings: B -> option list String
+      errors: B -> option list String
+    }
+  }
+
+  actions {
+    action build(concept: String, source: String, language: String, platform: String, config: { mode: String, features: option list String }) {
+      -> ok(build: B, artifactHash: String, artifactLocation: String, duration: Int) {
+        Compile, test, and package the concept implementation
+        for the specified language and platform. Completion
+        arrives after the provider concept finishes actual
+        compilation. Builder records the result in its registry.
+
+        The provider:
+        1. Resolves Toolchain for the language+platform
+        2. Compiles the source
+        3. Runs tests (unless config.mode = "skip-tests")
+        4. Packages the output
+        5. Returns content-addressed artifact
+
+        If an artifact with matching input hash already exists
+        in Artifact, returns it without rebuilding (cache hit
+        through Artifact's content-addressing).
+      }
+      -> compilationError(concept: String, language: String, errors: list { file: String, line: Int, message: String }) {
+        Compilation failed. Structured errors with file locations
+        for IDE integration.
+      }
+      -> testFailure(concept: String, language: String, passed: Int, failed: Int, failures: list { test: String, message: String }) {
+        Compilation succeeded but tests failed. Returns
+        pass/fail counts and failure details.
+      }
+      -> toolchainError(concept: String, language: String, reason: String) {
+        Toolchain resolution failed before compilation started.
+        Propagated from Toolchain concept.
+      }
+    }
+
+    action buildAll(concepts: list String, source: String, targets: list { language: String, platform: String }, config: { mode: String, features: option list String }) {
+      -> ok(results: list { concept: String, language: String, artifactHash: String, duration: Int }) {
+        Build multiple concepts across multiple targets.
+        Independent targets build in parallel. Returns
+        per-concept, per-target results.
+      }
+      -> partial(completed: list { concept: String, language: String, artifactHash: String }, failed: list { concept: String, language: String, error: String }) {
+        Some builds succeeded, some failed.
+      }
+    }
+
+    action test(concept: String, language: String, platform: String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
+        Run tests only (no compilation — assumes already built).
+        Used for re-running tests after a build.
+      }
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
+        Some tests failed.
+      }
+      -> notBuilt(concept: String, language: String) {
+        No build artifact found — must build first.
+      }
+    }
+
+    action status(build: B) {
+      -> ok(build: B, status: String, duration: option Int) {
+        Current build status. Statuses: "pending", "compiling",
+        "testing", "packaging", "done", "failed".
+      }
+    }
+
+    action history(concept: String, language: option String) {
+      -> ok(builds: list { language: String, platform: String, artifactHash: String, duration: Int, completedAt: DateTime, testsPassed: Int }) {
+        Build history for a concept, optionally filtered by
+        language. Used by `copf build history`.
+      }
+    }
+  }
+
+  invariant {
+    after build(concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: { mode: "release" })
+      -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".copf-artifacts/swift/password", duration: 3200)
+    then status(build: b) -> ok(build: b, status: "done", duration: 3200)
+    and  history(concept: "password", language: "swift") -> ok(builds: bs)
+  }
+}

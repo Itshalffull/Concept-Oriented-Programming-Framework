@@ -1,0 +1,57 @@
+@version(1)
+concept RustToolchain [R] {
+
+  purpose {
+    Resolve Rust compiler toolchains. Owns Rust-specific
+    resolution: rustup channel management, target triple
+    installation, cargo feature detection, and wasm-pack
+    availability.
+  }
+
+  state {
+    toolchains: set R
+    config {
+      rustcPath: R -> String
+      rustcVersion: R -> String
+      channel: R -> String
+      cargoPath: R -> String
+      installedTargets: R -> list String
+      wasmPackPath: R -> option String
+    }
+  }
+
+  actions {
+    action resolve(platform: String, versionConstraint: option String) {
+      -> ok(toolchain: R, rustcPath: String, version: String, capabilities: list String) {
+        Check rustup for requested channel (stable/nightly).
+        Verify target triple is installed. Detect wasm-pack
+        if platform is wasm32. Return capabilities:
+        "wasm-target", "proc-macros", "incremental", etc.
+      }
+      -> notInstalled(installHint: String) {
+        rustup/rustc not found.
+        Hint: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+      }
+      -> targetMissing(target: String, installHint: String) {
+        Requested target triple not installed.
+        Hint: "rustup target add wasm32-unknown-unknown"
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "RustToolchain"
+        language: "rust"
+        capabilities: ["rustup-channels", "target-management",
+        "wasm-pack-detection"]
+      }
+    }
+  }
+
+  invariant {
+    after resolve(platform: "linux-x86_64", versionConstraint: ">=1.75")
+      -> ok(toolchain: r, rustcPath: "/usr/local/bin/rustc", version: "1.78.0", capabilities: ["incremental", "proc-macros"])
+    then register() -> ok(name: "RustToolchain", language: "rust", capabilities: caps)
+  }
+}

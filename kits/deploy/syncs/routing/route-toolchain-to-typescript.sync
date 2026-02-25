@@ -1,0 +1,13 @@
+# Route Toolchain/resolve to TypeScriptToolchain — Architecture doc Section 3.8
+
+sync RouteToolchainToTypeScript [eager]
+when {
+  Toolchain/resolve: [ language: "typescript"; platform: ?plat;
+    versionConstraint: ?ver ]
+    => [ tool: ?tool; version: ?v; path: ?path;
+         capabilities: ?caps ]
+}
+then {
+  TypeScriptToolchain/resolve: [ platform: ?plat;
+    versionConstraint: ?ver ]
+}

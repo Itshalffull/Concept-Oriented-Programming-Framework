@@ -1,0 +1,85 @@
+@version(1)
+concept RustBuilder [R] {
+
+  purpose {
+    Compile, test, and package Rust concept implementations.
+    Owns Rust-specific build logic: cargo invocation, feature
+    flag management, WASM compilation via wasm-pack, and
+    crate packaging. Supports local, remote, and container-based
+    execution strategies configured via the deploy manifest
+    executor section.
+  }
+
+  state {
+    builds: set R
+    config {
+      manifestPath: R -> String
+      targetDir: R -> String
+      profile: R -> String
+      features: R -> option list String
+      targetTriple: R -> option String
+    }
+  }
+
+  actions {
+    action build(source: String, toolchainPath: String, platform: String, config: { mode: String, features: option list String }) {
+      -> ok(build: R, artifactPath: String, artifactHash: String) {
+        Run `cargo build` with resolved toolchain.
+        Mode mapping:
+        "debug" -> cargo build (dev profile)
+        "release" -> cargo build --release
+
+        Executor strategy (from deploy manifest):
+        "local" -> invoke cargo directly on host
+        "remote" -> send source to remote build endpoint
+        "container" -> run cargo build in Docker container
+
+        For WASM targets, uses wasm-pack if available.
+        Feature flags passed through from config.
+      }
+      -> compilationError(errors: list { file: String, line: Int, message: String }) {
+        rustc reported errors.
+      }
+      -> featureConflict(conflicting: list String) {
+        Incompatible feature flags.
+      }
+    }
+
+    action test(build: R, toolchainPath: String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
+        Run `cargo test`. Parses test harness output.
+      }
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
+        Some tests failed.
+      }
+    }
+
+    action package(build: R, format: String) {
+      -> ok(artifactPath: String, artifactHash: String) {
+        Package built artifact. Formats:
+        "crate" -> cargo-publishable crate
+        "binary" -> standalone executable
+        "wasm-pack" -> npm-publishable WASM package
+        "docker" -> Dockerfile + binary
+      }
+      -> formatUnsupported(format: String) {
+        Requested format not available.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "RustBuilder"
+        language: "rust"
+        capabilities: ["crate", "binary", "wasm-pack", "docker"]
+      }
+    }
+  }
+
+  invariant {
+    after build(source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: { mode: "release" })
+      -> ok(build: r, artifactPath: ".copf-artifacts/rust/password", artifactHash: "sha256:ghi")
+    then test(build: r, toolchainPath: "/usr/local/bin/rustc") -> ok(passed: 15, failed: 0, skipped: 0, duration: 2100)
+  }
+}

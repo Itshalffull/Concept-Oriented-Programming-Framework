@@ -6,9 +6,10 @@ kit:
     Deployment orchestration for COPF applications. Provides
     deploy planning, progressive delivery, schema migrations,
     health verification, environment management, observability
-    injection, and immutable artifact management. Uses the
-    coordination + provider pattern for runtimes, secrets, and
-    infrastructure-as-code.
+    injection, immutable artifact management, and multi-language
+    build coordination. Uses the coordination + provider pattern
+    for runtimes, secrets, infrastructure-as-code, builders,
+    and toolchains.
 
 concepts:
   # --- Orchestration Concepts ---
@@ -67,6 +68,16 @@ concepts:
     spec: ./concepts/gitops.concept
     params:
       G: { as: gitops-manifest-ref, description: "Reference to a GitOps manifest" }
+
+  Builder:
+    spec: ./concepts/builder.concept
+    params:
+      B: { as: build-ref, description: "Reference to a build record" }
+
+  Toolchain:
+    spec: ./concepts/toolchain.concept
+    params:
+      T: { as: tool-ref, description: "Reference to a resolved toolchain" }
 
   # --- Runtime Provider Plugins (load what you need) ---
   LambdaRuntime:
@@ -192,6 +203,56 @@ concepts:
       F: { as: flux-kustomization-ref, description: "Reference to a Flux kustomization" }
     optional: true
 
+  # --- Builder Provider Plugins (load what you need) ---
+  TypeScriptBuilder:
+    spec: ./concepts/providers/typescript-builder.concept
+    params:
+      N: { as: ts-build-ref, description: "Reference to a TypeScript build" }
+    optional: true
+
+  SwiftBuilder:
+    spec: ./concepts/providers/swift-builder.concept
+    params:
+      S: { as: swift-build-ref, description: "Reference to a Swift build" }
+    optional: true
+
+  RustBuilder:
+    spec: ./concepts/providers/rust-builder.concept
+    params:
+      R: { as: rust-build-ref, description: "Reference to a Rust build" }
+    optional: true
+
+  SolidityBuilder:
+    spec: ./concepts/providers/solidity-builder.concept
+    params:
+      L: { as: solidity-build-ref, description: "Reference to a Solidity build" }
+    optional: true
+
+  # --- Toolchain Provider Plugins (load what you need) ---
+  TypeScriptToolchain:
+    spec: ./concepts/providers/typescript-toolchain.concept
+    params:
+      N: { as: ts-toolchain-ref, description: "Reference to a TypeScript toolchain" }
+    optional: true
+
+  SwiftToolchain:
+    spec: ./concepts/providers/swift-toolchain.concept
+    params:
+      S: { as: swift-toolchain-ref, description: "Reference to a Swift toolchain" }
+    optional: true
+
+  RustToolchain:
+    spec: ./concepts/providers/rust-toolchain.concept
+    params:
+      R: { as: rust-toolchain-ref, description: "Reference to a Rust toolchain" }
+    optional: true
+
+  SolidityToolchain:
+    spec: ./concepts/providers/solidity-toolchain.concept
+    params:
+      L: { as: solidity-toolchain-ref, description: "Reference to a Solidity toolchain" }
+    optional: true
+
 syncs:
   required:
     - path: ./syncs/core/validate-before-execute.sync
@@ -294,6 +355,24 @@ syncs:
       name: PlanAfterPromotion
       description: >
         Create deploy plan after environment resolved.
+
+    - path: ./syncs/build/toolchain-before-build.sync
+      name: ToolchainBeforeBuild
+      description: >
+        Resolve toolchain before Builder runs for each
+        configured build target language and platform.
+
+    - path: ./syncs/build/build-after-toolchain.sync
+      name: BuildAfterToolchain
+      description: >
+        Start builds once toolchain is resolved for a
+        language and platform.
+
+    - path: ./syncs/build/store-after-build.sync
+      name: StoreAfterBuild
+      description: >
+        Store built artifacts in content-addressed Artifact
+        after Builder completes compilation.
 
   # --- Plugin Syncs (activate per loaded provider) ---
   integration:
@@ -436,6 +515,70 @@ syncs:
       name: RecordCacheFlux
     - path: ./syncs/generation/flux-observer.sync
       name: ObserveFlux
+
+    # ─── Builder Plugin: TypeScriptBuilder ───
+    - path: ./syncs/routing/route-builder-to-typescript.sync
+      name: RouteBuilderTypeScript
+    - path: ./syncs/routing/typescript-builder-complete.sync
+      name: TypeScriptBuilderComplete
+    - path: ./syncs/registration/register-typescript-builder.sync
+      name: RegisterTypeScriptBuilder
+
+    # ─── Builder Plugin: SwiftBuilder ───
+    - path: ./syncs/routing/route-builder-to-swift.sync
+      name: RouteBuilderSwift
+    - path: ./syncs/routing/swift-builder-complete.sync
+      name: SwiftBuilderComplete
+    - path: ./syncs/registration/register-swift-builder.sync
+      name: RegisterSwiftBuilder
+
+    # ─── Builder Plugin: RustBuilder ───
+    - path: ./syncs/routing/route-builder-to-rust.sync
+      name: RouteBuilderRust
+    - path: ./syncs/routing/rust-builder-complete.sync
+      name: RustBuilderComplete
+    - path: ./syncs/registration/register-rust-builder.sync
+      name: RegisterRustBuilder
+
+    # ─── Builder Plugin: SolidityBuilder ───
+    - path: ./syncs/routing/route-builder-to-solidity.sync
+      name: RouteBuilderSolidity
+    - path: ./syncs/routing/solidity-builder-complete.sync
+      name: SolidityBuilderComplete
+    - path: ./syncs/registration/register-solidity-builder.sync
+      name: RegisterSolidityBuilder
+
+    # ─── Toolchain Plugin: TypeScriptToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-typescript.sync
+      name: RouteToolchainTypeScript
+    - path: ./syncs/routing/typescript-toolchain-complete.sync
+      name: TypeScriptToolchainComplete
+    - path: ./syncs/registration/register-typescript-toolchain.sync
+      name: RegisterTypeScriptToolchain
+
+    # ─── Toolchain Plugin: SwiftToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-swift.sync
+      name: RouteToolchainSwift
+    - path: ./syncs/routing/swift-toolchain-complete.sync
+      name: SwiftToolchainComplete
+    - path: ./syncs/registration/register-swift-toolchain.sync
+      name: RegisterSwiftToolchain
+
+    # ─── Toolchain Plugin: RustToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-rust.sync
+      name: RouteToolchainRust
+    - path: ./syncs/routing/rust-toolchain-complete.sync
+      name: RustToolchainComplete
+    - path: ./syncs/registration/register-rust-toolchain.sync
+      name: RegisterRustToolchain
+
+    # ─── Toolchain Plugin: SolidityToolchain ───
+    - path: ./syncs/routing/route-toolchain-to-solidity.sync
+      name: RouteToolchainSolidity
+    - path: ./syncs/routing/solidity-toolchain-complete.sync
+      name: SolidityToolchainComplete
+    - path: ./syncs/registration/register-solidity-toolchain.sync
+      name: RegisterSolidityToolchain
 
 uses:
   - kit: generation

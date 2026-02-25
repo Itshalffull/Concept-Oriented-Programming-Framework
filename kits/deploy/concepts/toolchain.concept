@@ -1,0 +1,89 @@
+@version(1)
+concept Toolchain [T] {
+
+  purpose {
+    Coordinate tool resolution across languages and platforms.
+    Owns the resolved-tool registry: what tools are available,
+    their versions, paths, and capabilities. Provider-agnostic —
+    Builder invokes Toolchain actions, and integration syncs
+    route to the active language provider concept.
+  }
+
+  state {
+    tools: set T
+    registry {
+      language: T -> String
+      platform: T -> String
+      version: T -> String
+      path: T -> String
+      capabilities: T -> list String
+      resolvedAt: T -> DateTime
+      status: T -> String
+    }
+    constraints {
+      versionRange: T -> option String
+      requiredCapabilities: T -> option list String
+    }
+  }
+
+  actions {
+    action resolve(language: String, platform: String, versionConstraint: option String) {
+      -> ok(tool: T, version: String, path: String, capabilities: list String) {
+        Resolve a toolchain for the given language and platform.
+        Completion arrives after the provider concept finishes
+        actual resolution (checking PATH, version validation,
+        download if configured). Toolchain records the result
+        in its registry.
+
+        Capabilities describe what the tool supports:
+        "incremental", "wasm-target", "cross-compile",
+        "remote-execution", "debug-symbols", etc.
+      }
+      -> notInstalled(language: String, platform: String, installHint: String) {
+        Tool not found. installHint suggests how to install
+        (e.g., "brew install swift", "rustup target add wasm32").
+      }
+      -> versionMismatch(language: String, installed: String, required: String) {
+        Tool found but wrong version. Returns both so the
+        user can decide whether to upgrade.
+      }
+      -> platformUnsupported(language: String, platform: String) {
+        This language's toolchain doesn't support the
+        requested target platform.
+      }
+    }
+
+    action validate(tool: T) {
+      -> ok(tool: T, version: String) {
+        Verify a previously resolved toolchain is still valid.
+        Tool exists at recorded path, version matches, not
+        corrupted. Used before build to catch environment drift.
+      }
+      -> invalid(tool: T, reason: String) {
+        Tool moved, uninstalled, or version changed since
+        last resolution. Re-resolve required.
+      }
+    }
+
+    action list(language: option String) {
+      -> ok(tools: list { language: String, platform: String, version: String, path: String, status: String }) {
+        List all resolved toolchains, optionally filtered by
+        language. Used by `copf toolchain list`.
+      }
+    }
+
+    action capabilities(tool: T) {
+      -> ok(capabilities: list String) {
+        Return detailed capabilities for a resolved tool.
+        Used by Builder to determine available build modes.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(language: "swift", platform: "linux-arm64", versionConstraint: ">=5.10")
+      -> ok(tool: t, version: "5.10.1", path: "/usr/bin/swiftc", capabilities: ["cross-compile"])
+    then validate(tool: t) -> ok(tool: t, version: "5.10.1")
+    and  list(language: "swift") -> ok(tools: ts)
+  }
+}

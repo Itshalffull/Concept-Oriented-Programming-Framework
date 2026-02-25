@@ -1,0 +1,21 @@
+# Register RustBuilder with PluginRegistry — Architecture doc Section 3.8
+
+sync RegisterRustBuilder [eager]
+when {
+  RustBuilder/register: []
+    => [ name: ?name; language: ?lang; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "builder";
+    name: ?name;
+    metadata: {
+      language: ?lang;
+      concept: "RustBuilder";
+      action: "build";
+      testAction: "test";
+      packageAction: "package";
+      capabilities: ?caps
+    }
+  ]
+}

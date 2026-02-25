@@ -1,0 +1,11 @@
+# RustBuilder build completion propagates back to Builder — Architecture doc Section 3.8
+
+sync RustBuilderComplete [eager]
+when {
+  RustBuilder/build: [ source: ?src; platform: ?plat ]
+    => [ build: ?r; artifactPath: ?path; artifactHash: ?hash ]
+}
+then {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: "rust"; platform: ?plat; config: ?cfg ]
+}

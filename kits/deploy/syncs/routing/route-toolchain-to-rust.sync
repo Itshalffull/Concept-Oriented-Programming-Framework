@@ -1,0 +1,13 @@
+# Route Toolchain/resolve to RustToolchain — Architecture doc Section 3.8
+
+sync RouteToolchainToRust [eager]
+when {
+  Toolchain/resolve: [ language: "rust"; platform: ?plat;
+    versionConstraint: ?ver ]
+    => [ tool: ?tool; version: ?v; path: ?path;
+         capabilities: ?caps ]
+}
+then {
+  RustToolchain/resolve: [ platform: ?plat;
+    versionConstraint: ?ver ]
+}

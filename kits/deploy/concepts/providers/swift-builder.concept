@@ -1,0 +1,93 @@
+@version(1)
+concept SwiftBuilder [S] {
+
+  purpose {
+    Compile, test, and package Swift concept implementations.
+    Owns Swift-specific build logic: Swift Package Manager
+    invocation, test runner integration, framework packaging,
+    and XCFramework generation for multi-platform. Supports
+    local, remote, and container-based execution strategies
+    configured via the deploy manifest executor section.
+  }
+
+  state {
+    builds: set S
+    config {
+      packagePath: S -> String
+      buildDir: S -> String
+      configuration: S -> String
+      targetTriple: S -> option String
+      additionalFlags: S -> option list String
+    }
+    testResults {
+      testSuite: S -> option String
+      xcresultPath: S -> option String
+    }
+  }
+
+  actions {
+    action build(source: String, toolchainPath: String, platform: String, config: { mode: String, features: option list String }) {
+      -> ok(build: S, artifactPath: String, artifactHash: String) {
+        Run `swift build` with the resolved toolchain.
+        Configuration maps from COPF modes:
+        "debug" -> swift build (default)
+        "release" -> swift build -c release
+
+        Executor strategy (from deploy manifest):
+        "local" -> invoke swiftc directly on host
+        "remote" -> send source to remote build endpoint
+        "container" -> run swift build in Docker container
+
+        For cross-compilation, passes --triple to swiftc.
+        Packages result as .framework or .xcframework.
+      }
+      -> compilationError(errors: list { file: String, line: Int, message: String }) {
+        swiftc reported errors.
+      }
+      -> linkerError(reason: String) {
+        Compilation succeeded but linking failed.
+        Common for missing platform SDKs.
+      }
+    }
+
+    action test(build: S, toolchainPath: String) {
+      -> ok(passed: Int, failed: Int, skipped: Int, duration: Int) {
+        Run `swift test` against the built product.
+        Parses XCTest / swift-testing output.
+      }
+      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }) {
+        Some tests failed. Parses failure messages from
+        test runner output.
+      }
+    }
+
+    action package(build: S, format: String) {
+      -> ok(artifactPath: String, artifactHash: String) {
+        Package built artifact. Formats:
+        "framework" -> .framework bundle
+        "xcframework" -> multi-platform .xcframework
+        "binary" -> standalone executable
+        "library" -> .dylib / .so / .a
+      }
+      -> formatUnsupported(format: String) {
+        Requested format not available for this target.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "SwiftBuilder"
+        language: "swift"
+        capabilities: ["framework", "xcframework", "binary",
+        "library"]
+      }
+    }
+  }
+
+  invariant {
+    after build(source: "./generated/swift/password", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: { mode: "release" })
+      -> ok(build: s, artifactPath: ".copf-artifacts/swift/password", artifactHash: "sha256:abc")
+    then test(build: s, toolchainPath: "/usr/bin/swiftc") -> ok(passed: 12, failed: 0, skipped: 0, duration: 1500)
+  }
+}

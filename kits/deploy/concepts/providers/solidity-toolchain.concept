@@ -1,0 +1,54 @@
+@version(1)
+concept SolidityToolchain [L] {
+
+  purpose {
+    Resolve Solidity compiler toolchains. Owns Solidity-specific
+    resolution: solc version management (solc-select), Foundry
+    detection, Hardhat integration, and EVM version targeting.
+  }
+
+  state {
+    toolchains: set L
+    config {
+      solcPath: L -> String
+      solcVersion: L -> String
+      evmVersion: L -> String
+      foundryPath: L -> option String
+      hardhatPath: L -> option String
+    }
+  }
+
+  actions {
+    action resolve(platform: String, versionConstraint: option String) {
+      -> ok(toolchain: L, solcPath: String, version: String, capabilities: list String) {
+        Locate solc. Check version against Solidity pragma.
+        Detect Foundry/Hardhat for test infrastructure.
+        Return capabilities: "optimizer", "via-ir",
+        "foundry-tests", "hardhat-tests", etc.
+      }
+      -> notInstalled(installHint: String) {
+        solc not found.
+        Hint: "pip install solc-select && solc-select install 0.8.25"
+      }
+      -> evmVersionUnsupported(requested: String, supported: list String) {
+        Requested EVM version not supported by installed solc.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, language: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "SolidityToolchain"
+        language: "solidity"
+        capabilities: ["solc-select", "foundry-detection",
+        "hardhat-detection"]
+      }
+    }
+  }
+
+  invariant {
+    after resolve(platform: "evm-shanghai", versionConstraint: ">=0.8.20")
+      -> ok(toolchain: l, solcPath: "/usr/local/bin/solc", version: "0.8.25", capabilities: ["optimizer", "via-ir"])
+    then register() -> ok(name: "SolidityToolchain", language: "solidity", capabilities: caps)
+  }
+}

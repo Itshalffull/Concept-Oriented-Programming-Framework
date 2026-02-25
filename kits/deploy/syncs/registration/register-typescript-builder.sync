@@ -1,0 +1,21 @@
+# Register TypeScriptBuilder with PluginRegistry — Architecture doc Section 3.8
+
+sync RegisterTypeScriptBuilder [eager]
+when {
+  TypeScriptBuilder/register: []
+    => [ name: ?name; language: ?lang; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "builder";
+    name: ?name;
+    metadata: {
+      language: ?lang;
+      concept: "TypeScriptBuilder";
+      action: "build";
+      testAction: "test";
+      packageAction: "package";
+      capabilities: ?caps
+    }
+  ]
+}

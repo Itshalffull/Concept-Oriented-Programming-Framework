@@ -1,0 +1,13 @@
+# Route Builder/build to SwiftBuilder — Architecture doc Section 3.8
+
+sync RouteBuilderToSwift [eager]
+when {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: "swift"; platform: ?plat; config: ?cfg ]
+    => [ build: ?b; artifactHash: ?hash;
+         artifactLocation: ?loc; duration: ?dur ]
+}
+then {
+  SwiftBuilder/build: [ source: ?src; toolchainPath: ?toolPath;
+    platform: ?plat; config: ?cfg ]
+}

@@ -1,0 +1,21 @@
+# Register SwiftBuilder with PluginRegistry — Architecture doc Section 3.8
+
+sync RegisterSwiftBuilder [eager]
+when {
+  SwiftBuilder/register: []
+    => [ name: ?name; language: ?lang; capabilities: ?caps ]
+}
+then {
+  PluginRegistry/register: [
+    type: "builder";
+    name: ?name;
+    metadata: {
+      language: ?lang;
+      concept: "SwiftBuilder";
+      action: "build";
+      testAction: "test";
+      packageAction: "package";
+      capabilities: ?caps
+    }
+  ]
+}

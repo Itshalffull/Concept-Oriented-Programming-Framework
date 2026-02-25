@@ -1,0 +1,11 @@
+# SwiftBuilder build completion propagates back to Builder — Architecture doc Section 3.8
+
+sync SwiftBuilderComplete [eager]
+when {
+  SwiftBuilder/build: [ source: ?src; platform: ?plat ]
+    => [ build: ?s; artifactPath: ?path; artifactHash: ?hash ]
+}
+then {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: "swift"; platform: ?plat; config: ?cfg ]
+}

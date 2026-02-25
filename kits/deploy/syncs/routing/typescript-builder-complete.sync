@@ -1,0 +1,11 @@
+# TypeScriptBuilder build completion propagates back to Builder — Architecture doc Section 3.8
+
+sync TypeScriptBuilderComplete [eager]
+when {
+  TypeScriptBuilder/build: [ source: ?src; platform: ?plat ]
+    => [ build: ?n; artifactPath: ?path; artifactHash: ?hash ]
+}
+then {
+  Builder/build: [ concept: ?concept; source: ?src;
+    language: "typescript"; platform: ?plat; config: ?cfg ]
+}

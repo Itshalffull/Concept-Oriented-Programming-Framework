@@ -1,0 +1,13 @@
+# Route Toolchain/resolve to SolidityToolchain — Architecture doc Section 3.8
+
+sync RouteToolchainToSolidity [eager]
+when {
+  Toolchain/resolve: [ language: "solidity"; platform: ?plat;
+    versionConstraint: ?ver ]
+    => [ tool: ?tool; version: ?v; path: ?path;
+         capabilities: ?caps ]
+}
+then {
+  SolidityToolchain/resolve: [ platform: ?plat;
+    versionConstraint: ?ver ]
+}
