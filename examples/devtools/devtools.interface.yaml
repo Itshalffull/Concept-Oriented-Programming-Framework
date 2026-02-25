@@ -45,6 +45,17 @@ concepts:
   # Deploy kit build concepts
   - kits/deploy/concepts/builder.concept
   - kits/deploy/concepts/toolchain.concept
+  # Scaffold generator concepts
+  - specs/framework/kit-scaffold-gen.concept
+  - specs/framework/deploy-scaffold-gen.concept
+  - specs/framework/interface-scaffold-gen.concept
+  - specs/framework/concept-scaffold-gen.concept
+  - specs/framework/sync-scaffold-gen.concept
+  - specs/framework/handler-scaffold-gen.concept
+  - specs/framework/storage-adapter-scaffold-gen.concept
+  - specs/framework/transport-adapter-scaffold-gen.concept
+  - specs/framework/coif-component-scaffold-gen.concept
+  - specs/framework/coif-theme-scaffold-gen.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -2486,6 +2497,1567 @@ workflows:
       - name: incremental-caching
         description: "Cache hits/misses recorded as steps"
 
+  # ─── KitScaffoldGen: kit-scaffold ──────────────────
+  kit-scaffold:
+    concept: KitScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track KitConfig → KitManifest transformations."
+      - action: generate
+        title: "Generate Kit Manifest"
+        prose: "Generate a kit.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs."
+    checklists:
+      generate:
+        - "Kit name is kebab-case?"
+        - "Version is valid semver?"
+        - "All listed concepts have matching .concept stub files?"
+        - "Syncs are grouped by tier (required/recommended/integration)?"
+        - "Type parameter `as` tags are kebab-case with -ref suffix?"
+        - "Dependencies use semver constraints?"
+    design-principles:
+      - title: "Convention Over Configuration"
+        rule: "Generated kit.yaml follows the standard layout — concepts at top, syncs by tier, uses for external references. Tools work without extra configuration."
+      - title: "Type Parameter Alignment"
+        rule: "Every concept's type parameter has an `as` tag that enables cross-concept type alignment. Concepts sharing the same `as` tag share the same entity type."
+      - title: "Sync Tier Discipline"
+        rule: "Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external kits. Never promote a recommended sync to required without justification."
+    references:
+      - path: references/kit-manifest-schema.md
+        label: "Kit manifest (kit.yaml) schema reference"
+        tier: reference
+        content: |
+          # Kit Manifest Schema Reference
+
+          Complete schema for `kit.yaml` manifest files.
+
+          ## Root Structure
+
+          ```yaml
+          kit:
+            name: my-kit           # kebab-case
+            version: 0.1.0         # semver
+            description: >         # Multi-line description
+              What this kit provides.
+          ```
+
+          ## Concepts Section
+
+          ```yaml
+          concepts:
+            ConceptName:
+              spec: ./concept-name.concept
+              params:
+                T: { as: concept-ref, description: "Reference to a ConceptName" }
+          ```
+
+          **Rules:**
+          - Concept names are PascalCase
+          - File names are kebab-case
+          - Type parameters are single capital letters
+          - The `as` tag enables cross-concept type alignment
+
+          ## Syncs Section
+
+          ```yaml
+          syncs:
+            required:
+              - path: ./syncs/validate-before-save.sync
+                description: "Prevents invalid state — removal causes corruption."
+            recommended:
+              - path: ./syncs/notify-on-change.sync
+                name: NotifyOnChange
+                description: "Sends notifications — apps can override or disable."
+            integration:
+              - path: ./syncs/audit-log.sync
+                name: AuditLog
+                description: "Logs changes — activated by audit kit."
+          ```
+
+          | Tier | Overridable | Disableable | When to Use |
+          |------|------------|-------------|-------------|
+          | required | No | No | Removal causes data corruption |
+          | recommended | Yes | Yes | Useful defaults apps can customize |
+          | integration | Yes | Depends | Cross-kit wiring |
+
+          ## Uses Section
+
+          ```yaml
+          uses:
+            - kit: auth
+              concepts:
+                - name: User
+                  params: { U: { as: user-ref } }
+            - kit: storage
+              optional: true
+              concepts:
+                - name: Database
+          ```
+
+          ## Infrastructure Section (domain kits only)
+
+          ```yaml
+          infrastructure:
+            transports:
+              - name: http
+                path: ./transports/http-transport.ts
+            storage:
+              - name: sqlite
+                path: ./storage/sqlite-storage.ts
+            deployTemplates:
+              - path: ./deploy-templates/default.deploy.yaml
+          ```
+
+          ## Dependencies
+
+          ```yaml
+          dependencies:
+            - auth: ">=1.0.0"
+            - coif-core: ">=0.2.0"
+          ```
+      - path: references/type-alignment.md
+        label: "Cross-concept type parameter alignment"
+        tier: reference
+        content: |
+          # Type Parameter Alignment
+
+          Type parameters connect concepts without violating independence.
+
+          ## How It Works
+
+          1. Concept A declares `params: { U: { as: user-ref } }`
+          2. Concept B declares `params: { X: { as: user-ref } }`
+          3. Both use `user-ref` — the framework unifies A's `U` with B's `X`
+
+          ## Example
+
+          ```yaml
+          concepts:
+            User:
+              spec: ./user.concept
+              params:
+                U: { as: user-ref }
+            Session:
+              spec: ./session.concept
+              params:
+                S: { as: session-ref }
+                U: { as: user-ref }    # Same tag → same entity type
+          ```
+
+          Now `Session`'s `U` and `User`'s `U` refer to the same entity,
+          enabling syncs to pass user references between them.
+    validation-commands:
+      - label: "Generate a kit scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold kit --name my-kit --concepts User,Session"
+      - label: "Validate generated kit"
+        command: "npx tsx tools/copf-cli/src/index.ts kit validate ./kits/my-kit"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | Kit name (kebab-case) |
+        | description | String | Kit purpose description |
+        | concepts | list String | PascalCase concept names |
+        | syncs | list {name, tier} | Sync declarations with tiers |
+        | dependencies | list String | External kit dependencies |
+        | isDomain | Boolean | Include infrastructure section |
+    related-workflows:
+      - name: kit-lifecycle
+        description: "Manage kit versions and dependencies after scaffolding"
+      - name: concept-scaffold
+        description: "Generate concept specs for the kit's concepts"
+      - name: sync-scaffold
+        description: "Generate sync rules for the kit's syncs"
+    anti-patterns:
+      - title: "Missing type parameter alignment"
+        description: "Concepts in the same kit lack `as` tags, preventing cross-concept type unification."
+        bad: |
+          concepts:
+            User:
+              spec: ./user.concept
+              params:
+                U: {}
+            Session:
+              spec: ./session.concept
+              params:
+                S: {}
+        good: |
+          concepts:
+            User:
+              spec: ./user.concept
+              params:
+                U: { as: user-ref }
+            Session:
+              spec: ./session.concept
+              params:
+                S: { as: session-ref }
+                U: { as: user-ref }
+      - title: "Flat sync list without tiers"
+        description: "All syncs listed without tier annotation — impossible to know which are safe to override."
+        bad: |
+          syncs:
+            - syncs/validate.sync
+            - syncs/notify.sync
+            - syncs/audit.sync
+        good: |
+          syncs:
+            required:
+              - path: ./syncs/validate.sync
+            recommended:
+              - path: ./syncs/notify.sync
+                name: Notify
+
+  # ─── DeployScaffoldGen: deploy-scaffold ────────────
+  deploy-scaffold:
+    concept: DeployScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track DeployConfig → DeployManifest transformations."
+      - action: generate
+        title: "Generate Deploy Manifest"
+        prose: "Generate a deploy.yaml manifest with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings."
+    checklists:
+      generate:
+        - "App name is valid?"
+        - "Every runtime has a type and transport?"
+        - "Infrastructure storage backends match runtime storage refs?"
+        - "Every listed concept has a runtime assignment?"
+        - "IaC provider is set (terraform, cloudformation, pulumi, docker-compose)?"
+        - "Build section specifies compiler and test runner?"
+    design-principles:
+      - title: "Declarative Over Imperative"
+        rule: "The deploy manifest declares intent (what runs where) — the framework resolves transport, storage, and engine assignments."
+      - title: "Runtime Isolation"
+        rule: "Each concept runs in exactly one runtime. Cross-runtime communication uses transport adapters configured in the infrastructure section."
+      - title: "Infrastructure as Code"
+        rule: "The IaC provider setting enables `copf deploy` to generate Terraform, CloudFormation, or Pulumi resources from the manifest."
+    references:
+      - path: references/deploy-manifest-schema.md
+        label: "Deploy manifest (deploy.yaml) schema reference"
+        tier: reference
+        content: |
+          # Deploy Manifest Schema Reference
+
+          Complete schema for `deploy.yaml` manifest files.
+
+          ## Root Structure
+
+          ```yaml
+          app:
+            name: my-app
+            version: "0.1.0"
+          ```
+
+          ## Runtimes
+
+          ```yaml
+          runtimes:
+            api:
+              type: node
+              transport: http
+              storage: postgresql
+              iac: terraform
+              config:
+                cpu: 256
+                memory: 512
+                replicas: 2
+            worker:
+              type: node
+              transport: sqs
+              storage: redis
+            engine:
+              engine: true
+              transport: http
+          ```
+
+          | Field | Required | Description |
+          |-------|----------|-------------|
+          | type | Yes | Runtime type (node, deno, edge) |
+          | transport | Yes | Communication protocol |
+          | storage | No | Persistence backend |
+          | iac | No | IaC provider for this runtime |
+          | config | No | Resource limits and scaling |
+
+          ## Infrastructure
+
+          ```yaml
+          infrastructure:
+            storage:
+              postgresql:
+                type: postgresql
+                config:
+                  host: localhost
+                  port: 5432
+            transports:
+              http:
+                type: http
+                config:
+                  port: 3000
+            iac:
+              provider: terraform
+          ```
+
+          ## Concepts
+
+          ```yaml
+          concepts:
+            User:
+              spec: ./specs/app/user.concept
+              implementations:
+                - language: typescript
+                  path: ./implementations/typescript/app/user.impl.ts
+                  runtime: api
+                  storage: postgresql
+          ```
+
+          ## Build
+
+          ```yaml
+          build:
+            typescript:
+              compiler: tsc
+              testRunner: vitest
+          ```
+    validation-commands:
+      - label: "Generate a deploy scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold deploy --app my-app"
+      - label: "Validate deploy manifest"
+        command: "npx tsx tools/copf-cli/src/index.ts deploy --validate"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | appName | String | Application name |
+        | version | String | Semver version |
+        | runtimes | list Runtime | Runtime configs (name, type, transport, storage) |
+        | concepts | list Assignment | Concept-to-runtime mappings |
+        | iacProvider | String | IaC provider (terraform, cloudformation, pulumi) |
+    related-workflows:
+      - name: deployment-config
+        description: "Validate and refine generated deploy manifests"
+      - name: kit-scaffold
+        description: "Generate kits referenced by the deploy manifest"
+      - name: build-orchestration
+        description: "Build concepts for the declared runtimes"
+    anti-patterns:
+      - title: "Concept without runtime assignment"
+        description: "Concept listed in deploy manifest but not assigned to any runtime."
+        bad: |
+          concepts:
+            User:
+              spec: ./specs/user.concept
+              # No implementations or runtime!
+        good: |
+          concepts:
+            User:
+              spec: ./specs/user.concept
+              implementations:
+                - language: typescript
+                  runtime: api
+                  storage: postgresql
+      - title: "Mismatched storage backends"
+        description: "Runtime references a storage backend not declared in infrastructure."
+        bad: |
+          runtimes:
+            api: { storage: mongodb }  # Not in infrastructure!
+          infrastructure:
+            storage:
+              postgresql: { type: postgresql }
+        good: |
+          runtimes:
+            api: { storage: postgresql }
+          infrastructure:
+            storage:
+              postgresql: { type: postgresql }
+
+  # ─── InterfaceScaffoldGen: interface-scaffold ──────
+  interface-scaffold:
+    concept: InterfaceScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track InterfaceConfig → InterfaceManifest transformations."
+      - action: generate
+        title: "Generate Interface Manifest"
+        prose: "Generate an interface.yaml manifest with target configurations (REST, GraphQL, gRPC, CLI, MCP, Claude Skills), SDK settings, spec outputs, and per-concept overrides."
+    checklists:
+      generate:
+        - "Interface name is valid?"
+        - "At least one target is specified?"
+        - "Each target has sensible defaults?"
+        - "SDK package names are unique per language?"
+        - "Per-concept overrides reference valid concepts?"
+        - "Grouping strategy is set?"
+    design-principles:
+      - title: "Target Independence"
+        rule: "Each target (REST, GraphQL, CLI, etc.) generates independently — they share concept specs but produce separate output trees."
+      - title: "Layered Configuration"
+        rule: "Configuration flows from global defaults → target defaults → per-concept overrides. Specific settings override general ones."
+      - title: "SDK Completeness"
+        rule: "Each SDK target should generate a fully-functional client library — types, methods, error handling, and documentation."
+    references:
+      - path: references/interface-manifest-schema.md
+        label: "Interface manifest (interface.yaml) schema reference"
+        tier: reference
+        content: |
+          # Interface Manifest Schema Reference
+
+          Complete schema for `interface.yaml` manifest files.
+
+          ## Root Structure
+
+          ```yaml
+          interface:
+            name: my-api
+            version: "0.1.0"
+          ```
+
+          ## Targets
+
+          ```yaml
+          targets:
+            rest:
+              basePath: /api
+              framework: hono
+              versioning: url
+            graphql:
+              path: /graphql
+              relay: true
+              subscriptions: true
+            grpc:
+              package: app.v1
+            cli:
+              name: my-cli
+              shell: [bash, zsh, fish]
+            mcp:
+              name: my-mcp-server
+              transport: stdio
+            claude-skills:
+              name: my-skills
+              progressive: true
+          ```
+
+          ## SDKs
+
+          ```yaml
+          sdk:
+            typescript:
+              packageName: "@app/sdk"
+              moduleSystem: esm
+            python:
+              packageName: app-sdk
+              asyncSupport: true
+            go:
+              modulePath: github.com/org/app-sdk-go
+            rust:
+              packageName: app-sdk
+            java:
+              packageName: com.org.app.sdk
+            swift:
+              packageName: AppSDK
+          ```
+
+          ## Specs
+
+          ```yaml
+          specs:
+            openapi: true
+            asyncapi: false
+          ```
+
+          ## Per-Concept Overrides
+
+          ```yaml
+          concepts:
+            User:
+              rest:
+                basePath: /api/users
+              graphql:
+                typeName: User
+            Article:
+              rest:
+                basePath: /api/articles
+          ```
+
+          ## Output
+
+          ```yaml
+          output:
+            dir: ./generated/interface
+            clean: true
+          grouping:
+            strategy: per-concept
+          ```
+    validation-commands:
+      - label: "Generate an interface scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold interface --name my-api --targets rest,graphql"
+      - label: "Generate interfaces from manifest"
+        command: "npx tsx tools/copf-cli/src/index.ts interface generate --manifest my-api.interface.yaml"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | Interface name |
+        | targets | list String | Target types (rest, graphql, grpc, cli, mcp, claude-skills) |
+        | sdks | list String | SDK languages (typescript, python, go, rust, java, swift) |
+        | concepts | list String | Concepts with per-concept overrides |
+        | openapi | Boolean | Generate OpenAPI spec (default: true) |
+        | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |
+    related-workflows:
+      - name: kit-scaffold
+        description: "Generate kits whose concepts the interface exposes"
+      - name: concept-scaffold
+        description: "Generate concept specs for interface concepts"
+      - name: deployment-config
+        description: "Deploy the service that hosts the generated interface"
+    anti-patterns:
+      - title: "Targets without concept overrides"
+        description: "All concepts use the same REST base path — collision risk."
+        bad: |
+          targets:
+            rest: { basePath: /api }
+          # No per-concept overrides — all concepts share /api
+        good: |
+          targets:
+            rest: { basePath: /api }
+          concepts:
+            User:
+              rest: { basePath: /api/users }
+            Article:
+              rest: { basePath: /api/articles }
+
+  # ─── ConceptScaffoldGen: concept-scaffold ──────────
+  concept-scaffold:
+    concept: ConceptScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ConceptConfig → ConceptSpec transformations."
+      - action: generate
+        title: "Generate Concept Spec"
+        prose: "Generate a .concept specification file with purpose block, typed state declarations, action signatures with variants, and a register() action for PluginRegistry discovery."
+    checklists:
+      generate:
+        - "Concept name is PascalCase?"
+        - "Type parameter is a single capital letter?"
+        - "Purpose block describes why, not what?"
+        - "State fields use correct relation types (set, ->, option, list)?"
+        - "Every action has at least one variant?"
+        - "register() action is included for PluginRegistry?"
+        - "Annotations (@category, @visibility) are present?"
+    design-principles:
+      - title: "Singularity"
+        rule: "Each concept serves exactly one purpose — if the purpose has 'and', it's two concepts."
+      - title: "Independence"
+        rule: "A concept never references another concept's types or calls another concept's actions. Use type parameters and syncs."
+      - title: "Sufficiency & Necessity"
+        rule: "Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state."
+      - title: "Invariant Completeness"
+        rule: "Key properties are captured as formal invariants documenting what must be true after each action."
+    references:
+      - path: references/concept-spec-guide.md
+        label: "Concept specification writing guide"
+        tier: reference
+        content: |
+          # Concept Specification Guide
+
+          How to write well-formed `.concept` files.
+
+          ## Structure
+
+          ```
+          @category("domain")
+          @visibility("public")
+          concept Name [T] {
+            purpose { ... }
+            state { ... }
+            actions { ... }
+            invariant { ... }
+          }
+          ```
+
+          ## State Relations
+
+          | Syntax | Meaning | Example |
+          |--------|---------|---------|
+          | `set T` | Collection | `users: set U` |
+          | `T -> V` | Total function | `name: U -> String` |
+          | `T -> option V` | Partial function | `email: U -> option String` |
+          | `T -> list V` | Multi-valued | `tags: U -> list String` |
+
+          ## Action Signatures
+
+          ```
+          action create(name: String, email: String) {
+            description { Create a new user. }
+            -> ok(user: U) { User created. }
+            -> duplicate(email: String) { Email already registered. }
+            -> error(message: String) { Creation failed. }
+          }
+          ```
+
+          **Rules:**
+          - Every parameter must have a type
+          - At least one variant per action
+          - Variant names are lowercase
+          - `ok` is the conventional success variant
+
+          ## Register Action
+
+          Every generator concept includes `register()`:
+
+          ```
+          action register() {
+            -> ok(name: String, inputKind: String, outputKind: String,
+                  capabilities: list String) {
+              Return static metadata for PluginRegistry.
+            }
+          }
+          ```
+
+          ## Invariants
+
+          ```
+          invariant {
+            after create(name: "alice") -> ok(user: u)
+            then create(name: "alice") -> duplicate(email: _)
+          }
+          ```
+    validation-commands:
+      - label: "Generate a concept scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold concept --name User --actions create,update,delete"
+      - label: "Validate generated concept"
+        command: "npx tsx tools/copf-cli/src/index.ts check specs/app/user.concept"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | PascalCase concept name |
+        | typeParam | String | Type parameter letter (default: T) |
+        | purpose | String | Purpose description |
+        | category | String | Annotation category (domain, devtools, etc.) |
+        | stateFields | list StateField | State declarations |
+        | actions | list ActionDef | Action signatures with variants |
+    related-workflows:
+      - name: concept-designer
+        description: "Design concepts using Jackson's methodology before generating"
+      - name: handler-scaffold
+        description: "Generate handler implementations for the concept"
+      - name: sync-scaffold
+        description: "Generate sync rules connecting the concept"
+    anti-patterns:
+      - title: "Purpose describes implementation"
+        description: "Purpose block says how the concept works instead of why it exists."
+        bad: |
+          purpose {
+            Store users in a Map<string, User> and provide CRUD operations
+            via async handler methods.
+          }
+        good: |
+          purpose {
+            Manage user identity and profile information.
+          }
+      - title: "Missing variants"
+        description: "Action only has ok variant — no error handling path."
+        bad: |
+          action create(name: String) {
+            -> ok(user: U) { Created. }
+          }
+        good: |
+          action create(name: String) {
+            -> ok(user: U) { Created. }
+            -> duplicate(name: String) { Name taken. }
+            -> error(message: String) { Failed. }
+          }
+
+  # ─── SyncScaffoldGen: sync-scaffold ────────────────
+  sync-scaffold:
+    concept: SyncScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track SyncConfig → SyncSpec transformations."
+      - action: generate
+        title: "Generate Sync Rule"
+        prose: "Generate a .sync file with when clause (trigger pattern), optional where clause (guard conditions), and then clause (effect actions)."
+    checklists:
+      generate:
+        - "Sync name is PascalCase?"
+        - "Tier annotation matches intended behavior ([eager], [required], [recommended])?"
+        - "When clause references a valid concept/action?"
+        - "Variable bindings in where clause use ?prefix?"
+        - "Then clause references a valid concept/action?"
+        - "Purpose statement explains why the sync exists?"
+    design-principles:
+      - title: "Declarative Wiring"
+        rule: "Syncs declare what happens when — they never contain imperative logic, loops, or conditionals beyond pattern matching."
+      - title: "Concept Independence"
+        rule: "Syncs reference concepts by name but concepts never know about syncs. The sync is the only place where concept names appear together."
+      - title: "Pattern Completeness"
+        rule: "The when clause must match specific action completions (concept/action with variant). The then clause invokes specific actions."
+    references:
+      - path: references/sync-rule-guide.md
+        label: "Sync rule writing guide"
+        tier: reference
+        content: |
+          # Sync Rule Guide
+
+          How to write well-formed `.sync` files.
+
+          ## Structure
+
+          ```
+          sync SyncName [eager]
+            purpose { Why this sync exists. }
+          when {
+            SourceConcept/action: [
+              field: ?var
+            ] => ok(result: ?value)
+          }
+          where {
+            bind(?var.property as ?local)
+            query(OtherConcept/find: [criteria: ?local] as ?results)
+            any(?local = "value1"; ?local = "value2")
+            not(?local = "forbidden")
+          }
+          then {
+            TargetConcept/action: [
+              field: ?var;
+              other: ?local
+            ]
+          }
+          ```
+
+          ## When Clause
+
+          Matches completions of concept actions:
+          - `Concept/action: [params] => variant(results)`
+          - Variables use `?` prefix: `?user`, `?name`
+          - Can destructure: `metadata: ?meta`
+
+          ## Where Clause (optional)
+
+          Guard conditions:
+          - `bind(?expr as ?local)` — Extract nested values
+          - `query(Concept/action: [...] as ?result)` — Query state
+          - `any(cond1; cond2)` — OR conditions
+          - `not(cond)` — Negation
+          - `?a = ?b` — Equality check
+
+          ## Then Clause
+
+          Actions to invoke:
+          - `Concept/action: [field: ?var]`
+          - Multiple actions allowed
+          - Variables from when/where are available
+
+          ## Tier Annotations
+
+          | Annotation | Meaning |
+          |-----------|---------|
+          | `[eager]` | Fires immediately (same as required) |
+          | `[required]` | Cannot be disabled or overridden |
+          | `[recommended]` | Can be overridden by application |
+    validation-commands:
+      - label: "Generate a sync scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold sync --name CreateProfile --from User/create --to Profile/init"
+      - label: "Validate generated sync"
+        command: "npx tsx tools/copf-cli/src/index.ts sync validate syncs/create-profile.sync"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | PascalCase sync name |
+        | tier | String | Sync tier (required, recommended) |
+        | eager | Boolean | Fire immediately (default: true) |
+        | trigger | Trigger | When clause (concept, action, params, variant) |
+        | conditions | list Condition | Where clause guards |
+        | effects | list Effect | Then clause actions |
+    related-workflows:
+      - name: sync-designer
+        description: "Design syncs using formal patterns before generating"
+      - name: concept-scaffold
+        description: "Generate concept specs referenced by the sync"
+      - name: sync-validator
+        description: "Validate compiled syncs"
+    anti-patterns:
+      - title: "Sync with imperative logic"
+        description: "Sync tries to express conditionals or loops instead of pattern matching."
+        bad: |
+          # Pseudo-code in sync — not valid!
+          if user.isAdmin then
+            AdminPanel/grant: [user: ?u]
+        good: |
+          where {
+            bind(?meta.role as ?role)
+            any(?role = "admin")
+          }
+          then {
+            AdminPanel/grant: [user: ?u]
+          }
+
+  # ─── HandlerScaffoldGen: handler-scaffold ──────────
+  handler-scaffold:
+    concept: HandlerScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track HandlerConfig → HandlerImpl transformations."
+      - action: generate
+        title: "Generate Handler Implementation"
+        prose: "Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test."
+    checklists:
+      generate:
+        - "Handler export name follows convention (camelCase + 'Handler')?"
+        - "register() returns correct name, inputKind, outputKind?"
+        - "Each action extracts input parameters with correct types?"
+        - "Each action returns all declared variants?"
+        - "Storage operations use correct relation names?"
+        - "Error handling catches and wraps exceptions?"
+        - "Conformance test covers register() and each action?"
+    design-principles:
+      - title: "One Handler per Action"
+        rule: "Each action in the concept spec maps to exactly one async method in the handler."
+      - title: "Variant Completeness"
+        rule: "Every return variant declared in the spec must have a corresponding code path — no missing branches."
+      - title: "Storage Sovereignty"
+        rule: "Each concept owns its storage exclusively — no shared databases, no cross-concept state access."
+      - title: "Input Extraction"
+        rule: "Extract inputs with `as` casts at the top of each method. Validate required fields before processing."
+    references:
+      - path: references/handler-implementation-guide.md
+        label: "Handler implementation patterns"
+        tier: reference
+        content: |
+          # Handler Implementation Guide
+
+          How to implement COPF concept handlers in TypeScript.
+
+          ## ConceptHandler Interface
+
+          ```typescript
+          interface ConceptHandler {
+            [actionName: string]: (
+              input: Record<string, unknown>,
+              storage: ConceptStorage,
+            ) => Promise<{ variant: string; [key: string]: unknown }>;
+          }
+          ```
+
+          ## Standard Pattern
+
+          ```typescript
+          export const myConceptHandler: ConceptHandler = {
+            async register() {
+              return {
+                variant: 'ok',
+                name: 'MyConcept',
+                inputKind: 'MyInput',
+                outputKind: 'MyOutput',
+                capabilities: JSON.stringify(['cap1', 'cap2']),
+              };
+            },
+
+            async create(input, storage) {
+              const name = input.name as string;
+              if (!name) return { variant: 'error', message: 'name required' };
+
+              try {
+                const id = crypto.randomUUID();
+                await storage.put('items', id, { id, name });
+                return { variant: 'ok', item: id };
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                return { variant: 'error', message: msg };
+              }
+            },
+          };
+          ```
+
+          ## Storage Patterns
+
+          | Operation | Method | Example |
+          |-----------|--------|---------|
+          | Create/Update | `storage.put(rel, key, value)` | `put('items', id, data)` |
+          | Read | `storage.get(rel, key)` | `get('items', id)` |
+          | Query | `storage.find(rel, criteria)` | `find('items', { status: 'active' })` |
+          | Delete | `storage.del(rel, key)` | `del('items', id)` |
+          | Bulk delete | `storage.delMany(rel, criteria)` | `delMany('items', { expired: true })` |
+
+          ## Type Mapping
+
+          | Concept Type | TypeScript Type |
+          |-------------|----------------|
+          | String | string |
+          | Int | number |
+          | Bool | boolean |
+          | list T | T[] |
+          | set T | Map<string, T> |
+          | option T | T \| undefined |
+    validation-commands:
+      - label: "Generate a handler scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold handler --concept User --actions create,update,delete"
+      - label: "Run generated conformance test"
+        command: "npx vitest run tests/user.conformance.test.ts"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | conceptName | String | PascalCase concept name |
+        | actions | list ActionDef | Action signatures with params and variants |
+        | inputKind | String | KindSystem input kind |
+        | outputKind | String | KindSystem output kind |
+        | capabilities | list String | Generator capabilities |
+    related-workflows:
+      - name: concept-scaffold
+        description: "Generate concept specs before implementing handlers"
+      - name: implementation-builder
+        description: "Use SchemaGen for more advanced handler generation"
+      - name: concept-validator
+        description: "Validate concept specs before generating handlers"
+    anti-patterns:
+      - title: "Missing error variant"
+        description: "Handler doesn't return error variant on failure — caller gets an unstructured exception."
+        bad: |
+          async create(input, storage) {
+            const id = crypto.randomUUID();
+            await storage.put('items', id, { name: input.name });
+            return { variant: 'ok', item: id };
+            // Exception propagates raw if storage.put fails!
+          }
+        good: |
+          async create(input, storage) {
+            try {
+              const id = crypto.randomUUID();
+              await storage.put('items', id, { name: input.name });
+              return { variant: 'ok', item: id };
+            } catch (err) {
+              return { variant: 'error', message: String(err) };
+            }
+          }
+
+  # ─── StorageAdapterScaffoldGen: storage-adapter-scaffold ─
+  storage-adapter-scaffold:
+    concept: StorageAdapterScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track StorageConfig → StorageAdapter transformations."
+      - action: generate
+        title: "Generate Storage Adapter"
+        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods."
+    checklists:
+      generate:
+        - "Backend is valid (sqlite, postgresql, redis, dynamodb, memory)?"
+        - "Adapter class implements ConceptStorage interface?"
+        - "All five methods (put, get, find, del, delMany) are implemented?"
+        - "Constructor accepts backend-specific configuration?"
+        - "Find method supports criteria-based filtering?"
+        - "Proper serialization (JSON.stringify/parse) for non-native types?"
+    design-principles:
+      - title: "Interface Compliance"
+        rule: "Every adapter must implement all five ConceptStorage methods — put, get, find, del, delMany. No optional methods."
+      - title: "Backend Transparency"
+        rule: "Concept handlers use storage through the interface without knowing which backend is active. Swapping backends requires no handler changes."
+      - title: "Relation-Key Namespace"
+        rule: "Storage is organized by relation name and key. Each concept uses its own relation names, preventing cross-concept conflicts."
+    references:
+      - path: references/storage-adapter-guide.md
+        label: "Storage adapter implementation guide"
+        tier: reference
+        content: |
+          # Storage Adapter Guide
+
+          How to implement ConceptStorage adapters for different backends.
+
+          ## ConceptStorage Interface
+
+          ```typescript
+          interface ConceptStorage {
+            put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
+            get(relation: string, key: string): Promise<Record<string, unknown> | null>;
+            find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
+            del(relation: string, key: string): Promise<void>;
+            delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+          }
+          ```
+
+          ## Backend Comparison
+
+          | Backend | Best For | Persistence | Query Power |
+          |---------|----------|-------------|-------------|
+          | memory | Tests, prototypes | None | In-memory filter |
+          | sqlite | Single-node, embedded | File | SQL |
+          | postgresql | Production, multi-node | Server | Full SQL |
+          | redis | Caching, sessions | Optional | Key-value |
+          | dynamodb | Serverless, high-scale | Managed | Key + query |
+
+          ## SQLite Example
+
+          ```typescript
+          class SqliteStorage implements ConceptStorage {
+            private db: Database;
+
+            constructor(dbPath: string) {
+              this.db = new Database(dbPath);
+              this.db.exec(`
+                CREATE TABLE IF NOT EXISTS concept_store (
+                  relation TEXT NOT NULL,
+                  key TEXT NOT NULL,
+                  value TEXT NOT NULL,
+                  PRIMARY KEY (relation, key)
+                )
+              `);
+            }
+
+            async put(relation, key, value) {
+              this.db.prepare(
+                'INSERT OR REPLACE INTO concept_store VALUES (?, ?, ?)'
+              ).run(relation, key, JSON.stringify(value));
+            }
+            // ... other methods
+          }
+          ```
+    validation-commands:
+      - label: "Generate a storage adapter"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold storage --name AppStorage --backend postgresql"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | Adapter class name (PascalCase) |
+        | backend | String | Backend type (sqlite, postgresql, redis, dynamodb, memory) |
+
+        | Backend | Import | Constructor |
+        |---------|--------|-------------|
+        | sqlite | better-sqlite3 | `new SqliteStorage(dbPath)` |
+        | postgresql | pg | `new PgStorage(connectionString)` |
+        | redis | redis | `new RedisStorage(url)` |
+        | dynamodb | @aws-sdk/client-dynamodb | `new DynamoStorage(region, table)` |
+        | memory | (none) | `new MemoryStorage()` |
+    related-workflows:
+      - name: deployment-config
+        description: "Configure storage backends in deploy manifests"
+      - name: handler-scaffold
+        description: "Generate handlers that use the storage adapter"
+    anti-patterns:
+      - title: "Missing find criteria filtering"
+        description: "Find method ignores criteria parameter — returns all records regardless."
+        bad: |
+          async find(relation) {
+            return this.db.all('SELECT * FROM store WHERE relation = ?', relation);
+          }
+        good: |
+          async find(relation, criteria?) {
+            let results = this.db.all('SELECT * FROM store WHERE relation = ?', relation);
+            if (criteria) {
+              results = results.filter(r =>
+                Object.entries(criteria).every(([k, v]) => r[k] === v)
+              );
+            }
+            return results;
+          }
+
+  # ─── TransportAdapterScaffoldGen: transport-adapter-scaffold ─
+  transport-adapter-scaffold:
+    concept: TransportAdapterScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track TransportConfig → TransportAdapter transformations."
+      - action: generate
+        title: "Generate Transport Adapter"
+        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods."
+    checklists:
+      generate:
+        - "Protocol is valid (http, websocket, worker, in-process)?"
+        - "Adapter implements invoke(), query(), and health()?"
+        - "HTTP adapter uses fetch with proper error handling?"
+        - "WebSocket adapter manages connection lifecycle?"
+        - "Worker adapter handles message passing?"
+        - "In-process adapter dispatches to registered handlers?"
+    design-principles:
+      - title: "Protocol Transparency"
+        rule: "Concept handlers call invoke/query without knowing the transport. Swapping from HTTP to WebSocket requires no handler changes."
+      - title: "Health Monitoring"
+        rule: "Every adapter provides a health() method that returns latency and status — enables the framework to detect and route around failures."
+      - title: "Connection Lifecycle"
+        rule: "Stateful transports (WebSocket, Worker) manage their own connection lifecycle — connect on first use, reconnect on failure, clean up on dispose."
+    references:
+      - path: references/transport-adapter-guide.md
+        label: "Transport adapter implementation guide"
+        tier: reference
+        content: |
+          # Transport Adapter Guide
+
+          How to implement transport adapters for different protocols.
+
+          ## Transport Interface
+
+          ```typescript
+          interface ConceptTransport {
+            invoke(concept: string, action: string,
+                   input: Record<string, unknown>): Promise<Record<string, unknown>>;
+            query(concept: string, relation: string,
+                  criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
+            health(): Promise<{ ok: boolean; latencyMs: number }>;
+          }
+          ```
+
+          ## Protocol Comparison
+
+          | Protocol | Bidirectional | Latency | Best For |
+          |----------|--------------|---------|----------|
+          | http | No | Medium | REST APIs, microservices |
+          | websocket | Yes | Low | Real-time, subscriptions |
+          | worker | No | Very Low | Same-machine parallelism |
+          | in-process | N/A | None | Testing, monoliths |
+
+          ## HTTP Adapter
+
+          ```typescript
+          async invoke(concept, action, input) {
+            const url = `${this.baseUrl}/concepts/${concept}/${action}`;
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(input),
+            });
+            return response.json();
+          }
+          ```
+
+          ## WebSocket Adapter
+
+          Uses request/response correlation with message IDs:
+          1. Send `{ id, concept, action, input }` as JSON
+          2. Receive `{ id, result }` — match by ID
+          3. Resolve the pending promise
+
+          ## When to Use Each
+
+          - **Same runtime**: Use `in-process` — zero overhead
+          - **Same machine**: Use `worker` — parallel execution
+          - **Same network**: Use `http` — simple and reliable
+          - **Real-time**: Use `websocket` — bidirectional streaming
+    validation-commands:
+      - label: "Generate a transport adapter"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold transport --name ApiTransport --protocol http"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | Adapter class name (PascalCase) |
+        | protocol | String | Protocol (http, websocket, worker, in-process) |
+        | baseUrl | String | Base URL for HTTP/WS (default: http://localhost:3000) |
+    related-workflows:
+      - name: deployment-config
+        description: "Configure transport adapters in deploy manifests"
+      - name: storage-adapter-scaffold
+        description: "Generate storage adapters alongside transport adapters"
+    anti-patterns:
+      - title: "Missing health check"
+        description: "Transport adapter has no health() method — framework can't detect failures."
+        bad: |
+          class MyTransport {
+            async invoke(...) { ... }
+            async query(...) { ... }
+            // No health()!
+          }
+        good: |
+          class MyTransport {
+            async invoke(...) { ... }
+            async query(...) { ... }
+            async health() {
+              const start = Date.now();
+              try {
+                await fetch(`${this.baseUrl}/health`);
+                return { ok: true, latencyMs: Date.now() - start };
+              } catch {
+                return { ok: false, latencyMs: Date.now() - start };
+              }
+            }
+          }
+
+  # ─── CoifComponentScaffoldGen: coif-component-scaffold ─
+  coif-component-scaffold:
+    concept: CoifComponentScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ComponentConfig → CoifComponent transformations."
+      - action: generate
+        title: "Generate COIF Component"
+        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and kit manifest."
+    checklists:
+      generate:
+        - "Component name is PascalCase?"
+        - "Parts list defines all structural elements?"
+        - "States define all machine states?"
+        - "Events define all transitions?"
+        - "Anatomy lists all parts and slots?"
+        - "Machine implementation has spawn, send, connect, destroy actions?"
+        - "Kit manifest declares dependencies on coif-core and coif-component?"
+    design-principles:
+      - title: "Behavior-Rendering Separation"
+        rule: "Widget specs define behavior (states, transitions, guards). Rendering is handled by framework adapters. They agree only on part names (anatomy)."
+      - title: "Finite State Machine Discipline"
+        rule: "Every component is a finite state machine with explicit states, events, transitions, and guards. No implicit state."
+      - title: "Anatomy Contract"
+        rule: "The anatomy defines named parts (root, trigger, content, etc.) that both the machine and renderer reference. This is the only coupling point."
+      - title: "Props API via connect()"
+        rule: "The machine's connect() action transforms internal state into framework-neutral props objects — one per anatomy part."
+    references:
+      - path: references/coif-component-guide.md
+        label: "COIF headless component architecture"
+        tier: reference
+        content: |
+          # COIF Component Architecture
+
+          How headless components work in the Concept-Oriented Interface Framework.
+
+          ## Pipeline
+
+          ```
+          Concept Spec → Binding → UISchema → Element Tree
+                                                    ↓
+                                        Widget Registry (query)
+                                                    ↓
+                                        Machine (spawn + FSM)
+                                                    ↓
+                                        connect() → Props API
+                                                    ↓
+                                        Framework Adapter (React, Vue, etc.)
+          ```
+
+          ## Widget Specification
+
+          ```
+          widget Dialog {
+            anatomy {
+              part root
+              part trigger
+              part backdrop
+              part content
+              part title
+              part description
+              part closeTrigger
+            }
+
+            machine {
+              initial: closed
+
+              state closed {
+                on open -> open
+              }
+              state open {
+                on close -> closed
+                on escape -> closed
+              }
+            }
+
+            config {
+              closeOnEsc: true
+              closeOnOutsideClick: true
+              modal: true
+            }
+
+            connect {
+              rootProps { role: "dialog"; aria-modal: context.modal }
+              triggerProps { onClick: actions.open }
+              contentProps { data-state: context.state }
+              closeTriggerProps { onClick: actions.close }
+            }
+
+            accessibility {
+              role: "dialog"
+              aria-modal: true
+              aria-labelledby: titleId
+              aria-describedby: descriptionId
+            }
+          }
+          ```
+
+          ## Standard Components
+
+          | Component | Parts | States | Pattern |
+          |-----------|-------|--------|---------|
+          | Button | root | idle, pressed, disabled | Simple trigger |
+          | Dialog | root, trigger, backdrop, content, title, close | closed, open | Overlay |
+          | Tabs | root, list, trigger, content, indicator | idle, focused | Selection |
+          | Accordion | root, item, trigger, content | collapsed, expanded | Disclosure |
+          | Menu | root, trigger, content, item, separator | closed, open | Popup |
+          | Tooltip | root, trigger, content, arrow | hidden, visible | Overlay |
+          | Select | root, trigger, content, item, indicator | closed, open | Selection |
+          | Slider | root, track, range, thumb | idle, dragging | Range |
+    validation-commands:
+      - label: "Generate a COIF component scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | PascalCase component name |
+        | parts | list String | Anatomy part names (root, trigger, content, etc.) |
+        | slots | list String | Named slot insertion points |
+        | states | list String | FSM state names |
+        | events | list String | FSM event names |
+        | a11y | { role, ariaProps } | Accessibility configuration |
+
+        **Output Files:**
+        | File | Purpose |
+        |------|---------|
+        | `{name}-widget.concept` | Widget FSM specification |
+        | `{name}-anatomy.concept` | Parts contract definition |
+        | `kit.yaml` | Kit manifest with dependencies |
+        | `{name}-machine.impl.ts` | Machine handler implementation |
+    related-workflows:
+      - name: coif-theme-scaffold
+        description: "Generate themes to style the component"
+      - name: concept-scaffold
+        description: "Generate concept specs for custom component concepts"
+      - name: kit-scaffold
+        description: "Generate kit manifests for component libraries"
+    anti-patterns:
+      - title: "Rendering logic in widget spec"
+        description: "Widget spec includes CSS, HTML, or framework-specific code — violates behavior-rendering separation."
+        bad: |
+          widget Dialog {
+            render {
+              <div class="dialog-overlay">  # HTML in spec!
+                <div class="dialog-content">...</div>
+              </div>
+            }
+          }
+        good: |
+          widget Dialog {
+            anatomy {
+              part root        # Just names — rendering
+              part backdrop    # is the adapter's job
+              part content
+            }
+          }
+      - title: "Implicit state transitions"
+        description: "Component changes state without explicit events — makes behavior unpredictable."
+        bad: |
+          machine {
+            state open {
+              # Implicitly closes after 5 seconds — not declarative!
+              after 5000ms -> closed
+            }
+          }
+        good: |
+          machine {
+            state open {
+              on close -> closed
+              on timeout -> closed  # Explicit event
+            }
+          }
+
+  # ─── CoifThemeScaffoldGen: coif-theme-scaffold ─────
+  coif-theme-scaffold:
+    concept: CoifThemeScaffoldGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so the scaffolding kit's KindSystem can track ThemeConfig → CoifTheme transformations."
+      - action: generate
+        title: "Generate COIF Theme"
+        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests."
+    checklists:
+      generate:
+        - "Theme name is kebab-case?"
+        - "Primary color generates full 50-950 scale?"
+        - "Palette has semantic roles (primary, secondary, error, etc.)?"
+        - "WCAG contrast ratios meet AA standard (4.5:1 normal, 3:1 large)?"
+        - "Typography uses modular ratio scale?"
+        - "Motion respects prefers-reduced-motion?"
+        - "Elevation scale covers 0-5 levels?"
+        - "Light and dark themes are generated (if mode=both)?"
+    design-principles:
+      - title: "Token-Based Design"
+        rule: "Every visual value is a named design token — no hardcoded colors, sizes, or shadows anywhere in component code."
+      - title: "WCAG Compliance"
+        rule: "Every color pair must meet WCAG 2.1 AA contrast (4.5:1 normal text, 3:1 large text). The generator validates at generation time."
+      - title: "Reduced Motion Respect"
+        rule: "All motion durations collapse to 0ms when prefers-reduced-motion is active. This is built into the motion token system, not opt-in."
+      - title: "Theme Layering"
+        rule: "Themes are layered: base + variants. Multiple variants can be active simultaneously, resolved by priority then activation order."
+    references:
+      - path: references/coif-theme-guide.md
+        label: "COIF design system and theme architecture"
+        tier: reference
+        content: |
+          # COIF Theme Architecture
+
+          How the design system works in the Concept-Oriented Interface Framework.
+
+          ## Token Hierarchy
+
+          ```
+          Primitive Tokens     →  Semantic Tokens    →  Component Tokens
+          color.blue.500           color.primary          button.background
+          font.size.base           font.body              input.fontSize
+          spacing.4                spacing.md             card.padding
+          ```
+
+          ## Palette Generation
+
+          Colors are generated from a seed hue using OKLCH perceptual color space:
+
+          ```json
+          {
+            "primary": {
+              "seed": "220",
+              "scale": {
+                "50": "hsl(220, 65%, 97%)",
+                "100": "hsl(220, 65%, 93%)",
+                "500": "hsl(220, 65%, 50%)",
+                "900": "hsl(220, 65%, 18%)",
+                "950": "hsl(220, 65%, 12%)"
+              },
+              "roles": {
+                "default": "500",
+                "hover": "600",
+                "active": "700",
+                "subtle": "100"
+              }
+            }
+          }
+          ```
+
+          ## Typography Scale
+
+          Uses modular ratio (default: major third, 1.25):
+
+          | Name | Scale Factor | Size (16px base) |
+          |------|-------------|------------------|
+          | xs | 0.64 | 10.24px |
+          | sm | 0.80 | 12.80px |
+          | base | 1.00 | 16.00px |
+          | lg | 1.25 | 20.00px |
+          | xl | 1.56 | 25.00px |
+          | 2xl | 1.95 | 31.25px |
+          | 3xl | 2.44 | 39.06px |
+
+          ## Motion System
+
+          ```json
+          {
+            "durations": {
+              "instant": "0ms",
+              "fast": "100ms",
+              "normal": "200ms",
+              "slow": "300ms"
+            },
+            "reducedMotion": {
+              "respectPreference": true,
+              "fallbackDuration": "0ms"
+            }
+          }
+          ```
+
+          ## Elevation Scale
+
+          | Level | Use Case | Shadow |
+          |-------|----------|--------|
+          | 0 | Flat | none |
+          | 1 | Raised (card) | subtle |
+          | 2 | Floating (dropdown) | medium |
+          | 3 | Overlay (popover) | strong |
+          | 4 | Modal (dialog) | heavy |
+          | 5 | Top (toast) | maximum |
+
+          ## WCAG Contrast Requirements
+
+          | Standard | Normal Text | Large Text |
+          |----------|------------|------------|
+          | AA | 4.5:1 | 3:1 |
+          | AAA | 7:1 | 4.5:1 |
+    validation-commands:
+      - label: "Generate a COIF theme scaffold"
+        command: "npx tsx tools/copf-cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'"
+      - label: "Run scaffold generator tests"
+        command: "npx vitest run tests/scaffold-generators.test.ts"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Input | Type | Purpose |
+        |-------|------|---------|
+        | name | String | Theme name (kebab-case) |
+        | primaryColor | String | Primary color hue or hex value |
+        | secondaryColor | String | Secondary color hue or hex |
+        | fontFamily | String | Primary font stack |
+        | baseSize | Int | Base font size in pixels (default: 16) |
+        | scale | Float | Modular ratio (default: 1.25 major third) |
+        | borderRadius | String | Default border radius |
+        | mode | String | light, dark, or both (default: both) |
+
+        **Output Files:**
+        | File | Purpose |
+        |------|---------|
+        | `kit.yaml` | Theme kit manifest |
+        | `themes/{name}-light.json` | Light theme tokens |
+        | `themes/{name}-dark.json` | Dark theme tokens |
+        | `tokens/palette.json` | Color scale configuration |
+        | `tokens/typography.json` | Type scale and font stacks |
+        | `tokens/motion.json` | Animation timing and easing |
+        | `tokens/elevation.json` | Shadow scale |
+    related-workflows:
+      - name: coif-component-scaffold
+        description: "Generate components to use the theme tokens"
+      - name: kit-scaffold
+        description: "Generate kit manifests for theme packages"
+    anti-patterns:
+      - title: "Hardcoded colors in components"
+        description: "Component uses raw hex values instead of design tokens."
+        bad: |
+          .button { background: #3b82f6; color: #ffffff; }
+        good: |
+          .button {
+            background: var(--color-primary);
+            color: var(--color-on-primary);
+          }
+      - title: "Ignoring reduced motion"
+        description: "Animations play regardless of prefers-reduced-motion setting."
+        bad: |
+          .dialog { transition: transform 300ms ease; }
+        good: |
+          .dialog {
+            transition: transform var(--motion-duration-slow) var(--motion-ease-default);
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .dialog { transition-duration: 0ms; }
+          }
+
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Rich metadata for skills and CLI: tool permissions,
 # argument templates, code examples, references, and
@@ -3741,6 +5313,881 @@ annotations:
           language: bash
           code: "copf generation-plan history --limit 5"
 
+  KitScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <kit-name>"
+      trigger-description: >
+        Use when creating a new COPF kit from scratch. Generates a kit.yaml
+        manifest with concept declarations, sync tier groupings, type parameter
+        alignment, and directory structure stubs.
+      intro-template: >
+        Scaffold a new COPF kit named **$ARGUMENTS** with a kit.yaml manifest,
+        concept spec stubs, and sync directory structure.
+      companion-docs:
+        - path: examples/scaffold-a-kit.md
+          label: "End-to-end kit scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a New Kit
+
+            This walkthrough creates an `auth` kit with User, Session, and
+            Password concepts.
+
+            ## Step 1: Generate the Kit Scaffold
+
+            ```bash
+            copf scaffold kit --name auth --concepts User,Session,Password
+            ```
+
+            Output:
+            ```
+            Created auth/kit.yaml
+            Created auth/user.concept (stub)
+            Created auth/session.concept (stub)
+            Created auth/password.concept (stub)
+            Created auth/syncs/.gitkeep
+            ```
+
+            ## Step 2: Edit the Concept Stubs
+
+            Open `auth/user.concept` and replace the TODO with your design:
+
+            ```
+            concept User [U] {
+              purpose { Manage user identity and profile information. }
+              state {
+                users: set U
+                name: U -> String
+                email: U -> String
+              }
+              actions {
+                action create(name: String, email: String) {
+                  -> ok(user: U) { User created. }
+                  -> duplicate(email: String) { Email already registered. }
+                }
+              }
+            }
+            ```
+
+            ## Step 3: Add Type Alignment
+
+            Edit `auth/kit.yaml` to align type parameters:
+
+            ```yaml
+            concepts:
+              User:
+                params: { U: { as: user-ref } }
+              Session:
+                params:
+                  S: { as: session-ref }
+                  U: { as: user-ref }  # Same user-ref!
+            ```
+
+            ## Step 4: Validate
+
+            ```bash
+            copf kit validate ./kits/auth
+            ```
+    register:
+      examples:
+        - label: "Register the kit scaffold generator"
+          language: typescript
+          code: |
+            const result = await kitScaffoldGenHandler.register({}, storage);
+            // { variant: 'ok', name: 'KitScaffoldGen', inputKind: 'KitConfig', ... }
+    generate:
+      examples:
+        - label: "Generate a basic kit"
+          language: bash
+          code: "copf scaffold kit --name auth --concepts User,Session,Password"
+        - label: "Generate a domain kit with infrastructure"
+          language: bash
+          code: "copf scaffold kit --name web3 --concepts Token,Wallet --domain"
+        - label: "Generate programmatically"
+          language: typescript
+          code: |
+            import { kitScaffoldGenHandler } from './kit-scaffold-gen.impl';
+            const result = await kitScaffoldGenHandler.generate({
+              name: 'auth',
+              description: 'Authentication and identity management.',
+              concepts: ['User', 'Session', 'Password'],
+              syncs: [
+                { name: 'ValidateSession', tier: 'required' },
+                { name: 'RefreshExpired', tier: 'recommended' },
+              ],
+            }, storage);
+      references:
+        - path: references/kit-manifest-schema.md
+          label: "Kit manifest schema reference"
+
+  DeployScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--app <app-name>"
+      trigger-description: >
+        Use when creating a new deployment manifest for a COPF application.
+        Generates deploy.yaml with runtime configurations, infrastructure
+        declarations, concept-to-runtime assignments, and build settings.
+      intro-template: >
+        Scaffold a deploy.yaml manifest for application **$ARGUMENTS** with
+        runtime configs, infrastructure, and concept assignments.
+      companion-docs:
+        - path: examples/scaffold-deploy.md
+          label: "Deployment manifest scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Deployment Manifest
+
+            This walkthrough creates a deploy manifest for a multi-runtime
+            application.
+
+            ## Step 1: Generate the Deploy Scaffold
+
+            ```bash
+            copf scaffold deploy --app conduit \
+              --runtimes api:node:http:postgresql,worker:node:sqs:redis \
+              --iac terraform
+            ```
+
+            ## Step 2: Assign Concepts to Runtimes
+
+            Edit `deploy/conduit.deploy.yaml`:
+
+            ```yaml
+            concepts:
+              User:
+                spec: ./specs/app/user.concept
+                implementations:
+                  - language: typescript
+                    runtime: api
+                    storage: postgresql
+              Email:
+                spec: ./specs/app/email.concept
+                implementations:
+                  - language: typescript
+                    runtime: worker
+                    storage: redis
+            ```
+
+            ## Step 3: Add Sync Assignments
+
+            ```yaml
+            syncs:
+              - path: ./syncs/welcome-email.sync
+                engine: engine
+                annotations: [eventual]
+            ```
+
+            ## Step 4: Validate
+
+            ```bash
+            copf deploy --validate deploy/conduit.deploy.yaml
+            ```
+    register:
+      examples:
+        - label: "Register the deploy scaffold generator"
+          language: typescript
+          code: |
+            const result = await deployScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a basic deploy manifest"
+          language: bash
+          code: "copf scaffold deploy --app my-app"
+        - label: "Generate with custom runtimes"
+          language: bash
+          code: "copf scaffold deploy --app conduit --iac terraform"
+        - label: "Generate programmatically"
+          language: typescript
+          code: |
+            import { deployScaffoldGenHandler } from './deploy-scaffold-gen.impl';
+            const result = await deployScaffoldGenHandler.generate({
+              appName: 'conduit',
+              runtimes: [
+                { name: 'api', type: 'node', transport: 'http', storage: 'postgresql' },
+                { name: 'worker', type: 'node', transport: 'sqs', storage: 'redis' },
+              ],
+              concepts: [
+                { name: 'User', runtime: 'api' },
+                { name: 'Article', runtime: 'api' },
+              ],
+              iacProvider: 'terraform',
+            }, storage);
+      references:
+        - path: references/deploy-manifest-schema.md
+          label: "Deploy manifest schema reference"
+
+  InterfaceScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <interface-name>"
+      trigger-description: >
+        Use when creating a new interface generation manifest. Generates
+        interface.yaml with target configurations for REST, GraphQL, gRPC,
+        CLI, MCP, and Claude Skills, plus SDK settings and spec outputs.
+      intro-template: >
+        Scaffold an interface.yaml for **$ARGUMENTS** with target configs,
+        SDK settings, and per-concept overrides.
+      companion-docs:
+        - path: examples/scaffold-interface.md
+          label: "Interface manifest scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding an Interface Manifest
+
+            This walkthrough creates an interface manifest for a REST +
+            GraphQL API with TypeScript and Python SDKs.
+
+            ## Step 1: Generate the Interface Scaffold
+
+            ```bash
+            copf scaffold interface --name conduit-api \
+              --targets rest,graphql \
+              --sdks typescript,python \
+              --concepts User,Article,Comment
+            ```
+
+            ## Step 2: Customize Target Settings
+
+            Edit `conduit-api.interface.yaml`:
+
+            ```yaml
+            targets:
+              rest:
+                basePath: /api/v1
+                framework: hono
+              graphql:
+                path: /graphql
+                relay: true
+                subscriptions: true
+            ```
+
+            ## Step 3: Add Per-Concept Overrides
+
+            ```yaml
+            concepts:
+              User:
+                rest:
+                  basePath: /api/v1/users
+                graphql:
+                  typeName: User
+              Article:
+                rest:
+                  basePath: /api/v1/articles
+            ```
+
+            ## Step 4: Generate Interfaces
+
+            ```bash
+            copf interface generate --manifest conduit-api.interface.yaml
+            ```
+    register:
+      examples:
+        - label: "Register the interface scaffold generator"
+          language: typescript
+          code: |
+            const result = await interfaceScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a REST + GraphQL interface"
+          language: bash
+          code: "copf scaffold interface --name my-api --targets rest,graphql --sdks typescript"
+        - label: "Generate a full-stack interface"
+          language: bash
+          code: "copf scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills --sdks typescript,python,go"
+      references:
+        - path: references/interface-manifest-schema.md
+          label: "Interface manifest schema reference"
+
+  ConceptScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <ConceptName>"
+      trigger-description: >
+        Use when creating a new concept specification from scratch. Generates
+        a .concept file with purpose, state, actions, variants, invariants,
+        and a register() action following Jackson's methodology.
+      intro-template: >
+        Scaffold a concept spec for **$ARGUMENTS** with state declarations,
+        typed action signatures, and a register() action.
+      companion-docs:
+        - path: examples/scaffold-concept.md
+          label: "Concept spec scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Concept Spec
+
+            This walkthrough creates a `Bookmark` concept from inputs.
+
+            ## Step 1: Generate the Concept Scaffold
+
+            ```bash
+            copf scaffold concept --name Bookmark \
+              --param B \
+              --purpose "Allow users to save and organize references to items." \
+              --actions add,remove,list
+            ```
+
+            ## Step 2: Refine State Fields
+
+            Edit `bookmark.concept`:
+
+            ```
+            state {
+              bookmarks: set B
+              owner: B -> U        # who owns it
+              item: B -> I         # what it references
+              label: B -> option String
+            }
+            ```
+
+            ## Step 3: Refine Action Signatures
+
+            ```
+            action add(item: I, label: option String) {
+              -> ok(bookmark: B) { Bookmark created. }
+              -> duplicate(item: I) { Item already bookmarked. }
+            }
+            ```
+
+            ## Step 4: Add Invariants
+
+            ```
+            invariant {
+              after add(item: i) -> ok(bookmark: b)
+              then add(item: i) -> duplicate(item: i)
+            }
+            ```
+
+            ## Step 5: Validate
+
+            ```bash
+            copf check specs/app/bookmark.concept
+            ```
+    register:
+      examples:
+        - label: "Register the concept scaffold generator"
+          language: typescript
+          code: |
+            const result = await conceptScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a basic concept"
+          language: bash
+          code: "copf scaffold concept --name User --actions create,update,delete"
+        - label: "Generate with custom state"
+          language: bash
+          code: "copf scaffold concept --name Article --param A --category domain"
+      references:
+        - path: references/concept-spec-guide.md
+          label: "Concept specification writing guide"
+
+  SyncScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <SyncName>"
+      trigger-description: >
+        Use when creating a new sync rule to connect concepts. Generates a
+        .sync file with when/where/then clauses from trigger and effect
+        configurations.
+      intro-template: >
+        Scaffold a sync rule **$ARGUMENTS** with trigger patterns, guard
+        conditions, and effect actions.
+      companion-docs:
+        - path: examples/scaffold-sync.md
+          label: "Sync rule scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Sync Rule
+
+            This walkthrough creates a sync that auto-creates a profile
+            when a user is created.
+
+            ## Step 1: Generate the Sync Scaffold
+
+            ```bash
+            copf scaffold sync --name CreateProfile \
+              --from User/create \
+              --to Profile/init \
+              --tier required
+            ```
+
+            ## Step 2: Refine the Pattern
+
+            Edit `create-profile.sync`:
+
+            ```
+            sync CreateProfile [eager]
+              purpose { Auto-create a profile when a user registers. }
+            when {
+              User/create: [
+                name: ?name;
+                email: ?email
+              ] => ok(user: ?u)
+            }
+            then {
+              Profile/init: [
+                owner: ?u;
+                displayName: ?name
+              ]
+            }
+            ```
+
+            ## Step 3: Add Guard Conditions (optional)
+
+            ```
+            where {
+              not(query(Profile/find: [owner: ?u] as ?existing))
+            }
+            ```
+
+            ## Step 4: Validate
+
+            ```bash
+            copf sync validate syncs/create-profile.sync
+            ```
+    register:
+      examples:
+        - label: "Register the sync scaffold generator"
+          language: typescript
+          code: |
+            const result = await syncScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a simple sync"
+          language: bash
+          code: "copf scaffold sync --name CreateProfile --from User/create --to Profile/init"
+        - label: "Generate an eager sync"
+          language: bash
+          code: "copf scaffold sync --name ValidateOrder --tier required --eager"
+      references:
+        - path: references/sync-rule-guide.md
+          label: "Sync rule writing guide"
+
+  HandlerScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--concept <ConceptName>"
+      trigger-description: >
+        Use when implementing a concept handler in TypeScript. Generates a
+        .impl.ts handler with register(), typed action methods, input extraction,
+        storage patterns, and a conformance test file.
+      intro-template: >
+        Scaffold a TypeScript handler for concept **$ARGUMENTS** with typed
+        actions, storage patterns, and a conformance test.
+      companion-docs:
+        - path: examples/scaffold-handler.md
+          label: "Handler implementation scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Handler
+
+            This walkthrough creates a handler for the `Bookmark` concept.
+
+            ## Step 1: Generate the Handler Scaffold
+
+            ```bash
+            copf scaffold handler --concept Bookmark \
+              --actions add:url:String,remove:bookmark:String,list:owner:String
+            ```
+
+            Output:
+            ```
+            Created implementations/typescript/framework/bookmark.impl.ts
+            Created tests/bookmark.conformance.test.ts
+            ```
+
+            ## Step 2: Implement Action Logic
+
+            Edit `bookmark.impl.ts` — replace TODO comments:
+
+            ```typescript
+            async add(input, storage) {
+              const url = input.url as string;
+              if (!url) return { variant: 'error', message: 'url required' };
+
+              const existing = await storage.find('bookmarks', { url });
+              if (existing.length > 0) return { variant: 'duplicate', url };
+
+              const id = crypto.randomUUID();
+              await storage.put('bookmarks', id, { id, url, created: new Date().toISOString() });
+              return { variant: 'ok', bookmark: id };
+            },
+            ```
+
+            ## Step 3: Run Conformance Test
+
+            ```bash
+            npx vitest run tests/bookmark.conformance.test.ts
+            ```
+    register:
+      examples:
+        - label: "Register the handler scaffold generator"
+          language: typescript
+          code: |
+            const result = await handlerScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a handler"
+          language: bash
+          code: "copf scaffold handler --concept User --actions create,update,delete"
+        - label: "Generate with test only"
+          language: bash
+          code: "copf scaffold handler --concept Article"
+      references:
+        - path: references/handler-implementation-guide.md
+          label: "Handler implementation patterns"
+
+  StorageAdapterScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <AdapterName> --backend <backend>"
+      trigger-description: >
+        Use when adding a new storage backend to a COPF application. Generates
+        a ConceptStorage adapter implementation with put, get, find, del, and
+        delMany methods for the specified backend.
+      intro-template: >
+        Scaffold a **$ARGUMENTS** storage adapter implementing the ConceptStorage
+        interface with all five required methods.
+      companion-docs:
+        - path: examples/scaffold-storage-adapter.md
+          label: "Storage adapter scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Storage Adapter
+
+            This walkthrough creates a PostgreSQL storage adapter.
+
+            ## Step 1: Generate the Adapter Scaffold
+
+            ```bash
+            copf scaffold storage --name AppStorage --backend postgresql
+            ```
+
+            ## Step 2: Configure Connection
+
+            Edit the constructor in `app-storage-storage.ts`:
+
+            ```typescript
+            constructor(connectionString: string) {
+              this.pool = new Pool({ connectionString });
+            }
+            ```
+
+            ## Step 3: Wire into Deploy Manifest
+
+            ```yaml
+            # deploy.yaml
+            infrastructure:
+              storage:
+                postgresql:
+                  type: postgresql
+                  config:
+                    host: localhost
+                    port: 5432
+                    database: myapp
+            ```
+
+            ## Supported Backends
+
+            | Backend | Package | Best For |
+            |---------|---------|----------|
+            | sqlite | better-sqlite3 | Single-node, embedded |
+            | postgresql | pg | Production, multi-node |
+            | redis | redis | Caching, sessions |
+            | dynamodb | @aws-sdk/client-dynamodb | Serverless |
+            | memory | (none) | Tests, prototypes |
+    register:
+      examples:
+        - label: "Register the storage adapter scaffold generator"
+          language: typescript
+          code: |
+            const result = await storageAdapterScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a PostgreSQL adapter"
+          language: bash
+          code: "copf scaffold storage --name AppStorage --backend postgresql"
+        - label: "Generate a Redis adapter"
+          language: bash
+          code: "copf scaffold storage --name CacheStorage --backend redis"
+        - label: "Generate an in-memory adapter"
+          language: bash
+          code: "copf scaffold storage --name TestStorage --backend memory"
+      references:
+        - path: references/storage-adapter-guide.md
+          label: "Storage adapter implementation guide"
+
+  TransportAdapterScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <AdapterName> --protocol <protocol>"
+      trigger-description: >
+        Use when adding a new transport protocol to a COPF application.
+        Generates a transport adapter with invoke, query, and health methods
+        for the specified protocol.
+      intro-template: >
+        Scaffold a **$ARGUMENTS** transport adapter with invoke, query, and
+        health methods for cross-runtime communication.
+      companion-docs:
+        - path: examples/scaffold-transport-adapter.md
+          label: "Transport adapter scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Transport Adapter
+
+            This walkthrough creates an HTTP transport adapter.
+
+            ## Step 1: Generate the Adapter Scaffold
+
+            ```bash
+            copf scaffold transport --name ApiTransport --protocol http
+            ```
+
+            ## Step 2: Configure Base URL
+
+            ```typescript
+            const transport = new ApiTransport('http://api-server:3000');
+            ```
+
+            ## Step 3: Wire into Deploy Manifest
+
+            ```yaml
+            # deploy.yaml
+            infrastructure:
+              transports:
+                http:
+                  type: http
+                  config:
+                    port: 3000
+                    timeout: 5000
+            ```
+
+            ## Protocol Comparison
+
+            | Protocol | Bidirectional | Latency | Best For |
+            |----------|--------------|---------|----------|
+            | http | No | Medium | REST APIs |
+            | websocket | Yes | Low | Real-time |
+            | worker | No | Very Low | Same-machine |
+            | in-process | N/A | None | Tests |
+    register:
+      examples:
+        - label: "Register the transport adapter scaffold generator"
+          language: typescript
+          code: |
+            const result = await transportAdapterScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate an HTTP adapter"
+          language: bash
+          code: "copf scaffold transport --name ApiTransport --protocol http"
+        - label: "Generate a WebSocket adapter"
+          language: bash
+          code: "copf scaffold transport --name RealtimeTransport --protocol websocket"
+        - label: "Generate an in-process adapter"
+          language: bash
+          code: "copf scaffold transport --name TestTransport --protocol in-process"
+      references:
+        - path: references/transport-adapter-guide.md
+          label: "Transport adapter implementation guide"
+
+  CoifComponentScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <ComponentName>"
+      trigger-description: >
+        Use when creating a new COIF headless component. Generates a complete
+        component scaffold including widget specification (FSM), anatomy
+        definition (parts contract), machine implementation, and kit manifest.
+      intro-template: >
+        Scaffold a COIF headless component **$ARGUMENTS** with widget FSM,
+        anatomy parts, machine implementation, and kit manifest.
+      companion-docs:
+        - path: examples/scaffold-coif-component.md
+          label: "COIF component scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a COIF Component
+
+            This walkthrough creates a `Dialog` headless component.
+
+            ## Step 1: Generate the Component Scaffold
+
+            ```bash
+            copf scaffold component --name Dialog \
+              --parts root,trigger,backdrop,content,title,closeTrigger \
+              --states closed,open \
+              --events open,close,escape
+            ```
+
+            Output:
+            ```
+            Created coif-dialog/dialog-widget.concept
+            Created coif-dialog/dialog-anatomy.concept
+            Created coif-dialog/kit.yaml
+            Created coif-dialog/dialog-machine.impl.ts
+            ```
+
+            ## Step 2: Add Accessibility
+
+            Edit `dialog-widget.concept`:
+
+            ```
+            accessibility {
+              role: "dialog"
+              aria-modal: true
+              aria-labelledby: titleId
+              aria-describedby: descriptionId
+            }
+            ```
+
+            ## Step 3: Customize the Machine
+
+            Add guards and transition side effects in
+            `dialog-machine.impl.ts`:
+
+            ```typescript
+            // Add escape key handler
+            if (event === 'escape' && machine.config?.closeOnEsc !== false) {
+              // ... transition to closed
+            }
+            ```
+
+            ## Step 4: Register with Widget Catalog
+
+            The generated widget auto-registers via the coif-component
+            kit's Widget/register action.
+
+            ## Standard Component Library
+
+            | Component | Parts | States |
+            |-----------|-------|--------|
+            | Button | root | idle, pressed |
+            | Dialog | root, trigger, backdrop, content | closed, open |
+            | Tabs | root, list, trigger, content | idle, focused |
+            | Accordion | root, item, trigger, content | collapsed, expanded |
+            | Menu | root, trigger, content, item | closed, open |
+            | Select | root, trigger, content, item | closed, open |
+            | Tooltip | root, trigger, content | hidden, visible |
+    register:
+      examples:
+        - label: "Register the component scaffold generator"
+          language: typescript
+          code: |
+            const result = await coifComponentScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a dialog component"
+          language: bash
+          code: "copf scaffold component --name Dialog --parts root,trigger,content --states closed,open"
+        - label: "Generate a tabs component"
+          language: bash
+          code: "copf scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
+      references:
+        - path: references/coif-component-guide.md
+          label: "COIF headless component architecture"
+
+  CoifThemeScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <theme-name>"
+      trigger-description: >
+        Use when creating a new COIF design system theme. Generates palette
+        configuration, typography scale, motion definitions, elevation scale,
+        and light/dark theme manifests with WCAG accessibility compliance.
+      intro-template: >
+        Scaffold a COIF design system theme **$ARGUMENTS** with palette tokens,
+        typography scale, motion transitions, and elevation shadows.
+      companion-docs:
+        - path: examples/scaffold-coif-theme.md
+          label: "COIF theme scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a COIF Theme
+
+            This walkthrough creates an `ocean` design system theme.
+
+            ## Step 1: Generate the Theme Scaffold
+
+            ```bash
+            copf scaffold theme --name ocean \
+              --primary 220 \
+              --font "Inter, sans-serif" \
+              --base-size 16 \
+              --scale 1.25
+            ```
+
+            Output:
+            ```
+            Created theme-ocean/kit.yaml
+            Created theme-ocean/themes/ocean-light.json
+            Created theme-ocean/themes/ocean-dark.json
+            Created theme-ocean/tokens/palette.json
+            Created theme-ocean/tokens/typography.json
+            Created theme-ocean/tokens/motion.json
+            Created theme-ocean/tokens/elevation.json
+            ```
+
+            ## Step 2: Customize Colors
+
+            Edit `tokens/palette.json` to adjust semantic roles:
+
+            ```json
+            {
+              "primary": {
+                "roles": {
+                  "default": "500",
+                  "hover": "600",
+                  "active": "700"
+                }
+              }
+            }
+            ```
+
+            ## Step 3: Check WCAG Contrast
+
+            The palette generator ensures AA compliance (4.5:1 for
+            normal text, 3:1 for large text). Verify:
+
+            ```
+            Primary 500 on white background → 4.6:1 ✓ (AA pass)
+            Primary 500 on dark background → 7.2:1 ✓ (AAA pass)
+            ```
+
+            ## Step 4: Customize Typography
+
+            Edit `tokens/typography.json`:
+
+            ```json
+            {
+              "presets": {
+                "heading-1": { "size": "39.06px", "weight": 700 },
+                "body": { "size": "16px", "weight": 400 }
+              }
+            }
+            ```
+
+            ## Token Hierarchy
+
+            ```
+            Primitive          → Semantic          → Component
+            color.blue.500       color.primary        button.bg
+            font.size.base       font.body            input.fontSize
+            spacing.4            spacing.md           card.padding
+            ```
+    register:
+      examples:
+        - label: "Register the theme scaffold generator"
+          language: typescript
+          code: |
+            const result = await coifThemeScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a theme with defaults"
+          language: bash
+          code: "copf scaffold theme --name ocean"
+        - label: "Generate a custom theme"
+          language: bash
+          code: "copf scaffold theme --name brand --primary '#3b82f6' --font 'Inter, sans-serif' --base-size 18"
+        - label: "Generate light-only theme"
+          language: bash
+          code: "copf scaffold theme --name print --mode light"
+      references:
+        - path: references/coif-theme-guide.md
+          label: "COIF design system and theme architecture"
+
 # ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
 # CLI-specific: positional args, custom command names.
 
@@ -4102,3 +6549,485 @@ concept-overrides:
               command: "copf generation-plan history --limit 5"
             - description: "Show last 10 runs"
               command: "copf generation-plan history"
+
+  # ─── Scaffold Generators CLI ─────────────────────────
+  # All scaffold generators live under `copf scaffold <type>`.
+  # They share a common pattern: --name for the output name,
+  # type-specific flags for configuration, and --output for
+  # the target directory.
+
+  KitScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: kit
+      description: "Generate kit manifest (kit.yaml) and directory structure."
+      actions:
+        generate:
+          command: kit
+          description: "Scaffold a new COPF kit with kit.yaml, concept stubs, and sync directories."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Kit name (kebab-case)"
+            description:
+              type: string
+              required: false
+              short: d
+              description: "Kit description"
+            concepts:
+              type: string
+              required: false
+              short: c
+              description: "Comma-separated PascalCase concept names"
+            syncs:
+              type: string
+              required: false
+              description: "Comma-separated sync declarations (Name:tier)"
+            dependencies:
+              type: string
+              required: false
+              description: "Comma-separated kit dependencies"
+            domain:
+              type: boolean
+              required: false
+              description: "Include infrastructure section for domain kit"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory (default: ./kits/<name>)"
+          examples:
+            - description: "Scaffold a basic kit"
+              command: "copf scaffold kit --name auth --concepts User,Session,Password"
+            - description: "Scaffold a domain kit with infrastructure"
+              command: "copf scaffold kit --name web3 --concepts Token,Wallet --domain"
+            - description: "Scaffold with syncs"
+              command: "copf scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
+
+  DeployScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: deploy
+      description: "Generate deployment manifest (deploy.yaml)."
+      actions:
+        generate:
+          command: deploy
+          description: "Scaffold a deploy.yaml with runtimes, infrastructure, and concept assignments."
+          flags:
+            app:
+              type: string
+              required: true
+              description: "Application name"
+            version:
+              type: string
+              required: false
+              short: v
+              description: "Semver version (default: 0.1.0)"
+            runtimes:
+              type: string
+              required: false
+              short: r
+              description: "Runtime declarations (name:type:transport:storage, comma-separated)"
+            concepts:
+              type: string
+              required: false
+              short: c
+              description: "Concept assignments (Name:runtime, comma-separated)"
+            iac:
+              type: string
+              required: false
+              description: "IaC provider (terraform, cloudformation, pulumi, docker-compose)"
+              default: "terraform"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory (default: ./deploy)"
+          examples:
+            - description: "Scaffold a basic deploy manifest"
+              command: "copf scaffold deploy --app my-app"
+            - description: "Scaffold with custom runtimes"
+              command: "copf scaffold deploy --app conduit --runtimes api:node:http:postgresql,worker:node:sqs:redis --iac terraform"
+            - description: "Scaffold with concept assignments"
+              command: "copf scaffold deploy --app conduit --concepts User:api,Article:api,Email:worker"
+
+  InterfaceScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: interface
+      description: "Generate interface manifest (interface.yaml)."
+      actions:
+        generate:
+          command: interface
+          description: "Scaffold an interface.yaml with targets, SDKs, and concept overrides."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Interface name"
+            targets:
+              type: string
+              required: false
+              short: t
+              description: "Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)"
+              default: "rest"
+            sdks:
+              type: string
+              required: false
+              short: s
+              description: "Comma-separated SDK languages (typescript, python, go, rust, java, swift)"
+              default: "typescript"
+            concepts:
+              type: string
+              required: false
+              short: c
+              description: "Comma-separated concept names for per-concept overrides"
+            openapi:
+              type: boolean
+              required: false
+              description: "Generate OpenAPI spec (default: true)"
+              default: "true"
+            asyncapi:
+              type: boolean
+              required: false
+              description: "Generate AsyncAPI spec (default: false)"
+              default: "false"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory"
+          examples:
+            - description: "Scaffold a REST + GraphQL interface"
+              command: "copf scaffold interface --name my-api --targets rest,graphql --sdks typescript,python"
+            - description: "Scaffold a full-stack interface"
+              command: "copf scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills"
+
+  ConceptScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: concept
+      description: "Generate concept specification (.concept) file."
+      actions:
+        generate:
+          command: concept
+          description: "Scaffold a .concept file with state, actions, and register()."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase concept name"
+            param:
+              type: string
+              required: false
+              short: p
+              description: "Type parameter letter (default: T)"
+              default: "T"
+            purpose:
+              type: string
+              required: false
+              description: "Purpose description"
+            category:
+              type: string
+              required: false
+              description: "Annotation category (domain, devtools, etc.)"
+            actions:
+              type: string
+              required: false
+              short: a
+              description: "Comma-separated action names"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory (default: ./specs/app)"
+          examples:
+            - description: "Scaffold a basic concept"
+              command: "copf scaffold concept --name User --actions create,update,delete"
+            - description: "Scaffold with custom type parameter"
+              command: "copf scaffold concept --name Article --param A --category domain"
+            - description: "Scaffold with purpose"
+              command: "copf scaffold concept --name Bookmark --purpose 'Save and organize references.'"
+
+  SyncScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: sync
+      description: "Generate synchronization rule (.sync) file."
+      actions:
+        generate:
+          command: sync
+          description: "Scaffold a .sync file with when/where/then clauses."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase sync name"
+            from:
+              type: string
+              required: false
+              description: "Trigger source (Concept/action)"
+            to:
+              type: string
+              required: false
+              description: "Effect target (Concept/action)"
+            tier:
+              type: string
+              required: false
+              short: t
+              description: "Sync tier (required, recommended)"
+              default: "recommended"
+            eager:
+              type: boolean
+              required: false
+              description: "Fire immediately (default: true)"
+              default: "true"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory (default: ./syncs)"
+          examples:
+            - description: "Scaffold a sync between two concepts"
+              command: "copf scaffold sync --name CreateProfile --from User/create --to Profile/init"
+            - description: "Scaffold a required sync"
+              command: "copf scaffold sync --name ValidateOrder --tier required"
+
+  HandlerScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: handler
+      description: "Generate TypeScript concept handler (.impl.ts) and conformance test."
+      actions:
+        generate:
+          command: handler
+          description: "Scaffold a .impl.ts handler with register(), typed actions, and a conformance test."
+          flags:
+            concept:
+              type: string
+              required: true
+              short: c
+              description: "PascalCase concept name"
+            actions:
+              type: string
+              required: false
+              short: a
+              description: "Comma-separated action signatures (name:param1:Type1,name:param2:Type2)"
+            input-kind:
+              type: string
+              required: false
+              description: "KindSystem input kind"
+            output-kind:
+              type: string
+              required: false
+              description: "KindSystem output kind"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory (default: ./implementations/typescript)"
+          examples:
+            - description: "Scaffold a handler"
+              command: "copf scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String"
+            - description: "Scaffold with kind metadata"
+              command: "copf scaffold handler --concept Bookmark --input-kind BookmarkInput --output-kind BookmarkResult"
+
+  StorageAdapterScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: storage
+      description: "Generate ConceptStorage adapter for a persistence backend."
+      actions:
+        generate:
+          command: storage
+          description: "Scaffold a ConceptStorage adapter with put, get, find, del, and delMany methods."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Adapter class name (PascalCase)"
+            backend:
+              type: string
+              required: true
+              short: b
+              description: "Backend type"
+              choices: [sqlite, postgresql, redis, dynamodb, memory]
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory"
+          examples:
+            - description: "Generate a PostgreSQL adapter"
+              command: "copf scaffold storage --name AppStorage --backend postgresql"
+            - description: "Generate a Redis adapter"
+              command: "copf scaffold storage --name CacheStorage --backend redis"
+            - description: "Generate an in-memory adapter for tests"
+              command: "copf scaffold storage --name TestStorage --backend memory"
+
+  TransportAdapterScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: transport
+      description: "Generate transport adapter for a communication protocol."
+      actions:
+        generate:
+          command: transport
+          description: "Scaffold a transport adapter with invoke, query, and health methods."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Adapter class name (PascalCase)"
+            protocol:
+              type: string
+              required: true
+              short: p
+              description: "Protocol type"
+              choices: [http, websocket, worker, in-process]
+            base-url:
+              type: string
+              required: false
+              description: "Base URL (for http/websocket)"
+              default: "http://localhost:3000"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory"
+          examples:
+            - description: "Generate an HTTP adapter"
+              command: "copf scaffold transport --name ApiTransport --protocol http"
+            - description: "Generate a WebSocket adapter"
+              command: "copf scaffold transport --name RealtimeTransport --protocol websocket --base-url ws://localhost:3000"
+            - description: "Generate an in-process adapter for tests"
+              command: "copf scaffold transport --name TestTransport --protocol in-process"
+
+  CoifComponentScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: component
+      description: "Generate COIF headless component (widget, anatomy, machine, kit)."
+      actions:
+        generate:
+          command: component
+          description: "Scaffold a complete COIF headless component with FSM, anatomy, and machine."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase component name"
+            parts:
+              type: string
+              required: false
+              short: p
+              description: "Comma-separated anatomy part names"
+              default: "root,trigger,content"
+            slots:
+              type: string
+              required: false
+              description: "Comma-separated slot names"
+            states:
+              type: string
+              required: false
+              short: s
+              description: "Comma-separated FSM state names"
+              default: "idle,active"
+            events:
+              type: string
+              required: false
+              short: e
+              description: "Comma-separated FSM event names"
+              default: "open,close"
+            role:
+              type: string
+              required: false
+              description: "ARIA role for accessibility"
+              default: "widget"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory"
+          examples:
+            - description: "Generate a dialog component"
+              command: "copf scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape"
+            - description: "Generate a tabs component"
+              command: "copf scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
+            - description: "Generate with slots"
+              command: "copf scaffold component --name Card --parts root,header,body,footer --slots header,footer"
+
+  CoifThemeScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: theme
+      description: "Generate COIF design system theme (palette, typography, motion, elevation)."
+      actions:
+        generate:
+          command: theme
+          description: "Scaffold a complete design system theme with WCAG-compliant tokens."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "Theme name (kebab-case)"
+            primary:
+              type: string
+              required: false
+              short: p
+              description: "Primary color hue (0-360) or hex value"
+            secondary:
+              type: string
+              required: false
+              description: "Secondary color hue or hex value"
+            font:
+              type: string
+              required: false
+              short: f
+              description: "Primary font family stack"
+              default: "system-ui, -apple-system, sans-serif"
+            base-size:
+              type: string
+              required: false
+              description: "Base font size in pixels"
+              default: "16"
+            scale:
+              type: string
+              required: false
+              description: "Modular ratio for type scale"
+              default: "1.25"
+            border-radius:
+              type: string
+              required: false
+              description: "Default border radius"
+              default: "0.375rem"
+            mode:
+              type: string
+              required: false
+              short: m
+              description: "Theme mode"
+              choices: [light, dark, both]
+              default: "both"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory"
+          examples:
+            - description: "Generate a theme with defaults"
+              command: "copf scaffold theme --name ocean"
+            - description: "Generate a custom theme"
+              command: "copf scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18"
+            - description: "Generate a light-only theme"
+              command: "copf scaffold theme --name print --mode light"
+            - description: "Generate a dark theme"
+              command: "copf scaffold theme --name midnight --mode dark --primary '#6366f1'"

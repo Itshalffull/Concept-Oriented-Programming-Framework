@@ -16,6 +16,18 @@ import { BuildCacheCommand } from './BuildCache/BuildCache.command';
 import { ResourceCommand } from './Resource/Resource.command';
 import { KindSystemCommand } from './KindSystem/KindSystem.command';
 import { GenerationPlanCommand } from './GenerationPlan/GenerationPlan.command';
+import { BuilderCommand } from './Builder/Builder.command';
+import { ToolchainCommand } from './Toolchain/Toolchain.command';
+import { KitScaffoldGenCommand } from './KitScaffoldGen/KitScaffoldGen.command';
+import { DeployScaffoldGenCommand } from './DeployScaffoldGen/DeployScaffoldGen.command';
+import { InterfaceScaffoldGenCommand } from './InterfaceScaffoldGen/InterfaceScaffoldGen.command';
+import { ConceptScaffoldGenCommand } from './ConceptScaffoldGen/ConceptScaffoldGen.command';
+import { SyncScaffoldGenCommand } from './SyncScaffoldGen/SyncScaffoldGen.command';
+import { HandlerScaffoldGenCommand } from './HandlerScaffoldGen/HandlerScaffoldGen.command';
+import { StorageAdapterScaffoldGenCommand } from './StorageAdapterScaffoldGen/StorageAdapterScaffoldGen.command';
+import { TransportAdapterScaffoldGenCommand } from './TransportAdapterScaffoldGen/TransportAdapterScaffoldGen.command';
+import { CoifComponentScaffoldGenCommand } from './CoifComponentScaffoldGen/CoifComponentScaffoldGen.command';
+import { CoifThemeScaffoldGenCommand } from './CoifThemeScaffoldGen/CoifThemeScaffoldGen.command';
 
 const program = new Command();
 
@@ -35,5 +47,17 @@ const program = new Command();
   program.addCommand(ResourceCommand);
   program.addCommand(KindSystemCommand);
   program.addCommand(GenerationPlanCommand);
+  program.addCommand(BuilderCommand);
+  program.addCommand(ToolchainCommand);
+  program.addCommand(KitScaffoldGenCommand);
+  program.addCommand(DeployScaffoldGenCommand);
+  program.addCommand(InterfaceScaffoldGenCommand);
+  program.addCommand(ConceptScaffoldGenCommand);
+  program.addCommand(SyncScaffoldGenCommand);
+  program.addCommand(HandlerScaffoldGenCommand);
+  program.addCommand(StorageAdapterScaffoldGenCommand);
+  program.addCommand(TransportAdapterScaffoldGenCommand);
+  program.addCommand(CoifComponentScaffoldGenCommand);
+  program.addCommand(CoifThemeScaffoldGenCommand);
 
 export default program;
