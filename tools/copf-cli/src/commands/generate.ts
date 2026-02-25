@@ -873,14 +873,20 @@ then {
     },
   ];
 
-  // Route through Emitter for content-addressed writes
+  // Write to disk and record in Emitter for content-addressed tracking
   for (const sf of syncFiles) {
     const filePath = join(outDir, sf.path);
     mkdirSync(join(filePath, '..'), { recursive: true });
-    await emitterHandler.write(
+
+    const emitResult = await emitterHandler.write(
       { path: filePath, content: sf.content, target: 'sync-gen', concept: meta.name },
       emitStorage,
     );
+
+    // Write to disk: on first run or if content changed
+    if ((emitResult.variant === 'ok' && emitResult.written) || !existsSync(filePath)) {
+      writeFileSync(filePath, sf.content);
+    }
   }
 
   return syncFiles.length;
@@ -997,14 +1003,20 @@ then {
     },
   ];
 
-  // Route through Emitter for content-addressed writes
+  // Write to disk and record in Emitter for content-addressed tracking
   for (const sf of syncFiles) {
     const filePath = join(outDir, sf.path);
     mkdirSync(join(filePath, '..'), { recursive: true });
-    await emitterHandler.write(
+
+    const emitResult = await emitterHandler.write(
       { path: filePath, content: sf.content, target: 'sync-gen', concept: meta.name },
       emitStorage,
     );
+
+    // Write to disk: on first run or if content changed
+    if ((emitResult.variant === 'ok' && emitResult.written) || !existsSync(filePath)) {
+      writeFileSync(filePath, sf.content);
+    }
   }
 
   return syncFiles.length;

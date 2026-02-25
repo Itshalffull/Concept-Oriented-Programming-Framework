@@ -2,7 +2,7 @@
 // COPF CLI — Shared Utilities
 // ============================================================
 
-import { readdirSync, statSync, existsSync, mkdirSync } from 'fs';
+import { readdirSync, statSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import type { ConceptStorage } from '../../../kernel/src/types.js';
 import { emitterHandler } from '../../../implementations/typescript/framework/emitter.impl.js';
@@ -85,6 +85,10 @@ export async function writeGeneratedFiles(
     );
 
     if (writeResult.variant === 'ok' && writeResult.written) {
+      writeFileSync(filePath, file.content);
+      writtenCount++;
+    } else if (!existsSync(filePath)) {
+      writeFileSync(filePath, file.content);
       writtenCount++;
     } else {
       skippedCount++;
