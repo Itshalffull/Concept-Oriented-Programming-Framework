@@ -1,0 +1,20 @@
+# Lock/unlock events feed ChangeStream for audit trail.
+# Cross-kit sync — collaboration uses versioning's ChangeStream.
+
+sync LockAcquiredToStream [eager]
+when {
+  PessimisticLock/checkOut: [ resource: ?r; holder: ?h; duration: ?d; reason: ?reason ]
+    => [ ok(lockId: ?id) ]
+}
+then {
+  ChangeStream/append: [ type: "lock.acquired"; before: ""; after: ?h; source: ?r ]
+}
+
+sync LockReleasedToStream [eager]
+when {
+  PessimisticLock/checkIn: [ lockId: ?id ]
+    => [ ok ]
+}
+then {
+  ChangeStream/append: [ type: "lock.released"; before: ""; after: ""; source: ?id ]
+}

@@ -1,0 +1,12 @@
+# Before proceeding with conflict resolution, check whether a
+# pessimistic lock is active on the resource. If locked, the
+# merge should be rejected.
+
+sync LockBlocksMerge [eager]
+when {
+  ConflictResolution/detect: [ base: ?base; version1: ?v1; version2: ?v2; context: ?ctx ]
+    => [ detected(conflictId: ?conflictId, detail: ?detail) ]
+}
+then {
+  PessimisticLock/queryLocks: [ resource: ?ctx ]
+}

@@ -1,0 +1,20 @@
+# InlineAnnotation accept/reject events feed ChangeStream for audit.
+# Cross-kit sync — collaboration uses versioning's ChangeStream.
+
+sync AnnotationAcceptedToStream [eager]
+when {
+  InlineAnnotation/accept: [ annotationId: ?id ]
+    => [ ok(cleanContent: ?content) ]
+}
+then {
+  ChangeStream/append: [ type: "annotation.accepted"; before: ""; after: ?content; source: ?id ]
+}
+
+sync AnnotationRejectedToStream [eager]
+when {
+  InlineAnnotation/reject: [ annotationId: ?id ]
+    => [ ok(cleanContent: ?content) ]
+}
+then {
+  ChangeStream/append: [ type: "annotation.rejected"; before: ""; after: ?content; source: ?id ]
+}

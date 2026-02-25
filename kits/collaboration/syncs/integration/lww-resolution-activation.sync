@@ -1,0 +1,20 @@
+# Register LWWResolution with PluginRegistry as a conflict-resolution provider
+
+sync RegisterLWWResolution [eager]
+when {
+  LWWResolution/register: []
+    => [ ok(name: ?name, category: ?category, priority: ?priority) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "conflict-resolution";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "LWWResolution";
+      action: "attemptResolve";
+      priority: ?priority
+    }
+  ]
+}

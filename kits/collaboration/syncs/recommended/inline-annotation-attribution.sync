@@ -1,0 +1,10 @@
+# Every InlineAnnotation is attributed to its author via Attribution.
+
+sync AnnotationAttributedToAuthor [eager]
+when {
+  InlineAnnotation/annotate: [ contentRef: ?c; changeType: ?type; scope: ?scope; author: ?author ]
+    => [ ok(annotationId: ?id) ]
+}
+then {
+  Attribution/attribute: [ contentRef: ?c; region: ?scope; agent: ?author; changeRef: ?id ]
+}

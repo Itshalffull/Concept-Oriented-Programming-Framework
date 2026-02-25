@@ -1,0 +1,20 @@
+# Register AddWinsResolution with PluginRegistry as a conflict-resolution provider
+
+sync RegisterAddWinsResolution [eager]
+when {
+  AddWinsResolution/register: []
+    => [ ok(name: ?name, category: ?category, priority: ?priority) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "conflict-resolution";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "AddWinsResolution";
+      action: "attemptResolve";
+      priority: ?priority
+    }
+  ]
+}

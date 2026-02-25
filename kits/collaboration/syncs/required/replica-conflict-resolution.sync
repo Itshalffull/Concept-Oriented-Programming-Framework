@@ -1,0 +1,16 @@
+# Remote updates that produce conflicts must be routed through
+# ConflictResolution. Without this, the conflict variant has no handler.
+
+sync ReplicaConflictToResolution [eager]
+when {
+  Replica/receiveRemote: [ op: ?op; fromReplica: ?from ]
+    => [ conflict(details: ?details) ]
+}
+then {
+  ConflictResolution/detect: [
+    base: "";
+    version1: ?localState;
+    version2: ?op;
+    context: ?from
+  ]
+}

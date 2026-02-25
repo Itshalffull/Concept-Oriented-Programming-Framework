@@ -1,0 +1,20 @@
+# Every Replica operation must advance or merge the CausalClock
+# to maintain happens-before ordering across distributed participants.
+
+sync ReplicaLocalUpdateTick [eager]
+when {
+  Replica/localUpdate: [ op: ?op ]
+    => [ ok(newState: ?state) ]
+}
+then {
+  CausalClock/tick: [ replicaId: ?replicaId ]
+}
+
+sync ReplicaReceiveRemoteMerge [eager]
+when {
+  Replica/receiveRemote: [ op: ?op; fromReplica: ?from ]
+    => [ ok(newState: ?state) ]
+}
+then {
+  CausalClock/merge: [ localClock: ?localClock; remoteClock: ?remoteClock ]
+}

@@ -1,0 +1,12 @@
+# Blame queries walk DAGHistory to trace line-level attribution
+# across version history.
+# Cross-kit sync — collaboration uses versioning's DAGHistory.
+
+sync AttributionWalksDAG [eager]
+when {
+  Attribution/blame: [ contentRef: ?ref ]
+    => [ ok(map: ?map) ]
+}
+then {
+  DAGHistory/ancestors: [ nodeId: ?ref ]
+}

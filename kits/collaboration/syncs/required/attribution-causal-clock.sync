@@ -1,0 +1,11 @@
+# Every attribution record must be causally timestamped so blame
+# queries are consistent across replicas.
+
+sync AttributionCausalTimestamp [eager]
+when {
+  Attribution/attribute: [ contentRef: ?c; region: ?r; agent: ?a; changeRef: ?ch ]
+    => [ ok(attributionId: ?id) ]
+}
+then {
+  CausalClock/tick: [ replicaId: ?a ]
+}

@@ -1,0 +1,20 @@
+# Register ManualResolution with PluginRegistry as a conflict-resolution provider
+
+sync RegisterManualResolution [eager]
+when {
+  ManualResolution/register: []
+    => [ ok(name: ?name, category: ?category, priority: ?priority) ]
+}
+then {
+  PluginRegistry/register: [
+    type: "conflict-resolution";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      category: ?category;
+      concept: "ManualResolution";
+      action: "attemptResolve";
+      priority: ?priority
+    }
+  ]
+}
