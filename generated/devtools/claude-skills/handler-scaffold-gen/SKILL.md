@@ -74,9 +74,6 @@ copf scaffold handler --concept User --actions create,update,delete
 ```bash
 copf scaffold handler --concept Article
 ```
-## References
-
-- [Handler implementation patterns](references/handler-implementation-guide.md)
 
 ## References
 

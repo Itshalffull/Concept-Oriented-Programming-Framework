@@ -74,9 +74,6 @@ copf scaffold transport --name RealtimeTransport --protocol websocket
 ```bash
 copf scaffold transport --name TestTransport --protocol in-process
 ```
-## References
-
-- [Transport adapter implementation guide](references/transport-adapter-guide.md)
 
 ## References
 

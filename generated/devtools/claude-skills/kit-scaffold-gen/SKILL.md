@@ -83,9 +83,6 @@ const result = await kitScaffoldGenHandler.generate({
   ],
 }, storage);
 ```
-## References
-
-- [Kit manifest schema reference](references/kit-manifest-schema.md)
 
 ## References
 

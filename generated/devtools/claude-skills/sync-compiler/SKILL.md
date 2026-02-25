@@ -49,9 +49,6 @@ const result = await syncCompilerHandler.compile(
   { sync: parsedSync, ast: syncAst }, storage
 );
 ```
-## References
-
-- [Reusable sync templates and patterns](references/sync-patterns.md)
 
 #### Completion Chaining Pattern
 

@@ -70,9 +70,6 @@ copf scaffold sync --name CreateProfile --from User/create --to Profile/init
 ```bash
 copf scaffold sync --name ValidateOrder --tier required --eager
 ```
-## References
-
-- [Sync rule writing guide](references/sync-rule-guide.md)
 
 ## References
 

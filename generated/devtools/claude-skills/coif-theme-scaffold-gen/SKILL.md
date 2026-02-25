@@ -79,9 +79,6 @@ copf scaffold theme --name brand --primary '#3b82f6' --font 'Inter, sans-serif' 
 ```bash
 copf scaffold theme --name print --mode light
 ```
-## References
-
-- [COIF design system and theme architecture](references/coif-theme-guide.md)
 
 ## References
 

@@ -74,9 +74,6 @@ copf scaffold storage --name CacheStorage --backend redis
 ```bash
 copf scaffold storage --name TestStorage --backend memory
 ```
-## References
-
-- [Storage adapter implementation guide](references/storage-adapter-guide.md)
 
 ## References
 

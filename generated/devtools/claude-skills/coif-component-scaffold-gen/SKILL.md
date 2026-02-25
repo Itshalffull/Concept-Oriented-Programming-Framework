@@ -74,9 +74,6 @@ copf scaffold component --name Dialog --parts root,trigger,content --states clos
 ```bash
 copf scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur
 ```
-## References
-
-- [COIF headless component architecture](references/coif-component-guide.md)
 
 ## References
 

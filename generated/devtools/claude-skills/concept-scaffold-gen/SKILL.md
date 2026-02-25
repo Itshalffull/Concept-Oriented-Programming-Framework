@@ -73,9 +73,6 @@ copf scaffold concept --name User --actions create,update,delete
 ```bash
 copf scaffold concept --name Article --param A --category domain
 ```
-## References
-
-- [Concept specification writing guide](references/concept-spec-guide.md)
 
 ## References
 

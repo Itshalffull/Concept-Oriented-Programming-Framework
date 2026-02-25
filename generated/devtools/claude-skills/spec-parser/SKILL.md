@@ -46,9 +46,6 @@ const ast = parseConceptFile(source);
 ```bash
 copf check specs/my-concept.concept
 ```
-## References
-
-- [Full concept grammar specification](references/concept-grammar.md)
 
 ## References
 

@@ -43,10 +43,6 @@ Validate that deployment manifests correctly map concepts to runtimes, assign sy
 ```bash
 copf deploy --validate app.deploy.yaml
 ```
-## References
-
-- [Deployment configuration guide](references/deployment-guide.md)
-- [Transport adapter reference](references/transport-adapters.md)
 
 ## References
 

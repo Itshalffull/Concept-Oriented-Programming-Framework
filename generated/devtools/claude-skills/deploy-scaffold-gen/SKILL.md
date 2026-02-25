@@ -86,9 +86,6 @@ const result = await deployScaffoldGenHandler.generate({
   iacProvider: 'terraform',
 }, storage);
 ```
-## References
-
-- [Deploy manifest schema reference](references/deploy-manifest-schema.md)
 
 ## References
 

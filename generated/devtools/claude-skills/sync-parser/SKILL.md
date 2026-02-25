@@ -50,9 +50,6 @@ const result = await syncParserHandler.parse(
 ```bash
 copf compile-syncs syncs/my-sync.sync
 ```
-## References
-
-- [Sync language reference](references/sync-design.md)
 
 ## References
 

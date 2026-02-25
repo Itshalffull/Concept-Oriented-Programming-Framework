@@ -53,9 +53,6 @@ const result = await schemaGenHandler.generate(
 ```bash
 copf generate specs/my-concept.concept
 ```
-## References
-
-- [Spec-to-TypeScript type mapping rules](references/type-mapping.md)
 
 ## References
 

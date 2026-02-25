@@ -70,9 +70,6 @@ copf scaffold interface --name my-api --targets rest,graphql --sdks typescript
 ```bash
 copf scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills --sdks typescript,python,go
 ```
-## References
-
-- [Interface manifest schema reference](references/interface-manifest-schema.md)
 
 ## References
 

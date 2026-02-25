@@ -325,11 +325,12 @@ function renderWorkflowSkill(
     }
 
     // Per-action enrichment from annotations (rendered by Renderer)
+    // Only examples are rendered inline per-step; references are rendered
+    // once in the post-step enrichment section to avoid duplicate headings.
     const actionAnnot = annot?.actions?.[step.action];
     if (actionAnnot) {
       const actionEnrichment: Record<string, unknown> = {};
       if (actionAnnot.examples) actionEnrichment.examples = actionAnnot.examples;
-      if (actionAnnot.references) actionEnrichment.references = actionAnnot.references;
       if (Object.keys(actionEnrichment).length > 0) {
         const { output } = renderContent(actionEnrichment, fmt);
         if (output) lines.push(output);
