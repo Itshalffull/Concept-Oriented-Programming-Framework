@@ -1,0 +1,37 @@
+@version(1)
+concept TreeSitterQueryProvider [I] {
+
+  purpose {
+    Pattern engine provider for Tree-sitter S-expression queries.
+    The most precise structural pattern syntax, using native
+    Tree-sitter query capabilities against concrete syntax trees.
+  }
+
+  state {
+    instances: set I
+    patternRef: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register the Tree-sitter query engine with
+        StructuralPattern as a pattern syntax provider.
+      }
+    }
+
+    action execute(pattern: String, tree: String) {
+      -> ok(matches: String) {
+        Run an S-expression query against a syntax tree.
+        Returns matches as serialized JSON.
+      }
+      -> invalidPattern(message: String) {
+        The S-expression pattern has a syntax error.
+      }
+    }
+  }
+}

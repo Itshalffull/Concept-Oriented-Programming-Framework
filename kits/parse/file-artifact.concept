@@ -1,0 +1,81 @@
+@version(1)
+concept FileArtifact [F] {
+
+  purpose {
+    Software-engineering metadata for a project file, extending
+    ContentNode with role, provenance, and dependency information.
+    Automatically classifies files as source, generated, config,
+    spec, doc, test, or asset based on path and extension.
+  }
+
+  state {
+    artifacts: set F
+    node: F -> String
+    role: F -> String
+    language: F -> String
+    encoding: F -> String
+    generationSource: F -> String
+    schemaRef: F -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(node: String, role: String, language: String) {
+      -> ok(artifact: F) {
+        Register a file as a project artifact with inferred
+        or explicit role and language metadata.
+      }
+      -> alreadyRegistered(existing: F) {
+        This file path already has a FileArtifact entry.
+      }
+    }
+
+    action setProvenance(artifact: F, spec: String, generator: String) {
+      -> ok() {
+        Record that this artifact was generated from a spec
+        by a particular generator.
+      }
+      -> notfound() {
+        Artifact does not exist.
+      }
+    }
+
+    action findByRole(role: String) {
+      -> ok(artifacts: String) {
+        Return all artifacts with the given role as
+        serialized JSON array.
+      }
+    }
+
+    action findGeneratedFrom(spec: String) {
+      -> ok(artifacts: String) {
+        Return all artifacts generated from this spec.
+      }
+      -> noGeneratedFiles() {
+        No files were generated from this spec.
+      }
+    }
+
+    action get(artifact: F) {
+      -> ok(artifact: F, node: String, role: String, language: String, encoding: String) {
+        Retrieve artifact metadata.
+      }
+      -> notfound(message: String) {
+        Artifact does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(node: "src/handler.ts", role: "source", language: "typescript") -> ok(artifact: a)
+    then get(artifact: a) -> ok(artifact: a, node: "src/handler.ts", role: "source", language: "typescript", encoding: "utf-8")
+  }
+
+  invariant {
+    after register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> ok(artifact: a)
+    then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> alreadyRegistered(existing: a)
+  }
+}

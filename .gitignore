@@ -11,3 +11,6 @@ generated/concept-interface/schemas/
 __pycache__/
 *.pyc
 target/
+
+# Tree-sitter WASM grammar binaries (copied from node_modules after install)
+kits/parse/grammars/wasm/*.wasm

@@ -1,0 +1,14 @@
+// Parse files when content changes in storage.
+// Resolves the appropriate grammar by file extension,
+// then triggers SyntaxTree/parse for the updated file.
+
+sync ParseOnChangeSync [eager]
+when {
+  ContentStorage/save: [ record: ?node; data: ?content ]
+    => [ record: ?node ]
+  LanguageGrammar/resolve: [ fileExtension: ?ext ]
+    => [ grammar: ?grammar ]
+}
+then {
+  SyntaxTree/parse: [ file: ?node; grammar: ?grammar ]
+}

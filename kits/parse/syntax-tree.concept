@@ -1,0 +1,88 @@
+@version(1)
+concept SyntaxTree [T] {
+
+  purpose {
+    Lossless concrete syntax tree for any parsed file, wrapping
+    Tree-sitter CST output. Supports incremental reparse on edits
+    and S-expression pattern queries against the tree structure.
+  }
+
+  state {
+    trees: set T
+    source: T -> String
+    grammar: T -> String
+    rootSexp: T -> String
+    byteLength: T -> Int
+    editVersion: T -> Int
+    errorRanges: T -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action parse(file: String, grammar: String) {
+      -> ok(tree: T) {
+        Parse the file content using the resolved grammar.
+        Stores the full CST root as an S-expression string.
+      }
+      -> parseError(tree: T, errorCount: Int) {
+        Partial parse with error recovery. Tree is stored
+        but contains error nodes at the listed ranges.
+      }
+      -> noGrammar(message: String) {
+        No grammar could be loaded for this file type.
+      }
+    }
+
+    action reparse(tree: T, startByte: Int, oldEndByte: Int, newEndByte: Int, newText: String) {
+      -> ok(tree: T) {
+        Incrementally reparse the tree with the given edit.
+        More efficient than full reparse for small changes.
+      }
+      -> notfound(message: String) {
+        The tree does not exist in the cache.
+      }
+    }
+
+    action query(tree: T, pattern: String) {
+      -> ok(matches: String) {
+        Run an S-expression query pattern against the tree.
+        Returns matches as serialized JSON list of captures.
+      }
+      -> invalidPattern(message: String) {
+        The S-expression pattern has a syntax error.
+      }
+      -> notfound(message: String) {
+        The tree does not exist.
+      }
+    }
+
+    action nodeAt(tree: T, byteOffset: Int) {
+      -> ok(nodeType: String, startByte: Int, endByte: Int, named: String, field: String) {
+        Return the deepest named node at the given byte offset.
+      }
+      -> outOfRange() {
+        The byte offset is beyond the tree's range.
+      }
+      -> notfound(message: String) {
+        The tree does not exist.
+      }
+    }
+
+    action get(tree: T) {
+      -> ok(tree: T, source: String, grammar: String, byteLength: Int, editVersion: Int, errorRanges: String) {
+        Retrieve a stored syntax tree's metadata.
+      }
+      -> notfound(message: String) {
+        The tree does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after parse(file: "test.ts", grammar: "typescript") -> ok(tree: t)
+    then get(tree: t) -> ok(tree: t, source: "test.ts", grammar: "typescript", byteLength: b, editVersion: 1, errorRanges: "[]")
+  }
+}

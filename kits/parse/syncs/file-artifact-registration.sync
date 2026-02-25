@@ -1,0 +1,12 @@
+// Register files as project artifacts when stored.
+// Infers role (source, generated, config, spec, doc, test)
+// and language from file path and extension.
+
+sync FileArtifactRegistrationSync [eager]
+when {
+  ContentStorage/save: [ record: ?node; data: ?content ]
+    => [ record: ?node ]
+}
+then {
+  FileArtifact/register: [ node: ?node; role: ?inferredRole; language: ?inferredLang ]
+}

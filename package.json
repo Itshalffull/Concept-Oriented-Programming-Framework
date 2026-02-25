@@ -11,14 +11,17 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "copf": "npx tsx tools/copf-cli/src/index.ts"
+    "copf": "npx tsx tools/copf-cli/src/index.ts",
+    "postinstall": "node scripts/copy-tree-sitter-wasm.mjs"
   },
   "dependencies": {
     "ethers": "^6.13.0",
+    "web-tree-sitter": "^0.24.4",
     "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "tree-sitter-wasms": "^0.1.13",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   }

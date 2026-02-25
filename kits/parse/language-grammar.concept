@@ -1,0 +1,78 @@
+@version(1)
+concept LanguageGrammar [G] {
+
+  purpose {
+    Tree-sitter grammar definition for a language or file format.
+    Maps file extensions to parsers for grammar-based dispatch.
+    Acts as a coordination concept with grammar provider plugins
+    registering through PluginRegistry.
+  }
+
+  state {
+    grammars: set G
+    name: G -> String
+    extensions: G -> String
+    mimeTypes: G -> String
+    parserWasmPath: G -> String
+    nodeTypes: G -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, extensions: String, parserWasmPath: String, nodeTypes: String) {
+      -> ok(grammar: G) {
+        Register a grammar with its supported file extensions
+        and WASM parser path. Extensions stored as JSON array.
+      }
+      -> alreadyRegistered(existing: G) {
+        A grammar with this name is already registered.
+      }
+    }
+
+    action resolve(fileExtension: String) {
+      -> ok(grammar: G) {
+        Return the grammar that handles this file extension.
+      }
+      -> noGrammar(extension: String) {
+        No grammar is registered for this file extension.
+      }
+    }
+
+    action resolveByMime(mimeType: String) {
+      -> ok(grammar: G) {
+        Return the grammar registered for this MIME type.
+      }
+      -> noGrammar(mimeType: String) {
+        No grammar is registered for this MIME type.
+      }
+    }
+
+    action get(grammar: G) {
+      -> ok(grammar: G, name: String, extensions: String, parserWasmPath: String) {
+        Retrieve grammar metadata.
+      }
+      -> notfound(message: String) {
+        Grammar does not exist.
+      }
+    }
+
+    action list() {
+      -> ok(grammars: String) {
+        List all registered grammars as serialized JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}") -> ok(grammar: g)
+    then resolve(fileExtension: ".ts") -> ok(grammar: g)
+  }
+
+  invariant {
+    after register(name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}") -> ok(grammar: g)
+    then register(name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}") -> alreadyRegistered(existing: g)
+  }
+}
