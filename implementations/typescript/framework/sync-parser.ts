@@ -254,6 +254,15 @@ class SyncFileParser {
 
     this.skipSeps();
 
+    // Parse optional purpose metadata: purpose: "description string"
+    let purpose: string | undefined;
+    if (this.peek().type === 'IDENT' && this.peek().value === 'purpose') {
+      this.advance(); // consume 'purpose'
+      this.expect('COLON');
+      purpose = this.expect('STRING_LIT').value;
+      this.skipSeps();
+    }
+
     // Parse when clause
     const when = this.parseWhenClause();
 
@@ -270,7 +279,9 @@ class SyncFileParser {
     // Parse then clause
     const then = this.parseThenClause();
 
-    return { name, annotations, when, where, then };
+    const result: CompiledSync = { name, annotations, when, where, then };
+    if (purpose) result.purpose = purpose;
+    return result;
   }
 
   private parseWhenClause(): WhenPattern[] {
