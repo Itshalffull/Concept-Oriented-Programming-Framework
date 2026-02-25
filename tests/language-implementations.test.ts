@@ -21,6 +21,11 @@ import { swiftGenHandler } from '../implementations/typescript/framework/swift-g
 
 const ROOT = resolve(__dirname, '..');
 const SPECS_DIR = join(ROOT, 'specs', 'app');
+const KITS_DIR = join(ROOT, 'kits');
+const RELOCATED_APP_SPECS: Record<string, string> = {
+  tag: join(KITS_DIR, 'classification', 'tag.concept'),
+  comment: join(KITS_DIR, 'content', 'comment.concept'),
+};
 const IMPL_RUST = join(ROOT, 'implementations', 'rust', 'src');
 const IMPL_SOLIDITY = join(ROOT, 'implementations', 'solidity', 'src');
 const IMPL_SWIFT = join(ROOT, 'implementations', 'swift', 'Sources', 'COPF');
@@ -389,7 +394,7 @@ describe('PART 5 — Code generation pipeline produces valid output for all lang
   beforeAll(async () => {
     // Parse all concept specs and generate manifests
     for (const concept of APP_CONCEPTS) {
-      const specPath = join(SPECS_DIR, `${concept}.concept`);
+      const specPath = RELOCATED_APP_SPECS[concept] ?? join(SPECS_DIR, `${concept}.concept`);
       const source = readFileSync(specPath, 'utf-8');
 
       const ast = parseConceptFile(source);

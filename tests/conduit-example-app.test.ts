@@ -81,6 +81,12 @@ import { generateId, timestamp } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
+const KITS_DIR = resolve(__dirname, '..', 'kits');
+
+const RELOCATED_APP_SPECS: Record<string, string> = {
+  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
+  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+};
 
 const APP_CONCEPTS = [
   'password', 'user', 'article', 'comment',
@@ -104,6 +110,8 @@ const FRAMEWORKS = [
 ] as const;
 
 function readSpec(name: string): string {
+  const relocated = RELOCATED_APP_SPECS[name];
+  if (relocated) return readFileSync(relocated, 'utf-8');
   return readFileSync(resolve(SPECS_DIR, 'app', `${name}.concept`), 'utf-8');
 }
 

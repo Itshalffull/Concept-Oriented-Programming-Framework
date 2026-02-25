@@ -21,6 +21,13 @@ import type { CompiledSync, ConceptAST } from '../kernel/src/types.js';
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 const SPECS_DIR = resolve(__dirname, '..', 'specs', 'app');
 
+// Relocated specs: tag → kits/classification, comment → kits/content
+const KITS_DIR = resolve(__dirname, '..', 'kits');
+const RELOCATED_APP_SPECS: Record<string, string> = {
+  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
+  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+};
+
 // ============================================================
 // 1. SyncParser Concept
 // ============================================================
@@ -140,7 +147,8 @@ describe('SyncCompiler Concept', () => {
 // ============================================================
 
 function loadSpec(name: string): ConceptAST {
-  return parseConceptFile(readFileSync(resolve(SPECS_DIR, `${name}.concept`), 'utf-8'));
+  const specPath = RELOCATED_APP_SPECS[name] ?? resolve(SPECS_DIR, `${name}.concept`);
+  return parseConceptFile(readFileSync(specPath, 'utf-8'));
 }
 
 describe('Sync Field Validation', () => {

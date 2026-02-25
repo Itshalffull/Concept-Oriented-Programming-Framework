@@ -15,6 +15,12 @@ import { solidityGenHandler } from '../implementations/typescript/framework/soli
 import type { ConceptManifest, ConceptHandler } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs', 'app');
+const KITS_DIR = resolve(__dirname, '..', 'kits');
+
+const RELOCATED_APP_SPECS: Record<string, string> = {
+  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
+  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+};
 
 const CONCEPTS = [
   'echo', 'user', 'password', 'jwt', 'article',
@@ -33,7 +39,8 @@ describe('Conduit Code Generation — All Targets × All Concepts', () => {
 
   beforeAll(async () => {
     for (const name of CONCEPTS) {
-      const source = readFileSync(resolve(SPECS_DIR, `${name}.concept`), 'utf-8');
+      const specPath = RELOCATED_APP_SPECS[name] ?? resolve(SPECS_DIR, `${name}.concept`);
+      const source = readFileSync(specPath, 'utf-8');
       const ast = parseConceptFile(source);
       const storage = createInMemoryStorage();
       const result = await schemaGenHandler.generate({ spec: name, ast }, storage);

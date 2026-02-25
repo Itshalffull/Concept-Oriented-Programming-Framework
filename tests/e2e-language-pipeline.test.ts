@@ -29,8 +29,19 @@ import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
+const KITS_DIR = resolve(__dirname, '..', 'kits');
+
+// Concepts relocated from specs/ to kits/
+const RELOCATED_SPECS: Record<string, string> = {
+  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
+  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+  migration: resolve(KITS_DIR, 'deploy', 'concepts', 'migration.concept'),
+  telemetry: resolve(KITS_DIR, 'deploy', 'concepts', 'telemetry.concept'),
+};
 
 function readSpec(category: string, name: string): string {
+  const relocated = RELOCATED_SPECS[name];
+  if (relocated) return readFileSync(relocated, 'utf-8');
   return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
 }
 

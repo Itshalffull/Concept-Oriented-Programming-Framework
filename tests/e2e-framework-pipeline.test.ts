@@ -30,6 +30,12 @@ const COIF_THEME_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'co
 const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-component');
 const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-integration');
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
+const KITS_DIR = resolve(__dirname, '..', 'kits');
+
+const RELOCATED_SPECS: Record<string, string> = {
+  migration: resolve(KITS_DIR, 'deploy', 'concepts', 'migration.concept'),
+  telemetry: resolve(KITS_DIR, 'deploy', 'concepts', 'telemetry.concept'),
+};
 
 async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
   const storage = createInMemoryStorage();
@@ -42,6 +48,8 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
 }
 
 function readSpec(category: string, name: string): string {
+  const relocated = RELOCATED_SPECS[name];
+  if (relocated) return readFileSync(relocated, 'utf-8');
   return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
 }
 

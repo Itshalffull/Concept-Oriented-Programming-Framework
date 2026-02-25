@@ -21,8 +21,16 @@ import { swiftGenHandler } from '../implementations/typescript/framework/swift-g
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
+const KITS_DIR = resolve(__dirname, '..', 'kits');
+
+const RELOCATED_SPECS: Record<string, string> = {
+  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
+  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+};
 
 function readSpec(category: string, name: string): string {
+  const relocated = RELOCATED_SPECS[name];
+  if (relocated) return readFileSync(relocated, 'utf-8');
   return readFileSync(resolve(SPECS_DIR, category, `${name}.concept`), 'utf-8');
 }
 
