@@ -1,0 +1,16 @@
+// Record provenance when code generators produce output.
+// Links spec files to generated artifacts via FileArtifact
+// and Provenance, enabling "generated from" queries.
+
+sync GenerationProvenanceSync [eager]
+when {
+  Emitter/emit: [ plan: ?plan; template: ?template ]
+    => [ outputPath: ?path ]
+}
+where {
+  GenerationPlan: { ?plan step: ?step; sourceSpec: ?spec }
+}
+then {
+  FileArtifact/setProvenance: [ artifact: ?output; spec: ?spec; generator: ?generator ]
+  Provenance/record: [ source: ?spec; derived: ?output; method: ?generator ]
+}

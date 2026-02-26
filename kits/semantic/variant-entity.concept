@@ -1,0 +1,63 @@
+@version(1)
+concept VariantEntity [V] {
+
+  purpose {
+    Action return variant as a first-class branching point in
+    sync chains. Enables dead-variant detection and sync coverage
+    analysis — identifying variants that no sync pattern-matches on.
+  }
+
+  state {
+    variants: set V
+    action: V -> String
+    tag: V -> String
+    symbol: V -> String
+    fields: V -> String
+    description: V -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(action: String, tag: String, fields: String) {
+      -> ok(variant: V) {
+        Register a variant extracted from an action in a concept
+        spec. Fields is serialized JSON array of { name, typeExpr }.
+      }
+    }
+
+    action matchingSyncs(variant: V) {
+      -> ok(syncs: String) {
+        Return all syncs whose when-pattern matches this variant's
+        tag. Results as serialized JSON array.
+      }
+    }
+
+    action isDead(variant: V) {
+      -> dead(noMatchingSyncs: String, noRuntimeOccurrences: String) {
+        This variant has no sync matching it and/or no runtime
+        occurrences. Both values are "true" or "false".
+      }
+      -> alive(syncCount: Int, runtimeCount: Int) {
+        This variant is actively matched by syncs and/or
+        observed at runtime.
+      }
+    }
+
+    action get(variant: V) {
+      -> ok(variant: V, action: String, tag: String, fields: String) {
+        Retrieve variant entity metadata.
+      }
+      -> notfound() {
+        Variant does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(action: "Article/create", tag: "ok", fields: "[]") -> ok(variant: v)
+    then get(variant: v) -> ok(variant: v, action: "Article/create", tag: "ok", fields: "[]")
+  }
+}

@@ -1,0 +1,101 @@
+@version(1)
+concept ConceptEntity [E] {
+
+  purpose {
+    Queryable representation of a parsed concept, linking its
+    declaration to generated artifacts and runtime behavior.
+    Enables semantic queries like "what syncs participate in
+    this concept?" and "what artifacts were generated from it?"
+  }
+
+  state {
+    entities: set E
+    name: E -> String
+    symbol: E -> String
+    sourceFile: E -> String
+    purposeText: E -> String
+    version: E -> Int
+    gate: E -> String
+    capabilitiesList: E -> String
+    typeParams: E -> String
+    actionsRef: E -> String
+    stateFieldsRef: E -> String
+    kit: E -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, ast: String) {
+      -> ok(entity: E) {
+        Register a parsed concept as a semantic entity. Extracts
+        name, purpose, actions, variants, state fields, and
+        capabilities from the AST.
+      }
+      -> alreadyRegistered(existing: E) {
+        A concept entity with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(entity: E) {
+        Retrieve a concept entity by name.
+      }
+      -> notfound() {
+        No concept with this name exists.
+      }
+    }
+
+    action findByCapability(capability: String) {
+      -> ok(entities: String) {
+        Return all concepts that declare the given capability.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findByKit(kit: String) {
+      -> ok(entities: String) {
+        Return all concepts belonging to the given kit.
+        Results as serialized JSON array.
+      }
+    }
+
+    action generatedArtifacts(entity: E) {
+      -> ok(artifacts: String) {
+        Return all files generated from this concept via
+        Provenance lookup. Results as serialized JSON array.
+      }
+    }
+
+    action participatingSyncs(entity: E) {
+      -> ok(syncs: String) {
+        Return all syncs that reference any of this concept's
+        actions in when, where, or then clauses.
+        Results as serialized JSON array.
+      }
+    }
+
+    action checkCompatibility(a: E, b: E) {
+      -> compatible(sharedTypeParams: String) {
+        The two concepts share type parameters that can be
+        unified in a kit composition.
+      }
+      -> incompatible(reason: String) {
+        The concepts cannot compose due to conflicting
+        requirements or type parameter mismatches.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(entity: e)
+    then get(name: "Article") -> ok(entity: e)
+  }
+
+  invariant {
+    after register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(entity: e)
+    then register(name: "Article", source: "specs/article.concept", ast: "{}") -> alreadyRegistered(existing: e)
+  }
+}

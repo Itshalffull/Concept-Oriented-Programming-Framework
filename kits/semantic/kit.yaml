@@ -1,0 +1,105 @@
+kit:
+  name: semantic
+  version: 0.1.0
+  description: >
+    COPF-specific semantic entities — concepts, actions, variants,
+    syncs, and state fields as first-class queryable nodes. The
+    semantic glue that connects spec declarations to generated
+    artifacts, runtime behavior, and cross-concept data flow.
+
+concepts:
+  ConceptEntity:
+    spec: ./concept-entity.concept
+    params:
+      E: { as: concept-entity-id, description: "Concept entity identifier" }
+
+  ActionEntity:
+    spec: ./action-entity.concept
+    params:
+      A: { as: action-entity-id, description: "Action entity identifier" }
+
+  VariantEntity:
+    spec: ./variant-entity.concept
+    params:
+      V: { as: variant-entity-id, description: "Variant entity identifier" }
+
+  StateField:
+    spec: ./state-field.concept
+    params:
+      L: { as: state-field-id, description: "State field identifier" }
+
+  SyncEntity:
+    spec: ./sync-entity.concept
+    params:
+      Y: { as: sync-entity-id, description: "Sync entity identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/spec-semantic.sync
+      name: SpecSemanticSync
+      description: >
+        Extract ConceptEntity, ActionEntity, VariantEntity, and
+        StateField from parsed .concept files.
+
+    - path: ./syncs/sync-semantic.sync
+      name: SyncSemanticSync
+      description: >
+        Extract SyncEntity with resolved concept/action references
+        from parsed .sync files.
+
+    - path: ./syncs/generation-provenance.sync
+      name: GenerationProvenanceSync
+      description: >
+        Record provenance when code generators produce output,
+        linking specs to generated artifacts.
+
+  recommended:
+    - path: ./syncs/flow-graph.sync
+      name: FlowGraphSync
+      description: >
+        Rebuild the static flow graph when syncs change,
+        adding trigger edges to the flow-graph Graph overlay.
+
+    - path: ./syncs/type-binding-resolution.sync
+      name: TypeBindingResolutionSync
+      description: >
+        Resolve type parameter mappings from kit.yaml via FieldMapping.
+
+    - path: ./syncs/invariant-validation.sync
+      name: InvariantValidationSync
+      description: >
+        Check flow traces against declared invariants via DataQuality.
+
+    - path: ./syncs/dead-variant-detection.sync
+      name: DeadVariantDetectionSync
+      description: >
+        Find variants no sync pattern-matches on.
+
+  integration: []
+
+uses:
+  - kit: parse
+    concepts:
+      - name: SyntaxTree
+      - name: FileArtifact
+  - kit: symbol
+    concepts:
+      - name: Symbol
+      - name: SymbolOccurrence
+      - name: SymbolRelationship
+  - kit: data-integration
+    concepts:
+      - name: Transform
+      - name: Enricher
+      - name: FieldMapping
+      - name: DataQuality
+      - name: Provenance
+  - kit: data-organization
+    concepts:
+      - name: Graph
+  - kit: generation
+    concepts:
+      - name: GenerationPlan
+      - name: Emitter
+
+dependencies: []

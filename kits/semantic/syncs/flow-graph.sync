@@ -1,0 +1,12 @@
+// Rebuild the static flow graph when syncs are registered.
+// Adds trigger edges to the flow-graph Graph overlay for each
+// when-pattern → then-action pair in the sync.
+
+sync FlowGraphSync [eventual]
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => [ sync: ?sync ]
+}
+then {
+  Graph/addEdge: [ graph: "flow-graph"; source: ?triggerAction; target: ?invokedAction; edgeType: "triggers"; viaSync: ?sync ]
+}

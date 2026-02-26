@@ -1,0 +1,72 @@
+@version(1)
+concept StateField [L] {
+
+  purpose {
+    Single state declaration in a concept, traced through code
+    generation and storage mapping. Enables impact analysis —
+    "if I change this field's type, what generated code and
+    storage schemas are affected?"
+  }
+
+  state {
+    fields: set L
+    concept: L -> String
+    name: L -> String
+    symbol: L -> String
+    typeExpr: L -> String
+    cardinality: L -> String
+    group: L -> String
+    generatedSymbols: L -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(concept: String, name: String, typeExpr: String) {
+      -> ok(field: L) {
+        Register a state field extracted from a concept spec.
+        Cardinality is inferred from the type expression
+        (set, mapping, list, option, scalar).
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(fields: String) {
+        Return all state fields for a given concept.
+        Results as serialized JSON array.
+      }
+    }
+
+    action traceToGenerated(field: L) {
+      -> ok(targets: String) {
+        Trace this field to its generated code representations
+        across target languages. Results as serialized JSON array
+        of { language, symbol, file }.
+      }
+    }
+
+    action traceToStorage(field: L) {
+      -> ok(targets: String) {
+        Trace this field to its storage representation —
+        database columns, document keys, etc. Results as
+        serialized JSON array of { adapter, columnOrKey }.
+      }
+    }
+
+    action get(field: L) {
+      -> ok(field: L, concept: String, name: String, typeExpr: String, cardinality: String) {
+        Retrieve state field metadata.
+      }
+      -> notfound() {
+        Field does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(concept: "Article", name: "title", typeExpr: "T -> String") -> ok(field: l)
+    then get(field: l) -> ok(field: l, concept: "Article", name: "title", typeExpr: "T -> String", cardinality: "mapping")
+  }
+}

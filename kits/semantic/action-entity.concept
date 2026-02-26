@@ -1,0 +1,84 @@
+@version(1)
+concept ActionEntity [A] {
+
+  purpose {
+    Action declaration with full lifecycle tracing — from spec
+    through sync participation, implementation, interface exposure,
+    to runtime invocation. Enables queries like "what syncs trigger
+    on this action?" and "where is this action implemented?"
+  }
+
+  state {
+    actionsSet: set A
+    concept: A -> String
+    name: A -> String
+    symbol: A -> String
+    params: A -> String
+    variants: A -> String
+    implementationSymbols: A -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(concept: String, name: String, params: String, variantRefs: String) {
+      -> ok(action: A) {
+        Register an action extracted from a concept spec.
+        Params and variantRefs are serialized JSON.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(actions: String) {
+        Return all actions for a given concept.
+        Results as serialized JSON array.
+      }
+    }
+
+    action triggeringSyncs(action: A) {
+      -> ok(syncs: String) {
+        Return all syncs whose when-clause matches this action.
+        Results as serialized JSON array.
+      }
+    }
+
+    action invokingSyncs(action: A) {
+      -> ok(syncs: String) {
+        Return all syncs whose then-clause invokes this action.
+        Results as serialized JSON array.
+      }
+    }
+
+    action implementations(action: A) {
+      -> ok(symbols: String) {
+        Return implementation symbols (handler functions) for
+        this action across target languages.
+        Results as serialized JSON array.
+      }
+    }
+
+    action interfaceExposures(action: A) {
+      -> ok(exposures: String) {
+        Return all interface exposures for this action —
+        REST endpoints, CLI commands, GraphQL mutations, etc.
+        Results as serialized JSON array.
+      }
+    }
+
+    action get(action: A) {
+      -> ok(action: A, concept: String, name: String, params: String, variantCount: Int) {
+        Retrieve action entity metadata.
+      }
+      -> notfound() {
+        Action does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(concept: "Article", name: "create", params: "[]", variantRefs: "[]") -> ok(action: a)
+    then get(action: a) -> ok(action: a, concept: "Article", name: "create", params: "[]", variantCount: 0)
+  }
+}

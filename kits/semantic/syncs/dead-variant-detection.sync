@@ -1,0 +1,12 @@
+// Detect orphan variants when syncs are registered or updated.
+// Finds variants that no sync's when-pattern matches on,
+// feeding results into AnalysisRule findings.
+
+sync DeadVariantDetectionSync [eventual]
+when {
+  SyncEntity/register: [ name: ?name; source: ?source; compiled: ?compiled ]
+    => [ sync: ?sync ]
+}
+then {
+  SyncEntity/findOrphanVariants: [ ]
+}

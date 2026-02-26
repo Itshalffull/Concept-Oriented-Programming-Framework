@@ -1,0 +1,16 @@
+// Extract SyncEntity from parsed .sync files.
+// Resolves concept and action references in when/where/then
+// clauses against registered ConceptEntity and ActionEntity.
+
+sync SyncSemanticSync [eager]
+when {
+  SyncParser/parse: [ source: ?source ]
+    => [ ast: ?syncAst ]
+}
+where {
+  ConceptEntity: { ?concept name: ?conceptName }
+  ActionEntity: { ?action concept: ?concept; name: ?actionName }
+}
+then {
+  SyncEntity/register: [ name: ?syncAst.name; source: ?file; compiled: ?compiled ]
+}

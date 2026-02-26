@@ -1,0 +1,15 @@
+// Resolve type parameter mappings when kit.yaml is parsed.
+// Creates FieldMapping entries that bind concept type parameters
+// to kit shared types, enabling cross-concept type unification.
+
+sync TypeBindingResolutionSync [eager]
+when {
+  ContentParser/parse: [ file: ?kitYaml ]
+    => [ ]
+}
+where {
+  filter(?kitYaml pathMatches: "*/kit.yaml")
+}
+then {
+  FieldMapping/create: [ sourceSchema: ?conceptTypeParam; targetSchema: ?kitSharedType; direction: "bidirectional" ]
+}

@@ -1,0 +1,15 @@
+// Extract semantic entities from parsed .concept files.
+// Registers ConceptEntity, ActionEntity, VariantEntity, and
+// StateField for each concept spec, making the application's
+// declared structure queryable.
+
+sync SpecSemanticSync [eager]
+when {
+  SpecParser/parse: [ source: ?source ]
+    => [ ast: ?ast ]
+}
+then {
+  ConceptEntity/register: [ name: ?ast.name; source: ?file; ast: ?ast ]
+  ActionEntity/register: [ concept: ?entity; name: ?action.name; params: ?action.params; variantRefs: ?variants ]
+  StateField/register: [ concept: ?entity; name: ?field.name; typeExpr: ?field.type ]
+}

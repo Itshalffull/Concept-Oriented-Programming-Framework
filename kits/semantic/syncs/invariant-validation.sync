@@ -1,0 +1,12 @@
+// Validate flow traces against declared invariants.
+// When a FlowTrace is recorded, checks it against
+// DataQuality rules derived from concept invariants.
+
+sync InvariantValidationSync [eventual]
+when {
+  FlowTrace/record: [ concept: ?concept; action: ?action ]
+    => [ trace: ?trace ]
+}
+then {
+  DataQuality/check: [ data: ?trace; rules: ?invariantRules ]
+}

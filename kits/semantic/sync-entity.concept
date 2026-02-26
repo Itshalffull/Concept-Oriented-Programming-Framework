@@ -1,0 +1,100 @@
+@version(1)
+concept SyncEntity [Y] {
+
+  purpose {
+    Compiled sync rule as a queryable node — the semantic glue
+    connecting concepts. Stores resolved when-patterns, where-clauses,
+    and then-actions with full concept/action references. Enables
+    flow tracing, dead-end detection, and orphan variant analysis.
+  }
+
+  state {
+    syncs: set Y
+    name: Y -> String
+    symbol: Y -> String
+    sourceFile: Y -> String
+    annotations: Y -> String
+    whenPatterns: Y -> String
+    whereClauses: Y -> String
+    thenActions: Y -> String
+    tier: Y -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, compiled: String) {
+      -> ok(sync: Y) {
+        Register a parsed and compiled sync rule as a semantic
+        entity. The compiled payload contains resolved concept
+        and action references.
+      }
+      -> alreadyRegistered(existing: Y) {
+        A sync entity with this name is already registered.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(syncs: String) {
+        Return all syncs that reference this concept in any
+        clause (when, where, or then).
+        Results as serialized JSON array.
+      }
+    }
+
+    action findTriggerableBy(action: String, variant: String) {
+      -> ok(syncs: String) {
+        Return all syncs whose when-clause matches the given
+        action and optional variant filter.
+        Results as serialized JSON array.
+      }
+    }
+
+    action chainFrom(action: String, variant: String, depth: Int) {
+      -> ok(chain: String) {
+        Trace the static sync chain from an action/variant,
+        following when → then → when links up to the given
+        depth. Results as serialized JSON array of chain steps.
+      }
+      -> noChain() {
+        No syncs trigger on this action/variant combination.
+      }
+    }
+
+    action findDeadEnds() {
+      -> ok(deadEnds: String) {
+        Find syncs whose then-actions invoke concepts/actions
+        that have no further sync chain and no interface exposure.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findOrphanVariants() {
+      -> ok(orphans: String) {
+        Find all variant entities that no sync's when-pattern
+        matches on. Results as serialized JSON array.
+      }
+    }
+
+    action get(sync: Y) {
+      -> ok(sync: Y, name: String, annotations: String, tier: String, whenPatternCount: Int, thenActionCount: Int) {
+        Retrieve sync entity metadata.
+      }
+      -> notfound() {
+        Sync does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(sync: y)
+    then get(sync: y) -> ok(sync: y, name: "ArticlePublishSync", annotations: _, tier: _, whenPatternCount: _, thenActionCount: _)
+  }
+
+  invariant {
+    after register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(sync: y)
+    then register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> alreadyRegistered(existing: y)
+  }
+}
