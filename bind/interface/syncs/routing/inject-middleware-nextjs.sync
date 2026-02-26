@@ -1,0 +1,10 @@
+# Next.js target complete triggers middleware resolution
+
+sync InjectMiddlewareNextjs [eager]
+when {
+  NextjsTarget/generate: [ projection: ?p ]
+    => [ routes: ?routes; files: ?files ]
+}
+then {
+  Middleware/resolve: [ traits: ?traits; target: "nextjs" ]
+}

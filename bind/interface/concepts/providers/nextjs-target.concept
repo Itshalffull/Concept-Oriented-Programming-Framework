@@ -1,0 +1,68 @@
+@version(1)
+concept NextjsTarget [R] {
+
+  purpose {
+    Generate Next.js App Router API routes from concept projections.
+    Produces Route Handlers (route.ts) using fp-ts TaskEither for
+    error handling, Server Actions for mutations, and typed API
+    client modules. HTTP method mappings derived from action
+    semantics. All generated code is purely functional — no classes,
+    only const arrow functions and pipe composition. When
+    @hierarchical trait is present, generates nested dynamic routes.
+    Enrichment content from Projection is passed through for
+    documentation generation.
+  }
+
+  state {
+    routes: set R
+    config {
+      basePath: R -> String
+      appDir: R -> String
+    }
+    mapping {
+      concept: R -> String
+      action: R -> String
+      method: R -> String
+      path: R -> String
+      statusCodes: R -> list { code: Int, meaning: String }
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(routes: list String, files: list String) {
+        Next.js App Router routes generated from projection.
+        Each concept produces a route.ts file using fp-ts
+        TaskEither for action dispatch, plus typed input/output
+        modules. Server Actions generated for mutation operations.
+        All code is purely functional with pipe composition.
+      }
+      -> ambiguousMapping(action: String, reason: String) {
+        Action cannot be unambiguously mapped to an HTTP method.
+        Manual annotation required in the interface manifest.
+      }
+    }
+
+    action validate(route: R) {
+      -> ok(route: R) {
+        Route handler compiles. Request and response types are
+        consistent. No route path conflicts detected.
+      }
+      -> pathConflict(route: R, conflicting: String, reason: String) {
+        Two actions map to the same HTTP method and path.
+      }
+    }
+
+    action listRoutes(concept: String) {
+      -> ok(routes: list String, methods: list String) {
+        Return all generated routes for a concept with their
+        HTTP methods.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "user-projection", config: "{}") -> ok(routes: r, files: f)
+    then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+  }
+}

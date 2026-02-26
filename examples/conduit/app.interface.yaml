@@ -45,6 +45,13 @@ targets:
     progressive: true
     outputDir: ./generated/interfaces/claude-skills
 
+  nextjs:
+    basePath: /api
+    appDir: ./frontend/nextjs/app
+    functional: true
+    fpTs: true
+    outputDir: ./generated/interfaces/nextjs
+
 # ─── SDK LANGUAGES ────────────────────────────────────
 sdk:
   typescript:
@@ -68,6 +75,11 @@ sdk:
   swift:
     packageName: ConduitClient
     outputDir: ./generated/interfaces/sdk/swift
+  nextjs:
+    packageName: "@conduit/nextjs-client"
+    fpTs: true
+    serverActions: true
+    outputDir: ./generated/interfaces/sdk/nextjs
 
 # ─── SPECIFICATION DOCUMENTS ─────────────────────────
 specs:

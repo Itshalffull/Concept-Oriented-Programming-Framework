@@ -62,6 +62,9 @@ infrastructure:
     - name: svelte
       path: ./adapters/svelte/
       description: Svelte 5 with runes
+    - name: nextjs
+      path: ./adapters/nextjs/
+      description: Next.js App Router with functional RSC and Client Components
     - name: ink
       path: ./adapters/ink/
       description: Ink (React for terminal)

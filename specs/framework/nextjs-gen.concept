@@ -1,0 +1,33 @@
+concept NextjsGen [S] {
+
+  purpose {
+    Generate Next.js App Router code from a ConceptManifest using
+    fp-ts for purely functional concept implementations. Produces
+    type definitions with branded types, handler modules using
+    TaskEither and pipe, transport adapters as Next.js Route
+    Handlers, and conformance tests. All generated code uses
+    functional composition — no classes, no mutation.
+  }
+
+  state {
+    outputs: S -> list { path: String, content: String }
+  }
+
+  actions {
+    action generate(spec: S, manifest: ConceptManifest) {
+      -> ok(files: list { path: String, content: String }) {
+        Map ResolvedTypes to fp-ts branded types.
+        Emit type definitions for action inputs/outputs using
+        readonly interfaces and tagged unions.
+        Emit handler module with one function per action returning
+        TaskEither.
+        Emit Next.js Route Handler adapter (App Router).
+        Emit conformance tests using vitest and fp-ts assertions.
+      }
+      -> error(message: String) {
+        If the manifest contains types not mappable to TypeScript
+        with fp-ts.
+      }
+    }
+  }
+}

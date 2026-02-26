@@ -1,0 +1,10 @@
+# Route Sdk/generate to NextjsSdkTarget — Next.js fp-ts SDK
+
+sync RouteToNextjsSdk [eager]
+when {
+  Sdk/generate: [ projection: ?p; language: "nextjs"; config: ?c ]
+    => [ package: ?pkg ]
+}
+then {
+  NextjsSdkTarget/generate: [ projection: ?p; config: ?c ]
+}
