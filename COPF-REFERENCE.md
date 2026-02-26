@@ -433,28 +433,31 @@ Search and query execution.
 | **Notification** (`kits/notification/`) | Notification | Multi-channel notification delivery |
 | **Web3** (`kits/web3/`) | ChainMonitor (@gate), Content, Wallet | Blockchain finality tracking, IPFS storage, signature verification |
 
-### 5.23 COIF Kits (`concept-interface/kits/`) -- Concept-Oriented Interface Format
+### 5.23 COIF Kits (`concept-interface/kits/`) -- Concept-Oriented Interface Framework (v0.4.0)
 
-COIF provides a universal UI layer where headless component state machines produce props APIs that framework adapters render into platform-specific UI.
+COIF is the interface companion to COPF. Every abstraction is a concept, every coordination is a sync, every bundle is a kit. COIF generates working interfaces from concept specs — zero config gets a functional interface, progressive customization gets a beautiful one. Two-step semantic widget selection: abstract interaction types (Interactor) are classified from field metadata, then matched against widget capability declarations (Affordance) parameterized by runtime context.
 
-**coif-core** — Foundation: design tokens, abstract elements, UI schemas, concept bindings, reactive signals.
+**coif-core** — Foundation: design tokens, abstract elements (enriched with interactor classification and widget resolution), UI schemas, concept bindings, reactive signals.
 - DesignToken, Element, UISchema, Binding, Signal
 
-**coif-component** — Headless component state machines, anatomies, and slot composition. Widgets are behavioral specs without rendering.
-- Widget, Machine, Anatomy, Slot
+**coif-component** — Headless behaviors, semantic interaction classification, and context-aware widget resolution. Widgets are parsed ASTs from `.widget` specs. Interactors classify WHAT the user does, Affordances declare WHEN a widget is suitable, WidgetResolver decides WHICH widget for a given context.
+- Widget, Machine, Slot, Interactor, Affordance, WidgetResolver
 
 **coif-render** — Framework adapters that translate headless widget props into platform-specific bindings.
 - FrameworkAdapter, Surface, Layout, Viewport
 - 15 adapters: React, Solid, Vue, Svelte, Ink, Vanilla, SwiftUI, AppKit, Compose, ReactNative, NativeScript, GTK, WinUI, WatchKit, WearCompose
 
-**coif-theme** — Visual design system with WCAG accessibility enforcement.
+**coif-theme** — Visual design system with WCAG accessibility enforcement. Inputs from ThemeParser output; runtime concepts store resolved values.
 - Theme, Palette, Typography, Motion, Elevation
 
-**coif-app** — Application orchestration: navigation, lifecycle, network transport, platform composition.
+**coif-app** — Application orchestration: navigation, lifecycle, network transport, platform composition. All specs corrected per COPF independence rule.
 - Navigator, Host, Transport, Shell, PlatformAdapter
 - 5 platform adapters: Browser, Desktop, Mobile, Terminal, Watch
 
-**coif-integration** — Syncs-only kit bridging COPF domain concepts to COIF interface concepts. No new concepts.
+**coif-spec** — Build-time parsing and generation for `.widget` and `.theme` spec files. Uses COPF generation kit infrastructure (Resource, KindSystem, BuildCache, Emitter).
+- WidgetParser, ThemeParser, WidgetGen, ThemeGen
+
+**coif-integration** — Syncs-only kit bridging COPF domain concepts to COIF interface concepts. No new concepts. Includes IntentImprovesClassification and CustomizationOverridesResolver syncs.
 
 ---
 
@@ -520,7 +523,7 @@ Many kits use a coordination concept with multiple optional provider plugins. Ro
 
 ### 6.5 In-Progress Kit Additions (Separate Worktrees)
 
-Two major design documents are being implemented on separate worktrees:
+Three major design documents are being implemented on separate worktrees:
 
 #### Code Representation & Semantic Query System (`kits/code-representation-design.md`)
 
@@ -593,6 +596,22 @@ Adds 2 new kits with 18 new concepts providing version control, change tracking,
 - Provenance (Data Integration) → keeps identity; Attribution handles content-region authorship
 
 **Design principles:** Snapshot-patch duality is a composition. Conflict detection and resolution are always separate concepts. Causality is the universal ordering primitive. Algorithms are providers (Diff, Merge, ConflictResolution). Mutable pointers (Ref, Branch) over immutable data (ContentHash, DAGHistory, Patch).
+
+#### COIF v0.4.0 — Concept-Oriented Interface Framework (`concept-interface/coif-spec-v4.md`)
+
+Three-pass architectural revision of the COIF interface system:
+
+1. **Idiom alignment** — All concept specs corrected to follow COPF independence rule; action bodies describe own state only, sync chains live in syncs; JSON blob state replaced with typed relations.
+2. **Spec-first pipeline** — New `.widget` and `.theme` file formats with grammar, parser, and generator concepts in new coif-spec kit; Anatomy absorbed into `.widget` files; Widget stores validated ASTs not JSON blobs; uses COPF generation kit (Resource, KindSystem, BuildCache, Emitter).
+3. **Semantic widget selection** — New Interactor (abstract interaction taxonomy), Affordance (widget capability declarations), WidgetResolver (context-aware matching engine) replace flat type-mapping table with two-step classify→resolve pipeline.
+
+**Changes:**
+- +1 new kit: coif-spec (WidgetParser, ThemeParser, WidgetGen, ThemeGen)
+- +3 new concepts in coif-component: Interactor, Affordance, WidgetResolver
+- -1 absorbed concept: Anatomy (into `.widget` files)
+- Element enriched with interactorType, interactorProps, resolvedWidget state fields
+- All coif-app concepts (Navigator, Host, Transport, Shell, PlatformAdapter) rewritten per independence rule
+- Net: 29 COIF concepts across 7 kits (was 24 across 6 kits)
 
 ---
 
@@ -727,7 +746,7 @@ When designing new concepts, check for these common overlap patterns:
 
 ## 11. Kit Summary
 
-**Current:** 23 kits with ~145 concepts across `kits/`, 34 framework/app specs in `specs/`, plus 6 COIF kits with ~43 concepts in `concept-interface/`.
+**Current:** 23 kits with ~145 concepts across `kits/`, 34 framework/app specs in `specs/`, plus 7 COIF kits with 29 core + ~20 adapter concepts in `concept-interface/`.
 
 **In-progress (worktrees):**
 - Code Representation: +5 kits, +20 coordination concepts, +~35 providers
