@@ -1,0 +1,92 @@
+kit:
+  name: coif-spec
+  version: 0.1.0
+  description: >
+    Spec file parsing and generation for COIF. Defines .widget
+    and .theme file formats with parsers and generators. Uses
+    COPF generation kit infrastructure (Resource, KindSystem,
+    BuildCache, Emitter).
+
+concepts:
+  WidgetParser:
+    spec: ./widget-parser.concept
+    params:
+      W: { as: widget-parse-ref, description: "Reference to a widget parse operation" }
+
+  ThemeParser:
+    spec: ./theme-parser.concept
+    params:
+      H: { as: theme-parse-ref, description: "Reference to a theme parse operation" }
+
+  WidgetGen:
+    spec: ./widget-gen.concept
+    params:
+      G: { as: widget-gen-ref, description: "Reference to a widget generation operation" }
+
+  ThemeGen:
+    spec: ./theme-gen.concept
+    params:
+      G: { as: theme-gen-ref, description: "Reference to a theme generation operation" }
+
+syncs:
+  required:
+    - path: ./syncs/required/widget-spec-parsed.sync
+      name: WidgetSpecParsed
+      description: >
+        When a .widget file is loaded as a Resource, parse it
+        into a WidgetAST.
+
+    - path: ./syncs/required/parsed-widget-registered.sync
+      name: ParsedWidgetRegistered
+      description: >
+        Register parsed widgets in the Widget catalog.
+
+    - path: ./syncs/required/parsed-affordance-registered.sync
+      name: ParsedAffordanceRegistered
+      description: >
+        Register affordances extracted from widget specs
+        in the Affordance concept.
+
+    - path: ./syncs/required/theme-spec-parsed.sync
+      name: ThemeSpecParsed
+      description: >
+        When a .theme file is loaded as a Resource, parse it
+        into a ThemeAST.
+
+    - path: ./syncs/required/parsed-theme-tokens-registered.sync
+      name: ParsedThemeTokensRegistered
+      description: >
+        Register resolved tokens from parsed theme ASTs
+        in the DesignToken concept.
+
+  recommended:
+    - path: ./syncs/recommended/widget-generated.sync
+      name: WidgetGenerated
+      description: >
+        Generate framework-specific code from parsed widget ASTs
+        for each active framework adapter.
+
+    - path: ./syncs/recommended/theme-generated.sync
+      name: ThemeGenerated
+      description: >
+        Generate platform-specific styles from parsed theme ASTs
+        for each active surface.
+
+uses:
+  - kit: "@copf/generation"
+    concepts:
+      - name: Resource
+      - name: KindSystem
+      - name: BuildCache
+      - name: Emitter
+  - kit: coif-core
+    concepts:
+      - name: DesignToken
+  - kit: coif-component
+    concepts:
+      - name: Widget
+      - name: Affordance
+  - kit: coif-render
+    concepts:
+      - name: FrameworkAdapter
+      - name: Surface

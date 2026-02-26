@@ -1,0 +1,33 @@
+@version(1)
+concept WidgetGen [G] {
+
+  purpose {
+    Generate framework-specific widget implementations from
+    WidgetAST. Each target produces a complete component:
+    state machine runtime, connect function, accessibility,
+    keyboard handlers, and framework bindings. Follows the
+    M+N compiler pattern: one IR, multiple output targets.
+  }
+
+  state {
+    target: G -> String
+    input: G -> String
+    output: G -> option String
+    status: G -> String
+  }
+
+  actions {
+    action generate(gen: G, target: String, widgetAst: String) {
+      -> ok(gen: G, output: String) {
+        Target: "react", "solid", "vue", "svelte", "ink",
+        "react-native", "swiftui".
+      }
+      -> error(gen: G, message: String) { Unsupported feature. }
+    }
+  }
+
+  invariant {
+    after generate(gen: g, target: "react", widgetAst: _)
+      -> ok(gen: g, output: _)
+  }
+}

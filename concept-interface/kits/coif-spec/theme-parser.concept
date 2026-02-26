@@ -1,0 +1,37 @@
+@version(1)
+concept ThemeParser [H] {
+
+  purpose {
+    Parse .theme specification files into typed ASTs.
+    Resolves palette functions (contrast, lighten, darken),
+    computes typography scale, validates WCAG contrast.
+  }
+
+  state {
+    source: H -> String
+    ast: H -> option String
+    errors: H -> list String
+    warnings: H -> list String
+  }
+
+  actions {
+    action parse(theme: H, source: String) {
+      -> ok(theme: H, ast: String) {
+        Parse .theme source into ThemeAST. Resolves palette
+        functions, typography scale, extension inheritance.
+      }
+      -> error(theme: H, errors: list String) { Parse errors. }
+    }
+
+    action checkContrast(theme: H) {
+      -> ok(theme: H) { All role pairings meet WCAG ratios. }
+      -> violations(theme: H, failures: list String) { Failures. }
+    }
+  }
+
+  invariant {
+    after parse(theme: h, source: "theme light { ... }")
+      -> ok(theme: h, ast: _)
+    then checkContrast(theme: h) -> ok(theme: h)
+  }
+}

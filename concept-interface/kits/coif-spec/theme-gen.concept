@@ -1,0 +1,30 @@
+@version(1)
+concept ThemeGen [G] {
+
+  purpose {
+    Generate platform-specific style implementations from
+    ThemeAST. Resolves all computed values and emits
+    platform-native style formats.
+  }
+
+  state {
+    target: G -> String
+    input: G -> String
+    output: G -> option String
+  }
+
+  actions {
+    action generate(gen: G, target: String, themeAst: String) {
+      -> ok(gen: G, output: String) {
+        Targets: "css-variables", "tailwind", "react-native",
+        "terminal", "w3c-dtcg".
+      }
+      -> error(gen: G, message: String) { Generation failed. }
+    }
+  }
+
+  invariant {
+    after generate(gen: g, target: "css-variables", themeAst: _)
+      -> ok(gen: g, output: _)
+  }
+}

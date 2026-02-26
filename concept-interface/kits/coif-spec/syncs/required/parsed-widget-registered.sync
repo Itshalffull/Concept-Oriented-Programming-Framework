@@ -1,0 +1,15 @@
+# ============================================================
+# ParsedWidgetRegistered — coif-spec required sync
+#
+# Register parsed widget ASTs in the Widget catalog so they
+# are available for runtime instantiation.
+# ============================================================
+
+sync ParsedWidgetRegistered [eager]
+when {
+  WidgetParser/parse: [ widget: ?w ]
+    => ok(widget: ?w; ast: ?ast)
+}
+then {
+  Widget/register: [ widget: ?w; name: ?w; ast: ?ast; category: "auto" ]
+}

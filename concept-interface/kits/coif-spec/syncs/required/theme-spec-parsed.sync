@@ -1,0 +1,15 @@
+# ============================================================
+# ThemeSpecParsed — coif-spec required sync
+#
+# When a .theme file is loaded as a Resource, parse it into
+# a typed ThemeAST via ThemeParser.
+# ============================================================
+
+sync ThemeSpecParsed [eager]
+when {
+  Resource/track: [ resource: ?res; kind: "theme" ]
+    => ok(resource: ?res; content: ?source)
+}
+then {
+  ThemeParser/parse: [ theme: ?res; source: ?source ]
+}

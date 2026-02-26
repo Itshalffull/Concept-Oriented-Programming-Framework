@@ -1,0 +1,40 @@
+@version(1)
+concept WidgetParser [W] {
+
+  purpose {
+    Parse .widget specification files into typed ASTs.
+    Validates grammar, resolves anatomy references,
+    type-checks props and connect mappings, extracts
+    affordance declarations for downstream registration.
+  }
+
+  state {
+    source: W -> String
+    ast: W -> option String
+    errors: W -> list String
+    version: W -> Int
+  }
+
+  actions {
+    action parse(widget: W, source: String) {
+      -> ok(widget: W, ast: String) {
+        Parse .widget source into WidgetAST. Validates
+        state machine, anatomy, props, a11y, invariants.
+      }
+      -> error(widget: W, errors: list String) {
+        Parse or validation errors with locations.
+      }
+    }
+
+    action validate(widget: W) {
+      -> ok(widget: W) { Deep validation: connect completeness, a11y coverage. }
+      -> incomplete(widget: W, warnings: list String) { Valid but has gaps. }
+    }
+  }
+
+  invariant {
+    after parse(widget: w, source: "widget button { ... }")
+      -> ok(widget: w, ast: _)
+    then validate(widget: w) -> ok(widget: w)
+  }
+}
