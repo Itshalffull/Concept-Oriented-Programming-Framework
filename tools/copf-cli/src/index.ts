@@ -1,40 +1,75 @@
-// ============================================================
-// COPF CLI — Argument Parser
-//
-// Exports parseArgs utility for CLI argument parsing.
-// The generated Commander.js CLI (via interface generation)
-// serves as the primary entrypoint. This module preserves
-// the arg parser for backward compatibility and tests.
-// ============================================================
+// Auto-generated entrypoint for kit "copf-devtools", target "cli"
+import { Command } from 'commander';
+import { SpecParserCommand } from './SpecParser/SpecParser.command';
+import { SchemaGenCommand } from './SchemaGen/SchemaGen.command';
+import { SyncParserCommand } from './SyncParser/SyncParser.command';
+import { SyncCompilerCommand } from './SyncCompiler/SyncCompiler.command';
+import { FlowTraceCommand } from './FlowTrace/FlowTrace.command';
+import { DeploymentValidatorCommand } from './DeploymentValidator/DeploymentValidator.command';
+import { ProjectScaffoldCommand } from './ProjectScaffold/ProjectScaffold.command';
+import { DevServerCommand } from './DevServer/DevServer.command';
+import { KitManagerCommand } from './KitManager/KitManager.command';
+import { EmitterCommand } from './Emitter/Emitter.command';
+import { BuildCacheCommand } from './BuildCache/BuildCache.command';
+import { ResourceCommand } from './Resource/Resource.command';
+import { KindSystemCommand } from './KindSystem/KindSystem.command';
+import { GenerationPlanCommand } from './GenerationPlan/GenerationPlan.command';
+import { BuilderCommand } from './Builder/Builder.command';
+import { ToolchainCommand } from './Toolchain/Toolchain.command';
+import { KitScaffoldGenCommand } from './KitScaffoldGen/KitScaffoldGen.command';
+import { DeployScaffoldGenCommand } from './DeployScaffoldGen/DeployScaffoldGen.command';
+import { InterfaceScaffoldGenCommand } from './InterfaceScaffoldGen/InterfaceScaffoldGen.command';
+import { ConceptScaffoldGenCommand } from './ConceptScaffoldGen/ConceptScaffoldGen.command';
+import { SyncScaffoldGenCommand } from './SyncScaffoldGen/SyncScaffoldGen.command';
+import { HandlerScaffoldGenCommand } from './HandlerScaffoldGen/HandlerScaffoldGen.command';
+import { StorageAdapterScaffoldGenCommand } from './StorageAdapterScaffoldGen/StorageAdapterScaffoldGen.command';
+import { TransportAdapterScaffoldGenCommand } from './TransportAdapterScaffoldGen/TransportAdapterScaffoldGen.command';
+import { CoifComponentScaffoldGenCommand } from './CoifComponentScaffoldGen/CoifComponentScaffoldGen.command';
+import { CoifThemeScaffoldGenCommand } from './CoifThemeScaffoldGen/CoifThemeScaffoldGen.command';
+import { GeneratorCommand } from './Generator/Generator.command';
+import { ProjectionCommand } from './Projection/Projection.command';
+import { ApiSurfaceCommand } from './ApiSurface/ApiSurface.command';
+import { ConformanceCommand } from './Conformance/Conformance.command';
+import { TestSelectionCommand } from './TestSelection/TestSelection.command';
+import { FlakyTestCommand } from './FlakyTest/FlakyTest.command';
+import { ContractTestCommand } from './ContractTest/ContractTest.command';
+import { SnapshotCommand } from './Snapshot/Snapshot.command';
 
-interface ParsedArgs {
-  command: string;
-  positional: string[];
-  flags: Record<string, string | boolean>;
-}
+const program = new Command();
 
-export function parseArgs(argv: string[]): ParsedArgs {
-  // Skip node and script path
-  const args = argv.slice(2);
-  const command = args[0] || 'help';
-  const positional: string[] = [];
-  const flags: Record<string, string | boolean> = {};
+  program.addCommand(SpecParserCommand);
+  program.addCommand(SchemaGenCommand);
+  program.addCommand(SyncParserCommand);
+  program.addCommand(SyncCompilerCommand);
+  program.addCommand(FlowTraceCommand);
+  program.addCommand(DeploymentValidatorCommand);
+  program.addCommand(ProjectScaffoldCommand);
+  program.addCommand(DevServerCommand);
+  program.addCommand(KitManagerCommand);
+  program.addCommand(EmitterCommand);
+  program.addCommand(BuildCacheCommand);
+  program.addCommand(ResourceCommand);
+  program.addCommand(KindSystemCommand);
+  program.addCommand(GenerationPlanCommand);
+  program.addCommand(BuilderCommand);
+  program.addCommand(ToolchainCommand);
+  program.addCommand(KitScaffoldGenCommand);
+  program.addCommand(DeployScaffoldGenCommand);
+  program.addCommand(InterfaceScaffoldGenCommand);
+  program.addCommand(ConceptScaffoldGenCommand);
+  program.addCommand(SyncScaffoldGenCommand);
+  program.addCommand(HandlerScaffoldGenCommand);
+  program.addCommand(StorageAdapterScaffoldGenCommand);
+  program.addCommand(TransportAdapterScaffoldGenCommand);
+  program.addCommand(CoifComponentScaffoldGenCommand);
+  program.addCommand(CoifThemeScaffoldGenCommand);
+  program.addCommand(GeneratorCommand);
+  program.addCommand(ProjectionCommand);
+  program.addCommand(ApiSurfaceCommand);
+  program.addCommand(ConformanceCommand);
+  program.addCommand(TestSelectionCommand);
+  program.addCommand(FlakyTestCommand);
+  program.addCommand(ContractTestCommand);
+  program.addCommand(SnapshotCommand);
 
-  for (let i = 1; i < args.length; i++) {
-    const arg = args[i];
-    if (arg.startsWith('--')) {
-      const key = arg.slice(2);
-      const next = args[i + 1];
-      if (next && !next.startsWith('--')) {
-        flags[key] = next;
-        i++;
-      } else {
-        flags[key] = true;
-      }
-    } else {
-      positional.push(arg);
-    }
-  }
-
-  return { command, positional, flags };
-}
+export default program;

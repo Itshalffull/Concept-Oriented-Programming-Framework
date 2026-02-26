@@ -23,8 +23,8 @@
 // Generated output goes to the generated/ directory.
 // ============================================================
 
-import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'fs';
-import { resolve, relative, join } from 'path';
+import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, existsSync } from 'fs';
+import { resolve, relative, join, basename } from 'path';
 import { createHash } from 'crypto';
 import { parseConceptFile } from '../../../../implementations/typescript/framework/spec-parser.impl.js';
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
@@ -33,6 +33,7 @@ import { typescriptGenHandler } from '../../../../implementations/typescript/fra
 import { rustGenHandler } from '../../../../implementations/typescript/framework/rust-gen.impl.js';
 import { swiftGenHandler } from '../../../../implementations/typescript/framework/swift-gen.impl.js';
 import { solidityGenHandler } from '../../../../implementations/typescript/framework/solidity-gen.impl.js';
+import { handlerGenHandler } from '../../../../implementations/typescript/framework/handler-gen.impl.js';
 import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
 import { buildCacheHandler } from '../../../../kits/generation/implementations/typescript/build-cache.impl.js';
 import { generationPlanHandler } from '../../../../kits/generation/implementations/typescript/generation-plan.impl.js';
@@ -41,7 +42,7 @@ import { kindSystemHandler } from '../../../../kits/generation/implementations/t
 import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../../kernel/src/types.js';
 import { findFiles } from '../util.js';
 
-const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity'] as const;
+const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity', 'handler'] as const;
 type Target = (typeof SUPPORTED_TARGETS)[number];
 
 const GENERATOR_META: Record<string, {
@@ -83,6 +84,14 @@ const GENERATOR_META: Record<string, {
     outputKind: 'SolidityFiles',
     deterministic: true,
     handler: solidityGenHandler,
+  },
+  handler: {
+    name: 'HandlerGen',
+    family: 'framework',
+    inputKind: 'ConceptManifest',
+    outputKind: 'HandlerImplFiles',
+    deterministic: true,
+    handler: handlerGenHandler,
   },
 };
 
@@ -151,7 +160,16 @@ export async function generateCommand(
   const runId = beginResult.run as string;
   const runStartTime = Date.now();
 
-  const conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
+  // Scan for concept files. Handler target scans both specs/ and kits/ by default.
+  let conceptFiles: string[];
+  if (specsDir === 'all' || (target === 'handler' && specsDir === 'specs')) {
+    conceptFiles = [
+      ...findFiles(resolve(projectDir, 'specs'), '.concept'),
+      ...findFiles(resolve(projectDir, 'kits'), '.concept'),
+    ];
+  } else {
+    conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
+  }
 
   if (conceptFiles.length === 0) {
     console.log('No .concept files found.');
@@ -167,6 +185,7 @@ export async function generateCommand(
   }
 
   // Parse all specs
+  let parseFailures = 0;
   const asts: { file: string; ast: ConceptAST }[] = [];
   for (const file of conceptFiles) {
     const source = readFileSync(file, 'utf-8');
@@ -183,8 +202,9 @@ export async function generateCommand(
       );
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`Parse error in ${relative(projectDir, file)}: ${message}`);
-      process.exit(1);
+      console.error(`  [FAIL] Parse ${relative(projectDir, file)}: ${message}`);
+      parseFailures++;
+      continue;
     }
   }
 
@@ -192,6 +212,29 @@ export async function generateCommand(
     console.error(`Concept "${filterConcept}" not found in spec files.`);
     await generationPlanHandler.complete({}, planStorage);
     process.exit(1);
+  }
+
+  // For handler target: build index of existing impl stems to avoid duplicates
+  // regardless of directory layout
+  const existingImplStems = new Set<string>();
+  if (target === 'handler') {
+    function walkForImpls(dir: string): void {
+      try {
+        for (const entry of readdirSync(dir)) {
+          const full = join(dir, entry);
+          try {
+            const st = statSync(full);
+            if (st.isDirectory()) walkForImpls(full);
+            else if (entry.endsWith('.impl.ts')) {
+              existingImplStems.add(basename(entry, '.impl.ts'));
+            }
+          } catch { /* skip */ }
+        }
+      } catch { /* skip */ }
+    }
+    walkForImpls(join(projectDir, 'implementations'));
+    walkForImpls(join(projectDir, 'generated'));
+    walkForImpls(join(projectDir, 'kits'));
   }
 
   console.log(
@@ -245,21 +288,24 @@ export async function generateCommand(
       continue;
     }
 
-    // Write JSON schemas
-    const jsonSchemaDir = join(projectDir, outDir, 'schemas', 'json', ast.name.toLowerCase());
-    mkdirSync(jsonSchemaDir, { recursive: true });
-    writeFileSync(
-      join(jsonSchemaDir, 'manifest.json'),
-      JSON.stringify(manifest, null, 2) + '\n',
-    );
+    // Handler target skips schema generation (writes impls, not schemas)
+    if (target !== 'handler') {
+      // Write JSON schemas
+      const jsonSchemaDir = join(projectDir, outDir, 'schemas', 'json', ast.name.toLowerCase());
+      mkdirSync(jsonSchemaDir, { recursive: true });
+      writeFileSync(
+        join(jsonSchemaDir, 'manifest.json'),
+        JSON.stringify(manifest, null, 2) + '\n',
+      );
 
-    // Write GraphQL schema fragment
-    const gqlDir = join(projectDir, outDir, 'schemas', 'graphql');
-    mkdirSync(gqlDir, { recursive: true });
-    writeFileSync(
-      join(gqlDir, `${ast.name.toLowerCase()}.graphql`),
-      manifest.graphqlSchema + '\n',
-    );
+      // Write GraphQL schema fragment
+      const gqlDir = join(projectDir, outDir, 'schemas', 'graphql');
+      mkdirSync(gqlDir, { recursive: true });
+      writeFileSync(
+        join(gqlDir, `${ast.name.toLowerCase()}.graphql`),
+        manifest.graphqlSchema + '\n',
+      );
+    }
 
     // CodeGen — produce target-language files
     const codeStorage = createInMemoryStorage();
@@ -285,10 +331,24 @@ export async function generateCommand(
     // Write files through Emitter for content-addressed writes
     let stepFilesWritten = 0;
     let stepFilesSkipped = 0;
-    const targetDir = join(projectDir, outDir, target);
+
+    // Handler target: files contain project-relative paths (write to project root)
+    // Other targets: files are relative to generated/<target>/
+    const targetDir = target === 'handler' ? projectDir : join(projectDir, outDir, target);
 
     for (const f of files) {
       const filePath = join(targetDir, f.path);
+
+      // Handler target: no-clobber — skip if any impl with same stem exists
+      if (target === 'handler') {
+        const stem = basename(f.path, '.impl.ts');
+        if (existingImplStems.has(stem) || existsSync(filePath)) {
+          stepFilesSkipped++;
+          skippedCount++;
+          continue;
+        }
+      }
+
       mkdirSync(join(filePath, '..'), { recursive: true });
 
       const writeResult = await emitterHandler.write(
@@ -303,6 +363,8 @@ export async function generateCommand(
       );
 
       if (writeResult.variant === 'ok' && writeResult.written) {
+        // Emitter only tracks in ConceptStorage — write to disk
+        writeFileSync(filePath, f.content + '\n');
         stepFilesWritten++;
         writtenCount++;
       } else {

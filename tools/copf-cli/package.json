@@ -4,7 +4,7 @@
   "description": "CLI for the Concept-Oriented Programming Framework",
   "type": "module",
   "bin": {
-    "copf": "../../dist/tools/copf-cli/src/index.js"
+    "copf": "../../dist/tools/copf-cli/src/main.js"
   },
   "scripts": {
     "build": "tsc -b ../../tsconfig.json"

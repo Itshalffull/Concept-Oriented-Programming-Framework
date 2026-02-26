@@ -5,13 +5,13 @@
   "private": true,
   "type": "module",
   "bin": {
-    "copf": "./dist/tools/copf-cli/src/index.js"
+    "copf": "./dist/tools/copf-cli/src/main.js"
   },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "copf": "npx tsx tools/copf-cli/src/index.ts",
+    "copf": "npx tsx tools/copf-cli/src/main.ts",
     "postinstall": "node scripts/copy-tree-sitter-wasm.mjs"
   },
   "dependencies": {
