@@ -1,0 +1,32 @@
+@version(1)
+concept ConceptScopeProvider [I] {
+
+  purpose {
+    Scope resolution provider for .concept files. Each concept
+    declaration is an isolated scope containing state fields,
+    actions, and variants as declarations. Type parameters are
+    scoped to the concept.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this scope provider with PluginRegistry for
+        concept-spec language.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the concept scope provider.
+      }
+    }
+  }
+}

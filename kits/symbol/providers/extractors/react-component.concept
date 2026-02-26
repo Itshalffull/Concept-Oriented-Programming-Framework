@@ -1,0 +1,32 @@
+@version(1)
+concept ReactComponentSymbolExtractor [I] {
+
+  purpose {
+    Symbol extraction provider for React component files (.tsx).
+    Extracts component names, prop type definitions, hook usages,
+    and exported component symbols. Builds on the TypeScript
+    extractor with React-specific awareness.
+  }
+
+  state {
+    instances: set I
+    extractorRef: I -> String
+    handledExtensions: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this extractor with PluginRegistry for
+        .tsx file extensions with React detection.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the React component extractor.
+      }
+    }
+  }
+}

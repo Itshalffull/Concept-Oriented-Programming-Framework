@@ -1,0 +1,83 @@
+@version(1)
+concept SymbolOccurrence [O] {
+
+  purpose {
+    Records where a Symbol appears in a file — exact location and
+    semantic role. Enables go-to-definition, find-references, and
+    rename-refactoring across the entire project.
+  }
+
+  state {
+    occurrences: set O
+    symbol: O -> String
+    file: O -> String
+    startRow: O -> Int
+    startCol: O -> Int
+    endRow: O -> Int
+    endCol: O -> Int
+    startByte: O -> Int
+    endByte: O -> Int
+    role: O -> String
+    enclosingSymbol: O -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(symbol: String, file: String, startRow: Int, startCol: Int, endRow: Int, endCol: Int, startByte: Int, endByte: Int, role: String) {
+      -> ok(occurrence: O) {
+        Record a symbol occurrence at a specific file location.
+        Role is a comma-separated list of: definition, reference,
+        import, export, write, read.
+      }
+    }
+
+    action findDefinitions(symbol: String) {
+      -> ok(occurrences: String) {
+        Return all definition-role occurrences for this symbol.
+        Results as serialized JSON array.
+      }
+      -> noDefinitions() {
+        No definition occurrences found for this symbol.
+      }
+    }
+
+    action findReferences(symbol: String, roleFilter: String) {
+      -> ok(occurrences: String) {
+        Return all occurrences for this symbol, optionally filtered
+        by role. Results as serialized JSON array.
+      }
+      -> noReferences() {
+        No references found for this symbol.
+      }
+    }
+
+    action findAtPosition(file: String, row: Int, col: Int) {
+      -> ok(occurrence: O, symbol: String) {
+        Find the symbol occurrence at a specific file position.
+      }
+      -> noSymbolAtPosition() {
+        No symbol found at this position.
+      }
+    }
+
+    action findInFile(file: String) {
+      -> ok(occurrences: String) {
+        Return all symbol occurrences in a file.
+        Results as serialized JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after record(symbol: "copf/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition") -> ok(occurrence: o)
+    then findDefinitions(symbol: "copf/concept/Article") -> ok(occurrences: _)
+  }
+
+  invariant {
+    after record(symbol: "copf/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition") -> ok(occurrence: o)
+    then findAtPosition(file: "specs/article.concept", row: 2, col: 10) -> ok(occurrence: o, symbol: "copf/concept/Article")
+  }
+}

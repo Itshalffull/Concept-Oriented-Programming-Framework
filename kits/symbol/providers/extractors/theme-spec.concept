@@ -1,0 +1,31 @@
+@version(1)
+concept ThemeSpecSymbolExtractor [I] {
+
+  purpose {
+    Symbol extraction provider for COIF theme spec files. Extracts
+    token names, scale values, semantic aliases, and mode variants
+    as symbols in the coif/* namespace.
+  }
+
+  state {
+    instances: set I
+    extractorRef: I -> String
+    handledExtensions: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this extractor with PluginRegistry for
+        theme spec file extensions.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the theme spec extractor.
+      }
+    }
+  }
+}

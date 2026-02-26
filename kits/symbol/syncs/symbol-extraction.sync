@@ -1,0 +1,16 @@
+// Extract symbols from parsed syntax trees.
+// Resolves the best available extractor for the file's language
+// via PluginRegistry, then dispatches to the provider
+// (TypeScriptSymbolExtractor, ConceptSpecSymbolExtractor, etc.).
+
+sync SymbolExtractionSync [eager]
+when {
+  SyntaxTree/parse: [ file: ?file; grammar: ?grammar ]
+    => [ tree: ?tree ]
+}
+where {
+  PluginRegistry: { ?extractor kind: "symbol-extractor"; language: ?treeLang }
+}
+then {
+  Symbol/extractFromTree: [ tree: ?tree; extractor: ?extractor ]
+}

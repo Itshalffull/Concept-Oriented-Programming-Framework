@@ -1,0 +1,77 @@
+@version(1)
+concept SymbolRelationship [R] {
+
+  purpose {
+    Typed semantic relationships between Symbols beyond simple
+    reference — implements, extends, overrides, generates,
+    configures, tests, documents. Extends the Linking Kit's
+    Reference/Relation vocabulary with program-analysis-specific
+    edge types.
+  }
+
+  state {
+    relationships: set R
+    source: R -> String
+    target: R -> String
+    kind: R -> String
+    metadata: R -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action add(source: String, target: String, kind: String) {
+      -> ok(relationship: R) {
+        Create a typed relationship between two symbols.
+        Kind is one of: implements, extends, overrides, aliases,
+        generates, configures, tests, documents.
+      }
+      -> alreadyExists(existing: R) {
+        This relationship already exists.
+      }
+    }
+
+    action findFrom(source: String, kind: String) {
+      -> ok(relationships: String) {
+        Find all relationships from a source symbol, optionally
+        filtered by kind. Results as serialized JSON array.
+      }
+    }
+
+    action findTo(target: String, kind: String) {
+      -> ok(relationships: String) {
+        Find all relationships targeting a symbol, optionally
+        filtered by kind. Results as serialized JSON array.
+      }
+    }
+
+    action transitiveClosure(start: String, kind: String, direction: String) {
+      -> ok(symbols: String, paths: String) {
+        Follow relationships of a given kind transitively from
+        a starting symbol. Direction is "forward" or "backward".
+        Returns reachable symbols and paths as serialized JSON.
+      }
+    }
+
+    action get(relationship: R) {
+      -> ok(relationship: R, source: String, target: String, kind: String, metadata: String) {
+        Retrieve relationship metadata.
+      }
+      -> notfound() {
+        Relationship does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
+    then findFrom(source: "ts/class/Handler", kind: "implements") -> ok(relationships: _)
+  }
+
+  invariant {
+    after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
+    then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> alreadyExists(existing: r)
+  }
+}

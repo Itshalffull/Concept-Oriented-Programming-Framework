@@ -1,0 +1,31 @@
+@version(1)
+concept TypeScriptScopeProvider [I] {
+
+  purpose {
+    Scope resolution provider for TypeScript and JavaScript files.
+    Models module scopes, hoisting, closures, and ES module
+    import/export edges.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this scope provider with PluginRegistry for
+        TypeScript and JavaScript languages.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the TypeScript scope provider.
+      }
+    }
+  }
+}

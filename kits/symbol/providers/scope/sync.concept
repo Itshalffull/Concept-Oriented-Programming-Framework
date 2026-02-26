@@ -1,0 +1,31 @@
+@version(1)
+concept SyncScopeProvider [I] {
+
+  purpose {
+    Scope resolution provider for .sync files. Models cross-concept
+    references with variable scoping — when-clause bindings are
+    visible in where and then clauses.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this scope provider with PluginRegistry for
+        sync-spec language.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the sync scope provider.
+      }
+    }
+  }
+}

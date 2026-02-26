@@ -1,0 +1,82 @@
+@version(1)
+concept ScopeGraph [C] {
+
+  purpose {
+    Lexical scoping, visibility, and name resolution model for a
+    file or module. Models nested scopes, declarations, references,
+    and import edges to support cross-file resolution and rename
+    refactoring.
+  }
+
+  state {
+    graphs: set C
+    file: C -> String
+    scopes: C -> String
+    declarations: C -> String
+    references: C -> String
+    importEdges: C -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action build(file: String, tree: String) {
+      -> ok(graph: C) {
+        Build a scope graph from a parsed syntax tree. Extracts
+        scopes, declarations, references, and import edges
+        using a language-specific scope provider.
+      }
+      -> unsupportedLanguage(language: String) {
+        No scope provider available for this language.
+      }
+    }
+
+    action resolveReference(graph: C, scope: String, name: String) {
+      -> ok(symbol: String) {
+        Resolve a name reference within a scope to its declaration
+        symbol, following scope parent chains and import edges.
+      }
+      -> unresolved(candidates: String) {
+        Name could not be resolved. Candidates lists possible
+        matches from nearby scopes as serialized JSON array.
+      }
+      -> ambiguous(symbols: String) {
+        Multiple declarations match this name in scope.
+        Symbols returned as serialized JSON array.
+      }
+    }
+
+    action visibleSymbols(graph: C, scope: String) {
+      -> ok(symbols: String) {
+        Return all symbols visible from a given scope, including
+        inherited and imported names. Results as serialized JSON array.
+      }
+    }
+
+    action resolveCrossFile(graph: C) {
+      -> ok(resolvedCount: Int) {
+        Attempt to resolve all unresolved references in this graph
+        by searching other files' scope graphs for matching exports.
+      }
+      -> noUnresolved() {
+        All references in this graph are already resolved.
+      }
+    }
+
+    action get(graph: C) {
+      -> ok(graph: C, file: String, scopeCount: Int, declarationCount: Int, unresolvedCount: Int) {
+        Retrieve scope graph metadata.
+      }
+      -> notfound() {
+        Graph does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after build(file: "src/handler.ts", tree: "tree-123") -> ok(graph: g)
+    then get(graph: g) -> ok(graph: g, file: "src/handler.ts", scopeCount: _, declarationCount: _, unresolvedCount: _)
+  }
+}

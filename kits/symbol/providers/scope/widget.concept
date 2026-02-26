@@ -1,0 +1,31 @@
+@version(1)
+concept WidgetScopeProvider [I] {
+
+  purpose {
+    Scope resolution provider for .widget spec files. Models
+    widget-level scopes containing anatomy parts, states,
+    transitions, props, slots, and composed widget references.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this scope provider with PluginRegistry for
+        widget-spec language.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the widget scope provider.
+      }
+    }
+  }
+}

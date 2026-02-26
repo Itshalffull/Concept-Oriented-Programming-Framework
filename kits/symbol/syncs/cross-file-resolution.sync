@@ -1,0 +1,16 @@
+// Resolve unresolved references across files.
+// After a scope graph is built, checks for unresolved references
+// and attempts to resolve them against other files' exported symbols.
+
+sync CrossFileResolutionSync [eventual]
+when {
+  ScopeGraph/build: [ file: ?file; tree: ?tree ]
+    => [ graph: ?graph ]
+}
+where {
+  ScopeGraph: { ?graph references: ?refs }
+  filter(?refs hasUnresolved: true)
+}
+then {
+  ScopeGraph/resolveCrossFile: [ graph: ?graph ]
+}

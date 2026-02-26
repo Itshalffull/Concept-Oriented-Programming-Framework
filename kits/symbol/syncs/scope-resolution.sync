@@ -1,0 +1,12 @@
+// Build scope graphs after symbol extraction.
+// Uses a language-specific scope provider to model
+// lexical scopes, declarations, and references.
+
+sync ScopeResolutionSync [eager]
+when {
+  Symbol/extractFromTree: [ tree: ?tree ]
+    => [ symbols: ?symbols ]
+}
+then {
+  ScopeGraph/build: [ file: ?file; tree: ?tree ]
+}

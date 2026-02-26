@@ -1,0 +1,102 @@
+@version(1)
+concept Symbol [S] {
+
+  purpose {
+    Globally unique, cross-file identifier for any named entity in
+    the project. Provides hierarchical symbol strings (e.g.
+    "copf/concept/Article", "ts/function/src/handlers/article.ts/createArticle")
+    that unify identity across languages, file formats, and project layers.
+  }
+
+  state {
+    symbols: set S
+    symbolString: S -> String
+    kind: S -> String
+    displayName: S -> String
+    documentation: S -> String
+    visibility: S -> String
+    deprecated: S -> String
+    definingFile: S -> String
+    namespace: S -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(symbolString: String, kind: String, displayName: String, definingFile: String) {
+      -> ok(symbol: S) {
+        Create a new symbol with a globally unique symbol string.
+        Kind is one of: function, class, type, variable, concept,
+        action, variant, state-field, sync, config-key.
+      }
+      -> alreadyExists(existing: S) {
+        A symbol with this symbol string is already registered.
+      }
+    }
+
+    action resolve(symbolString: String) {
+      -> ok(symbol: S) {
+        Resolve a symbol string to its registered symbol.
+      }
+      -> notfound() {
+        No symbol with this string exists.
+      }
+      -> ambiguous(candidates: String) {
+        Multiple symbols match this string. Candidates
+        returned as serialized JSON array of symbol strings.
+      }
+    }
+
+    action findByKind(kind: String, namespace: String) {
+      -> ok(symbols: String) {
+        Return all symbols of the given kind, optionally filtered
+        by namespace. Results as serialized JSON array.
+      }
+    }
+
+    action findByFile(file: String) {
+      -> ok(symbols: String) {
+        Return all symbols defined in the given file.
+        Results as serialized JSON array.
+      }
+    }
+
+    action rename(symbol: S, newName: String) {
+      -> ok(oldName: String, occurrencesUpdated: Int) {
+        Rename a symbol and update all tracked occurrences.
+      }
+      -> conflict(conflicting: S) {
+        The new name conflicts with an existing symbol in scope.
+      }
+      -> notfound() {
+        Symbol does not exist.
+      }
+    }
+
+    action get(symbol: S) {
+      -> ok(symbol: S, symbolString: String, kind: String, displayName: String, visibility: String, definingFile: String, namespace: String) {
+        Retrieve a symbol's metadata.
+      }
+      -> notfound() {
+        Symbol does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
+    then get(symbol: s) -> ok(symbol: s, symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", visibility: "public", definingFile: "specs/article.concept", namespace: "copf/concept")
+  }
+
+  invariant {
+    after register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
+    then resolve(symbolString: "copf/concept/Article") -> ok(symbol: s)
+  }
+
+  invariant {
+    after register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
+    then register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> alreadyExists(existing: s)
+  }
+}

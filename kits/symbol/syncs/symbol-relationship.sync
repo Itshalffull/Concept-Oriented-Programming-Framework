@@ -1,0 +1,13 @@
+// Maintain typed relationships between symbols.
+// When a scope reference is resolved, creates a SymbolRelationship
+// edge and a corresponding Backlink for reverse traversal.
+
+sync SymbolRelationshipSync [eager]
+when {
+  ScopeGraph/resolveReference: [ graph: ?graph; scope: ?scope; name: ?name ]
+    => [ symbol: ?refSymbol ]
+}
+then {
+  SymbolRelationship/add: [ source: ?refSymbol; target: ?defSymbol; kind: ?relKind ]
+  Backlink/register: [ source: ?refSymbol; target: ?defSymbol ]
+}
