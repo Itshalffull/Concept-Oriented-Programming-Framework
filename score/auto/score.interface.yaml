@@ -1,0 +1,862 @@
+# Score — LLM-Optimized Interface Manifest
+#
+# Generates all interface targets for the built-in Score API,
+# specifically designed for LLM tool-use consumption. Every
+# Clef app gets these interfaces automatically — no user
+# configuration required.
+#
+# Targets are tuned for LLM ergonomics:
+#   - GraphQL: introspectable schema with descriptive types
+#   - MCP: tool/resource definitions with rich JSON Schema
+#   - Claude Skills: progressive workflow-based skills
+#   - OpenAI: function-calling definitions with strict mode
+#   - REST: standard API for non-LLM consumers
+#
+# Usage (automatic — no manual invocation needed):
+#   copf interface generate --manifest score/auto/score.interface.yaml
+
+interface:
+  name: score
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+
+targets:
+  graphql:
+    path: /score/graphql
+    relay: false
+    subscriptions: true
+    federation: false
+    outputDir: ./generated/score/interfaces/graphql
+    description: >
+      Score GraphQL endpoint — introspectable schema for querying
+      project structure, symbols, concepts, syncs, data flows,
+      and search. Optimized for LLM tool-use: all types have
+      descriptions, queries return structured data, and mutations
+      are clearly separated from queries.
+
+  mcp:
+    name: score
+    transport: stdio
+    outputDir: ./generated/score/interfaces/mcp
+    description: >
+      Score MCP server — exposes project knowledge as tools and
+      resources for any MCP-compatible LLM client. Tools map to
+      write operations (reindex), resources map to read queries
+      (listConcepts, findSymbol, search, etc.).
+
+  claude-skills:
+    name: score
+    progressive: true
+    outputDir: ./generated/score/interfaces/claude-skills
+    description: >
+      Score Claude Skills — rich workflow-based skills for
+      Claude Code that provide guided project exploration,
+      architecture understanding, and impact analysis.
+
+  rest:
+    basePath: /score/api
+    framework: hono
+    versioning: none
+    outputDir: ./generated/score/interfaces/rest
+
+  cli:
+    name: score
+    shell: bash,zsh,fish
+    outputDir: ./generated/score/interfaces/cli
+
+  openai:
+    format: function-calling
+    strict: true
+    outputDir: ./generated/score/interfaces/openai
+    description: >
+      Score OpenAI function-calling definitions — JSON Schema
+      tool definitions compatible with OpenAI Chat Completions
+      API, Google Gemini, and other function-calling LLM APIs.
+      Strict mode ensures parameters are fully typed.
+
+# ─── SDK LANGUAGES ────────────────────────────────────
+
+sdk:
+  typescript:
+    packageName: "@clef/score-client"
+    moduleSystem: esm
+    outputDir: ./generated/score/interfaces/sdk/typescript
+  python:
+    packageName: clef-score
+    asyncSupport: true
+    outputDir: ./generated/score/interfaces/sdk/python
+
+# ─── SPECIFICATION DOCUMENTS ─────────────────────────
+
+specs:
+  openapi: true
+  asyncapi: false
+  outputDir: ./generated/score/interfaces/specs
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+
+output:
+  dir: ./generated/score/interfaces
+  formatting:
+    typescript: prettier
+    python: black
+  clean: true
+
+# ─── GLOBAL TRAITS ────────────────────────────────────
+
+traits:
+  - name: cached
+    config:
+      ttl: 30
+    scope: query
+
+  - name: paginated
+    config:
+      defaultLimit: 50
+      maxLimit: 200
+    scope: list
+
+# ─── GROUPING ─────────────────────────────────────────
+# Score uses functional grouping for Claude Skills —
+# organized by query domain rather than per-concept.
+
+grouping:
+  strategy: custom
+  skills:
+    - name: score-explore
+      description: >
+        Explore project structure — list files, browse the file
+        tree, read file contents, and find definitions.
+      concepts: [ScoreApi]
+      actions: [listFiles, getFileTree, getFileContent, getDefinitions, matchPattern]
+
+    - name: score-symbols
+      description: >
+        Find and trace symbols — locate definitions, find
+        references, explore scopes, and discover relationships.
+      concepts: [ScoreApi]
+      actions: [findSymbol, getReferences, getScope, getRelationships]
+
+    - name: score-architecture
+      description: >
+        Understand app architecture — list concepts, inspect
+        actions, browse syncs, and trace action flows.
+      concepts: [ScoreApi]
+      actions: [listConcepts, getConcept, getAction, listSyncs, getSync, getFlow]
+
+    - name: score-analysis
+      description: >
+        Analyze dependencies and impact — trace dependencies,
+        find dependents, assess change impact, and follow data
+        flow paths.
+      concepts: [ScoreApi]
+      actions: [getDependencies, getDependents, getImpact, getDataFlow]
+
+    - name: score-search
+      description: >
+        Search and understand code — natural language search,
+        symbol explanations, and index management.
+      concepts: [ScoreApi]
+      actions: [search, explain, status, reindex]
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+
+concepts:
+  ScoreApi:
+    graphql:
+      actions:
+        # Structural queries
+        listFiles: query
+        getFileTree: query
+        getFileContent: query
+        getDefinitions: query
+        matchPattern: query
+        # Symbol queries
+        findSymbol: query
+        getReferences: query
+        getScope: query
+        getRelationships: query
+        # Semantic queries
+        listConcepts: query
+        getConcept: query
+        getAction: query
+        listSyncs: query
+        getSync: query
+        getFlow: query
+        # Analysis queries
+        getDependencies: query
+        getDependents: query
+        getImpact: query
+        getDataFlow: query
+        # Discovery queries
+        search: query
+        explain: query
+        # Index management
+        status: query
+        reindex: mutation
+
+    rest:
+      path: /score
+      actions:
+        listFiles:
+          method: GET
+          path: /score/files
+        getFileTree:
+          method: GET
+          path: /score/tree/{path}
+        getFileContent:
+          method: GET
+          path: /score/files/{path}
+        getDefinitions:
+          method: GET
+          path: /score/definitions/{path}
+        matchPattern:
+          method: POST
+          path: /score/pattern
+        findSymbol:
+          method: GET
+          path: /score/symbols/{name}
+        getReferences:
+          method: GET
+          path: /score/symbols/{symbol}/references
+        getScope:
+          method: GET
+          path: /score/scope
+        getRelationships:
+          method: GET
+          path: /score/symbols/{symbol}/relationships
+        listConcepts:
+          method: GET
+          path: /score/concepts
+        getConcept:
+          method: GET
+          path: /score/concepts/{name}
+        getAction:
+          method: GET
+          path: /score/concepts/{concept}/actions/{action}
+        listSyncs:
+          method: GET
+          path: /score/syncs
+        getSync:
+          method: GET
+          path: /score/syncs/{name}
+        getFlow:
+          method: GET
+          path: /score/flow/{startConcept}/{startAction}
+        getDependencies:
+          method: GET
+          path: /score/analysis/dependencies/{symbol}
+        getDependents:
+          method: GET
+          path: /score/analysis/dependents/{symbol}
+        getImpact:
+          method: GET
+          path: /score/analysis/impact/{file}
+        getDataFlow:
+          method: GET
+          path: /score/analysis/flow
+        search:
+          method: GET
+          path: /score/search
+        explain:
+          method: GET
+          path: /score/explain/{symbol}
+        status:
+          method: GET
+          path: /score/status
+        reindex:
+          method: POST
+          path: /score/reindex
+
+    mcp:
+      actions:
+        # File operations → resources (read-only)
+        listFiles:
+          type: resource-template
+          uriTemplate: "score://files/{pattern}"
+          description: >
+            List project files matching a glob pattern. Use "*" for
+            all files, "**/*.ts" for TypeScript, "**/*.concept" for
+            concept specs. Returns path, language, role, and size.
+        getFileTree:
+          type: resource
+          uriTemplate: "score://tree/{path}"
+          description: >
+            Get a hierarchical tree view of the project directory.
+            Depth 0 returns the full tree. Great for orienting
+            yourself in an unfamiliar codebase.
+        getFileContent:
+          type: resource
+          uriTemplate: "score://files/{path}/content"
+          description: >
+            Read a file's content with language detection and a
+            list of its top-level definitions. Use this to examine
+            specific files found via listFiles or search.
+        getDefinitions:
+          type: resource
+          uriTemplate: "score://files/{path}/definitions"
+          description: >
+            Get all definitions in a file — functions, classes,
+            types, concept actions, etc. Each includes name, kind,
+            line number, and source span.
+        matchPattern:
+          type: tool
+          description: >
+            Run a structural pattern query across all files of a
+            given language. Uses tree-sitter query syntax for
+            precise structural matching beyond regex.
+
+        # Symbol operations → resources
+        findSymbol:
+          type: resource
+          uriTemplate: "score://symbols/{name}"
+          description: >
+            Find all symbols matching a name. Returns kind (function,
+            type, concept, action), file, line, and scope. The first
+            step for understanding any named entity.
+        getReferences:
+          type: resource
+          uriTemplate: "score://symbols/{symbol}/references"
+          description: >
+            Find every reference to a symbol across the project.
+            Shows the definition location and all reference sites
+            with kind (read, write, call, import, type-use).
+        getScope:
+          type: resource
+          uriTemplate: "score://scope?file={file}&line={line}"
+          description: >
+            Get the scope at a specific file:line location. Shows
+            all symbols visible at that point and the scope hierarchy.
+        getRelationships:
+          type: resource
+          uriTemplate: "score://symbols/{symbol}/relationships"
+          description: >
+            Get typed relationships for a symbol — implements,
+            extends, calls, imports, depends-on, etc. Shows the
+            web of connections around any entity.
+
+        # Concept/Sync operations → resources
+        listConcepts:
+          type: resource-template
+          uriTemplate: "score://concepts"
+          description: >
+            List all concepts in the project with purpose, actions,
+            and state fields. The primary entry point for understanding
+            a COPF application's architecture.
+        getConcept:
+          type: resource
+          uriTemplate: "score://concepts/{name}"
+          description: >
+            Get complete details of a concept — purpose, type params,
+            actions with params and variants, state fields with types,
+            invariants, and source file.
+        getAction:
+          type: resource
+          uriTemplate: "score://concepts/{concept}/actions/{action}"
+          description: >
+            Get full details of a concept action — parameters with
+            types, all variants with fields and prose, and description.
+        listSyncs:
+          type: resource-template
+          uriTemplate: "score://syncs"
+          description: >
+            List all sync rules with annotation (eager/eventual/local),
+            trigger patterns, effect actions, and source file.
+        getSync:
+          type: resource
+          uriTemplate: "score://syncs/{name}"
+          description: >
+            Get full sync rule details — when clause with patterns,
+            where clause with queries, then clause with invocations.
+        getFlow:
+          type: resource
+          uriTemplate: "score://flow/{startConcept}/{startAction}"
+          description: >
+            Trace the static flow graph from a concept action.
+            Shows the chain of sync firings and concept invocations.
+            Essential for understanding side effects.
+
+        # Analysis operations → resources
+        getDependencies:
+          type: resource
+          uriTemplate: "score://analysis/deps/{symbol}"
+          description: >
+            Get direct and transitive dependencies of a symbol.
+            Shows imports, calls, and reads that a symbol depends on.
+        getDependents:
+          type: resource
+          uriTemplate: "score://analysis/dependents/{symbol}"
+          description: >
+            Get direct and transitive dependents — what depends
+            on this symbol. Essential for impact analysis before
+            making changes.
+        getImpact:
+          type: resource
+          uriTemplate: "score://analysis/impact/{file}"
+          description: >
+            Analyze the impact of changing a file. Returns directly
+            and transitively affected files with reasons (import,
+            sync reference, type dependency, generated-from).
+        getDataFlow:
+          type: tool
+          description: >
+            Find data flow paths between two symbols. Shows how
+            data propagates through sync chains and action calls.
+
+        # Discovery operations
+        search:
+          type: tool
+          description: >
+            Search the project using natural language. Combines
+            semantic embeddings, trigram text search, and symbol
+            indexing. Returns ranked results with relevance scores.
+        explain:
+          type: resource
+          uriTemplate: "score://explain/{symbol}"
+          description: >
+            Generate a natural language explanation of a symbol —
+            what it is, where it's defined, what uses it. The
+            summary is a complete sentence suitable for chat.
+
+        # Index management
+        status:
+          type: resource
+          uriTemplate: "score://status"
+          description: >
+            Get the current Score index status — counts of indexed
+            entities and last indexing time.
+        reindex:
+          type: tool
+          description: >
+            Force a full reindex of the project. Parses all files,
+            extracts symbols, builds semantic graph, and computes
+            analysis overlays. Use when the index seems stale.
+
+    cli:
+      actions:
+        listFiles:
+          command: files
+          args:
+            pattern: { positional: true }
+          examples:
+            - description: List all concept files
+              command: score files "**/*.concept"
+            - description: List all TypeScript files
+              command: score files "**/*.ts"
+        getFileTree:
+          command: tree
+          args:
+            path: { positional: true }
+          examples:
+            - description: Show full project tree
+              command: score tree .
+            - description: Show handlers directory
+              command: score tree handlers/ --depth 2
+        getFileContent:
+          command: cat
+          args:
+            path: { positional: true }
+          examples:
+            - description: Read a concept file
+              command: score cat specs/app/user.concept
+        getDefinitions:
+          command: defs
+          args:
+            path: { positional: true }
+          examples:
+            - description: List definitions in a handler
+              command: score defs handlers/ts/app/user.impl.ts
+        findSymbol:
+          command: find
+          args:
+            name: { positional: true }
+          examples:
+            - description: Find a symbol by name
+              command: score find UserHandler
+        getReferences:
+          command: refs
+          args:
+            symbol: { positional: true }
+          examples:
+            - description: Find all references to a symbol
+              command: score refs UserHandler
+        listConcepts:
+          command: concepts
+          examples:
+            - description: List all concepts
+              command: score concepts
+        getConcept:
+          command: concept
+          args:
+            name: { positional: true }
+          examples:
+            - description: Inspect the User concept
+              command: score concept User
+        getAction:
+          command: action
+          args:
+            concept: { positional: true }
+            action: { positional: true }
+          examples:
+            - description: Inspect User/register action
+              command: score action User register
+        listSyncs:
+          command: syncs
+          examples:
+            - description: List all syncs
+              command: score syncs
+        getSync:
+          command: sync
+          args:
+            name: { positional: true }
+          examples:
+            - description: Inspect a sync rule
+              command: score sync RegisterUser
+        getFlow:
+          command: flow
+          args:
+            startConcept: { positional: true }
+            startAction: { positional: true }
+          examples:
+            - description: Trace flow from User/register
+              command: score flow User register
+        getDependencies:
+          command: deps
+          args:
+            symbol: { positional: true }
+          examples:
+            - description: Show dependencies
+              command: score deps UserHandler
+        getDependents:
+          command: dependents
+          args:
+            symbol: { positional: true }
+          examples:
+            - description: Show reverse dependencies
+              command: score dependents UserHandler
+        getImpact:
+          command: impact
+          args:
+            file: { positional: true }
+          examples:
+            - description: Analyze change impact
+              command: score impact specs/app/user.concept
+        search:
+          command: search
+          args:
+            query: { positional: true }
+          examples:
+            - description: Search for authentication code
+              command: score search "authentication flow"
+            - description: Search for error handling
+              command: score search "error handling patterns"
+        explain:
+          command: explain
+          args:
+            symbol: { positional: true }
+          examples:
+            - description: Explain a symbol
+              command: score explain SyncEngine
+        status:
+          command: status
+          examples:
+            - description: Check index status
+              command: score status
+        reindex:
+          command: reindex
+          examples:
+            - description: Rebuild the index
+              command: score reindex
+
+# ─── OPENAI FUNCTION CALLING ─────────────────────────
+# OpenAI-compatible function-calling definitions for Score.
+# Per-concept overrides are in the concepts section below.
+
+    openai:
+      actions:
+        # Structural queries
+        listFiles:
+          description: >
+            List all files in the project matching a glob pattern. Use "*" for
+            all files, "**/*.ts" for TypeScript, "**/*.concept" for concept specs.
+            Returns path, language, role (source/generated/config/test/doc), and size.
+        getFileTree:
+          description: >
+            Get a hierarchical tree view of the project directory. Depth 0 returns
+            the full tree. Great for orienting in an unfamiliar codebase.
+        getFileContent:
+          description: >
+            Read a file's content with language detection and a list of its
+            top-level definitions. Use this to examine specific files.
+        getDefinitions:
+          description: >
+            Get all definitions in a file — functions, classes, types, concept
+            actions, etc. Each includes name, kind, line number, and source span.
+        matchPattern:
+          description: >
+            Run a structural pattern query (tree-sitter syntax) across all files
+            of a given language. For precise structural matching beyond regex.
+        # Symbol queries
+        findSymbol:
+          description: >
+            Find all symbols matching a name. Returns kind (function, type,
+            concept, action), file, line, and scope. Start here to locate
+            any named entity.
+        getReferences:
+          description: >
+            Find every reference to a symbol across the project. Shows the
+            definition location and all reference sites with kind (read, write,
+            call, import, type-use).
+        getScope:
+          description: >
+            Get the scope at a specific file:line location. Shows all symbols
+            visible at that point and the scope hierarchy.
+        getRelationships:
+          description: >
+            Get typed relationships for a symbol — implements, extends, calls,
+            imports, depends-on, etc.
+        # Semantic queries
+        listConcepts:
+          description: >
+            List all concepts in the project with purpose, actions, and state
+            fields. The primary entry point for understanding a COPF app's
+            architecture.
+        getConcept:
+          description: >
+            Get complete details of a concept — purpose, type params, actions
+            with params and variants, state fields with types, and invariants.
+        getAction:
+          description: >
+            Get full details of a concept action — parameters with types, all
+            variants with fields and prose, and description.
+        listSyncs:
+          description: >
+            List all sync rules with annotation (eager/eventual/local), trigger
+            patterns, effect actions, and source file.
+        getSync:
+          description: >
+            Get full sync rule details — when clause with patterns, where clause
+            with queries, then clause with invocations.
+        getFlow:
+          description: >
+            Trace the static flow graph from a concept action. Shows the chain
+            of sync firings and concept invocations. Essential for understanding
+            side effects.
+        # Analysis queries
+        getDependencies:
+          description: >
+            Get direct and transitive dependencies of a symbol. Shows imports,
+            calls, and reads that a symbol depends on.
+        getDependents:
+          description: >
+            Get direct and transitive dependents — what depends on this symbol.
+            Essential for impact analysis before making changes.
+        getImpact:
+          description: >
+            Analyze the impact of changing a file. Returns directly and
+            transitively affected files with reasons.
+        getDataFlow:
+          description: >
+            Find data flow paths between two symbols. Shows how data propagates
+            through sync chains and action calls.
+        # Discovery queries
+        search:
+          description: >
+            Search the project using natural language. Combines semantic
+            embeddings, trigram text search, and symbol indexing. Returns
+            ranked results with relevance scores.
+        explain:
+          description: >
+            Generate a natural language explanation of a symbol — what it is,
+            where it's defined, what uses it. Summary is a complete sentence
+            suitable for including in a chat response.
+        # Index management
+        status:
+          description: >
+            Get the current Score index status — counts of indexed entities
+            and last indexing time.
+        reindex:
+          description: >
+            Force a full reindex of the project. Use when the index seems stale.
+
+# ─── ENRICHMENT ───────────────────────────────────────
+# Workflow and annotation metadata for rich skill generation.
+
+workflows:
+  score-explore:
+    concept: ScoreApi
+    steps:
+      - action: listFiles
+        title: Browse Project Files
+        prose: >
+          Start by listing files to understand the project structure.
+          Use glob patterns to filter by type — "**/*.concept" for
+          concept specs, "**/*.sync" for sync rules, "**/*.ts" for
+          TypeScript code.
+      - action: getFileTree
+        title: Visualize Directory Structure
+        prose: >
+          Get a tree view of the project to see how files are organized.
+          Start from the root and adjust depth to control detail level.
+      - action: getFileContent
+        title: Read File Contents
+        prose: >
+          Read specific files to examine implementation details.
+          The response includes language detection and top-level
+          definitions for quick orientation.
+      - action: getDefinitions
+        title: List Definitions
+        prose: >
+          Extract all definitions from a file — functions, classes,
+          types, actions, etc. Useful for understanding a file's
+          public surface without reading the full content.
+      - action: matchPattern
+        title: Structural Pattern Search
+        prose: >
+          Use tree-sitter query patterns for precise structural
+          matching when you need more than text search. For example,
+          find all async functions, or all concept actions with
+          specific parameter patterns.
+    design-principles:
+      - title: Start Broad
+        rule: Begin with listFiles or getFileTree to orient, then drill into specifics
+      - title: Follow Conventions
+        rule: COPF projects follow a standard layout — specs/, handlers/, syncs/, kernel/
+      - title: Check Roles
+        rule: File roles (source, generated, config, test, doc) indicate intent
+
+  score-architecture:
+    concept: ScoreApi
+    steps:
+      - action: listConcepts
+        title: Survey the Concept Graph
+        prose: >
+          List all concepts to understand the application's domain model.
+          Each concept represents an independent service with its own
+          state and actions. The purpose field explains why it exists.
+      - action: getConcept
+        title: Deep-Dive into a Concept
+        prose: >
+          Examine a concept in detail — its type parameters define what
+          entities it manages, actions define its behavior contract, and
+          state fields define its persistent data model.
+      - action: getAction
+        title: Inspect an Action
+        prose: >
+          Get full action details — parameters, all possible outcome
+          variants with their fields, and prose descriptions. Actions
+          always enumerate their outcomes explicitly (no exceptions).
+      - action: listSyncs
+        title: Map the Sync Network
+        prose: >
+          List all syncs to understand cross-concept coordination.
+          Syncs are the only place concepts connect — each sync
+          pattern-matches on action completions and invokes other actions.
+      - action: getSync
+        title: Examine a Sync Rule
+        prose: >
+          Read a sync's when/where/then clauses to understand exactly
+          what triggers it, what conditions it checks, and what effects
+          it produces.
+      - action: getFlow
+        title: Trace an Action Flow
+        prose: >
+          Follow the chain of effects from any starting action.
+          Shows every sync that fires and every action that gets invoked.
+          Essential for understanding side effects.
+    design-principles:
+      - title: Concepts Are Independent
+        rule: No concept references another — all coupling is through syncs
+      - title: Syncs Are Declarative
+        rule: Pattern matching and variable binding, not imperative code
+      - title: Variants Over Exceptions
+        rule: Every action outcome is an explicit named variant
+
+  score-search:
+    concept: ScoreApi
+    steps:
+      - action: search
+        title: Natural Language Search
+        prose: >
+          Search the project using natural language queries. The
+          search combines semantic similarity, text matching, and
+          symbol awareness for best results. Results are ranked by
+          relevance.
+      - action: explain
+        title: Explain a Symbol
+        prose: >
+          Get a natural language explanation of any symbol. The
+          summary describes what it is, where it's defined, and
+          how it's used — ready to include in a response.
+      - action: status
+        title: Check Index Health
+        prose: >
+          Verify the Score index is up to date. If counts seem low
+          or lastIndexed is old, run reindex.
+      - action: reindex
+        title: Rebuild Index
+        prose: >
+          Force a full reindex when the index seems stale. Parses
+          all files, extracts all symbols, and rebuilds the full
+          semantic graph.
+    design-principles:
+      - title: Search First
+        rule: Use natural language search before structural queries when unsure what to look for
+      - title: Explain for Context
+        rule: Use explain to generate summaries suitable for including in LLM responses
+      - title: Reindex When Stale
+        rule: If results seem incomplete, check status and reindex if needed
+
+annotations:
+  ScoreApi:
+    concept:
+      skill-title: Score — Project Intelligence
+      intro-template: >
+        Use Score to understand, search, and analyze your Clef project.
+        Score automatically indexes your entire codebase — concepts,
+        syncs, symbols, files, and data flows — and provides
+        structured queries designed for LLM tool use.
+      tool-permissions:
+        - Read
+        - Bash
+      trigger-patterns:
+        - "what concepts"
+        - "how does * work"
+        - "find * in the code"
+        - "what depends on"
+        - "trace the flow"
+        - "search for"
+        - "explain *"
+        - "show me the"
+        - "list all"
+        - "what files"
+        - "impact of changing"
+      argument-template: "[query-type] [target]"
+    actions:
+      listFiles:
+        examples:
+          - label: All concept specs
+            language: bash
+            code: score files "**/*.concept"
+          - label: All TypeScript handlers
+            language: bash
+            code: score files "handlers/**/*.ts"
+      listConcepts:
+        examples:
+          - label: Survey the domain model
+            language: bash
+            code: score concepts
+      search:
+        examples:
+          - label: Find authentication logic
+            language: bash
+            code: score search "user authentication flow"
+          - label: Find error handling
+            language: bash
+            code: score search "error handling and recovery"
+      getFlow:
+        examples:
+          - label: Trace registration flow
+            language: bash
+            code: score flow User register

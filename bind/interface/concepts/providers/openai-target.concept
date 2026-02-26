@@ -1,0 +1,75 @@
+@version(1)
+concept OpenaiTarget [F] {
+
+  purpose {
+    Generate OpenAI-compatible function-calling definitions from
+    concept projections. Produces JSON Schema tool definitions
+    suitable for the OpenAI Chat Completions API tools parameter,
+    Google Gemini function calling, and any API that accepts the
+    OpenAI function-calling format. Supports strict mode
+    (additionalProperties: false, all properties required) for
+    deterministic structured outputs. When @hierarchical trait is
+    present, generates tree navigation functions (list_children,
+    get_ancestors). Enrichment content from Projection is passed
+    through for description enhancement.
+    See Architecture doc Section 2.7.
+  }
+
+  state {
+    functions: set F
+    config {
+      strict: F -> Bool
+      format: F -> String
+      version: F -> String
+    }
+    mapping {
+      concept: F -> String
+      action: F -> String
+      functionName: F -> String
+      description: F -> String
+    }
+    content: F -> String
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(functions: list String, files: list String) {
+        OpenAI function-calling definitions generated from
+        projection. Each concept action becomes a function
+        with typed JSON Schema parameters and a description
+        optimized for LLM comprehension. Strict mode ensures
+        all parameters are required and additionalProperties
+        is false — required for OpenAI structured outputs.
+      }
+      -> tooManyFunctions(count: Int, limit: Int) {
+        Generated function count exceeds the configured limit.
+        Consider grouping related actions or reducing the
+        concept surface.
+      }
+    }
+
+    action validate(function: F) {
+      -> ok(function: F) {
+        Function definition is valid. JSON Schema matches
+        action parameter types. Description is present and
+        within recommended length. Strict mode constraints
+        are satisfied.
+      }
+      -> missingDescription(function: F, functionName: String) {
+        Function lacks a description. OpenAI functions require
+        descriptions for reliable tool selection by the model.
+      }
+    }
+
+    action listFunctions(concept: String) {
+      -> ok(functions: list String) {
+        Return all generated function names for a concept.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "score-projection", config: "{}") -> ok(functions: f, files: fl)
+    then listFunctions(concept: "ScoreApi") -> ok(functions: fns)
+  }
+}

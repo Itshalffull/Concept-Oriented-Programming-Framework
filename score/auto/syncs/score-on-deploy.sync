@@ -1,0 +1,12 @@
+// Record deployment topology in Score's semantic layer when
+// deployment validation succeeds. Enables runtime-aware queries
+// about where concepts run and how they communicate.
+
+sync ScoreOnDeploySync [eventual]
+when {
+  DeploymentValidator/validate: [ manifest: ?manifest ]
+    => [ plan: ?plan ]
+}
+then {
+  ScoreApi/reindex: []
+}

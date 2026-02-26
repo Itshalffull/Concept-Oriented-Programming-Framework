@@ -29,6 +29,7 @@ import type {
 import { generateId, timestamp } from './types.js';
 import { createInMemoryStorage } from './storage.js';
 import { createInProcessAdapter } from './transport.js';
+import { bootstrapScore, isScoreRegistered } from './score-bootstrap.js';
 
 const WEB_CONCEPT_URI = 'urn:copf/Web';
 const SYNC_ENGINE_URI = 'urn:copf/SyncEngine';
@@ -56,6 +57,7 @@ export interface FlowLog {
 export interface Kernel {
   registerConcept(uri: string, handler: ConceptHandler): void;
   registerSync(sync: CompiledSync): void;
+  registerBuiltins(builtins: { scoreApi?: ConceptHandler; scoreIndex?: ConceptHandler }): void;
   handleRequest(request: WebRequest): Promise<WebResponse>;
   getFlowLog(flowId: string): ActionRecord[];
   invokeConcept(
@@ -123,6 +125,14 @@ export function createSelfHostedKernel(
   const syncEngineStorage = createInMemoryStorage();
   registry.register(SYNC_ENGINE_URI, createInProcessAdapter(syncEngineHandler, syncEngineStorage));
 
+  // Helper to register a sync with the engine
+  function doRegisterSync(sync: CompiledSync): void {
+    syncEngineHandler.registerSync(
+      { sync },
+      syncEngineStorage,
+    );
+  }
+
   return {
     registerConcept(uri: string, handler: ConceptHandler): void {
       const storage = createInMemoryStorage();
@@ -131,10 +141,13 @@ export function createSelfHostedKernel(
     },
 
     registerSync(sync: CompiledSync): void {
-      syncEngineHandler.registerSync(
-        { sync },
-        syncEngineStorage,
-      );
+      doRegisterSync(sync);
+    },
+
+    registerBuiltins(builtins: { scoreApi?: ConceptHandler; scoreIndex?: ConceptHandler }): void {
+      if (builtins.scoreApi && builtins.scoreIndex && !isScoreRegistered(registry)) {
+        bootstrapScore(registry, builtins.scoreApi, builtins.scoreIndex, doRegisterSync);
+      }
     },
 
     async handleRequest(request: WebRequest): Promise<WebResponse> {
