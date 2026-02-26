@@ -1,0 +1,43 @@
+@version(1)
+concept NextjsAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into Next.js-specific bindings.
+    Transforms Clef Surface's generic event model into Next.js
+    conventions: React Server Components (RSC) for static content,
+    Client Components with 'use client' for interactive widgets,
+    Server Actions with 'use server' for mutations. Uses only
+    functional React components — no classes, no forwardRef with
+    class instances. Maps className, SyntheticEvent handlers,
+    and data attributes. Integrates with Next.js Image, Link,
+    and dynamic imports for code splitting.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to Next.js functional React
+        bindings. Convert onclick to onClick, class to className.
+        Wrap event handlers as SyntheticEvent callbacks. Mark
+        interactive components with 'use client'. Generate Server
+        Action wrappers for mutation handlers. Preserve ARIA and
+        data-* attributes unchanged.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to Next.js React.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

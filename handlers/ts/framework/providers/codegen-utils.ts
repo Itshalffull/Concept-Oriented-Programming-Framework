@@ -132,6 +132,27 @@ export function typeToSwift(type: ResolvedType): string {
   }
 }
 
+export function typeToNextjs(type: ResolvedType): string {
+  switch (type.kind) {
+    case 'primitive':
+      switch (type.primitive) {
+        case 'String': return 'string';
+        case 'Int': return 'number';
+        case 'Float': return 'number';
+        case 'Bool': return 'boolean';
+        case 'DateTime': return 'Date';
+        default: return 'string';
+      }
+    case 'param': return 'string';
+    case 'set': return `ReadonlySet<${typeToNextjs(type.inner)}>`;
+    case 'list': return `readonly ${typeToNextjs(type.inner)}[]`;
+    case 'option': return `O.Option<${typeToNextjs(type.inner)}>`;
+    case 'map': return `ReadonlyMap<${typeToNextjs(type.keyType)}, ${typeToNextjs(type.inner)}>`;
+    case 'record':
+      return `{ ${type.fields.map(f => `readonly ${f.name}: ${typeToNextjs(f.type)}`).join('; ')} }`;
+  }
+}
+
 export function typeToProtobuf(type: ResolvedType): string {
   switch (type.kind) {
     case 'primitive':

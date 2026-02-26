@@ -1,0 +1,39 @@
+@version(1)
+concept NextjsSdkTarget [S] {
+
+  purpose {
+    Generate idiomatic Next.js SDK client libraries using fp-ts.
+    Produces typed client modules with TaskEither-based methods,
+    Server Action wrappers for direct invocation from Server
+    Components, and React hooks (useConceptAction, useConceptQuery)
+    for Client Components. All code is purely functional — no
+    classes, only const arrow functions and pipe composition.
+    Package includes next.config.js integration helpers.
+  }
+
+  state {
+    packages: set S
+    config {
+      packageName: S -> String
+      runtime: S -> String
+    }
+  }
+
+  actions {
+    action generate(projection: String, config: String) {
+      -> ok(package: S, files: list String) {
+        Map concept types to fp-ts branded TypeScript types.
+        Map actions to const arrow functions returning
+        TaskEither. Generate Server Action wrappers using
+        'use server' directive. Generate React hooks using
+        'use client' directive. Generate package.json and
+        tsconfig.json.
+      }
+    }
+  }
+
+  invariant {
+    after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
+    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+  }
+}

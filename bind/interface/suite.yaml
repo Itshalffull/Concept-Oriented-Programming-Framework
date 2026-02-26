@@ -155,6 +155,19 @@ concepts:
       S: { as: swift-sdk-package-ref, description: "Reference to a generated Swift SDK package" }
     optional: true
 
+  # --- Next.js Target & SDK Providers ---
+  NextjsTarget:
+    spec: ./concepts/providers/nextjs-target.concept
+    params:
+      R: { as: nextjs-route-ref, description: "Reference to a generated Next.js App Router route" }
+    optional: true
+
+  NextjsSdkTarget:
+    spec: ./concepts/providers/nextjs-sdk-target.concept
+    params:
+      S: { as: nextjs-sdk-package-ref, description: "Reference to a generated Next.js fp-ts SDK" }
+    optional: true
+
 syncs:
   required:
     - path: ./syncs/project-on-manifest.sync
@@ -191,6 +204,7 @@ syncs:
     - path: ./syncs/routing/route-to-cli.sync
     - path: ./syncs/routing/route-to-mcp.sync
     - path: ./syncs/routing/route-to-claude-skills.sync
+    - path: ./syncs/routing/route-to-nextjs.sync
 
     # Spec routing
     - path: ./syncs/routing/route-to-openapi.sync
@@ -203,6 +217,7 @@ syncs:
     - path: ./syncs/routing/route-to-rust-sdk.sync
     - path: ./syncs/routing/route-to-java-sdk.sync
     - path: ./syncs/routing/route-to-swift-sdk.sync
+    - path: ./syncs/routing/route-to-nextjs-sdk.sync
 
     # Middleware injection
     - path: ./syncs/routing/inject-middleware-rest.sync
@@ -211,6 +226,7 @@ syncs:
     - path: ./syncs/routing/inject-middleware-cli.sync
     - path: ./syncs/routing/inject-middleware-mcp.sync
     - path: ./syncs/routing/inject-middleware-claude-skills.sync
+    - path: ./syncs/routing/inject-middleware-nextjs.sync
 
 uses:
   - suite: generation

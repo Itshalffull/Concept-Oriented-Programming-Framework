@@ -1,0 +1,10 @@
+# Route Target/generate to NextjsTarget — Next.js App Router target
+
+sync RouteToNextjs [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "nextjs"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  NextjsTarget/generate: [ projection: ?p; config: ?c ]
+}

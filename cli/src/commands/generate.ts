@@ -34,6 +34,7 @@ import { rustGenHandler } from '../../../handlers/ts/framework/rust-gen.handler.
 import { swiftGenHandler } from '../../../handlers/ts/framework/swift-gen.handler.js';
 import { solidityGenHandler } from '../../../handlers/ts/framework/solidity-gen.handler.js';
 import { handlerGenHandler } from '../../../handlers/ts/framework/handler-gen.handler.js';
+import { nextjsGenHandler } from '../../../handlers/ts/framework/nextjs-gen.handler.js';
 import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.js';
 import { buildCacheHandler } from '../../../../kits/generation/handlers/ts/build-cache.handler.js';
 import { generationPlanHandler } from '../../../../kits/generation/handlers/ts/generation-plan.handler.js';
@@ -42,7 +43,7 @@ import { kindSystemHandler } from '../../../../kits/generation/handlers/ts/kind-
 import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../runtime/types.js';
 import { findFiles } from '../util.js';
 
-const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity', 'handler'] as const;
+const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity', 'nextjs', 'handler'] as const;
 type Target = (typeof SUPPORTED_TARGETS)[number];
 
 // Map target names to output directory names per clef-naming-reference.md
@@ -51,6 +52,7 @@ const TARGET_DIR_NAMES: Record<string, string> = {
   rust: 'rust',
   swift: 'swift',
   solidity: 'solidity',
+  nextjs: 'nextjs',
 };
 
 const GENERATOR_META: Record<string, {
@@ -92,6 +94,14 @@ const GENERATOR_META: Record<string, {
     outputKind: 'SolidityFiles',
     deterministic: true,
     handler: solidityGenHandler,
+  },
+  nextjs: {
+    name: 'NextjsGen',
+    family: 'framework',
+    inputKind: 'ConceptManifest',
+    outputKind: 'NextjsFiles',
+    deterministic: true,
+    handler: nextjsGenHandler,
   },
   handler: {
     name: 'HandlerGen',
@@ -820,6 +830,7 @@ export const INTERFACE_TARGET_META: {
   { name: 'CliTarget', family: 'interface', inputKind: 'Projection', outputKind: 'CliFiles', deterministic: true, category: 'target' },
   { name: 'McpTarget', family: 'interface', inputKind: 'Projection', outputKind: 'McpFiles', deterministic: true, category: 'target' },
   { name: 'ClaudeSkillsTarget', family: 'interface', inputKind: 'Projection', outputKind: 'ClaudeSkillsFiles', deterministic: true, category: 'target' },
+  { name: 'NextjsTarget', family: 'interface', inputKind: 'Projection', outputKind: 'NextjsRouteFiles', deterministic: true, category: 'target' },
   // SDK providers
   { name: 'TsSdkTarget', family: 'interface', inputKind: 'Projection', outputKind: 'TsSdkFiles', deterministic: true, category: 'sdk' },
   { name: 'PySdkTarget', family: 'interface', inputKind: 'Projection', outputKind: 'PySdkFiles', deterministic: true, category: 'sdk' },
@@ -827,6 +838,7 @@ export const INTERFACE_TARGET_META: {
   { name: 'RustSdkTarget', family: 'interface', inputKind: 'Projection', outputKind: 'RustSdkFiles', deterministic: true, category: 'sdk' },
   { name: 'JavaSdkTarget', family: 'interface', inputKind: 'Projection', outputKind: 'JavaSdkFiles', deterministic: true, category: 'sdk' },
   { name: 'SwiftSdkTarget', family: 'interface', inputKind: 'Projection', outputKind: 'SwiftSdkFiles', deterministic: true, category: 'sdk' },
+  { name: 'NextjsSdkTarget', family: 'interface', inputKind: 'Projection', outputKind: 'NextjsSdkFiles', deterministic: true, category: 'sdk' },
   // Spec providers
   { name: 'OpenapiTarget', family: 'interface', inputKind: 'Projection', outputKind: 'OpenApiDoc', deterministic: true, category: 'spec' },
   { name: 'AsyncapiTarget', family: 'interface', inputKind: 'Projection', outputKind: 'AsyncApiDoc', deterministic: true, category: 'spec' },
