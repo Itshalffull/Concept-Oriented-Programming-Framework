@@ -12,6 +12,6 @@ when {
     => ok(view: ?viewId)
 }
 then {
-  Layout/create: [ name: ?viewId; kind: ?layoutType ]
+  Layout/create: [ layout: ?viewId; kind: ?layoutType ]
   UISchema/inspect: [ schema: ?viewId; conceptSpec: ?ds ]
 }

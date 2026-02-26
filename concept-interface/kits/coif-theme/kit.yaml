@@ -1,12 +1,15 @@
 # kits/coif-theme/kit.yaml
 kit:
   name: coif-theme
-  version: 0.1.0
+  version: 0.4.0
   description: >
     Visual design system: themes, palettes, typography, motion,
-    and elevation. Composes design tokens into complete visual
-    languages with WCAG accessibility enforcement and
-    prefers-reduced-motion support.
+    and elevation. Concept structures are unchanged but inputs
+    now come from ThemeParser output rather than imperative calls.
+    Palette/generate, Typography scale computation, and Motion
+    reduced-motion handling are resolved at parse time; runtime
+    concepts store the resolved values (color maps, sizes, etc.)
+    with WCAG accessibility enforcement.
 
 concepts:
   Theme:

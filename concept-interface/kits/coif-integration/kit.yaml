@@ -1,7 +1,7 @@
 # kits/coif-integration/kit.yaml
 kit:
   name: coif-integration
-  version: 0.1.0
+  version: 0.4.0
   description: >
     Syncs that bridge COPF Concept Library domain concepts to COIF
     interface concepts. Requires both COIF kits and the relevant
@@ -43,6 +43,16 @@ syncs:
       name: IntentEnrichesUI
       description: >
         Use concept purpose to enhance generated interface labels.
+
+    - path: ./syncs/intent-improves-classification.sync
+      name: IntentImprovesClassification
+      description: >
+        Use Intent semantic data to improve interactor classification.
+
+    - path: ./syncs/customization-overrides-resolver.sync
+      name: CustomizationOverridesResolver
+      description: >
+        Level 1+ customization bypasses affordance matching.
 
     - path: ./syncs/view-drives-layout.sync
       name: ViewDrivesLayout

@@ -1,7 +1,7 @@
 # kits/coif-render/kit.yaml
 kit:
   name: coif-render
-  version: 0.1.0
+  version: 0.4.0
   description: >
     Framework adapters, surfaces, layouts, and viewports.
     Translates headless widget props into framework-specific
@@ -70,5 +70,5 @@ infrastructure:
       description: Framework-free DOM APIs
 
 dependencies:
-  - coif-core: ">=0.1.0"
-  - coif-component: ">=0.1.0"
+  - coif-core: ">=0.4.0"
+  - coif-component: ">=0.4.0"

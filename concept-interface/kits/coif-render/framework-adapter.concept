@@ -42,17 +42,10 @@ concept FrameworkAdapter [R] {
       -> error(message: String) { Mount failed. }
     }
 
-    action render(renderer: R, tree: String, target: String) {
-      -> ok(renderer: R) {
-        Render a complete component tree to a target. Takes a tree
-        of machine props (collected from a Host's machine set),
-        composes them into a framework-specific component hierarchy,
-        and calls the framework's root mount function:
-        - React: ReactDOM.createRoot(target).render(tree)
-        - Solid: render(() => tree, target)
-        - Ink: render(tree)
-        - React Native: AppRegistry.registerComponent
-        Used by Host after collecting all spawned machines.
+    action render(adapter: R, props: String) {
+      -> ok(adapter: R) {
+        Render props received from Machine/connect via the
+        framework's rendering pipeline.
       }
       -> error(message: String) { Render failed. }
     }

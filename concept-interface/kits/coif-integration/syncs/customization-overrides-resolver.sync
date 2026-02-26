@@ -1,0 +1,17 @@
+# ============================================================
+# CustomizationOverridesResolver — coif-integration recommended sync
+#
+# Level 1+ customization bypasses affordance matching.
+# When UISchema overrides are applied, forward them to
+# WidgetResolver as explicit overrides.
+# ============================================================
+
+sync CustomizationOverridesResolver [eager]
+when {
+  UISchema/override: [ schema: ?schema; overrides: ?overrides ]
+    => ok(schema: ?schema)
+}
+then {
+  WidgetResolver/override: [ resolver: ?schema;
+    element: ?overrides; widget: ?overrides ]
+}
