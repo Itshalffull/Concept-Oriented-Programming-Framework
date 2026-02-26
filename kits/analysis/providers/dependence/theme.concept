@@ -1,0 +1,31 @@
+@version(1)
+concept ThemeDependenceProvider [I] {
+
+  purpose {
+    Dependence analysis provider for .theme files. Computes
+    extends → parent theme, role → palette color, and token
+    reference chain dependency edges.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this provider with PluginRegistry for
+        theme spec dependence analysis.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the theme dependence provider.
+      }
+    }
+  }
+}

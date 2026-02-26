@@ -45,6 +45,20 @@ concepts:
     spec: ./providers/dependence/universal.concept
     optional: true
 
+  # COIF dependence providers
+  WidgetDependenceProvider:
+    spec: ./providers/dependence/widget.concept
+    optional: true
+  ThemeDependenceProvider:
+    spec: ./providers/dependence/theme.concept
+    optional: true
+  SelectionPipelineDependenceProvider:
+    spec: ./providers/dependence/selection-pipeline.concept
+    optional: true
+  BindingDependenceProvider:
+    spec: ./providers/dependence/binding.concept
+    optional: true
+
   # Analysis engine providers
   DatalogAnalysisProvider:
     spec: ./providers/analysis-engines/datalog.concept
@@ -88,6 +102,10 @@ uses:
       - name: ConceptEntity
       - name: ActionEntity
       - name: SyncEntity
+      - name: StateField
+      - name: WidgetEntity
+      - name: ThemeEntity
+      - name: InteractorEntity
   - kit: data-organization
     concepts:
       - name: Graph
