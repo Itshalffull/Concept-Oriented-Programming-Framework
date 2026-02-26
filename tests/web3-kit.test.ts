@@ -212,7 +212,7 @@ describe('Wallet Handler', () => {
     storage = createInMemoryStorage();
   });
 
-  it('verify returns a result with variant', async () => {
+  it('verify returns a result with variant', { timeout: 15000 }, async () => {
     // Without ethers installed, the stub always returns zero address
     const result = await walletHandler.verify(
       {

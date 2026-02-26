@@ -585,55 +585,38 @@ describe('Platform Target Integration — Unknown Type Passthrough', () => {
 // ============================================================
 
 describe('Platform Target Integration — Platform Pipeline Syncs', () => {
-  const platformPipelinePath = resolve(COIF_APP_DIR, 'syncs', 'platform-pipeline.sync');
+  const recommendedSyncDir = resolve(COIF_APP_DIR, 'syncs', 'recommended');
+  const navigatorToPlatformPath = resolve(recommendedSyncDir, 'navigator-to-platform.sync');
+  const platformEventToNavigatorPath = resolve(recommendedSyncDir, 'platform-event-to-navigator.sync');
 
-  it('platform pipeline sync file exists', () => {
-    expect(existsSync(platformPipelinePath)).toBe(true);
+  it('navigator-to-platform sync file exists', () => {
+    expect(existsSync(navigatorToPlatformPath)).toBe(true);
   });
 
-  it('has sync declarations for all five platform adapters', () => {
-    const source = readFileSync(platformPipelinePath, 'utf-8');
-    expect(source).toContain('BrowserAdapter/normalize');
-    expect(source).toContain('MobileAdapter/normalize');
-    expect(source).toContain('DesktopAdapter/normalize');
-    expect(source).toContain('WatchAdapter/normalize');
-    expect(source).toContain('TerminalAdapter/normalize');
+  it('platform-event-to-navigator sync file exists', () => {
+    expect(existsSync(platformEventToNavigatorPath)).toBe(true);
   });
 
-  it('each platform adapter has both Navigation and Event trigger syncs', () => {
-    const source = readFileSync(platformPipelinePath, 'utf-8');
-    const platforms = ['Browser', 'Mobile', 'Desktop', 'Watch', 'Terminal'];
-
-    for (const platform of platforms) {
-      expect(
-        source.includes(`Normalize${platform}FromNavigation`),
-        `${platform} should have Navigation trigger sync`,
-      ).toBe(true);
-      expect(
-        source.includes(`Normalize${platform}FromEvent`),
-        `${platform} should have Event trigger sync`,
-      ).toBe(true);
-    }
+  it('navigator-to-platform references PlatformAdapter/mapNavigation', () => {
+    const source = readFileSync(navigatorToPlatformPath, 'utf-8');
+    expect(source).toContain('PlatformAdapter/mapNavigation');
   });
 
-  it('all platform pipeline syncs have eager annotation', () => {
-    const source = readFileSync(platformPipelinePath, 'utf-8');
-    const syncDecls = source.match(/^sync \w+/gm) || [];
-    const eagerAnnotations = source.match(/\[eager\]/g) || [];
-    expect(eagerAnnotations.length).toBe(syncDecls.length);
+  it('platform-event-to-navigator references PlatformAdapter/handlePlatformEvent', () => {
+    const source = readFileSync(platformEventToNavigatorPath, 'utf-8');
+    expect(source).toContain('PlatformAdapter/handlePlatformEvent');
   });
 
-  it('all platform adapter syncs have a where clause querying PlatformAdapter', () => {
-    const source = readFileSync(platformPipelinePath, 'utf-8');
-    const platformAdapterRefs = source.match(/PlatformAdapter:/g) || [];
-    const syncDecls = source.match(/^sync \w+/gm) || [];
-    expect(platformAdapterRefs.length).toBe(syncDecls.length);
+  it('both platform pipeline syncs have eager annotation', () => {
+    const navSource = readFileSync(navigatorToPlatformPath, 'utf-8');
+    const eventSource = readFileSync(platformEventToNavigatorPath, 'utf-8');
+    expect(navSource).toContain('[eager]');
+    expect(eventSource).toContain('[eager]');
   });
 
-  it('has exactly 10 sync declarations (2 per platform × 5 platforms)', () => {
-    const source = readFileSync(platformPipelinePath, 'utf-8');
-    const syncDecls = source.match(/^sync \w+/gm) || [];
-    expect(syncDecls.length).toBe(10);
+  it('navigator-to-platform has a where clause querying PlatformAdapter', () => {
+    const source = readFileSync(navigatorToPlatformPath, 'utf-8');
+    expect(source).toContain('PlatformAdapter:');
   });
 });
 

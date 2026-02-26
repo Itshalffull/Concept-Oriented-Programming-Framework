@@ -449,8 +449,8 @@ describe('Framework Target Integration — COIF Kit Completeness', () => {
     }
   });
 
-  it('coif-component has exactly 4 concept files', () => {
-    const concepts = ['machine', 'slot', 'anatomy', 'widget'];
+  it('coif-component has exactly 6 concept files', () => {
+    const concepts = ['machine', 'slot', 'widget', 'affordance', 'interactor', 'widget-resolver'];
     for (const name of concepts) {
       expect(existsSync(resolve(COIF_COMPONENT_DIR, `${name}.concept`))).toBe(true);
     }

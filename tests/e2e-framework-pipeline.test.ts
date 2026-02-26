@@ -415,8 +415,8 @@ describe('E2E Framework Pipeline — COIF Completeness', () => {
     }
   });
 
-  it('coif-component has exactly 4 concepts', () => {
-    const concepts = ['machine', 'slot', 'anatomy', 'widget'];
+  it('coif-component has exactly 6 concepts', () => {
+    const concepts = ['machine', 'slot', 'widget', 'affordance', 'interactor', 'widget-resolver'];
     for (const name of concepts) {
       const source = readFileSync(resolve(COIF_COMPONENT_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');

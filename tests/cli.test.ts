@@ -10,7 +10,7 @@ import { existsSync, readFileSync, rmSync, mkdirSync } from 'fs';
 import { resolve, join } from 'path';
 
 // Import CLI internals
-import { parseArgs } from '../tools/copf-cli/src/index';
+import { parseArgs } from '../tools/copf-cli/src/main';
 import { findFiles } from '../tools/copf-cli/src/util';
 
 // Import kernel modules used by commands

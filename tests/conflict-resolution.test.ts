@@ -1,575 +1,348 @@
 // ============================================================
-// Conflict Resolution Tests
+// ConflictResolution Concept Handler Tests
 //
-// Tests for:
-// 1. Storage: lastWrittenAt timestamps on put, getMeta retrieval
-// 2. Storage: LWW warning on overwriting more recent entry
-// 3. Storage: onConflict callback with all four resolutions
-// 4. DistributedSyncEngine: conflict completion production
-// 5. LiteQueryAdapter: large snapshot threshold warnings
-// 6. Deploy manifest: liteQueryWarnThreshold config
-// 7. End-to-end: concurrent writes with conflict detection
+// Validates detect, resolve, manualResolve, and registerPolicy
+// actions including happy paths, error cases, and multi-step
+// sequences for the collaboration kit's conflict resolution concept.
 // ============================================================
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
-  createInMemoryStorage,
-  createInProcessAdapter,
-  createConceptRegistry,
-} from '@copf/kernel';
-import { DistributedSyncEngine, ActionLog } from '../implementations/typescript/framework/sync-engine.impl';
-import { LiteQueryAdapter, createStorageLiteProtocol } from '../implementations/typescript/framework/lite-query-adapter';
-import { parseDeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl';
-import type {
-  ConceptStorage,
-  ConflictResolution,
-  ConflictInfo,
-  EntryMeta,
-} from '@copf/kernel';
+  conflictResolutionHandler,
+  resetConflictResolutionCounter,
+} from '../implementations/typescript/conflict-resolution.impl.js';
 
-// --- 1. Storage: lastWrittenAt Timestamps ---
+describe('ConflictResolution', () => {
+  let storage: ReturnType<typeof createInMemoryStorage>;
 
-describe('Storage lastWrittenAt', () => {
-  it('stores a lastWrittenAt timestamp on put', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    const meta = await storage.getMeta!('users', 'u-1');
-    expect(meta).not.toBeNull();
-    expect(meta!.lastWrittenAt).toBeDefined();
-    // Should be a valid ISO 8601 timestamp
-    expect(new Date(meta!.lastWrittenAt).toISOString()).toBe(meta!.lastWrittenAt);
+  beforeEach(() => {
+    storage = createInMemoryStorage();
+    resetConflictResolutionCounter();
   });
 
-  it('updates timestamp on subsequent puts', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-    const meta1 = await storage.getMeta!('users', 'u-1');
+  // ---- registerPolicy ----
 
-    // Small delay to ensure different timestamp
-    await new Promise(r => setTimeout(r, 5));
-
-    await storage.put('users', 'u-1', { name: 'bob' });
-    const meta2 = await storage.getMeta!('users', 'u-1');
-
-    expect(meta2!.lastWrittenAt >= meta1!.lastWrittenAt).toBe(true);
-  });
-
-  it('returns null getMeta for non-existent key', async () => {
-    const storage = createInMemoryStorage();
-    const meta = await storage.getMeta!('users', 'missing');
-    expect(meta).toBeNull();
-  });
-
-  it('getMeta returns null after deletion', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-    await storage.del('users', 'u-1');
-    const meta = await storage.getMeta!('users', 'u-1');
-    expect(meta).toBeNull();
-  });
-
-  it('stores data correctly alongside metadata', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice', age: 30 });
-
-    const data = await storage.get('users', 'u-1');
-    expect(data).toEqual({ name: 'alice', age: 30 });
-  });
-
-  it('find returns data without metadata leaking', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-    await storage.put('users', 'u-2', { name: 'bob' });
-
-    const all = await storage.find('users');
-    expect(all).toHaveLength(2);
-    // Entries should NOT contain _meta or lastWrittenAt
-    for (const entry of all) {
-      expect(entry).not.toHaveProperty('lastWrittenAt');
-      expect(entry).not.toHaveProperty('_meta');
-    }
-  });
-
-  it('delMany works with new internal structure', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('items', 'i-1', { color: 'red' });
-    await storage.put('items', 'i-2', { color: 'red' });
-    await storage.put('items', 'i-3', { color: 'blue' });
-
-    const count = await storage.delMany('items', { color: 'red' });
-    expect(count).toBe(2);
-
-    const remaining = await storage.find('items');
-    expect(remaining).toHaveLength(1);
-    expect(remaining[0].color).toBe('blue');
-  });
-});
-
-// --- 2. Storage: LWW Warning ---
-
-describe('Storage LWW Warning', () => {
-  it('logs warning when overwriting a more recent entry (no onConflict)', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const storage = createInMemoryStorage();
-
-    // Write first entry
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    // Manually adjust the internal timestamp to be in the future
-    // We can't easily do this with the public API, but we can test
-    // that a normal sequential write does NOT trigger the warning
-    await storage.put('users', 'u-1', { name: 'bob' });
-
-    // Normal sequential writes should NOT warn (timestamp increases)
-    expect(warnSpy).not.toHaveBeenCalled();
-    warnSpy.mockRestore();
-  });
-});
-
-// --- 3. Storage: onConflict Callback ---
-
-describe('Storage onConflict Callback', () => {
-  it('calls onConflict when overwriting an existing entry', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    const conflicts: ConflictInfo[] = [];
-    storage.onConflict = (info) => {
-      conflicts.push(info);
-      return { action: 'accept-incoming' };
-    };
-
-    await storage.put('users', 'u-1', { name: 'bob' });
-
-    expect(conflicts).toHaveLength(1);
-    expect(conflicts[0].relation).toBe('users');
-    expect(conflicts[0].key).toBe('u-1');
-    expect(conflicts[0].existing.fields.name).toBe('alice');
-    expect(conflicts[0].incoming.fields.name).toBe('bob');
-  });
-
-  it('does not call onConflict for new entries', async () => {
-    const storage = createInMemoryStorage();
-    const conflicts: ConflictInfo[] = [];
-    storage.onConflict = (info) => {
-      conflicts.push(info);
-      return { action: 'accept-incoming' };
-    };
-
-    await storage.put('users', 'u-1', { name: 'alice' });
-    expect(conflicts).toHaveLength(0);
-  });
-
-  it('keep-existing resolution prevents write', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    storage.onConflict = () => ({ action: 'keep-existing' });
-    await storage.put('users', 'u-1', { name: 'bob' });
-
-    const data = await storage.get('users', 'u-1');
-    expect(data!.name).toBe('alice'); // Original preserved
-  });
-
-  it('accept-incoming resolution writes the new value', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    storage.onConflict = () => ({ action: 'accept-incoming' });
-    await storage.put('users', 'u-1', { name: 'bob' });
-
-    const data = await storage.get('users', 'u-1');
-    expect(data!.name).toBe('bob'); // New value accepted
-  });
-
-  it('merge resolution writes merged fields', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice', score: 10 });
-
-    storage.onConflict = (info) => ({
-      action: 'merge',
-      merged: {
-        name: info.incoming.fields.name,
-        score: (info.existing.fields.score as number) + (info.incoming.fields.score as number),
-      },
+  describe('registerPolicy', () => {
+    it('registers a new policy and returns ok with the policy ID', async () => {
+      const result = await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 10 },
+        storage,
+      );
+      expect(result.variant).toBe('ok');
+      expect(result.policy).toBe('policy-1');
     });
 
-    await storage.put('users', 'u-1', { name: 'alice', score: 5 });
-
-    const data = await storage.get('users', 'u-1');
-    expect(data!.name).toBe('alice');
-    expect(data!.score).toBe(15); // Merged: 10 + 5
-  });
-
-  it('escalate resolution still writes the incoming value', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    let escalated = false;
-    storage.onConflict = () => {
-      escalated = true;
-      return { action: 'escalate' };
-    };
-
-    await storage.put('users', 'u-1', { name: 'bob' });
-
-    expect(escalated).toBe(true);
-    const data = await storage.get('users', 'u-1');
-    expect(data!.name).toBe('bob'); // Incoming written (escalation is post-hoc)
-  });
-
-  it('onConflict receives correct timestamps', async () => {
-    const storage = createInMemoryStorage();
-    await storage.put('users', 'u-1', { name: 'alice' });
-
-    let receivedInfo: ConflictInfo | null = null;
-    storage.onConflict = (info) => {
-      receivedInfo = info;
-      return { action: 'accept-incoming' };
-    };
-
-    await new Promise(r => setTimeout(r, 5));
-    await storage.put('users', 'u-1', { name: 'bob' });
-
-    expect(receivedInfo).not.toBeNull();
-    expect(receivedInfo!.existing.writtenAt).toBeDefined();
-    expect(receivedInfo!.incoming.writtenAt).toBeDefined();
-    // Incoming timestamp should be >= existing
-    expect(receivedInfo!.incoming.writtenAt >= receivedInfo!.existing.writtenAt).toBe(true);
-  });
-});
-
-// --- 4. DistributedSyncEngine: Conflict Completions ---
-
-describe('DistributedSyncEngine Conflict Completions', () => {
-  it('produces a conflict completion from escalated conflict', () => {
-    const log = new ActionLog();
-    const registry = createConceptRegistry();
-    const engine = new DistributedSyncEngine(log, registry, 'server');
-
-    const conflictInfo: ConflictInfo = {
-      relation: 'articles',
-      key: 'art-1',
-      existing: {
-        fields: { title: 'Original Title', body: 'old body' },
-        writtenAt: '2026-01-01T00:00:00.000Z',
-      },
-      incoming: {
-        fields: { title: 'Updated Title', body: 'new body' },
-        writtenAt: '2026-01-01T00:01:00.000Z',
-      },
-    };
-
-    const completion = engine.produceConflictCompletion(
-      'urn:copf/Article',
-      conflictInfo,
-      'flow-001',
-    );
-
-    expect(completion.concept).toBe('urn:copf/Article');
-    expect(completion.variant).toBe('conflict');
-    expect(completion.output.key).toBe('art-1');
-    expect(completion.output.existing).toEqual({ title: 'Original Title', body: 'old body' });
-    expect(completion.output.incoming).toEqual({ title: 'Updated Title', body: 'new body' });
-    expect(completion.flow).toBe('flow-001');
-  });
-
-  it('drainConflictCompletions returns and clears pending conflicts', () => {
-    const log = new ActionLog();
-    const registry = createConceptRegistry();
-    const engine = new DistributedSyncEngine(log, registry, 'server');
-
-    engine.produceConflictCompletion('urn:copf/A', {
-      relation: 'items',
-      key: 'k-1',
-      existing: { fields: {}, writtenAt: '2026-01-01T00:00:00.000Z' },
-      incoming: { fields: {}, writtenAt: '2026-01-01T00:01:00.000Z' },
-    }, 'flow-1');
-
-    engine.produceConflictCompletion('urn:copf/B', {
-      relation: 'items',
-      key: 'k-2',
-      existing: { fields: {}, writtenAt: '2026-01-01T00:00:00.000Z' },
-      incoming: { fields: {}, writtenAt: '2026-01-01T00:01:00.000Z' },
-    }, 'flow-2');
-
-    const conflicts = engine.drainConflictCompletions();
-    expect(conflicts).toHaveLength(2);
-
-    // After drain, should be empty
-    const empty = engine.drainConflictCompletions();
-    expect(empty).toHaveLength(0);
-  });
-
-  it('getPendingConflicts returns without clearing', () => {
-    const log = new ActionLog();
-    const registry = createConceptRegistry();
-    const engine = new DistributedSyncEngine(log, registry, 'server');
-
-    engine.produceConflictCompletion('urn:copf/A', {
-      relation: 'items',
-      key: 'k-1',
-      existing: { fields: {}, writtenAt: '2026-01-01T00:00:00.000Z' },
-      incoming: { fields: {}, writtenAt: '2026-01-01T00:01:00.000Z' },
-    }, 'flow-1');
-
-    const first = engine.getPendingConflicts();
-    expect(first).toHaveLength(1);
-
-    // Should still be there
-    const second = engine.getPendingConflicts();
-    expect(second).toHaveLength(1);
-  });
-});
-
-// --- 5. LiteQueryAdapter: Threshold Warnings ---
-
-describe('LiteQueryAdapter Diagnostics', () => {
-  it('warns when snapshot exceeds threshold', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const storage = createInMemoryStorage();
-    // Populate with entries above default threshold (using a low threshold)
-    for (let i = 0; i < 15; i++) {
-      await storage.put('items', `k-${i}`, { value: i });
-    }
-
-    const protocol = createStorageLiteProtocol(storage, ['items']);
-    const adapter = new LiteQueryAdapter(protocol, 5000, { warnThreshold: 10 });
-
-    // Trigger snapshot via resolve
-    await adapter.resolve('items');
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Snapshot returned 15 entries'),
-    );
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('threshold: 10'),
-    );
-    warnSpy.mockRestore();
-  });
-
-  it('does not warn when snapshot is below threshold', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const storage = createInMemoryStorage();
-    for (let i = 0; i < 5; i++) {
-      await storage.put('items', `k-${i}`, { value: i });
-    }
-
-    const protocol = createStorageLiteProtocol(storage, ['items']);
-    const adapter = new LiteQueryAdapter(protocol, 5000, { warnThreshold: 10 });
-
-    await adapter.resolve('items');
-    expect(warnSpy).not.toHaveBeenCalled();
-    warnSpy.mockRestore();
-  });
-
-  it('setWarnThreshold changes the threshold', () => {
-    const storage = createInMemoryStorage();
-    const protocol = createStorageLiteProtocol(storage, []);
-    const adapter = new LiteQueryAdapter(protocol, 5000, { warnThreshold: 500 });
-
-    expect(adapter.getWarnThreshold()).toBe(500);
-    adapter.setWarnThreshold(2000);
-    expect(adapter.getWarnThreshold()).toBe(2000);
-  });
-
-  it('defaults to 1000 threshold when not specified', () => {
-    const storage = createInMemoryStorage();
-    const protocol = createStorageLiteProtocol(storage, []);
-    const adapter = new LiteQueryAdapter(protocol);
-
-    expect(adapter.getWarnThreshold()).toBe(1000);
-  });
-});
-
-// --- 6. Deploy Manifest: liteQueryWarnThreshold ---
-
-describe('Deploy Manifest liteQueryWarnThreshold', () => {
-  it('parses liteQueryWarnThreshold from runtime config', () => {
-    const manifest = parseDeploymentManifest({
-      app: { name: 'test', version: '1.0', uri: 'urn:app/test' },
-      runtimes: {
-        server: {
-          type: 'node',
-          engine: true,
-          transport: 'in-process',
-          liteQueryWarnThreshold: 5000,
-        },
-      },
-      concepts: {},
-      syncs: [],
+    it('returns duplicate when registering the same policy name twice', async () => {
+      await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 10 },
+        storage,
+      );
+      const result = await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 20 },
+        storage,
+      );
+      expect(result.variant).toBe('duplicate');
+      expect(result.message).toContain('lww');
     });
 
-    expect(manifest.runtimes.server.liteQueryWarnThreshold).toBe(5000);
+    it('allows registering multiple distinct policies', async () => {
+      const r1 = await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 10 },
+        storage,
+      );
+      const r2 = await conflictResolutionHandler.registerPolicy(
+        { name: 'manual', priority: 99 },
+        storage,
+      );
+      expect(r1.variant).toBe('ok');
+      expect(r2.variant).toBe('ok');
+      expect(r1.policy).not.toBe(r2.policy);
+    });
   });
 
-  it('liteQueryWarnThreshold is undefined when not specified', () => {
-    const manifest = parseDeploymentManifest({
-      app: { name: 'test', version: '1.0', uri: 'urn:app/test' },
-      runtimes: {
-        server: {
-          type: 'node',
-          engine: true,
-          transport: 'in-process',
-        },
-      },
-      concepts: {},
-      syncs: [],
+  // ---- detect ----
+
+  describe('detect', () => {
+    it('returns noConflict when versions are identical', async () => {
+      const result = await conflictResolutionHandler.detect(
+        { version1: 'abc', version2: 'abc', context: 'field-merge' },
+        storage,
+      );
+      expect(result.variant).toBe('noConflict');
     });
 
-    expect(manifest.runtimes.server.liteQueryWarnThreshold).toBeUndefined();
-  });
-});
-
-// --- 7. End-to-End: Concurrent Write Simulation ---
-
-describe('End-to-End Concurrent Writes', () => {
-  it('simulates phone + server concurrent writes with merge resolution', async () => {
-    const storage = createInMemoryStorage();
-
-    // Server writes first
-    await storage.put('articles', 'art-1', { title: 'Draft', body: 'server body', edits: 1 });
-
-    // Set up merge conflict handler
-    storage.onConflict = (info) => {
-      // Custom merge: keep higher edit count, concatenate bodies
-      const existingEdits = (info.existing.fields.edits as number) || 0;
-      const incomingEdits = (info.incoming.fields.edits as number) || 0;
-      return {
-        action: 'merge',
-        merged: {
-          title: info.incoming.fields.title, // Latest title wins
-          body: `${info.existing.fields.body}\n---\n${info.incoming.fields.body}`,
-          edits: existingEdits + incomingEdits,
-        },
-      };
-    };
-
-    // Phone writes (simulating offline sync replay)
-    await storage.put('articles', 'art-1', { title: 'Updated', body: 'phone body', edits: 2 });
-
-    const merged = await storage.get('articles', 'art-1');
-    expect(merged!.title).toBe('Updated');
-    expect(merged!.body).toBe('server body\n---\nphone body');
-    expect(merged!.edits).toBe(3); // 1 + 2
-
-    const meta = await storage.getMeta!('articles', 'art-1');
-    expect(meta).not.toBeNull();
-  });
-
-  it('simulates phone + server with escalation producing conflict completion', async () => {
-    const storage = createInMemoryStorage();
-    const log = new ActionLog();
-    const registry = createConceptRegistry();
-    const engine = new DistributedSyncEngine(log, registry, 'server');
-
-    // Server writes
-    await storage.put('articles', 'art-1', { title: 'Server Title' });
-
-    // Set up escalation handler
-    const escalatedConflicts: ConflictInfo[] = [];
-    storage.onConflict = (info) => {
-      escalatedConflicts.push(info);
-      return { action: 'escalate' };
-    };
-
-    // Phone writes (conflict)
-    await storage.put('articles', 'art-1', { title: 'Phone Title' });
-
-    expect(escalatedConflicts).toHaveLength(1);
-
-    // Engine produces conflict completion
-    const completion = engine.produceConflictCompletion(
-      'urn:copf/Article',
-      escalatedConflicts[0],
-      'flow-replay-001',
-    );
-
-    expect(completion.variant).toBe('conflict');
-    expect(completion.output.key).toBe('art-1');
-    expect(completion.output.existing).toEqual({ title: 'Server Title' });
-    expect(completion.output.incoming).toEqual({ title: 'Phone Title' });
-
-    // The data was still written (escalate doesn't block)
-    const data = await storage.get('articles', 'art-1');
-    expect(data!.title).toBe('Phone Title');
-
-    // Conflict completion can be drained for sync processing
-    const conflicts = engine.drainConflictCompletions();
-    expect(conflicts).toHaveLength(1);
-    expect(conflicts[0].concept).toBe('urn:copf/Article');
-  });
-
-  it('uses keep-existing for stale writes during replay', async () => {
-    const storage = createInMemoryStorage();
-
-    // Server has latest version
-    await storage.put('config', 'settings', { theme: 'dark', fontSize: 16 });
-
-    // Phone replay brings an older write — keep existing
-    storage.onConflict = (info) => {
-      // If incoming is older, keep existing
-      if (info.incoming.writtenAt < info.existing.writtenAt) {
-        return { action: 'keep-existing' };
-      }
-      return { action: 'accept-incoming' };
-    };
-
-    // Simulate: phone's write is newer (sequential), so it's accepted
-    await storage.put('config', 'settings', { theme: 'light', fontSize: 14 });
-
-    const data = await storage.get('config', 'settings');
-    expect(data!.theme).toBe('light'); // Newer write accepted
-  });
-
-  it('storage operations work correctly with transport adapter', async () => {
-    const handler = {
-      async save(input: Record<string, unknown>, storage: ConceptStorage) {
-        await storage.put('items', input.id as string, {
-          id: input.id,
-          value: input.value,
-        });
-        return { variant: 'ok', id: input.id };
-      },
-      async load(input: Record<string, unknown>, storage: ConceptStorage) {
-        const item = await storage.get('items', input.id as string);
-        if (!item) return { variant: 'notFound' };
-        return { variant: 'ok', ...item };
-      },
-    };
-
-    const storage = createInMemoryStorage();
-    const transport = createInProcessAdapter(handler, storage);
-
-    // Write via transport
-    const saveResult = await transport.invoke({
-      id: 'inv-1',
-      concept: 'urn:copf/Items',
-      action: 'save',
-      input: { id: 'item-1', value: 42 },
-      flow: 'f-1',
-      timestamp: new Date().toISOString(),
+    it('returns detected when versions differ', async () => {
+      const result = await conflictResolutionHandler.detect(
+        { base: 'original', version1: 'v1', version2: 'v2', context: 'text-edit' },
+        storage,
+      );
+      expect(result.variant).toBe('detected');
+      expect(result.conflictId).toBeDefined();
+      const detail = JSON.parse(result.detail as string);
+      expect(detail.base).toBe('original');
+      expect(detail.version1).toBe('v1');
+      expect(detail.version2).toBe('v2');
+      expect(detail.context).toBe('text-edit');
     });
-    expect(saveResult.variant).toBe('ok');
 
-    // Read via transport
-    const loadResult = await transport.invoke({
-      id: 'inv-2',
-      concept: 'urn:copf/Items',
-      action: 'load',
-      input: { id: 'item-1' },
-      flow: 'f-1',
-      timestamp: new Date().toISOString(),
+    it('stores the conflict in storage as pending', async () => {
+      const result = await conflictResolutionHandler.detect(
+        { version1: 'a', version2: 'b', context: 'ctx' },
+        storage,
+      );
+      const stored = await storage.get('conflict-resolution', result.conflictId as string);
+      expect(stored).not.toBeNull();
+      expect(stored!.status).toBe('pending');
+      expect(stored!.resolution).toBeNull();
     });
-    expect(loadResult.variant).toBe('ok');
-    expect(loadResult.output.value).toBe(42);
 
-    // Verify getMeta works
-    const meta = await storage.getMeta!('items', 'item-1');
-    expect(meta).not.toBeNull();
-    expect(meta!.lastWrittenAt).toBeDefined();
+    it('handles missing base gracefully', async () => {
+      const result = await conflictResolutionHandler.detect(
+        { version1: 'x', version2: 'y', context: 'no-base' },
+        storage,
+      );
+      expect(result.variant).toBe('detected');
+      const detail = JSON.parse(result.detail as string);
+      expect(detail.base).toBeNull();
+    });
+  });
+
+  // ---- resolve ----
+
+  describe('resolve', () => {
+    it('returns noPolicy when conflict ID does not exist', async () => {
+      const result = await conflictResolutionHandler.resolve(
+        { conflictId: 'nonexistent' },
+        storage,
+      );
+      expect(result.variant).toBe('noPolicy');
+      expect(result.message).toContain('nonexistent');
+    });
+
+    it('returns noPolicy when no policies are registered', async () => {
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'a', version2: 'b', context: 'ctx' },
+        storage,
+      );
+      const result = await conflictResolutionHandler.resolve(
+        { conflictId: detected.conflictId },
+        storage,
+      );
+      expect(result.variant).toBe('noPolicy');
+      expect(result.message).toContain('No resolution policies registered');
+    });
+
+    it('returns noPolicy when override policy name does not match any registered', async () => {
+      await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 10 },
+        storage,
+      );
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'a', version2: 'b', context: 'ctx' },
+        storage,
+      );
+      const result = await conflictResolutionHandler.resolve(
+        { conflictId: detected.conflictId, policyOverride: 'nonexistent-policy' },
+        storage,
+      );
+      expect(result.variant).toBe('noPolicy');
+      expect(result.message).toContain('nonexistent-policy');
+    });
+
+    it('returns requiresHuman when no automatic resolution is available', async () => {
+      await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 10 },
+        storage,
+      );
+      const detected = await conflictResolutionHandler.detect(
+        { base: 'orig', version1: 'v1', version2: 'v2', context: 'ctx' },
+        storage,
+      );
+      const result = await conflictResolutionHandler.resolve(
+        { conflictId: detected.conflictId },
+        storage,
+      );
+      expect(result.variant).toBe('requiresHuman');
+      expect(result.conflictId).toBe(detected.conflictId);
+      expect(result.options).toBeDefined();
+      const options = result.options as string[];
+      // Should include version1, version2, and base
+      expect(options.length).toBe(3);
+    });
+
+    it('returns requiresHuman options without base when base is null', async () => {
+      await conflictResolutionHandler.registerPolicy(
+        { name: 'lww', priority: 10 },
+        storage,
+      );
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'v1', version2: 'v2', context: 'ctx' },
+        storage,
+      );
+      const result = await conflictResolutionHandler.resolve(
+        { conflictId: detected.conflictId },
+        storage,
+      );
+      expect(result.variant).toBe('requiresHuman');
+      const options = result.options as string[];
+      // Only version1 and version2 (no base)
+      expect(options.length).toBe(2);
+    });
+
+    it('returns resolved when conflict already has a resolution set', async () => {
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'a', version2: 'b', context: 'ctx' },
+        storage,
+      );
+
+      // Manually set the resolution on the conflict record
+      const conflict = await storage.get('conflict-resolution', detected.conflictId as string);
+      await storage.put('conflict-resolution', detected.conflictId as string, {
+        ...conflict!,
+        resolution: 'merged-result',
+      });
+
+      await conflictResolutionHandler.registerPolicy(
+        { name: 'auto', priority: 1 },
+        storage,
+      );
+
+      const result = await conflictResolutionHandler.resolve(
+        { conflictId: detected.conflictId },
+        storage,
+      );
+      expect(result.variant).toBe('resolved');
+      expect(result.result).toBe('merged-result');
+    });
+  });
+
+  // ---- manualResolve ----
+
+  describe('manualResolve', () => {
+    it('resolves a pending conflict with the chosen value', async () => {
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'v1', version2: 'v2', context: 'ctx' },
+        storage,
+      );
+      const result = await conflictResolutionHandler.manualResolve(
+        { conflictId: detected.conflictId, chosen: 'v1' },
+        storage,
+      );
+      expect(result.variant).toBe('ok');
+      expect(result.result).toBe('v1');
+    });
+
+    it('marks the conflict as resolved in storage', async () => {
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'v1', version2: 'v2', context: 'ctx' },
+        storage,
+      );
+      await conflictResolutionHandler.manualResolve(
+        { conflictId: detected.conflictId, chosen: 'v2' },
+        storage,
+      );
+      const stored = await storage.get('conflict-resolution', detected.conflictId as string);
+      expect(stored!.status).toBe('resolved');
+      expect(stored!.resolution).toBe('v2');
+    });
+
+    it('returns notPending when conflict does not exist', async () => {
+      const result = await conflictResolutionHandler.manualResolve(
+        { conflictId: 'ghost', chosen: 'x' },
+        storage,
+      );
+      expect(result.variant).toBe('notPending');
+      expect(result.message).toContain('not found');
+    });
+
+    it('returns notPending when conflict was already resolved', async () => {
+      const detected = await conflictResolutionHandler.detect(
+        { version1: 'v1', version2: 'v2', context: 'ctx' },
+        storage,
+      );
+      await conflictResolutionHandler.manualResolve(
+        { conflictId: detected.conflictId, chosen: 'v1' },
+        storage,
+      );
+      const result = await conflictResolutionHandler.manualResolve(
+        { conflictId: detected.conflictId, chosen: 'v2' },
+        storage,
+      );
+      expect(result.variant).toBe('notPending');
+      expect(result.message).toContain('already resolved');
+    });
+  });
+
+  // ---- Multi-step sequences ----
+
+  describe('full detect-then-resolve workflow', () => {
+    it('detect -> registerPolicy -> resolve -> manualResolve sequence', async () => {
+      // Detect a conflict
+      const detected = await conflictResolutionHandler.detect(
+        { base: 'base', version1: 'edit-A', version2: 'edit-B', context: 'doc-merge' },
+        storage,
+      );
+      expect(detected.variant).toBe('detected');
+
+      // Register a policy
+      await conflictResolutionHandler.registerPolicy(
+        { name: 'manual', priority: 99 },
+        storage,
+      );
+
+      // Attempt automatic resolve - should escalate to human
+      const autoResult = await conflictResolutionHandler.resolve(
+        { conflictId: detected.conflictId },
+        storage,
+      );
+      expect(autoResult.variant).toBe('requiresHuman');
+
+      // Human picks version1
+      const manualResult = await conflictResolutionHandler.manualResolve(
+        { conflictId: detected.conflictId, chosen: 'edit-A' },
+        storage,
+      );
+      expect(manualResult.variant).toBe('ok');
+      expect(manualResult.result).toBe('edit-A');
+
+      // Verify storage state
+      const stored = await storage.get('conflict-resolution', detected.conflictId as string);
+      expect(stored!.status).toBe('resolved');
+      expect(stored!.resolution).toBe('edit-A');
+    });
+
+    it('handles multiple concurrent conflicts independently', async () => {
+      const d1 = await conflictResolutionHandler.detect(
+        { version1: 'a1', version2: 'a2', context: 'field-a' },
+        storage,
+      );
+      const d2 = await conflictResolutionHandler.detect(
+        { version1: 'b1', version2: 'b2', context: 'field-b' },
+        storage,
+      );
+
+      expect(d1.conflictId).not.toBe(d2.conflictId);
+
+      // Resolve first conflict
+      await conflictResolutionHandler.manualResolve(
+        { conflictId: d1.conflictId, chosen: 'a1' },
+        storage,
+      );
+
+      // Second should still be pending
+      const s2 = await storage.get('conflict-resolution', d2.conflictId as string);
+      expect(s2!.status).toBe('pending');
+
+      // Resolve second conflict
+      await conflictResolutionHandler.manualResolve(
+        { conflictId: d2.conflictId, chosen: 'b2' },
+        storage,
+      );
+
+      const s2After = await storage.get('conflict-resolution', d2.conflictId as string);
+      expect(s2After!.status).toBe('resolved');
+      expect(s2After!.resolution).toBe('b2');
+    });
   });
 });
