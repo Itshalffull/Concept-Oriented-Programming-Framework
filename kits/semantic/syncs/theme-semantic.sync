@@ -1,0 +1,12 @@
+// Extract semantic entities from parsed .theme files.
+// Registers ThemeEntity with palette, typography, motion,
+// elevation, spacing, and radius structures.
+
+sync ThemeSemanticSync [eager]
+when {
+  ThemeParser/parse: [ source: ?source ]
+    => [ theme: ?h; ast: ?ast ]
+}
+then {
+  ThemeEntity/register: [ name: ?h; source: ?file; ast: ?ast ]
+}

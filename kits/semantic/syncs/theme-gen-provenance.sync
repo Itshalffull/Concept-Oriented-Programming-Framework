@@ -1,0 +1,13 @@
+// Record provenance when ThemeGen produces platform outputs.
+// Links theme specs to generated CSS custom properties, DTCG JSON,
+// React Native styles, etc. via FileArtifact and Provenance.
+
+sync ThemeGenProvenanceSync [eager]
+when {
+  ThemeGen/generate: [ target: ?platform; themeAst: ?ast ]
+    => [ output: ?output ]
+}
+then {
+  FileArtifact/setProvenance: [ artifact: ?outputFile; spec: ?themeFile; generator: ?generatorName ]
+  Provenance/record: [ source: ?themeFile; derived: ?outputFile; method: ?generatorName ]
+}

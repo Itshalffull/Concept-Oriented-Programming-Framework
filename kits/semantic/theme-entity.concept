@@ -1,0 +1,109 @@
+@version(1)
+concept ThemeEntity [T] {
+
+  purpose {
+    Queryable representation of a parsed theme spec — token
+    hierarchy, palette, typography, motion, elevation as a
+    traversable structure. Enables token resolution tracing,
+    contrast auditing, and theme change impact analysis.
+  }
+
+  state {
+    themes: set T
+    name: T -> String
+    symbol: T -> String
+    sourceFile: T -> String
+    purposeText: T -> String
+    extendsTheme: T -> String
+    paletteColors: T -> String
+    colorRoles: T -> String
+    typographyStyles: T -> String
+    motionCurves: T -> String
+    elevationLevels: T -> String
+    spacingUnit: T -> String
+    radiusValues: T -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, ast: String) {
+      -> ok(entity: T) {
+        Register a parsed theme spec as a semantic entity.
+        Extracts palette, typography, motion, elevation, spacing,
+        and radius structures from the AST.
+      }
+      -> alreadyRegistered(existing: T) {
+        A theme entity with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(entity: T) {
+        Retrieve a theme entity by name.
+      }
+      -> notfound() {
+        No theme with this name exists.
+      }
+    }
+
+    action resolveToken(theme: T, tokenPath: String) {
+      -> ok(resolvedValue: String, resolutionChain: String) {
+        Resolve a token path to its final value, following
+        reference chains and extends inheritance. Chain as
+        serialized JSON array.
+      }
+      -> notfound(tokenPath: String) {
+        Token path does not exist in this theme.
+      }
+      -> brokenChain(brokenAt: String) {
+        Token reference chain is broken at this point.
+      }
+    }
+
+    action contrastAudit(theme: T) {
+      -> ok(allPassing: String, results: String) {
+        Audit all color role pairings for WCAG contrast ratios.
+        Results as serialized JSON array of { rolePair, ratio,
+        passes }.
+      }
+    }
+
+    action diffThemes(a: T, b: T) {
+      -> ok(differences: String) {
+        Compare two themes token by token. Results as serialized
+        JSON array of { token, aValue, bValue }.
+      }
+      -> same() {
+        The themes are identical.
+      }
+    }
+
+    action affectedWidgets(theme: T, changedToken: String) {
+      -> ok(widgets: String) {
+        Find all widgets whose connect sections reference the
+        changed token. Results as serialized JSON array.
+      }
+    }
+
+    action generatedOutputs(theme: T) {
+      -> ok(outputs: String) {
+        Return all generated files from this theme across
+        platforms (CSS, RN, DTCG JSON, etc.). Results as
+        serialized JSON array of { platform, file }.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
+    then get(name: "light") -> ok(entity: t)
+  }
+
+  invariant {
+    after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
+    then register(name: "light", source: "themes/light.theme", ast: "{}") -> alreadyRegistered(existing: t)
+  }
+}

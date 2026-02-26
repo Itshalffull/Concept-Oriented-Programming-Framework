@@ -1,0 +1,115 @@
+@version(1)
+concept WidgetEntity [W] {
+
+  purpose {
+    Queryable representation of a parsed widget spec — the COIF
+    counterpart to ConceptEntity. Links anatomy, state machines,
+    props, slots, accessibility contracts, affordance declarations,
+    and composition references as a traversable structure.
+  }
+
+  state {
+    widgets: set W
+    name: W -> String
+    symbol: W -> String
+    sourceFile: W -> String
+    purposeText: W -> String
+    version: W -> Int
+    category: W -> String
+    anatomyParts: W -> String
+    states: W -> String
+    props: W -> String
+    slots: W -> String
+    composedWidgets: W -> String
+    affordances: W -> String
+    accessibilityRole: W -> String
+    hasFocusTrap: W -> String
+    keyboardBindings: W -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, ast: String) {
+      -> ok(entity: W) {
+        Register a parsed widget spec as a semantic entity.
+        Extracts anatomy, states, props, slots, accessibility,
+        affordances, and composition from the AST.
+      }
+      -> alreadyRegistered(existing: W) {
+        A widget entity with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(entity: W) {
+        Retrieve a widget entity by name.
+      }
+      -> notfound() {
+        No widget with this name exists.
+      }
+    }
+
+    action findByAffordance(interactor: String) {
+      -> ok(widgets: String) {
+        Return all widgets that declare affordance for the given
+        interactor type. Results as serialized JSON array.
+      }
+    }
+
+    action findComposing(widget: W) {
+      -> ok(parents: String) {
+        Return all widgets that compose this widget.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findComposedBy(widget: W) {
+      -> ok(children: String) {
+        Return all widgets this widget composes.
+        Results as serialized JSON array.
+      }
+    }
+
+    action generatedComponents(widget: W) {
+      -> ok(components: String) {
+        Return all generated framework components for this widget.
+        Results as serialized JSON array of { framework, file }.
+      }
+    }
+
+    action accessibilityAudit(widget: W) {
+      -> ok(report: String) {
+        Audit accessibility completeness: role, keyboard bindings,
+        ARIA attributes, focus management. Report as serialized JSON.
+      }
+      -> incomplete(missing: String) {
+        Accessibility declaration is incomplete. Missing items
+        as serialized JSON array.
+      }
+    }
+
+    action traceToConcept(widget: W) {
+      -> ok(concepts: String) {
+        Trace which COPF concepts this widget can render, via
+        affordance matching and connect bindings. Results as
+        serialized JSON array of { concept, via }.
+      }
+      -> noConceptBinding() {
+        This widget has no bindings to any concept.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
+    then get(name: "dialog") -> ok(entity: w)
+  }
+
+  invariant {
+    after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
+    then register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> alreadyRegistered(existing: w)
+  }
+}

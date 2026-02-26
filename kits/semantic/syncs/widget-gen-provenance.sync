@@ -1,0 +1,14 @@
+// Record provenance when WidgetGen produces framework components.
+// Links widget specs to generated React/Solid/Vue/Svelte components
+// via FileArtifact, Provenance, and generates-component relationships.
+
+sync WidgetGenProvenanceSync [eager]
+when {
+  WidgetGen/generate: [ target: ?framework; widgetAst: ?ast ]
+    => [ output: ?output ]
+}
+then {
+  FileArtifact/setProvenance: [ artifact: ?outputFile; spec: ?widgetFile; generator: ?generatorName ]
+  Provenance/record: [ source: ?widgetFile; derived: ?outputFile; method: ?generatorName ]
+  SymbolRelationship/add: [ source: ?widgetSymbol; target: ?componentSymbol; kind: "generates-component" ]
+}

@@ -1,0 +1,16 @@
+// Track classification of concept state fields to interactor types.
+// When a field is classified at design time, creates a
+// classifies-as SymbolRelationship linking the field to its
+// interactor type.
+
+sync FieldToInteractorSync [eventual]
+when {
+  Interactor/classify: [ fieldType: ?type; constraints: ?constraints ]
+    => [ interactor: ?interactorType; confidence: ?conf ]
+}
+where {
+  StateField: { ?field typeExpr: ?type }
+}
+then {
+  SymbolRelationship/add: [ source: ?fieldSymbol; target: ?interactorSymbol; kind: "classifies-as" ]
+}

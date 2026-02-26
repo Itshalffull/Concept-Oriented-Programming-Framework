@@ -1,0 +1,72 @@
+@version(1)
+concept AnatomyPartEntity [A] {
+
+  purpose {
+    Named part within a widget's anatomy — each carries a semantic
+    role and connects to props via the connect section. Enables
+    tracing from rendered UI elements back to concept state fields
+    and actions.
+  }
+
+  state {
+    parts: set A
+    widget: A -> String
+    name: A -> String
+    symbol: A -> String
+    semanticRole: A -> String
+    required: A -> String
+    description: A -> String
+    connectProps: A -> String
+    ariaAttrs: A -> String
+    boundField: A -> String
+    boundAction: A -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(widget: String, name: String, role: String, required: String) {
+      -> ok(part: A) {
+        Register an anatomy part extracted from a widget spec.
+        Role is one of: container, action, text, overlay, widget.
+      }
+    }
+
+    action findByRole(role: String) {
+      -> ok(parts: String) {
+        Return all anatomy parts with the given semantic role
+        across all widgets. Results as serialized JSON array.
+      }
+    }
+
+    action findBoundToField(field: String) {
+      -> ok(parts: String) {
+        Return all anatomy parts that present the given concept
+        state field. Results as serialized JSON array.
+      }
+    }
+
+    action findBoundToAction(action: String) {
+      -> ok(parts: String) {
+        Return all anatomy parts that trigger the given concept
+        action. Results as serialized JSON array.
+      }
+    }
+
+    action get(part: A) {
+      -> ok(part: A, widget: String, name: String, semanticRole: String, required: String) {
+        Retrieve anatomy part metadata.
+      }
+      -> notfound() {
+        Part does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(widget: "dialog", name: "root", role: "container", required: "true") -> ok(part: a)
+    then get(part: a) -> ok(part: a, widget: "dialog", name: "root", semanticRole: "container", required: "true")
+  }
+}

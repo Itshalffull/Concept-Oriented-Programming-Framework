@@ -1,0 +1,15 @@
+// Extract semantic entities from parsed .widget files.
+// Registers WidgetEntity, AnatomyPartEntity, WidgetStateEntity,
+// and WidgetPropEntity for each widget spec.
+
+sync WidgetSemanticSync [eager]
+when {
+  WidgetParser/parse: [ source: ?source ]
+    => [ widget: ?w; ast: ?ast ]
+}
+then {
+  WidgetEntity/register: [ name: ?w; source: ?file; ast: ?ast ]
+  AnatomyPartEntity/register: [ widget: ?entity; name: ?part; role: ?role; required: ?req ]
+  WidgetStateEntity/register: [ widget: ?entity; name: ?state; initial: ?init ]
+  WidgetPropEntity/register: [ widget: ?entity; name: ?prop; typeExpr: ?type; defaultValue: ?default ]
+}

@@ -1,0 +1,63 @@
+@version(1)
+concept WidgetPropEntity [P] {
+
+  purpose {
+    A declared prop on a widget — typed, with default value,
+    connected to anatomy parts and ultimately to concept state
+    fields via Binding. Enables tracing from concept fields
+    through props to rendered anatomy parts.
+  }
+
+  state {
+    props: set P
+    widget: P -> String
+    name: P -> String
+    symbol: P -> String
+    typeExpr: P -> String
+    defaultValue: P -> String
+    connectedParts: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(widget: String, name: String, typeExpr: String, defaultValue: String) {
+      -> ok(prop: P) {
+        Register a prop extracted from a widget spec.
+      }
+    }
+
+    action findByWidget(widget: String) {
+      -> ok(props: String) {
+        Return all props for the given widget.
+        Results as serialized JSON array.
+      }
+    }
+
+    action traceToField(prop: P) {
+      -> ok(field: String, concept: String, viaBinding: String) {
+        Trace this prop back to the concept state field it
+        is bound to, via the Binding concept.
+      }
+      -> noBinding() {
+        This prop is not bound to any concept field.
+      }
+    }
+
+    action get(prop: P) {
+      -> ok(prop: P, widget: String, name: String, typeExpr: String, defaultValue: String) {
+        Retrieve prop metadata.
+      }
+      -> notfound() {
+        Prop does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true") -> ok(prop: p)
+    then get(prop: p) -> ok(prop: p, widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true")
+  }
+}

@@ -1,0 +1,80 @@
+@version(1)
+concept WidgetStateEntity [S] {
+
+  purpose {
+    A state in a widget's finite state machine, with transitions,
+    entry/exit actions, and guards. Enables static analysis of
+    widget behavior — reachability, dead states, unhandled events.
+  }
+
+  state {
+    statesSet: set S
+    widget: S -> String
+    name: S -> String
+    symbol: S -> String
+    initial: S -> String
+    transitions: S -> String
+    entryActions: S -> String
+    exitActions: S -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(widget: String, name: String, initial: String) {
+      -> ok(widgetState: S) {
+        Register a state extracted from a widget spec's FSM.
+        Initial is "true" or "false".
+      }
+    }
+
+    action findByWidget(widget: String) {
+      -> ok(states: String) {
+        Return all states for the given widget.
+        Results as serialized JSON array.
+      }
+    }
+
+    action reachableFrom(widgetState: S) {
+      -> ok(reachable: String, via: String) {
+        Compute all states reachable from this state via
+        transitions. Results as serialized JSON.
+      }
+    }
+
+    action unreachableStates(widget: String) {
+      -> ok(unreachable: String) {
+        Find states in this widget's FSM that no transition
+        leads to (dead states). Results as serialized JSON array.
+      }
+    }
+
+    action traceEvent(widget: String, event: String) {
+      -> ok(paths: String) {
+        Trace how an event is handled across all states in
+        the widget. Results as serialized JSON array of
+        { from, to, guard }.
+      }
+      -> unhandled(inStates: String) {
+        States where this event has no transition.
+        Results as serialized JSON array.
+      }
+    }
+
+    action get(widgetState: S) {
+      -> ok(widgetState: S, widget: String, name: String, initial: String, transitionCount: Int) {
+        Retrieve widget state metadata.
+      }
+      -> notfound() {
+        State does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(widget: "dialog", name: "closed", initial: "true") -> ok(widgetState: s)
+    then get(widgetState: s) -> ok(widgetState: s, widget: "dialog", name: "closed", initial: "true", transitionCount: _)
+  }
+}

@@ -1,0 +1,18 @@
+// Analyze connect section bindings in widget specs.
+// When a widget is registered, inspects its connect mappings
+// to establish presents and triggers relationships between
+// anatomy parts and concept state fields or actions.
+
+sync ConnectMappingAnalysisSync [eventual]
+when {
+  WidgetEntity/register: [ name: ?name; source: ?source; ast: ?ast ]
+    => [ entity: ?widget ]
+}
+where {
+  AnatomyPartEntity: { ?part widget: ?widget; connectProps: ?connect }
+  WidgetPropEntity: { ?prop widget: ?widget }
+}
+then {
+  SymbolRelationship/add: [ source: ?partSymbol; target: ?fieldSymbol; kind: "presents" ]
+  SymbolRelationship/add: [ source: ?partSymbol; target: ?actionSymbol; kind: "triggers" ]
+}

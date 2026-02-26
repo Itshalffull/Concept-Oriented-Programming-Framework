@@ -1,0 +1,79 @@
+@version(1)
+concept InteractorEntity [I] {
+
+  purpose {
+    Queryable representation of a registered interactor type —
+    the abstract interaction taxonomy as a traversable node.
+    Enables queries like "what fields classify as this interactor?"
+    and "what widgets match this interactor in a given context?"
+  }
+
+  state {
+    interactors: set I
+    name: I -> String
+    symbol: I -> String
+    category: I -> String
+    properties: I -> String
+    classificationRules: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, category: String, properties: String) {
+      -> ok(entity: I) {
+        Register an interactor type with its classification
+        properties (dataType, cardinality, optionCount, etc.
+        as serialized JSON).
+      }
+    }
+
+    action findByCategory(category: String) {
+      -> ok(interactors: String) {
+        Return all interactors in the given category.
+        Results as serialized JSON array.
+      }
+    }
+
+    action matchingWidgets(interactor: I, context: String) {
+      -> ok(widgets: String) {
+        Find widgets that satisfy this interactor's affordance
+        requirements in the given context. Results as serialized
+        JSON array of { widget, affordanceSpecificity, conditionsMet }.
+      }
+    }
+
+    action classifiedFields(interactor: I) {
+      -> ok(fields: String) {
+        Find all concept state fields that classify as this
+        interactor type. Results as serialized JSON array of
+        { concept, field, confidence }.
+      }
+    }
+
+    action coverageReport() {
+      -> ok(report: String) {
+        Generate an affordance coverage report across all
+        interactors — which have matching widgets and which
+        have gaps for certain contexts. Results as serialized
+        JSON array of { interactor, widgetCount, uncoveredContexts }.
+      }
+    }
+
+    action get(interactor: I) {
+      -> ok(interactor: I, name: String, category: String, properties: String) {
+        Retrieve interactor entity metadata.
+      }
+      -> notfound() {
+        Interactor does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "single-choice", category: "selection", properties: "{}") -> ok(entity: i)
+    then get(interactor: i) -> ok(interactor: i, name: "single-choice", category: "selection", properties: "{}")
+  }
+}

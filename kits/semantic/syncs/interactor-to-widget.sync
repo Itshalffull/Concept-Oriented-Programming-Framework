@@ -1,0 +1,13 @@
+// Track resolution of interactor types to widgets.
+// When the WidgetResolver selects a widget for an element,
+// creates a resolves-to SymbolRelationship linking the
+// interactor to the resolved widget.
+
+sync InteractorToWidgetSync [eventual]
+when {
+  WidgetResolver/resolve: [ element: ?element ]
+    => [ widget: ?widgetName; score: ?score; reason: ?reason ]
+}
+then {
+  SymbolRelationship/add: [ source: ?interactorSymbol; target: ?widgetSymbol; kind: "resolves-to" ]
+}
