@@ -1474,9 +1474,9 @@ workflows:
       - name: dev-workflow
         description: "Start the dev server for the new project"
 
-  # ─── KitManager: kit-lifecycle ─────────────────────
+  # ─── SuiteManager: kit-lifecycle ─────────────────────
   kit-lifecycle:
-    concept: KitManager
+    concept: SuiteManager
     steps:
       - action: init
         title: "Create Kit"
@@ -1782,9 +1782,9 @@ workflows:
         description: "Debug flows generated during dev server sessions"
       - name: cache-build
         description: "Pre-compile for production after dev iteration"
-  # ─── KitScaffoldGen: suite-scaffold ──────────────────
+  # ─── SuiteScaffoldGen: suite-scaffold ──────────────────
   suite-scaffold:
-    concept: KitScaffoldGen
+    concept: SuiteScaffoldGen
     steps:
       - action: register
         title: "Register Generator"
@@ -3065,9 +3065,9 @@ workflows:
             }
           }
 
-  # ─── CoifComponentScaffoldGen: surface-component-scaffold ─
+  # ─── SurfaceComponentScaffoldGen: surface-component-scaffold ─
   surface-component-scaffold:
-    concept: CoifComponentScaffoldGen
+    concept: SurfaceComponentScaffoldGen
     steps:
       - action: register
         title: "Register Generator"
@@ -3249,9 +3249,9 @@ workflows:
             }
           }
 
-  # ─── CoifThemeScaffoldGen: surface-theme-scaffold ─────
+  # ─── SurfaceThemeScaffoldGen: surface-theme-scaffold ─────
   surface-theme-scaffold:
-    concept: CoifThemeScaffoldGen
+    concept: SurfaceThemeScaffoldGen
     steps:
       - action: register
         title: "Register Generator"
@@ -4099,7 +4099,7 @@ annotations:
           language: bash
           code: "clef dev stop"
 
-  KitManager:
+  SuiteManager:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
@@ -4196,7 +4196,7 @@ annotations:
         - label: "Check sync overrides"
           language: bash
           code: "clef suite check-overrides ./kits/my-kit"
-  KitScaffoldGen:
+  SuiteScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <suite-name>"
@@ -4277,7 +4277,7 @@ annotations:
           language: typescript
           code: |
             const result = await kitScaffoldGenHandler.register({}, storage);
-            // { variant: 'ok', name: 'KitScaffoldGen', inputKind: 'KitConfig', ... }
+            // { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'KitConfig', ... }
     generate:
       examples:
         - label: "Generate a basic kit"
@@ -4868,7 +4868,7 @@ annotations:
         - path: references/transport-adapter-guide.md
           label: "Transport adapter implementation guide"
 
-  CoifComponentScaffoldGen:
+  SurfaceComponentScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <ComponentName>"
@@ -4963,7 +4963,7 @@ annotations:
         - path: references/surface-component-guide.md
           label: "Clef Surface headless component architecture"
 
-  CoifThemeScaffoldGen:
+  SurfaceThemeScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <theme-name>"
@@ -5093,7 +5093,7 @@ concept-overrides:
             name:
               positional: true
 
-  KitManager:
+  SuiteManager:
     cli:
       actions:
         init:
@@ -5108,7 +5108,7 @@ concept-overrides:
           params:
             path:
               positional: true
-  KitScaffoldGen:
+  SuiteScaffoldGen:
     cli:
       command-group: scaffold
       subcommand: kit
@@ -5555,7 +5555,7 @@ concept-overrides:
             - description: "Generate an in-process adapter for tests"
               command: "clef scaffold transport --name TestTransport --protocol in-process"
 
-  CoifComponentScaffoldGen:
+  SurfaceComponentScaffoldGen:
     cli:
       command-group: scaffold
       subcommand: component
@@ -5624,7 +5624,7 @@ concept-overrides:
             - description: "Generate with slots"
               command: "clef scaffold component --name Card --parts root,header,body,footer --slots header,footer"
 
-  CoifThemeScaffoldGen:
+  SurfaceThemeScaffoldGen:
     cli:
       command-group: scaffold
       subcommand: theme

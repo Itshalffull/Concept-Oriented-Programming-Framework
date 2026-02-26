@@ -1,8 +1,8 @@
-# Register CoifThemeScaffoldGen with PluginRegistry
+# Register SurfaceThemeScaffoldGen with PluginRegistry
 
-sync RegisterCoifThemeScaffoldGen [eager]
+sync RegisterSurfaceThemeScaffoldGen [eager]
 when {
-  CoifThemeScaffoldGen/register: []
+  SurfaceThemeScaffoldGen/register: []
     => [ name: ?name; inputKind: ?inputKind; outputKind: ?outputKind; capabilities: ?caps ]
 }
 then {
@@ -13,7 +13,7 @@ then {
       name: ?name;
       inputKind: ?inputKind;
       outputKind: ?outputKind;
-      concept: "CoifThemeScaffoldGen";
+      concept: "SurfaceThemeScaffoldGen";
       action: "generate";
       capabilities: ?caps
     }

@@ -16,7 +16,7 @@ where {
   bind(?meta.outputKind as ?outputKind)
   bind(?meta.concept as ?concept)
   any(
-    ?concept = "KitScaffoldGen";
+    ?concept = "SuiteScaffoldGen";
     ?concept = "DeployScaffoldGen";
     ?concept = "InterfaceScaffoldGen";
     ?concept = "ConceptScaffoldGen";
@@ -24,8 +24,8 @@ where {
     ?concept = "HandlerScaffoldGen";
     ?concept = "StorageAdapterScaffoldGen";
     ?concept = "TransportAdapterScaffoldGen";
-    ?concept = "CoifComponentScaffoldGen";
-    ?concept = "CoifThemeScaffoldGen"
+    ?concept = "SurfaceComponentScaffoldGen";
+    ?concept = "SurfaceThemeScaffoldGen"
   )
 }
 then {

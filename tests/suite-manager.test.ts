@@ -151,20 +151,20 @@ describe('SuiteManager', () => {
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.kits).toEqual([]);
+      expect(result.suites).toEqual([]);
     });
 
-    it('lists all initialized kits', async () => {
+    it('lists all initialized suites', async () => {
       await suiteManagerHandler.init!({ name: 'kit-a' }, storage);
       await suiteManagerHandler.init!({ name: 'kit-b' }, storage);
       await suiteManagerHandler.init!({ name: 'kit-c' }, storage);
 
       const result = await suiteManagerHandler.list!({}, storage);
       expect(result.variant).toBe('ok');
-      expect((result.kits as string[]).length).toBe(3);
-      expect(result.kits).toContain('kit-a');
-      expect(result.kits).toContain('kit-b');
-      expect(result.kits).toContain('kit-c');
+      expect((result.suites as string[]).length).toBe(3);
+      expect(result.suites).toContain('kit-a');
+      expect(result.suites).toContain('kit-b');
+      expect(result.suites).toContain('kit-c');
     });
   });
 

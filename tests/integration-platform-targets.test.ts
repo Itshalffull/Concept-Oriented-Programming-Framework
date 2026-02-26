@@ -17,7 +17,7 @@ import { desktopadapterHandler } from '../generated/surface/typescript/desktopad
 import { watchadapterHandler } from '../generated/surface/typescript/watchadapter.impl.js';
 import { terminaladapterHandler } from '../generated/surface/typescript/terminaladapter.impl.js';
 
-const Clef Surface_APP_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-app');
+const SURFACE_APP_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-app');
 
 // All platform adapter concepts
 const platformAdapters = [
@@ -44,7 +44,7 @@ const handlers: Record<string, { normalize: (input: Record<string, unknown>, sto
 describe('Platform Target Integration — Concept File Structure', () => {
   for (const adapter of platformAdapters) {
     it(`${adapter.displayName} concept file exists and has correct structure`, () => {
-      const path = resolve(Clef Surface_APP_DIR, `${adapter.name}.concept`);
+      const path = resolve(SURFACE_APP_DIR, `${adapter.name}.concept`);
       expect(existsSync(path)).toBe(true);
 
       const source = readFileSync(path, 'utf-8');
@@ -60,7 +60,7 @@ describe('Platform Target Integration — Concept File Structure', () => {
 
   it('all platform adapter concepts have identical action signatures', () => {
     for (const adapter of platformAdapters) {
-      const source = readFileSync(resolve(Clef Surface_APP_DIR, `${adapter.name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_APP_DIR, `${adapter.name}.concept`), 'utf-8');
       expect(source).toContain('action normalize(adapter: A, props: String)');
       expect(source).toContain('-> ok(adapter: A, normalized: String)');
       expect(source).toContain('-> error(message: String)');
@@ -69,7 +69,7 @@ describe('Platform Target Integration — Concept File Structure', () => {
 
   it('all platform adapter concepts have a type parameter [A]', () => {
     for (const adapter of platformAdapters) {
-      const source = readFileSync(resolve(Clef Surface_APP_DIR, `${adapter.name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_APP_DIR, `${adapter.name}.concept`), 'utf-8');
       expect(source).toMatch(/concept \w+Adapter \[A\]/);
     }
   });
@@ -585,7 +585,7 @@ describe('Platform Target Integration — Unknown Type Passthrough', () => {
 // ============================================================
 
 describe('Platform Target Integration — Platform Pipeline Syncs', () => {
-  const recommendedSyncDir = resolve(Clef Surface_APP_DIR, 'syncs', 'recommended');
+  const recommendedSyncDir = resolve(SURFACE_APP_DIR, 'syncs', 'recommended');
   const navigatorToPlatformPath = resolve(recommendedSyncDir, 'navigator-to-platform.sync');
   const platformEventToNavigatorPath = resolve(recommendedSyncDir, 'platform-event-to-navigator.sync');
 

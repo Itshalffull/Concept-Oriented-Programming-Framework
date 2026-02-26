@@ -589,7 +589,7 @@ describe('Conduit Example App — All Framework Adapters', () => {
 
   it('adapter pipeline sync file references all 6 frameworks', () => {
     const source = readFileSync(
-      resolve(__dirname, '..', 'surface', 'kits', 'surface-render', 'syncs', 'adapter-pipeline.sync'),
+      resolve(__dirname, '..', 'surface', 'suites', 'surface-render', 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     for (const fw of FRAMEWORKS) {

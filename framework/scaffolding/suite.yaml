@@ -11,7 +11,7 @@ suite:
     so the generation suite's KindSystem can track scaffold outputs.
 
 concepts:
-  KitScaffoldGen:
+  SuiteScaffoldGen:
     spec: ../../specs/framework/suite-scaffold-gen.concept
     params:
       K: { as: kit-config-ref, description: "Reference to a suite configuration" }
@@ -51,12 +51,12 @@ concepts:
     params:
       T: { as: transport-config-ref, description: "Reference to a transport adapter configuration" }
 
-  CoifComponentScaffoldGen:
+  SurfaceComponentScaffoldGen:
     spec: ../../specs/framework/surface-component-scaffold-gen.concept
     params:
       W: { as: component-config-ref, description: "Reference to a Clef Surface component configuration" }
 
-  CoifThemeScaffoldGen:
+  SurfaceThemeScaffoldGen:
     spec: ../../specs/framework/surface-theme-scaffold-gen.concept
     params:
       X: { as: theme-config-ref, description: "Reference to a Clef Surface theme configuration" }
@@ -65,7 +65,7 @@ syncs:
   required:
     # Registration syncs — each generator self-registers with PluginRegistry
     - path: ./syncs/registration/register-suite-scaffold-gen.sync
-      description: "KitScaffoldGen/register → PluginRegistry/register"
+      description: "SuiteScaffoldGen/register → PluginRegistry/register"
 
     - path: ./syncs/registration/register-deploy-scaffold-gen.sync
       description: "DeployScaffoldGen/register → PluginRegistry/register"
@@ -89,10 +89,10 @@ syncs:
       description: "TransportAdapterScaffoldGen/register → PluginRegistry/register"
 
     - path: ./syncs/registration/register-surface-component-scaffold-gen.sync
-      description: "CoifComponentScaffoldGen/register → PluginRegistry/register"
+      description: "SurfaceComponentScaffoldGen/register → PluginRegistry/register"
 
     - path: ./syncs/registration/register-surface-theme-scaffold-gen.sync
-      description: "CoifThemeScaffoldGen/register → PluginRegistry/register"
+      description: "SurfaceThemeScaffoldGen/register → PluginRegistry/register"
 
     # KindSystem syncs — auto-define scaffold output kinds and edges
     - path: ./syncs/ensure-scaffold-kinds-defined.sync
