@@ -14,7 +14,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { testSelectionHandler } from '../../implementations/typescript/test-selection.impl.js';
+import { testSelectionHandler } from '../../../../handlers/ts/framework/test/test-selection.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 /**

@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { generationPlanHandler } from '../../implementations/typescript/generation-plan.impl.js';
+import { generationPlanHandler } from '../../../../handlers/ts/framework/generation/generation-plan.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('GenerationPlan conformance', () => {

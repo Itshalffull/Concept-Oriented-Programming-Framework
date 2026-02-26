@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { kindSystemHandler } from '../../implementations/typescript/kind-system.impl.js';
+import { kindSystemHandler } from '../../../../handlers/ts/framework/generation/kind-system.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('KindSystem conformance', () => {

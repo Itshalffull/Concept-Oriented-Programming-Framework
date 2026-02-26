@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { resourceHandler } from '../../implementations/typescript/resource.impl.js';
+import { resourceHandler } from '../../../../handlers/ts/framework/generation/resource.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Resource conformance', () => {

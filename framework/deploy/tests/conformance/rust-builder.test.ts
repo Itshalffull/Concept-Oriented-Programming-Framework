@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { rustBuilderHandler } from '../../../../implementations/typescript/deploy/rust-builder.impl.js';
+import { rustBuilderHandler } from '../../../../handlers/ts/deploy/rust-builder.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('RustBuilder conformance', () => {

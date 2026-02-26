@@ -36,10 +36,10 @@ import { solidityGenHandler } from '../../../handlers/ts/framework/solidity-gen.
 import { handlerGenHandler } from '../../../handlers/ts/framework/handler-gen.handler.js';
 import { nextjsGenHandler } from '../../../handlers/ts/framework/nextjs-gen.handler.js';
 import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.js';
-import { buildCacheHandler } from '../../../../kits/generation/handlers/ts/build-cache.handler.js';
-import { generationPlanHandler } from '../../../../kits/generation/handlers/ts/generation-plan.handler.js';
-import { resourceHandler } from '../../../../kits/generation/handlers/ts/resource.handler.js';
-import { kindSystemHandler } from '../../../../kits/generation/handlers/ts/kind-system.handler.js';
+import { buildCacheHandler } from '../../../handlers/ts/framework/generation/build-cache.handler.js';
+import { generationPlanHandler } from '../../../handlers/ts/framework/generation/generation-plan.handler.js';
+import { resourceHandler } from '../../../handlers/ts/framework/generation/resource.handler.js';
+import { kindSystemHandler } from '../../../handlers/ts/framework/generation/kind-system.handler.js';
 import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../runtime/types.js';
 import { findFiles } from '../util.js';
 

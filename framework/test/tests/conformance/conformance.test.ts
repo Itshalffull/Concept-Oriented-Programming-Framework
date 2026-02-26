@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { conformanceHandler } from '../../implementations/typescript/conformance.impl.js';
+import { conformanceHandler } from '../../../../handlers/ts/framework/test/conformance.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Conformance conformance', () => {

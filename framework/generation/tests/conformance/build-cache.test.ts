@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
+import { buildCacheHandler } from '../../../../handlers/ts/framework/generation/build-cache.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('BuildCache conformance', () => {

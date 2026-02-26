@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { contractTestHandler } from '../../implementations/typescript/contract-test.impl.js';
+import { contractTestHandler } from '../../../../handlers/ts/framework/test/contract-test.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('ContractTest conformance', () => {

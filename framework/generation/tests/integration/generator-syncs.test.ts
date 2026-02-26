@@ -18,7 +18,7 @@ import {
   generateFrameworkSyncs,
   generateInterfaceSyncs,
   INTERFACE_TARGET_META,
-} from '../../../../tools/clef-cli/src/commands/generate.js';
+} from '../../../../cli/src/commands/generate.js';
 import { createInMemoryStorage } from '../../../../runtime/index.js';
 
 let tempDir: string;
@@ -187,12 +187,12 @@ describe('Interface target provider sync auto-generation', () => {
 });
 
 // ============================================================
-// Full coverage: all 14 interface providers
+// Full coverage: all 16 interface providers
 // ============================================================
 
 describe('All interface providers produce valid sync files', () => {
-  it('generates syncs for all 14 interface target providers', async () => {
-    expect(INTERFACE_TARGET_META).toHaveLength(14);
+  it('generates syncs for all 16 interface target providers', async () => {
+    expect(INTERFACE_TARGET_META).toHaveLength(16);
 
     let totalFiles = 0;
     for (const meta of INTERFACE_TARGET_META) {
@@ -200,11 +200,11 @@ describe('All interface providers produce valid sync files', () => {
       totalFiles += count;
     }
 
-    // 14 providers × 5 syncs each = 70 files
-    expect(totalFiles).toBe(70);
+    // 16 providers × 5 syncs each = 80 files
+    expect(totalFiles).toBe(80);
 
     const allFiles = readdirSync(tempDir);
-    expect(allFiles).toHaveLength(70);
+    expect(allFiles).toHaveLength(80);
   });
 
   it('covers all three provider categories', () => {
@@ -212,8 +212,8 @@ describe('All interface providers produce valid sync files', () => {
     const sdks = INTERFACE_TARGET_META.filter(m => m.category === 'sdk');
     const specs = INTERFACE_TARGET_META.filter(m => m.category === 'spec');
 
-    expect(targets).toHaveLength(6);
-    expect(sdks).toHaveLength(6);
+    expect(targets).toHaveLength(7);
+    expect(sdks).toHaveLength(7);
     expect(specs).toHaveLength(2);
   });
 
