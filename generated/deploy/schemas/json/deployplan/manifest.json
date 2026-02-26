@@ -89,7 +89,7 @@
           "optional": false
         },
         {
-          "name": "kitName",
+          "name": "suiteName",
           "type": {
             "kind": "primitive",
             "primitive": "String"
@@ -799,7 +799,7 @@
       ]
     }
   ],
-  "graphqlSchema": "type DeployPlanState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DeployPlanEntry {\n  d: ID!\n  nodes: [JSON!]!\n  edges: [JSON!]!\n  kitName: String!\n  kitVersion: String!\n  environment: String!\n  createdAt: String!\n  strategy: String!\n  currentPhase: String!\n  completedNodes: [String!]!\n  failedNodes: [String!]!\n  rollbackStack: [String!]!\n}\n\nextend type Query {\n  deployplan_entry(d: ID!): DeployPlanEntry\n  deployplan_entries: [DeployPlanEntry!]!\n}\n\ntype DeployPlanPlans {\n  d: ID!\n  value: ID!\n}",
+  "graphqlSchema": "type DeployPlanState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DeployPlanEntry {\n  d: ID!\n  nodes: [JSON!]!\n  edges: [JSON!]!\n  suiteName: String!\n  kitVersion: String!\n  environment: String!\n  createdAt: String!\n  strategy: String!\n  currentPhase: String!\n  completedNodes: [String!]!\n  failedNodes: [String!]!\n  rollbackStack: [String!]!\n}\n\nextend type Query {\n  deployplan_entry(d: ID!): DeployPlanEntry\n  deployplan_entries: [DeployPlanEntry!]!\n}\n\ntype DeployPlanPlans {\n  d: ID!\n  value: ID!\n}",
   "jsonSchemas": {
     "invocations": {
       "plan": {

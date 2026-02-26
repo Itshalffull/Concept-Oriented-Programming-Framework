@@ -277,4 +277,4 @@ See [templates/storage-scaffold.md](templates/storage-scaffold.md) for copy-past
 | `/create-transport-adapter` | Write the transport adapter that delivers actions to concepts |
 | `/create-implementation` | Write the concept handler that uses this storage |
 | `/configure-deployment` | Wire this storage into a deployment manifest |
-| `/create-concept-kit` | Bundle this storage into a domain suite's infrastructure |
+| `/create-suite` | Bundle this storage into a domain suite's infrastructure |

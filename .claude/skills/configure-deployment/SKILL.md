@@ -285,5 +285,5 @@ See [templates/deployment-scaffold.md](templates/deployment-scaffold.md) for cop
 |-------|------------|
 | `/create-transport-adapter` | Write custom transport adapters referenced in the manifest |
 | `/create-storage-adapter` | Write custom storage backends referenced in the manifest |
-| `/create-concept-kit` | Create suites whose deploy templates this manifest can use |
+| `/create-suite` | Create suites whose deploy templates this manifest can use |
 | `/create-implementation` | Write implementations assigned to runtimes in the manifest |

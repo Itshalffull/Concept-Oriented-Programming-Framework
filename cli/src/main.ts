@@ -78,7 +78,7 @@ async function runBootstrapCommand(
       break;
     }
     case 'kit': {
-      const { kitCommand } = await import('./commands/kit.js');
+      const { kitCommand } = await import('./commands/suite.js');
       await kitCommand(positional, flags);
       break;
     }

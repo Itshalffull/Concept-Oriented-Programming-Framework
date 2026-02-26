@@ -239,4 +239,4 @@ See [templates/adapter-scaffold.md](templates/adapter-scaffold.md) for copy-past
 | `/create-storage-adapter` | Write the storage backend that persists concept state |
 | `/create-implementation` | Write the concept handler this transport delivers actions to |
 | `/configure-deployment` | Wire this transport into a deployment manifest |
-| `/create-concept-kit` | Bundle this transport into a domain suite's infrastructure |
+| `/create-suite` | Bundle this transport into a domain suite's infrastructure |

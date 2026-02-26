@@ -501,115 +501,115 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- clef suite <sub> → kit-manager <sub> ----
+  // ---- clef suite <sub> → suite-manager <sub> ----
 
   describe('kit → SuiteManager parity', () => {
-    it('generated group "kit-manager" exists', () => {
-      expect(generatedCommands.has('kit-manager')).toBe(true);
+    it('generated group "suite-manager" exists', () => {
+      expect(generatedCommands.has('suite-manager')).toBe(true);
     });
 
     it('has exactly 5 subcommands matching handmade kit subcommands', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       expect(cmd.subcommands.length).toBe(5);
     });
 
     it('has all 5 subcommand names: init, validate, test, list, check-overrides', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const names = cmd.subcommands.map(s => s.name).sort();
       expect(names).toEqual(['check-overrides', 'init', 'list', 'test', 'validate']);
     });
 
     // ---- suite init <name> ----
     it('init: has positional "name" arg (via concept-override)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'init')!;
       expect(sub.positionalArgs).toContain('name');
     });
 
     it('init: "name" is NOT a required option (must be positional)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'init')!;
       expect(sub.requiredOptions).not.toContain('name');
     });
 
     it('init: has --json flag', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'init')!;
       expect(sub.hasJsonFlag).toBe(true);
     });
 
     it('init: has no extra required options', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'init')!;
       expect(sub.requiredOptions).toEqual([]);
     });
 
     // ---- suite validate <path> ----
     it('validate: has positional "path" arg (via concept-override)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'validate')!;
       expect(sub.positionalArgs).toContain('path');
     });
 
     it('validate: "path" is NOT a required option (must be positional)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'validate')!;
       expect(sub.requiredOptions).not.toContain('path');
     });
 
     it('validate: has --json flag', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'validate')!;
       expect(sub.hasJsonFlag).toBe(true);
     });
 
     // ---- suite test <path> ----
     it('test: has positional "path" arg (via concept-override)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'test')!;
       expect(sub.positionalArgs).toContain('path');
     });
 
     it('test: "path" is NOT a required option (must be positional)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'test')!;
       expect(sub.requiredOptions).not.toContain('path');
     });
 
     it('test: has --json flag', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'test')!;
       expect(sub.hasJsonFlag).toBe(true);
     });
 
     // ---- suite list ----
     it('list: has no positional args (handmade has none)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'list')!;
       expect(sub.positionalArgs).toEqual([]);
     });
 
     it('list: has no required options (handmade has none)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'list')!;
       expect(sub.requiredOptions).toEqual([]);
     });
 
     it('list: has --json flag', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'list')!;
       expect(sub.hasJsonFlag).toBe(true);
     });
 
     // ---- suite check-overrides ----
     it('check-overrides: has --json flag', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'check-overrides')!;
       expect(sub.hasJsonFlag).toBe(true);
     });
 
     it('check-overrides: has --path as required option (concept spec param)', () => {
-      const cmd = generatedCommands.get('kit-manager')!;
+      const cmd = generatedCommands.get('suite-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'check-overrides')!;
       expect(sub.requiredOptions).toContain('path');
     });
@@ -786,7 +786,7 @@ describe('CLI Generation Regression', () => {
       DevServer: 'dev-server',
       DeploymentValidator: 'deployment-validator',
       FlowTrace: 'flow-trace',
-      SuiteManager: 'kit-manager',
+      SuiteManager: 'suite-manager',
     };
 
     it('generated CLI has a command group for each successfully parsed concept in manifest', () => {

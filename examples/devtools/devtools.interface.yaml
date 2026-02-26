@@ -35,10 +35,10 @@ concepts:
   - specs/framework/deployment-validator.concept
   - specs/framework/project-scaffold.concept
   - specs/framework/dev-server.concept
-  - specs/framework/kit-manager.concept
+  - specs/framework/suite-manager.concept
   # (Generation and deploy kit concepts removed during restructure)
   # Scaffold generator concepts
-  - specs/framework/kit-scaffold-gen.concept
+  - specs/framework/suite-scaffold-gen.concept
   - specs/framework/deploy-scaffold-gen.concept
   - specs/framework/interface-scaffold-gen.concept
   - specs/framework/concept-scaffold-gen.concept
@@ -1518,7 +1518,7 @@ workflows:
       - title: "Required vs Recommended Syncs"
         rule: "Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites."
     references:
-      - path: references/kit-structure.md
+      - path: references/suite-structure.md
         label: "Kit manifest and directory structure"
         tier: reference
         content: |
@@ -1584,7 +1584,7 @@ workflows:
           Kit syncs wire concepts *within* the suite. Application syncs
           wire *across* suites. Applications can override recommended
           and integration syncs but not required syncs.
-      - path: references/kit-publishing.md
+      - path: references/suite-publishing.md
         label: "Publishing and versioning kits"
         tier: reference
         content: |
@@ -1782,8 +1782,8 @@ workflows:
         description: "Debug flows generated during dev server sessions"
       - name: cache-build
         description: "Pre-compile for production after dev iteration"
-  # ─── KitScaffoldGen: kit-scaffold ──────────────────
-  kit-scaffold:
+  # ─── KitScaffoldGen: suite-scaffold ──────────────────
+  suite-scaffold:
     concept: KitScaffoldGen
     steps:
       - action: register
@@ -1794,7 +1794,7 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Suite Manifest"
-        prose: "Generate a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: kit-scaffold-emit.sync routes files through Emitter, kit-scaffold-record-cache.sync records output in BuildCache, and kit-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: suite-scaffold-emit.sync routes files through Emitter, suite-scaffold-record-cache.sync records output in BuildCache, and suite-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Kit name is kebab-case?"
@@ -1814,7 +1814,7 @@ workflows:
       - title: "Sync Tier Discipline"
         rule: "Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external suites. Never promote a recommended sync to required without justification."
     references:
-      - path: references/kit-manifest-schema.md
+      - path: references/suite-manifest-schema.md
         label: "Kit manifest (suite.yaml) schema reference"
         tier: reference
         content: |
@@ -2139,7 +2139,7 @@ workflows:
     related-workflows:
       - name: deployment-config
         description: "Validate and refine generated deploy manifests"
-      - name: kit-scaffold
+      - name: suite-scaffold
         description: "Generate suites referenced by the deploy manifest"
       - name: build-orchestration
         description: "Build concepts for the declared runtimes"
@@ -2317,7 +2317,7 @@ workflows:
         | openapi | Boolean | Generate OpenAPI spec (default: true) |
         | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |
     related-workflows:
-      - name: kit-scaffold
+      - name: suite-scaffold
         description: "Generate suites whose concepts the interface exposes"
       - name: concept-scaffold
         description: "Generate concept specs for interface concepts"
@@ -3211,7 +3211,7 @@ workflows:
         description: "Generate themes to style the component"
       - name: concept-scaffold
         description: "Generate concept specs for custom component concepts"
-      - name: kit-scaffold
+      - name: suite-scaffold
         description: "Generate suite manifests for component libraries"
     anti-patterns:
       - title: "Rendering logic in widget spec"
@@ -3407,7 +3407,7 @@ workflows:
     related-workflows:
       - name: surface-component-scaffold
         description: "Generate components to use the theme tokens"
-      - name: kit-scaffold
+      - name: suite-scaffold
         description: "Generate suite manifests for theme packages"
     anti-patterns:
       - title: "Hardcoded colors in components"
@@ -4110,7 +4110,7 @@ annotations:
         Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish
         reusable concept packages.
       companion-docs:
-        - path: examples/create-a-kit.md
+        - path: examples/create-a-suite.md
           label: "Kit creation walkthrough"
           content: |
             # Walkthrough: Creating a Kit
@@ -4169,7 +4169,7 @@ annotations:
             clef suite test ./auth-kit
             ```
       example-walkthroughs:
-        - path: examples/create-a-kit.md
+        - path: examples/create-a-suite.md
           label: "Create a reusable suite (auth example)"
     init:
       examples:
@@ -4199,7 +4199,7 @@ annotations:
   KitScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
-      argument-template: "--name <kit-name>"
+      argument-template: "--name <suite-name>"
       trigger-description: >
         Use when creating a new CLEF kit from scratch. Generates a suite.yaml
         manifest with concept declarations, sync tier groupings, type parameter
@@ -4208,7 +4208,7 @@ annotations:
         Scaffold a new CLEF kit named **$ARGUMENTS** with a suite.yaml manifest,
         concept spec stubs, and sync directory structure.
       companion-docs:
-        - path: examples/scaffold-a-kit.md
+        - path: examples/scaffold-a-suite.md
           label: "End-to-end suite scaffolding walkthrough"
           content: |
             # Walkthrough: Scaffolding a New Kit
@@ -4289,7 +4289,7 @@ annotations:
         - label: "Generate programmatically"
           language: typescript
           code: |
-            import { kitScaffoldGenHandler } from './kit-scaffold-gen.impl';
+            import { kitScaffoldGenHandler } from './suite-scaffold-gen.impl';
             const result = await kitScaffoldGenHandler.generate({
               name: 'auth',
               description: 'Authentication and identity management.',
@@ -4300,7 +4300,7 @@ annotations:
               ],
             }, storage);
       references:
-        - path: references/kit-manifest-schema.md
+        - path: references/suite-manifest-schema.md
           label: "Kit manifest schema reference"
 
   DeployScaffoldGen:

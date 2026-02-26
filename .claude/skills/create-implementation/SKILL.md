@@ -399,4 +399,4 @@ See [templates/implementation-scaffold.md](templates/implementation-scaffold.md)
 | `/create-sync` | Write syncs that invoke actions on this implementation |
 | `/create-storage-adapter` | Write the storage backend this implementation uses |
 | `/create-transport-adapter` | Write the transport that delivers actions to this implementation |
-| `/create-concept-kit` | Bundle this implementation into a suite with its concept and syncs |
+| `/create-suite` | Bundle this implementation into a suite with its concept and syncs |

@@ -9,7 +9,7 @@
       "Bash(dir:*)",
       "Bash(powershell -Command:*)",
       "Bash(powershell -File - <<'PS1'\nAdd-Type -AssemblyName System.IO.Compression.FileSystem\n$zip = [System.IO.Compression.ZipFile]::OpenRead\\(\"C:\\\\Users\\\\Matt\\\\OneDrive\\\\buildamodule-resource-pack\\\\Documents\\\\GitHub\\\\Concept-Oriented-Programming-Framework\\\\skill-packs\\\\create-concept.zip\"\\)\nforeach \\($entry in $zip.Entries\\) { Write-Host $entry.FullName }\n$zip.Dispose\\(\\)\nPS1)",
-      "Bash(powershell -File - <<'PS1'\nAdd-Type -AssemblyName System.IO.Compression.FileSystem\n$zip = [System.IO.Compression.ZipFile]::OpenRead\\(\"C:\\\\Users\\\\Matt\\\\OneDrive\\\\buildamodule-resource-pack\\\\Documents\\\\GitHub\\\\Concept-Oriented-Programming-Framework\\\\skill-packs\\\\create-concept-kit.zip\"\\)\nforeach \\($entry in $zip.Entries\\) { Write-Host $entry.FullName }\n$zip.Dispose\\(\\)\nPS1)",
+      "Bash(powershell -File - <<'PS1'\nAdd-Type -AssemblyName System.IO.Compression.FileSystem\n$zip = [System.IO.Compression.ZipFile]::OpenRead\\(\"C:\\\\Users\\\\Matt\\\\OneDrive\\\\buildamodule-resource-pack\\\\Documents\\\\GitHub\\\\Concept-Oriented-Programming-Framework\\\\skill-packs\\\\create-suite.zip\"\\)\nforeach \\($entry in $zip.Entries\\) { Write-Host $entry.FullName }\n$zip.Dispose\\(\\)\nPS1)",
       "Bash(git fetch:*)",
       "Bash(comm:*)",
       "Bash(python3:*)",

@@ -807,7 +807,7 @@ describe('Claude Skills Generation Parity', () => {
   });
 
   describe('SuiteManager skill', () => {
-    const kebab = 'kit-manager';
+    const kebab = 'suite-manager';
 
     it('has 5 workflow steps matching kit-lifecycle', () => {
       const steps = extractSteps(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));

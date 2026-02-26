@@ -25,7 +25,7 @@
           "optional": false
         },
         {
-          "name": "kitName",
+          "name": "suiteName",
           "type": {
             "kind": "primitive",
             "primitive": "String"
@@ -515,7 +515,7 @@
       ]
     }
   ],
-  "graphqlSchema": "type ArtifactState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ArtifactEntry {\n  a: ID!\n  hash: String!\n  kitName: String!\n  kitVersion: String!\n  conceptName: String!\n  builtAt: String!\n  inputs: [JSON!]!\n  location: String!\n  sizeBytes: Int!\n}\n\nextend type Query {\n  artifact_entry(a: ID!): ArtifactEntry\n  artifact_entries: [ArtifactEntry!]!\n}\n\ntype ArtifactArtifacts {\n  a: ID!\n  value: ID!\n}",
+  "graphqlSchema": "type ArtifactState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype ArtifactEntry {\n  a: ID!\n  hash: String!\n  suiteName: String!\n  kitVersion: String!\n  conceptName: String!\n  builtAt: String!\n  inputs: [JSON!]!\n  location: String!\n  sizeBytes: Int!\n}\n\nextend type Query {\n  artifact_entry(a: ID!): ArtifactEntry\n  artifact_entries: [ArtifactEntry!]!\n}\n\ntype ArtifactArtifacts {\n  a: ID!\n  value: ID!\n}",
   "jsonSchemas": {
     "invocations": {
       "build": {

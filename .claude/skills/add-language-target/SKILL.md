@@ -192,4 +192,4 @@ This will generate $ARGUMENTS code for all concepts in `specs/` and write output
 |-------|------------|
 | `/create-concept` | Design concept specs that the language target generates code from |
 | `/create-implementation` | Write TypeScript implementations (the reference target) |
-| `/create-concept-kit` | Create suites whose concepts need code generation in the new language |
+| `/create-suite` | Create suites whose concepts need code generation in the new language |

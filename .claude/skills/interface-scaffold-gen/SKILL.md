@@ -131,6 +131,6 @@ npx vitest run tests/scaffold-generators.test.ts
 
 | Skill | When to Use |
 | --- | --- |
-| `/kit-scaffold` | Generate suites whose concepts the interface exposes |
+| `/suite-scaffold` | Generate suites whose concepts the interface exposes |
 | `/concept-scaffold` | Generate concept specs for interface concepts |
 | `/deployment-config` | Deploy the service that hosts the generated interface |

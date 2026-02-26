@@ -241,5 +241,5 @@ See [examples/social-blogging-platform.md](examples/social-blogging-platform.md)
 |-------|------------|
 | `/create-concept` | Design each concept identified during decomposition |
 | `/create-sync` | Write the sync rules that connect decomposed concepts |
-| `/create-concept-kit` | Bundle the decomposed concepts into a reusable suite |
+| `/create-suite` | Bundle the decomposed concepts into a reusable suite |
 | `/create-implementation` | Write implementations for each decomposed concept |

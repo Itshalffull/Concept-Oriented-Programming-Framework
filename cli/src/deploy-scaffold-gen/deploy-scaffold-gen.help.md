@@ -107,5 +107,5 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /deployment-config — Validate and refine generated deploy manifests
-- /kit-scaffold — Generate suites referenced by the deploy manifest
+- /suite-scaffold — Generate suites referenced by the deploy manifest
 - /build-orchestration — Build concepts for the declared runtimes

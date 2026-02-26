@@ -12,7 +12,7 @@ suite:
 
 concepts:
   KitScaffoldGen:
-    spec: ../../specs/framework/kit-scaffold-gen.concept
+    spec: ../../specs/framework/suite-scaffold-gen.concept
     params:
       K: { as: kit-config-ref, description: "Reference to a suite configuration" }
 
@@ -64,7 +64,7 @@ concepts:
 syncs:
   required:
     # Registration syncs — each generator self-registers with PluginRegistry
-    - path: ./syncs/registration/register-kit-scaffold-gen.sync
+    - path: ./syncs/registration/register-suite-scaffold-gen.sync
       description: "KitScaffoldGen/register → PluginRegistry/register"
 
     - path: ./syncs/registration/register-deploy-scaffold-gen.sync

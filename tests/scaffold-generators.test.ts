@@ -13,7 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
 
-import { suiteScaffoldGenHandler } from '../handlers/ts/framework/kit-scaffold-gen.handler.js';
+import { suiteScaffoldGenHandler } from '../handlers/ts/framework/suite-scaffold-gen.handler.js';
 import { deployScaffoldGenHandler } from '../handlers/ts/framework/deploy-scaffold-gen.handler.js';
 import { interfaceScaffoldGenHandler } from '../handlers/ts/framework/interface-scaffold-gen.handler.js';
 import { conceptScaffoldGenHandler } from '../handlers/ts/framework/concept-scaffold-gen.handler.js';

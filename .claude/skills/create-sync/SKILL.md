@@ -162,7 +162,7 @@ sync SyncName [idempotent]  // Safe to re-execute (engine may retry)
 
 Multiple annotations allowed: `sync MySync [eager] [idempotent]`
 
-For suite syncs, also add tier annotations: `[required]` or `[recommended]`. See the `create-concept-kit` skill.
+For suite syncs, also add tier annotations: `[required]` or `[recommended]`. See the `create-suite` skill.
 
 ### Step 7: Write Descriptions (Mandatory)
 
@@ -209,7 +209,7 @@ syncs/
 
 - Group related syncs in one `.sync` file (e.g., all article CRUD syncs)
 - Use `//` or `#` for comments
-- Kit syncs go under `kits/<kit-name>/syncs/`
+- Kit syncs go under `kits/<suite-name>/syncs/`
 - Multiple syncs per file is normal and encouraged for related flows
 
 ### Step 9: Validate
@@ -219,7 +219,7 @@ syncs/
 npx tsx cli/src/index.ts compile-syncs
 
 # For suite syncs
-npx tsx cli/src/index.ts suite validate kits/<kit-name>
+npx tsx cli/src/index.ts suite validate kits/<suite-name>
 ```
 
 The compiler checks:
@@ -268,6 +268,6 @@ See [templates/sync-scaffold.md](templates/sync-scaffold.md) for copy-paste temp
 | Skill | When to Use |
 |-------|------------|
 | `/create-concept` | Design the concepts that syncs connect |
-| `/create-concept-kit` | Bundle concepts and their syncs into a reusable suite |
+| `/create-suite` | Bundle concepts and their syncs into a reusable suite |
 | `/create-implementation` | Write the implementation that handles actions syncs invoke |
 | `/configure-deployment` | Assign syncs to engines in deployment manifests |

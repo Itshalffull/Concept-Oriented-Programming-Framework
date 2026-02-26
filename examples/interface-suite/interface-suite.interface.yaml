@@ -1,0 +1,2054 @@
+# Clef Clef Bind — Interface Generation Manifest
+#
+# Self-referential manifest: generates CLI commands, MCP tools,
+# and Claude Skills for the 26 Clef Bind concepts themselves.
+# Covers orchestration (Projection, Generator, Emitter, Surface,
+# Middleware, Grouping, Workflow, Annotation, Renderer),
+# coordination (Target, Sdk, Spec), target providers (Rest,
+# GraphQL, gRPC, CLI, MCP, Claude Skills, OpenAPI, AsyncAPI),
+# and SDK providers (TypeScript, Python, Go, Rust, Java, Swift).
+#
+# See Architecture doc Sections 1.8, 2.1-2.7.
+#
+# Usage:
+#   clef interface generate --manifest examples/bind/bind.interface.yaml
+
+interface:
+  name: clef-bind
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  claude-skills:
+    name: clef-bind
+    progressive: true
+  cli:
+    name: clef-interface
+    shell: bash,zsh,fish
+  mcp:
+    name: clef-interface-mcp
+    transport: stdio
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/bind
+  formatting:
+    typescript: prettier
+  clean: true
+
+# ─── GLOBAL TRAITS ───────────────────────────────────
+traits:
+  - name: validated
+    scope: kit
+
+# ─── GROUPING ────────────────────────────────────────
+grouping:
+  strategy: per-concept
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+# CLI and MCP configuration for each of the 26 concepts.
+# See Architecture doc Sections 1.8, 2.4, 2.5.
+
+concepts:
+
+  # ── Orchestration Concepts ─────────────────────────
+
+  Projection:
+    cli:
+      actions:
+        project:
+          command: project
+          args:
+            manifest: { positional: true }
+          examples:
+            - description: Project a concept from a manifest
+              command: clef-interface projection project app.interface.yaml
+        validate:
+          command: validate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Validate a projection
+              command: clef-interface projection validate proj-001
+        diff:
+          command: diff
+          args:
+            current: { positional: true }
+            previous: { positional: true }
+          examples:
+            - description: Diff two projections
+              command: clef-interface projection diff proj-002 proj-001
+        inferResources:
+          command: infer-resources
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Infer REST resources from a projection
+              command: clef-interface projection infer-resources proj-001
+    mcp:
+      actions:
+        project:
+          type: tool
+          description: "Enrich a ConceptManifest with interface generation metadata"
+        validate:
+          type: tool
+          description: "Validate a projection for annotation completeness and breaking changes"
+        diff:
+          type: tool
+          description: "Compare two projections and list added, removed, and changed elements"
+        inferResources:
+          type: tool
+          description: "Auto-derive REST resource mappings from state relations and action signatures"
+
+  Generator:
+    cli:
+      actions:
+        plan:
+          command: plan
+          args:
+            suite: { positional: true }
+          flags:
+            manifest: { type: string, description: "Path to interface manifest" }
+          examples:
+            - description: Plan generation for a suite
+              command: clef-interface generator plan my-kit --manifest app.interface.yaml
+        generate:
+          command: generate
+          args:
+            plan: { positional: true }
+          flags:
+            breaking: { type: boolean, description: "Allow breaking changes" }
+          examples:
+            - description: Run generation from a plan
+              command: clef-interface generator generate plan-001
+        status:
+          command: status
+          args:
+            plan: { positional: true }
+          examples:
+            - description: Check generation status
+              command: clef-interface generator status plan-001
+        regenerate:
+          command: regenerate
+          args:
+            plan: { positional: true }
+          flags:
+            targets: { type: string, description: "Comma-separated target list" }
+          examples:
+            - description: Regenerate only REST and CLI targets
+              command: clef-interface generator regenerate plan-001 --targets rest,cli
+    mcp:
+      actions:
+        plan:
+          type: tool
+          description: "Create a generation plan from a suite and interface manifest"
+        generate:
+          type: tool
+          description: "Execute a generation plan to produce interface code"
+        status:
+          type: resource-template
+          uriTemplate: "clef-interface://generators/{plan}/status"
+        regenerate:
+          type: tool
+          description: "Regenerate specific targets using cached projections"
+
+  Emitter:
+    cli:
+      actions:
+        write:
+          command: write
+          args:
+            path: { positional: true }
+          flags:
+            content: { type: string, description: "Content to write" }
+            target: { type: string, description: "Target type" }
+            concept: { type: string, description: "Source concept" }
+          examples:
+            - description: Write a generated file
+              command: clef-interface emitter write ./generated/rest/user.ts --target rest --concept User
+        format:
+          command: format
+          args:
+            file: { positional: true }
+          flags:
+            formatter: { type: string, description: "Formatter name (prettier, black, gofmt)" }
+          examples:
+            - description: Format a generated TypeScript file
+              command: clef-interface emitter format ./generated/rest/user.ts --formatter prettier
+        clean:
+          command: clean
+          args:
+            dir: { positional: true }
+          examples:
+            - description: Clean orphaned files from output directory
+              command: clef-interface emitter clean ./generated/rest
+        manifest:
+          command: manifest
+          args:
+            dir: { positional: true }
+          examples:
+            - description: List all generated files
+              command: clef-interface emitter manifest ./generated --json
+    mcp:
+      actions:
+        write:
+          type: tool
+          description: "Write content-addressed generated file, skipping unchanged"
+        format:
+          type: tool
+          description: "Format a generated file using the configured formatter"
+        clean:
+          type: tool
+          description: "Remove orphaned files from previous generation runs"
+        manifest:
+          type: resource-template
+          uriTemplate: "clef-interface://emitter/{dir}/manifest"
+
+  Surface:
+    cli:
+      actions:
+        compose:
+          command: compose
+          args:
+            suite: { positional: true }
+          flags:
+            target: { type: string, description: "Target type to compose" }
+          examples:
+            - description: Compose REST surface from per-concept outputs
+              command: clef-interface api-surface compose my-kit --target rest
+        entrypoint:
+          command: entrypoint
+          args:
+            surface: { positional: true }
+          examples:
+            - description: View composed entrypoint content
+              command: clef-interface api-surface entrypoint surface-001 --json
+    mcp:
+      actions:
+        compose:
+          type: tool
+          description: "Merge per-concept outputs into a unified API surface"
+        entrypoint:
+          type: resource-template
+          uriTemplate: "clef-interface://api-surfaces/{surface}/entrypoint"
+
+  Middleware:
+    cli:
+      actions:
+        register:
+          command: register
+          flags:
+            trait: { type: string, description: "Trait name" }
+            target: { type: string, description: "Target type" }
+            implementation: { type: string, description: "Implementation code reference" }
+            position: { type: string, description: "Middleware position (before-auth, auth, validation, etc.)" }
+          examples:
+            - description: Register auth middleware for REST
+              command: clef-interface middleware register --trait auth --target rest --implementation bearer-check --position auth
+        resolve:
+          command: resolve
+          flags:
+            traits: { type: string, description: "Comma-separated trait list" }
+            target: { type: string, description: "Target type" }
+          examples:
+            - description: Resolve middleware chain for REST target
+              command: clef-interface middleware resolve --traits auth,validated --target rest
+        inject:
+          command: inject
+          args:
+            output: { positional: true }
+          flags:
+            target: { type: string, description: "Target type" }
+          examples:
+            - description: Inject middleware into generated output
+              command: clef-interface middleware inject ./generated/rest/user.ts --target rest
+    mcp:
+      actions:
+        register:
+          type: tool
+          description: "Register a trait-to-target middleware implementation"
+        resolve:
+          type: tool
+          description: "Resolve ordered middleware chain for given traits and target"
+        inject:
+          type: tool
+          description: "Inject middleware code into generated target output"
+
+  Grouping:
+    cli:
+      actions:
+        group:
+          command: group
+          flags:
+            strategy: { type: string, description: "Grouping strategy (per-concept, per-kit, by-crud, by-intent)" }
+          examples:
+            - description: Group concepts by CRUD role
+              command: clef-interface grouping group --strategy by-crud
+        classify:
+          command: classify
+          args:
+            action: { positional: true }
+          examples:
+            - description: Classify an action name
+              command: clef-interface grouping classify create --json
+    mcp:
+      actions:
+        group:
+          type: tool
+          description: "Organize concepts into named groups using a classification strategy"
+        classify:
+          type: tool
+          description: "Classify a single action name by CRUD role, intent, and MCP type"
+
+  Workflow:
+    cli:
+      actions:
+        define:
+          command: define
+          args:
+            concept: { positional: true }
+          flags:
+            steps: { type: string, description: "Comma-separated ordered action names" }
+          examples:
+            - description: Define a workflow for SpecParser
+              command: clef-interface action-guide define SpecParser --steps parse
+        render:
+          command: render
+          args:
+            workflow: { positional: true }
+          flags:
+            format: { type: string, description: "Output format (skill-md, cli-help, rest-guide)" }
+          examples:
+            - description: Render workflow as skill markdown
+              command: clef-interface action-guide render wf-001 --format skill-md
+    mcp:
+      actions:
+        define:
+          type: tool
+          description: "Create an ordered, annotated workflow from concept actions"
+        render:
+          type: tool
+          description: "Render a workflow in a specific format (skill-md, cli-help, etc.)"
+
+  Annotation:
+    cli:
+      actions:
+        annotate:
+          command: annotate
+          args:
+            concept: { positional: true }
+          flags:
+            scope: { type: string, description: "Scope (concept or action name)" }
+            content: { type: string, description: "JSON content string" }
+          examples:
+            - description: Annotate a concept with tool permissions
+              command: >-
+                clef-interface annotation annotate SpecParser
+                --scope concept --content '{"tool-permissions":["Read","Bash"]}'
+        resolve:
+          command: resolve
+          args:
+            concept: { positional: true }
+          examples:
+            - description: Resolve all annotations for a concept
+              command: clef-interface annotation resolve SpecParser --json
+    mcp:
+      actions:
+        annotate:
+          type: tool
+          description: "Attach opaque metadata to a concept or action scope"
+        resolve:
+          type: tool
+          description: "Retrieve all annotations for a concept and its actions"
+
+  Renderer:
+    cli:
+      actions:
+        register:
+          command: register
+          flags:
+            key: { type: string, description: "Enrichment key to handle" }
+            format: { type: string, description: "Output format" }
+            order: { type: number, description: "Render position (lower first)" }
+            pattern: { type: string, description: "Built-in render pattern name" }
+          examples:
+            - description: Register a renderer for design principles
+              command: >-
+                clef-interface enrichment-renderer register
+                --key design-principles --format skill-md --order 50 --pattern list
+        render:
+          command: render
+          flags:
+            format: { type: string, description: "Output format" }
+            content: { type: string, description: "JSON enrichment content" }
+          examples:
+            - description: Render enrichment content as skill markdown
+              command: clef-interface enrichment-renderer render --format skill-md --content '{"checklists":{"parse":["Valid?"]}}'
+        listHandlers:
+          command: list-handlers
+          flags:
+            format: { type: string, description: "Format to list handlers for" }
+          examples:
+            - description: List registered handlers for skill-md format
+              command: clef-interface enrichment-renderer list-handlers --format skill-md
+        listPatterns:
+          command: list-patterns
+          examples:
+            - description: List all available render patterns
+              command: clef-interface enrichment-renderer list-patterns --json
+    mcp:
+      actions:
+        register:
+          type: tool
+          description: "Register a handler mapping an enrichment key to a render pattern"
+        render:
+          type: tool
+          description: "Render enrichment content using registered handlers for a format"
+        listHandlers:
+          type: resource-template
+          uriTemplate: "clef-interface://enrichment-renderer/handlers/{format}"
+        listPatterns:
+          type: resource
+          uriTemplate: "clef-interface://enrichment-renderer/patterns"
+
+  # ── Coordination Concepts ──────────────────────────
+
+  Target:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          flags:
+            type: { type: string, description: "Target type (rest, graphql, grpc, cli, mcp, claude-skills)" }
+          examples:
+            - description: Generate REST target from projection
+              command: clef-interface target generate proj-001 --type rest
+        diff:
+          command: diff
+          args:
+            output: { positional: true }
+          examples:
+            - description: Diff current vs previous generation
+              command: clef-interface target diff out-001 --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate interface code for a specific target type from a projection"
+        diff:
+          type: tool
+          description: "Compare current generation output against previous run"
+
+  Sdk:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          flags:
+            language: { type: string, description: "SDK language (typescript, python, go, rust, java, swift)" }
+          examples:
+            - description: Generate TypeScript SDK from projection
+              command: clef-interface sdk generate proj-001 --language typescript
+        publish:
+          command: publish
+          args:
+            package: { positional: true }
+          flags:
+            registry: { type: string, description: "Package registry (npm, pypi, crates.io, maven, etc.)" }
+          examples:
+            - description: Publish SDK to npm
+              command: clef-interface sdk publish pkg-001 --registry npm
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate an idiomatic SDK client library for a target language"
+        publish:
+          type: tool
+          description: "Publish a generated SDK package to a language registry"
+
+  Spec:
+    cli:
+      actions:
+        emit:
+          command: emit
+          flags:
+            format: { type: string, description: "Spec format (openapi, asyncapi)" }
+          examples:
+            - description: Emit OpenAPI spec from projections
+              command: clef-interface spec emit --format openapi
+        validate:
+          command: validate
+          args:
+            document: { positional: true }
+          examples:
+            - description: Validate generated OpenAPI spec
+              command: clef-interface spec validate doc-001
+    mcp:
+      actions:
+        emit:
+          type: tool
+          description: "Generate a specification document covering all kit concepts"
+        validate:
+          type: tool
+          description: "Validate a generated spec against format-specific rules"
+
+  # ── Target Providers ───────────────────────────────
+
+  RestTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate REST routes
+              command: clef-interface rest generate proj-001
+        validate:
+          command: validate
+          args:
+            route: { positional: true }
+          examples:
+            - description: Validate generated REST route
+              command: clef-interface rest validate route-001
+        listRoutes:
+          command: list-routes
+          args:
+            concept: { positional: true }
+          examples:
+            - description: List REST routes for a concept
+              command: clef-interface rest list-routes User --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate REST API routes and handlers from a concept projection"
+        validate:
+          type: tool
+          description: "Validate a generated REST route for path conflicts and type consistency"
+        listRoutes:
+          type: resource-template
+          uriTemplate: "clef-interface://rest/routes/{concept}"
+
+  GraphqlTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate GraphQL schema
+              command: clef-interface graphql generate proj-001
+        validate:
+          command: validate
+          args:
+            type: { positional: true }
+          examples:
+            - description: Validate generated GraphQL type
+              command: clef-interface graphql validate type-001
+        listOperations:
+          command: list-operations
+          args:
+            concept: { positional: true }
+          examples:
+            - description: List GraphQL operations for a concept
+              command: clef-interface graphql list-operations Article --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate GraphQL schema and resolvers from a concept projection"
+        validate:
+          type: tool
+          description: "Validate generated GraphQL schema for cycles and Relay conformance"
+        listOperations:
+          type: resource-template
+          uriTemplate: "clef-interface://graphql/operations/{concept}"
+
+  GrpcTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate gRPC proto definitions
+              command: clef-interface grpc generate proj-001
+        validate:
+          command: validate
+          args:
+            service: { positional: true }
+          examples:
+            - description: Validate generated gRPC service
+              command: clef-interface grpc validate service-001
+        listRpcs:
+          command: list-rpcs
+          args:
+            concept: { positional: true }
+          examples:
+            - description: List gRPC RPCs for a concept
+              command: clef-interface grpc list-rpcs Payment --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate Protocol Buffer definitions and gRPC service stubs"
+        validate:
+          type: tool
+          description: "Validate generated proto definitions and field number consistency"
+        listRpcs:
+          type: resource-template
+          uriTemplate: "clef-interface://grpc/rpcs/{concept}"
+
+  CliTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate CLI command tree
+              command: clef-interface cli-target generate proj-001
+        validate:
+          command: validate
+          args:
+            command: { positional: true }
+          examples:
+            - description: Validate generated CLI command
+              command: clef-interface cli-target validate cmd-001
+        listCommands:
+          command: list-commands
+          args:
+            concept: { positional: true }
+          examples:
+            - description: List CLI commands for a concept
+              command: clef-interface cli-target list-commands Task --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate CLI command trees with flags, args, and shell completions"
+        validate:
+          type: tool
+          description: "Validate CLI command tree for flag collisions and arg consistency"
+        listCommands:
+          type: resource-template
+          uriTemplate: "clef-interface://cli/commands/{concept}"
+
+  McpTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate MCP server implementation
+              command: clef-interface mcp-target generate proj-001
+        validate:
+          command: validate
+          args:
+            tool: { positional: true }
+          examples:
+            - description: Validate generated MCP tool
+              command: clef-interface mcp-target validate tool-001
+        listTools:
+          command: list-tools
+          args:
+            concept: { positional: true }
+          examples:
+            - description: List MCP tools for a concept
+              command: clef-interface mcp-target list-tools Agent --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate MCP server with tools, resources, and templates"
+        validate:
+          type: tool
+          description: "Validate MCP tool schemas, descriptions, and transport config"
+        listTools:
+          type: resource-template
+          uriTemplate: "clef-interface://mcp/tools/{concept}"
+
+  ClaudeSkillsTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate Claude Code skill files
+              command: clef-interface claude-skills generate proj-001
+        validate:
+          command: validate
+          args:
+            skill: { positional: true }
+          examples:
+            - description: Validate generated skill
+              command: clef-interface claude-skills validate skill-001
+        listSkills:
+          command: list-skills
+          args:
+            suite: { positional: true }
+          examples:
+            - description: List generated skills
+              command: clef-interface claude-skills list-skills my-kit --json
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate Claude Code SKILL.md and command runner from a projection"
+        validate:
+          type: tool
+          description: "Validate skill frontmatter, scaffold refs, and related skill names"
+        listSkills:
+          type: resource-template
+          uriTemplate: "clef-interface://claude-skills/skills/{kit}"
+
+  OpenApiTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          flags:
+            config: { type: string, description: "OpenAPI generation config" }
+          examples:
+            - description: Generate OpenAPI 3.1 spec
+              command: clef-interface openapi generate --config '{"version":"3.1.0"}'
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate OpenAPI 3.1 specification from concept projections"
+
+  AsyncApiTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          flags:
+            config: { type: string, description: "AsyncAPI generation config" }
+          examples:
+            - description: Generate AsyncAPI 3.0 spec
+              command: clef-interface asyncapi generate --config '{"version":"3.0.0"}'
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate AsyncAPI 3.0 specification for event-driven interfaces"
+
+  # ── SDK Providers ──────────────────────────────────
+
+  TsSdkTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate TypeScript SDK
+              command: clef-interface ts-sdk generate proj-001
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate idiomatic TypeScript SDK with discriminated union return types"
+
+  PySdkTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate Python SDK
+              command: clef-interface py-sdk generate proj-001
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate idiomatic Python SDK with dataclass models and async support"
+
+  GoSdkTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate Go SDK module
+              command: clef-interface go-sdk generate proj-001
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate idiomatic Go SDK with struct types and (T, error) returns"
+
+  RustSdkTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate Rust SDK crate
+              command: clef-interface rust-sdk generate proj-001
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate idiomatic Rust SDK crate with Result enum and serde derives"
+
+  JavaSdkTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate Java SDK artifact
+              command: clef-interface java-sdk generate proj-001
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate idiomatic Java SDK with sealed interfaces and CompletableFuture"
+
+  SwiftSdkTarget:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            projection: { positional: true }
+          examples:
+            - description: Generate Swift SDK package
+              command: clef-interface swift-sdk generate proj-001
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate idiomatic Swift SDK with Codable conformance and async/await"
+
+# ─── WORKFLOWS ───────────────────────────────────────
+# Ordered action sequences for skill and CLI help generation.
+# See Architecture doc Sections 1.8, 2.6.
+
+workflows:
+
+  interface-pipeline:
+    concept: Generator
+    steps:
+      - action: plan
+        title: Plan Generation
+        prose: >
+          Parse the interface manifest and resolve which targets,
+          SDK languages, and spec formats are configured. Validate
+          that required provider concepts are loaded. Estimate the
+          output file count for progress tracking.
+      - action: generate
+        title: Execute Generation
+        prose: >
+          Run the generation pipeline for all configured targets.
+          Content-addressed output skips unchanged files. Breaking
+          changes block generation unless --breaking flag is set.
+      - action: status
+        title: Check Status
+        prose: >
+          Query the current execution status including active
+          targets, progress percentage, and elapsed time.
+      - action: regenerate
+        title: Regenerate Targets
+        prose: >
+          Regenerate only the specified targets using cached
+          projections. Useful when target configuration changes
+          but concept specs are unchanged.
+    checklists:
+      plan:
+        - Interface manifest is valid YAML
+        - At least one target is configured
+        - Required provider concepts are loaded
+        - Kit concepts have valid specs
+      generate:
+        - All projections completed successfully
+        - Breaking change check passed (or --breaking set)
+        - Output directory is writable
+      regenerate:
+        - Target names are valid
+        - Cached projections exist and are not stale
+    design-principles:
+      - title: Content-Addressed Output
+        rule: Files are only rewritten when their content hash changes, preserving timestamps for build tools
+      - title: Incremental Regeneration
+        rule: Individual targets can be regenerated without re-running the full pipeline
+      - title: Breaking Change Guard
+        rule: Generation halts on breaking changes unless explicitly overridden
+    references:
+      - path: references/generation-pipeline.md
+        label: Generation Pipeline Reference
+      - path: references/content-addressing.md
+        label: Content-Addressing Strategy
+    validation-commands:
+      - label: Run generator tests
+        command: clef test Generator
+      - label: Validate generated output
+        command: clef interface validate --dir ./generated/bind
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action     | Command                  | Purpose                        |
+        |------------|--------------------------|--------------------------------|
+        | plan       | generator plan <kit>     | Create generation plan         |
+        | generate   | generator generate <plan>| Execute plan                   |
+        | status     | generator status <plan>  | Check progress                 |
+        | regenerate | generator regenerate     | Regenerate specific targets    |
+    related-workflows:
+      - name: projection-enrichment
+        description: Enrich concepts before generation
+      - name: file-emission
+        description: Write and format generated files
+      - name: target-generation
+        description: Generate individual targets
+
+  projection-enrichment:
+    concept: Projection
+    steps:
+      - action: project
+        title: Project Concept
+        prose: >
+          Parse interface annotations and merge with the ConceptManifest.
+          Compute resource mappings from state relations and action
+          signatures. Bind traits to actions. Resolve cross-concept
+          type references. Serialize enrichment data (workflows,
+          annotations, target configs) as opaque JSON content.
+      - action: validate
+        title: Validate Projection
+        prose: >
+          Verify all annotations resolve correctly. Check resource
+          mapping consistency. Detect breaking changes from previous
+          generation if history exists.
+      - action: diff
+        title: Diff Projections
+        prose: >
+          Compare current projection against a previous version.
+          List added, removed, and changed elements for changelog
+          generation and breaking change detection.
+      - action: inferResources
+        title: Infer Resources
+        prose: >
+          Auto-derive REST resource mappings from state relations.
+          Map create/add to POST, delete/remove to DELETE,
+          list/find to GET, update/edit to PUT. Non-CRUD actions
+          map to POST /resource/{id}/action-name.
+    checklists:
+      project:
+        - ConceptManifest is valid and complete
+        - Interface annotations reference valid actions
+        - Trait bindings are compatible
+        - Cross-concept type references resolve
+      validate:
+        - All required annotations present for configured targets
+        - Resource mappings are consistent with concept state
+        - No unresolved type references remain
+      diff:
+        - Both projections are from the same concept
+        - Previous projection exists in history
+    design-principles:
+      - title: Opaque Enrichment
+        rule: Enrichment content is stored as opaque JSON; targets interpret keys they recognize and ignore the rest
+      - title: One Projection Per Concept
+        rule: Each concept produces exactly one projection per generation run
+      - title: Automatic Resource Inference
+        rule: REST resources are derivable from concept state and action names without manual annotation
+    references:
+      - path: references/projection-model.md
+        label: Projection Data Model
+      - path: references/resource-inference.md
+        label: Resource Inference Algorithm
+    validation-commands:
+      - label: Run projection tests
+        command: clef test Projection
+      - label: Validate projection completeness
+        command: clef check --pattern projection-complete Projection
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action         | Command                            | Purpose                      |
+        |----------------|------------------------------------|------------------------------|
+        | project        | projection project <manifest>      | Enrich concept               |
+        | validate       | projection validate <proj>         | Check annotation completeness|
+        | diff           | projection diff <cur> <prev>       | Compare projections          |
+        | inferResources | projection infer-resources <proj>  | Derive REST mappings         |
+    related-workflows:
+      - name: interface-pipeline
+        description: Full generation pipeline that consumes projections
+      - name: enrichment-rendering
+        description: Render enrichment content from projections
+
+  file-emission:
+    concept: Emitter
+    steps:
+      - action: write
+        title: Write Generated File
+        prose: >
+          Write content to the output directory. Content-addressed:
+          if the hash matches the existing file, the write is skipped
+          to preserve filesystem timestamps for build tools.
+      - action: format
+        title: Format Output
+        prose: >
+          Apply the configured code formatter (prettier for TypeScript,
+          black for Python, gofmt for Go, rustfmt for Rust, buf for
+          proto). File hash is updated after formatting.
+      - action: clean
+        title: Clean Orphans
+        prose: >
+          Remove files from the output directory that were not part
+          of the current generation run. Prevents stale artifacts
+          from accumulating across runs.
+      - action: manifest
+        title: List Generated Files
+        prose: >
+          Return the complete manifest of generated files with paths,
+          sizes, and hashes. Used for build tool integration and
+          verification.
+    checklists:
+      write:
+        - Output directory exists or can be created
+        - Content hash computed before write
+        - File permissions allow write
+      format:
+        - Formatter binary is available on PATH
+        - File was written successfully before formatting
+      clean:
+        - Current file list is complete before cleaning
+        - Only generated files are removed (not user files)
+    design-principles:
+      - title: Content-Addressed Writes
+        rule: Files are only rewritten when content changes, preserving timestamps
+      - title: Formatter Tolerance
+        rule: Missing formatters produce warnings, not errors; files are left unformatted
+      - title: Safe Cleanup
+        rule: Only files tracked in the generation manifest are candidates for removal
+    references:
+      - path: references/emitter-model.md
+        label: Emitter File Model
+    validation-commands:
+      - label: Run emitter tests
+        command: clef test Emitter
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action   | Command                    | Purpose                     |
+        |----------|----------------------------|-----------------------------|
+        | write    | emitter write <path>       | Write content-addressed file|
+        | format   | emitter format <file>      | Apply code formatter        |
+        | clean    | emitter clean <dir>        | Remove orphaned files       |
+        | manifest | emitter manifest <dir>     | List all generated files    |
+    related-workflows:
+      - name: interface-pipeline
+        description: Pipeline that produces files for emission
+      - name: surface-composition
+        description: Composed surfaces that emit entrypoint files
+
+  surface-composition:
+    concept: Surface
+    steps:
+      - action: compose
+        title: Compose Surface
+        prose: >
+          Merge per-concept generated outputs into a unified API
+          surface for a single target. Create shared entrypoint
+          (REST router, GraphQL merged schema, CLI command tree root,
+          MCP combined tool set, SDK client with namespaced methods).
+          Deduplicate shared types. Apply suite-level middleware.
+      - action: entrypoint
+        title: Get Entrypoint
+        prose: >
+          Return the composed entrypoint file content. This is the
+          single import point for consuming the generated interface.
+    checklists:
+      compose:
+        - All per-concept outputs for the target are present
+        - No route/command/tool name conflicts between concepts
+        - Shared types are deduplicated
+        - Kit-level middleware is applied
+    design-principles:
+      - title: Single Entrypoint
+        rule: Each target produces exactly one entrypoint that consumers import
+      - title: Concept Namespacing
+        rule: Per-concept outputs are namespaced to avoid collisions in the unified surface
+      - title: Shared Type Deduplication
+        rule: Types referenced by multiple concepts are defined once and shared
+    references:
+      - path: references/surface-composition.md
+        label: Surface Composition Patterns
+    validation-commands:
+      - label: Run surface tests
+        command: clef test Surface
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action     | Command                       | Purpose                      |
+        |------------|-------------------------------|------------------------------|
+        | compose    | surface compose <kit>         | Merge outputs into surface   |
+        | entrypoint | surface entrypoint <surface>  | Get entrypoint content       |
+    related-workflows:
+      - name: interface-pipeline
+        description: Pipeline that triggers surface composition
+      - name: middleware-resolution
+        description: Middleware injected during composition
+
+  enrichment-rendering:
+    concept: Renderer
+    steps:
+      - action: register
+        title: Register Handler
+        prose: >
+          Register a handler mapping an enrichment key to a built-in
+          render pattern (list, checklist, code-list, callout,
+          heading-body, bad-good, scaffold-list, slash-list,
+          keyed-checklist, inline-list). Order determines rendering
+          position. Template provides {{field}} interpolation config.
+      - action: render
+        title: Render Content
+        prose: >
+          Render enrichment content in the given format. Parse the
+          content JSON, walk top-level keys, dispatch each to its
+          registered handler's pattern. Keys without handlers are
+          listed in unhandledKeys for transparency.
+      - action: listHandlers
+        title: List Handlers
+        prose: >
+          Return handler keys registered for a specific format,
+          in render order. Useful for debugging and verifying
+          handler coverage.
+      - action: listPatterns
+        title: List Patterns
+        prose: >
+          List all available built-in render patterns. Useful for
+          discovering what patterns are available when registering
+          new handlers.
+    checklists:
+      register:
+        - Pattern name refers to a built-in pattern
+        - Template is valid JSON with correct {{field}} placeholders
+        - Order does not conflict with existing handlers for same key
+      render:
+        - Content is valid JSON
+        - At least one handler is registered for the format
+    design-principles:
+      - title: Data-Driven Handlers
+        rule: Handlers are pure data (YAML entries); patterns are the only code surface
+      - title: Additive Extension
+        rule: New enrichment kinds need only a YAML handler entry, not code changes
+      - title: Transparent Passthrough
+        rule: Unhandled content keys are reported, not silently dropped
+    references:
+      - path: references/renderer-patterns.md
+        label: Built-in Render Patterns
+      - path: references/enrichment-model.md
+        label: Enrichment Data Model
+    validation-commands:
+      - label: Run renderer tests
+        command: clef test Renderer
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action       | Command                           | Purpose                    |
+        |--------------|-----------------------------------|----------------------------|
+        | register     | renderer register --key <k>       | Register render handler     |
+        | render       | renderer render --format <fmt>    | Render enrichment content   |
+        | listHandlers | renderer list-handlers --format   | List handlers for format    |
+        | listPatterns | renderer list-patterns            | List available patterns     |
+    related-workflows:
+      - name: projection-enrichment
+        description: Projections that produce enrichment content
+      - name: workflow-definition
+        description: Workflows rendered via enrichment handlers
+
+  middleware-resolution:
+    concept: Middleware
+    steps:
+      - action: register
+        title: Register Implementation
+        prose: >
+          Register a trait-to-target middleware implementation.
+          Specify the trait name, target type, implementation code
+          reference, and position in the middleware chain
+          (before-auth, auth, after-auth, validation, business-logic,
+          serialization).
+      - action: resolve
+        title: Resolve Middleware Chain
+        prose: >
+          For each trait, find the per-target implementation. Order
+          by declared position. Detect incompatible trait combinations.
+          Return the ordered middleware chain for injection.
+      - action: inject
+        title: Inject Middleware
+        prose: >
+          Inject middleware code into generated target output. For
+          REST: wrap route handlers. For gRPC: add interceptors.
+          For CLI: add pre-command hooks. For MCP: add tool middleware.
+    checklists:
+      register:
+        - Trait name is valid
+        - Target type is supported
+        - Position is a valid middleware position
+        - No duplicate registration for same trait-target pair
+      resolve:
+        - All requested traits have implementations for the target
+        - No incompatible trait combinations
+      inject:
+        - Middleware chain is resolved before injection
+        - Output file exists and is writable
+    design-principles:
+      - title: Trait Abstraction
+        rule: Traits are abstract; each target provides its own concrete middleware implementation
+      - title: Ordered Composition
+        rule: Middleware is composed in a deterministic order based on declared positions
+      - title: Graceful Degradation
+        rule: Missing trait implementations produce warnings, not errors
+    references:
+      - path: references/middleware-model.md
+        label: Middleware Composition Model
+      - path: references/trait-implementations.md
+        label: Per-Target Trait Implementations
+    validation-commands:
+      - label: Run middleware tests
+        command: clef test Middleware
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action   | Command                             | Purpose                       |
+        |----------|-------------------------------------|-------------------------------|
+        | register | middleware register --trait <t>      | Register trait implementation  |
+        | resolve  | middleware resolve --traits <t1,t2>  | Resolve ordered chain         |
+        | inject   | middleware inject <output>           | Inject into generated code    |
+    related-workflows:
+      - name: surface-composition
+        description: Surfaces that consume injected middleware
+      - name: target-generation
+        description: Targets that receive middleware injection
+
+  target-generation:
+    concept: Target
+    steps:
+      - action: generate
+        title: Generate Target
+        prose: >
+          Generate interface code for a specific target type from a
+          concept projection. Routes to the active provider (RestTarget,
+          GraphqlTarget, etc.) via integration syncs. Registers output
+          files in the target manifest.
+      - action: diff
+        title: Diff Output
+        prose: >
+          Compare current generation output against the previous run.
+          Content-addressed: unchanged files have matching hashes.
+          Used for incremental builds and change detection.
+    checklists:
+      generate:
+        - Projection is valid and complete
+        - Target type has a loaded provider concept
+        - Config is well-formed for the target type
+      diff:
+        - Previous generation output exists for comparison
+    design-principles:
+      - title: Provider Indirection
+        rule: Generator talks to Target, never to providers directly; syncs route to the active provider
+      - title: Content-Addressed History
+        rule: Each generation records file hashes for efficient diff and incremental regeneration
+    references:
+      - path: references/target-routing.md
+        label: Target Routing Syncs
+    validation-commands:
+      - label: Run target tests
+        command: clef test Target
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action   | Command                            | Purpose                     |
+        |----------|------------------------------------|-----------------------------|
+        | generate | target generate <proj> --type <t>  | Generate for target type    |
+        | diff     | target diff <output>               | Compare with previous run   |
+    related-workflows:
+      - name: interface-pipeline
+        description: Pipeline that orchestrates target generation
+      - name: middleware-resolution
+        description: Middleware injected into target output
+
+  sdk-generation:
+    concept: Sdk
+    steps:
+      - action: generate
+        title: Generate SDK
+        prose: >
+          Generate an idiomatic SDK client library for the specified
+          language. Routes to the language provider (TsSdkTarget,
+          PySdkTarget, etc.) via integration syncs. Produces typed
+          methods, package manifest, and language-idiomatic patterns.
+      - action: publish
+        title: Publish SDK
+        prose: >
+          Publish the generated SDK to the appropriate language
+          registry (npm, PyPI, crates.io, Maven Central, SPM).
+          Version conflicts are detected before publishing.
+    checklists:
+      generate:
+        - Projection is valid and complete
+        - Language has a loaded SDK provider concept
+        - Package name follows registry conventions
+      publish:
+        - Package builds without errors
+        - Version does not already exist in registry
+        - Registry credentials are configured
+    design-principles:
+      - title: Language Idiomatic
+        rule: Each SDK follows the conventions of its target language (error handling, naming, async patterns)
+      - title: Provider Indirection
+        rule: Sdk coordinates; language-specific providers do the actual generation
+      - title: Semantic Versioning
+        rule: SDK versions follow semver; breaking changes bump the major version
+    references:
+      - path: references/sdk-patterns.md
+        label: SDK Generation Patterns
+    validation-commands:
+      - label: Run SDK tests
+        command: clef test Sdk
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action  | Command                              | Purpose                    |
+        |---------|--------------------------------------|----------------------------|
+        | generate| sdk generate <proj> --language <l>   | Generate language SDK      |
+        | publish | sdk publish <pkg> --registry <r>     | Publish to package registry|
+    related-workflows:
+      - name: interface-pipeline
+        description: Pipeline that triggers SDK generation
+      - name: target-generation
+        description: Target generation that SDK complements
+
+  spec-generation:
+    concept: Spec
+    steps:
+      - action: emit
+        title: Emit Spec Document
+        prose: >
+          Generate a specification document covering all concepts in
+          the suite. Routes to format providers (OpenApiTarget,
+          AsyncApiTarget) via integration syncs. Produces a single
+          document per suite per format.
+      - action: validate
+        title: Validate Spec
+        prose: >
+          Run format-specific validation (OpenAPI linter, AsyncAPI
+          parser, JSON Schema validator) against the generated spec.
+          Reports structural errors for correction.
+    checklists:
+      emit:
+        - All projections are complete
+        - Format provider is loaded
+        - Config is well-formed
+      validate:
+        - Spec document was emitted successfully
+        - Validation tools are available on PATH
+    design-principles:
+      - title: Kit-Wide Documents
+        rule: Each spec format produces a single document covering the entire kit, not per-concept
+      - title: Format Validation
+        rule: Generated specs are validated against their format standard before being considered complete
+    references:
+      - path: references/spec-formats.md
+        label: Specification Format Reference
+    validation-commands:
+      - label: Run spec tests
+        command: clef test Spec
+      - label: Lint OpenAPI output
+        command: clef check --lint openapi
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action   | Command                        | Purpose                     |
+        |----------|--------------------------------|-----------------------------|
+        | emit     | spec emit --format <f>         | Generate spec document      |
+        | validate | spec validate <doc>            | Validate against standard   |
+    related-workflows:
+      - name: interface-pipeline
+        description: Pipeline that triggers spec generation
+      - name: target-generation
+        description: Target generation that spec documents describe
+
+  workflow-definition:
+    concept: Workflow
+    steps:
+      - action: define
+        title: Define Workflow
+        prose: >
+          Create a workflow from a concept's actions with ordered
+          steps, titles, and prose. Attach opaque decoration content
+          (checklists, design-principles, anti-patterns, references,
+          examples, validation-commands, quick-reference, etc.)
+          from the interface manifest as JSON.
+      - action: render
+        title: Render Workflow
+        prose: >
+          Render the workflow in the requested format (skill-md,
+          cli-help, rest-guide, generic). The renderer deserializes
+          the content JSON and picks out keys it understands for
+          the given format. Delegates to Renderer handlers.
+    checklists:
+      define:
+        - Steps reference valid actions in the concept
+        - At least one step is provided
+        - Decoration content is valid JSON
+      render:
+        - Workflow is defined before rendering
+        - Format has registered render handlers
+    design-principles:
+      - title: Structural Ownership
+        rule: The Workflow concept owns step ordering; decoration content is opaque
+      - title: Format Independence
+        rule: The same workflow can be rendered in multiple formats without changes
+      - title: Zero-Change Extension
+        rule: New decoration kinds need only a YAML key and a renderer handler; no concept changes
+    references:
+      - path: references/workflow-model.md
+        label: Workflow Data Model
+    validation-commands:
+      - label: Run workflow tests
+        command: clef test Workflow
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Command                            | Purpose                     |
+        |--------|------------------------------------|-----------------------------|
+        | define | workflow define <concept>           | Create ordered workflow      |
+        | render | workflow render <wf> --format <fmt> | Render in target format     |
+    related-workflows:
+      - name: enrichment-rendering
+        description: Renderer that formats workflow content
+      - name: projection-enrichment
+        description: Projections that feed workflow definitions
+
+# ─── ANNOTATIONS ─────────────────────────────────────
+# Concept-level and action-level metadata for skill, CLI,
+# and MCP generation. See Architecture doc Sections 1.8, 2.6.
+
+annotations:
+
+  # ── Orchestration Concepts ─────────────────────────
+
+  Projection:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<manifest-path> [--concept <name>]"
+      trigger-description: >
+        Use when enriching concept specs with interface generation
+        metadata. Covers projection, validation, diffing, and
+        automatic REST resource inference from concept state.
+      trigger-patterns:
+        - "projection"
+        - "enrich"
+        - "resource mapping"
+        - "interface metadata"
+      trigger-exclude:
+        - "generate"
+        - "emit"
+        - "render"
+    project:
+      examples:
+        - label: Project a concept from an interface manifest
+          language: bash
+          code: |
+            clef-interface projection project app.interface.yaml --concept User
+    validate:
+      examples:
+        - label: Validate a projection
+          language: bash
+          code: |
+            clef-interface projection validate proj-001
+
+  Generator:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<suite-name> --manifest <path>"
+      trigger-description: >
+        Use when orchestrating multi-target interface generation.
+        Covers planning, execution, status checking, and
+        incremental regeneration of specific targets.
+      trigger-patterns:
+        - "generate"
+        - "interface generation"
+        - "generation pipeline"
+        - "regenerate"
+      trigger-exclude:
+        - "projection"
+        - "emit"
+        - "render"
+    plan:
+      examples:
+        - label: Plan generation from a manifest
+          language: bash
+          code: |
+            clef-interface generator plan my-kit --manifest app.interface.yaml
+    generate:
+      examples:
+        - label: Execute a generation plan
+          language: bash
+          code: |
+            clef-interface generator generate plan-001
+
+  Emitter:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "<path> [--target <type>] [--concept <name>]"
+      trigger-description: >
+        Use when writing, formatting, or cleaning generated output
+        files. Handles content-addressed writes, code formatting,
+        orphan cleanup, and file manifests.
+      trigger-patterns:
+        - "emit"
+        - "write file"
+        - "format"
+        - "clean generated"
+        - "output manifest"
+      trigger-exclude:
+        - "generate"
+        - "projection"
+    write:
+      examples:
+        - label: Write a generated file
+          language: bash
+          code: |
+            clef-interface emitter write ./generated/rest/user.ts \
+              --target rest --concept User
+
+  Surface:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<suite-name> --target <type>"
+      trigger-description: >
+        Use when composing per-concept outputs into a unified
+        API surface. Covers merging routes, schemas, command
+        trees, and tool sets into single entrypoints.
+      trigger-patterns:
+        - "surface"
+        - "compose"
+        - "entrypoint"
+        - "merge"
+        - "unified API"
+      trigger-exclude:
+        - "generate"
+        - "emit"
+    compose:
+      examples:
+        - label: Compose REST surface
+          language: bash
+          code: |
+            clef-interface api-surface compose my-kit --target rest
+
+  Middleware:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "--trait <name> --target <type>"
+      trigger-description: >
+        Use when mapping abstract traits to concrete middleware
+        per target. Covers registration, resolution, and injection
+        of auth, validation, and other middleware.
+      trigger-patterns:
+        - "middleware"
+        - "trait"
+        - "auth middleware"
+        - "inject middleware"
+      trigger-exclude:
+        - "generate"
+        - "surface"
+    register:
+      examples:
+        - label: Register auth middleware for REST
+          language: bash
+          code: |
+            clef-interface middleware register \
+              --trait auth --target rest \
+              --implementation bearer-check --position auth
+
+  Grouping:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "--strategy <strategy>"
+      trigger-description: >
+        Use when organizing concepts into named groups for
+        interface generation. Supports structural (per-concept,
+        per-kit) and behavioral (by-crud, by-intent) strategies.
+      trigger-patterns:
+        - "grouping"
+        - "group concepts"
+        - "classify action"
+      trigger-exclude:
+        - "generate"
+        - "compose"
+    group:
+      examples:
+        - label: Group concepts by CRUD role
+          language: bash
+          code: |
+            clef-interface grouping group --strategy by-crud
+
+  Workflow:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<concept-name> --steps <actions>"
+      trigger-description: >
+        Use when defining or rendering ordered action workflows
+        for skill and CLI help generation. Covers step ordering,
+        decoration attachment, and multi-format rendering.
+      trigger-patterns:
+        - "workflow"
+        - "action sequence"
+        - "step-by-step"
+      trigger-exclude:
+        - "generate"
+        - "annotation"
+    define:
+      examples:
+        - label: Define a workflow
+          language: bash
+          code: |
+            clef-interface action-guide define SpecParser --steps parse
+
+  Annotation:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<concept-name> --scope <scope>"
+      trigger-description: >
+        Use when attaching metadata to concepts and actions for
+        interface generation. Covers tool permissions, examples,
+        trigger descriptions, and custom metadata keys.
+      trigger-patterns:
+        - "annotation"
+        - "metadata"
+        - "tool permissions"
+        - "trigger pattern"
+      trigger-exclude:
+        - "workflow"
+        - "render"
+    annotate:
+      examples:
+        - label: Annotate a concept with metadata
+          language: bash
+          code: |
+            clef-interface annotation annotate SpecParser \
+              --scope concept \
+              --content '{"tool-permissions":["Read","Bash"]}'
+
+  Renderer:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "--key <key> --format <format> --pattern <pattern>"
+      trigger-description: >
+        Use when registering or invoking render handlers for
+        enrichment content. Covers handler registration, content
+        rendering, and pattern/handler discovery.
+      trigger-patterns:
+        - "renderer"
+        - "render"
+        - "pattern"
+        - "handler"
+        - "enrichment"
+      trigger-exclude:
+        - "workflow"
+        - "annotation"
+    register:
+      examples:
+        - label: Register a handler for design principles
+          language: bash
+          code: |
+            clef-interface enrichment-renderer register \
+              --key design-principles --format skill-md \
+              --order 50 --pattern list
+
+  # ── Coordination Concepts ──────────────────────────
+
+  Target:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> --type <target-type>"
+      trigger-description: >
+        Use when coordinating code generation for a specific
+        interface target (REST, GraphQL, gRPC, CLI, MCP, Claude
+        Skills). Covers generation dispatch and output diffing.
+      trigger-patterns:
+        - "target"
+        - "target generation"
+        - "interface target"
+      trigger-exclude:
+        - "sdk"
+        - "spec"
+    generate:
+      examples:
+        - label: Generate REST target
+          language: bash
+          code: |
+            clef-interface target generate proj-001 --type rest
+
+  Sdk:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> --language <lang>"
+      trigger-description: >
+        Use when generating or publishing SDK client libraries
+        across programming languages. Routes to language-specific
+        providers.
+      trigger-patterns:
+        - "sdk"
+        - "client library"
+        - "publish package"
+      trigger-exclude:
+        - "target"
+        - "spec"
+    generate:
+      examples:
+        - label: Generate TypeScript SDK
+          language: bash
+          code: |
+            clef-interface sdk generate proj-001 --language typescript
+
+  Spec:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "--format <format>"
+      trigger-description: >
+        Use when generating or validating specification documents
+        (OpenAPI, AsyncAPI) from concept projections.
+      trigger-patterns:
+        - "spec"
+        - "specification"
+        - "openapi"
+        - "asyncapi"
+      trigger-exclude:
+        - "target"
+        - "sdk"
+    emit:
+      examples:
+        - label: Emit OpenAPI spec
+          language: bash
+          code: |
+            clef-interface spec emit --format openapi
+
+  # ── Target Providers ───────────────────────────────
+
+  RestTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating REST API routes, handlers, and type
+        definitions from concept projections. See Architecture
+        doc Section 2.1.
+      trigger-patterns:
+        - "rest"
+        - "rest api"
+        - "http route"
+      trigger-exclude:
+        - "graphql"
+        - "grpc"
+    generate:
+      examples:
+        - label: Generate REST routes
+          language: bash
+          code: |
+            clef-interface rest generate proj-001
+
+  GraphqlTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating GraphQL schema and resolvers from
+        concept projections. See Architecture doc Section 2.2.
+      trigger-patterns:
+        - "graphql"
+        - "schema"
+        - "resolver"
+        - "relay"
+      trigger-exclude:
+        - "rest"
+        - "grpc"
+    generate:
+      examples:
+        - label: Generate GraphQL schema
+          language: bash
+          code: |
+            clef-interface graphql generate proj-001
+
+  GrpcTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Protocol Buffer definitions and gRPC
+        service stubs. See Architecture doc Section 2.3.
+      trigger-patterns:
+        - "grpc"
+        - "protobuf"
+        - "proto"
+        - "rpc"
+      trigger-exclude:
+        - "rest"
+        - "graphql"
+    generate:
+      examples:
+        - label: Generate gRPC proto definitions
+          language: bash
+          code: |
+            clef-interface grpc generate proj-001
+
+  CliTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating CLI command trees with flags,
+        arguments, and shell completion scripts. See Architecture
+        doc Section 2.4.
+      trigger-patterns:
+        - "cli"
+        - "command line"
+        - "shell completion"
+      trigger-exclude:
+        - "mcp"
+        - "claude skills"
+    generate:
+      examples:
+        - label: Generate CLI command tree
+          language: bash
+          code: |
+            clef-interface cli-target generate proj-001
+
+  McpTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating MCP server implementations with tools,
+        resources, and templates. See Architecture doc Section 2.5.
+      trigger-patterns:
+        - "mcp"
+        - "model context protocol"
+        - "mcp server"
+        - "mcp tool"
+      trigger-exclude:
+        - "cli"
+        - "claude skills"
+    generate:
+      examples:
+        - label: Generate MCP server
+          language: bash
+          code: |
+            clef-interface mcp-target generate proj-001
+
+  ClaudeSkillsTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Claude Code skill files (SKILL.md)
+        with frontmatter, workflow content, and command runners.
+        See Architecture doc Section 2.6.
+      trigger-patterns:
+        - "claude skills"
+        - "skill file"
+        - "SKILL.md"
+      trigger-exclude:
+        - "cli"
+        - "mcp"
+    generate:
+      examples:
+        - label: Generate Claude Code skills
+          language: bash
+          code: |
+            clef-interface claude-skills generate proj-001
+
+  OpenApiTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "[--config <json>]"
+      trigger-description: >
+        Use when generating OpenAPI 3.1 specification documents
+        from concept projections. See Architecture doc Section 2.7.
+      trigger-patterns:
+        - "openapi"
+        - "swagger"
+        - "api spec"
+      trigger-exclude:
+        - "asyncapi"
+    generate:
+      examples:
+        - label: Generate OpenAPI spec
+          language: bash
+          code: |
+            clef-interface openapi generate
+
+  AsyncApiTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "[--config <json>]"
+      trigger-description: >
+        Use when generating AsyncAPI 3.0 specification documents
+        for event-driven interfaces. See Architecture doc Section 2.7.
+      trigger-patterns:
+        - "asyncapi"
+        - "event driven"
+        - "pub sub"
+      trigger-exclude:
+        - "openapi"
+    generate:
+      examples:
+        - label: Generate AsyncAPI spec
+          language: bash
+          code: |
+            clef-interface asyncapi generate
+
+  # ── SDK Providers ──────────────────────────────────
+
+  TsSdkTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating TypeScript SDK client libraries with
+        discriminated union return types and async/await patterns.
+      trigger-patterns:
+        - "typescript sdk"
+        - "ts client"
+        - "npm package"
+      trigger-exclude:
+        - "python sdk"
+        - "go sdk"
+    generate:
+      examples:
+        - label: Generate TypeScript SDK
+          language: bash
+          code: |
+            clef-interface ts-sdk generate proj-001
+
+  PySdkTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Python SDK client libraries with
+        dataclass models and optional async support.
+      trigger-patterns:
+        - "python sdk"
+        - "py client"
+        - "pypi package"
+      trigger-exclude:
+        - "typescript sdk"
+        - "go sdk"
+    generate:
+      examples:
+        - label: Generate Python SDK
+          language: bash
+          code: |
+            clef-interface py-sdk generate proj-001
+
+  GoSdkTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Go SDK modules with struct types,
+        error returns, and context.Context parameters.
+      trigger-patterns:
+        - "go sdk"
+        - "go client"
+        - "go module"
+      trigger-exclude:
+        - "rust sdk"
+        - "java sdk"
+    generate:
+      examples:
+        - label: Generate Go SDK module
+          language: bash
+          code: |
+            clef-interface go-sdk generate proj-001
+
+  RustSdkTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Rust SDK crates with Result enums,
+        serde derives, and async/tokio patterns.
+      trigger-patterns:
+        - "rust sdk"
+        - "rust crate"
+        - "cargo"
+      trigger-exclude:
+        - "go sdk"
+        - "java sdk"
+    generate:
+      examples:
+        - label: Generate Rust SDK crate
+          language: bash
+          code: |
+            clef-interface rust-sdk generate proj-001
+
+  JavaSdkTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Java SDK artifacts with sealed
+        interfaces, CompletableFuture, and Maven configuration.
+      trigger-patterns:
+        - "java sdk"
+        - "java client"
+        - "maven"
+      trigger-exclude:
+        - "rust sdk"
+        - "swift sdk"
+    generate:
+      examples:
+        - label: Generate Java SDK artifact
+          language: bash
+          code: |
+            clef-interface java-sdk generate proj-001
+
+  SwiftSdkTarget:
+    concept:
+      tool-permissions: [Read, Grep, Glob, Write, Bash]
+      argument-template: "<projection> [--config <json>]"
+      trigger-description: >
+        Use when generating Swift SDK packages with Codable
+        conformance, Result types, and SPM configuration.
+      trigger-patterns:
+        - "swift sdk"
+        - "swift package"
+        - "ios client"
+      trigger-exclude:
+        - "java sdk"
+        - "rust sdk"
+    generate:
+      examples:
+        - label: Generate Swift SDK package
+          language: bash
+          code: |
+            clef-interface swift-sdk generate proj-001

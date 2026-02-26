@@ -371,7 +371,7 @@ For complete examples with design rationale:
 
 | Skill | When to Use |
 |-------|------------|
-| `/create-concept-kit` | Bundle multiple related concepts into a reusable suite |
+| `/create-suite` | Bundle multiple related concepts into a reusable suite |
 | `/create-sync` | Write sync rules that connect this concept to others |
 | `/create-implementation` | Write the TypeScript implementation for this concept |
 | `/decompose-feature` | Break down a feature into concepts before designing each one |

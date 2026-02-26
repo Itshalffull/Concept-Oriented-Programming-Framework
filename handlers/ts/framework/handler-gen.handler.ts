@@ -416,7 +416,7 @@ function determineOutputPath(manifest: ConceptManifest, specPath: string): strin
   const kebab = toKebab(manifest.name);
   // Route based on where the spec lives
   if (specPath.startsWith('kits/')) {
-    // Extract kit name: kits/<kit-name>/...
+    // Extract kit name: kits/<suite-name>/...
     const parts = specPath.split('/');
     const suiteName = parts[1];
     // Providers go under providers/ subfolder
