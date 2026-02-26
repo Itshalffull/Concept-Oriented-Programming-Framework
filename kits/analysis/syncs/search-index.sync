@@ -1,0 +1,12 @@
+// Update search indexes when syntax trees are parsed.
+// Feeds file content, extracted symbols, and structural
+// information into SearchIndex providers.
+
+sync SearchIndexSync [eventual]
+when {
+  SyntaxTree/parse: [ file: ?file; grammar: ?grammar ]
+    => [ tree: ?tree ]
+}
+then {
+  SearchIndex/update: [ source: ?file; content: ?text; symbols: ?extractedSymbols ]
+}

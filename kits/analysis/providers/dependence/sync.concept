@@ -1,0 +1,31 @@
+@version(1)
+concept SyncDependenceProvider [I] {
+
+  purpose {
+    Dependence analysis provider for .sync files. Extracts
+    when-clause to then-clause data flow and cross-sync
+    triggering chains as dependency edges.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this provider with PluginRegistry for
+        sync spec dependence analysis.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the sync dependence provider.
+      }
+    }
+  }
+}

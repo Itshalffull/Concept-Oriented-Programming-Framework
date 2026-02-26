@@ -1,0 +1,30 @@
+@version(1)
+concept UniversalTreeSitterDependenceProvider [I] {
+
+  purpose {
+    Fallback dependence analysis provider using generic Tree-sitter
+    queries. Provides basic import and call analysis for any
+    language with a Tree-sitter grammar.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this provider as a fallback with PluginRegistry
+        for universal dependence analysis.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the Tree-sitter dependence provider.
+      }
+    }
+  }
+}

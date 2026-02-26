@@ -1,0 +1,66 @@
+@version(1)
+concept ProgramSlice [Z] {
+
+  purpose {
+    Minimal subgraph of the dependence graph preserving behavior
+    with respect to a slicing criterion. Identifies the exact set
+    of symbols and files relevant to understanding or modifying
+    a specific program point.
+  }
+
+  state {
+    slices: set Z
+    criterionSymbol: Z -> String
+    criterionLocation: Z -> String
+    direction: Z -> String
+    includedSymbols: Z -> String
+    includedFiles: Z -> String
+    edgeCount: Z -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action compute(criterion: String, direction: String) {
+      -> ok(slice: Z) {
+        Compute a program slice from the given criterion symbol.
+        Direction is "forward" (what is affected) or "backward"
+        (what contributes).
+      }
+      -> noDependenceData(message: String) {
+        No dependence graph has been computed for files
+        containing this symbol.
+      }
+    }
+
+    action filesInSlice(slice: Z) {
+      -> ok(files: String) {
+        Return all files included in the slice.
+        Results as serialized JSON array.
+      }
+    }
+
+    action symbolsInSlice(slice: Z) {
+      -> ok(symbols: String) {
+        Return all symbols included in the slice.
+        Results as serialized JSON array.
+      }
+    }
+
+    action get(slice: Z) {
+      -> ok(slice: Z, criterionSymbol: String, direction: String, symbolCount: Int, fileCount: Int, edgeCount: Int) {
+        Retrieve slice metadata.
+      }
+      -> notfound() {
+        Slice does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after compute(criterion: "copf/state-field/Article/title", direction: "forward") -> ok(slice: z)
+    then get(slice: z) -> ok(slice: z, criterionSymbol: "copf/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
+  }
+}

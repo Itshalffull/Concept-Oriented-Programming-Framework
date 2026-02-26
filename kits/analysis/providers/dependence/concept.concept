@@ -1,0 +1,31 @@
+@version(1)
+concept ConceptDependenceProvider [I] {
+
+  purpose {
+    Dependence analysis provider for .concept files. Extracts
+    state field type references and capability requirements
+    as dependency edges.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this provider with PluginRegistry for
+        concept spec dependence analysis.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the concept dependence provider.
+      }
+    }
+  }
+}

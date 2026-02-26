@@ -1,0 +1,32 @@
+@version(1)
+concept GraphTraversalAnalysisProvider [I] {
+
+  purpose {
+    Analysis engine provider for graph reachability queries.
+    Evaluates rules by traversing Graph overlays (flow-graph,
+    call-graph, import-graph, dependence-graph) to find
+    reachability violations and structural patterns.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    engineType: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this engine with PluginRegistry for
+        graph traversal analysis rule evaluation.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the graph traversal engine.
+      }
+    }
+  }
+}

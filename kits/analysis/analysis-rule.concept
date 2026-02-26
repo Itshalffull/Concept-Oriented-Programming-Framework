@@ -1,0 +1,74 @@
+@version(1)
+concept AnalysisRule [U] {
+
+  purpose {
+    Declarative analysis rule for deriving facts from program
+    entities — custom queries, linting, and architectural
+    constraint validation. Supports multiple engine backends
+    (datalog, graph traversal, pattern match).
+  }
+
+  state {
+    rules: set U
+    name: U -> String
+    description: U -> String
+    engine: U -> String
+    source: U -> String
+    severity: U -> String
+    category: U -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, engine: String, source: String, severity: String, category: String) {
+      -> ok(rule: U) {
+        Create a new analysis rule. Engine is one of: datalog,
+        graph-traversal, pattern-match. Severity is one of:
+        error, warning, info. Category classifies the rule
+        (dead-code, security, architecture, convention).
+      }
+      -> invalidSyntax(message: String) {
+        The rule source has syntax errors for the given engine.
+      }
+    }
+
+    action evaluate(rule: U) {
+      -> ok(findings: String) {
+        Evaluate a single rule against the current program state.
+        Findings as serialized JSON array of { message, symbol,
+        file, location }.
+      }
+      -> noFindings() {
+        Rule evaluation produced no findings.
+      }
+      -> evaluationError(message: String) {
+        Rule evaluation failed.
+      }
+    }
+
+    action evaluateAll(category: String) {
+      -> ok(results: String) {
+        Evaluate all rules matching the optional category filter.
+        Results as serialized JSON array of { rule, findingCount,
+        findings }.
+      }
+    }
+
+    action get(rule: U) {
+      -> ok(rule: U, name: String, engine: String, severity: String, category: String) {
+        Retrieve rule metadata.
+      }
+      -> notfound() {
+        Rule does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "dead-variants", engine: "graph-traversal", source: "...", severity: "warning", category: "dead-code") -> ok(rule: u)
+    then get(rule: u) -> ok(rule: u, name: "dead-variants", engine: "graph-traversal", severity: "warning", category: "dead-code")
+  }
+}

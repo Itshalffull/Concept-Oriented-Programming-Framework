@@ -1,0 +1,88 @@
+@version(1)
+concept DependenceGraph [N] {
+
+  purpose {
+    Data and control dependency edges between program elements,
+    within and across files. Enables forward and backward slicing,
+    impact analysis, and dependency queries at file, module, or
+    project scope.
+  }
+
+  state {
+    graphs: set N
+    scope: N -> String
+    scopeRef: N -> String
+    nodes: N -> String
+    edges: N -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action compute(scopeRef: String) {
+      -> ok(graph: N) {
+        Compute a dependence graph for the given scope. Uses
+        provider-dispatched analysis (TypeScript, Rust, concept,
+        sync, or universal Tree-sitter).
+      }
+      -> unsupportedLanguage(language: String) {
+        No dependence provider available for this language.
+      }
+    }
+
+    action queryDependents(symbol: String, edgeKinds: String) {
+      -> ok(dependents: String) {
+        Find all symbols that depend on the given symbol,
+        optionally filtered by edge kind (data-dep, control-dep,
+        call, import, type-dep). Results as serialized JSON array.
+      }
+    }
+
+    action queryDependencies(symbol: String, edgeKinds: String) {
+      -> ok(dependencies: String) {
+        Find all symbols the given symbol depends on.
+        Results as serialized JSON array.
+      }
+    }
+
+    action sliceForward(criterion: String) {
+      -> ok(slice: String, edges: String) {
+        Compute the forward slice from a symbol — all symbols
+        affected by changes to the criterion. Results as
+        serialized JSON.
+      }
+    }
+
+    action sliceBackward(criterion: String) {
+      -> ok(slice: String, edges: String) {
+        Compute the backward slice from a symbol — all symbols
+        that contribute to the criterion. Results as
+        serialized JSON.
+      }
+    }
+
+    action impactAnalysis(changed: String) {
+      -> ok(affected: String, paths: String) {
+        Given a list of changed symbols, compute the transitive
+        set of affected symbols and the dependency paths.
+        Results as serialized JSON.
+      }
+    }
+
+    action get(graph: N) {
+      -> ok(graph: N, scope: String, nodeCount: Int, edgeCount: Int) {
+        Retrieve dependence graph metadata.
+      }
+      -> notfound() {
+        Graph does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after compute(scopeRef: "src/handler.ts") -> ok(graph: n)
+    then get(graph: n) -> ok(graph: n, scope: "file", nodeCount: _, edgeCount: _)
+  }
+}

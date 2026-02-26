@@ -1,0 +1,31 @@
+@version(1)
+concept TypeScriptDependenceProvider [I] {
+
+  purpose {
+    Dependence analysis provider for TypeScript and TSX files.
+    Uses the TypeScript compiler API for type-aware data and
+    control dependency extraction.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    handledLanguages: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this provider with PluginRegistry for
+        TypeScript dependence analysis.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the TypeScript dependence provider.
+      }
+    }
+  }
+}

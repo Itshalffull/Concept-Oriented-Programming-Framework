@@ -1,0 +1,31 @@
+@version(1)
+concept PatternMatchAnalysisProvider [I] {
+
+  purpose {
+    Analysis engine provider for structural pattern matching.
+    Delegates to StructuralPattern for AST-level pattern queries,
+    enabling code smell detection and convention enforcement.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    engineType: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this engine with PluginRegistry for
+        pattern match analysis rule evaluation.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the pattern match engine.
+      }
+    }
+  }
+}

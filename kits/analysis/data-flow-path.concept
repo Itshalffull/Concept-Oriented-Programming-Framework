@@ -1,0 +1,61 @@
+@version(1)
+concept DataFlowPath [W] {
+
+  purpose {
+    Traced flow of data from source to sink through the program.
+    Enables taint tracking, config value propagation tracing,
+    and data provenance analysis.
+  }
+
+  state {
+    paths: set W
+    sourceSymbol: W -> String
+    sinkSymbol: W -> String
+    steps: W -> String
+    pathKind: W -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action trace(source: String, sink: String) {
+      -> ok(paths: String) {
+        Find all data flow paths between a source and sink
+        symbol. Results as serialized JSON array of paths.
+      }
+      -> noPath() {
+        No data flow path exists between source and sink.
+      }
+    }
+
+    action traceFromConfig(configKey: String) {
+      -> ok(paths: String) {
+        Trace all places a config value flows to. Results as
+        serialized JSON array of paths.
+      }
+    }
+
+    action traceToOutput(output: String) {
+      -> ok(paths: String) {
+        Trace all data sources that contribute to a generated
+        output file. Results as serialized JSON array of paths.
+      }
+    }
+
+    action get(path: W) {
+      -> ok(path: W, sourceSymbol: String, sinkSymbol: String, pathKind: String, stepCount: Int) {
+        Retrieve data flow path metadata.
+      }
+      -> notfound() {
+        Path does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after trace(source: "config/db-url", sink: "ts/function/connect") -> ok(paths: p)
+    then get(path: _) -> ok(path: _, sourceSymbol: "config/db-url", sinkSymbol: "ts/function/connect", pathKind: "config-propagation", stepCount: _)
+  }
+}

@@ -1,0 +1,12 @@
+// Compute dependence graphs after scope graphs are built.
+// Uses provider-dispatched analysis for the file's language
+// to extract data and control dependency edges.
+
+sync DependenceComputeSync [eventual]
+when {
+  ScopeGraph/build: [ file: ?file; tree: ?tree ]
+    => [ graph: ?scope ]
+}
+then {
+  DependenceGraph/compute: [ scopeRef: ?file ]
+}

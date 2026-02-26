@@ -1,0 +1,98 @@
+kit:
+  name: analysis
+  version: 0.1.0
+  description: >
+    Program analysis overlays — dependence graphs, data flow
+    tracing, program slicing, and declarative analysis rules.
+    Computed from parse and symbol layers to enable impact
+    analysis, taint tracking, and architectural validation.
+
+concepts:
+  DependenceGraph:
+    spec: ./dependence-graph.concept
+    params:
+      N: { as: dep-graph-id, description: "Dependence graph identifier" }
+
+  DataFlowPath:
+    spec: ./data-flow-path.concept
+    params:
+      W: { as: flow-path-id, description: "Flow path identifier" }
+
+  ProgramSlice:
+    spec: ./program-slice.concept
+    params:
+      Z: { as: slice-id, description: "Slice identifier" }
+
+  AnalysisRule:
+    spec: ./analysis-rule.concept
+    params:
+      U: { as: rule-id, description: "Rule identifier" }
+
+  # Dependence providers
+  TypeScriptDependenceProvider:
+    spec: ./providers/dependence/typescript.concept
+    optional: true
+  ConceptDependenceProvider:
+    spec: ./providers/dependence/concept.concept
+    optional: true
+  SyncDependenceProvider:
+    spec: ./providers/dependence/sync.concept
+    optional: true
+  DatalogDependenceProvider:
+    spec: ./providers/dependence/datalog.concept
+    optional: true
+  UniversalTreeSitterDependenceProvider:
+    spec: ./providers/dependence/universal.concept
+    optional: true
+
+  # Analysis engine providers
+  DatalogAnalysisProvider:
+    spec: ./providers/analysis-engines/datalog.concept
+    optional: true
+  GraphTraversalAnalysisProvider:
+    spec: ./providers/analysis-engines/graph-traversal.concept
+    optional: true
+  PatternMatchAnalysisProvider:
+    spec: ./providers/analysis-engines/pattern-match.concept
+    optional: true
+
+syncs:
+  required: []
+
+  recommended:
+    - path: ./syncs/dependence-compute.sync
+      name: DependenceComputeSync
+      description: >
+        Compute dependence graphs after scope graphs are built.
+
+    - path: ./syncs/search-index.sync
+      name: SearchIndexSync
+      description: >
+        Update search indexes when syntax trees are parsed.
+
+  integration: []
+
+uses:
+  - kit: parse
+    concepts:
+      - name: SyntaxTree
+      - name: FileArtifact
+      - name: StructuralPattern
+  - kit: symbol
+    concepts:
+      - name: Symbol
+      - name: SymbolOccurrence
+      - name: ScopeGraph
+  - kit: semantic
+    concepts:
+      - name: ConceptEntity
+      - name: ActionEntity
+      - name: SyncEntity
+  - kit: data-organization
+    concepts:
+      - name: Graph
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+dependencies: []
