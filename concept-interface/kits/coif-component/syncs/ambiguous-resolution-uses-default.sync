@@ -1,0 +1,15 @@
+# ============================================================
+# AmbiguousResolutionUsesDefault — coif-component recommended sync
+#
+# When widget resolution returns ambiguous (multiple equal
+# candidates), use the first candidate as default.
+# ============================================================
+
+sync AmbiguousResolutionUsesDefault [eager]
+when {
+  WidgetResolver/resolve: [ resolver: ?element ]
+    => ambiguous(resolver: ?element; candidates: ?candidates)
+}
+then {
+  Widget/get: [ widget: ?candidates ]
+}

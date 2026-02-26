@@ -1,33 +1,43 @@
-# kits/coif-component/kit.yaml
 kit:
   name: coif-component
-  version: 0.1.0
+  version: 0.4.0
   description: >
-    Headless component state machines, anatomies, and slot composition.
-    Widgets are behavioral specifications without rendering — finite
-    state machines that produce a props API via connect(), consumable
-    by any framework adapter.
+    Headless component behaviors, semantic interaction classification,
+    and context-aware widget resolution. Widgets are parsed ASTs from
+    .widget specs. Interactors classify WHAT the user does, Affordances
+    declare WHEN a widget is suitable, WidgetResolver decides WHICH
+    widget for a given context.
 
 concepts:
   Widget:
     spec: ./widget.concept
     params:
-      P: { as: widget-ref, description: "Reference to a registered widget type" }
+      P: { as: widget-ref, description: "Reference to a registered widget AST" }
 
   Machine:
     spec: ./machine.concept
     params:
       M: { as: machine-ref, description: "Reference to a running machine instance" }
 
-  Anatomy:
-    spec: ./anatomy.concept
-    params:
-      N: { as: anatomy-ref, description: "Reference to a component anatomy definition" }
-
   Slot:
     spec: ./slot.concept
     params:
       L: { as: slot-ref, description: "Reference to a named insertion point" }
+
+  Interactor:
+    spec: ./interactor.concept
+    params:
+      I: { as: interactor-ref, description: "Reference to an abstract interaction type" }
+
+  Affordance:
+    spec: ./affordance.concept
+    params:
+      F: { as: affordance-ref, description: "Reference to a widget capability declaration" }
+
+  WidgetResolver:
+    spec: ./widget-resolver.concept
+    params:
+      R: { as: resolver-ref, description: "Reference to a widget resolution context" }
 
 syncs:
   required:
@@ -38,23 +48,43 @@ syncs:
         instances to clean up timers and state.
 
   recommended:
-    - path: ./syncs/element-to-machine.sync
-      name: ElementToMachine
+    - path: ./syncs/elements-classified.sync
+      name: ElementsClassified
       description: >
-        When abstract elements are extracted, query the component
-        registry for appropriate widget machines.
+        Classify each element's abstract interaction type after
+        UISchema generates the element tree.
+
+    - path: ./syncs/classified-elements-resolved.sync
+      name: ClassifiedElementsResolved
+      description: >
+        Resolve classified elements to concrete widgets using
+        affordance matching and runtime context.
+
+    - path: ./syncs/resolved-widget-spawned.sync
+      name: ResolvedWidgetSpawned
+      description: >
+        Retrieve widget AST for a resolved widget name.
 
     - path: ./syncs/spawn-machine-for-element.sync
       name: SpawnMachineForElement
       description: >
-        When a widget spec is retrieved, spawn a machine instance
-        with auto-generated context.
+        Spawn a machine instance for a retrieved widget AST.
+
+    - path: ./syncs/ambiguous-resolution-uses-default.sync
+      name: AmbiguousResolutionUsesDefault
+      description: >
+        When widget resolution is ambiguous, use the first candidate.
+
+    - path: ./syncs/unresolved-element-signals-error.sync
+      name: UnresolvedElementSignalsError
+      description: >
+        When no widget matches an element, signal error to the host.
 
     - path: ./syncs/machine-to-adapter.sync
       name: MachineToFrameworkAdapter
       description: >
         When a machine produces props via connect(), send to the
-        active framework adapter for normalization.
+        active framework adapter for rendering.
 
 dependencies:
-  - coif-core: ">=0.1.0"
+  - coif-core: ">=0.4.0"

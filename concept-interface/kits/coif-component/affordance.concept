@@ -1,0 +1,78 @@
+@version(1)
+concept Affordance [F] {
+
+  purpose {
+    Declare what semantic interaction situations a widget
+    can serve. Each affordance binds a widget name to an
+    interactor type with conditional constraints. A widget
+    may have multiple affordances at different specificity
+    levels. The most specific matching affordance wins.
+    Affordances are declared in .widget file affordance
+    sections and registered by WidgetParser.
+  }
+
+  state {
+    affordances: set F
+    widget: F -> String
+    interactor: F -> String
+    specificity: F -> Int
+    conditions {
+      minOptions: F -> option Int
+      maxOptions: F -> option Int
+      platform: F -> option String
+      viewport: F -> option String
+      density: F -> option String
+      mutable: F -> option Bool
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action declare(affordance: F, widget: String,
+                   interactor: String, specificity: Int,
+                   conditions: option String) {
+      -> ok(affordance: F) {
+        Declare that widget can serve the named interactor
+        type when conditions are met. Higher specificity wins.
+      }
+      -> duplicate(message: String) { Exact affordance exists. }
+    }
+
+    action match(affordance: F, interactor: String,
+                 context: String) {
+      -> ok(matches: String) {
+        Find all affordances matching the interactor type
+        whose conditions are satisfied by context. Returns
+        ranked list by specificity then score.
+        Context: { optionCount, platform, viewport, density }.
+      }
+      -> none(message: String) { No affordances match. }
+    }
+
+    action explain(affordance: F) {
+      -> ok(affordance: F, reason: String) {
+        Human-readable explanation of selection/rejection.
+      }
+      -> notfound(message: String) { Affordance missing. }
+    }
+
+    action remove(affordance: F) {
+      -> ok(affordance: F) { Remove declaration. }
+      -> notfound(message: String) { Affordance missing. }
+    }
+  }
+
+  invariant {
+    after declare(affordance: f1, widget: "radio-group",
+      interactor: "single-choice", specificity: 10,
+      conditions: "{ \"maxOptions\": 8 }") -> ok(affordance: f1)
+    and declare(affordance: f2, widget: "select",
+      interactor: "single-choice", specificity: 5,
+      conditions: _) -> ok(affordance: f2)
+    then match(affordance: _, interactor: "single-choice",
+      context: "{ \"optionCount\": 4 }") -> ok(matches: _)
+  }
+}

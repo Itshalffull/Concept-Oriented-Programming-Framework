@@ -1,0 +1,16 @@
+# ============================================================
+# ResolvedWidgetSpawned — coif-component recommended sync
+#
+# Retrieve the widget AST for the widget name selected by
+# the resolver. Bridges resolution to instantiation.
+# ============================================================
+
+sync ResolvedWidgetSpawned [eager]
+when {
+  WidgetResolver/resolve: [ resolver: ?element ]
+    => ok(resolver: ?element; widget: ?widgetName;
+         score: ?_; reason: ?_)
+}
+then {
+  Widget/get: [ widget: ?widgetName ]
+}

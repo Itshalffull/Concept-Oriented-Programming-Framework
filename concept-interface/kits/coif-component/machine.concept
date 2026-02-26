@@ -2,65 +2,68 @@
 concept Machine [M] {
 
   purpose {
-    Finite state machine runtime. Instantiates and executes
-    behavioral state machines defined by Widget. A Machine
-    instance holds current state, processes events, executes
-    guards and actions, and produces output via connect().
-
-    The connect() function transforms machine state into a
-    framework-neutral props API. For a dialog in "open" state:
-    { getRootProps(), getTriggerProps(), getContentProps(),
-      isOpen: true, open(), close() }
-
-    These props are plain objects — no framework dependency.
-    Each FrameworkAdapter transforms them into framework bindings.
+    Finite state machine runtime. Each instance executes a
+    behavioral specification (from a WidgetAST): states,
+    transitions, guards, entry/exit actions. Produces a
+    framework-neutral props API via the connect action —
+    anatomy parts mapped to attributes and handlers.
   }
 
   state {
-    current: M -> String
+    currentState: M -> String
     context: M -> String
     component: M -> String
     status: M -> String
   }
 
+  capabilities {
+    requires persistent-storage
+  }
+
   actions {
-    action spawn(machine: M, component: String, context: String) {
+    action spawn(machine: M, widget: String, context: String) {
       -> ok(machine: M) {
-        Create machine instance from registered component type.
-        Initialize with component defaults merged with context.
+        Create machine instance from registered widget name.
+        Initialize to the widget's initial state. Store
+        provided context.
       }
-      -> notfound(message: String) { Widget type not registered. }
+      -> notfound(message: String) { Widget not registered. }
+      -> invalid(message: String) { Context malformed. }
     }
 
     action send(machine: M, event: String) {
       -> ok(machine: M, state: String) {
-        Send event to machine. Evaluates transitions from current
-        state: checks guards, executes actions, moves to target.
-        Events: { "type": "OPEN" } or { "type": "SET_VALUE", "value": "..." }
+        Process event. Execute transition if current state
+        handles it. Run exit actions on departing state,
+        entry actions on entering state. Return new state.
       }
-      -> invalid(message: String) { Event not valid in current state. }
-      -> notfound(message: String) { Machine does not exist. }
+      -> invalid(message: String) { Event not handled in current state. }
+      -> guarded(machine: M, guard: String) { Guard blocked transition. }
     }
 
     action connect(machine: M) {
       -> ok(machine: M, props: String) {
-        Produce framework-neutral props API. JSON object where keys
-        are anatomy part names and values are prop objects with
-        event handlers, ARIA attributes, data attributes, state flags.
+        Produce framework-neutral props from current state
+        and context. Props map anatomy parts to attributes:
+        ARIA roles, event handlers, data-state attributes,
+        conditional visibility. Generated from the .widget
+        connect section.
       }
-      -> notfound(message: String) { Machine does not exist. }
+      -> notfound(message: String) { Machine missing. }
     }
 
     action destroy(machine: M) {
-      -> ok(machine: M) { Tear down, run exit actions, clean up timers. }
-      -> notfound(message: String) { Machine does not exist. }
+      -> ok(machine: M) {
+        Run exit actions on current state, dispose machine.
+      }
+      -> notfound(message: String) { Machine missing. }
     }
   }
 
   invariant {
-    after spawn(machine: m, component: "dialog",
-                context: "{ \"open\": false }")
+    after spawn(machine: m, widget: "dialog", context: "{}")
       -> ok(machine: m)
-    then connect(machine: m) -> ok(machine: m, props: _)
+    then send(machine: m, event: "{ \"type\": \"OPEN\" }")
+      -> ok(machine: m, state: "open")
   }
 }

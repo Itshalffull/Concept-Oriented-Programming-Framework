@@ -1,0 +1,18 @@
+# ============================================================
+# ElementsClassified — coif-component recommended sync
+#
+# Classify each element's abstract interaction type after
+# UISchema generates the element tree. This is the first step
+# of the two-step semantic widget selection pipeline.
+# ============================================================
+
+sync ElementsClassified [eager]
+when {
+  UISchema/getElements: [ schema: ?schema ]
+    => ok(elements: ?elements)
+}
+then {
+  Interactor/classify: [ interactor: ?elements;
+    fieldType: ?elements; constraints: ?elements;
+    intent: ?elements ]
+}

@@ -1,0 +1,82 @@
+@version(1)
+concept Interactor [I] {
+
+  purpose {
+    Abstract interaction type taxonomy. Classifies user
+    interactions by semantic purpose independent of any
+    concrete widget. A single-choice interactor means
+    "user selects one from a set" — whether that renders
+    as radio buttons, a dropdown, or a voice prompt is
+    determined downstream by affordance matching.
+  }
+
+  state {
+    types: set I
+    name: I -> String
+    category: I -> String
+    properties {
+      dataType: I -> String
+      cardinality: I -> String
+      optionCount: I -> option Int
+      optionSource: I -> option String
+      domain: I -> option String
+      comparison: I -> Bool
+      mutable: I -> Bool
+      multiLine: I -> Bool
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(interactor: I, name: String, category: String,
+                  properties: String) {
+      -> ok(interactor: I) {
+        Define an interaction type. Categories:
+        selection, edit, control, output, navigation,
+        composition. Properties describe semantic
+        constraints on the type.
+      }
+      -> duplicate(message: String) { Name already defined. }
+    }
+
+    action classify(interactor: I, fieldType: String,
+                    constraints: option String,
+                    intent: option String) {
+      -> ok(interactor: I, confidence: Float) {
+        Classify a concept field into an interaction type.
+        Uses field type, constraints (min/max, enum, cardinality),
+        and optional intent annotation for best match.
+        Confidence: 1.0 = exact, 0.5 = heuristic.
+      }
+      -> ambiguous(interactor: I, candidates: String) {
+        Multiple types match equally. Returns ranked list.
+      }
+    }
+
+    action get(interactor: I) {
+      -> ok(interactor: I, name: String, category: String,
+           properties: String) { Retrieve full definition. }
+      -> notfound(message: String) { Type not defined. }
+    }
+
+    action list(category: option String) {
+      -> ok(interactors: String) {
+        List types, optionally filtered by category.
+      }
+    }
+  }
+
+  invariant {
+    after define(interactor: i, name: "single-choice",
+      category: "selection",
+      properties: "{ \"cardinality\": \"one\", \"comparison\": true }")
+      -> ok(interactor: i)
+    then classify(interactor: _, fieldType: "T -> T",
+      constraints: "{ \"enum\": [\"A\",\"B\",\"C\"] }",
+      intent: _)
+      -> ok(interactor: _, confidence: _)
+  }
+}

@@ -1,15 +1,18 @@
 # ============================================================
 # MachineToFrameworkAdapter — coif-component recommended sync
 #
-# SUPERSEDED by adapter-pipeline.sync in coif-render.
-#
-# Previously this sync routed Machine/connect props to
-# FrameworkAdapter/normalize directly. Now the adapter pipeline
-# in coif-render handles this: per-framework adapter concepts
-# (ReactAdapter, SolidAdapter, etc.) each have their own sync
-# rule that fires on Machine/connect, routing to the correct
-# adapter based on the active framework.
-#
-# This file is retained for documentation — the actual routing
-# lives in coif-render/syncs/adapter-pipeline.sync.
+# When a machine produces framework-neutral props via connect(),
+# route them to the active framework adapter for rendering.
 # ============================================================
+
+sync MachineToFrameworkAdapter [eager]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => ok(machine: ?machine; props: ?props)
+}
+where {
+  FrameworkAdapter: { ?adapter status: "active" }
+}
+then {
+  FrameworkAdapter/render: [ adapter: ?adapter; props: ?props ]
+}

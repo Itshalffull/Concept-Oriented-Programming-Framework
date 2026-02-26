@@ -1,0 +1,93 @@
+@version(1)
+concept WidgetResolver [R] {
+
+  purpose {
+    Context-aware selection of the best widget for a given
+    abstract element. Gathers semantic properties from the
+    element's interactor type, combines with runtime context,
+    queries affordance declarations, and returns a ranked
+    selection. Replaces flat type-mapping tables with a
+    parameterized, extensible decision engine.
+  }
+
+  state {
+    overrides: R -> option String
+    defaultContext: R -> String
+    scoringWeights: R -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action resolve(resolver: R, element: String,
+                   context: String) {
+      -> ok(resolver: R, widget: String, score: Float,
+           reason: String) {
+        Select best widget for element in context.
+        1. Read element's interactor type and properties
+        2. Merge runtime context with defaults
+        3. Check for explicit overrides
+        4. Query affordance matches for candidates
+        5. Score candidates by specificity + condition fit
+        6. Return highest-scoring widget with explanation
+      }
+      -> ambiguous(resolver: R, candidates: String) {
+        Multiple widgets scored equally.
+      }
+      -> none(resolver: R, element: String) {
+        No widget matches. Needs manual binding.
+      }
+    }
+
+    action resolveAll(resolver: R, elements: String,
+                      context: String) {
+      -> ok(resolver: R, resolutions: String) {
+        Batch-resolve all elements in a tree.
+      }
+      -> partial(resolver: R, resolved: String,
+                 unresolved: String) { Some unresolved. }
+    }
+
+    action override(resolver: R, element: String,
+                    widget: String) {
+      -> ok(resolver: R) {
+        Force widget for element, bypassing affordance
+        matching. Used by progressive customization Level 1+
+        and UISchema overrides.
+      }
+      -> invalid(message: String) { Widget not registered. }
+    }
+
+    action setWeights(resolver: R, weights: String) {
+      -> ok(resolver: R) {
+        Adjust scoring weights (accessibility vs compactness,
+        mobile-native vs cross-platform).
+      }
+      -> invalid(message: String) { Weight spec malformed. }
+    }
+
+    action explain(resolver: R, element: String,
+                   context: String) {
+      -> ok(resolver: R, explanation: String) {
+        Full resolution trace: interactor type, affordances
+        considered, why winner won.
+      }
+      -> notfound(message: String) { Element not found. }
+    }
+  }
+
+  invariant {
+    after resolve(resolver: r,
+      element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }",
+      context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }")
+      -> ok(resolver: r, widget: "radio-group", score: _, reason: _)
+
+    after override(resolver: r, element: "{ \"kind\": \"selection-single\" }",
+      widget: "custom-picker") -> ok(resolver: r)
+    then resolve(resolver: r,
+      element: "{ \"kind\": \"selection-single\" }", context: _)
+      -> ok(resolver: r, widget: "custom-picker", score: _, reason: _)
+  }
+}

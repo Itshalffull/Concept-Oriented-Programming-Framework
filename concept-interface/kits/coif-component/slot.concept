@@ -2,54 +2,42 @@
 concept Slot [L] {
 
   purpose {
-    Named insertion points for component composition. Enables the
-    compound component pattern without coupling. Replaces Atomic
-    Design's rigid hierarchy with flexible, on-demand composition.
-    Supports named slots, default slots, and scoped slots.
+    Named insertion points for component composition.
+    A slot defines a location within a widget's anatomy
+    where external content can be injected without modifying
+    the host widget's behavior or structure.
   }
 
   state {
     name: L -> String
-    component: L -> String
-    defaultContent: L -> option String
-    scope: L -> option String
-    filled: L -> Bool
-  }
-
-  capabilities {
-    requires persistent-storage
+    host: L -> String
+    content: L -> option String
+    position: L -> String
+    fallback: L -> option String
   }
 
   actions {
-    action define(slot: L, name: String, component: String) {
-      -> ok(slot: L) { Define a slot on a component. }
-      -> invalid(message: String) { Anatomy does not include this slot. }
+    action define(slot: L, name: String, host: String,
+                  position: String, fallback: option String) {
+      -> ok(slot: L) { Define an insertion point. }
+      -> duplicate(message: String) { Name taken on this host. }
     }
 
     action fill(slot: L, content: String) {
-      -> ok(slot: L) {
-        Fill with content: component reference, raw content,
-        or scoped render function key.
-      }
-      -> notfound(message: String) { Slot does not exist. }
-    }
-
-    action setDefault(slot: L, defaultContent: String) {
-      -> ok(slot: L) { Set fallback content when no fill provided. }
-      -> notfound(message: String) { Slot does not exist. }
+      -> ok(slot: L) { Inject content into slot. }
+      -> notfound(message: String) { Slot missing. }
     }
 
     action clear(slot: L) {
-      -> ok(slot: L) { Remove fill, revert to default. }
-      -> notfound(message: String) { Slot does not exist. }
+      -> ok(slot: L) { Remove content, revert to fallback. }
+      -> notfound(message: String) { Slot missing. }
     }
   }
 
   invariant {
-    after define(slot: l, name: "header", component: "card")
+    after define(slot: l, name: "header", host: "dialog",
+                 position: "before-title", fallback: _)
       -> ok(slot: l)
-    then fill(slot: l, content: "{ \"type\": \"text\", \"value\": \"Hello\" }")
-      -> ok(slot: l)
-    and clear(slot: l) -> ok(slot: l)
+    then fill(slot: l, content: "Custom Header") -> ok(slot: l)
   }
 }

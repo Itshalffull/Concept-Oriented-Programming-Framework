@@ -2,24 +2,17 @@
 concept Widget [P] {
 
   purpose {
-    Headless state machine catalog. Each component type is a named
-    behavioral specification — complete widget logic without rendering.
-    Inspired by Zag.js: components are finite state machines that
-    produce a props API via connect(), consumable by any framework.
-    Standard library: button, input, textarea, select, checkbox,
-    radio, toggle, dialog, popover, tooltip, tabs, accordion, menu,
-    combobox, datepicker, slider, toast, alert, table, form,
-    listview, card, avatar, badge, breadcrumb, pagination, progress,
-    skeleton, spinner.
+    Catalog of parsed widget specifications available for
+    instantiation. Each entry is a validated WidgetAST
+    produced by WidgetParser. The catalog bridges spec-time
+    parsing and run-time instantiation.
   }
 
   state {
     name: P -> String
-    anatomy: P -> String
-    defaultConfig: P -> String
-    machineSpec: P -> String
-    a11ySpec: P -> String
     category: P -> String
+    ast: P -> String
+    version: P -> Int
   }
 
   capabilities {
@@ -27,51 +20,38 @@ concept Widget [P] {
   }
 
   actions {
-    action register(component: P, name: String, machineSpec: String,
-                    anatomy: String, a11ySpec: String) {
-      -> ok(component: P) {
-        Register a component type. machineSpec: JSON state machine
-        (states, transitions, guards, actions). anatomy: named parts.
-        a11ySpec: ARIA attributes, keyboard interactions, focus management.
+    action register(widget: P, name: String, ast: String,
+                    category: String) {
+      -> ok(widget: P) {
+        Register a parsed widget AST. Only accepts output
+        from a parser — raw JSON or source strings rejected.
       }
-      -> duplicate(message: String) { Already registered. }
+      -> duplicate(message: String) { Name already registered. }
+      -> invalid(message: String) { AST failed validation. }
     }
 
-    action configure(component: P, config: String) {
-      -> ok(component: P) { Set default config (initial machine context). }
-      -> notfound(message: String) { Not registered. }
-    }
-
-    action get(component: P) {
-      -> ok(component: P, machineSpec: String, anatomy: String, a11ySpec: String) {
-        Retrieve full specification for instantiation.
+    action get(widget: P) {
+      -> ok(widget: P, ast: String, name: String) {
+        Retrieve widget AST for instantiation.
       }
       -> notfound(message: String) { Not registered. }
     }
 
     action list(category: option String) {
-      -> ok(components: String) {
-        List registered types. Categories: input, display,
-        overlay, navigation, feedback, layout, composite.
+      -> ok(widgets: String) {
+        List registered widgets, optionally filtered.
       }
     }
 
-    action unregister(component: P) {
-      -> ok(component: P) { Remove from registry. }
+    action unregister(widget: P) {
+      -> ok(widget: P) { Remove from catalog. }
       -> notfound(message: String) { Not registered. }
     }
   }
 
   invariant {
-    after register(component: p, name: "button",
-                   machineSpec: "{ \"initial\": \"idle\" }",
-                   anatomy: "{ \"parts\": [\"root\"] }",
-                   a11ySpec: "{ \"role\": \"button\" }")
-      -> ok(component: p)
-    then get(component: p)
-      -> ok(component: p,
-            machineSpec: "{ \"initial\": \"idle\" }",
-            anatomy: "{ \"parts\": [\"root\"] }",
-            a11ySpec: "{ \"role\": \"button\" }")
+    after register(widget: p, name: "dialog", ast: _,
+                   category: "overlay") -> ok(widget: p)
+    then get(widget: p) -> ok(widget: p, ast: _, name: "dialog")
   }
 }
