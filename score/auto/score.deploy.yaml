@@ -1,0 +1,63 @@
+# Score — Built-in Deployment Manifest
+#
+# Automatically included in every Clef app deployment.
+# Score runs in the same runtime as the app's sync engine
+# using in-process transport and memory storage (upgraded
+# to persistent storage in production deployments).
+#
+# This manifest is merged with the app's deploy.yaml by the
+# deployment validator. Users never need to write this.
+
+app:
+  name: score
+  version: "0.1.0"
+  uri: urn:copf/score
+  builtin: true
+
+# Score always runs in the app's engine runtime — it
+# needs to observe all action completions and sync firings.
+# The runtime key "auto" means "same runtime as the engine."
+runtimes:
+  auto:
+    type: auto
+    engine: false
+    transport: in-process
+    storage: memory
+
+concepts:
+  ScoreApi:
+    spec: score/auto/score-api.concept
+    builtin: true
+    implementations:
+      - language: typescript
+        path: handlers/ts/score/score-api.handler.ts
+        runtime: auto
+        storage: memory
+        queryMode: graphql
+  ScoreIndex:
+    spec: score/auto/score-index.concept
+    builtin: true
+    implementations:
+      - language: typescript
+        path: handlers/ts/score/score-index.handler.ts
+        runtime: auto
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: score/auto/syncs/auto-register.sync
+    engine: auto
+    annotations: [eager]
+    builtin: true
+  - path: score/auto/syncs/index-on-parse.sync
+    engine: auto
+    annotations: [eager]
+    builtin: true
+  - path: score/auto/syncs/score-on-generate.sync
+    engine: auto
+    annotations: [eager]
+    builtin: true
+  - path: score/auto/syncs/score-on-deploy.sync
+    engine: auto
+    annotations: [eventual]
+    builtin: true

@@ -1,0 +1,17 @@
+// Update Score semantic graph when code generation runs.
+// Records provenance from specs to generated artifacts so
+// LLMs can answer "what files were generated from this spec?"
+// and "what spec produced this file?"
+
+sync ScoreOnGenerateSync [eager]
+when {
+  Emitter/write: [ path: ?outputPath; content: _; sources: ?sources ]
+    => [ written: true; contentHash: ?hash ]
+}
+then {
+  ScoreIndex/upsertFile: [
+    path: ?outputPath;
+    language: "generated";
+    role: "generated";
+    definitions: ?sources ]
+}

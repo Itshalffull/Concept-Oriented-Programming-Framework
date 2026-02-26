@@ -1,0 +1,108 @@
+@version(1)
+concept ScoreIndex [X] {
+
+  purpose {
+    Materialized index backing ScoreApi queries. Maintains
+    denormalized views of the five Score layers (parse, symbol,
+    semantic, analysis, discovery) optimized for fast LLM-friendly
+    lookups. Rebuilt incrementally as project files change.
+    Auto-registered as a built-in concept in every Clef runtime.
+  }
+
+  state {
+    indexes: set X
+    meta {
+      kind: X -> String
+      entityCount: X -> Int
+      lastUpdated: X -> DateTime
+    }
+    concepts {
+      conceptName: X -> String
+      purpose: X -> String
+      actions: X -> list String
+      stateFields: X -> list String
+      file: X -> String
+    }
+    syncs {
+      syncName: X -> String
+      annotation: X -> String
+      triggers: X -> list String
+      effects: X -> list String
+      file: X -> String
+    }
+    symbols {
+      symbolName: X -> String
+      symbolKind: X -> String
+      file: X -> String
+      line: X -> Int
+      scope: X -> String
+    }
+    files {
+      filePath: X -> String
+      language: X -> String
+      role: X -> String
+      definitions: X -> list String
+    }
+  }
+
+  actions {
+    action upsertConcept(name: String, purpose: String, actions: list String, stateFields: list String, file: String) {
+      -> ok(index: X) {
+        Insert or update a concept entry in the index.
+      }
+      -> error(message: String) {
+        Invalid concept data.
+      }
+    }
+
+    action upsertSync(name: String, annotation: String, triggers: list String, effects: list String, file: String) {
+      -> ok(index: X) {
+        Insert or update a sync entry in the index.
+      }
+      -> error(message: String) {
+        Invalid sync data.
+      }
+    }
+
+    action upsertSymbol(name: String, kind: String, file: String, line: Int, scope: String) {
+      -> ok(index: X) {
+        Insert or update a symbol entry in the index.
+      }
+      -> error(message: String) {
+        Invalid symbol data.
+      }
+    }
+
+    action upsertFile(path: String, language: String, role: String, definitions: list String) {
+      -> ok(index: X) {
+        Insert or update a file entry in the index.
+      }
+      -> error(message: String) {
+        Invalid file data.
+      }
+    }
+
+    action removeByFile(path: String) {
+      -> ok(removed: Int) {
+        Remove all index entries associated with a file.
+      }
+    }
+
+    action clear() {
+      -> ok(cleared: Int) {
+        Clear all index entries. Used before a full reindex.
+      }
+    }
+
+    action stats() {
+      -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, lastUpdated: DateTime) {
+        Return current index statistics.
+      }
+    }
+  }
+
+  invariant {
+    after upsertConcept(name: "Test", purpose: "A test concept", actions: a, stateFields: f, file: "/test.concept") -> ok(index: x)
+    then stats() -> ok(conceptCount: c, syncCount: s, symbolCount: y, fileCount: f2, lastUpdated: t)
+  }
+}

@@ -1,0 +1,307 @@
+@version(1)
+concept ScoreApi [Q] {
+
+  purpose {
+    Unified facade over the five Score kits (parse, symbol, semantic,
+    analysis, discovery) providing a single LLM-friendly surface for
+    querying any COPF project's structure, symbols, semantics, data
+    flows, and search indexes. Every Clef app gets ScoreApi registered
+    automatically — LLMs can immediately ask questions about the
+    codebase without configuration. Actions are designed for natural
+    language invocation: parameter names read as English, results are
+    structured for tool-use consumption, and error variants include
+    actionable suggestions.
+  }
+
+  state {
+    queries: set Q
+    queryState {
+      kind: Q -> String
+      input: Q -> String
+      result: Q -> String
+      timestamp: Q -> DateTime
+    }
+    indexes {
+      conceptCount: Q -> Int
+      symbolCount: Q -> Int
+      fileCount: Q -> Int
+      syncCount: Q -> Int
+      lastIndexed: Q -> DateTime
+    }
+  }
+
+  actions {
+    # ─── Structural Queries (Parse Layer) ───────────────────
+
+    action listFiles(pattern: String) {
+      -> ok(files: list { path: String, language: String, role: String, size: Int }) {
+        List all files in the project matching a glob pattern.
+        Returns path, detected language, role (source, generated,
+        config, test, doc), and file size. Use "*" for all files.
+      }
+      -> empty(pattern: String) {
+        No files match the given pattern.
+      }
+    }
+
+    action getFileTree(path: String, depth: Int) {
+      -> ok(tree: String, fileCount: Int, dirCount: Int) {
+        Get a hierarchical tree view of the project starting at
+        the given path. Depth controls recursion level (0 = full).
+        Tree is formatted as an indented text tree suitable for
+        display in chat or tool output.
+      }
+      -> notFound(path: String) {
+        The specified path does not exist in the project.
+      }
+    }
+
+    action getFileContent(path: String) {
+      -> ok(content: String, language: String, definitions: list String) {
+        Read a file's content along with its detected language
+        and the names of top-level definitions it contains.
+      }
+      -> notFound(path: String) {
+        File does not exist in the project.
+      }
+    }
+
+    action getDefinitions(path: String) {
+      -> ok(definitions: list { name: String, kind: String, line: Int, span: String }) {
+        Extract all definition units from a file — functions,
+        classes, types, concept actions, sync rules, etc. Each
+        entry includes the definition name, its kind, the line
+        number, and the source span.
+      }
+      -> notFound(path: String) {
+        File does not exist or has not been parsed.
+      }
+    }
+
+    action matchPattern(pattern: String, language: String) {
+      -> ok(matches: list { file: String, line: Int, text: String, context: String }) {
+        Run a structural pattern query (tree-sitter query syntax)
+        across all files of the given language. Returns matching
+        locations with surrounding context.
+      }
+      -> invalidPattern(pattern: String, error: String) {
+        The pattern syntax is invalid for the given language.
+      }
+    }
+
+    # ─── Symbol Queries (Symbol Layer) ──────────────────────
+
+    action findSymbol(name: String) {
+      -> ok(symbols: list { name: String, kind: String, file: String, line: Int, scope: String }) {
+        Find all symbols matching the given name. Returns the
+        symbol kind (function, type, concept, action, field, etc.),
+        defining file, line number, and enclosing scope.
+      }
+      -> notFound(name: String) {
+        No symbols match the given name. Consider using search
+        for fuzzy matching.
+      }
+    }
+
+    action getReferences(symbol: String) {
+      -> ok(definition: { file: String, line: Int }, references: list { file: String, line: Int, kind: String }) {
+        Find all references to a symbol across the project.
+        Returns the definition location and all reference
+        locations with their reference kind (read, write, call,
+        import, type-use).
+      }
+      -> notFound(symbol: String) {
+        Symbol not found. Check spelling or use findSymbol first.
+      }
+    }
+
+    action getScope(file: String, line: Int) {
+      -> ok(scope: String, symbols: list { name: String, kind: String }, parent: option String) {
+        Get the scope at a specific file location. Returns the
+        scope name, all symbols visible in that scope, and the
+        parent scope if any.
+      }
+      -> notFound(file: String) {
+        File not found or has not been analyzed.
+      }
+    }
+
+    action getRelationships(symbol: String) {
+      -> ok(relationships: list { from: String, to: String, kind: String, file: String }) {
+        Get typed relationships involving a symbol — implements,
+        extends, overrides, calls, imports, depends-on, etc.
+      }
+      -> notFound(symbol: String) {
+        Symbol not found.
+      }
+    }
+
+    # ─── Semantic Queries (Semantic Layer) ──────────────────
+
+    action listConcepts() {
+      -> ok(concepts: list { name: String, purpose: String, actions: list String, stateFields: list String, file: String }) {
+        List all concepts in the project with their purpose,
+        action names, state field names, and defining file path.
+        This is the primary entry point for understanding a
+        COPF application's architecture.
+      }
+    }
+
+    action getConcept(name: String) {
+      -> ok(concept: { name: String, purpose: String, typeParams: list String, actions: list { name: String, params: list String, variants: list String }, stateFields: list { name: String, type: String, relation: String }, invariants: list String, file: String }) {
+        Get complete details of a concept — its purpose, type
+        parameters, actions with params and variants, state
+        fields with types and relation groups, invariants, and
+        source file.
+      }
+      -> notFound(name: String) {
+        Concept not found. Use listConcepts to see available concepts.
+      }
+    }
+
+    action getAction(concept: String, action: String) {
+      -> ok(action: { name: String, params: list { name: String, type: String }, variants: list { name: String, fields: list String, prose: String }, description: String }) {
+        Get full details of a concept action — parameters with
+        types, all variants with their fields and prose, and the
+        action description.
+      }
+      -> notFound(concept: String, action: String) {
+        Action not found on the given concept.
+      }
+    }
+
+    action listSyncs() {
+      -> ok(syncs: list { name: String, annotation: String, triggers: list String, effects: list String, file: String }) {
+        List all sync rules in the project with their annotation
+        (eager, eventual, local), trigger patterns, effect actions,
+        and source file.
+      }
+    }
+
+    action getSync(name: String) {
+      -> ok(sync: { name: String, annotation: String, when: list { concept: String, action: String, bindings: list String }, where: list String, then: list { concept: String, action: String, bindings: list String }, file: String }) {
+        Get full details of a sync rule — the when clause with
+        pattern-matched concept/action/bindings, optional where
+        clause with queries and filters, and then clause with
+        invoked concept/action/bindings.
+      }
+      -> notFound(name: String) {
+        Sync not found. Use listSyncs to see available syncs.
+      }
+    }
+
+    action getFlow(startConcept: String, startAction: String) {
+      -> ok(flow: list { step: Int, concept: String, action: String, sync: String, variant: String }) {
+        Trace the static flow graph starting from a concept
+        action. Shows the chain of sync firings and concept
+        action invocations that would occur. Useful for
+        understanding side effects and cross-concept coordination.
+      }
+      -> notFound(concept: String, action: String) {
+        Starting concept/action not found.
+      }
+    }
+
+    # ─── Analysis Queries (Analysis Layer) ──────────────────
+
+    action getDependencies(symbol: String) {
+      -> ok(directDeps: list { name: String, kind: String, file: String }, transitiveDeps: list { name: String, kind: String, file: String }) {
+        Get direct and transitive dependencies of a symbol.
+        Shows what a symbol depends on (imports, calls, reads).
+      }
+      -> notFound(symbol: String) {
+        Symbol not found.
+      }
+    }
+
+    action getDependents(symbol: String) {
+      -> ok(directDeps: list { name: String, kind: String, file: String }, transitiveDeps: list { name: String, kind: String, file: String }) {
+        Get direct and transitive dependents of a symbol.
+        Shows what depends on this symbol (reverse dependencies).
+        Useful for impact analysis.
+      }
+      -> notFound(symbol: String) {
+        Symbol not found.
+      }
+    }
+
+    action getImpact(file: String) {
+      -> ok(directImpact: list { file: String, reason: String }, transitiveImpact: list { file: String, reason: String }) {
+        Analyze the impact of changing a file. Returns directly
+        affected files and transitively affected files with the
+        reason for impact (import, sync reference, type dependency,
+        generated-from, etc.).
+      }
+      -> notFound(file: String) {
+        File not found.
+      }
+    }
+
+    action getDataFlow(from: String, to: String) {
+      -> ok(paths: list { hops: list { symbol: String, file: String, kind: String }, length: Int }) {
+        Find data flow paths between two symbols. Shows how data
+        moves from one point to another through the program.
+        Useful for understanding action chains and sync propagation.
+      }
+      -> noPath(from: String, to: String) {
+        No data flow path exists between the given symbols.
+      }
+    }
+
+    # ─── Discovery Queries (Discovery Layer) ────────────────
+
+    action search(query: String, limit: Int) {
+      -> ok(results: list { name: String, kind: String, file: String, line: Int, score: Float, snippet: String }) {
+        Search the project using natural language. Combines
+        semantic embedding similarity, trigram text search, and
+        symbol-aware indexing for best results. Returns ranked
+        matches with relevance score and context snippet.
+      }
+      -> empty(query: String) {
+        No results found. Try broader terms or check listConcepts
+        for available concepts.
+      }
+    }
+
+    action explain(symbol: String) {
+      -> ok(summary: String, kind: String, definedIn: String, usedBy: list String, relationships: list String) {
+        Generate a natural language explanation of a symbol —
+        what it is, where it's defined, what uses it, and its
+        key relationships. Designed for LLM consumption: the
+        summary is a complete sentence suitable for embedding
+        in a response.
+      }
+      -> notFound(symbol: String) {
+        Symbol not found.
+      }
+    }
+
+    # ─── Index Management ───────────────────────────────────
+
+    action status() {
+      -> ok(indexed: Bool, conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, lastIndexed: DateTime) {
+        Get the current status of the Score index. Returns
+        counts of indexed entities and the last indexing time.
+      }
+    }
+
+    action reindex() {
+      -> ok(conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, duration: Int) {
+        Force a full reindex of the project. Parses all files,
+        extracts symbols, builds semantic graph, computes
+        analysis overlays, and generates embeddings. Returns
+        counts and duration in milliseconds.
+      }
+      -> inProgress(startedAt: DateTime) {
+        A reindex is already in progress.
+      }
+    }
+  }
+
+  invariant {
+    after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, duration: d)
+    then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, lastIndexed: t)
+    and listConcepts() -> ok(concepts: concepts)
+    and listSyncs() -> ok(syncs: syncs)
+  }
+}

@@ -1,0 +1,24 @@
+// Automatically register Score kits when a Clef app boots.
+// Fires on the first concept registration, ensuring Score
+// concepts are available before user concepts begin executing.
+// See Architecture doc Section 10.1 for kernel bootstrap order.
+
+sync ScoreAutoRegisterSync [eager]
+when {
+  Registry/register: [ uri: ?uri; transport: ?transport ]
+    => [ concept: ?concept ]
+}
+where {
+  filter(?uri != "urn:copf/ScoreApi")
+  filter(?uri != "urn:copf/ScoreIndex")
+  filter(?uri != "urn:copf/SyncEngine")
+  filter(?uri != "urn:copf/Web")
+}
+then {
+  Registry/register: [
+    uri: "urn:copf/ScoreApi";
+    transport: "builtin" ]
+  Registry/register: [
+    uri: "urn:copf/ScoreIndex";
+    transport: "builtin" ]
+}

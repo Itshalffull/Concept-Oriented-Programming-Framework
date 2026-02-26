@@ -1,0 +1,58 @@
+// Index semantic entities into ScoreIndex when files are parsed.
+// Feeds concept specs, sync specs, and symbol extractions into
+// the materialized index for LLM queries.
+
+sync ScoreIndexOnParseConceptSync [eager]
+when {
+  ConceptEntity/register: [ name: ?name; source: ?file; ast: ?ast ]
+    => [ entity: ?entity ]
+}
+then {
+  ScoreIndex/upsertConcept: [
+    name: ?name;
+    purpose: ?ast.purpose;
+    actions: ?ast.actionNames;
+    stateFields: ?ast.fieldNames;
+    file: ?file ]
+}
+
+sync ScoreIndexOnParseSyncSync [eager]
+when {
+  SyncEntity/register: [ name: ?name; source: ?file ]
+    => [ entity: ?entity ]
+}
+then {
+  ScoreIndex/upsertSync: [
+    name: ?name;
+    annotation: ?entity.annotation;
+    triggers: ?entity.triggers;
+    effects: ?entity.effects;
+    file: ?file ]
+}
+
+sync ScoreIndexOnSymbolSync [eager]
+when {
+  Symbol/register: [ name: ?name; kind: ?kind; file: ?file; line: ?line; scope: ?scope ]
+    => [ symbol: ?symbol ]
+}
+then {
+  ScoreIndex/upsertSymbol: [
+    name: ?name;
+    kind: ?kind;
+    file: ?file;
+    line: ?line;
+    scope: ?scope ]
+}
+
+sync ScoreIndexOnFileSync [eager]
+when {
+  FileArtifact/register: [ path: ?path; language: ?lang; role: ?role ]
+    => [ artifact: ?artifact ]
+}
+then {
+  ScoreIndex/upsertFile: [
+    path: ?path;
+    language: ?lang;
+    role: ?role;
+    definitions: ?artifact.definitions ]
+}

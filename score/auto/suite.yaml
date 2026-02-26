@@ -1,0 +1,91 @@
+suite:
+  name: score-auto
+  version: 0.1.0
+  description: >
+    Automatic Score integration for Clef apps. Provides a unified
+    ScoreApi facade over the five Score kits (parse, symbol, semantic,
+    analysis, discovery) and auto-registers Score as a built-in
+    concept in every Clef runtime. Includes pre-built interface
+    manifests for GraphQL, MCP, Claude Skills, and OpenAI function
+    calling — all optimized for LLM consumption.
+
+concepts:
+  ScoreApi:
+    spec: ./score-api.concept
+    params:
+      Q: { as: query-id, description: "Score query identifier" }
+
+  ScoreIndex:
+    spec: ./score-index.concept
+    params:
+      X: { as: index-id, description: "Score index identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/auto-register.sync
+      name: ScoreAutoRegisterSync
+      description: >
+        Automatically register all Score kits when a Clef app
+        boots. Fires on Registry/register completion for any
+        concept, ensuring Score is available before user concepts
+        begin executing.
+
+    - path: ./syncs/index-on-parse.sync
+      name: ScoreIndexOnParseSync
+      description: >
+        Maintain Score indexes when files are parsed. Feeds
+        semantic entities into the ScoreIndex for LLM queries.
+
+  recommended:
+    - path: ./syncs/score-on-generate.sync
+      name: ScoreOnGenerateSync
+      description: >
+        Update Score semantic graph when code generation runs.
+        Tracks provenance from specs to generated artifacts.
+
+    - path: ./syncs/score-on-deploy.sync
+      name: ScoreOnDeploySync
+      description: >
+        Record deployment topology in Score's semantic layer.
+        Enables runtime-aware queries about where concepts run.
+
+  integration: []
+
+uses:
+  - kit: parse
+    concepts:
+      - name: SyntaxTree
+      - name: FileArtifact
+      - name: ContentDigest
+      - name: DefinitionUnit
+  - kit: symbol
+    concepts:
+      - name: Symbol
+      - name: SymbolOccurrence
+      - name: ScopeGraph
+      - name: SymbolRelationship
+  - kit: semantic
+    concepts:
+      - name: ConceptEntity
+      - name: ActionEntity
+      - name: VariantEntity
+      - name: StateField
+      - name: SyncEntity
+  - kit: analysis
+    concepts:
+      - name: DependenceGraph
+      - name: DataFlowPath
+      - name: ProgramSlice
+  - kit: discovery
+    concepts:
+      - name: SemanticEmbedding
+  - kit: runtime
+    concepts:
+      - name: Registry
+
+dependencies:
+  - kit: parse
+  - kit: symbol
+  - kit: semantic
+  - kit: analysis
+  - kit: discovery
