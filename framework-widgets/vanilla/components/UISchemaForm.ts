@@ -2,7 +2,7 @@
 // UISchemaForm — Vanilla DOM Component
 //
 // Creates a <form> element with input fields generated from
-// a COIF UISchema definition. Handles submit with
+// a Clef Surface UISchema definition. Handles submit with
 // preventDefault and collects form data into a typed object.
 // Uses ElementRenderer internally for field creation.
 // ============================================================
@@ -15,12 +15,12 @@ import type {
   ElementConfig,
 } from '../../shared/types.js';
 
-import { mapElementToHTML } from '../../shared/coif-bridge.js';
+import { mapElementToHTML } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
 export interface UISchemaFormProps {
-  /** COIF UISchema definition */
+  /** Clef Surface UISchema definition */
   schema: UISchema;
   /** Which view to render (defaults to 'create') */
   view?: 'list' | 'detail' | 'create' | 'edit';
@@ -63,7 +63,7 @@ export class UISchemaForm {
 
     // Create form element
     this.el = document.createElement('form');
-    this.el.setAttribute('data-coif-form', props.schema.concept);
+    this.el.setAttribute('data-surface-form', props.schema.concept);
     this.el.setAttribute('novalidate', '');
 
     if (props.className) {
@@ -299,7 +299,7 @@ export class UISchemaForm {
     label.style.marginBottom = '4px';
     wrapper.appendChild(label);
 
-    // Create the input element using the COIF element mapper
+    // Create the input element using the Clef Surface element mapper
     const hint = mapElementToHTML(field.element);
     const input = document.createElement(hint.tag);
     input.id = `field-${field.name}`;

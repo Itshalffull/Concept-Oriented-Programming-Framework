@@ -1,0 +1,20 @@
+# ============================================================
+# FormValidatesViaValidator — surface-integration recommended sync
+#
+# Delegate form submission validation to the library Validator
+# concept. When a form machine enters the "validating" state,
+# send the form data for constraint checking.
+# ============================================================
+
+sync FormValidatesViaValidator [eager]
+when {
+  Machine/send: [ machine: ?form; event: "{ \"type\": \"SUBMIT\" }" ]
+    => ok(machine: ?form; state: "validating")
+}
+where {
+  Binding: { ?binding signalMap: ?map }
+  filter(contains(?map, ?form))
+}
+then {
+  Validator/validate: [ nodeId: ?form; formData: ?map ]
+}

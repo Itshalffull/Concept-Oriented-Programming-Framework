@@ -5,7 +5,7 @@
 # Optimized for Next.js-style API routes with edge caching.
 #
 # Usage:
-#   copf deploy --manifest deploy/vercel.deploy.yaml
+#   clef deploy --manifest deploy/vercel.deploy.yaml
 
 app:
   name: conduit
@@ -37,7 +37,7 @@ infrastructure:
     http:
       type: http
       config:
-        basePath: /api/copf
+        basePath: /api/clef
         timeout: 10000
 
 concepts:

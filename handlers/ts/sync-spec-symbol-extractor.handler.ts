@@ -44,7 +44,7 @@ function extractFromSyncSpec(source: string, file: string): Array<{
     if (syncMatch) {
       syncName = syncMatch[1];
       symbols.push({
-        symbolString: `copf/sync/${syncName}`,
+        symbolString: `clef/sync/${syncName}`,
         kind: 'sync',
         displayName: syncName,
         role: 'definition',
@@ -63,7 +63,7 @@ function extractFromSyncSpec(source: string, file: string): Array<{
 
       // Concept reference
       symbols.push({
-        symbolString: `copf/concept/${conceptRef}`,
+        symbolString: `clef/concept/${conceptRef}`,
         kind: 'concept',
         displayName: conceptRef,
         role: 'reference',
@@ -73,7 +73,7 @@ function extractFromSyncSpec(source: string, file: string): Array<{
 
       // Action reference
       symbols.push({
-        symbolString: `copf/concept/${conceptRef}/action/${actionRef}`,
+        symbolString: `clef/concept/${conceptRef}/action/${actionRef}`,
         kind: 'action',
         displayName: `${conceptRef}.${actionRef}`,
         role: 'reference',
@@ -95,7 +95,7 @@ function extractFromSyncSpec(source: string, file: string): Array<{
       if (line.charAt(bindingMatch.index + bindingMatch[0].length) === '"') continue;
 
       symbols.push({
-        symbolString: `copf/sync/${syncName || 'unknown'}/var/${varName}`,
+        symbolString: `clef/sync/${syncName || 'unknown'}/var/${varName}`,
         kind: 'variable',
         displayName: varName,
         role: 'definition',
@@ -109,7 +109,7 @@ function extractFromSyncSpec(source: string, file: string): Array<{
     if (variantMatch) {
       const variantName = variantMatch[1];
       symbols.push({
-        symbolString: `copf/variant/${variantName}`,
+        symbolString: `clef/variant/${variantName}`,
         kind: 'variant',
         displayName: variantName,
         role: 'reference',

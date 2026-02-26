@@ -1,5 +1,5 @@
 # Middleware injected triggers file writing
-# Architecture doc: Interface Kit, Sync Section 3.7
+# Architecture doc: Clef Bind, Sync Section 3.7
 
 sync WriteOnInject [eager]
 when {

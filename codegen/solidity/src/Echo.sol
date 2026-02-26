@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Echo
 /// @notice Concept-oriented echo (ping/pong) service
-/// @dev Implements the Echo concept from COPF specification.
+/// @dev Implements the Echo concept from Clef specification.
 ///      Stores a message and echoes it back, serving as a health-check pattern.
 
 contract Echo {

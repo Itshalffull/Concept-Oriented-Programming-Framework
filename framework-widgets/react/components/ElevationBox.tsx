@@ -1,6 +1,6 @@
 // ============================================================
 // ElevationBox — A <div> wrapper that applies box-shadow based
-// on a COIF ElevationLevel (0-5).
+// on a Clef Surface ElevationLevel (0-5).
 //
 // Uses elevationToCSS from the bridge to resolve the shadow
 // string for each level. Supports custom shadow layers and an
@@ -17,7 +17,7 @@ import React, {
 } from 'react';
 
 import type { ElevationLevel, ShadowLayer } from '../../shared/types.js';
-import { elevationToCSS, shadowLayersToCSS } from '../../shared/coif-bridge.js';
+import { elevationToCSS, shadowLayersToCSS } from '../../shared/surface-bridge.js';
 
 // --------------- Props ---------------
 
@@ -94,7 +94,7 @@ export const ElevationBox: React.FC<ElevationBoxProps> = ({
       {...rest}
       className={className}
       style={mergedStyle}
-      data-coif-elevation=""
+      data-surface-elevation=""
       data-elevation-level={effectiveLevel}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

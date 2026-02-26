@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Pathauto",
+  "uri": "urn:clef/Pathauto",
   "name": "Pathauto",
   "typeParams": [
     {
@@ -242,11 +242,11 @@
   "jsonSchemas": {
     "invocations": {
       "generateAlias": {
-        "$id": "urn:copf/Pathauto/generateAlias/invocation",
+        "$id": "urn:clef/Pathauto/generateAlias/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Pathauto"
+            "const": "urn:clef/Pathauto"
           },
           "action": {
             "const": "generateAlias"
@@ -269,11 +269,11 @@
         }
       },
       "bulkGenerate": {
-        "$id": "urn:copf/Pathauto/bulkGenerate/invocation",
+        "$id": "urn:clef/Pathauto/bulkGenerate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Pathauto"
+            "const": "urn:clef/Pathauto"
           },
           "action": {
             "const": "bulkGenerate"
@@ -296,11 +296,11 @@
         }
       },
       "cleanString": {
-        "$id": "urn:copf/Pathauto/cleanString/invocation",
+        "$id": "urn:clef/Pathauto/cleanString/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Pathauto"
+            "const": "urn:clef/Pathauto"
           },
           "action": {
             "const": "cleanString"
@@ -322,11 +322,11 @@
     "completions": {
       "generateAlias": {
         "ok": {
-          "$id": "urn:copf/Pathauto/generateAlias/completion/ok",
+          "$id": "urn:clef/Pathauto/generateAlias/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Pathauto"
+              "const": "urn:clef/Pathauto"
             },
             "action": {
               "const": "generateAlias"
@@ -348,11 +348,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Pathauto/generateAlias/completion/notfound",
+          "$id": "urn:clef/Pathauto/generateAlias/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Pathauto"
+              "const": "urn:clef/Pathauto"
             },
             "action": {
               "const": "generateAlias"
@@ -370,11 +370,11 @@
       },
       "bulkGenerate": {
         "ok": {
-          "$id": "urn:copf/Pathauto/bulkGenerate/completion/ok",
+          "$id": "urn:clef/Pathauto/bulkGenerate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Pathauto"
+              "const": "urn:clef/Pathauto"
             },
             "action": {
               "const": "bulkGenerate"
@@ -396,11 +396,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Pathauto/bulkGenerate/completion/notfound",
+          "$id": "urn:clef/Pathauto/bulkGenerate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Pathauto"
+              "const": "urn:clef/Pathauto"
             },
             "action": {
               "const": "bulkGenerate"
@@ -418,11 +418,11 @@
       },
       "cleanString": {
         "ok": {
-          "$id": "urn:copf/Pathauto/cleanString/completion/ok",
+          "$id": "urn:clef/Pathauto/cleanString/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Pathauto"
+              "const": "urn:clef/Pathauto"
             },
             "action": {
               "const": "cleanString"

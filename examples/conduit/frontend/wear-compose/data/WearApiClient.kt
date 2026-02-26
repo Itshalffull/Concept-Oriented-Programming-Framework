@@ -1,7 +1,7 @@
 // Conduit Example App -- Wear OS Compose API Client
 // Retrofit-based HTTP client with compact models for Wear OS.
 
-package com.copf.conduit.wear.data
+package com.clef.conduit.wear.data
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient

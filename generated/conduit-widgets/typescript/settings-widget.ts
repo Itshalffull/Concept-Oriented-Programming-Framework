@@ -21,12 +21,12 @@ export const settingsWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Profile',
+      concept: 'urn:clef/Profile',
       actions: ['update'],
       queries: ['get'],
     },
     {
-      concept: 'urn:copf/Password',
+      concept: 'urn:clef/Password',
       actions: ['validate', 'set'],
       queries: [],
     },

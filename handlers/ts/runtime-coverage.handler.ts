@@ -233,7 +233,7 @@ export const runtimeCoverageHandler: ConceptHandler = {
     const widget = input.widget as string;
     const since = input.since as string;
 
-    const widgetSymbol = `copf/widget/${widget}`;
+    const widgetSymbol = `clef/widget/${widget}`;
 
     // Gather coverage entries for various lifecycle events
     const mountEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/mount`, entityKind: 'widget-mount' });
@@ -305,7 +305,7 @@ export const runtimeCoverageHandler: ConceptHandler = {
 
     for (const w of allWidgets) {
       const widgetName = w.name as string;
-      const widgetSymbol = `copf/widget/${widgetName}`;
+      const widgetSymbol = `clef/widget/${widgetName}`;
 
       const mountEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/mount`, entityKind: 'widget-mount' });
       const renderEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/render`, entityKind: 'widget-render' });

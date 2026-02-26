@@ -8,7 +8,7 @@ When an action is invoked (either by a sync or directly), the framework follows 
 
 ```
 1. ActionInvocation arrives
-   ├── concept: "urn:copf/Article"
+   ├── concept: "urn:clef/Article"
    ├── action: "create"
    └── input: { article: "...", title: "...", ... }
 
@@ -19,7 +19,7 @@ When an action is invoked (either by a sync or directly), the framework follows 
    └── Returns { variant: "ok", article: "..." }
 
 4. ActionCompletion produced
-   ├── concept: "urn:copf/Article"
+   ├── concept: "urn:clef/Article"
    ├── action: "create"
    ├── variant: "ok"
    └── output: { article: "..." }
@@ -32,7 +32,7 @@ When an action is invoked (either by a sync or directly), the framework follows 
 ```typescript
 interface ActionInvocation {
   id: string;           // Unique invocation ID
-  concept: string;      // Concept URI (e.g., "urn:copf/Article")
+  concept: string;      // Concept URI (e.g., "urn:clef/Article")
   action: string;       // Action name (e.g., "create")
   input: Record<string, unknown>;  // Action parameters
   flow: string;         // Flow ID (groups related actions)
@@ -67,7 +67,7 @@ import { createKernel } from './kernel-factory';
 import { articleHandler } from './article.impl';
 
 const kernel = createKernel();
-kernel.registerConcept('urn:copf/Article', articleHandler);
+kernel.registerConcept('urn:clef/Article', articleHandler);
 ```
 
 The kernel:
@@ -78,7 +78,7 @@ The kernel:
 ### Versioned Registration (with migration support)
 
 ```typescript
-await kernel.registerVersionedConcept('urn:copf/Article', articleHandler, 2);
+await kernel.registerVersionedConcept('urn:clef/Article', articleHandler, 2);
 ```
 
 This additionally:
@@ -88,15 +88,15 @@ This additionally:
 
 ### Concept URIs
 
-Convention: `urn:copf/<ConceptName>`
+Convention: `urn:clef/<ConceptName>`
 
 ```
-urn:copf/User
-urn:copf/Password
-urn:copf/JWT
-urn:copf/Article
-urn:copf/Comment
-urn:copf/Echo
+urn:clef/User
+urn:clef/Password
+urn:clef/JWT
+urn:clef/Article
+urn:clef/Comment
+urn:clef/Echo
 ```
 
 For testing, you may use `urn:test/<Name>` prefixes.
@@ -174,9 +174,9 @@ import { echoHandler } from '../handlers/ts/app/echo.impl';
 describe('Echo Concept', () => {
   it('stores and echoes message', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/Echo', echoHandler);
+    kernel.registerConcept('urn:clef/Echo', echoHandler);
 
-    const result = await kernel.invokeConcept('urn:copf/Echo', 'send', {
+    const result = await kernel.invokeConcept('urn:clef/Echo', 'send', {
       id: 'msg-1',
       text: 'hello world',
     });
@@ -205,10 +205,10 @@ Becomes:
 ```typescript
 it('invariant: after set, check returns correct validity', async () => {
   const kernel = createKernel();
-  kernel.registerConcept('urn:copf/Password', passwordHandler);
+  kernel.registerConcept('urn:clef/Password', passwordHandler);
 
   // AFTER: set(user: x, password: "secret") -> ok(user: x)
-  const step1 = await kernel.invokeConcept('urn:copf/Password', 'set', {
+  const step1 = await kernel.invokeConcept('urn:clef/Password', 'set', {
     user: 'test-user-x',
     password: 'secret12',   // Must satisfy validation (>= 8 chars)
   });
@@ -216,7 +216,7 @@ it('invariant: after set, check returns correct validity', async () => {
   expect(step1.user).toBe('test-user-x');
 
   // THEN: check(user: x, password: "secret") -> ok(valid: true)
-  const step2 = await kernel.invokeConcept('urn:copf/Password', 'check', {
+  const step2 = await kernel.invokeConcept('urn:clef/Password', 'check', {
     user: 'test-user-x',
     password: 'secret12',
   });
@@ -224,7 +224,7 @@ it('invariant: after set, check returns correct validity', async () => {
   expect(step2.valid).toBe(true);
 
   // AND: check(user: x, password: "wrong") -> ok(valid: false)
-  const step3 = await kernel.invokeConcept('urn:copf/Password', 'check', {
+  const step3 = await kernel.invokeConcept('urn:clef/Password', 'check', {
     user: 'test-user-x',
     password: 'wrongpassword',
   });
@@ -242,9 +242,9 @@ Test each error variant explicitly:
 ```typescript
 it('returns notfound for missing article', async () => {
   const kernel = createKernel();
-  kernel.registerConcept('urn:copf/Article', articleHandler);
+  kernel.registerConcept('urn:clef/Article', articleHandler);
 
-  const result = await kernel.invokeConcept('urn:copf/Article', 'get', {
+  const result = await kernel.invokeConcept('urn:clef/Article', 'get', {
     article: 'nonexistent',
   });
 
@@ -254,15 +254,15 @@ it('returns notfound for missing article', async () => {
 
 it('returns error for duplicate name', async () => {
   const kernel = createKernel();
-  kernel.registerConcept('urn:copf/User', userHandler);
+  kernel.registerConcept('urn:clef/User', userHandler);
 
   // First registration succeeds
-  await kernel.invokeConcept('urn:copf/User', 'register', {
+  await kernel.invokeConcept('urn:clef/User', 'register', {
     user: 'u1', name: 'alice', email: 'a@b.com',
   });
 
   // Duplicate name fails
-  const dup = await kernel.invokeConcept('urn:copf/User', 'register', {
+  const dup = await kernel.invokeConcept('urn:clef/User', 'register', {
     user: 'u2', name: 'alice', email: 'c@d.com',
   });
   expect(dup.variant).toBe('error');
@@ -277,7 +277,7 @@ Test the concept within a complete sync-driven flow:
 ```typescript
 it('processes echo flow with syncs', async () => {
   const kernel = createKernel();
-  kernel.registerConcept('urn:copf/Echo', echoHandler);
+  kernel.registerConcept('urn:clef/Echo', echoHandler);
   await kernel.loadSyncs(resolve(SYNCS_DIR, 'echo.sync'));
 
   const response = await kernel.handleRequest({
@@ -293,8 +293,8 @@ it('processes echo flow with syncs', async () => {
 
   const completions = flow.filter(r => r.type === 'completion');
   const actions = completions.map(r => `${r.concept}/${r.action}`);
-  expect(actions).toContain('urn:copf/Echo/send');
-  expect(actions).toContain('urn:copf/Web/respond');
+  expect(actions).toContain('urn:clef/Echo/send');
+  expect(actions).toContain('urn:clef/Web/respond');
 });
 ```
 
@@ -328,7 +328,7 @@ Two approaches for registering syncs in tests:
 kernel.registerSync({
   name: 'HandleEcho',
   when: [{
-    concept: 'urn:copf/Web', action: 'request',
+    concept: 'urn:clef/Web', action: 'request',
     inputFields: [
       { name: 'method', match: { type: 'literal', value: 'echo' } },
       { name: 'text', match: { type: 'variable', name: 'text' } },

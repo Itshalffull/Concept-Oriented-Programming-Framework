@@ -5,7 +5,7 @@
 //   (ast: ConceptAST) => ValidationResult
 //
 // Validators live in this directory and are registered by name.
-// The `copf check --pattern <name> <concept>` command dispatches
+// The `clef check --pattern <name> <concept>` command dispatches
 // to the named validator.
 //
 // See Architecture doc Sections 16.11, 16.12.

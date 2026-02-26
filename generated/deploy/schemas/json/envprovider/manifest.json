@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/EnvProvider",
+  "uri": "urn:clef/EnvProvider",
   "name": "EnvProvider",
   "typeParams": [
     {
@@ -172,11 +172,11 @@
   "jsonSchemas": {
     "invocations": {
       "fetch": {
-        "$id": "urn:copf/EnvProvider/fetch/invocation",
+        "$id": "urn:clef/EnvProvider/fetch/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EnvProvider"
+            "const": "urn:clef/EnvProvider"
           },
           "action": {
             "const": "fetch"
@@ -198,11 +198,11 @@
     "completions": {
       "fetch": {
         "ok": {
-          "$id": "urn:copf/EnvProvider/fetch/completion/ok",
+          "$id": "urn:clef/EnvProvider/fetch/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EnvProvider"
+              "const": "urn:clef/EnvProvider"
             },
             "action": {
               "const": "fetch"
@@ -224,11 +224,11 @@
           }
         },
         "variableNotSet": {
-          "$id": "urn:copf/EnvProvider/fetch/completion/variableNotSet",
+          "$id": "urn:clef/EnvProvider/fetch/completion/variableNotSet",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EnvProvider"
+              "const": "urn:clef/EnvProvider"
             },
             "action": {
               "const": "fetch"

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // Conflict Resolver Plugin — on-chain bidirectional sync conflict resolution
-// for the SyncPair concept in the COPF Data Integration Kit.
+// for the SyncPair concept in the Clef Data Integration Kit.
 //
 // On-chain conflict resolution provides an immutable audit trail of how data
 // conflicts were resolved during bidirectional sync operations. Resolution

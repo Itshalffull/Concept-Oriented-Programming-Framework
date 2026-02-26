@@ -107,7 +107,7 @@ describe('ConceptManifest Structure', () => {
     const ast = parseConceptFile(readSpec('app', 'password'));
     const manifest = await generateManifest(ast);
 
-    expect(manifest.uri).toBe('urn:copf/Password');
+    expect(manifest.uri).toBe('urn:clef/Password');
     expect(manifest.name).toBe('Password');
     expect(manifest.typeParams).toHaveLength(1);
     expect(manifest.typeParams[0].name).toBe('U');
@@ -212,7 +212,7 @@ describe('ConceptManifest Structure', () => {
 
     // Verify invocation schema structure
     const setInv = manifest.jsonSchemas.invocations['set'] as any;
-    expect(setInv.$id).toBe('urn:copf/Password/set/invocation');
+    expect(setInv.$id).toBe('urn:clef/Password/set/invocation');
     expect(setInv.properties.input.properties.user.type).toBe('string');
     expect(setInv.properties.input.properties.password.type).toBe('string');
   });

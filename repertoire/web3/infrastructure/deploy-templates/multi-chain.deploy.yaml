@@ -13,7 +13,7 @@ deploy:
     its own ChainMonitor instance with chain-specific finality.
 
   runtime:
-    engine: copf-sync-engine
+    engine: clef-sync-engine
     transport: http
 
   concepts:

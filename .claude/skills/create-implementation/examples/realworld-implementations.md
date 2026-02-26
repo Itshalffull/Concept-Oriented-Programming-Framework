@@ -24,7 +24,7 @@ All concept handler implementations from the RealWorld (Conduit) blogging platfo
 
 ```typescript
 // echo.handler.ts — 12 lines
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const echoHandler: ConceptHandler = {
   async send(input, storage) {
@@ -46,7 +46,7 @@ export const echoHandler: ConceptHandler = {
 
 ```typescript
 // user.handler.ts — 27 lines
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const userHandler: ConceptHandler = {
   async register(input, storage) {
@@ -83,7 +83,7 @@ export const userHandler: ConceptHandler = {
 ```typescript
 // password.handler.ts — 47 lines
 import { createHash, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const passwordHandler: ConceptHandler = {
   async set(input, storage) {
@@ -143,7 +143,7 @@ export const passwordHandler: ConceptHandler = {
 ```typescript
 // jwt.handler.ts — 56 lines
 import { createHmac, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 const JWT_SECRET = randomBytes(32);
 
@@ -209,7 +209,7 @@ export const jwtHandler: ConceptHandler = {
 
 ```typescript
 // article.handler.ts — 93 lines
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 function slugify(title: string): string {
   return title
@@ -304,7 +304,7 @@ export const articleHandler: ConceptHandler = {
 
 ```typescript
 // comment.handler.ts — 50 lines
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const commentHandler: ConceptHandler = {
   async create(input, storage) {
@@ -361,7 +361,7 @@ export const commentHandler: ConceptHandler = {
 
 ```typescript
 // favorite.handler.ts — 63 lines
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const favoriteHandler: ConceptHandler = {
   async favorite(input, storage) {

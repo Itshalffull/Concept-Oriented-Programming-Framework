@@ -28,7 +28,7 @@ describe('Flow Tracing', () => {
     kernel.registerSync({
       name: 'HandleEcho',
       when: [{
-        concept: 'urn:copf/Web', action: 'request',
+        concept: 'urn:clef/Web', action: 'request',
         inputFields: [
           { name: 'method', match: { type: 'literal', value: 'echo' } },
           { name: 'text', match: { type: 'variable', name: 'text' } },
@@ -51,7 +51,7 @@ describe('Flow Tracing', () => {
       name: 'EchoResponse',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'echo' } },
           ],
@@ -69,7 +69,7 @@ describe('Flow Tracing', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'body', value: { type: 'variable', name: 'echo' } },
@@ -83,14 +83,14 @@ describe('Flow Tracing', () => {
   // --- Helper: set up a registration kernel ---
   function setupRegistrationKernel() {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/User', userHandler);
-    kernel.registerConcept('urn:copf/Password', passwordHandler);
-    kernel.registerConcept('urn:copf/JWT', jwtHandler);
+    kernel.registerConcept('urn:clef/User', userHandler);
+    kernel.registerConcept('urn:clef/Password', passwordHandler);
+    kernel.registerConcept('urn:clef/JWT', jwtHandler);
 
     kernel.registerSync({
       name: 'ValidatePassword',
       when: [{
-        concept: 'urn:copf/Web', action: 'request',
+        concept: 'urn:clef/Web', action: 'request',
         inputFields: [
           { name: 'method', match: { type: 'literal', value: 'register' } },
           { name: 'password', match: { type: 'variable', name: 'password' } },
@@ -101,7 +101,7 @@ describe('Flow Tracing', () => {
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/Password', action: 'validate',
+        concept: 'urn:clef/Password', action: 'validate',
         fields: [
           { name: 'password', value: { type: 'variable', name: 'password' } },
         ],
@@ -112,7 +112,7 @@ describe('Flow Tracing', () => {
       name: 'ValidatePasswordError',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
           ],
@@ -121,7 +121,7 @@ describe('Flow Tracing', () => {
           ],
         },
         {
-          concept: 'urn:copf/Password', action: 'validate',
+          concept: 'urn:clef/Password', action: 'validate',
           inputFields: [],
           outputFields: [
             { name: 'valid', match: { type: 'literal', value: false } },
@@ -130,7 +130,7 @@ describe('Flow Tracing', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'error', value: { type: 'literal', value: 'Password does not meet requirements' } },
@@ -143,7 +143,7 @@ describe('Flow Tracing', () => {
       name: 'RegisterUser',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
             { name: 'username', match: { type: 'variable', name: 'username' } },
@@ -152,7 +152,7 @@ describe('Flow Tracing', () => {
           outputFields: [],
         },
         {
-          concept: 'urn:copf/Password', action: 'validate',
+          concept: 'urn:clef/Password', action: 'validate',
           inputFields: [],
           outputFields: [
             { name: 'valid', match: { type: 'literal', value: true } },
@@ -161,7 +161,7 @@ describe('Flow Tracing', () => {
       ],
       where: [{ type: 'bind', expr: 'uuid()', as: 'user' }],
       then: [{
-        concept: 'urn:copf/User', action: 'register',
+        concept: 'urn:clef/User', action: 'register',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
           { name: 'name', value: { type: 'variable', name: 'username' } },
@@ -174,7 +174,7 @@ describe('Flow Tracing', () => {
       name: 'SetPassword',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
             { name: 'password', match: { type: 'variable', name: 'password' } },
@@ -182,7 +182,7 @@ describe('Flow Tracing', () => {
           outputFields: [],
         },
         {
-          concept: 'urn:copf/User', action: 'register',
+          concept: 'urn:clef/User', action: 'register',
           inputFields: [],
           outputFields: [
             { name: 'user', match: { type: 'variable', name: 'user' } },
@@ -191,7 +191,7 @@ describe('Flow Tracing', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Password', action: 'set',
+        concept: 'urn:clef/Password', action: 'set',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
           { name: 'password', value: { type: 'variable', name: 'password' } },
@@ -202,7 +202,7 @@ describe('Flow Tracing', () => {
     kernel.registerSync({
       name: 'GenerateToken',
       when: [{
-        concept: 'urn:copf/User', action: 'register',
+        concept: 'urn:clef/User', action: 'register',
         inputFields: [],
         outputFields: [
           { name: 'user', match: { type: 'variable', name: 'user' } },
@@ -210,7 +210,7 @@ describe('Flow Tracing', () => {
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/JWT', action: 'generate',
+        concept: 'urn:clef/JWT', action: 'generate',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
         ],
@@ -221,7 +221,7 @@ describe('Flow Tracing', () => {
       name: 'RegistrationResponse',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
           ],
@@ -230,21 +230,21 @@ describe('Flow Tracing', () => {
           ],
         },
         {
-          concept: 'urn:copf/User', action: 'register',
+          concept: 'urn:clef/User', action: 'register',
           inputFields: [],
           outputFields: [
             { name: 'user', match: { type: 'variable', name: 'user' } },
           ],
         },
         {
-          concept: 'urn:copf/Password', action: 'set',
+          concept: 'urn:clef/Password', action: 'set',
           inputFields: [],
           outputFields: [
             { name: 'user', match: { type: 'variable', name: 'user' } },
           ],
         },
         {
-          concept: 'urn:copf/JWT', action: 'generate',
+          concept: 'urn:clef/JWT', action: 'generate',
           inputFields: [],
           outputFields: [
             { name: 'token', match: { type: 'variable', name: 'token' } },
@@ -253,7 +253,7 @@ describe('Flow Tracing', () => {
       ],
       where: [{
         type: 'query',
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         bindings: [
           { variable: 'u', field: '__key' },
           { variable: 'username', field: 'name' },
@@ -261,7 +261,7 @@ describe('Flow Tracing', () => {
         ],
       }],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'body', value: { type: 'literal', value: {

@@ -432,7 +432,7 @@ function capitalize(s: string): string {
 // --- Build ConceptManifest ---
 
 function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
-  const conceptUri = `urn:copf/${ast.name}`;
+  const conceptUri = `urn:clef/${ast.name}`;
 
   const typeParams: TypeParamInfo[] = ast.typeParams.map(p => ({
     name: p,

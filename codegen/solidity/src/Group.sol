@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Group
 /// @notice Concept-oriented group management with membership roles and content association
-/// @dev Implements the Group concept from COPF specification.
+/// @dev Implements the Group concept from Clef specification.
 ///      Supports creating groups, managing members with roles, and associating content.
 
 contract Group {

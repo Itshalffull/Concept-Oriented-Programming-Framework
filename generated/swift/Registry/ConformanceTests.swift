@@ -1,7 +1,7 @@
 // generated: Registry/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class RegistryConformanceTests: XCTestCase {
 

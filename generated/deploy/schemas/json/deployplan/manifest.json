@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/DeployPlan",
+  "uri": "urn:clef/DeployPlan",
   "name": "DeployPlan",
   "typeParams": [
     {
@@ -89,7 +89,7 @@
           "optional": false
         },
         {
-          "name": "kitName",
+          "name": "suiteName",
           "type": {
             "kind": "primitive",
             "primitive": "String"
@@ -799,15 +799,15 @@
       ]
     }
   ],
-  "graphqlSchema": "type DeployPlanState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DeployPlanEntry {\n  d: ID!\n  nodes: [JSON!]!\n  edges: [JSON!]!\n  kitName: String!\n  kitVersion: String!\n  environment: String!\n  createdAt: String!\n  strategy: String!\n  currentPhase: String!\n  completedNodes: [String!]!\n  failedNodes: [String!]!\n  rollbackStack: [String!]!\n}\n\nextend type Query {\n  deployplan_entry(d: ID!): DeployPlanEntry\n  deployplan_entries: [DeployPlanEntry!]!\n}\n\ntype DeployPlanPlans {\n  d: ID!\n  value: ID!\n}",
+  "graphqlSchema": "type DeployPlanState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype DeployPlanEntry {\n  d: ID!\n  nodes: [JSON!]!\n  edges: [JSON!]!\n  suiteName: String!\n  kitVersion: String!\n  environment: String!\n  createdAt: String!\n  strategy: String!\n  currentPhase: String!\n  completedNodes: [String!]!\n  failedNodes: [String!]!\n  rollbackStack: [String!]!\n}\n\nextend type Query {\n  deployplan_entry(d: ID!): DeployPlanEntry\n  deployplan_entries: [DeployPlanEntry!]!\n}\n\ntype DeployPlanPlans {\n  d: ID!\n  value: ID!\n}",
   "jsonSchemas": {
     "invocations": {
       "plan": {
-        "$id": "urn:copf/DeployPlan/plan/invocation",
+        "$id": "urn:clef/DeployPlan/plan/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DeployPlan"
+            "const": "urn:clef/DeployPlan"
           },
           "action": {
             "const": "plan"
@@ -830,11 +830,11 @@
         }
       },
       "validate": {
-        "$id": "urn:copf/DeployPlan/validate/invocation",
+        "$id": "urn:clef/DeployPlan/validate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DeployPlan"
+            "const": "urn:clef/DeployPlan"
           },
           "action": {
             "const": "validate"
@@ -853,11 +853,11 @@
         }
       },
       "execute": {
-        "$id": "urn:copf/DeployPlan/execute/invocation",
+        "$id": "urn:clef/DeployPlan/execute/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DeployPlan"
+            "const": "urn:clef/DeployPlan"
           },
           "action": {
             "const": "execute"
@@ -876,11 +876,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/DeployPlan/rollback/invocation",
+        "$id": "urn:clef/DeployPlan/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DeployPlan"
+            "const": "urn:clef/DeployPlan"
           },
           "action": {
             "const": "rollback"
@@ -899,11 +899,11 @@
         }
       },
       "status": {
-        "$id": "urn:copf/DeployPlan/status/invocation",
+        "$id": "urn:clef/DeployPlan/status/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DeployPlan"
+            "const": "urn:clef/DeployPlan"
           },
           "action": {
             "const": "status"
@@ -925,11 +925,11 @@
     "completions": {
       "plan": {
         "ok": {
-          "$id": "urn:copf/DeployPlan/plan/completion/ok",
+          "$id": "urn:clef/DeployPlan/plan/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "plan"
@@ -959,11 +959,11 @@
           }
         },
         "invalidManifest": {
-          "$id": "urn:copf/DeployPlan/plan/completion/invalidManifest",
+          "$id": "urn:clef/DeployPlan/plan/completion/invalidManifest",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "plan"
@@ -988,11 +988,11 @@
           }
         },
         "incompleteGraph": {
-          "$id": "urn:copf/DeployPlan/plan/completion/incompleteGraph",
+          "$id": "urn:clef/DeployPlan/plan/completion/incompleteGraph",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "plan"
@@ -1017,11 +1017,11 @@
           }
         },
         "circularDependency": {
-          "$id": "urn:copf/DeployPlan/plan/completion/circularDependency",
+          "$id": "urn:clef/DeployPlan/plan/completion/circularDependency",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "plan"
@@ -1046,11 +1046,11 @@
           }
         },
         "transportMismatch": {
-          "$id": "urn:copf/DeployPlan/plan/completion/transportMismatch",
+          "$id": "urn:clef/DeployPlan/plan/completion/transportMismatch",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "plan"
@@ -1077,11 +1077,11 @@
       },
       "validate": {
         "ok": {
-          "$id": "urn:copf/DeployPlan/validate/completion/ok",
+          "$id": "urn:clef/DeployPlan/validate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "validate"
@@ -1110,11 +1110,11 @@
           }
         },
         "migrationRequired": {
-          "$id": "urn:copf/DeployPlan/validate/completion/migrationRequired",
+          "$id": "urn:clef/DeployPlan/validate/completion/migrationRequired",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "validate"
@@ -1157,11 +1157,11 @@
           }
         },
         "schemaIncompatible": {
-          "$id": "urn:copf/DeployPlan/validate/completion/schemaIncompatible",
+          "$id": "urn:clef/DeployPlan/validate/completion/schemaIncompatible",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "validate"
@@ -1188,11 +1188,11 @@
       },
       "execute": {
         "ok": {
-          "$id": "urn:copf/DeployPlan/execute/completion/ok",
+          "$id": "urn:clef/DeployPlan/execute/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "execute"
@@ -1222,11 +1222,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/DeployPlan/execute/completion/partial",
+          "$id": "urn:clef/DeployPlan/execute/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "execute"
@@ -1262,11 +1262,11 @@
           }
         },
         "rollbackTriggered": {
-          "$id": "urn:copf/DeployPlan/execute/completion/rollbackTriggered",
+          "$id": "urn:clef/DeployPlan/execute/completion/rollbackTriggered",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "execute"
@@ -1299,11 +1299,11 @@
           }
         },
         "rollbackFailed": {
-          "$id": "urn:copf/DeployPlan/execute/completion/rollbackFailed",
+          "$id": "urn:clef/DeployPlan/execute/completion/rollbackFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "execute"
@@ -1338,11 +1338,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/DeployPlan/rollback/completion/ok",
+          "$id": "urn:clef/DeployPlan/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "rollback"
@@ -1371,11 +1371,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/DeployPlan/rollback/completion/partial",
+          "$id": "urn:clef/DeployPlan/rollback/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "rollback"
@@ -1413,11 +1413,11 @@
       },
       "status": {
         "ok": {
-          "$id": "urn:copf/DeployPlan/status/completion/ok",
+          "$id": "urn:clef/DeployPlan/status/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "status"
@@ -1454,11 +1454,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/DeployPlan/status/completion/notfound",
+          "$id": "urn:clef/DeployPlan/status/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DeployPlan"
+              "const": "urn:clef/DeployPlan"
             },
             "action": {
               "const": "status"
@@ -1483,5 +1483,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Compute , validate , and execute deployment plans for kits \n Constructs a dependency graph from concept specs , syncs , \n and the deploy manifest , then executes operations in \n topological order with parallelism on independent branches"
+  "purpose": "Compute , validate , and execute deployment plans for suites \n Constructs a dependency graph from concept specs , syncs , \n and the deploy manifest , then executes operations in \n topological order with parallelism on independent branches"
 }

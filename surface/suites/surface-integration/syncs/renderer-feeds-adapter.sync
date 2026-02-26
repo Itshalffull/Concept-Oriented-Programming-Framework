@@ -1,0 +1,14 @@
+# ============================================================
+# RendererFeedsAdapter — surface-integration recommended sync
+#
+# SUPERSEDED by adapter-pipeline.sync in surface-render.
+#
+# Previously this file contained per-framework sync rules for
+# Renderer/render → per-framework adapter normalization. These
+# rules now live in adapter-pipeline.sync alongside the
+# Machine/connect rules, so that adding a new framework only
+# requires editing ONE file.
+#
+# This file is retained for documentation — the actual routing
+# lives in surface-render/syncs/adapter-pipeline.sync.
+# ============================================================

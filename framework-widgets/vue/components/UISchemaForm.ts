@@ -1,7 +1,7 @@
 // ============================================================
 // UISchemaForm — Vue 3 Component
 //
-// Auto-generates a form from a COIF UISchema definition.
+// Auto-generates a form from a Clef Surface UISchema definition.
 // Each UISchemaField is rendered via ElementRenderer, with
 // reactive form data collected into a single model object.
 // Supports create, edit, detail, and list views.
@@ -151,16 +151,16 @@ export const UISchemaForm = defineComponent({
 
     // Render the list view (table-like output)
     function renderListView(view: UISchemaView): VNode {
-      return h('div', { class: 'coif-ui-schema-form__list' }, [
+      return h('div', { class: 'surface-ui-schema-form__list' }, [
         h(
           'div',
-          { class: 'coif-ui-schema-form__list-header', role: 'row' },
+          { class: 'surface-ui-schema-form__list-header', role: 'row' },
           view.fields.map((field) =>
             h(
               'span',
               {
                 key: field.name,
-                class: 'coif-ui-schema-form__list-col',
+                class: 'surface-ui-schema-form__list-col',
                 role: 'columnheader',
               },
               field.label,
@@ -171,7 +171,7 @@ export const UISchemaForm = defineComponent({
         slots.listRows?.({ fields: view.fields, formData }) ??
           h(
             'div',
-            { class: 'coif-ui-schema-form__list-empty' },
+            { class: 'surface-ui-schema-form__list-empty' },
             'No data available.',
           ),
       ]);
@@ -183,7 +183,7 @@ export const UISchemaForm = defineComponent({
       if (!view) {
         return h(
           'div',
-          { class: 'coif-ui-schema-form coif-ui-schema-form--empty' },
+          { class: 'surface-ui-schema-form surface-ui-schema-form--empty' },
           `No "${props.view}" view defined in schema for "${props.schema.concept}".`,
         );
       }
@@ -194,8 +194,8 @@ export const UISchemaForm = defineComponent({
           'div',
           {
             class: [
-              'coif-ui-schema-form',
-              'coif-ui-schema-form--list',
+              'surface-ui-schema-form',
+              'surface-ui-schema-form--list',
             ],
             'data-concept': props.schema.concept,
             'data-view': props.view,
@@ -217,9 +217,9 @@ export const UISchemaForm = defineComponent({
         props.tag,
         {
           class: [
-            'coif-ui-schema-form',
-            `coif-ui-schema-form--${props.view}`,
-            { 'coif-ui-schema-form--readonly': isDisabled.value },
+            'surface-ui-schema-form',
+            `surface-ui-schema-form--${props.view}`,
+            { 'surface-ui-schema-form--readonly': isDisabled.value },
           ],
           'data-concept': props.schema.concept,
           'data-view': props.view,
@@ -231,20 +231,20 @@ export const UISchemaForm = defineComponent({
           slots.header?.() ?? null,
 
           // Form fields
-          h('div', { class: 'coif-ui-schema-form__fields' }, fieldNodes),
+          h('div', { class: 'surface-ui-schema-form__fields' }, fieldNodes),
 
           // Actions slot (submit button etc.) or default
           slots.actions?.({ formData, isDisabled: isDisabled.value }) ??
             (props.view !== 'detail'
               ? h(
                   'div',
-                  { class: 'coif-ui-schema-form__actions' },
+                  { class: 'surface-ui-schema-form__actions' },
                   [
                     h(
                       'button',
                       {
                         type: 'submit',
-                        class: 'coif-ui-schema-form__submit',
+                        class: 'surface-ui-schema-form__submit',
                         disabled: isDisabled.value,
                       },
                       props.view === 'edit' ? 'Update' : 'Create',

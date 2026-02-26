@@ -1,7 +1,7 @@
 // ============================================================
-// COIF Framework Widgets — Vue 3 Components
+// Clef Surface Framework Widgets — Vue 3 Components
 //
-// Barrel export for all Vue 3 COIF concept components.
+// Barrel export for all Vue 3 Clef Surface concept components.
 // Each component uses defineComponent() with h() render
 // functions (no SFC compiler required) and Composition API.
 // ============================================================

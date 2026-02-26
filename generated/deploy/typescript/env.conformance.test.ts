@@ -23,9 +23,9 @@ describe("Env conformance", () => {
     expect((step1 as any).resolved).toBe(r);
 
     // --- THEN clause ---
-    // promote(fromEnv: e, toEnv: e2, kitName: "auth") -> ok(toEnv: e2, version: "1.0.0")
+    // promote(fromEnv: e, toEnv: e2, suiteName: "auth") -> ok(toEnv: e2, version: "1.0.0")
     const step2 = await envHandler.promote(
-      { fromEnv: e, toEnv: e2, kitName: "auth" },
+      { fromEnv: e, toEnv: e2, suiteName: "auth" },
       storage,
     );
     expect(step2.variant).toBe("ok");

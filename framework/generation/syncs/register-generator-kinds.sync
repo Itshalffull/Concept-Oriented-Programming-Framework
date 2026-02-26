@@ -1,4 +1,4 @@
-# RegisterGeneratorKinds — generation kit required sync
+# RegisterGeneratorKinds — generation suite required sync
 sync RegisterGeneratorKinds [eager]
   purpose { Auto-populate KindSystem edges from PluginRegistry generator registrations. }
 when {

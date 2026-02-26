@@ -1,7 +1,7 @@
 // Conduit Example App -- Jetpack Compose Home Screen
 // Displays the global article feed with pull-to-refresh.
 
-package com.copf.conduit.ui
+package com.clef.conduit.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.copf.conduit.ConduitGreen
-import com.copf.conduit.data.*
+import com.clef.conduit.ConduitGreen
+import com.clef.conduit.data.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

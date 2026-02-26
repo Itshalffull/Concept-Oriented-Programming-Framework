@@ -1,4 +1,4 @@
-// Automatically register Score kits when a Clef app boots.
+// Automatically register Score suites when a Clef app boots.
 // Fires on the first concept registration, ensuring Score
 // concepts are available before user concepts begin executing.
 // See Architecture doc Section 10.1 for kernel bootstrap order.
@@ -9,16 +9,16 @@ when {
     => [ concept: ?concept ]
 }
 where {
-  filter(?uri != "urn:copf/ScoreApi")
-  filter(?uri != "urn:copf/ScoreIndex")
-  filter(?uri != "urn:copf/SyncEngine")
-  filter(?uri != "urn:copf/Web")
+  filter(?uri != "urn:clef/ScoreApi")
+  filter(?uri != "urn:clef/ScoreIndex")
+  filter(?uri != "urn:clef/SyncEngine")
+  filter(?uri != "urn:clef/Web")
 }
 then {
   Registry/register: [
-    uri: "urn:copf/ScoreApi";
+    uri: "urn:clef/ScoreApi";
     transport: "builtin" ]
   Registry/register: [
-    uri: "urn:copf/ScoreIndex";
+    uri: "urn:clef/ScoreIndex";
     transport: "builtin" ]
 }

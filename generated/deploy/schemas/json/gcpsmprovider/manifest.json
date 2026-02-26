@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/GcpSmProvider",
+  "uri": "urn:clef/GcpSmProvider",
   "name": "GcpSmProvider",
   "typeParams": [
     {
@@ -366,11 +366,11 @@
   "jsonSchemas": {
     "invocations": {
       "fetch": {
-        "$id": "urn:copf/GcpSmProvider/fetch/invocation",
+        "$id": "urn:clef/GcpSmProvider/fetch/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcpSmProvider"
+            "const": "urn:clef/GcpSmProvider"
           },
           "action": {
             "const": "fetch"
@@ -393,11 +393,11 @@
         }
       },
       "rotate": {
-        "$id": "urn:copf/GcpSmProvider/rotate/invocation",
+        "$id": "urn:clef/GcpSmProvider/rotate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcpSmProvider"
+            "const": "urn:clef/GcpSmProvider"
           },
           "action": {
             "const": "rotate"
@@ -419,11 +419,11 @@
     "completions": {
       "fetch": {
         "ok": {
-          "$id": "urn:copf/GcpSmProvider/fetch/completion/ok",
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcpSmProvider"
+              "const": "urn:clef/GcpSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -453,11 +453,11 @@
           }
         },
         "iamBindingMissing": {
-          "$id": "urn:copf/GcpSmProvider/fetch/completion/iamBindingMissing",
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/iamBindingMissing",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcpSmProvider"
+              "const": "urn:clef/GcpSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -483,11 +483,11 @@
           }
         },
         "versionDisabled": {
-          "$id": "urn:copf/GcpSmProvider/fetch/completion/versionDisabled",
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/versionDisabled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcpSmProvider"
+              "const": "urn:clef/GcpSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -513,11 +513,11 @@
           }
         },
         "secretNotFound": {
-          "$id": "urn:copf/GcpSmProvider/fetch/completion/secretNotFound",
+          "$id": "urn:clef/GcpSmProvider/fetch/completion/secretNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcpSmProvider"
+              "const": "urn:clef/GcpSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -545,11 +545,11 @@
       },
       "rotate": {
         "ok": {
-          "$id": "urn:copf/GcpSmProvider/rotate/completion/ok",
+          "$id": "urn:clef/GcpSmProvider/rotate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcpSmProvider"
+              "const": "urn:clef/GcpSmProvider"
             },
             "action": {
               "const": "rotate"

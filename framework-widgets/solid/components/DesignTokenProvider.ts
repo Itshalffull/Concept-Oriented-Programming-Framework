@@ -14,13 +14,13 @@ import type {
 
 import {
   resolveTheme,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -102,7 +102,7 @@ export function DesignTokenProvider(props: DesignTokenProviderProps): DesignToke
 
   // Create the provider container element
   const container = document.createElement('div');
-  container.setAttribute('data-coif-provider', 'design-tokens');
+  container.setAttribute('data-surface-provider', 'design-tokens');
   if (props.scope) {
     container.setAttribute('data-scope', props.scope);
   }
@@ -137,7 +137,7 @@ export function DesignTokenProvider(props: DesignTokenProviderProps): DesignToke
 
     // Dispatch a custom event for downstream consumers
     container.dispatchEvent(
-      new CustomEvent('coif:tokens-changed', {
+      new CustomEvent('surface:tokens-changed', {
         bubbles: true,
         detail: { theme: theme.name, tokenCount: entries.length },
       })

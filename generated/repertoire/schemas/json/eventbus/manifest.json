@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/EventBus",
+  "uri": "urn:clef/EventBus",
   "name": "EventBus",
   "typeParams": [
     {
@@ -400,11 +400,11 @@
   "jsonSchemas": {
     "invocations": {
       "registerEventType": {
-        "$id": "urn:copf/EventBus/registerEventType/invocation",
+        "$id": "urn:clef/EventBus/registerEventType/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EventBus"
+            "const": "urn:clef/EventBus"
           },
           "action": {
             "const": "registerEventType"
@@ -427,11 +427,11 @@
         }
       },
       "subscribe": {
-        "$id": "urn:copf/EventBus/subscribe/invocation",
+        "$id": "urn:clef/EventBus/subscribe/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EventBus"
+            "const": "urn:clef/EventBus"
           },
           "action": {
             "const": "subscribe"
@@ -458,11 +458,11 @@
         }
       },
       "unsubscribe": {
-        "$id": "urn:copf/EventBus/unsubscribe/invocation",
+        "$id": "urn:clef/EventBus/unsubscribe/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EventBus"
+            "const": "urn:clef/EventBus"
           },
           "action": {
             "const": "unsubscribe"
@@ -481,11 +481,11 @@
         }
       },
       "dispatch": {
-        "$id": "urn:copf/EventBus/dispatch/invocation",
+        "$id": "urn:clef/EventBus/dispatch/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EventBus"
+            "const": "urn:clef/EventBus"
           },
           "action": {
             "const": "dispatch"
@@ -508,11 +508,11 @@
         }
       },
       "dispatchAsync": {
-        "$id": "urn:copf/EventBus/dispatchAsync/invocation",
+        "$id": "urn:clef/EventBus/dispatchAsync/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EventBus"
+            "const": "urn:clef/EventBus"
           },
           "action": {
             "const": "dispatchAsync"
@@ -535,11 +535,11 @@
         }
       },
       "getHistory": {
-        "$id": "urn:copf/EventBus/getHistory/invocation",
+        "$id": "urn:clef/EventBus/getHistory/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EventBus"
+            "const": "urn:clef/EventBus"
           },
           "action": {
             "const": "getHistory"
@@ -565,11 +565,11 @@
     "completions": {
       "registerEventType": {
         "ok": {
-          "$id": "urn:copf/EventBus/registerEventType/completion/ok",
+          "$id": "urn:clef/EventBus/registerEventType/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "registerEventType"
@@ -585,11 +585,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/EventBus/registerEventType/completion/exists",
+          "$id": "urn:clef/EventBus/registerEventType/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "registerEventType"
@@ -607,11 +607,11 @@
       },
       "subscribe": {
         "ok": {
-          "$id": "urn:copf/EventBus/subscribe/completion/ok",
+          "$id": "urn:clef/EventBus/subscribe/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "subscribe"
@@ -635,11 +635,11 @@
       },
       "unsubscribe": {
         "ok": {
-          "$id": "urn:copf/EventBus/unsubscribe/completion/ok",
+          "$id": "urn:clef/EventBus/unsubscribe/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "unsubscribe"
@@ -655,11 +655,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/EventBus/unsubscribe/completion/notfound",
+          "$id": "urn:clef/EventBus/unsubscribe/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "unsubscribe"
@@ -677,11 +677,11 @@
       },
       "dispatch": {
         "ok": {
-          "$id": "urn:copf/EventBus/dispatch/completion/ok",
+          "$id": "urn:clef/EventBus/dispatch/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "dispatch"
@@ -703,11 +703,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/EventBus/dispatch/completion/error",
+          "$id": "urn:clef/EventBus/dispatch/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "dispatch"
@@ -731,11 +731,11 @@
       },
       "dispatchAsync": {
         "ok": {
-          "$id": "urn:copf/EventBus/dispatchAsync/completion/ok",
+          "$id": "urn:clef/EventBus/dispatchAsync/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "dispatchAsync"
@@ -757,11 +757,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/EventBus/dispatchAsync/completion/error",
+          "$id": "urn:clef/EventBus/dispatchAsync/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "dispatchAsync"
@@ -785,11 +785,11 @@
       },
       "getHistory": {
         "ok": {
-          "$id": "urn:copf/EventBus/getHistory/completion/ok",
+          "$id": "urn:clef/EventBus/getHistory/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EventBus"
+              "const": "urn:clef/EventBus"
             },
             "action": {
               "const": "getHistory"

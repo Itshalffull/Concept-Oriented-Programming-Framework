@@ -3,7 +3,7 @@
 //
 // Globally unique, cross-file identifier for any named entity in
 // the project. Provides hierarchical symbol strings (e.g.
-// "copf/concept/Article", "ts/function/src/handlers/article.ts/createArticle")
+// "clef/concept/Article", "ts/function/src/handlers/article.ts/createArticle")
 // that unify identity across languages, file formats, and project layers.
 // ============================================================
 
@@ -16,7 +16,7 @@ function nextId(): string {
 
 /**
  * Derive the namespace from a symbol string by stripping the last segment.
- * E.g. "copf/concept/Article" -> "copf/concept"
+ * E.g. "clef/concept/Article" -> "clef/concept"
  */
 function deriveNamespace(symbolString: string): string {
   const parts = symbolString.split('/');

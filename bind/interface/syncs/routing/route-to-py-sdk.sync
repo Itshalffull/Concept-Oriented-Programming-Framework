@@ -1,4 +1,4 @@
-# Route Sdk/generate to PySdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+# Route Sdk/generate to PySdkTarget — Architecture doc: Clef Bind, Sync Section 3.4
 
 sync RouteToPySdk [eager]
 when {

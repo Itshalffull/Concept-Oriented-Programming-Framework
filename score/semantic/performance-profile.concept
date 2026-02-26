@@ -78,7 +78,7 @@ concept PerformanceProfile [P] {
   }
 
   invariant {
-    after aggregate(symbol: "copf/action/Article/create", window: "{}") -> ok(profile: p)
-    then get(profile: p) -> ok(profile: p, entitySymbol: "copf/action/Article/create", entityKind: _, invocationCount: _, errorRate: _)
+    after aggregate(symbol: "clef/action/Article/create", window: "{}") -> ok(profile: p)
+    then get(profile: p) -> ok(profile: p, entitySymbol: "clef/action/Article/create", entityKind: _, invocationCount: _, errorRate: _)
   }
 }

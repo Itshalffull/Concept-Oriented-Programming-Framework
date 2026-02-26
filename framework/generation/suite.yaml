@@ -1,9 +1,9 @@
-# kits/generation/kit.yaml
-kit:
+# kits/generation/suite.yaml
+suite:
   name: generation
   version: 0.1.0
   description: >
-    Shared generation infrastructure for all COPF generation families.
+    Shared generation infrastructure for all Clef generation families.
     Provides input tracking, pipeline topology, incremental build caching,
     content-addressed file emission, traceability, drift detection, and
     unified run reporting.
@@ -92,6 +92,6 @@ syncs:
   # kit because they name family-specific concepts.
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

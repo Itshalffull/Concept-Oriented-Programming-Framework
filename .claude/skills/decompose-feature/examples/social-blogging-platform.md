@@ -1,6 +1,6 @@
 # Worked Example: Social Blogging Platform
 
-A complete decomposition of a "social blogging platform" (similar to Medium or RealWorld) into independent COPF concepts with synchronizations. This is the actual decomposition used by the COPF codebase.
+A complete decomposition of a "social blogging platform" (similar to Medium or RealWorld) into independent Clef concepts with synchronizations. This is the actual decomposition used by the Clef codebase.
 
 ## Feature Description
 

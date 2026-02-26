@@ -1,7 +1,7 @@
 // generated: FormBuilder/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class FormBuilderConformanceTests: XCTestCase {
 

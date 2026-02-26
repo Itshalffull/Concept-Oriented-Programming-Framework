@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/SwiftToolchain",
+  "uri": "urn:clef/SwiftToolchain",
   "name": "SwiftToolchain",
   "typeParams": [
     {
@@ -332,11 +332,11 @@
   "jsonSchemas": {
     "invocations": {
       "resolve": {
-        "$id": "urn:copf/SwiftToolchain/resolve/invocation",
+        "$id": "urn:clef/SwiftToolchain/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SwiftToolchain"
+            "const": "urn:clef/SwiftToolchain"
           },
           "action": {
             "const": "resolve"
@@ -366,11 +366,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/SwiftToolchain/register/invocation",
+        "$id": "urn:clef/SwiftToolchain/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SwiftToolchain"
+            "const": "urn:clef/SwiftToolchain"
           },
           "action": {
             "const": "register"
@@ -386,11 +386,11 @@
     "completions": {
       "resolve": {
         "ok": {
-          "$id": "urn:copf/SwiftToolchain/resolve/completion/ok",
+          "$id": "urn:clef/SwiftToolchain/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftToolchain"
+              "const": "urn:clef/SwiftToolchain"
             },
             "action": {
               "const": "resolve"
@@ -427,11 +427,11 @@
           }
         },
         "notInstalled": {
-          "$id": "urn:copf/SwiftToolchain/resolve/completion/notInstalled",
+          "$id": "urn:clef/SwiftToolchain/resolve/completion/notInstalled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftToolchain"
+              "const": "urn:clef/SwiftToolchain"
             },
             "action": {
               "const": "resolve"
@@ -453,11 +453,11 @@
           }
         },
         "xcodeRequired": {
-          "$id": "urn:copf/SwiftToolchain/resolve/completion/xcodeRequired",
+          "$id": "urn:clef/SwiftToolchain/resolve/completion/xcodeRequired",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftToolchain"
+              "const": "urn:clef/SwiftToolchain"
             },
             "action": {
               "const": "resolve"
@@ -481,11 +481,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/SwiftToolchain/register/completion/ok",
+          "$id": "urn:clef/SwiftToolchain/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftToolchain"
+              "const": "urn:clef/SwiftToolchain"
             },
             "action": {
               "const": "register"

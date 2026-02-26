@@ -7,7 +7,7 @@
 // 3. Registry.reloadConcept() — transport swap
 // 4. Registry.deregisterConcept() — concept removal
 // 5. Degraded sync skipping and un-degrading
-// 6. copf dev file watcher integration
+// 6. clef dev file watcher integration
 // ============================================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -38,7 +38,7 @@ describe('Telemetry Concept', () => {
     const record = {
       id: 'rec-001',
       type: 'completion',
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'register',
       input: { user: 'u-1', name: 'alice' },
       variant: 'ok',
@@ -69,7 +69,7 @@ describe('Telemetry Concept', () => {
     const record = {
       id: 'rec-002',
       type: 'completion',
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'register',
       variant: 'error',
       output: { message: 'name already taken' },
@@ -88,7 +88,7 @@ describe('Telemetry Concept', () => {
     const record = {
       id: 'inv-001',
       type: 'invocation',
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'register',
       input: { user: 'u-1' },
       flow: 'flow-003',
@@ -108,7 +108,7 @@ describe('Telemetry Concept', () => {
     const record = {
       id: 'rec-003',
       type: 'completion',
-      concept: 'urn:copf/Password',
+      concept: 'urn:clef/Password',
       action: 'validate',
       variant: 'ok',
       output: { valid: true },
@@ -128,7 +128,7 @@ describe('Telemetry Concept', () => {
     const record = {
       id: 'rec-004',
       type: 'completion',
-      concept: 'urn:copf/Echo',
+      concept: 'urn:clef/Echo',
       action: 'send',
       input: { text: 'hello' },
       variant: 'ok',
@@ -140,9 +140,9 @@ describe('Telemetry Concept', () => {
     await telemetryHandler.export({ record }, storage);
 
     const spans = getExportedSpans();
-    expect(spans[0].attributes['copf.input.text']).toBe('hello');
-    expect(spans[0].attributes['copf.output.echo']).toBe('hello');
-    expect(spans[0].attributes['copf.variant']).toBe('ok');
+    expect(spans[0].attributes['clef.input.text']).toBe('hello');
+    expect(spans[0].attributes['clef.output.echo']).toBe('hello');
+    expect(spans[0].attributes['clef.variant']).toBe('ok');
   });
 
   it('handles missing record gracefully', async () => {
@@ -166,9 +166,9 @@ describe('Telemetry Concept', () => {
 
     // Simulate a flow with multiple actions
     const records = [
-      { id: 'r1', type: 'completion', concept: 'urn:copf/Web', action: 'request', variant: 'ok', output: {}, flow: 'flow-multi', timestamp: new Date().toISOString() },
-      { id: 'r2', type: 'invocation', concept: 'urn:copf/Echo', action: 'send', flow: 'flow-multi', sync: 'HandleEcho', parent: 'r1', timestamp: new Date().toISOString() },
-      { id: 'r3', type: 'completion', concept: 'urn:copf/Echo', action: 'send', variant: 'ok', output: { echo: 'hi' }, flow: 'flow-multi', parent: 'r2', timestamp: new Date().toISOString() },
+      { id: 'r1', type: 'completion', concept: 'urn:clef/Web', action: 'request', variant: 'ok', output: {}, flow: 'flow-multi', timestamp: new Date().toISOString() },
+      { id: 'r2', type: 'invocation', concept: 'urn:clef/Echo', action: 'send', flow: 'flow-multi', sync: 'HandleEcho', parent: 'r1', timestamp: new Date().toISOString() },
+      { id: 'r3', type: 'completion', concept: 'urn:clef/Echo', action: 'send', variant: 'ok', output: { echo: 'hi' }, flow: 'flow-multi', parent: 'r2', timestamp: new Date().toISOString() },
     ];
 
     for (const record of records) {
@@ -524,14 +524,14 @@ describe('Telemetry Integration', () => {
 
   it('telemetry handler works as a registered concept in the kernel', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/Telemetry', telemetryHandler);
+    kernel.registerConcept('urn:clef/Telemetry', telemetryHandler);
 
     // Invoke telemetry export directly
-    const result = await kernel.invokeConcept('urn:copf/Telemetry', 'export', {
+    const result = await kernel.invokeConcept('urn:clef/Telemetry', 'export', {
       record: {
         id: 'test-rec',
         type: 'completion',
-        concept: 'urn:copf/Echo',
+        concept: 'urn:clef/Echo',
         action: 'send',
         variant: 'ok',
         output: { echo: 'test' },

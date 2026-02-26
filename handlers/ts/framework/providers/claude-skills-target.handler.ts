@@ -12,7 +12,7 @@
 // / renderKey() for enrichment blocks. New enrichment keys
 // only need a handler registered in the Renderer — no changes
 // to this file.
-// Architecture doc: Interface Kit
+// Architecture doc: Clef Bind
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ResolvedType } from '../../../../kernel/src/types.js';

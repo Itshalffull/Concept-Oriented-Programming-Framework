@@ -9,7 +9,7 @@ describe("Builder conformance", () => {
     const storage = createInMemoryStorage();
 
     // --- AFTER clause ---
-    // build(concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {mode:"release"}) -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".copf-artifacts/swift/password", duration: 3200)
+    // build(concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {mode:"release"}) -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".clef-artifacts/swift/password", duration: 3200)
     const step1 = await builderHandler.build(
       { concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: { mode: "release" } },
       storage,

@@ -1,6 +1,6 @@
 # Existing Adapter Walkthroughs
 
-Annotated walkthroughs of all four existing COPF transport adapters. Use these as models for new adapters.
+Annotated walkthroughs of all four existing Clef transport adapters. Use these as models for new adapters.
 
 ## 1. InProcessAdapter — Direct Function Calls
 

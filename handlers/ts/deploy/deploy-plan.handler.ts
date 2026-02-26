@@ -29,7 +29,7 @@ export const deployPlanHandler: ConceptHandler = {
       graph: graphId,
       graphNodes: JSON.stringify([manifest]),
       graphEdges: JSON.stringify([]),
-      kitName: manifest,
+      suiteName: manifest,
       kitVersion: '0.1.0',
       strategy: 'rolling',
       createdAt: now,

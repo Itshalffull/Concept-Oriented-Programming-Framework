@@ -24,11 +24,11 @@ import type {
   ResolvedTheme,
 } from '../../shared/types.js';
 
-import { resolveTheme } from '../../shared/coif-bridge.js';
+import { resolveTheme } from '../../shared/surface-bridge.js';
 
 // --- Injection Key ---
 
-export const DESIGN_TOKENS_KEY: InjectionKey<ResolvedTheme> = Symbol('coif-design-tokens');
+export const DESIGN_TOKENS_KEY: InjectionKey<ResolvedTheme> = Symbol('surface-design-tokens');
 
 // --- Component ---
 
@@ -92,7 +92,7 @@ export const DesignTokenProvider = defineComponent({
       h(
         props.tag,
         {
-          class: 'coif-design-token-provider',
+          class: 'surface-design-token-provider',
           style: cssVars.value,
           'data-theme': resolved.value.name,
         },

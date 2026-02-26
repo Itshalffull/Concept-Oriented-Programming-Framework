@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/VercelRuntime",
+  "uri": "urn:clef/VercelRuntime",
   "name": "VercelRuntime",
   "typeParams": [
     {
@@ -494,11 +494,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/VercelRuntime/provision/invocation",
+        "$id": "urn:clef/VercelRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VercelRuntime"
+            "const": "urn:clef/VercelRuntime"
           },
           "action": {
             "const": "provision"
@@ -525,11 +525,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/VercelRuntime/deploy/invocation",
+        "$id": "urn:clef/VercelRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VercelRuntime"
+            "const": "urn:clef/VercelRuntime"
           },
           "action": {
             "const": "deploy"
@@ -552,11 +552,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/VercelRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/VercelRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VercelRuntime"
+            "const": "urn:clef/VercelRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -579,11 +579,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/VercelRuntime/rollback/invocation",
+        "$id": "urn:clef/VercelRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VercelRuntime"
+            "const": "urn:clef/VercelRuntime"
           },
           "action": {
             "const": "rollback"
@@ -606,11 +606,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/VercelRuntime/destroy/invocation",
+        "$id": "urn:clef/VercelRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VercelRuntime"
+            "const": "urn:clef/VercelRuntime"
           },
           "action": {
             "const": "destroy"
@@ -632,11 +632,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/VercelRuntime/provision/completion/ok",
+          "$id": "urn:clef/VercelRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "provision"
@@ -666,11 +666,11 @@
           }
         },
         "domainConflict": {
-          "$id": "urn:copf/VercelRuntime/provision/completion/domainConflict",
+          "$id": "urn:clef/VercelRuntime/provision/completion/domainConflict",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "provision"
@@ -698,11 +698,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/VercelRuntime/deploy/completion/ok",
+          "$id": "urn:clef/VercelRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "deploy"
@@ -732,11 +732,11 @@
           }
         },
         "buildFailed": {
-          "$id": "urn:copf/VercelRuntime/deploy/completion/buildFailed",
+          "$id": "urn:clef/VercelRuntime/deploy/completion/buildFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "deploy"
@@ -767,11 +767,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/VercelRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/VercelRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -795,11 +795,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/VercelRuntime/rollback/completion/ok",
+          "$id": "urn:clef/VercelRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "rollback"
@@ -827,11 +827,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/VercelRuntime/destroy/completion/ok",
+          "$id": "urn:clef/VercelRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VercelRuntime"
+              "const": "urn:clef/VercelRuntime"
             },
             "action": {
               "const": "destroy"

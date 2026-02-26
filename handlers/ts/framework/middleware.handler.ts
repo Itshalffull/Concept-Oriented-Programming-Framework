@@ -5,7 +5,7 @@
 // implementations per target. Manages trait definitions,
 // per-target implementations, composition ordering, and
 // compatibility rules.
-// Architecture doc: Interface Kit, Section 1.8
+// Architecture doc: Clef Bind, Section 1.8
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';

@@ -294,7 +294,7 @@ then {
 
 ## Template 15: Kit Required Sync
 
-Structural invariant sync for a concept kit.
+Structural invariant sync for a suite.
 
 ```
 sync TODO_SyncName [required]

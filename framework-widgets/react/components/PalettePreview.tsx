@@ -1,7 +1,7 @@
 // ============================================================
 // PalettePreview — Renders a color scale swatch grid.
 //
-// Given a COIF ColorScale (50-950) and an optional semantic
+// Given a Clef Surface ColorScale (50-950) and an optional semantic
 // role label, renders each shade as a visual swatch cell with
 // the hex value and step label.  Contrast ratio against white
 // and black is computed so that the text overlay is readable.
@@ -10,7 +10,7 @@
 import React, { useMemo, type CSSProperties } from 'react';
 
 import type { ColorScale, SemanticRole } from '../../shared/types.js';
-import { contrastRatio } from '../../shared/coif-bridge.js';
+import { contrastRatio } from '../../shared/surface-bridge.js';
 
 // --------------- Props ---------------
 
@@ -103,12 +103,12 @@ export const PalettePreview: React.FC<PalettePreviewProps> = ({
   return (
     <div
       className={className}
-      data-coif-palette=""
+      data-surface-palette=""
       data-role={role ?? undefined}
     >
       {(name || role) && (
         <div
-          data-coif-palette-header=""
+          data-surface-palette-header=""
           style={{
             marginBottom: '8px',
             display: 'flex',
@@ -117,11 +117,11 @@ export const PalettePreview: React.FC<PalettePreviewProps> = ({
           }}
         >
           {name && (
-            <strong data-coif-palette-name="">{name}</strong>
+            <strong data-surface-palette-name="">{name}</strong>
           )}
           {role && (
             <span
-              data-coif-palette-role=""
+              data-surface-palette-role=""
               style={{ opacity: 0.7, fontSize: '0.85em' }}
             >
               ({role})
@@ -131,7 +131,7 @@ export const PalettePreview: React.FC<PalettePreviewProps> = ({
       )}
 
       <div
-        data-coif-palette-grid=""
+        data-surface-palette-grid=""
         style={gridStyle}
         role="img"
         aria-label={`Color scale${name ? ` for ${name}` : ''}${role ? ` (${role})` : ''}`}
@@ -139,16 +139,16 @@ export const PalettePreview: React.FC<PalettePreviewProps> = ({
         {swatches.map(({ step, color, textColor }) => (
           <div
             key={step}
-            data-coif-swatch=""
+            data-surface-swatch=""
             data-step={step}
             style={swatchCellStyle(color, textColor)}
             title={`${step}: ${color}`}
           >
             {showLabels && (
-              <span data-coif-swatch-label="">{step}</span>
+              <span data-surface-swatch-label="">{step}</span>
             )}
             {showValues && (
-              <span data-coif-swatch-value="">{color}</span>
+              <span data-surface-swatch-value="">{color}</span>
             )}
           </div>
         ))}

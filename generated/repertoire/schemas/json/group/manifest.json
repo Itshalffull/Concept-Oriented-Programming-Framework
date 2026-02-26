@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Group",
+  "uri": "urn:clef/Group",
   "name": "Group",
   "typeParams": [
     {
@@ -413,11 +413,11 @@
   "jsonSchemas": {
     "invocations": {
       "createGroup": {
-        "$id": "urn:copf/Group/createGroup/invocation",
+        "$id": "urn:clef/Group/createGroup/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Group"
+            "const": "urn:clef/Group"
           },
           "action": {
             "const": "createGroup"
@@ -440,11 +440,11 @@
         }
       },
       "addMember": {
-        "$id": "urn:copf/Group/addMember/invocation",
+        "$id": "urn:clef/Group/addMember/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Group"
+            "const": "urn:clef/Group"
           },
           "action": {
             "const": "addMember"
@@ -471,11 +471,11 @@
         }
       },
       "assignGroupRole": {
-        "$id": "urn:copf/Group/assignGroupRole/invocation",
+        "$id": "urn:clef/Group/assignGroupRole/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Group"
+            "const": "urn:clef/Group"
           },
           "action": {
             "const": "assignGroupRole"
@@ -502,11 +502,11 @@
         }
       },
       "addContent": {
-        "$id": "urn:copf/Group/addContent/invocation",
+        "$id": "urn:clef/Group/addContent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Group"
+            "const": "urn:clef/Group"
           },
           "action": {
             "const": "addContent"
@@ -529,11 +529,11 @@
         }
       },
       "checkGroupAccess": {
-        "$id": "urn:copf/Group/checkGroupAccess/invocation",
+        "$id": "urn:clef/Group/checkGroupAccess/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Group"
+            "const": "urn:clef/Group"
           },
           "action": {
             "const": "checkGroupAccess"
@@ -563,11 +563,11 @@
     "completions": {
       "createGroup": {
         "ok": {
-          "$id": "urn:copf/Group/createGroup/completion/ok",
+          "$id": "urn:clef/Group/createGroup/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "createGroup"
@@ -583,11 +583,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Group/createGroup/completion/exists",
+          "$id": "urn:clef/Group/createGroup/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "createGroup"
@@ -611,11 +611,11 @@
       },
       "addMember": {
         "ok": {
-          "$id": "urn:copf/Group/addMember/completion/ok",
+          "$id": "urn:clef/Group/addMember/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "addMember"
@@ -631,11 +631,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Group/addMember/completion/notfound",
+          "$id": "urn:clef/Group/addMember/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "addMember"
@@ -659,11 +659,11 @@
       },
       "assignGroupRole": {
         "ok": {
-          "$id": "urn:copf/Group/assignGroupRole/completion/ok",
+          "$id": "urn:clef/Group/assignGroupRole/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "assignGroupRole"
@@ -679,11 +679,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Group/assignGroupRole/completion/notfound",
+          "$id": "urn:clef/Group/assignGroupRole/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "assignGroupRole"
@@ -707,11 +707,11 @@
       },
       "addContent": {
         "ok": {
-          "$id": "urn:copf/Group/addContent/completion/ok",
+          "$id": "urn:clef/Group/addContent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "addContent"
@@ -727,11 +727,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Group/addContent/completion/notfound",
+          "$id": "urn:clef/Group/addContent/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "addContent"
@@ -755,11 +755,11 @@
       },
       "checkGroupAccess": {
         "ok": {
-          "$id": "urn:copf/Group/checkGroupAccess/completion/ok",
+          "$id": "urn:clef/Group/checkGroupAccess/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "checkGroupAccess"
@@ -781,11 +781,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Group/checkGroupAccess/completion/notfound",
+          "$id": "urn:clef/Group/checkGroupAccess/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Group"
+              "const": "urn:clef/Group"
             },
             "action": {
               "const": "checkGroupAccess"

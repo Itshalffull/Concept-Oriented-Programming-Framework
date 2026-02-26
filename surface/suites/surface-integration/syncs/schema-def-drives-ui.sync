@@ -1,0 +1,16 @@
+# ============================================================
+# SchemaDefDrivesUI — surface-integration required sync
+#
+# Auto-generate interface when a library Schema concept defines
+# a new schema. Bridges Clef's classification kit to Clef Surface's
+# UISchema concept.
+# ============================================================
+
+sync SchemaDefDrivesUI [eager]
+when {
+  Schema/defineSchema: [ name: ?name; fields: ?fields ]
+    => ok(schema: ?schemaId)
+}
+then {
+  UISchema/inspect: [ schema: ?schemaId; conceptSpec: ?fields ]
+}

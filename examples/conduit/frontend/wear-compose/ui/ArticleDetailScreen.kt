@@ -1,7 +1,7 @@
 // Conduit Example App -- Wear OS Compose Article Detail Screen
 // Compact article reader for the watch display with truncated body text.
 
-package com.copf.conduit.wear.ui
+package com.clef.conduit.wear.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.*
-import com.copf.conduit.wear.data.WearApiClient
-import com.copf.conduit.wear.data.WearArticle
+import com.clef.conduit.wear.data.WearApiClient
+import com.clef.conduit.wear.data.WearArticle
 
 @Composable
 fun ArticleDetailScreen(slug: String) {

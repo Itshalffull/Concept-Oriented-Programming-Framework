@@ -1,0 +1,37 @@
+@version(1)
+concept SwiftUIAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into SwiftUI-specific bindings.
+    Transforms Clef Surface's generic event model into SwiftUI conventions:
+    View protocol conformance, @State/@Binding property wrappers,
+    .onTapGesture modifiers, VStack/HStack/ZStack layout.
+    Implementation in Swift, runs natively on iOS/macOS/tvOS.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to SwiftUI bindings.
+        Convert onclick to .onTapGesture. Convert class to
+        ViewModifier chains. Map layout to Stack-based composition.
+        Resolve design tokens to SwiftUI Color/Font values.
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to SwiftUI.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

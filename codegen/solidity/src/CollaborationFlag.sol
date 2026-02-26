@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title CollaborationFlag
 /// @notice Concept-oriented flagging system for collaborative content moderation
-/// @dev Implements the CollaborationFlag concept from COPF specification.
+/// @dev Implements the CollaborationFlag concept from Clef specification.
 ///      Supports creating flag types, flagging/unflagging entities per user, and counting flags.
 
 contract CollaborationFlag {

@@ -1,8 +1,8 @@
-# COPF Serverless Deployment Architecture
+# Clef Serverless Deployment Architecture
 
 ## Overview
 
-COPF concepts can be deployed on AWS and GCP serverless platforms with shared
+Clef concepts can be deployed on AWS and GCP serverless platforms with shared
 storage across three engine topology options. All three topologies use the same
 storage adapters, transport adapters, and concept deployment model — they differ
 only in where and how the sync engine runs.

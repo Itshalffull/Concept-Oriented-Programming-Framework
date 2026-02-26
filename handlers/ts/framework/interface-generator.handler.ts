@@ -4,7 +4,7 @@
 // Orchestrates multi-target interface generation from concept
 // projections. Plans targets, coordinates pipeline, tracks
 // output files and generation history.
-// Architecture doc: Interface Kit, Section 1.2
+// Architecture doc: Clef Bind, Section 1.2
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';

@@ -2,7 +2,7 @@
 // Replica Concept Handler Tests
 //
 // Validates localUpdate, receiveRemote, sync, getState, fork,
-// and addPeer actions for the collaboration kit's replica concept.
+// and addPeer actions for the collaboration suite's replica concept.
 // Covers local state management, remote op integration, conflict
 // detection, peer management, and fork/branch workflows.
 // ============================================================

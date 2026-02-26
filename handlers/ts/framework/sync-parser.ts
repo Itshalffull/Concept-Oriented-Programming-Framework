@@ -316,7 +316,7 @@ class SyncFileParser {
       this.expect('RBRACKET');
 
       patterns.push({
-        concept: `urn:copf/${concept}`,
+        concept: `urn:clef/${concept}`,
         action,
         inputFields,
         outputFields,
@@ -498,7 +498,7 @@ class SyncFileParser {
 
     return {
       type: 'query',
-      concept: `urn:copf/${concept}`,
+      concept: `urn:clef/${concept}`,
       bindings,
     };
   }
@@ -558,7 +558,7 @@ class SyncFileParser {
       }
 
       this.expect('RBRACKET');
-      actions.push({ concept: `urn:copf/${concept}`, action, fields });
+      actions.push({ concept: `urn:clef/${concept}`, action, fields });
       this.skipSeps();
     }
 

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/RustToolchain",
+  "uri": "urn:clef/RustToolchain",
   "name": "RustToolchain",
   "typeParams": [
     {
@@ -333,11 +333,11 @@
   "jsonSchemas": {
     "invocations": {
       "resolve": {
-        "$id": "urn:copf/RustToolchain/resolve/invocation",
+        "$id": "urn:clef/RustToolchain/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/RustToolchain"
+            "const": "urn:clef/RustToolchain"
           },
           "action": {
             "const": "resolve"
@@ -367,11 +367,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/RustToolchain/register/invocation",
+        "$id": "urn:clef/RustToolchain/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/RustToolchain"
+            "const": "urn:clef/RustToolchain"
           },
           "action": {
             "const": "register"
@@ -387,11 +387,11 @@
     "completions": {
       "resolve": {
         "ok": {
-          "$id": "urn:copf/RustToolchain/resolve/completion/ok",
+          "$id": "urn:clef/RustToolchain/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustToolchain"
+              "const": "urn:clef/RustToolchain"
             },
             "action": {
               "const": "resolve"
@@ -428,11 +428,11 @@
           }
         },
         "notInstalled": {
-          "$id": "urn:copf/RustToolchain/resolve/completion/notInstalled",
+          "$id": "urn:clef/RustToolchain/resolve/completion/notInstalled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustToolchain"
+              "const": "urn:clef/RustToolchain"
             },
             "action": {
               "const": "resolve"
@@ -454,11 +454,11 @@
           }
         },
         "targetMissing": {
-          "$id": "urn:copf/RustToolchain/resolve/completion/targetMissing",
+          "$id": "urn:clef/RustToolchain/resolve/completion/targetMissing",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustToolchain"
+              "const": "urn:clef/RustToolchain"
             },
             "action": {
               "const": "resolve"
@@ -486,11 +486,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/RustToolchain/register/completion/ok",
+          "$id": "urn:clef/RustToolchain/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustToolchain"
+              "const": "urn:clef/RustToolchain"
             },
             "action": {
               "const": "register"

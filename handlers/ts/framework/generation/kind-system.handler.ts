@@ -5,7 +5,7 @@
 // artifacts in generation pipelines. Tracks which IR kinds
 // can transform into which others. Enables pipeline validation,
 // execution ordering, and cascading invalidation.
-// See copf-generation-kit.md Part 1.2
+// See clef-generation-suite.md Part 1.2
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

@@ -1,4 +1,4 @@
-# Route Target/generate to CliTarget — Architecture doc: Interface Kit, Sync Section 3.3
+# Route Target/generate to CliTarget — Architecture doc: Clef Bind, Sync Section 3.3
 
 sync RouteToCli [eager]
 when {

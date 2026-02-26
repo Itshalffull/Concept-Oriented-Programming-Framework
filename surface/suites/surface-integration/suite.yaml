@@ -1,0 +1,116 @@
+# kits/surface-integration/suite.yaml
+suite:
+  name: surface-integration
+  version: 0.4.0
+  description: >
+    Syncs that bridge Clef Concept Library domain concepts to Clef Surface
+    interface concepts. Requires both Clef Surface suites and the relevant
+    library suites to be active. No new concepts — this suite is
+    syncs-only.
+
+uses:
+  "@clef/classification":
+    concepts: [Schema]
+  "@clef/foundation":
+    concepts: [ContentParser, Intent]
+  "@clef/presentation":
+    concepts: [View, Renderer]
+  "@clef/infrastructure":
+    concepts: [EventBus, Validator]
+  "@clef/automation":
+    concepts: [Workflow, Control]
+  "@clef/layout":
+    concepts: [Component]
+  "@clef/notification":
+    concepts: [Notification]
+
+concepts: []  # No new concepts — this suite is syncs-only
+
+syncs:
+  required:
+    - path: ./syncs/schema-def-drives-ui.sync
+      name: SchemaDefDrivesUI
+      description: >
+        Auto-generate interface when a concept schema is defined.
+
+    - path: ./syncs/schema-apply-drives-binding.sync
+      name: SchemaApplyDrivesBinding
+      description: >
+        Create data binding when a schema is applied to a node.
+
+  recommended:
+    - path: ./syncs/intent-enriches-ui.sync
+      name: IntentEnrichesUI
+      description: >
+        Use concept purpose to enhance generated interface labels.
+
+    - path: ./syncs/intent-improves-classification.sync
+      name: IntentImprovesClassification
+      description: >
+        Use Intent semantic data to improve interactor classification.
+
+    - path: ./syncs/customization-overrides-resolver.sync
+      name: CustomizationOverridesResolver
+      description: >
+        Level 1+ customization bypasses affordance matching.
+
+    - path: ./syncs/view-drives-layout.sync
+      name: ViewDrivesLayout
+      description: >
+        Map View layout type to Clef Surface spatial arrangement.
+
+    - path: ./syncs/view-fields-drive-uischema.sync
+      name: ViewFieldsDriveUISchema
+      description: >
+        Reflect visible field changes in UI schema overrides.
+
+    - path: ./syncs/view-embed-creates-surface.sync
+      name: ViewEmbedCreatesInlineSurface
+      description: >
+        Embed a View inside a ContentNode as an inline Clef Surface surface.
+
+    - path: ./syncs/form-validates-via-validator.sync
+      name: FormValidatesViaValidator
+      description: >
+        Delegate form submission validation to library Validator.
+
+    - path: ./syncs/validation-result-to-form.sync
+      name: ValidationResultToForm
+      description: >
+        Route validation results back to form machine.
+
+    - path: ./syncs/workflow-state-to-signal.sync
+      name: WorkflowStateToSignal
+      description: >
+        Reflect workflow state changes in UI signals.
+
+    - path: ./syncs/eventbus-feeds-signals.sync
+      name: EventBusFeedsSignals
+      description: >
+        Route domain events to subscribed UI signals.
+
+    - path: ./syncs/notification-to-toast.sync
+      name: NotificationToToast
+      description: >
+        Display notifications as toast UI widgets.
+
+    - path: ./syncs/parsed-content-to-richtext.sync
+      name: ParsedContentToRichText
+      description: >
+        Feed parsed AST to rich-text widget for interactive rendering.
+
+    - path: ./syncs/renderer-feeds-adapter.sync
+      name: RendererFeedsAdapter
+      description: >
+        Route rendered content tree through framework adapter.
+
+    - path: ./syncs/layout-component-via-widget.sync
+      name: LayoutComponentRendersViaWidget
+      description: >
+        Render layout components through Clef Surface widget state machines.
+
+dependencies:
+  - surface-core: ">=0.2.0"
+  - surface-component: ">=0.2.0"
+  - surface-render: ">=0.2.0"
+  - surface-theme: ">=0.2.0"

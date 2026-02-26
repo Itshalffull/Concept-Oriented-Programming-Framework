@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/PulumiProvider",
+  "uri": "urn:clef/PulumiProvider",
   "name": "PulumiProvider",
   "typeParams": [
     {
@@ -502,11 +502,11 @@
   "jsonSchemas": {
     "invocations": {
       "generate": {
-        "$id": "urn:copf/PulumiProvider/generate/invocation",
+        "$id": "urn:clef/PulumiProvider/generate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PulumiProvider"
+            "const": "urn:clef/PulumiProvider"
           },
           "action": {
             "const": "generate"
@@ -525,11 +525,11 @@
         }
       },
       "preview": {
-        "$id": "urn:copf/PulumiProvider/preview/invocation",
+        "$id": "urn:clef/PulumiProvider/preview/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PulumiProvider"
+            "const": "urn:clef/PulumiProvider"
           },
           "action": {
             "const": "preview"
@@ -548,11 +548,11 @@
         }
       },
       "apply": {
-        "$id": "urn:copf/PulumiProvider/apply/invocation",
+        "$id": "urn:clef/PulumiProvider/apply/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PulumiProvider"
+            "const": "urn:clef/PulumiProvider"
           },
           "action": {
             "const": "apply"
@@ -571,11 +571,11 @@
         }
       },
       "teardown": {
-        "$id": "urn:copf/PulumiProvider/teardown/invocation",
+        "$id": "urn:clef/PulumiProvider/teardown/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PulumiProvider"
+            "const": "urn:clef/PulumiProvider"
           },
           "action": {
             "const": "teardown"
@@ -597,11 +597,11 @@
     "completions": {
       "generate": {
         "ok": {
-          "$id": "urn:copf/PulumiProvider/generate/completion/ok",
+          "$id": "urn:clef/PulumiProvider/generate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "generate"
@@ -632,11 +632,11 @@
       },
       "preview": {
         "ok": {
-          "$id": "urn:copf/PulumiProvider/preview/completion/ok",
+          "$id": "urn:clef/PulumiProvider/preview/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "preview"
@@ -674,11 +674,11 @@
           }
         },
         "backendUnreachable": {
-          "$id": "urn:copf/PulumiProvider/preview/completion/backendUnreachable",
+          "$id": "urn:clef/PulumiProvider/preview/completion/backendUnreachable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "preview"
@@ -702,11 +702,11 @@
       },
       "apply": {
         "ok": {
-          "$id": "urn:copf/PulumiProvider/apply/completion/ok",
+          "$id": "urn:clef/PulumiProvider/apply/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "apply"
@@ -742,11 +742,11 @@
           }
         },
         "pluginMissing": {
-          "$id": "urn:copf/PulumiProvider/apply/completion/pluginMissing",
+          "$id": "urn:clef/PulumiProvider/apply/completion/pluginMissing",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "apply"
@@ -772,11 +772,11 @@
           }
         },
         "conflictingUpdate": {
-          "$id": "urn:copf/PulumiProvider/apply/completion/conflictingUpdate",
+          "$id": "urn:clef/PulumiProvider/apply/completion/conflictingUpdate",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "apply"
@@ -805,11 +805,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/PulumiProvider/apply/completion/partial",
+          "$id": "urn:clef/PulumiProvider/apply/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "apply"
@@ -847,11 +847,11 @@
       },
       "teardown": {
         "ok": {
-          "$id": "urn:copf/PulumiProvider/teardown/completion/ok",
+          "$id": "urn:clef/PulumiProvider/teardown/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "teardown"
@@ -880,11 +880,11 @@
           }
         },
         "protectedResource": {
-          "$id": "urn:copf/PulumiProvider/teardown/completion/protectedResource",
+          "$id": "urn:clef/PulumiProvider/teardown/completion/protectedResource",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PulumiProvider"
+              "const": "urn:clef/PulumiProvider"
             },
             "action": {
               "const": "teardown"
@@ -913,5 +913,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate and apply Pulumi TypeScript programs from COPF \n deploy plans Owns Pulumi stack state , backend configuration , \n and plugin versioning"
+  "purpose": "Generate and apply Pulumi TypeScript programs from Clef \n deploy plans Owns Pulumi stack state , backend configuration , \n and plugin versioning"
 }

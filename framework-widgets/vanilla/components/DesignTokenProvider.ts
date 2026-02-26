@@ -13,7 +13,7 @@ import type {
   ThemeConfig,
 } from '../../shared/types.js';
 
-import { resolveTheme } from '../../shared/coif-bridge.js';
+import { resolveTheme } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
@@ -51,7 +51,7 @@ export class DesignTokenProvider {
 
     // Create the container element
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-token-provider', '');
+    this.el.setAttribute('data-surface-token-provider', '');
 
     if (props.className) {
       this.el.classList.add(props.className);

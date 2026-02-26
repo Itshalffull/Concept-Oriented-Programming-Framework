@@ -1,0 +1,18 @@
+# ============================================================
+# NavigatorGoUnmountsPrevious — surface-app required sync
+#
+# When Navigator/go succeeds and there was a previous
+# destination, unmount the previous host.
+# ============================================================
+
+sync NavigatorGoUnmountsPrevious [eager]
+when {
+  Navigator/go: [ nav: ?nav ]
+    => ok(nav: ?nav; previous: ?prev)
+}
+where {
+  filter(?prev != null)
+}
+then {
+  Host/unmount: [ host: ?prev ]
+}

@@ -2,7 +2,7 @@
 // SurfaceRoot — Solid.js Component
 //
 // Root surface lifecycle manager. Manages the top-level
-// rendering surface for a COIF application, including
+// rendering surface for a Clef Surface application, including
 // mount/unmount lifecycle, surface kind detection, and
 // coordination of provider contexts (tokens, viewport, binding).
 // ============================================================
@@ -14,7 +14,7 @@ import type {
   BindingConfig,
 } from '../../shared/types.js';
 
-import { createSignal as coifCreateSignal } from '../../shared/coif-bridge.js';
+import { createSignal as surfaceCreateSignal } from '../../shared/surface-bridge.js';
 
 import {
   DesignTokenProvider,
@@ -29,7 +29,7 @@ import {
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -118,7 +118,7 @@ export function SurfaceRoot(props: SurfaceRootProps): SurfaceRootResult {
 
   // Create the root element
   const root = document.createElement('div');
-  root.setAttribute('data-coif-surface', 'root');
+  root.setAttribute('data-surface-surface', 'root');
   root.setAttribute('data-surface-kind', surfaceKind);
   root.setAttribute('data-surface-phase', 'created');
 
@@ -164,7 +164,7 @@ export function SurfaceRoot(props: SurfaceRootProps): SurfaceRootResult {
     root.setAttribute('data-surface-phase', phase());
 
     root.dispatchEvent(
-      new CustomEvent('coif:surface-lifecycle', {
+      new CustomEvent('surface:surface-lifecycle', {
         bubbles: true,
         detail: {
           phase: phase(),

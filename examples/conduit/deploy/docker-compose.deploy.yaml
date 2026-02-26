@@ -5,7 +5,7 @@
 # Suitable for staging environments and local production testing.
 #
 # Usage:
-#   copf deploy --manifest deploy/docker-compose.deploy.yaml
+#   clef deploy --manifest deploy/docker-compose.deploy.yaml
 
 app:
   name: conduit
@@ -20,7 +20,7 @@ runtimes:
     storage: redis
     secrets: env
     config:
-      image: conduit-copf:latest
+      image: conduit-clef:latest
       port: "${PORT:-3000}"
       replicas: 1
       healthCheck:

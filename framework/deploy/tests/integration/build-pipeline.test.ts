@@ -12,11 +12,11 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { toolchainHandler } from '../../../../implementations/typescript/deploy/toolchain.impl.js';
 import { builderHandler } from '../../../../implementations/typescript/deploy/builder.impl.js';
 import { artifactHandler } from '../../../../implementations/typescript/deploy/artifact.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 /**
  * Simulates the build pipeline that sync chains would orchestrate:

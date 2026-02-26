@@ -246,7 +246,7 @@ describe('Migration Module', () => {
 
       const invocation: ActionInvocation = {
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'register',
         input: { user: 'u-1', name: 'alice' },
         flow: generateId(),
@@ -265,7 +265,7 @@ describe('Migration Module', () => {
 
       const invocation: ActionInvocation = {
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'migrate',
         input: { fromVersion: 1, toVersion: 3 },
         flow: generateId(),
@@ -283,7 +283,7 @@ describe('Migration Module', () => {
       // First: migrate
       const migrateInvocation: ActionInvocation = {
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'migrate',
         input: { fromVersion: 1, toVersion: 3 },
         flow: generateId(),
@@ -294,7 +294,7 @@ describe('Migration Module', () => {
       // Now: regular action should work
       const registerInvocation: ActionInvocation = {
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'register',
         input: { user: 'u-1', name: 'alice' },
         flow: generateId(),
@@ -312,7 +312,7 @@ describe('Migration Module', () => {
 
       await gated.invoke({
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'migrate',
         input: { fromVersion: 1, toVersion: 3 },
         flow: generateId(),
@@ -330,7 +330,7 @@ describe('Migration Module', () => {
 
       await gated.invoke({
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'migrate',
         input: { fromVersion: -1, toVersion: 3 },
         flow: generateId(),
@@ -342,7 +342,7 @@ describe('Migration Module', () => {
 
       const result = await gated.invoke({
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'register',
         input: { user: 'u-1', name: 'alice' },
         flow: generateId(),
@@ -360,7 +360,7 @@ describe('Migration Module', () => {
 
       await gated.invoke({
         id: generateId(),
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'migrate',
         input: { fromVersion: 1, toVersion: 3 },
         flow: generateId(),
@@ -402,7 +402,7 @@ describe('Kernel registerVersionedConcept', () => {
     const handler = createVersionedHandler();
 
     const status = await kernel.registerVersionedConcept(
-      'urn:copf/User',
+      'urn:clef/User',
       handler,
       3,
     );
@@ -415,9 +415,9 @@ describe('Kernel registerVersionedConcept', () => {
     const kernel = createKernel();
     const handler = createVersionedHandler();
 
-    await kernel.registerVersionedConcept('urn:copf/User', handler, 3);
+    await kernel.registerVersionedConcept('urn:clef/User', handler, 3);
 
-    const result = await kernel.invokeConcept('urn:copf/User', 'register', {
+    const result = await kernel.invokeConcept('urn:clef/User', 'register', {
       user: 'u-1',
       name: 'alice',
     });
@@ -431,7 +431,7 @@ describe('Kernel registerVersionedConcept', () => {
     const handler = createVersionedHandler();
 
     const status = await kernel.registerVersionedConcept(
-      'urn:copf/User',
+      'urn:clef/User',
       handler,
       undefined,
     );
@@ -443,13 +443,13 @@ describe('Kernel registerVersionedConcept', () => {
     const kernel = createKernel();
     const handler = createVersionedHandler();
 
-    await kernel.registerVersionedConcept('urn:copf/User', handler, 3);
-    await kernel.registerVersionedConcept('urn:copf/Item', handler, 1);
+    await kernel.registerVersionedConcept('urn:clef/User', handler, 3);
+    await kernel.registerVersionedConcept('urn:clef/Item', handler, 1);
 
     const statuses = kernel.getMigrationStatus();
     expect(statuses).toHaveLength(2);
 
-    const userStatus = statuses.find(s => s.uri === 'urn:copf/User');
+    const userStatus = statuses.find(s => s.uri === 'urn:clef/User');
     expect(userStatus).toBeDefined();
     expect(userStatus!.currentVersion).toBe(3);
     expect(userStatus!.requiredVersion).toBe(3);
@@ -460,12 +460,12 @@ describe('Kernel registerVersionedConcept', () => {
     const kernel = createKernel();
     const handler = createVersionedHandler();
 
-    await kernel.registerVersionedConcept('urn:copf/User', handler, 3);
-    await kernel.registerVersionedConcept('urn:copf/Other', handler, undefined);
+    await kernel.registerVersionedConcept('urn:clef/User', handler, 3);
+    await kernel.registerVersionedConcept('urn:clef/Other', handler, undefined);
 
     const statuses = kernel.getMigrationStatus();
     expect(statuses).toHaveLength(1);
-    expect(statuses[0].uri).toBe('urn:copf/User');
+    expect(statuses[0].uri).toBe('urn:clef/User');
   });
 });
 
@@ -498,7 +498,7 @@ describe('End-to-End Migration', () => {
     // Step 1: Regular action is blocked
     const blocked = await gated.invoke({
       id: generateId(),
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'register',
       input: { user: 'u-1', name: 'alice' },
       flow: generateId(),
@@ -509,7 +509,7 @@ describe('End-to-End Migration', () => {
     // Step 2: Run migration
     const migrateResult = await gated.invoke({
       id: generateId(),
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'migrate',
       input: { fromVersion: 1, toVersion: 3 },
       flow: generateId(),
@@ -520,7 +520,7 @@ describe('End-to-End Migration', () => {
     // Step 3: Regular action now works
     const resumed = await gated.invoke({
       id: generateId(),
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'register',
       input: { user: 'u-1', name: 'alice' },
       flow: generateId(),
@@ -539,13 +539,13 @@ describe('End-to-End Migration', () => {
     const handler = createVersionedHandler();
 
     // Register as versioned (fresh storage → no migration)
-    await kernel.registerVersionedConcept('urn:copf/User', handler, 2);
+    await kernel.registerVersionedConcept('urn:clef/User', handler, 2);
 
     // Register sync that fires on register
     kernel.registerSync({
       name: 'LogRegister',
       when: [{
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         action: 'register',
         inputFields: [{ name: 'user', match: { type: 'variable', name: 'u' } }],
         outputFields: [],
@@ -555,7 +555,7 @@ describe('End-to-End Migration', () => {
     });
 
     // Should work normally
-    const result = await kernel.invokeConcept('urn:copf/User', 'register', {
+    const result = await kernel.invokeConcept('urn:clef/User', 'register', {
       user: 'u-1',
       name: 'alice',
     });
@@ -573,13 +573,13 @@ describe('End-to-End Migration', () => {
 
     // Register in a registry
     const registry = createConceptRegistry();
-    registry.register('urn:copf/User', gated);
+    registry.register('urn:clef/User', gated);
 
     // Resolve and invoke — should get needsMigration
-    const transport = registry.resolve('urn:copf/User')!;
+    const transport = registry.resolve('urn:clef/User')!;
     const result = await transport.invoke({
       id: generateId(),
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       action: 'register',
       input: { user: 'u-1', name: 'alice' },
       flow: generateId(),

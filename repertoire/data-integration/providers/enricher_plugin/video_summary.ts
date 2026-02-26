@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Video summarization enricher provider
+// Clef Data Integration Kit - Video summarization enricher provider
 // Extracts keyframes at intervals, generates transcript via whisper, combines for chapter markers.
 
 import { execFile } from 'child_process';
@@ -218,9 +218,9 @@ export class VideoSummaryEnricherProvider {
     const language = (config.options?.language as string) ?? 'en';
 
     // Write video to temp file
-    const videoPath = join(tmpdir(), `copf_video_${item.id}_${Date.now()}.mp4`);
-    const audioPath = join(tmpdir(), `copf_audio_${item.id}_${Date.now()}.wav`);
-    const keyframeDir = mkdtempSync(join(tmpdir(), 'copf_keyframes_'));
+    const videoPath = join(tmpdir(), `clef_video_${item.id}_${Date.now()}.mp4`);
+    const audioPath = join(tmpdir(), `clef_audio_${item.id}_${Date.now()}.wav`);
+    const keyframeDir = mkdtempSync(join(tmpdir(), 'clef_keyframes_'));
 
     writeFileSync(videoPath, Buffer.from(item.content, 'base64'));
 

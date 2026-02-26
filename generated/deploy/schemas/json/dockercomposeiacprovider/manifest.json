@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/DockerComposeIacProvider",
+  "uri": "urn:clef/DockerComposeIacProvider",
   "name": "DockerComposeIacProvider",
   "typeParams": [
     {
@@ -373,11 +373,11 @@
   "jsonSchemas": {
     "invocations": {
       "generate": {
-        "$id": "urn:copf/DockerComposeIacProvider/generate/invocation",
+        "$id": "urn:clef/DockerComposeIacProvider/generate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeIacProvider"
+            "const": "urn:clef/DockerComposeIacProvider"
           },
           "action": {
             "const": "generate"
@@ -396,11 +396,11 @@
         }
       },
       "preview": {
-        "$id": "urn:copf/DockerComposeIacProvider/preview/invocation",
+        "$id": "urn:clef/DockerComposeIacProvider/preview/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeIacProvider"
+            "const": "urn:clef/DockerComposeIacProvider"
           },
           "action": {
             "const": "preview"
@@ -419,11 +419,11 @@
         }
       },
       "apply": {
-        "$id": "urn:copf/DockerComposeIacProvider/apply/invocation",
+        "$id": "urn:clef/DockerComposeIacProvider/apply/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeIacProvider"
+            "const": "urn:clef/DockerComposeIacProvider"
           },
           "action": {
             "const": "apply"
@@ -442,11 +442,11 @@
         }
       },
       "teardown": {
-        "$id": "urn:copf/DockerComposeIacProvider/teardown/invocation",
+        "$id": "urn:clef/DockerComposeIacProvider/teardown/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeIacProvider"
+            "const": "urn:clef/DockerComposeIacProvider"
           },
           "action": {
             "const": "teardown"
@@ -468,11 +468,11 @@
     "completions": {
       "generate": {
         "ok": {
-          "$id": "urn:copf/DockerComposeIacProvider/generate/completion/ok",
+          "$id": "urn:clef/DockerComposeIacProvider/generate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeIacProvider"
+              "const": "urn:clef/DockerComposeIacProvider"
             },
             "action": {
               "const": "generate"
@@ -503,11 +503,11 @@
       },
       "preview": {
         "ok": {
-          "$id": "urn:copf/DockerComposeIacProvider/preview/completion/ok",
+          "$id": "urn:clef/DockerComposeIacProvider/preview/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeIacProvider"
+              "const": "urn:clef/DockerComposeIacProvider"
             },
             "action": {
               "const": "preview"
@@ -543,11 +543,11 @@
       },
       "apply": {
         "ok": {
-          "$id": "urn:copf/DockerComposeIacProvider/apply/completion/ok",
+          "$id": "urn:clef/DockerComposeIacProvider/apply/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeIacProvider"
+              "const": "urn:clef/DockerComposeIacProvider"
             },
             "action": {
               "const": "apply"
@@ -583,11 +583,11 @@
           }
         },
         "portConflict": {
-          "$id": "urn:copf/DockerComposeIacProvider/apply/completion/portConflict",
+          "$id": "urn:clef/DockerComposeIacProvider/apply/completion/portConflict",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeIacProvider"
+              "const": "urn:clef/DockerComposeIacProvider"
             },
             "action": {
               "const": "apply"
@@ -615,11 +615,11 @@
       },
       "teardown": {
         "ok": {
-          "$id": "urn:copf/DockerComposeIacProvider/teardown/completion/ok",
+          "$id": "urn:clef/DockerComposeIacProvider/teardown/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeIacProvider"
+              "const": "urn:clef/DockerComposeIacProvider"
             },
             "action": {
               "const": "teardown"
@@ -651,5 +651,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate and apply Docker Compose files from COPF deploy \n plans Owns the compose file path , service definitions , \n and running container state for local IaC management"
+  "purpose": "Generate and apply Docker Compose files from Clef deploy \n plans Owns the compose file path , service definitions , \n and running container state for local IaC management"
 }

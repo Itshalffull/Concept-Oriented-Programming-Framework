@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Pathauto
 /// @notice Concept-oriented automatic path alias generation from titles
-/// @dev Implements the Pathauto concept from COPF specification.
+/// @dev Implements the Pathauto concept from Clef specification.
 ///      Generates URL-friendly slugs from titles and stores them as aliases for nodes.
 
 contract Pathauto {

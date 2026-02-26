@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/TypeScriptToolchain",
+  "uri": "urn:clef/TypeScriptToolchain",
   "name": "TypeScriptToolchain",
   "typeParams": [
     {
@@ -355,11 +355,11 @@
   "jsonSchemas": {
     "invocations": {
       "resolve": {
-        "$id": "urn:copf/TypeScriptToolchain/resolve/invocation",
+        "$id": "urn:clef/TypeScriptToolchain/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeScriptToolchain"
+            "const": "urn:clef/TypeScriptToolchain"
           },
           "action": {
             "const": "resolve"
@@ -389,11 +389,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/TypeScriptToolchain/register/invocation",
+        "$id": "urn:clef/TypeScriptToolchain/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeScriptToolchain"
+            "const": "urn:clef/TypeScriptToolchain"
           },
           "action": {
             "const": "register"
@@ -409,11 +409,11 @@
     "completions": {
       "resolve": {
         "ok": {
-          "$id": "urn:copf/TypeScriptToolchain/resolve/completion/ok",
+          "$id": "urn:clef/TypeScriptToolchain/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptToolchain"
+              "const": "urn:clef/TypeScriptToolchain"
             },
             "action": {
               "const": "resolve"
@@ -450,11 +450,11 @@
           }
         },
         "notInstalled": {
-          "$id": "urn:copf/TypeScriptToolchain/resolve/completion/notInstalled",
+          "$id": "urn:clef/TypeScriptToolchain/resolve/completion/notInstalled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptToolchain"
+              "const": "urn:clef/TypeScriptToolchain"
             },
             "action": {
               "const": "resolve"
@@ -476,11 +476,11 @@
           }
         },
         "nodeVersionMismatch": {
-          "$id": "urn:copf/TypeScriptToolchain/resolve/completion/nodeVersionMismatch",
+          "$id": "urn:clef/TypeScriptToolchain/resolve/completion/nodeVersionMismatch",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptToolchain"
+              "const": "urn:clef/TypeScriptToolchain"
             },
             "action": {
               "const": "resolve"
@@ -508,11 +508,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/TypeScriptToolchain/register/completion/ok",
+          "$id": "urn:clef/TypeScriptToolchain/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptToolchain"
+              "const": "urn:clef/TypeScriptToolchain"
             },
             "action": {
               "const": "register"

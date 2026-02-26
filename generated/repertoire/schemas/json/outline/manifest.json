@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Outline",
+  "uri": "urn:clef/Outline",
   "name": "Outline",
   "typeParams": [
     {
@@ -562,11 +562,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/Outline/create/invocation",
+        "$id": "urn:clef/Outline/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "create"
@@ -596,11 +596,11 @@
         }
       },
       "indent": {
-        "$id": "urn:copf/Outline/indent/invocation",
+        "$id": "urn:clef/Outline/indent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "indent"
@@ -619,11 +619,11 @@
         }
       },
       "outdent": {
-        "$id": "urn:copf/Outline/outdent/invocation",
+        "$id": "urn:clef/Outline/outdent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "outdent"
@@ -642,11 +642,11 @@
         }
       },
       "moveUp": {
-        "$id": "urn:copf/Outline/moveUp/invocation",
+        "$id": "urn:clef/Outline/moveUp/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "moveUp"
@@ -665,11 +665,11 @@
         }
       },
       "moveDown": {
-        "$id": "urn:copf/Outline/moveDown/invocation",
+        "$id": "urn:clef/Outline/moveDown/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "moveDown"
@@ -688,11 +688,11 @@
         }
       },
       "collapse": {
-        "$id": "urn:copf/Outline/collapse/invocation",
+        "$id": "urn:clef/Outline/collapse/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "collapse"
@@ -711,11 +711,11 @@
         }
       },
       "expand": {
-        "$id": "urn:copf/Outline/expand/invocation",
+        "$id": "urn:clef/Outline/expand/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "expand"
@@ -734,11 +734,11 @@
         }
       },
       "reparent": {
-        "$id": "urn:copf/Outline/reparent/invocation",
+        "$id": "urn:clef/Outline/reparent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "reparent"
@@ -761,11 +761,11 @@
         }
       },
       "getChildren": {
-        "$id": "urn:copf/Outline/getChildren/invocation",
+        "$id": "urn:clef/Outline/getChildren/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Outline"
+            "const": "urn:clef/Outline"
           },
           "action": {
             "const": "getChildren"
@@ -787,11 +787,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/Outline/create/completion/ok",
+          "$id": "urn:clef/Outline/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "create"
@@ -813,11 +813,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Outline/create/completion/exists",
+          "$id": "urn:clef/Outline/create/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "create"
@@ -841,11 +841,11 @@
       },
       "indent": {
         "ok": {
-          "$id": "urn:copf/Outline/indent/completion/ok",
+          "$id": "urn:clef/Outline/indent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "indent"
@@ -867,11 +867,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/indent/completion/notfound",
+          "$id": "urn:clef/Outline/indent/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "indent"
@@ -893,11 +893,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Outline/indent/completion/invalid",
+          "$id": "urn:clef/Outline/indent/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "indent"
@@ -921,11 +921,11 @@
       },
       "outdent": {
         "ok": {
-          "$id": "urn:copf/Outline/outdent/completion/ok",
+          "$id": "urn:clef/Outline/outdent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "outdent"
@@ -947,11 +947,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/outdent/completion/notfound",
+          "$id": "urn:clef/Outline/outdent/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "outdent"
@@ -973,11 +973,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Outline/outdent/completion/invalid",
+          "$id": "urn:clef/Outline/outdent/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "outdent"
@@ -1001,11 +1001,11 @@
       },
       "moveUp": {
         "ok": {
-          "$id": "urn:copf/Outline/moveUp/completion/ok",
+          "$id": "urn:clef/Outline/moveUp/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "moveUp"
@@ -1027,11 +1027,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/moveUp/completion/notfound",
+          "$id": "urn:clef/Outline/moveUp/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "moveUp"
@@ -1055,11 +1055,11 @@
       },
       "moveDown": {
         "ok": {
-          "$id": "urn:copf/Outline/moveDown/completion/ok",
+          "$id": "urn:clef/Outline/moveDown/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "moveDown"
@@ -1081,11 +1081,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/moveDown/completion/notfound",
+          "$id": "urn:clef/Outline/moveDown/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "moveDown"
@@ -1109,11 +1109,11 @@
       },
       "collapse": {
         "ok": {
-          "$id": "urn:copf/Outline/collapse/completion/ok",
+          "$id": "urn:clef/Outline/collapse/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "collapse"
@@ -1135,11 +1135,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/collapse/completion/notfound",
+          "$id": "urn:clef/Outline/collapse/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "collapse"
@@ -1163,11 +1163,11 @@
       },
       "expand": {
         "ok": {
-          "$id": "urn:copf/Outline/expand/completion/ok",
+          "$id": "urn:clef/Outline/expand/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "expand"
@@ -1189,11 +1189,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/expand/completion/notfound",
+          "$id": "urn:clef/Outline/expand/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "expand"
@@ -1217,11 +1217,11 @@
       },
       "reparent": {
         "ok": {
-          "$id": "urn:copf/Outline/reparent/completion/ok",
+          "$id": "urn:clef/Outline/reparent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "reparent"
@@ -1243,11 +1243,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/reparent/completion/notfound",
+          "$id": "urn:clef/Outline/reparent/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "reparent"
@@ -1271,11 +1271,11 @@
       },
       "getChildren": {
         "ok": {
-          "$id": "urn:copf/Outline/getChildren/completion/ok",
+          "$id": "urn:clef/Outline/getChildren/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "getChildren"
@@ -1297,11 +1297,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Outline/getChildren/completion/notfound",
+          "$id": "urn:clef/Outline/getChildren/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Outline"
+              "const": "urn:clef/Outline"
             },
             "action": {
               "const": "getChildren"

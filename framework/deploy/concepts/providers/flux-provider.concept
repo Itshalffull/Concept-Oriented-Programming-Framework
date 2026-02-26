@@ -2,7 +2,7 @@
 concept FluxProvider [F] {
 
   purpose {
-    Generate Flux CRDs from COPF deploy plans. Owns Kustomization
+    Generate Flux CRDs from Clef deploy plans. Owns Kustomization
     CRDs, HelmRelease objects, source controller references,
     and reconciliation status tracking.
   }

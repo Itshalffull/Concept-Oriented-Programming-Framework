@@ -1,4 +1,4 @@
-// Grouping Concept Implementation (Interface Kit)
+// Grouping Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 /** Classify a single action name by its operational properties. */

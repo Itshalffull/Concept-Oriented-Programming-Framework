@@ -1,4 +1,4 @@
-// Resolve type parameter mappings when kit.yaml is parsed.
+// Resolve type parameter mappings when suite.yaml is parsed.
 // Creates FieldMapping entries that bind concept type parameters
 // to kit shared types, enabling cross-concept type unification.
 
@@ -8,7 +8,7 @@ when {
     => [ ]
 }
 where {
-  filter(?kitYaml pathMatches: "*/kit.yaml")
+  filter(?kitYaml pathMatches: "*/suite.yaml")
 }
 then {
   FieldMapping/create: [ sourceSchema: ?conceptTypeParam; targetSchema: ?kitSharedType; direction: "bidirectional" ]

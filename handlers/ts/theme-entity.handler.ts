@@ -27,7 +27,7 @@ export const themeEntityHandler: ConceptHandler = {
     }
 
     const id = nextId();
-    const symbol = `copf/theme/${name}`;
+    const symbol = `clef/theme/${name}`;
 
     // Extract metadata from AST
     let purposeText = '';

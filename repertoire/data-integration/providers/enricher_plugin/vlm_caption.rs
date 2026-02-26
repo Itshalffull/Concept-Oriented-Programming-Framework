@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Vision-Language Model captioning enricher provider
+// Clef Data Integration Kit - Vision-Language Model captioning enricher provider
 // Sends image to VLM API endpoint, receives caption + detailed description + detected objects.
 
 use std::collections::HashMap;

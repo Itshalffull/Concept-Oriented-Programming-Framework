@@ -15,12 +15,12 @@ func profileWidgetSpec() -> WidgetSpec {
         category: .composite,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/Profile",
+                concept: "urn:clef/Profile",
                 actions: ["update"],
                 queries: ["get"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Follow",
+                concept: "urn:clef/Follow",
                 actions: ["follow", "unfollow"],
                 queries: ["isFollowing"]
             ),

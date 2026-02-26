@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title ArticleViewWidget
-/// @notice Self-describing COIF widget for displaying a single article on Conduit.
+/// @notice Self-describing Clef Surface widget for displaying a single article on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -129,7 +129,7 @@ contract ArticleViewWidget {
         string[] memory articleActions = new string[](1);
         articleActions[0] = "get";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Article",
+            concept: "urn:clef/Article",
             actions: articleActions
         });
 
@@ -137,7 +137,7 @@ contract ArticleViewWidget {
         favoriteActions[0] = "favorite";
         favoriteActions[1] = "unfavorite";
         bindings[1] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Favorite",
+            concept: "urn:clef/Favorite",
             actions: favoriteActions
         });
 
@@ -145,14 +145,14 @@ contract ArticleViewWidget {
         followActions[0] = "follow";
         followActions[1] = "unfollow";
         bindings[2] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Follow",
+            concept: "urn:clef/Follow",
             actions: followActions
         });
 
         string[] memory commentActions = new string[](1);
         commentActions[0] = "list";
         bindings[3] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Comment",
+            concept: "urn:clef/Comment",
             actions: commentActions
         });
 

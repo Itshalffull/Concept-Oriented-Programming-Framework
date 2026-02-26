@@ -1,5 +1,5 @@
 """
-Tests for the COPF Python SDK.
+Tests for the Clef Python SDK.
 
 Covers:
   - ConceptHandler dispatch
@@ -10,9 +10,9 @@ Covers:
 import asyncio
 import pytest
 
-from copf.handler import ConceptHandler
-from copf.storage import InMemoryStorage
-from copf.registry import register, _REGISTRY
+from clef.handler import ConceptHandler
+from clef.storage import InMemoryStorage
+from clef.registry import register, _REGISTRY
 
 
 # ============================================================

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title SyncPair
 /// @notice Bidirectional sync with conflict resolution between two endpoints
-/// @dev Implements the SyncPair concept from COPF specification.
+/// @dev Implements the SyncPair concept from Clef specification.
 ///      Supports creating sync pairs, linking records across endpoints,
 ///      triggering sync operations, resolving conflicts, and unlinking records.
 

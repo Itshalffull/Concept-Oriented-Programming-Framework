@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Queue
 /// @notice Concept-oriented queue management with enqueue, claim, release, and delete operations
-/// @dev Implements the Queue concept from COPF specification.
+/// @dev Implements the Queue concept from Clef specification.
 ///      Supports multiple named queues with item lifecycle management.
 
 contract Queue {

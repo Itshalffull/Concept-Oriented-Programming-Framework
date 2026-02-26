@@ -1,4 +1,4 @@
-# Route Sdk/generate to SwiftSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+# Route Sdk/generate to SwiftSdkTarget — Architecture doc: Clef Bind, Sync Section 3.4
 
 sync RouteToSwiftSdk [eager]
 when {

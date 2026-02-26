@@ -259,12 +259,12 @@ describe('Sync Parser', () => {
     const handle = syncs[0];
     expect(handle.name).toBe('HandleEcho');
     expect(handle.when).toHaveLength(1);
-    expect(handle.when[0].concept).toBe('urn:copf/Web');
+    expect(handle.when[0].concept).toBe('urn:clef/Web');
     expect(handle.when[0].action).toBe('request');
     expect(handle.where).toHaveLength(1);
     expect(handle.where[0].type).toBe('bind');
     expect(handle.then).toHaveLength(1);
-    expect(handle.then[0].concept).toBe('urn:copf/Echo');
+    expect(handle.then[0].concept).toBe('urn:clef/Echo');
     expect(handle.then[0].action).toBe('send');
 
     // EchoResponse
@@ -272,7 +272,7 @@ describe('Sync Parser', () => {
     expect(resp.name).toBe('EchoResponse');
     expect(resp.when).toHaveLength(2);
     expect(resp.then).toHaveLength(1);
-    expect(resp.then[0].concept).toBe('urn:copf/Web');
+    expect(resp.then[0].concept).toBe('urn:clef/Web');
     expect(resp.then[0].action).toBe('respond');
   });
 

@@ -7,7 +7,7 @@
 // 3. Pattern validator: non-gate concept fails gracefully
 // 4. FlowTrace: gate action populates TraceNode.gate
 // 5. Trace renderer: gate-annotated output (completed, pending, failed)
-// 6. copf trace --gates filtering
+// 6. clef trace --gates filtering
 //
 // See Architecture doc Sections 16.11, 16.12.
 // ============================================================
@@ -295,7 +295,7 @@ describe('Gate-aware FlowTrace builder', () => {
   const chainMonitorAst = parseConceptFile(CHAIN_MONITOR_SPEC);
 
   const gateLookup: GateLookup = (uri: string) => {
-    if (uri === 'urn:copf/ChainMonitor') return chainMonitorAst;
+    if (uri === 'urn:clef/ChainMonitor') return chainMonitorAst;
     return undefined;
   };
 
@@ -306,7 +306,7 @@ describe('Gate-aware FlowTrace builder', () => {
     // Root: ArbitrumVault/lock → ok
     log.append({
       id: 'c1',
-      concept: 'urn:copf/ArbitrumVault',
+      concept: 'urn:clef/ArbitrumVault',
       action: 'lock',
       input: { amount: 100 },
       variant: 'ok',
@@ -318,7 +318,7 @@ describe('Gate-aware FlowTrace builder', () => {
     // Invocation: ChainMonitor/awaitFinality (triggered by sync)
     log.appendInvocation({
       id: 'i1',
-      concept: 'urn:copf/ChainMonitor',
+      concept: 'urn:clef/ChainMonitor',
       action: 'awaitFinality',
       input: { txHash: '0xabc', level: 'l1-batch' },
       flow: flowId,
@@ -329,7 +329,7 @@ describe('Gate-aware FlowTrace builder', () => {
     // Completion: ChainMonitor/awaitFinality → ok (with description)
     log.append({
       id: 'c2',
-      concept: 'urn:copf/ChainMonitor',
+      concept: 'urn:clef/ChainMonitor',
       action: 'awaitFinality',
       input: { txHash: '0xabc', level: 'l1-batch' },
       variant: 'ok',
@@ -346,14 +346,14 @@ describe('Gate-aware FlowTrace builder', () => {
     const syncs: CompiledSync[] = [{
       name: 'WaitForFinality',
       when: [{
-        concept: 'urn:copf/ArbitrumVault',
+        concept: 'urn:clef/ArbitrumVault',
         action: 'lock',
         inputFields: [],
         outputFields: [{ name: 'txHash', match: { type: 'variable', name: 'tx' } }],
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/ChainMonitor',
+        concept: 'urn:clef/ChainMonitor',
         action: 'awaitFinality',
         fields: [
           { name: 'txHash', value: { type: 'variable', name: 'tx' } },
@@ -383,7 +383,7 @@ describe('Gate-aware FlowTrace builder', () => {
     // Root completion
     log.append({
       id: 'c1',
-      concept: 'urn:copf/ArbitrumVault',
+      concept: 'urn:clef/ArbitrumVault',
       action: 'lock',
       input: { amount: 100 },
       variant: 'ok',
@@ -395,7 +395,7 @@ describe('Gate-aware FlowTrace builder', () => {
     // Invocation for gate — no completion yet (pending)
     log.appendInvocation({
       id: 'i1',
-      concept: 'urn:copf/ChainMonitor',
+      concept: 'urn:clef/ChainMonitor',
       action: 'awaitFinality',
       input: { txHash: '0xdef', level: 'l1-batch' },
       flow: flowId,
@@ -406,14 +406,14 @@ describe('Gate-aware FlowTrace builder', () => {
     const syncs: CompiledSync[] = [{
       name: 'WaitForFinality',
       when: [{
-        concept: 'urn:copf/ArbitrumVault',
+        concept: 'urn:clef/ArbitrumVault',
         action: 'lock',
         inputFields: [],
         outputFields: [],
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/ChainMonitor',
+        concept: 'urn:clef/ChainMonitor',
         action: 'awaitFinality',
         fields: [
           { name: 'txHash', value: { type: 'variable', name: 'tx' } },
@@ -443,7 +443,7 @@ describe('Gate-aware FlowTrace builder', () => {
 
     log.append({
       id: 'c1',
-      concept: 'urn:copf/ChainMonitor',
+      concept: 'urn:clef/ChainMonitor',
       action: 'awaitFinality',
       input: { txHash: '0xghi', level: 'l1-batch' },
       variant: 'ok',
@@ -477,7 +477,7 @@ describe('Gate-aware FlowTrace builder', () => {
 
     log.append({
       id: 'c1',
-      concept: 'urn:copf/Echo',
+      concept: 'urn:clef/Echo',
       action: 'send',
       input: { id: '1', text: 'hello' },
       variant: 'ok',

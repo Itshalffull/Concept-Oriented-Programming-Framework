@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - EXIF metadata extraction enricher provider
+// Clef Data Integration Kit - EXIF metadata extraction enricher provider
 // Reads EXIF IFD entries from JPEG/TIFF bytes: parses APP1 marker, reads IFD tags
 // for camera (0x010F), lens, GPS (IFD 0x8825), datetime (0x9003), dimensions.
 

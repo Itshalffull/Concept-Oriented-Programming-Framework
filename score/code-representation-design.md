@@ -1,4 +1,4 @@
-# COPF Code Representation & Semantic Query System
+# Clef Code Representation & Semantic Query System
 
 ## Design Document v0.1.0 — 2026-02-25
 
@@ -6,9 +6,9 @@
 
 ## 1. Motivation
 
-A COPF program is a collection of `.concept` specs, `.sync` specs, `kit.yaml` manifests, generated code files (TypeScript, Rust, Swift, Solidity), JSON/YAML configs, deployment manifests, interface definitions, documentation, and test files. Today these artifacts are opaque to the framework — the compiler pipeline processes them transiently, but nothing persists the structural or semantic content as queryable, traversable, connectable entities.
+A Clef program is a collection of `.concept` specs, `.sync` specs, `suite.yaml` manifests, generated code files (TypeScript, Rust, Swift, Solidity), JSON/YAML configs, deployment manifests, interface definitions, documentation, and test files. Today these artifacts are opaque to the framework — the compiler pipeline processes them transiently, but nothing persists the structural or semantic content as queryable, traversable, connectable entities.
 
-This design introduces a layered system that makes **every file in a COPF project** — source, generated, config, spec, doc — a first-class node in the concept graph, queryable at three levels:
+This design introduces a layered system that makes **every file in a Clef project** — source, generated, config, spec, doc — a first-class node in the concept graph, queryable at three levels:
 
 - **Syntactic**: What tokens, nodes, and structure does this file contain?
 - **Symbolic**: What named entities does it define or reference, and how do they connect across files?
@@ -97,7 +97,7 @@ These existing concepts are used as-is in the new system's pipelines and storage
 | ContentParser | Foundation | New parser providers dispatch through LanguageGrammar rather than hardcoded format detection |
 | Schema | Classification | New schema definitions for concept-spec-metadata, sync-spec-metadata, action-signature, variant-signature — used to validate and structure semantic entities |
 | SearchIndex | Query/Retrieval | TextIndex providers (trigram, suffix array, symbol index) register as SearchIndex providers |
-| Namespace | Classification | COPF symbol namespace scheme (`copf/concept/`, `copf/sync/`, `copf/action/`, `ts/module/`, etc.) |
+| Namespace | Classification | Clef symbol namespace scheme (`clef/concept/`, `clef/sync/`, `clef/action/`, `ts/module/`, etc.) |
 | Tag | Classification | Standard tags: `role:source`, `role:generated`, `role:config`, `role:spec`, `role:doc`, `role:test`; `lang:typescript`, `lang:rust`, etc. |
 
 ### 3.3 Concepts superseded by new design
@@ -372,7 +372,7 @@ purpose: Globally unique, cross-file identifier for any named entity in the proj
 
 state:
   symbols: set S
-  symbol_string: S -> String      // hierarchical: "copf/concept/Article", "ts/function/src/handlers/article.ts/createArticle"
+  symbol_string: S -> String      // hierarchical: "clef/concept/Article", "ts/function/src/handlers/article.ts/createArticle"
   kind: S -> String               // "function", "class", "type", "variable", "concept", "action", "variant", "state-field", "sync", "config-key"
   display_name: S -> String
   documentation: S -> option String
@@ -415,7 +415,7 @@ capabilities:
 | ConceptSpecSymbolExtractor | .concept | Extracts concept, action, variant, state-field symbols |
 | SyncSpecSymbolExtractor | .sync | Extracts sync name, concept refs, variable bindings |
 | JsonConfigSymbolExtractor | .json | Extracts config keys as symbols (with JSON Schema awareness) |
-| YamlConfigSymbolExtractor | .yaml | Extracts config keys; kit.yaml gets special handling |
+| YamlConfigSymbolExtractor | .yaml | Extracts config keys; suite.yaml gets special handling |
 | GraphQLSymbolExtractor | .graphql | Extracts types, fields, queries, mutations |
 | UniversalTreeSitterExtractor | any | Fallback: generic Tree-sitter queries for function/class/type declarations |
 
@@ -532,7 +532,7 @@ Interoperates with existing Linking Kit: SymbolRelationship extends the vocabula
 
 ### 4.3 Semantic Kit (`kits/semantic/`)
 
-New kit. COPF-specific semantic entities representing the application's declared structure.
+New suite. Clef-specific semantic entities representing the application's declared structure.
 
 #### ConceptEntity [E]
 
@@ -735,7 +735,7 @@ capabilities:
 
 ### 4.4 Analysis Kit (`kits/analysis/`)
 
-New kit. Program analysis overlays computed from parse + symbol layers.
+New suite. Program analysis overlays computed from parse + symbol layers.
 
 #### DependenceGraph [N]
 
@@ -1127,7 +1127,7 @@ then {
 
 #### TypeBindingResolutionSync [recommended]
 
-When kit.yaml is parsed, resolve type parameter mappings via FieldMapping:
+When suite.yaml is parsed, resolve type parameter mappings via FieldMapping:
 
 ```
 sync TypeBindingResolutionSync [eager]
@@ -1135,10 +1135,10 @@ when {
   ContentParser/parse: [ file: ?kit_yaml ] => [ ]
 }
 where {
-  filter(?kit_yaml path_matches: "*/kit.yaml")
+  filter(?kit_yaml path_matches: "*/suite.yaml")
 }
 then {
-  // For each concept param mapping in kit.yaml:
+  // For each concept param mapping in suite.yaml:
   FieldMapping/create: [ source_schema: ?concept_type_param; target_schema: ?kit_shared_type; direction: "bidirectional" ]
 }
 ```
@@ -1217,7 +1217,7 @@ then {
 
 ---
 
-## 6. Kit Manifests
+## 6. Suite Manifests
 
 ### 6.1 Parse Kit
 
@@ -1398,7 +1398,7 @@ uses:
 kit:
   name: semantic
   version: 0.1.0
-  description: "COPF-specific semantic entities — concepts, actions, variants, syncs, state fields"
+  description: "Clef-specific semantic entities — concepts, actions, variants, syncs, state fields"
 
 concepts:
   ConceptEntity:
@@ -1610,60 +1610,60 @@ uses:
 
 ### 7.1 New commands
 
-Add to `tools/copf-cli/`:
+Add to `tools/clef-cli/`:
 
 ```
-copf symbols <subcommand>
-  copf symbols list [--kind <kind>] [--file <path>] [--namespace <ns>]
-  copf symbols resolve <symbol-string>
-  copf symbols references <symbol-string> [--role definition|reference|import]
-  copf symbols rename <symbol-string> <new-name> [--dry-run]
+clef symbols <subcommand>
+  clef symbols list [--kind <kind>] [--file <path>] [--namespace <ns>]
+  clef symbols resolve <symbol-string>
+  clef symbols references <symbol-string> [--role definition|reference|import]
+  clef symbols rename <symbol-string> <new-name> [--dry-run]
 
-copf query <subcommand>
-  copf query flow <concept/action> [--variant <tag>] [--depth <n>]
+clef query <subcommand>
+  clef query flow <concept/action> [--variant <tag>] [--depth <n>]
     # Traces the static sync chain from an action
-  copf query impact <file-or-symbol> [--depth <n>]
+  clef query impact <file-or-symbol> [--depth <n>]
     # Shows what would be affected by a change
-  copf query dead-variants
+  clef query dead-variants
     # Lists variants no sync pattern-matches on
-  copf query dead-syncs
+  clef query dead-syncs
     # Lists syncs whose when-patterns can never fire
-  copf query generated-from <spec-file>
+  clef query generated-from <spec-file>
     # Lists all files generated from a spec
-  copf query depends-on <symbol-string>
+  clef query depends-on <symbol-string>
     # Lists all symbols this one depends on
-  copf query depended-by <symbol-string>
+  clef query depended-by <symbol-string>
     # Lists all symbols that depend on this one
 
-copf search <subcommand>
-  copf search text <query> [--regex] [--file-pattern <glob>]
-  copf search structural <pattern> [--syntax ast-grep|comby|tree-sitter] [--language <lang>]
-  copf search semantic <natural-language-query> [--top-k <n>]
+clef search <subcommand>
+  clef search text <query> [--regex] [--file-pattern <glob>]
+  clef search structural <pattern> [--syntax ast-grep|comby|tree-sitter] [--language <lang>]
+  clef search semantic <natural-language-query> [--top-k <n>]
 
-copf analyze <subcommand>
-  copf analyze rules [--category <cat>] [--severity <sev>]
+clef analyze <subcommand>
+  clef analyze rules [--category <cat>] [--severity <sev>]
     # Run all matching analysis rules
-  copf analyze slice <symbol-string> [--direction forward|backward]
-  copf analyze flow <source-symbol> <sink-symbol>
+  clef analyze slice <symbol-string> [--direction forward|backward]
+  clef analyze flow <source-symbol> <sink-symbol>
     # Trace data flow paths between two symbols
-  copf analyze invariants [--concept <name>]
+  clef analyze invariants [--concept <name>]
     # Check invariant coverage
 
-copf inspect <subcommand>
-  copf inspect tree <file> [--node-at <line:col>] [--query <s-expr>]
+clef inspect <subcommand>
+  clef inspect tree <file> [--node-at <line:col>] [--query <s-expr>]
     # Show syntax tree for a file
-  copf inspect concept <name>
+  clef inspect concept <name>
     # Show full semantic breakdown of a concept
-  copf inspect sync <name>
+  clef inspect sync <name>
     # Show sync's resolved when/where/then with concept/action refs
-  copf inspect file <path>
+  clef inspect file <path>
     # Show file artifact metadata, symbols defined, provenance
 ```
 
 ### 7.2 Updates to existing commands
 
 ```
-copf check
+clef check
   # Existing patterns:
   --pattern async-gate
   # New patterns:
@@ -1675,7 +1675,7 @@ copf check
   --pattern unused-type-params     # type params never mapped in any kit
   --pattern invariant-coverage     # invariants without test or runtime validation
 
-copf trace
+clef trace
   # Existing:
   --gates
   # New:
@@ -1683,13 +1683,13 @@ copf trace
   --from <concept/action>          # starting point for static trace
   --variant <tag>                  # filter to specific variant paths
 
-copf generate
+clef generate
   # New flag:
   --with-provenance                # emit Provenance records linking specs to outputs
   --with-symbols                   # emit Symbol + SymbolOccurrence data in generated files
 
-copf impact <file-or-symbol>
-  # New top-level command (alias for copf query impact)
+clef impact <file-or-symbol>
+  # New top-level command (alias for clef query impact)
   # Shows affected files, concepts, syncs, generated artifacts
 ```
 
@@ -1700,15 +1700,15 @@ The DevServer concept gains new hot-reload behaviors:
 - On `.concept` file save → reparse → update ConceptEntity/ActionEntity/VariantEntity/StateField → rebuild affected FlowGraph edges → re-run affected AnalysisRules
 - On `.sync` file save → reparse → update SyncEntity → rebuild FlowGraph → check for newly dead variants
 - On generated file manual edit → warn that file is generated (via FileArtifact role + Provenance) and suggest editing the source spec instead
-- Symbol rename refactoring across files via `copf symbols rename`
+- Symbol rename refactoring across files via `clef symbols rename`
 
 ---
 
-## 8. Interface Kit Updates
+## 8. Clef Bind Updates
 
 ### 8.1 New interface targets
 
-The Interface Kit's provider pattern extends to expose semantic query capabilities:
+The Clef Bind's provider pattern extends to expose semantic query capabilities:
 
 #### McpTarget additions
 
@@ -1716,15 +1716,15 @@ The existing McpTarget gains new tools exposed via MCP:
 
 ```
 tools:
-  - copf_symbols_resolve: Resolve a symbol string to its definition
-  - copf_symbols_references: Find all references to a symbol
-  - copf_query_flow: Trace sync chain from an action
-  - copf_query_impact: Impact analysis for a change
-  - copf_search_structural: Structural code search
-  - copf_search_semantic: Natural language code search
-  - copf_inspect_concept: Full concept semantic breakdown
-  - copf_inspect_sync: Resolved sync with concept/action refs
-  - copf_analyze_rules: Run analysis rules
+  - clef_symbols_resolve: Resolve a symbol string to its definition
+  - clef_symbols_references: Find all references to a symbol
+  - clef_query_flow: Trace sync chain from an action
+  - clef_query_impact: Impact analysis for a change
+  - clef_search_structural: Structural code search
+  - clef_search_semantic: Natural language code search
+  - clef_inspect_concept: Full concept semantic breakdown
+  - clef_inspect_sync: Resolved sync with concept/action refs
+  - clef_analyze_rules: Run analysis rules
 ```
 
 #### ClaudeSkillsTarget additions
@@ -1733,30 +1733,30 @@ New Claude Skills that leverage the semantic layer:
 
 ```
 skills:
-  - copf-code-navigator:
-      description: "Navigate COPF project structure semantically"
+  - clef-code-navigator:
+      description: "Navigate Clef project structure semantically"
       tools: [symbols_resolve, symbols_references, query_flow, inspect_concept, inspect_sync]
 
-  - copf-impact-analyzer:
+  - clef-impact-analyzer:
       description: "Analyze impact of proposed changes"
       tools: [query_impact, analyze_slice, query_depends_on, query_depended_by]
 
-  - copf-code-search:
+  - clef-code-search:
       description: "Search project code by structure, text, or natural language"
       tools: [search_text, search_structural, search_semantic]
 
-  - copf-spec-writer:
+  - clef-spec-writer:
       description: "Write and validate concept/sync specs with semantic awareness"
       tools: [inspect_concept, query_dead_variants, analyze_invariants, check_compatibility]
 ```
 
 #### CliTarget additions
 
-All new `copf` subcommands from Section 7 are generated by the CliTarget from the semantic entities' action signatures.
+All new `clef` subcommands from Section 7 are generated by the CliTarget from the semantic entities' action signatures.
 
 ### 8.2 Existing target impact
 
-REST, GraphQL, and gRPC targets automatically gain endpoints for new concept actions through the standard Interface Kit generation pipeline. No manual updates needed — the M+N pattern handles this.
+REST, GraphQL, and gRPC targets automatically gain endpoints for new concept actions through the standard Clef Bind generation pipeline. No manual updates needed — the M+N pattern handles this.
 
 ---
 
@@ -1765,9 +1765,9 @@ REST, GraphQL, and gRPC targets automatically gain endpoints for new concept act
 This design adds:
 
 - **15 new concepts** (SyntaxTree, LanguageGrammar, DefinitionUnit, ContentDigest, StructuralPattern, FileArtifact, Symbol, SymbolOccurrence, ScopeGraph, SymbolRelationship, ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity) + DependenceGraph, DataFlowPath, ProgramSlice, AnalysisRule, SemanticEmbedding = **20 new coordination concepts**
-- **~35 provider concepts** across all kits (grammars, extractors, scope providers, dependence providers, pattern engines, analysis engines, embedding models, search backends)
-- **5 new kits** (Parse, Symbol, Semantic, Analysis, Discovery)
-- **~18 new syncs** across all kits
+- **~35 provider concepts** across all suites (grammars, extractors, scope providers, dependence providers, pattern engines, analysis engines, embedding models, search backends)
+- **5 new suites** (Parse, Symbol, Semantic, Analysis, Discovery)
+- **~18 new syncs** across all suites
 
 Updated library count: 54 existing + 20 new coordination + ~35 providers = **~109 concepts, 20 kits**
 
@@ -1779,7 +1779,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 
 ### Phase 1: Parse Foundation (v0.19.0)
 
-**Goal**: Every file in a COPF project has a lossless syntax tree.
+**Goal**: Every file in a Clef project has a lossless syntax tree.
 
 **Deliverables**:
 1. Parse Kit with SyntaxTree, LanguageGrammar, FileArtifact concepts
@@ -1787,10 +1787,10 @@ Concept library version: **v0.5.0** (from v0.4.0)
 3. Custom Tree-sitter grammars for `.concept` and `.sync` file formats
 4. ParseOnChangeSync and FileArtifactRegistrationSync
 5. PluginRegistry integration for grammar providers
-6. `copf inspect tree <file>` CLI command
+6. `clef inspect tree <file>` CLI command
 7. Conformance tests for all three concepts
 
-**Dependencies**: Foundation Kit (ContentNode, ContentParser, ContentStorage), Generation Kit (Resource), Infrastructure Kit (PluginRegistry)
+**Dependencies**: Foundation Kit (ContentNode, ContentParser, ContentStorage), Generation Suite (Resource), Infrastructure Kit (PluginRegistry)
 
 **Validation**: Parse every file in the RealWorld benchmark project; verify round-trip fidelity (tree → text matches source); verify incremental reparse on edit.
 
@@ -1805,16 +1805,16 @@ Concept library version: **v0.5.0** (from v0.4.0)
 4. TypeScriptSymbolExtractor provider (primary language)
 5. SymbolExtractionSync
 6. SymbolRelationshipSync with Backlink integration
-7. `copf symbols` CLI commands (list, resolve, references)
-8. Namespace scheme registration for COPF symbol strings
+7. `clef symbols` CLI commands (list, resolve, references)
+8. Namespace scheme registration for Clef symbol strings
 
 **Dependencies**: Phase 1 (SyntaxTree, LanguageGrammar, FileArtifact), Linking Kit (Reference, Relation, Backlink), Classification Kit (Namespace)
 
-**Validation**: For the RealWorld benchmark, verify every concept name, action name, variant tag, state field, and sync name has a Symbol; verify cross-file references from syncs to concepts resolve correctly; verify `copf symbols references User/register` returns all sync when-patterns that reference it.
+**Validation**: For the RealWorld benchmark, verify every concept name, action name, variant tag, state field, and sync name has a Symbol; verify cross-file references from syncs to concepts resolve correctly; verify `clef symbols references User/register` returns all sync when-patterns that reference it.
 
 ### Phase 3: Semantic Entities (v0.21.0)
 
-**Goal**: COPF-specific semantic structure is queryable as first-class entities.
+**Goal**: Clef-specific semantic structure is queryable as first-class entities.
 
 **Deliverables**:
 1. Semantic Kit with ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity concepts
@@ -1823,13 +1823,13 @@ Concept library version: **v0.5.0** (from v0.4.0)
 4. GenerationProvenanceSync using Provenance
 5. TypeBindingResolutionSync using FieldMapping
 6. DeadVariantDetectionSync
-7. `copf inspect concept`, `copf inspect sync` CLI commands
-8. `copf query flow`, `copf query dead-variants` CLI commands
-9. `copf check --pattern dead-variants`, `--pattern missing-error-handling`
+7. `clef inspect concept`, `clef inspect sync` CLI commands
+8. `clef query flow`, `clef query dead-variants` CLI commands
+9. `clef check --pattern dead-variants`, `--pattern missing-error-handling`
 
-**Dependencies**: Phase 2 (Symbol, SymbolOccurrence, SymbolRelationship), Data Integration Kit (Transform, Enricher, FieldMapping, DataQuality, Provenance), Data Organization Kit (Graph), Generation Kit (GenerationPlan, Emitter)
+**Dependencies**: Phase 2 (Symbol, SymbolOccurrence, SymbolRelationship), Data Integration Kit (Transform, Enricher, FieldMapping, DataQuality, Provenance), Data Organization Kit (Graph), Generation Suite (GenerationPlan, Emitter)
 
-**Validation**: For the RealWorld benchmark, verify the complete registration flow (`User/register → Password/set → JWT/generate`) is captured in the flow graph; verify `copf query flow User/register` returns the full chain; verify `copf query dead-variants` correctly identifies any unmatched variants; verify `copf query generated-from specs/app/user.concept` returns all generated handler files.
+**Validation**: For the RealWorld benchmark, verify the complete registration flow (`User/register → Password/set → JWT/generate`) is captured in the flow graph; verify `clef query flow User/register` returns the full chain; verify `clef query dead-variants` correctly identifies any unmatched variants; verify `clef query generated-from specs/app/user.concept` returns all generated handler files.
 
 ### Phase 4: Scope Resolution & Cross-File Linking (v0.22.0)
 
@@ -1840,9 +1840,9 @@ Concept library version: **v0.5.0** (from v0.4.0)
 2. ScopeResolutionSync and CrossFileResolutionSync
 3. DefinitionUnit and ContentDigest concepts
 4. DefinitionExtractionSync, ContentDigestSync
-5. `copf symbols rename` with cross-file refactoring
-6. `copf query depends-on`, `copf query depended-by` CLI commands
-7. `copf impact` top-level command
+5. `clef symbols rename` with cross-file refactoring
+6. `clef query depends-on`, `clef query depended-by` CLI commands
+7. `clef impact` top-level command
 
 **Dependencies**: Phases 1-3, PluginRegistry for scope providers
 
@@ -1857,9 +1857,9 @@ Concept library version: **v0.5.0** (from v0.4.0)
 2. ConceptDependenceProvider and SyncDependenceProvider
 3. DependenceComputeSync
 4. InvariantValidationSync using DataQuality
-5. `copf analyze` CLI commands (rules, slice, flow, invariants)
-6. `copf check --pattern circular-sync-chains`, `--pattern invariant-coverage`
-7. Built-in analysis rules for common COPF patterns
+5. `clef analyze` CLI commands (rules, slice, flow, invariants)
+6. `clef check --pattern circular-sync-chains`, `--pattern invariant-coverage`
+7. Built-in analysis rules for common Clef patterns
 
 **Dependencies**: Phases 1-4, Data Integration Kit (DataQuality)
 
@@ -1874,7 +1874,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 2. StructuralPattern concept and providers (AstGrepProvider, CombyProvider, TreeSitterQueryProvider)
 3. TrigramIndexProvider and SymbolIndexProvider for SearchIndex
 4. SearchIndexSync, EmbeddingSync
-5. `copf search` CLI commands (text, structural, semantic)
+5. `clef search` CLI commands (text, structural, semantic)
 6. MCP tools for all search capabilities
 7. Claude Skills for code navigation, impact analysis, code search, spec writing
 
@@ -1895,7 +1895,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 6. Generated-file-edit warning system
 7. End-to-end integration tests
 
-**Dependencies**: All previous phases, Interface Kit
+**Dependencies**: All previous phases, Clef Bind
 
 **Validation**: Full round-trip: edit a `.concept` spec → DevServer detects change → reparses → updates semantic entities → rebuilds flow graph → regenerates affected code → updates search index → semantic query via MCP returns correct results.
 
@@ -1907,7 +1907,7 @@ This design corresponds to architecture doc section additions covering:
 
 - Section X.1: Parse Layer — universal file parsing via Tree-sitter
 - Section X.2: Symbol Layer — cross-file identity and scope resolution  
-- Section X.3: Semantic Layer — COPF domain entities as queryable nodes
+- Section X.3: Semantic Layer — Clef domain entities as queryable nodes
 - Section X.4: Analysis Layer — dependence graphs, slicing, data flow
 - Section X.5: Discovery Layer — search and embedding
 - Section X.6: Provider patterns for language extensibility

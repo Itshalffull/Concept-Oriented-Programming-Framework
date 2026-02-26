@@ -5,7 +5,7 @@
 # Full control over scaling, networking, and infrastructure.
 #
 # Usage:
-#   copf deploy --manifest deploy/k8s.deploy.yaml
+#   clef deploy --manifest deploy/k8s.deploy.yaml
 
 app:
   name: conduit
@@ -21,7 +21,7 @@ runtimes:
     secrets: vault
     config:
       namespace: "${K8S_NAMESPACE:-conduit}"
-      image: "${CONTAINER_REGISTRY}/conduit-copf:${IMAGE_TAG:-latest}"
+      image: "${CONTAINER_REGISTRY}/conduit-clef:${IMAGE_TAG:-latest}"
       replicas: 2
       port: 3000
       resources:

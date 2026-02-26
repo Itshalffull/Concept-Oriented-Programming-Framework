@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Password
 /// @notice Concept-oriented password hashing and verification
-/// @dev Implements the Password concept from COPF specification.
+/// @dev Implements the Password concept from Clef specification.
 ///      Uses keccak256 with per-user salts for password storage.
 
 contract Password {

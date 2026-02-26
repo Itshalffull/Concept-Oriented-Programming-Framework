@@ -1,5 +1,5 @@
 // ============================================================
-// COIF Ink Widget — DesignTokenProvider
+// Clef Surface Ink Widget — DesignTokenProvider
 //
 // Wraps children and provides design token values as ANSI color
 // escape sequences. Maps CSS hex colors to truecolor (24-bit)
@@ -12,7 +12,7 @@ import type {
   TokenType,
 } from '../../shared/types.js';
 
-import { resolveTheme } from '../../shared/coif-bridge.js';
+import { resolveTheme } from '../../shared/surface-bridge.js';
 
 // --- TerminalNode (shared across all Ink widgets) ---
 

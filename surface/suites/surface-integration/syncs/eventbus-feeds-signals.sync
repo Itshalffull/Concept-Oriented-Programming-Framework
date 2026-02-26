@@ -1,0 +1,20 @@
+# ============================================================
+# EventBusFeedsSignals — surface-integration recommended sync
+#
+# Route domain events from the library EventBus to Clef Surface signals
+# subscribed to those event types. Enables real-time UI updates
+# from domain events.
+# ============================================================
+
+sync EventBusFeedsSignals [eager]
+when {
+  EventBus/dispatch: [ event: ?event ]
+    => ok(eventType: ?type; payload: ?payload)
+}
+where {
+  Signal: { ?signal kind: "state" }
+  filter(subscribedTo(?signal, ?type))
+}
+then {
+  Signal/write: [ signal: ?signal; value: ?payload ]
+}

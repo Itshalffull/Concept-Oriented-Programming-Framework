@@ -1,7 +1,7 @@
 // ============================================================
-// COIF Ink Widget — ElementRenderer
+// Clef Surface Ink Widget — ElementRenderer
 //
-// Renders COIF Element concepts as terminal prompts:
+// Renders Clef Surface Element concepts as terminal prompts:
 //
 //   input-text    → readline-style text input with cursor
 //   input-number  → numeric input with increment/decrement
@@ -50,7 +50,7 @@ const BORDER = {
 // --- ElementRenderer Props ---
 
 export interface ElementRendererProps {
-  /** COIF element configuration. */
+  /** Clef Surface element configuration. */
   element: ElementConfig;
   /** Current value of the element. */
   value?: unknown;
@@ -81,7 +81,7 @@ export interface ElementRendererProps {
 /**
  * Creates an ElementRenderer terminal node.
  *
- * Maps COIF ElementKind to appropriate terminal rendering.
+ * Maps Clef Surface ElementKind to appropriate terminal rendering.
  */
 export function createElementRenderer(props: ElementRendererProps): TerminalNode {
   const { element } = props;

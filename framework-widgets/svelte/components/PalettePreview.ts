@@ -1,7 +1,7 @@
 // ============================================================
-// PalettePreview — Svelte-compatible COIF component
+// PalettePreview — Svelte-compatible Clef Surface component
 //
-// Renders a grid of color swatches from COIF palette data.
+// Renders a grid of color swatches from Clef Surface palette data.
 // Supports both raw ColorScale objects and semantic role
 // mappings. Displays color name, hex value, and optional
 // contrast info on each swatch.
@@ -12,7 +12,7 @@ import type {
   SemanticRole,
 } from '../../shared/types.js';
 
-import { contrastRatio } from '../../shared/coif-bridge.js';
+import { contrastRatio } from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -65,7 +65,7 @@ export function createPalettePreview(
 
   // Root container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-palette-preview', '');
+  container.setAttribute('data-surface-palette-preview', '');
   if (className) container.className = className;
   target.appendChild(container);
 

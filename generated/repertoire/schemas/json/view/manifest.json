@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/View",
+  "uri": "urn:clef/View",
   "name": "View",
   "typeParams": [
     {
@@ -619,11 +619,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/View/create/invocation",
+        "$id": "urn:clef/View/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "create"
@@ -650,11 +650,11 @@
         }
       },
       "setFilter": {
-        "$id": "urn:copf/View/setFilter/invocation",
+        "$id": "urn:clef/View/setFilter/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "setFilter"
@@ -677,11 +677,11 @@
         }
       },
       "setSort": {
-        "$id": "urn:copf/View/setSort/invocation",
+        "$id": "urn:clef/View/setSort/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "setSort"
@@ -704,11 +704,11 @@
         }
       },
       "setGroup": {
-        "$id": "urn:copf/View/setGroup/invocation",
+        "$id": "urn:clef/View/setGroup/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "setGroup"
@@ -731,11 +731,11 @@
         }
       },
       "setVisibleFields": {
-        "$id": "urn:copf/View/setVisibleFields/invocation",
+        "$id": "urn:clef/View/setVisibleFields/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "setVisibleFields"
@@ -758,11 +758,11 @@
         }
       },
       "changeLayout": {
-        "$id": "urn:copf/View/changeLayout/invocation",
+        "$id": "urn:clef/View/changeLayout/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "changeLayout"
@@ -785,11 +785,11 @@
         }
       },
       "duplicate": {
-        "$id": "urn:copf/View/duplicate/invocation",
+        "$id": "urn:clef/View/duplicate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "duplicate"
@@ -808,11 +808,11 @@
         }
       },
       "embed": {
-        "$id": "urn:copf/View/embed/invocation",
+        "$id": "urn:clef/View/embed/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/View"
+            "const": "urn:clef/View"
           },
           "action": {
             "const": "embed"
@@ -834,11 +834,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/View/create/completion/ok",
+          "$id": "urn:clef/View/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "create"
@@ -860,11 +860,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/View/create/completion/error",
+          "$id": "urn:clef/View/create/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "create"
@@ -888,11 +888,11 @@
       },
       "setFilter": {
         "ok": {
-          "$id": "urn:copf/View/setFilter/completion/ok",
+          "$id": "urn:clef/View/setFilter/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setFilter"
@@ -914,11 +914,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/setFilter/completion/notfound",
+          "$id": "urn:clef/View/setFilter/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setFilter"
@@ -942,11 +942,11 @@
       },
       "setSort": {
         "ok": {
-          "$id": "urn:copf/View/setSort/completion/ok",
+          "$id": "urn:clef/View/setSort/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setSort"
@@ -968,11 +968,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/setSort/completion/notfound",
+          "$id": "urn:clef/View/setSort/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setSort"
@@ -996,11 +996,11 @@
       },
       "setGroup": {
         "ok": {
-          "$id": "urn:copf/View/setGroup/completion/ok",
+          "$id": "urn:clef/View/setGroup/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setGroup"
@@ -1022,11 +1022,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/setGroup/completion/notfound",
+          "$id": "urn:clef/View/setGroup/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setGroup"
@@ -1050,11 +1050,11 @@
       },
       "setVisibleFields": {
         "ok": {
-          "$id": "urn:copf/View/setVisibleFields/completion/ok",
+          "$id": "urn:clef/View/setVisibleFields/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setVisibleFields"
@@ -1076,11 +1076,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/setVisibleFields/completion/notfound",
+          "$id": "urn:clef/View/setVisibleFields/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "setVisibleFields"
@@ -1104,11 +1104,11 @@
       },
       "changeLayout": {
         "ok": {
-          "$id": "urn:copf/View/changeLayout/completion/ok",
+          "$id": "urn:clef/View/changeLayout/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "changeLayout"
@@ -1130,11 +1130,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/changeLayout/completion/notfound",
+          "$id": "urn:clef/View/changeLayout/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "changeLayout"
@@ -1158,11 +1158,11 @@
       },
       "duplicate": {
         "ok": {
-          "$id": "urn:copf/View/duplicate/completion/ok",
+          "$id": "urn:clef/View/duplicate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "duplicate"
@@ -1184,11 +1184,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/duplicate/completion/notfound",
+          "$id": "urn:clef/View/duplicate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "duplicate"
@@ -1212,11 +1212,11 @@
       },
       "embed": {
         "ok": {
-          "$id": "urn:copf/View/embed/completion/ok",
+          "$id": "urn:clef/View/embed/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "embed"
@@ -1238,11 +1238,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/View/embed/completion/notfound",
+          "$id": "urn:clef/View/embed/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/View"
+              "const": "urn:clef/View"
             },
             "action": {
               "const": "embed"

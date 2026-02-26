@@ -1,5 +1,5 @@
 // ============================================================
-// DesignTokenProvider — Svelte-compatible COIF component
+// DesignTokenProvider — Svelte-compatible Clef Surface component
 //
 // Provides design tokens as CSS custom properties on a container
 // element. Implements a context-like pattern (setContext/getContext
@@ -18,7 +18,7 @@ import type {
 import {
   createSignal,
   resolveTheme,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Context registry (module-scoped, mirrors Svelte setContext/getContext) ---
 
@@ -69,7 +69,7 @@ export function createDesignTokenProvider(
 
   // Create the wrapper container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-token-provider', '');
+  container.setAttribute('data-surface-token-provider', '');
   if (className) container.className = className;
   target.appendChild(container);
 

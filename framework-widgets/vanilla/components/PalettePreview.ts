@@ -12,7 +12,7 @@ import type {
   SemanticRole,
 } from '../../shared/types.js';
 
-import { contrastRatio } from '../../shared/coif-bridge.js';
+import { contrastRatio } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
@@ -54,7 +54,7 @@ export class PalettePreview {
     this.props = props;
 
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-palette-preview', '');
+    this.el.setAttribute('data-surface-palette-preview', '');
     this.el.setAttribute('role', 'presentation');
 
     if (props.className) {

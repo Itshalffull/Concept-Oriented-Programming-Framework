@@ -1,5 +1,5 @@
 // ============================================================
-// COIF Ink Widget — SlotOutlet
+// Clef Surface Ink Widget — SlotOutlet
 //
 // Named placeholder in terminal layout. Renders default content
 // when no fill is provided, or renders the filled content when
@@ -244,10 +244,10 @@ export class SlotRegistry {
   }
 }
 
-// --- SlotOutlet from COIF SlotConfig ---
+// --- SlotOutlet from Clef Surface SlotConfig ---
 
 /**
- * Create a SlotOutlet from a COIF SlotConfig.
+ * Create a SlotOutlet from a Clef Surface SlotConfig.
  */
 export function createSlotFromConfig(
   config: SlotConfig,

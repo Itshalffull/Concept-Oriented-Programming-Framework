@@ -1,4 +1,4 @@
-# COPF Code Representation — Runtime & Debug Addendum
+# Clef Code Representation — Runtime & Debug Addendum
 
 ## Addendum to: Code Representation & Semantic Query System v0.1.0
 
@@ -8,7 +8,7 @@
 
 ## 1. The Three-Layer Model (Complete)
 
-The base design doc describes two layers — static file representation and static semantic structure. But COPF already has a third layer: runtime execution data. The complete picture is:
+The base design doc describes two layers — static file representation and static semantic structure. But Clef already has a third layer: runtime execution data. The complete picture is:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -37,7 +37,7 @@ The critical insight: **the runtime layer is already data** — ActionLog is an 
 
 ## 2. Existing Runtime Concepts
 
-COPF already has these runtime/debug concepts:
+Clef already has these runtime/debug concepts:
 
 | Concept | What it records |
 |---------|----------------|
@@ -46,7 +46,7 @@ COPF already has these runtime/debug concepts:
 | **SyncEngine** | Runtime sync matching — maintains an index from (concept, action) pairs to compiled syncs. On completion: find candidates, match when-patterns, evaluate where-clauses, emit invocations. |
 | **Telemetry** | Observability data collection and export. |
 
-COIF adds runtime state:
+Clef Surface adds runtime state:
 
 | Concept | What it records |
 |---------|----------------|
@@ -60,7 +60,7 @@ The problem is that these runtime concepts record events in their own sovereign 
 
 **The widget tracking gap:** Beyond the cross-referencing problem, there's a coverage asymmetry between concepts and widgets. Concepts have ActionLog recording *every* invocation and completion — full lifecycle visibility. Widgets don't have an equivalent. Machine/send captures state transitions, but that misses the full widget lifecycle:
 
-| Tracked by existing COIF concepts | NOT tracked |
+| Tracked by existing Clef Surface concepts | NOT tracked |
 |-----------------------------------|-------------|
 | FSM state transitions (Machine/send) | Widget mount/unmount counts per widget type |
 | Signal value changes (Signal/write) | Which signal write caused which widget re-render |
@@ -86,9 +86,9 @@ ActionLog entry:
   { concept: "Article", action: "create", variant: "ok", flow: "f-123", sync: "article-crud" }
 
 Resolves to:
-  ActionEntity where symbol = "copf/action/Article/create"
-  VariantEntity where symbol = "copf/variant/Article/create/ok"
-  SyncEntity where symbol = "copf/sync/article-crud"
+  ActionEntity where symbol = "clef/action/Article/create"
+  VariantEntity where symbol = "clef/variant/Article/create/ok"
+  SyncEntity where symbol = "clef/sync/article-crud"
 ```
 
 No schema change to ActionLog needed. The representation system provides the resolver.
@@ -306,7 +306,7 @@ state:
     then_invoke_ms: Float,
     downstream_wait_ms: Float
   }
-  // For COIF: selection pipeline timing
+  // For Clef Surface: selection pipeline timing
   selection_breakdown: P -> option {
     classify_ms: Float,
     resolve_ms: Float,
@@ -314,7 +314,7 @@ state:
     connect_ms: Float,
     render_ms: Float
   }
-  // For COIF widgets: render performance
+  // For Clef Surface widgets: render performance
   render_breakdown: P -> option {
     render_count: Int,
     avg_render_ms: Float,
@@ -509,7 +509,7 @@ then {
 }
 ```
 
-### 5.5 COIF Runtime → Static Correlation
+### 5.5 Clef Surface Runtime → Static Correlation
 
 ```
 sync MachineStateCorrelationSync [eventual]
@@ -721,7 +721,7 @@ then {
 ### 6.1 "Why did this request fail?"
 
 ```
-copf debug error <flow-id>
+clef debug error <flow-id>
 ```
 
 Executes: `ErrorCorrelation/root_cause` → walks the flow's steps backward → finds the first deviation from FlowGraph → returns the source location of the failing entity.
@@ -749,7 +749,7 @@ Sync:   syncs/auth/registration-flow.sync, line 12
 ### 6.2 "Which variants have never fired?"
 
 ```
-copf debug coverage --kind variant
+clef debug coverage --kind variant
 ```
 
 Executes: `RuntimeCoverage/coverage_report(kind: "variant")` → cross-references with `SyncEntity/find_orphan_variants` (static analysis).
@@ -781,7 +781,7 @@ Dynamically dead (syncs exist but haven't fired):
 ### 6.3 "What's the slowest sync chain?"
 
 ```
-copf debug hotspots --kind sync --metric p90
+clef debug hotspots --kind sync --metric p90
 ```
 
 Executes: `PerformanceProfile/slow_chains` → traces through FlowGraph to find the bottleneck entity.
@@ -805,7 +805,7 @@ Chain: Article/create → Tag/add → SearchIndex/update
 ### 6.4 "Show me the runtime path vs. static expectation"
 
 ```
-copf debug flow <flow-id> --compare-static
+clef debug flow <flow-id> --compare-static
 ```
 
 Executes: `RuntimeFlow/compare_to_static` → diffs actual execution against FlowGraph prediction.
@@ -836,7 +836,7 @@ Extra steps: 1 (publish-cache — eventual, errored)
 ### 6.5 "How does this widget actually behave at runtime?"
 
 ```
-copf debug widget dialog --coverage
+clef debug widget dialog --coverage
 ```
 
 Executes: `RuntimeCoverage/widget_state_coverage(widget: dialog)` → compares against WidgetStateEntity definitions.
@@ -866,7 +866,7 @@ Accessibility events:
 ### 6.5b "Full widget lifecycle report"
 
 ```
-copf debug widget checkbox-group --lifecycle
+clef debug widget checkbox-group --lifecycle
 ```
 
 Executes: `RuntimeCoverage/widget_lifecycle_report(widget: checkbox-group)` → full mount/render/unmount lifecycle.
@@ -918,7 +918,7 @@ Concept field bindings:
 ### 6.5c "Why did this widget re-render?"
 
 ```
-copf debug widget-instance <machine-id> --render-trace
+clef debug widget-instance <machine-id> --render-trace
 ```
 
 Executes: `RuntimeCoverage/widget_render_trace(widget_instance: machine-id)` → shows every render with causal chain.
@@ -934,9 +934,9 @@ Render 1: 2026-02-25T14:03:22.100Z  (1.1ms)  MOUNT
 
 Render 2: 2026-02-25T14:03:24.350Z  (0.8ms)  NECESSARY
   Trigger: Signal/write → article.tags
-  Chain: Tag/add(tag: "copf") → tag-update-sync → Article/update → ok
+  Chain: Tag/add(tag: "clef") → tag-update-sync → Article/update → ok
          → Binding/sync → Signal/write(article.tags)
-  Props changed: options (added "copf"), selected (unchanged)
+  Props changed: options (added "clef"), selected (unchanged)
 
 Render 3: 2026-02-25T14:03:24.351Z  (0.9ms)  UNNECESSARY ⚠
   Trigger: Signal/write → article.published
@@ -953,7 +953,7 @@ Render 4: 2026-02-25T14:03:30.200Z  (1.4ms)  NECESSARY
 ### 6.5d "Compare widget performance across the project"
 
 ```
-copf debug widget --comparison --top 10
+clef debug widget --comparison --top 10
 ```
 
 Executes: `RuntimeCoverage/widget_comparison` → ranks widgets by render load.
@@ -984,7 +984,7 @@ textarea             1,842    5,526    3.2%          0.5ms    1.1ms
 ### 6.6 "What concept field changes caused this UI re-render?"
 
 ```
-copf debug binding <binding-id> --signal-trace
+clef debug binding <binding-id> --signal-trace
 ```
 
 Traces: Signal/write → Binding/sync → which concept field changed → which ActionLog entry caused it → which sync fired.
@@ -994,12 +994,12 @@ Output:
 Signal trace for binding b-article-42
 ═════════════════════════════════════
 
-Signal write: article.tags = ["rust", "wasm", "copf"]
+Signal write: article.tags = ["rust", "wasm", "clef"]
   ← Binding/sync (b-article-42)
   ← Transport/fetch response
   ← ActionLog: Article/update → ok (flow: f-789)
   ← SyncEngine fired: tag-update-sync
-  ← ActionLog: Tag/add (tag: "copf", article: 42)
+  ← ActionLog: Tag/add (tag: "clef", article: 42)
   ← User action in UI
 
 Re-render triggered:
@@ -1012,7 +1012,7 @@ Re-render triggered:
 ### 6.7 "If I change this concept's schema, what breaks in production?"
 
 ```
-copf debug impact Article/tags --include-runtime
+clef debug impact Article/tags --include-runtime
 ```
 
 Combines static impact analysis with runtime coverage:
@@ -1108,45 +1108,45 @@ Unlike parse/symbol/analysis layers which are language-specific, runtime correla
 ## 9. CLI Additions
 
 ```
-copf debug <subcommand>
-  copf debug flow <flow-id> [--compare-static] [--source-locations]
+clef debug <subcommand>
+  clef debug flow <flow-id> [--compare-static] [--source-locations]
     # Show enriched flow with static comparison
 
-  copf debug error <flow-id-or-error-id> [--root-cause]
+  clef debug error <flow-id-or-error-id> [--root-cause]
     # Error details with root cause chain
 
-  copf debug coverage [--kind action|variant|sync|widget-state|transition|widget-render|widget-mount]
+  clef debug coverage [--kind action|variant|sync|widget-state|transition|widget-render|widget-mount]
                       [--since <datetime>] [--concept <n>] [--widget <n>]
     # Coverage report — which declared entities have been exercised
 
-  copf debug hotspots [--kind action|sync|chain|widget] [--metric p50|p90|p99|error-rate|unnecessary-render-pct]
+  clef debug hotspots [--kind action|sync|chain|widget] [--metric p50|p90|p99|error-rate|unnecessary-render-pct]
                       [--top <n>] [--since <datetime>]
     # Performance hotspots
 
-  copf debug binding <binding-id> [--signal-trace]
+  clef debug binding <binding-id> [--signal-trace]
     # Trace signal writes back to concept field changes
 
-  copf debug widget <widget-name> [--coverage] [--transitions] [--lifecycle] [--comparison]
+  clef debug widget <widget-name> [--coverage] [--transitions] [--lifecycle] [--comparison]
     # --coverage: FSM state/transition coverage
     # --lifecycle: full mount/render/unmount lifecycle report
     # --transitions: which transitions have been exercised
     # --comparison: rank all widgets by render performance
 
-  copf debug widget-instance <machine-id> [--render-trace] [--signal-chain]
+  clef debug widget-instance <machine-id> [--render-trace] [--signal-chain]
     # --render-trace: every render with causal chain (signal → prop → render)
     # --signal-chain: which signals this instance depends on
 
-  copf debug compare-static [--flow <flow-id>] [--all-recent]
+  clef debug compare-static [--flow <flow-id>] [--all-recent]
     # Compare recent runtime behavior against static FlowGraph predictions
 
-copf impact <file-or-symbol> [--include-runtime]
+clef impact <file-or-symbol> [--include-runtime]
   # Extended: adds runtime frequency data to static impact analysis
 ```
 
 ### Updates to Existing Commands
 
 ```
-copf check
+clef check
   --pattern runtime-dead-variants    # variants with syncs but zero runtime exercises
   --pattern runtime-dead-syncs       # syncs that have never fired
   --pattern unexercised-transitions  # widget FSM transitions never taken
@@ -1156,52 +1156,52 @@ copf check
   --pattern signal-cascade           # signal writes that trigger > 10 widget re-renders
   --pattern unbound-signal-leak      # signals in binding signalMap that no widget reads
 
-copf trace
+clef trace
   --resolve                          # resolve trace entries to semantic entities
   --source                           # include source file locations
   --compare                          # diff against static FlowGraph
 
-copf query flow <concept/action>
+clef query flow <concept/action>
   --actual                           # show runtime flows instead of static FlowGraph
   --both                             # show static expectation alongside actual history
 ```
 
 ---
 
-## 10. Interface Kit Additions
+## 10. Clef Bind Additions
 
 ### MCP Tools
 
 ```
 tools:
-  - copf_debug_flow: Enriched flow trace with static comparison
-  - copf_debug_error: Error with root cause chain and source locations
-  - copf_debug_coverage: Runtime coverage for any entity kind
-  - copf_debug_hotspots: Performance hotspots by entity
-  - copf_debug_binding_trace: Signal write → concept field → action chain
-  - copf_debug_compare_static: Runtime vs static flow comparison
-  - copf_debug_widget_lifecycle: Full widget mount/render/unmount lifecycle report
-  - copf_debug_widget_render_trace: Per-instance render trace with causal chains
-  - copf_debug_widget_comparison: Cross-project widget performance ranking
+  - clef_debug_flow: Enriched flow trace with static comparison
+  - clef_debug_error: Error with root cause chain and source locations
+  - clef_debug_coverage: Runtime coverage for any entity kind
+  - clef_debug_hotspots: Performance hotspots by entity
+  - clef_debug_binding_trace: Signal write → concept field → action chain
+  - clef_debug_compare_static: Runtime vs static flow comparison
+  - clef_debug_widget_lifecycle: Full widget mount/render/unmount lifecycle report
+  - clef_debug_widget_render_trace: Per-instance render trace with causal chains
+  - clef_debug_widget_comparison: Cross-project widget performance ranking
 ```
 
 ### Claude Skills
 
 ```
 skills:
-  - copf-debugger:
+  - clef-debugger:
       description: "Debug runtime issues with full static context"
       tools: [debug_flow, debug_error, debug_coverage, debug_compare_static, inspect_concept, inspect_sync]
 
-  - copf-performance-analyst:
+  - clef-performance-analyst:
       description: "Identify performance bottlenecks with structural context"
       tools: [debug_hotspots, debug_flow, query_flow, analyze_slice, debug_widget_comparison]
 
-  - copf-coverage-analyst:
+  - clef-coverage-analyst:
       description: "Analyze runtime coverage against declared structure"
       tools: [debug_coverage, query_dead_variants, query_dead_syncs, check_runtime_dead_variants]
 
-  - copf-widget-profiler:
+  - clef-widget-profiler:
       description: "Profile and optimize widget rendering performance"
       tools: [debug_widget_lifecycle, debug_widget_render_trace, debug_widget_comparison,
               debug_hotspots, debug_binding_trace, check_unnecessary_renders, check_signal_cascade]
@@ -1211,20 +1211,20 @@ skills:
 
 ## 11. Updated Totals
 
-From base doc + COIF addendum: 26 coordination concepts + ~46 providers across 27 kits.
+From base doc + Clef Surface addendum: 26 coordination concepts + ~46 providers across 27 suites.
 
 This addendum adds:
 - 4 semantic entities (RuntimeFlow, RuntimeCoverage, PerformanceProfile, ErrorCorrelation)
 - 0 providers (uniform across languages)
-- 0 new kits (goes in Semantic Kit)
+- 0 new suites (goes in Semantic Kit)
 - ~18 new syncs (correlation, coverage, performance, error, widget lifecycle)
 - 8 new AnalysisRule built-ins (runtime-dead-variants, runtime-dead-syncs, unexercised-transitions, performance-regression, error-hotspots, unnecessary-renders, signal-cascade, unbound-signal-leak)
 
 **Final combined totals:**
-- COPF concept library: 54 concepts, 15 kits
-- Code Representation system: 30 coordination concepts + ~46 providers, 5 new kits
-- COIF: 29 concepts, 7 kits
-- Combined: **~113 coordination concepts + ~46 providers across 27 kits**
+- Clef concept library: 54 concepts, 15 suites
+- Code Representation system: 30 coordination concepts + ~46 providers, 5 new suites
+- Clef Surface: 29 concepts, 7 suites
+- Combined: **~113 coordination concepts + ~46 providers across 27 suites**
 
 Concept library version: **v0.5.0**
 
@@ -1246,7 +1246,7 @@ Runtime correlation integrates into the existing phases:
 
 ### Phase 7 (Interface Exposure & DevServer) — add:
 - PerformanceProfile concept and PerformanceAggregationSync
-- `copf debug` CLI commands
+- `clef debug` CLI commands
 - MCP tools for debugging
 - Claude Skills for debugging and performance analysis
 - DevServer integration: live coverage overlay showing which syncs/variants have fired during the current dev session

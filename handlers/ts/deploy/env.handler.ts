@@ -33,14 +33,14 @@ export const envHandler: ConceptHandler = {
   async promote(input, storage) {
     const fromEnv = input.fromEnv as string;
     const toEnv = input.toEnv as string;
-    const kitName = input.kitName as string;
+    const suiteName = input.suiteName as string;
 
     const fromRecord = await storage.get(RELATION, fromEnv);
     if (!fromRecord) {
-      return { variant: 'notValidated', fromEnv, kitName };
+      return { variant: 'notValidated', fromEnv, suiteName };
     }
 
-    const version = `${kitName}@${Date.now()}`;
+    const version = `${suiteName}@${Date.now()}`;
 
     const toId = toEnv || `env-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await storage.put(RELATION, toId, {

@@ -3,7 +3,7 @@
 //
 // Creates a <div> with box-shadow style derived from an
 // ElevationLevel (0-5). Supports both preset levels and
-// custom ShadowLayer arrays via the COIF bridge.
+// custom ShadowLayer arrays via the Clef Surface bridge.
 // ============================================================
 
 import type {
@@ -14,7 +14,7 @@ import type {
 import {
   elevationToCSS,
   shadowLayersToCSS,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
@@ -52,7 +52,7 @@ export class ElevationBox {
     this.props = props;
 
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-elevation', '');
+    this.el.setAttribute('data-surface-elevation', '');
 
     this.applyStyles(props);
 

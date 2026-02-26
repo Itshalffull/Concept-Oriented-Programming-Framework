@@ -3,7 +3,7 @@
 concept ProjectScaffold [P] {
 
   purpose {
-    Initialize new COPF projects with the standard directory
+    Initialize new Clef projects with the standard directory
     structure, example concept specs, and configuration files.
   }
 
@@ -16,7 +16,7 @@ concept ProjectScaffold [P] {
   actions {
     action scaffold(name: String) {
       description {
-        Create a new COPF project directory with specs, syncs,
+        Create a new Clef project directory with specs, syncs,
         implementations, and configuration files. Generates an
         example concept and sync to get started.
       }

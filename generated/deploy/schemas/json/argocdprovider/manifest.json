@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ArgoCDProvider",
+  "uri": "urn:clef/ArgoCDProvider",
   "name": "ArgoCDProvider",
   "typeParams": [
     {
@@ -437,11 +437,11 @@
   "jsonSchemas": {
     "invocations": {
       "emit": {
-        "$id": "urn:copf/ArgoCDProvider/emit/invocation",
+        "$id": "urn:clef/ArgoCDProvider/emit/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ArgoCDProvider"
+            "const": "urn:clef/ArgoCDProvider"
           },
           "action": {
             "const": "emit"
@@ -468,11 +468,11 @@
         }
       },
       "reconciliationStatus": {
-        "$id": "urn:copf/ArgoCDProvider/reconciliationStatus/invocation",
+        "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ArgoCDProvider"
+            "const": "urn:clef/ArgoCDProvider"
           },
           "action": {
             "const": "reconciliationStatus"
@@ -491,11 +491,11 @@
         }
       },
       "syncWave": {
-        "$id": "urn:copf/ArgoCDProvider/syncWave/invocation",
+        "$id": "urn:clef/ArgoCDProvider/syncWave/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ArgoCDProvider"
+            "const": "urn:clef/ArgoCDProvider"
           },
           "action": {
             "const": "syncWave"
@@ -521,11 +521,11 @@
     "completions": {
       "emit": {
         "ok": {
-          "$id": "urn:copf/ArgoCDProvider/emit/completion/ok",
+          "$id": "urn:clef/ArgoCDProvider/emit/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ArgoCDProvider"
+              "const": "urn:clef/ArgoCDProvider"
             },
             "action": {
               "const": "emit"
@@ -556,11 +556,11 @@
       },
       "reconciliationStatus": {
         "ok": {
-          "$id": "urn:copf/ArgoCDProvider/reconciliationStatus/completion/ok",
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ArgoCDProvider"
+              "const": "urn:clef/ArgoCDProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -595,11 +595,11 @@
           }
         },
         "pending": {
-          "$id": "urn:copf/ArgoCDProvider/reconciliationStatus/completion/pending",
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/pending",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ArgoCDProvider"
+              "const": "urn:clef/ArgoCDProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -628,11 +628,11 @@
           }
         },
         "degraded": {
-          "$id": "urn:copf/ArgoCDProvider/reconciliationStatus/completion/degraded",
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/degraded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ArgoCDProvider"
+              "const": "urn:clef/ArgoCDProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -661,11 +661,11 @@
           }
         },
         "failed": {
-          "$id": "urn:copf/ArgoCDProvider/reconciliationStatus/completion/failed",
+          "$id": "urn:clef/ArgoCDProvider/reconciliationStatus/completion/failed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ArgoCDProvider"
+              "const": "urn:clef/ArgoCDProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -693,11 +693,11 @@
       },
       "syncWave": {
         "ok": {
-          "$id": "urn:copf/ArgoCDProvider/syncWave/completion/ok",
+          "$id": "urn:clef/ArgoCDProvider/syncWave/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ArgoCDProvider"
+              "const": "urn:clef/ArgoCDProvider"
             },
             "action": {
               "const": "syncWave"
@@ -722,5 +722,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate ArgoCD Application CRDs from COPF deploy plans \n Owns Application resources , sync wave ordering , health \n assessments , and auto sync configuration"
+  "purpose": "Generate ArgoCD Application CRDs from Clef deploy plans \n Owns Application resources , sync wave ordering , health \n assessments , and auto sync configuration"
 }

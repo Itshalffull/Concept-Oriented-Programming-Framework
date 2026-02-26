@@ -1,14 +1,14 @@
 // ============================================================
-// COIF Ink Widget — SurfaceRoot
+// Clef Surface Ink Widget — SurfaceRoot
 //
 // Terminal surface manager. Handles alternate screen buffer
 // management, cursor visibility, raw mode, cleanup on exit,
 // and provides the top-level rendering context for terminal
-// COIF widgets. Acts as the terminal equivalent of a DOM root.
+// Clef Surface widgets. Acts as the terminal equivalent of a DOM root.
 // ============================================================
 
 import type { SurfaceKind, WritableSignal } from '../../shared/types.js';
-import { createSignal } from '../../shared/coif-bridge.js';
+import { createSignal } from '../../shared/surface-bridge.js';
 import type { TerminalNode } from './DesignTokenProvider.js';
 import { hexToAnsiFg, hexToAnsiBg } from './DesignTokenProvider.js';
 
@@ -97,7 +97,7 @@ export interface SurfaceRootProps {
 /**
  * Creates a SurfaceRoot terminal node.
  *
- * This is the top-level wrapper for terminal COIF rendering.
+ * This is the top-level wrapper for terminal Clef Surface rendering.
  * It provides the rendering context and surface configuration
  * as node metadata. The actual terminal control sequences are
  * managed by SurfaceRootInteractive.
@@ -209,7 +209,7 @@ function buildSurfaceStatusBar(
   const barWidth = width || getTerminalWidth();
   const bgAnsi = backgroundColor ? hexToAnsiBg(backgroundColor) : '\x1b[100m'; // Default gray bg
 
-  const statusText = content || `${ANSI_DIM}COIF Terminal Surface${ANSI_RESET}`;
+  const statusText = content || `${ANSI_DIM}Clef Surface Terminal Surface${ANSI_RESET}`;
   const separator = `${ANSI_DIM}${'─'.repeat(barWidth)}${ANSI_RESET}`;
 
   return {

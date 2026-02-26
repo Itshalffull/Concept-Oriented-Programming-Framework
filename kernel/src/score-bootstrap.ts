@@ -16,8 +16,8 @@ import type { ConceptHandler, ConceptRegistry, CompiledSync } from './types.js';
 import { createInMemoryStorage } from './storage.js';
 import { createInProcessAdapter } from './transport.js';
 
-const SCORE_API_URI = 'urn:copf/ScoreApi';
-const SCORE_INDEX_URI = 'urn:copf/ScoreIndex';
+const SCORE_API_URI = 'urn:clef/ScoreApi';
+const SCORE_INDEX_URI = 'urn:clef/ScoreIndex';
 
 /**
  * Compiled sync definitions for Score auto-registration.
@@ -32,7 +32,7 @@ function createScoreIndexSyncs(): CompiledSync[] {
       annotation: 'eager',
       patterns: [
         {
-          concept: 'urn:copf/ConceptEntity',
+          concept: 'urn:clef/ConceptEntity',
           action: 'register',
           inputBindings: { name: '?name', source: '?file', ast: '?ast' },
           outputBindings: { entity: '?entity' },
@@ -60,7 +60,7 @@ function createScoreIndexSyncs(): CompiledSync[] {
       annotation: 'eager',
       patterns: [
         {
-          concept: 'urn:copf/SyncEntity',
+          concept: 'urn:clef/SyncEntity',
           action: 'register',
           inputBindings: { name: '?name', source: '?file' },
           outputBindings: { entity: '?entity' },
@@ -88,7 +88,7 @@ function createScoreIndexSyncs(): CompiledSync[] {
       annotation: 'eager',
       patterns: [
         {
-          concept: 'urn:copf/Symbol',
+          concept: 'urn:clef/Symbol',
           action: 'register',
           inputBindings: { name: '?name', kind: '?kind', file: '?file', line: '?line', scope: '?scope' },
           outputBindings: { symbol: '?symbol' },
@@ -116,7 +116,7 @@ function createScoreIndexSyncs(): CompiledSync[] {
       annotation: 'eager',
       patterns: [
         {
-          concept: 'urn:copf/FileArtifact',
+          concept: 'urn:clef/FileArtifact',
           action: 'register',
           inputBindings: { path: '?path', language: '?lang', role: '?role' },
           outputBindings: { artifact: '?artifact' },

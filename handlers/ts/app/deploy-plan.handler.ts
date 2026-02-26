@@ -1,5 +1,5 @@
 // DeployPlan Concept Implementation (Deploy Kit)
-// Compute, validate, and execute deployment plans for kits.
+// Compute, validate, and execute deployment plans for suites.
 import type { ConceptHandler } from '@clef/kernel';
 
 export const deployPlanHandler: ConceptHandler = {
@@ -78,7 +78,7 @@ export const deployPlanHandler: ConceptHandler = {
 
     await storage.put('deployPlan', planId, {
       planId,
-      kitName: (parsed.kitName as string) || 'unknown',
+      suiteName: (parsed.suiteName as string) || 'unknown',
       kitVersion: (parsed.kitVersion as string) || '0.0.0',
       environment,
       createdAt,

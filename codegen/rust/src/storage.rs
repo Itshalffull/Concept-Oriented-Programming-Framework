@@ -13,7 +13,7 @@ use std::sync::Mutex;
 /// Result type alias for storage operations.
 pub type StorageResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-/// Storage interface matching the COPF kernel's ConceptStorage.
+/// Storage interface matching the Clef kernel's ConceptStorage.
 #[async_trait]
 pub trait ConceptStorage: Send + Sync {
     async fn put(&self, relation: &str, key: &str, value: Value) -> StorageResult<()>;

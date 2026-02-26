@@ -1,7 +1,7 @@
 // ============================================================
-// COIF Ink Widget — UISchemaForm
+// Clef Surface Ink Widget — UISchemaForm
 //
-// Terminal form renderer driven by COIF UISchema. Generates
+// Terminal form renderer driven by Clef Surface UISchema. Generates
 // labeled inputs, selection prompts, and submit handling
 // from schema definitions. Manages focus traversal, validation,
 // and value collection across form fields.
@@ -49,7 +49,7 @@ const DOUBLE_BORDER = {
 // --- UISchemaForm Props ---
 
 export interface UISchemaFormProps {
-  /** COIF UI Schema definition. */
+  /** Clef Surface UI Schema definition. */
   schema: UISchema;
   /** Which view to render (list, detail, create, edit). */
   viewName?: 'list' | 'detail' | 'create' | 'edit';
@@ -80,7 +80,7 @@ export interface UISchemaFormProps {
 /**
  * Creates a UISchemaForm terminal node.
  *
- * Renders a complete form from COIF UISchema definition
+ * Renders a complete form from Clef Surface UISchema definition
  * with labeled inputs, validation display, and submit action.
  */
 export function createUISchemaForm(props: UISchemaFormProps): TerminalNode {

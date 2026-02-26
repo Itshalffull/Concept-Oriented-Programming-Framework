@@ -30,22 +30,22 @@ export const articleViewWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Article',
+      concept: 'urn:clef/Article',
       actions: [],
       queries: ['get'],
     },
     {
-      concept: 'urn:copf/Favorite',
+      concept: 'urn:clef/Favorite',
       actions: ['favorite', 'unfavorite'],
       queries: ['isFavorited', 'count'],
     },
     {
-      concept: 'urn:copf/Follow',
+      concept: 'urn:clef/Follow',
       actions: ['follow', 'unfollow'],
       queries: ['isFollowing'],
     },
     {
-      concept: 'urn:copf/Comment',
+      concept: 'urn:clef/Comment',
       actions: [],
       queries: ['list'],
     },

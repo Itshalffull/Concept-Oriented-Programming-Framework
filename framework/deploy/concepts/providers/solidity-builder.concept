@@ -83,7 +83,7 @@ concept SolidityBuilder [L] {
 
   invariant {
     after build(source: "./generated/solidity/password", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: { mode: "release" })
-      -> ok(build: l, artifactPath: ".copf-artifacts/solidity/password", artifactHash: "sha256:jkl")
+      -> ok(build: l, artifactPath: ".clef-artifacts/solidity/password", artifactHash: "sha256:jkl")
     then test(build: l, toolchainPath: "/usr/local/bin/solc",
               invocation: { command: "forge test", args: ["--json", "--gas-report"], outputFormat: "forge-test-json", configFile: "foundry.toml", env: null },
               testType: "unit")

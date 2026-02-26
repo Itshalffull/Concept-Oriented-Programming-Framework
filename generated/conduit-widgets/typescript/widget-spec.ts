@@ -1,11 +1,11 @@
 // =============================================================================
 // Conduit App Widget Specification Types
 //
-// COIF-driven widget abstraction: each Conduit widget is described as a
+// Clef Surface-driven widget abstraction: each Conduit widget is described as a
 // WidgetSpec that declares its concept bindings, element tree, anatomy,
 // state machine, and accessibility contract. This spec is framework-agnostic —
 // the same WidgetSpec renders via React, Vue, Svelte, Solid, Ink, or Vanilla
-// through the COIF FrameworkAdapter pipeline.
+// through the Clef Surface FrameworkAdapter pipeline.
 //
 // Architecture:
 //   ConceptSpec → UISchema.inspect() → ElementTree
@@ -14,7 +14,7 @@
 // =============================================================================
 
 // ---------------------------------------------------------------------------
-// Element kinds — abstract interaction units from COIF Element concept
+// Element kinds — abstract interaction units from Clef Surface Element concept
 // ---------------------------------------------------------------------------
 
 export type ElementKind =
@@ -70,13 +70,13 @@ export interface SelectionOption {
 // ---------------------------------------------------------------------------
 
 export interface ConceptBinding {
-  readonly concept: string;            // URI: "urn:copf/Article"
+  readonly concept: string;            // URI: "urn:clef/Article"
   readonly actions: readonly string[]; // actions this widget can invoke
   readonly queries: readonly string[]; // state relations this widget reads
 }
 
 // ---------------------------------------------------------------------------
-// Anatomy — named parts contract (from COIF Anatomy concept)
+// Anatomy — named parts contract (from Clef Surface Anatomy concept)
 // ---------------------------------------------------------------------------
 
 export interface AnatomySpec {
@@ -86,7 +86,7 @@ export interface AnatomySpec {
 }
 
 // ---------------------------------------------------------------------------
-// State machine — headless interaction logic (from COIF Widget/Machine)
+// State machine — headless interaction logic (from Clef Surface Widget/Machine)
 // ---------------------------------------------------------------------------
 
 export interface MachineState {
@@ -107,7 +107,7 @@ export interface MachineSpec {
 }
 
 // ---------------------------------------------------------------------------
-// Accessibility — ARIA + keyboard interactions (from COIF Widget a11ySpec)
+// Accessibility — ARIA + keyboard interactions (from Clef Surface Widget a11ySpec)
 // ---------------------------------------------------------------------------
 
 export interface A11ySpec {
@@ -130,16 +130,16 @@ export interface WidgetSpec {
   // Which concepts this widget binds to
   readonly concepts: readonly ConceptBinding[];
 
-  // COIF Anatomy: named parts
+  // Clef Surface Anatomy: named parts
   readonly anatomy: AnatomySpec;
 
-  // COIF Element tree: abstract UI structure
+  // Clef Surface Element tree: abstract UI structure
   readonly elements: readonly ElementNode[];
 
-  // COIF Machine: headless state machine
+  // Clef Surface Machine: headless state machine
   readonly machine: MachineSpec;
 
-  // COIF A11y: accessibility contract
+  // Clef Surface A11y: accessibility contract
   readonly a11y: A11ySpec;
 }
 

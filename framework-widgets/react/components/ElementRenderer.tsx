@@ -18,12 +18,12 @@ import React, {
 } from 'react';
 
 import type { ElementConfig, ElementKind } from '../../shared/types.js';
-import { mapElementToHTML, type ElementRenderHint } from '../../shared/coif-bridge.js';
+import { mapElementToHTML, type ElementRenderHint } from '../../shared/surface-bridge.js';
 
 // --------------- Props ---------------
 
 export interface ElementRendererProps {
-  /** The COIF element configuration. */
+  /** The Clef Surface element configuration. */
   element: ElementConfig;
   /** Current value for the element (controlled). */
   value?: unknown;
@@ -138,7 +138,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({
       style,
       disabled,
       ...ariaProps,
-      'data-coif-element': '',
+      'data-surface-element': '',
       'data-element-kind': element.kind,
     };
 
@@ -235,7 +235,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({
     if (element.kind.startsWith('output-')) {
       const Tag = hint.tag as 'span' | 'time';
       return (
-        <div data-coif-element="" data-element-kind={element.kind} className={className} style={style}>
+        <div data-surface-element="" data-element-kind={element.kind} className={className} style={style}>
           {element.label && (
             <label>{element.label}</label>
           )}
@@ -249,7 +249,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({
     // --- Rich text ---
     if (element.kind === 'rich-text') {
       return (
-        <div data-coif-element="" data-element-kind={element.kind} className={className} style={style}>
+        <div data-surface-element="" data-element-kind={element.kind} className={className} style={style}>
           {element.label && (
             <label htmlFor={`${element.id}-richtext`}>{element.label}</label>
           )}
@@ -269,7 +269,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({
     // --- File upload ---
     if (element.kind === 'file-upload') {
       return (
-        <div data-coif-element="" data-element-kind={element.kind} className={className} style={style}>
+        <div data-surface-element="" data-element-kind={element.kind} className={className} style={style}>
           {element.label && (
             <label htmlFor={`${element.id}-file`}>{element.label}</label>
           )}
@@ -290,7 +290,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({
     // --- Media display ---
     if (element.kind === 'media-display') {
       return (
-        <figure data-coif-element="" data-element-kind={element.kind} className={className} style={style}>
+        <figure data-surface-element="" data-element-kind={element.kind} className={className} style={style}>
           {value && (
             <img src={value as string} alt={element.label} />
           )}
@@ -304,7 +304,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({
     const isBool = element.kind === 'input-bool';
 
     return (
-      <div data-coif-element="" data-element-kind={element.kind} className={className} style={style}>
+      <div data-surface-element="" data-element-kind={element.kind} className={className} style={style}>
         {element.label && (
           <label htmlFor={`${element.id}-input`}>{element.label}</label>
         )}

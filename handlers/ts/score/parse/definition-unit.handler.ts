@@ -3,7 +3,7 @@
 //
 // Full implementation deferred to Phase 4 (Scope Resolution
 // & Cross-File Linking). Concept spec is present in the Parse
-// Kit manifest; this stub returns unsupported for all actions.
+// Suite manifest; this stub returns unsupported for all actions.
 // ============================================================
 
 import type { ConceptHandler } from '../../../../kernel/src/types.js';

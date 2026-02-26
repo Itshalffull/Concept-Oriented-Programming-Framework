@@ -1,0 +1,16 @@
+# ============================================================
+# ShellInitCreatesRootSurface — surface-app recommended sync
+#
+# When Shell/initialize completes, create the root Surface
+# and Layout.
+# ============================================================
+
+sync ShellInitCreatesRootSurface [eager]
+when {
+  Shell/initialize: [ shell: ?shell ]
+    => ok(shell: ?shell)
+}
+then {
+  Surface/create: [ surface: ?shell; kind: "browser-dom" ]
+  Layout/create: [ layout: ?shell; kind: "shell" ]
+}

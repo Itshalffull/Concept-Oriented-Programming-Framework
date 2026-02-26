@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Notification
 /// @notice Concept-oriented notification system with channels, inbox, and read tracking
-/// @dev Implements the Notification concept from COPF specification.
+/// @dev Implements the Notification concept from Clef specification.
 ///      Supports registering delivery channels, sending notifications, marking as read,
 ///      and tracking unread counts.
 

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Query",
+  "uri": "urn:clef/Query",
   "name": "Query",
   "typeParams": [
     {
@@ -413,11 +413,11 @@
   "jsonSchemas": {
     "invocations": {
       "parse": {
-        "$id": "urn:copf/Query/parse/invocation",
+        "$id": "urn:clef/Query/parse/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Query"
+            "const": "urn:clef/Query"
           },
           "action": {
             "const": "parse"
@@ -440,11 +440,11 @@
         }
       },
       "execute": {
-        "$id": "urn:copf/Query/execute/invocation",
+        "$id": "urn:clef/Query/execute/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Query"
+            "const": "urn:clef/Query"
           },
           "action": {
             "const": "execute"
@@ -463,11 +463,11 @@
         }
       },
       "subscribe": {
-        "$id": "urn:copf/Query/subscribe/invocation",
+        "$id": "urn:clef/Query/subscribe/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Query"
+            "const": "urn:clef/Query"
           },
           "action": {
             "const": "subscribe"
@@ -486,11 +486,11 @@
         }
       },
       "addFilter": {
-        "$id": "urn:copf/Query/addFilter/invocation",
+        "$id": "urn:clef/Query/addFilter/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Query"
+            "const": "urn:clef/Query"
           },
           "action": {
             "const": "addFilter"
@@ -513,11 +513,11 @@
         }
       },
       "addSort": {
-        "$id": "urn:copf/Query/addSort/invocation",
+        "$id": "urn:clef/Query/addSort/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Query"
+            "const": "urn:clef/Query"
           },
           "action": {
             "const": "addSort"
@@ -540,11 +540,11 @@
         }
       },
       "setScope": {
-        "$id": "urn:copf/Query/setScope/invocation",
+        "$id": "urn:clef/Query/setScope/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Query"
+            "const": "urn:clef/Query"
           },
           "action": {
             "const": "setScope"
@@ -570,11 +570,11 @@
     "completions": {
       "parse": {
         "ok": {
-          "$id": "urn:copf/Query/parse/completion/ok",
+          "$id": "urn:clef/Query/parse/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "parse"
@@ -596,11 +596,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/Query/parse/completion/error",
+          "$id": "urn:clef/Query/parse/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "parse"
@@ -624,11 +624,11 @@
       },
       "execute": {
         "ok": {
-          "$id": "urn:copf/Query/execute/completion/ok",
+          "$id": "urn:clef/Query/execute/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "execute"
@@ -650,11 +650,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Query/execute/completion/notfound",
+          "$id": "urn:clef/Query/execute/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "execute"
@@ -678,11 +678,11 @@
       },
       "subscribe": {
         "ok": {
-          "$id": "urn:copf/Query/subscribe/completion/ok",
+          "$id": "urn:clef/Query/subscribe/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "subscribe"
@@ -704,11 +704,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Query/subscribe/completion/notfound",
+          "$id": "urn:clef/Query/subscribe/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "subscribe"
@@ -732,11 +732,11 @@
       },
       "addFilter": {
         "ok": {
-          "$id": "urn:copf/Query/addFilter/completion/ok",
+          "$id": "urn:clef/Query/addFilter/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "addFilter"
@@ -758,11 +758,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Query/addFilter/completion/notfound",
+          "$id": "urn:clef/Query/addFilter/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "addFilter"
@@ -786,11 +786,11 @@
       },
       "addSort": {
         "ok": {
-          "$id": "urn:copf/Query/addSort/completion/ok",
+          "$id": "urn:clef/Query/addSort/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "addSort"
@@ -812,11 +812,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Query/addSort/completion/notfound",
+          "$id": "urn:clef/Query/addSort/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "addSort"
@@ -840,11 +840,11 @@
       },
       "setScope": {
         "ok": {
-          "$id": "urn:copf/Query/setScope/completion/ok",
+          "$id": "urn:clef/Query/setScope/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "setScope"
@@ -866,11 +866,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Query/setScope/completion/notfound",
+          "$id": "urn:clef/Query/setScope/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Query"
+              "const": "urn:clef/Query"
             },
             "action": {
               "const": "setScope"

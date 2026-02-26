@@ -12,7 +12,7 @@
 //   - Checklist, code block, and reference formatting
 //   - Supporting material structure (examples/, references/)
 //
-// See Architecture doc: Interface Kit, Section 2.4
+// See Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -200,7 +200,7 @@ const VALID_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'WebFetch'
 // may not follow all conventions.
 const ORIGINAL_HANDMADE = new Set([
   'create-concept',
-  'create-concept-kit',
+  'create-suite',
   'create-implementation',
   'create-storage-adapter',
   'create-sync',

@@ -1,4 +1,4 @@
-# Conduit COPF App — Docker Compose Configuration
+# Conduit Clef App — Docker Compose Configuration
 # App service with Redis for concept storage.
 
 services:

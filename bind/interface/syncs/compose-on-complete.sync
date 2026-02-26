@@ -1,5 +1,5 @@
-# All targets for a kit complete triggers surface composition
-# Architecture doc: Interface Kit, Sync Section 3.8
+# All targets for a suite complete triggers surface composition
+# Architecture doc: Clef Bind, Sync Section 3.8
 
 sync ComposeOnComplete [eager]
 when {

@@ -5,7 +5,7 @@ Copy-paste templates for common implementation patterns. Replace all `TODO` mark
 ## Template 1: Minimal Handler (Single Action, Single Variant)
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async TODO_action(input, storage) {
@@ -22,7 +22,7 @@ export const TODO_nameHandler: ConceptHandler = {
 ## Template 2: Create with Uniqueness Check
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async create(input, storage) {
@@ -50,7 +50,7 @@ export const TODO_nameHandler: ConceptHandler = {
 ## Template 3: Full CRUD (Create, Update, Delete, Get)
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async create(input, storage) {
@@ -124,7 +124,7 @@ export const TODO_nameHandler: ConceptHandler = {
 ## Template 4: Array-Valued Relation (Add/Remove/Check)
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async add(input, storage) {
@@ -171,7 +171,7 @@ export const TODO_nameHandler: ConceptHandler = {
 
 ```typescript
 import { createHash, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async set(input, storage) {
@@ -216,7 +216,7 @@ export const TODO_nameHandler: ConceptHandler = {
 
 ```typescript
 import { createHmac, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 const SECRET = randomBytes(32);
 
@@ -266,7 +266,7 @@ export const TODO_nameHandler: ConceptHandler = {
 ## Template 7: Query and List
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async create(input, storage) {
@@ -312,7 +312,7 @@ export const TODO_nameHandler: ConceptHandler = {
 ## Template 8: Stateless Validator
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const TODO_nameHandler: ConceptHandler = {
   async validate(input, _storage) {
@@ -336,9 +336,9 @@ import { TODO_nameHandler } from '../handlers/ts/app/TODO_name.impl';
 describe('TODO_Name Concept', () => {
   it('TODO_action returns ok', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/TODO_Name', TODO_nameHandler);
+    kernel.registerConcept('urn:clef/TODO_Name', TODO_nameHandler);
 
-    const result = await kernel.invokeConcept('urn:copf/TODO_Name', 'TODO_action', {
+    const result = await kernel.invokeConcept('urn:clef/TODO_Name', 'TODO_action', {
       TODO_field: 'TODO_value',
     });
 
@@ -348,9 +348,9 @@ describe('TODO_Name Concept', () => {
 
   it('TODO_action returns error for TODO_condition', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/TODO_Name', TODO_nameHandler);
+    kernel.registerConcept('urn:clef/TODO_Name', TODO_nameHandler);
 
-    const result = await kernel.invokeConcept('urn:copf/TODO_Name', 'TODO_action', {
+    const result = await kernel.invokeConcept('urn:clef/TODO_Name', 'TODO_action', {
       TODO_field: 'TODO_badValue',
     });
 
@@ -370,17 +370,17 @@ import { TODO_nameHandler } from '../handlers/ts/app/TODO_name.impl';
 describe('TODO_Name Invariants', () => {
   it('invariant: after TODO_action1 then TODO_action2', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/TODO_Name', TODO_nameHandler);
+    kernel.registerConcept('urn:clef/TODO_Name', TODO_nameHandler);
 
     // AFTER clause
-    const step1 = await kernel.invokeConcept('urn:copf/TODO_Name', 'TODO_action1', {
+    const step1 = await kernel.invokeConcept('urn:clef/TODO_Name', 'TODO_action1', {
       TODO_id: 'test-x',
       TODO_field: 'TODO_value',
     });
     expect(step1.variant).toBe('ok');
 
     // THEN clause
-    const step2 = await kernel.invokeConcept('urn:copf/TODO_Name', 'TODO_action2', {
+    const step2 = await kernel.invokeConcept('urn:clef/TODO_Name', 'TODO_action2', {
       TODO_id: 'test-x',
     });
     expect(step2.variant).toBe('ok');
@@ -402,7 +402,7 @@ const SYNCS_DIR = resolve(__dirname, '../syncs/app');
 describe('TODO_Name Flow', () => {
   it('processes complete TODO_flow flow', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/TODO_Name', TODO_nameHandler);
+    kernel.registerConcept('urn:clef/TODO_Name', TODO_nameHandler);
     // TODO: register other concepts needed for the flow
     await kernel.loadSyncs(resolve(SYNCS_DIR, 'TODO_sync.sync'));
 
@@ -418,8 +418,8 @@ describe('TODO_Name Flow', () => {
 
     const completions = flow.filter(r => r.type === 'completion');
     const actions = completions.map(r => `${r.concept}/${r.action}`);
-    expect(actions).toContain('urn:copf/TODO_Name/TODO_action');
-    expect(actions).toContain('urn:copf/Web/respond');
+    expect(actions).toContain('urn:clef/TODO_Name/TODO_action');
+    expect(actions).toContain('urn:clef/Web/respond');
   });
 });
 ```

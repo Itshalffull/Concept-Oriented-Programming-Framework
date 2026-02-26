@@ -55,11 +55,11 @@ export const envHandler: ConceptHandler = {
   async promote(input, storage) {
     const fromEnv = input.fromEnv as string;
     const toEnv = input.toEnv as string;
-    const kitName = input.kitName as string;
+    const suiteName = input.suiteName as string;
 
     const sourceEnv = await storage.get('environment', fromEnv);
     if (!sourceEnv) {
-      return { variant: 'notValidated', fromEnv, kitName };
+      return { variant: 'notValidated', fromEnv, suiteName };
     }
 
     const targetEnv = await storage.get('environment', toEnv);
@@ -67,24 +67,24 @@ export const envHandler: ConceptHandler = {
       return { variant: 'versionMismatch', fromEnv, toEnv, details: 'Target environment not found' };
     }
 
-    // Find the kit version in source environment
+    // Find the suite version in source environment
     const sourceKitVersions: Array<{ kit: string; version: string }> =
       sourceEnv.kitVersions ? JSON.parse(sourceEnv.kitVersions as string) : [];
-    const kitEntry = sourceKitVersions.find(k => k.kit === kitName);
+    const kitEntry = sourceKitVersions.find(k => k.kit === suiteName);
 
     if (!kitEntry) {
-      return { variant: 'notValidated', fromEnv, kitName };
+      return { variant: 'notValidated', fromEnv, suiteName };
     }
 
     // Update target environment's kit versions
     const targetKitVersions: Array<{ kit: string; version: string }> =
       targetEnv.kitVersions ? JSON.parse(targetEnv.kitVersions as string) : [];
-    const existingIndex = targetKitVersions.findIndex(k => k.kit === kitName);
+    const existingIndex = targetKitVersions.findIndex(k => k.kit === suiteName);
 
     if (existingIndex >= 0) {
       targetKitVersions[existingIndex].version = kitEntry.version;
     } else {
-      targetKitVersions.push({ kit: kitName, version: kitEntry.version });
+      targetKitVersions.push({ kit: suiteName, version: kitEntry.version });
     }
 
     const now = new Date().toISOString();

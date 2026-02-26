@@ -2,7 +2,7 @@
 
 ## The ConceptHandler Interface
 
-Every code generator is itself a COPF concept implementation. It exports a `ConceptHandler` with a single `generate` action:
+Every code generator is itself a Clef concept implementation. It exports a `ConceptHandler` with a single `generate` action:
 
 ```typescript
 // From kernel/src/types.ts
@@ -89,7 +89,7 @@ interface <Concept>Handler {
 
 ### File 3: Transport Adapter
 
-Generates a transport adapter that bridges the handler to the COPF runtime. The adapter:
+Generates a transport adapter that bridges the handler to the Clef runtime. The adapter:
 
 1. Receives an `ActionInvocation` (JSON)
 2. Deserializes the input into the typed input struct
@@ -172,7 +172,7 @@ Choose the convention that's idiomatic for the target language:
 
 Generated code references two kinds of imports:
 
-1. **Runtime types** from `@copf/runtime` (or language-equivalent):
+1. **Runtime types** from `@clef/runtime` (or language-equivalent):
    - `ConceptStorage`, `ActionInvocation`, `ActionCompletion`, `ConceptTransport`, `ConceptQuery`
 
 2. **Sibling generated files**:

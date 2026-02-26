@@ -17,12 +17,12 @@ export const loginWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Password',
+      concept: 'urn:clef/Password',
       actions: ['check'],
       queries: [],
     },
     {
-      concept: 'urn:copf/JWT',
+      concept: 'urn:clef/JWT',
       actions: ['generate'],
       queries: [],
     },

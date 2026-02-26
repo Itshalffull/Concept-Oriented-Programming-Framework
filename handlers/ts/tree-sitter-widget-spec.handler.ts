@@ -1,7 +1,7 @@
 // ============================================================
 // TreeSitterWidgetSpec Handler
 //
-// Tree-sitter grammar provider for COIF widget spec files.
+// Tree-sitter grammar provider for Clef Surface widget spec files.
 // Sections: purpose, anatomy, slots, states (FSM), accessibility,
 // props, connect, affordance, compose, invariant.
 // ============================================================

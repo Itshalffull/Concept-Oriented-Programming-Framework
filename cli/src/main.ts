@@ -1,5 +1,5 @@
 // ============================================================
-// COPF CLI — Bootstrap Entrypoint
+// Clef CLI — Bootstrap Entrypoint
 //
 // Thin bootstrap that delegates to the generated Commander.js
 // program (index.ts) for all commands. The only hand-written
@@ -8,8 +8,8 @@
 // program handles all concept-derived commands.
 //
 // Usage:
-//   copf interface generate --manifest <path>   # bootstrap step
-//   copf <command> [args...]                     # generated commands
+//   clef interface generate --manifest <path>   # bootstrap step
+//   clef <command> [args...]                     # generated commands
 // ============================================================
 
 // --- Argument Parser ---
@@ -78,7 +78,7 @@ async function runBootstrapCommand(
       break;
     }
     case 'kit': {
-      const { kitCommand } = await import('./commands/kit.js');
+      const { kitCommand } = await import('./commands/suite.js');
       await kitCommand(positional, flags);
       break;
     }
@@ -102,7 +102,7 @@ async function main(): Promise<void> {
   }
 
   // Everything else delegates to the generated Commander.js program.
-  // This program is produced by `copf interface generate` and lives
+  // This program is produced by `clef interface generate` and lives
   // in index.ts alongside this file.
   try {
     const { default: program } = await import('./index.js');
@@ -111,28 +111,28 @@ async function main(): Promise<void> {
       return;
     }
   } catch {
-    // Generated CLI not available — run `copf interface generate` first
+    // Generated CLI not available — run `clef interface generate` first
   }
 
   if (command === 'help' || command === '--help' || command === '-h') {
-    console.log(`Usage: copf <command> [args...]
+    console.log(`Usage: clef <command> [args...]
 
 Bootstrap commands (always available):
   interface      Interface generation (generate|plan|validate|files|clean)
   generate       Generate schemas and code from concept specs
   compile-syncs  Compile sync specifications
-  init           Initialize a new COPF project
-  kit            Kit management (list|add|info|validate)
+  init           Initialize a new Clef project
+  kit            Suite management (list|add|info|validate)
   inspect        Inspect syntax trees and parsed structures
 
-Generated commands (available after 'copf interface generate'):
-  Run 'copf <generated-command> --help' for details.
+Generated commands (available after 'clef interface generate'):
+  Run 'clef <generated-command> --help' for details.
 `);
     return;
   }
 
   console.error(`Unknown command: ${command}`);
-  console.error(`Run 'copf interface generate --manifest <path>' to generate CLI commands.`);
+  console.error(`Run 'clef interface generate --manifest <path>' to generate CLI commands.`);
   process.exit(1);
 }
 

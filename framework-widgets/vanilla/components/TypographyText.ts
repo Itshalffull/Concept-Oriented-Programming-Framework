@@ -3,7 +3,7 @@
 //
 // Creates a <span> or <p> element with computed inline styles
 // derived from a TextStyle configuration, TypeScale, and
-// FontStack definitions via the COIF bridge.
+// FontStack definitions via the Clef Surface bridge.
 // ============================================================
 
 import type {
@@ -12,7 +12,7 @@ import type {
   FontStack,
 } from '../../shared/types.js';
 
-import { textStyleToCSS } from '../../shared/coif-bridge.js';
+import { textStyleToCSS } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
@@ -53,7 +53,7 @@ export class TypographyText {
 
     const tag = props.tag || 'span';
     this.el = document.createElement(tag);
-    this.el.setAttribute('data-coif-typography', '');
+    this.el.setAttribute('data-surface-typography', '');
     this.el.setAttribute('data-text-style', props.textStyle.name);
 
     this.applyStyles(props);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title FieldMapping
 /// @notice Source-to-destination field translation with transformation rules
-/// @dev Implements the FieldMapping concept from COPF specification.
+/// @dev Implements the FieldMapping concept from Clef specification.
 ///      Supports creating schema mappings, adding field-level translation rules,
 ///      applying mappings to records, and validating mapping completeness.
 

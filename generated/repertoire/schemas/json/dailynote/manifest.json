@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/DailyNote",
+  "uri": "urn:clef/DailyNote",
   "name": "DailyNote",
   "typeParams": [
     {
@@ -249,11 +249,11 @@
   "jsonSchemas": {
     "invocations": {
       "getOrCreateToday": {
-        "$id": "urn:copf/DailyNote/getOrCreateToday/invocation",
+        "$id": "urn:clef/DailyNote/getOrCreateToday/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DailyNote"
+            "const": "urn:clef/DailyNote"
           },
           "action": {
             "const": "getOrCreateToday"
@@ -272,11 +272,11 @@
         }
       },
       "navigateToDate": {
-        "$id": "urn:copf/DailyNote/navigateToDate/invocation",
+        "$id": "urn:clef/DailyNote/navigateToDate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DailyNote"
+            "const": "urn:clef/DailyNote"
           },
           "action": {
             "const": "navigateToDate"
@@ -295,11 +295,11 @@
         }
       },
       "listRecent": {
-        "$id": "urn:copf/DailyNote/listRecent/invocation",
+        "$id": "urn:clef/DailyNote/listRecent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DailyNote"
+            "const": "urn:clef/DailyNote"
           },
           "action": {
             "const": "listRecent"
@@ -321,11 +321,11 @@
     "completions": {
       "getOrCreateToday": {
         "ok": {
-          "$id": "urn:copf/DailyNote/getOrCreateToday/completion/ok",
+          "$id": "urn:clef/DailyNote/getOrCreateToday/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DailyNote"
+              "const": "urn:clef/DailyNote"
             },
             "action": {
               "const": "getOrCreateToday"
@@ -353,11 +353,11 @@
       },
       "navigateToDate": {
         "ok": {
-          "$id": "urn:copf/DailyNote/navigateToDate/completion/ok",
+          "$id": "urn:clef/DailyNote/navigateToDate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DailyNote"
+              "const": "urn:clef/DailyNote"
             },
             "action": {
               "const": "navigateToDate"
@@ -379,11 +379,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/DailyNote/navigateToDate/completion/notfound",
+          "$id": "urn:clef/DailyNote/navigateToDate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DailyNote"
+              "const": "urn:clef/DailyNote"
             },
             "action": {
               "const": "navigateToDate"
@@ -407,11 +407,11 @@
       },
       "listRecent": {
         "ok": {
-          "$id": "urn:copf/DailyNote/listRecent/completion/ok",
+          "$id": "urn:clef/DailyNote/listRecent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DailyNote"
+              "const": "urn:clef/DailyNote"
             },
             "action": {
               "const": "listRecent"

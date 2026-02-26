@@ -1,4 +1,4 @@
-# COPF Type System Reference
+# Clef Type System Reference
 
 ## ResolvedType — The Recursive Type Tree
 
@@ -28,9 +28,9 @@ interface FieldSchema {
 
 ### Primitive Types
 
-COPF defines exactly 7 primitives. Every generator must map all of them:
+Clef defines exactly 7 primitives. Every generator must map all of them:
 
-| COPF Primitive | JSON Wire | TypeScript | Rust | Description |
+| Clef Primitive | JSON Wire | TypeScript | Rust | Description |
 |---------------|-----------|------------|------|-------------|
 | `String` | string | `string` | `String` | UTF-8 text |
 | `Int` | number | `number` | `i64` | 64-bit integer |
@@ -42,7 +42,7 @@ COPF defines exactly 7 primitives. Every generator must map all of them:
 
 ### Collection Types
 
-| COPF Type | JSON Wire | TypeScript | Rust |
+| Clef Type | JSON Wire | TypeScript | Rust |
 |-----------|-----------|------------|------|
 | `option T` | `T \| null` | `T \| null` | `Option<T>` |
 | `set T` | `T[]` (array) | `Set<T>` | `HashSet<T>` |
@@ -102,7 +102,7 @@ function resolvedTypeTo<Lang>(t: ResolvedType): string {
 ### Common Patterns for New Languages
 
 **Swift:**
-| COPF | Swift |
+| Clef | Swift |
 |------|-------|
 | String | `String` |
 | Int | `Int` |
@@ -116,7 +116,7 @@ function resolvedTypeTo<Lang>(t: ResolvedType): string {
 | A -> B | `[A: B]` |
 
 **Go:**
-| COPF | Go |
+| Clef | Go |
 |------|-----|
 | String | `string` |
 | Int | `int64` |
@@ -130,7 +130,7 @@ function resolvedTypeTo<Lang>(t: ResolvedType): string {
 | A -> B | `map[A]B` |
 
 **Python:**
-| COPF | Python |
+| Clef | Python |
 |------|--------|
 | String | `str` |
 | Int | `int` |
@@ -144,7 +144,7 @@ function resolvedTypeTo<Lang>(t: ResolvedType): string {
 | A -> B | `dict[A, B]` |
 
 **Kotlin:**
-| COPF | Kotlin |
+| Clef | Kotlin |
 |------|--------|
 | String | `String` |
 | Int | `Long` |
@@ -158,7 +158,7 @@ function resolvedTypeTo<Lang>(t: ResolvedType): string {
 | A -> B | `Map<A, B>` |
 
 **C#:**
-| COPF | C# |
+| Clef | C# |
 |------|----|
 | String | `string` |
 | Int | `long` |

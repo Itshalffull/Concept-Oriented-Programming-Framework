@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Comment
 /// @notice Concept-oriented comment management attached to target entities (articles)
-/// @dev Implements the Comment concept from COPF specification.
+/// @dev Implements the Comment concept from Clef specification.
 
 contract Comment {
     // --- Types ---

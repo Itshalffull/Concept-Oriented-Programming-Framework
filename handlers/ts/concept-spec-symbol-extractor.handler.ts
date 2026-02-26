@@ -3,7 +3,7 @@
 //
 // Symbol extraction provider for .concept files. Extracts concept
 // name, action names, variant names, and state field names as
-// symbols in the copf/* namespace.
+// symbols in the clef/* namespace.
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
@@ -46,7 +46,7 @@ function extractFromConceptSpec(source: string, file: string): Array<{
     if (conceptMatch) {
       conceptName = conceptMatch[1];
       symbols.push({
-        symbolString: `copf/concept/${conceptName}`,
+        symbolString: `clef/concept/${conceptName}`,
         kind: 'concept',
         displayName: conceptName,
         role: 'definition',
@@ -63,7 +63,7 @@ function extractFromConceptSpec(source: string, file: string): Array<{
       // Skip common keywords that look like fields but are section headers
       if (!['purpose', 'state', 'actions', 'capabilities', 'invariant'].includes(fieldName)) {
         symbols.push({
-          symbolString: `copf/concept/${conceptName}/state/${fieldName}`,
+          symbolString: `clef/concept/${conceptName}/state/${fieldName}`,
           kind: 'state-field',
           displayName: fieldName,
           role: 'definition',
@@ -78,7 +78,7 @@ function extractFromConceptSpec(source: string, file: string): Array<{
     if (actionMatch && conceptName) {
       const actionName = actionMatch[1];
       symbols.push({
-        symbolString: `copf/concept/${conceptName}/action/${actionName}`,
+        symbolString: `clef/concept/${conceptName}/action/${actionName}`,
         kind: 'action',
         displayName: actionName,
         role: 'definition',
@@ -92,7 +92,7 @@ function extractFromConceptSpec(source: string, file: string): Array<{
     if (variantMatch && conceptName) {
       const variantName = variantMatch[1];
       symbols.push({
-        symbolString: `copf/concept/${conceptName}/variant/${variantName}`,
+        symbolString: `clef/concept/${conceptName}/variant/${variantName}`,
         kind: 'variant',
         displayName: variantName,
         role: 'definition',

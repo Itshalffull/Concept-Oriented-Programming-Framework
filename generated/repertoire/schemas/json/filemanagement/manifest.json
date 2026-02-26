@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/FileManagement",
+  "uri": "urn:clef/FileManagement",
   "name": "FileManagement",
   "typeParams": [
     {
@@ -395,11 +395,11 @@
   "jsonSchemas": {
     "invocations": {
       "upload": {
-        "$id": "urn:copf/FileManagement/upload/invocation",
+        "$id": "urn:clef/FileManagement/upload/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FileManagement"
+            "const": "urn:clef/FileManagement"
           },
           "action": {
             "const": "upload"
@@ -426,11 +426,11 @@
         }
       },
       "addUsage": {
-        "$id": "urn:copf/FileManagement/addUsage/invocation",
+        "$id": "urn:clef/FileManagement/addUsage/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FileManagement"
+            "const": "urn:clef/FileManagement"
           },
           "action": {
             "const": "addUsage"
@@ -453,11 +453,11 @@
         }
       },
       "removeUsage": {
-        "$id": "urn:copf/FileManagement/removeUsage/invocation",
+        "$id": "urn:clef/FileManagement/removeUsage/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FileManagement"
+            "const": "urn:clef/FileManagement"
           },
           "action": {
             "const": "removeUsage"
@@ -480,11 +480,11 @@
         }
       },
       "garbageCollect": {
-        "$id": "urn:copf/FileManagement/garbageCollect/invocation",
+        "$id": "urn:clef/FileManagement/garbageCollect/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FileManagement"
+            "const": "urn:clef/FileManagement"
           },
           "action": {
             "const": "garbageCollect"
@@ -497,11 +497,11 @@
         }
       },
       "getFile": {
-        "$id": "urn:copf/FileManagement/getFile/invocation",
+        "$id": "urn:clef/FileManagement/getFile/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FileManagement"
+            "const": "urn:clef/FileManagement"
           },
           "action": {
             "const": "getFile"
@@ -523,11 +523,11 @@
     "completions": {
       "upload": {
         "ok": {
-          "$id": "urn:copf/FileManagement/upload/completion/ok",
+          "$id": "urn:clef/FileManagement/upload/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "upload"
@@ -549,11 +549,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/FileManagement/upload/completion/error",
+          "$id": "urn:clef/FileManagement/upload/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "upload"
@@ -577,11 +577,11 @@
       },
       "addUsage": {
         "ok": {
-          "$id": "urn:copf/FileManagement/addUsage/completion/ok",
+          "$id": "urn:clef/FileManagement/addUsage/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "addUsage"
@@ -597,11 +597,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/FileManagement/addUsage/completion/notfound",
+          "$id": "urn:clef/FileManagement/addUsage/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "addUsage"
@@ -625,11 +625,11 @@
       },
       "removeUsage": {
         "ok": {
-          "$id": "urn:copf/FileManagement/removeUsage/completion/ok",
+          "$id": "urn:clef/FileManagement/removeUsage/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "removeUsage"
@@ -645,11 +645,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/FileManagement/removeUsage/completion/notfound",
+          "$id": "urn:clef/FileManagement/removeUsage/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "removeUsage"
@@ -673,11 +673,11 @@
       },
       "garbageCollect": {
         "ok": {
-          "$id": "urn:copf/FileManagement/garbageCollect/completion/ok",
+          "$id": "urn:clef/FileManagement/garbageCollect/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "garbageCollect"
@@ -701,11 +701,11 @@
       },
       "getFile": {
         "ok": {
-          "$id": "urn:copf/FileManagement/getFile/completion/ok",
+          "$id": "urn:clef/FileManagement/getFile/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "getFile"
@@ -731,11 +731,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/FileManagement/getFile/completion/notfound",
+          "$id": "urn:clef/FileManagement/getFile/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FileManagement"
+              "const": "urn:clef/FileManagement"
             },
             "action": {
               "const": "getFile"

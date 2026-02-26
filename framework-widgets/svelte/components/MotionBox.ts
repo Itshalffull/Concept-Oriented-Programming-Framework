@@ -1,8 +1,8 @@
 // ============================================================
-// MotionBox — Svelte-compatible COIF component
+// MotionBox — Svelte-compatible Clef Surface component
 //
 // Container with CSS transitions respecting prefers-reduced-motion.
-// Maps COIF MotionTransition, MotionDuration, and MotionEasing
+// Maps Clef Surface MotionTransition, MotionDuration, and MotionEasing
 // to live CSS transition strings. Disables or reduces animations
 // when the user's OS requests reduced motion.
 // ============================================================
@@ -13,7 +13,7 @@ import type {
   MotionEasing,
 } from '../../shared/types.js';
 
-import { motionToCSS } from '../../shared/coif-bridge.js';
+import { motionToCSS } from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -60,7 +60,7 @@ export function createMotionBox(
 
   // Create element
   let element = document.createElement(tag);
-  element.setAttribute('data-coif-motion', '');
+  element.setAttribute('data-surface-motion', '');
   if (className) element.className = className;
   target.appendChild(element);
 
@@ -159,7 +159,7 @@ export function createMotionBox(
       if (newProps.tag !== undefined && newProps.tag !== tag) {
         tag = newProps.tag;
         const newElement = document.createElement(tag);
-        newElement.setAttribute('data-coif-motion', '');
+        newElement.setAttribute('data-surface-motion', '');
         if (className) newElement.className = className;
         while (element.firstChild) {
           newElement.appendChild(element.firstChild);

@@ -1,0 +1,16 @@
+# ============================================================
+# ViewEmbedCreatesInlineSurface — surface-integration recommended sync
+#
+# Embed a View inside a ContentNode as an inline Clef Surface surface.
+# Creates a deployment target scoped to the embedding node.
+# ============================================================
+
+sync ViewEmbedCreatesInlineSurface [eager]
+when {
+  View/embed: [ targetNodeId: ?node ]
+    => ok(view: ?viewId)
+}
+then {
+  Surface/create: [ surface: ?viewId; kind: "browser-dom";
+    mountPoint: ?node ]
+}

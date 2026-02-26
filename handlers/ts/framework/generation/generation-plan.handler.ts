@@ -5,7 +5,7 @@
 // complete, and report. Purely passive — does not dispatch
 // generators or query other concepts. Observer syncs feed data
 // into it; GenerationPlan stores and aggregates.
-// See copf-generation-kit.md Part 1.4
+// See clef-generation-suite.md Part 1.4
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

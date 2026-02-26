@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Flag",
+  "uri": "urn:clef/Flag",
   "name": "Flag",
   "typeParams": [
     {
@@ -443,11 +443,11 @@
   "jsonSchemas": {
     "invocations": {
       "flag": {
-        "$id": "urn:copf/Flag/flag/invocation",
+        "$id": "urn:clef/Flag/flag/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Flag"
+            "const": "urn:clef/Flag"
           },
           "action": {
             "const": "flag"
@@ -478,11 +478,11 @@
         }
       },
       "unflag": {
-        "$id": "urn:copf/Flag/unflag/invocation",
+        "$id": "urn:clef/Flag/unflag/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Flag"
+            "const": "urn:clef/Flag"
           },
           "action": {
             "const": "unflag"
@@ -501,11 +501,11 @@
         }
       },
       "isFlagged": {
-        "$id": "urn:copf/Flag/isFlagged/invocation",
+        "$id": "urn:clef/Flag/isFlagged/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Flag"
+            "const": "urn:clef/Flag"
           },
           "action": {
             "const": "isFlagged"
@@ -532,11 +532,11 @@
         }
       },
       "getCount": {
-        "$id": "urn:copf/Flag/getCount/invocation",
+        "$id": "urn:clef/Flag/getCount/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Flag"
+            "const": "urn:clef/Flag"
           },
           "action": {
             "const": "getCount"
@@ -562,11 +562,11 @@
     "completions": {
       "flag": {
         "ok": {
-          "$id": "urn:copf/Flag/flag/completion/ok",
+          "$id": "urn:clef/Flag/flag/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Flag"
+              "const": "urn:clef/Flag"
             },
             "action": {
               "const": "flag"
@@ -582,11 +582,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Flag/flag/completion/exists",
+          "$id": "urn:clef/Flag/flag/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Flag"
+              "const": "urn:clef/Flag"
             },
             "action": {
               "const": "flag"
@@ -610,11 +610,11 @@
       },
       "unflag": {
         "ok": {
-          "$id": "urn:copf/Flag/unflag/completion/ok",
+          "$id": "urn:clef/Flag/unflag/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Flag"
+              "const": "urn:clef/Flag"
             },
             "action": {
               "const": "unflag"
@@ -630,11 +630,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Flag/unflag/completion/notfound",
+          "$id": "urn:clef/Flag/unflag/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Flag"
+              "const": "urn:clef/Flag"
             },
             "action": {
               "const": "unflag"
@@ -658,11 +658,11 @@
       },
       "isFlagged": {
         "ok": {
-          "$id": "urn:copf/Flag/isFlagged/completion/ok",
+          "$id": "urn:clef/Flag/isFlagged/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Flag"
+              "const": "urn:clef/Flag"
             },
             "action": {
               "const": "isFlagged"
@@ -686,11 +686,11 @@
       },
       "getCount": {
         "ok": {
-          "$id": "urn:copf/Flag/getCount/completion/ok",
+          "$id": "urn:clef/Flag/getCount/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Flag"
+              "const": "urn:clef/Flag"
             },
             "action": {
               "const": "getCount"

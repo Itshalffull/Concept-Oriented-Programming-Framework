@@ -1,9 +1,9 @@
-# kits/interface/kit.yaml
+# kits/interface/suite.yaml
 suite:
   name: interface
   version: 0.1.0
   description: >
-    Multi-target interface generation for COPF applications.
+    Multi-target interface generation for Clef applications.
     Generates REST APIs, GraphQL schemas, gRPC services, CLIs,
     MCP servers, SDKs, and specification documents from concept
     specs and an interface manifest.
@@ -20,7 +20,7 @@ concepts:
     params:
       G: { as: generator-plan-ref, description: "Reference to a generation plan" }
 
-  # Emitter: imported from generation kit (see uses section below)
+  # Emitter: imported from generation suite (see uses section below)
 
   ApiSurface:
     spec: ./concepts/api-surface.concept
@@ -213,7 +213,7 @@ syncs:
     - path: ./syncs/routing/inject-middleware-claude-skills.sync
 
 uses:
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
         params:

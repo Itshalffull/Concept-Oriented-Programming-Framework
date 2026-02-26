@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Control",
+  "uri": "urn:clef/Control",
   "name": "Control",
   "typeParams": [
     {
@@ -373,11 +373,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/Control/create/invocation",
+        "$id": "urn:clef/Control/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Control"
+            "const": "urn:clef/Control"
           },
           "action": {
             "const": "create"
@@ -404,11 +404,11 @@
         }
       },
       "interact": {
-        "$id": "urn:copf/Control/interact/invocation",
+        "$id": "urn:clef/Control/interact/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Control"
+            "const": "urn:clef/Control"
           },
           "action": {
             "const": "interact"
@@ -431,11 +431,11 @@
         }
       },
       "getValue": {
-        "$id": "urn:copf/Control/getValue/invocation",
+        "$id": "urn:clef/Control/getValue/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Control"
+            "const": "urn:clef/Control"
           },
           "action": {
             "const": "getValue"
@@ -454,11 +454,11 @@
         }
       },
       "setValue": {
-        "$id": "urn:copf/Control/setValue/invocation",
+        "$id": "urn:clef/Control/setValue/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Control"
+            "const": "urn:clef/Control"
           },
           "action": {
             "const": "setValue"
@@ -481,11 +481,11 @@
         }
       },
       "triggerAction": {
-        "$id": "urn:copf/Control/triggerAction/invocation",
+        "$id": "urn:clef/Control/triggerAction/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Control"
+            "const": "urn:clef/Control"
           },
           "action": {
             "const": "triggerAction"
@@ -507,11 +507,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/Control/create/completion/ok",
+          "$id": "urn:clef/Control/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "create"
@@ -527,11 +527,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Control/create/completion/exists",
+          "$id": "urn:clef/Control/create/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "create"
@@ -555,11 +555,11 @@
       },
       "interact": {
         "ok": {
-          "$id": "urn:copf/Control/interact/completion/ok",
+          "$id": "urn:clef/Control/interact/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "interact"
@@ -581,11 +581,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Control/interact/completion/notfound",
+          "$id": "urn:clef/Control/interact/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "interact"
@@ -609,11 +609,11 @@
       },
       "getValue": {
         "ok": {
-          "$id": "urn:copf/Control/getValue/completion/ok",
+          "$id": "urn:clef/Control/getValue/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "getValue"
@@ -635,11 +635,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Control/getValue/completion/notfound",
+          "$id": "urn:clef/Control/getValue/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "getValue"
@@ -663,11 +663,11 @@
       },
       "setValue": {
         "ok": {
-          "$id": "urn:copf/Control/setValue/completion/ok",
+          "$id": "urn:clef/Control/setValue/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "setValue"
@@ -683,11 +683,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Control/setValue/completion/notfound",
+          "$id": "urn:clef/Control/setValue/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "setValue"
@@ -711,11 +711,11 @@
       },
       "triggerAction": {
         "ok": {
-          "$id": "urn:copf/Control/triggerAction/completion/ok",
+          "$id": "urn:clef/Control/triggerAction/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "triggerAction"
@@ -737,11 +737,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Control/triggerAction/completion/notfound",
+          "$id": "urn:clef/Control/triggerAction/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Control"
+              "const": "urn:clef/Control"
             },
             "action": {
               "const": "triggerAction"

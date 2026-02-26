@@ -1,8 +1,8 @@
 // ============================================================
-// COIF Framework Widgets — Shared Types
+// Clef Surface Framework Widgets — Shared Types
 //
 // Platform-agnostic types used by all framework adapters.
-// These mirror the COIF concept state shapes and provide
+// These mirror the Clef Surface concept state shapes and provide
 // the contract between headless logic and framework renderers.
 // ============================================================
 

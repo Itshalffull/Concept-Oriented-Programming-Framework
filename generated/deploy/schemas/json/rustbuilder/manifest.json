@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/RustBuilder",
+  "uri": "urn:clef/RustBuilder",
   "name": "RustBuilder",
   "typeParams": [
     {
@@ -479,7 +479,7 @@
               "name": "artifactPath",
               "value": {
                 "kind": "literal",
-                "value": ".copf-artifacts/rust/password"
+                "value": ".clef-artifacts/rust/password"
               }
             },
             {
@@ -556,11 +556,11 @@
   "jsonSchemas": {
     "invocations": {
       "build": {
-        "$id": "urn:copf/RustBuilder/build/invocation",
+        "$id": "urn:clef/RustBuilder/build/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/RustBuilder"
+            "const": "urn:clef/RustBuilder"
           },
           "action": {
             "const": "build"
@@ -613,11 +613,11 @@
         }
       },
       "test": {
-        "$id": "urn:copf/RustBuilder/test/invocation",
+        "$id": "urn:clef/RustBuilder/test/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/RustBuilder"
+            "const": "urn:clef/RustBuilder"
           },
           "action": {
             "const": "test"
@@ -640,11 +640,11 @@
         }
       },
       "package": {
-        "$id": "urn:copf/RustBuilder/package/invocation",
+        "$id": "urn:clef/RustBuilder/package/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/RustBuilder"
+            "const": "urn:clef/RustBuilder"
           },
           "action": {
             "const": "package"
@@ -667,11 +667,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/RustBuilder/register/invocation",
+        "$id": "urn:clef/RustBuilder/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/RustBuilder"
+            "const": "urn:clef/RustBuilder"
           },
           "action": {
             "const": "register"
@@ -687,11 +687,11 @@
     "completions": {
       "build": {
         "ok": {
-          "$id": "urn:copf/RustBuilder/build/completion/ok",
+          "$id": "urn:clef/RustBuilder/build/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "build"
@@ -721,11 +721,11 @@
           }
         },
         "compilationError": {
-          "$id": "urn:copf/RustBuilder/build/completion/compilationError",
+          "$id": "urn:clef/RustBuilder/build/completion/compilationError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "build"
@@ -766,11 +766,11 @@
           }
         },
         "featureConflict": {
-          "$id": "urn:copf/RustBuilder/build/completion/featureConflict",
+          "$id": "urn:clef/RustBuilder/build/completion/featureConflict",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "build"
@@ -797,11 +797,11 @@
       },
       "test": {
         "ok": {
-          "$id": "urn:copf/RustBuilder/test/completion/ok",
+          "$id": "urn:clef/RustBuilder/test/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "test"
@@ -835,11 +835,11 @@
           }
         },
         "testFailure": {
-          "$id": "urn:copf/RustBuilder/test/completion/testFailure",
+          "$id": "urn:clef/RustBuilder/test/completion/testFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "test"
@@ -886,11 +886,11 @@
       },
       "package": {
         "ok": {
-          "$id": "urn:copf/RustBuilder/package/completion/ok",
+          "$id": "urn:clef/RustBuilder/package/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "package"
@@ -916,11 +916,11 @@
           }
         },
         "formatUnsupported": {
-          "$id": "urn:copf/RustBuilder/package/completion/formatUnsupported",
+          "$id": "urn:clef/RustBuilder/package/completion/formatUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "package"
@@ -944,11 +944,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/RustBuilder/register/completion/ok",
+          "$id": "urn:clef/RustBuilder/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/RustBuilder"
+              "const": "urn:clef/RustBuilder"
             },
             "action": {
               "const": "register"

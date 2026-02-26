@@ -1,0 +1,63 @@
+@version(1)
+concept Binding [B, C] {
+
+  purpose {
+    Bridge between Clef backend concepts and Clef Surface frontend
+    signals. In coupled mode, subscribes to concept state changes
+    via Clef's action completion stream and pushes updates to
+    signals. Routes user-triggered actions back as invocations.
+    In standalone mode, wraps a data source (REST, GraphQL,
+    static) and presents it through the same signal interface.
+  }
+
+  state {
+    concept: B -> C
+    mode: B -> String
+    endpoint: B -> option String
+    lastSync: B -> option DateTime
+    status: B -> String
+    signalMap: B -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action bind(binding: B, concept: C, mode: String) {
+      -> ok(binding: B) {
+        Create a binding. Mode: "coupled" (direct Clef engine),
+        "rest" (REST API), "graphql" (subscription),
+        "static" (in-memory). Generates signal map: one signal
+        per state field, one command per action.
+      }
+      -> invalid(message: String) { Mode not recognized or concept unreachable. }
+    }
+
+    action sync(binding: B) {
+      -> ok(binding: B) { Pull latest state and update signals. }
+      -> error(message: String) { Backend unreachable. }
+    }
+
+    action invoke(binding: B, action: String, input: String) {
+      -> ok(binding: B, result: String) {
+        Invoke an action on the bound concept. Routes to
+        appropriate backend based on mode. Returns completion.
+      }
+      -> error(message: String) { Invocation failed. }
+    }
+
+    action unbind(binding: B) {
+      -> ok(binding: B) { Remove binding, unsubscribe, dispose signals. }
+      -> notfound(message: String) { Binding does not exist. }
+    }
+  }
+
+  invariant {
+    after bind(binding: b, concept: c, mode: "static")
+      -> ok(binding: b)
+    then sync(binding: b) -> ok(binding: b)
+    and bind(binding: b2, concept: c2, mode: "invalid-mode")
+      -> invalid(message: _)
+  }
+}

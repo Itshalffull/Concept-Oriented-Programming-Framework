@@ -89,7 +89,7 @@ concept ContractTest [P] {
   invariant {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(contract: p, definition: d)
-    and  verify(contract: p, producerArtifact: ".copf-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".copf-artifacts/ts/password", consumerLanguage: "typescript")
+    and  verify(contract: p, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript")
       -> ok(contract: p, passed: 8, total: 8)
     then canDeploy(concept: "password", language: "typescript") -> ok(safe: true, verifiedAgainst: ["rust"])
   }

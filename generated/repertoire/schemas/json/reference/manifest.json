@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Reference",
+  "uri": "urn:clef/Reference",
   "name": "Reference",
   "typeParams": [
     {
@@ -316,11 +316,11 @@
   "jsonSchemas": {
     "invocations": {
       "addRef": {
-        "$id": "urn:copf/Reference/addRef/invocation",
+        "$id": "urn:clef/Reference/addRef/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Reference"
+            "const": "urn:clef/Reference"
           },
           "action": {
             "const": "addRef"
@@ -343,11 +343,11 @@
         }
       },
       "removeRef": {
-        "$id": "urn:copf/Reference/removeRef/invocation",
+        "$id": "urn:clef/Reference/removeRef/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Reference"
+            "const": "urn:clef/Reference"
           },
           "action": {
             "const": "removeRef"
@@ -370,11 +370,11 @@
         }
       },
       "getRefs": {
-        "$id": "urn:copf/Reference/getRefs/invocation",
+        "$id": "urn:clef/Reference/getRefs/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Reference"
+            "const": "urn:clef/Reference"
           },
           "action": {
             "const": "getRefs"
@@ -393,11 +393,11 @@
         }
       },
       "resolveTarget": {
-        "$id": "urn:copf/Reference/resolveTarget/invocation",
+        "$id": "urn:clef/Reference/resolveTarget/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Reference"
+            "const": "urn:clef/Reference"
           },
           "action": {
             "const": "resolveTarget"
@@ -419,11 +419,11 @@
     "completions": {
       "addRef": {
         "ok": {
-          "$id": "urn:copf/Reference/addRef/completion/ok",
+          "$id": "urn:clef/Reference/addRef/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "addRef"
@@ -449,11 +449,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Reference/addRef/completion/exists",
+          "$id": "urn:clef/Reference/addRef/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "addRef"
@@ -481,11 +481,11 @@
       },
       "removeRef": {
         "ok": {
-          "$id": "urn:copf/Reference/removeRef/completion/ok",
+          "$id": "urn:clef/Reference/removeRef/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "removeRef"
@@ -511,11 +511,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Reference/removeRef/completion/notfound",
+          "$id": "urn:clef/Reference/removeRef/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "removeRef"
@@ -543,11 +543,11 @@
       },
       "getRefs": {
         "ok": {
-          "$id": "urn:copf/Reference/getRefs/completion/ok",
+          "$id": "urn:clef/Reference/getRefs/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "getRefs"
@@ -569,11 +569,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Reference/getRefs/completion/notfound",
+          "$id": "urn:clef/Reference/getRefs/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "getRefs"
@@ -597,11 +597,11 @@
       },
       "resolveTarget": {
         "ok": {
-          "$id": "urn:copf/Reference/resolveTarget/completion/ok",
+          "$id": "urn:clef/Reference/resolveTarget/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Reference"
+              "const": "urn:clef/Reference"
             },
             "action": {
               "const": "resolveTarget"

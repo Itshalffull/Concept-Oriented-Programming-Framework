@@ -2,9 +2,9 @@
 concept ScoreApi [Q] {
 
   purpose {
-    Unified facade over the five Score kits (parse, symbol, semantic,
+    Unified facade over the five Score suites (parse, symbol, semantic,
     analysis, discovery) providing a single LLM-friendly surface for
-    querying any COPF project's structure, symbols, semantics, data
+    querying any Clef project's structure, symbols, semantics, data
     flows, and search indexes. Every Clef app gets ScoreApi registered
     automatically — LLMs can immediately ask questions about the
     codebase without configuration. Actions are designed for natural
@@ -143,7 +143,7 @@ concept ScoreApi [Q] {
         List all concepts in the project with their purpose,
         action names, state field names, and defining file path.
         This is the primary entry point for understanding a
-        COPF application's architecture.
+        Clef application's architecture.
       }
     }
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Cache
 /// @notice Concept-oriented cache with TTL-based expiry, tagging, and invalidation
-/// @dev Implements the Cache concept from COPF specification.
+/// @dev Implements the Cache concept from Clef specification.
 ///      Supports setting cached values with max age, checking expiry on reads, and invalidation.
 
 contract Cache {

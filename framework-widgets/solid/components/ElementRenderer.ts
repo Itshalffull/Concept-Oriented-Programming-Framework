@@ -1,7 +1,7 @@
 // ============================================================
 // ElementRenderer — Solid.js Component
 //
-// Form element renderer from ElementConfig. Maps COIF element
+// Form element renderer from ElementConfig. Maps Clef Surface element
 // kinds to native HTML elements with proper attributes, roles,
 // and accessibility markup. Supports nested groups and
 // reactive value binding.
@@ -14,15 +14,15 @@ import type {
 
 import {
   mapElementToHTML,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
-import type { ElementRenderHint } from '../../shared/coif-bridge.js';
+import type { ElementRenderHint } from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -79,7 +79,7 @@ function buildLabel(config: ElementConfig, forId: string): HTMLLabelElement {
     const required = document.createElement('span');
     required.textContent = ' *';
     required.setAttribute('aria-hidden', 'true');
-    required.style.setProperty('color', 'var(--coif-error, #dc2626)');
+    required.style.setProperty('color', 'var(--surface-error, #dc2626)');
     label.appendChild(required);
   }
 
@@ -124,11 +124,11 @@ export function ElementRenderer(props: ElementRendererProps): ElementRendererRes
 
   const config = props.config;
   const hint: ElementRenderHint = mapElementToHTML(config.kind);
-  const elementId = `coif-el-${config.id}`;
+  const elementId = `surface-el-${config.id}`;
 
   // Create wrapper
   const wrapper = document.createElement('div');
-  wrapper.setAttribute('data-coif-widget', 'element-renderer');
+  wrapper.setAttribute('data-surface-widget', 'element-renderer');
   wrapper.setAttribute('data-element-kind', config.kind);
   wrapper.setAttribute('data-element-id', config.id);
 
@@ -143,7 +143,7 @@ export function ElementRenderer(props: ElementRendererProps): ElementRendererRes
   if (isGroup) {
     // Create a fieldset/div with nested children
     const groupEl = document.createElement(hint.tag);
-    groupEl.setAttribute('data-coif-group', config.id);
+    groupEl.setAttribute('data-surface-group', config.id);
 
     if (hint.role) {
       groupEl.setAttribute('role', hint.role);
@@ -261,7 +261,7 @@ export function ElementRenderer(props: ElementRendererProps): ElementRendererRes
           props.onAction(config.id);
         }
         inputEl.dispatchEvent(
-          new CustomEvent('coif:action', {
+          new CustomEvent('surface:action', {
             bubbles: true,
             detail: { elementId: config.id, kind: config.kind },
           })

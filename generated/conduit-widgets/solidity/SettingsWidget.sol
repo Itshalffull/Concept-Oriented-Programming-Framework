@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title SettingsWidget
-/// @notice Self-describing COIF widget for the user settings page on Conduit.
+/// @notice Self-describing Clef Surface widget for the user settings page on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -124,14 +124,14 @@ contract SettingsWidget {
         profileActions[0] = "get";
         profileActions[1] = "update";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Profile",
+            concept: "urn:clef/Profile",
             actions: profileActions
         });
 
         string[] memory passwordActions = new string[](1);
         passwordActions[0] = "change";
         bindings[1] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Password",
+            concept: "urn:clef/Password",
             actions: passwordActions
         });
 

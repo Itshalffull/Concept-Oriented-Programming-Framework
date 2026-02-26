@@ -208,8 +208,8 @@ func main() {
 	// Create article
 	fmt.Println("3. Creating article...")
 	article, err := client.CreateArticle(
-		"COPF from Go",
-		"Using the Go SDK to interact with COPF",
+		"Clef from Go",
+		"Using the Go SDK to interact with Clef",
 		"This article was created by the Go SDK client...",
 	)
 	if err != nil {

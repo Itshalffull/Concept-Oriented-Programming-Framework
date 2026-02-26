@@ -2,7 +2,7 @@
 concept DeployPlan [D] {
 
   purpose {
-    Compute, validate, and execute deployment plans for kits.
+    Compute, validate, and execute deployment plans for suites.
     Constructs a dependency graph from concept specs, syncs,
     and the deploy manifest, then executes operations in
     topological order with parallelism on independent branches.

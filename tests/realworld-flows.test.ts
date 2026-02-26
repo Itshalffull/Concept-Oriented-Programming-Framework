@@ -36,15 +36,15 @@ function createRealWorldKernel() {
   const kernel = createKernel();
 
   // Register all app concepts
-  kernel.registerConcept('urn:copf/User', userHandler);
-  kernel.registerConcept('urn:copf/Password', passwordHandler);
-  kernel.registerConcept('urn:copf/JWT', jwtHandler);
-  kernel.registerConcept('urn:copf/Profile', profileHandler);
-  kernel.registerConcept('urn:copf/Article', articleHandler);
-  kernel.registerConcept('urn:copf/Comment', commentHandler);
-  kernel.registerConcept('urn:copf/Tag', tagHandler);
-  kernel.registerConcept('urn:copf/Favorite', favoriteHandler);
-  kernel.registerConcept('urn:copf/Follow', followHandler);
+  kernel.registerConcept('urn:clef/User', userHandler);
+  kernel.registerConcept('urn:clef/Password', passwordHandler);
+  kernel.registerConcept('urn:clef/JWT', jwtHandler);
+  kernel.registerConcept('urn:clef/Profile', profileHandler);
+  kernel.registerConcept('urn:clef/Article', articleHandler);
+  kernel.registerConcept('urn:clef/Comment', commentHandler);
+  kernel.registerConcept('urn:clef/Tag', tagHandler);
+  kernel.registerConcept('urn:clef/Favorite', favoriteHandler);
+  kernel.registerConcept('urn:clef/Follow', followHandler);
 
   // Load all sync files
   const allSyncFiles = [
@@ -170,7 +170,7 @@ describe('Article CRUD Flow (end-to-end)', () => {
     // We need to get the article reference from the flow log
     const flowLog = kernel.getFlowLog(createResponse.flowId);
     const articleCreation = flowLog.find(
-      r => r.concept === 'urn:copf/Article' && r.action === 'create' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Article' && r.action === 'create' && r.type === 'completion',
     );
     expect(articleCreation).toBeDefined();
     const articleId = articleCreation!.output?.article as string;
@@ -208,7 +208,7 @@ describe('Cascade Delete Comments (end-to-end)', () => {
 
     const createFlowLog = kernel.getFlowLog(createArticleResponse.flowId);
     const articleCreation = createFlowLog.find(
-      r => r.concept === 'urn:copf/Article' && r.action === 'create' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Article' && r.action === 'create' && r.type === 'completion',
     );
     const articleId = articleCreation!.output?.article as string;
 
@@ -240,7 +240,7 @@ describe('Cascade Delete Comments (end-to-end)', () => {
     // Check the delete flow log for comment deletions
     const deleteFlowLog = kernel.getFlowLog(deleteResponse.flowId);
     const commentDeletions = deleteFlowLog.filter(
-      r => r.concept === 'urn:copf/Comment' && r.action === 'delete' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Comment' && r.action === 'delete' && r.type === 'completion',
     );
     expect(commentDeletions.length).toBe(2);
   });
@@ -420,7 +420,7 @@ describe('Full User Journey', () => {
     // Extract article ID from flow log
     const articleFlowLog = kernel.getFlowLog(articleResponse.flowId);
     const articleCreation = articleFlowLog.find(
-      r => r.concept === 'urn:copf/Article' && r.action === 'create' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Article' && r.action === 'create' && r.type === 'completion',
     );
     const articleId = articleCreation!.output?.article as string;
 

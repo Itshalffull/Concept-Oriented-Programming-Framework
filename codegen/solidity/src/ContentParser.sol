@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ContentParser
 /// @notice Concept-oriented format registration for content parsing
-/// @dev Implements the ContentParser concept from COPF specification.
+/// @dev Implements the ContentParser concept from Clef specification.
 ///      Stores format configurations on-chain; actual parsing logic executes off-chain.
 
 contract ContentParser {

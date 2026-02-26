@@ -1,10 +1,10 @@
 // ============================================================
-// COIF Ink Widget — BindingProvider
+// Clef Surface Ink Widget — BindingProvider
 //
-// Manages COIF concept binding in terminal context. Renders
+// Manages Clef Surface concept binding in terminal context. Renders
 // a status bar showing the connection state (connected,
 // disconnected, loading, error) and provides signal-based
-// data flow between COIF concepts and terminal widgets.
+// data flow between Clef Surface concepts and terminal widgets.
 // ============================================================
 
 import type {
@@ -14,7 +14,7 @@ import type {
   WritableSignal,
 } from '../../shared/types.js';
 
-import { createSignal } from '../../shared/coif-bridge.js';
+import { createSignal } from '../../shared/surface-bridge.js';
 import type { TerminalNode } from './DesignTokenProvider.js';
 import { hexToAnsiFg } from './DesignTokenProvider.js';
 
@@ -77,7 +77,7 @@ const MODE_ICONS: Record<BindingMode, string> = {
 // --- BindingProvider Props ---
 
 export interface BindingProviderProps {
-  /** COIF binding configuration. */
+  /** Clef Surface binding configuration. */
   binding: BindingConfig;
   /** Current connection state. */
   connectionState?: ConnectionState;
@@ -294,7 +294,7 @@ export class BindingProviderInteractive {
     if (this.destroyed) return;
     this.setConnectionState('connecting');
 
-    // The actual connection would be handled by the COIF binding layer.
+    // The actual connection would be handled by the Clef Surface binding layer.
     // This provides the terminal UI feedback.
   }
 

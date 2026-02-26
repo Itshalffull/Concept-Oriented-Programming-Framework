@@ -1,8 +1,8 @@
 // ============================================================
-// COIF Ink Widget — ViewportProvider
+// Clef Surface Ink Widget — ViewportProvider
 //
 // Reads terminal dimensions via process.stdout.columns/rows
-// and provides COIF Breakpoint values based on terminal width.
+// and provides Clef Surface Breakpoint values based on terminal width.
 // Observes terminal resize events to keep viewport state current.
 // ============================================================
 
@@ -17,7 +17,7 @@ import {
   createSignal,
   getBreakpoint,
   getOrientation,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 import type { TerminalNode } from './DesignTokenProvider.js';
 

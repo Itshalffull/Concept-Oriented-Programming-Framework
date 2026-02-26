@@ -1,4 +1,4 @@
-# FileRemoved — generation kit required sync
+# FileRemoved — generation suite required sync
 sync FileRemoved [eager]
   purpose { Track file deletions. }
 when {

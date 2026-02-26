@@ -6,7 +6,7 @@
 # Zero idle cost, event-driven auto-scaling.
 #
 # Usage:
-#   copf deploy --manifest deploy/gcp-gcf.deploy.yaml
+#   clef deploy --manifest deploy/gcp-gcf.deploy.yaml
 
 app:
   name: conduit

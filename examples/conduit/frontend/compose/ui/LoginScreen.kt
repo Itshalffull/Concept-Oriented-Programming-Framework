@@ -1,7 +1,7 @@
 // Conduit Example App -- Jetpack Compose Login Screen
 // Email/password login form with registration option.
 
-package com.copf.conduit.ui
+package com.clef.conduit.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,8 +17,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.copf.conduit.ConduitGreen
-import com.copf.conduit.data.*
+import com.clef.conduit.ConduitGreen
+import com.clef.conduit.data.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

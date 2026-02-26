@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Health",
+  "uri": "urn:clef/Health",
   "name": "Health",
   "typeParams": [
     {
@@ -590,11 +590,11 @@
   "jsonSchemas": {
     "invocations": {
       "checkConcept": {
-        "$id": "urn:copf/Health/checkConcept/invocation",
+        "$id": "urn:clef/Health/checkConcept/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Health"
+            "const": "urn:clef/Health"
           },
           "action": {
             "const": "checkConcept"
@@ -617,11 +617,11 @@
         }
       },
       "checkSync": {
-        "$id": "urn:copf/Health/checkSync/invocation",
+        "$id": "urn:clef/Health/checkSync/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Health"
+            "const": "urn:clef/Health"
           },
           "action": {
             "const": "checkSync"
@@ -647,11 +647,11 @@
         }
       },
       "checkKit": {
-        "$id": "urn:copf/Health/checkKit/invocation",
+        "$id": "urn:clef/Health/checkKit/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Health"
+            "const": "urn:clef/Health"
           },
           "action": {
             "const": "checkKit"
@@ -674,11 +674,11 @@
         }
       },
       "checkInvariant": {
-        "$id": "urn:copf/Health/checkInvariant/invocation",
+        "$id": "urn:clef/Health/checkInvariant/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Health"
+            "const": "urn:clef/Health"
           },
           "action": {
             "const": "checkInvariant"
@@ -704,11 +704,11 @@
     "completions": {
       "checkConcept": {
         "ok": {
-          "$id": "urn:copf/Health/checkConcept/completion/ok",
+          "$id": "urn:clef/Health/checkConcept/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkConcept"
@@ -734,11 +734,11 @@
           }
         },
         "unreachable": {
-          "$id": "urn:copf/Health/checkConcept/completion/unreachable",
+          "$id": "urn:clef/Health/checkConcept/completion/unreachable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkConcept"
@@ -764,11 +764,11 @@
           }
         },
         "storageFailed": {
-          "$id": "urn:copf/Health/checkConcept/completion/storageFailed",
+          "$id": "urn:clef/Health/checkConcept/completion/storageFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkConcept"
@@ -798,11 +798,11 @@
           }
         },
         "degraded": {
-          "$id": "urn:copf/Health/checkConcept/completion/degraded",
+          "$id": "urn:clef/Health/checkConcept/completion/degraded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkConcept"
@@ -834,11 +834,11 @@
       },
       "checkSync": {
         "ok": {
-          "$id": "urn:copf/Health/checkSync/completion/ok",
+          "$id": "urn:clef/Health/checkSync/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkSync"
@@ -864,11 +864,11 @@
           }
         },
         "partialFailure": {
-          "$id": "urn:copf/Health/checkSync/completion/partialFailure",
+          "$id": "urn:clef/Health/checkSync/completion/partialFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkSync"
@@ -897,11 +897,11 @@
           }
         },
         "timeout": {
-          "$id": "urn:copf/Health/checkSync/completion/timeout",
+          "$id": "urn:clef/Health/checkSync/completion/timeout",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkSync"
@@ -929,11 +929,11 @@
       },
       "checkKit": {
         "ok": {
-          "$id": "urn:copf/Health/checkKit/completion/ok",
+          "$id": "urn:clef/Health/checkKit/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkKit"
@@ -969,11 +969,11 @@
           }
         },
         "degraded": {
-          "$id": "urn:copf/Health/checkKit/completion/degraded",
+          "$id": "urn:clef/Health/checkKit/completion/degraded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkKit"
@@ -1009,11 +1009,11 @@
           }
         },
         "failed": {
-          "$id": "urn:copf/Health/checkKit/completion/failed",
+          "$id": "urn:clef/Health/checkKit/completion/failed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkKit"
@@ -1051,11 +1051,11 @@
       },
       "checkInvariant": {
         "ok": {
-          "$id": "urn:copf/Health/checkInvariant/completion/ok",
+          "$id": "urn:clef/Health/checkInvariant/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkInvariant"
@@ -1077,11 +1077,11 @@
           }
         },
         "violated": {
-          "$id": "urn:copf/Health/checkInvariant/completion/violated",
+          "$id": "urn:clef/Health/checkInvariant/completion/violated",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Health"
+              "const": "urn:clef/Health"
             },
             "action": {
               "const": "checkInvariant"

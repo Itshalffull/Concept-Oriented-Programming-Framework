@@ -1,5 +1,5 @@
 // ============================================================
-// Tests for COIF Framework Widgets — Shared Bridge Module
+// Tests for Clef Surface Framework Widgets — Shared Bridge Module
 //
 // Tests the framework-agnostic bridge that all framework
 // widget adapters depend on: signals, machine runner, theme
@@ -28,7 +28,7 @@ import {
   motionToCSS,
   reducedMotionCSS,
   mapElementToHTML,
-} from '../framework-widgets/shared/coif-bridge.js';
+} from '../framework-widgets/shared/surface-bridge.js';
 
 import type {
   DesignTokenValue,

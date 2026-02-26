@@ -1,5 +1,5 @@
 # Graph visualization layout is handled by the rendering layer,
-# not the data structure. Graph data connects to Layout (COIF)
+# not the data structure. Graph data connects to Layout (Clef Surface)
 # or a dedicated visualization target for force-directed rendering.
 
 sync GraphVisualization [eager]

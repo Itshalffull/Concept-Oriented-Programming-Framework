@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Namespace",
+  "uri": "urn:clef/Namespace",
   "name": "Namespace",
   "typeParams": [
     {
@@ -283,11 +283,11 @@
   "jsonSchemas": {
     "invocations": {
       "createNamespacedPage": {
-        "$id": "urn:copf/Namespace/createNamespacedPage/invocation",
+        "$id": "urn:clef/Namespace/createNamespacedPage/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Namespace"
+            "const": "urn:clef/Namespace"
           },
           "action": {
             "const": "createNamespacedPage"
@@ -310,11 +310,11 @@
         }
       },
       "getChildren": {
-        "$id": "urn:copf/Namespace/getChildren/invocation",
+        "$id": "urn:clef/Namespace/getChildren/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Namespace"
+            "const": "urn:clef/Namespace"
           },
           "action": {
             "const": "getChildren"
@@ -333,11 +333,11 @@
         }
       },
       "getHierarchy": {
-        "$id": "urn:copf/Namespace/getHierarchy/invocation",
+        "$id": "urn:clef/Namespace/getHierarchy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Namespace"
+            "const": "urn:clef/Namespace"
           },
           "action": {
             "const": "getHierarchy"
@@ -356,11 +356,11 @@
         }
       },
       "move": {
-        "$id": "urn:copf/Namespace/move/invocation",
+        "$id": "urn:clef/Namespace/move/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Namespace"
+            "const": "urn:clef/Namespace"
           },
           "action": {
             "const": "move"
@@ -386,11 +386,11 @@
     "completions": {
       "createNamespacedPage": {
         "ok": {
-          "$id": "urn:copf/Namespace/createNamespacedPage/completion/ok",
+          "$id": "urn:clef/Namespace/createNamespacedPage/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "createNamespacedPage"
@@ -406,11 +406,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Namespace/createNamespacedPage/completion/exists",
+          "$id": "urn:clef/Namespace/createNamespacedPage/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "createNamespacedPage"
@@ -434,11 +434,11 @@
       },
       "getChildren": {
         "ok": {
-          "$id": "urn:copf/Namespace/getChildren/completion/ok",
+          "$id": "urn:clef/Namespace/getChildren/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "getChildren"
@@ -460,11 +460,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Namespace/getChildren/completion/notfound",
+          "$id": "urn:clef/Namespace/getChildren/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "getChildren"
@@ -488,11 +488,11 @@
       },
       "getHierarchy": {
         "ok": {
-          "$id": "urn:copf/Namespace/getHierarchy/completion/ok",
+          "$id": "urn:clef/Namespace/getHierarchy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "getHierarchy"
@@ -514,11 +514,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Namespace/getHierarchy/completion/notfound",
+          "$id": "urn:clef/Namespace/getHierarchy/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "getHierarchy"
@@ -542,11 +542,11 @@
       },
       "move": {
         "ok": {
-          "$id": "urn:copf/Namespace/move/completion/ok",
+          "$id": "urn:clef/Namespace/move/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "move"
@@ -562,11 +562,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Namespace/move/completion/notfound",
+          "$id": "urn:clef/Namespace/move/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Namespace"
+              "const": "urn:clef/Namespace"
             },
             "action": {
               "const": "move"

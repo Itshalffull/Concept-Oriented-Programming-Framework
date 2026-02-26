@@ -265,7 +265,7 @@ const version = meta ? (meta.version as number) : 0;
 For tests and lightweight use:
 
 ```typescript
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 
 const storage = createInMemoryStorage();
 ```

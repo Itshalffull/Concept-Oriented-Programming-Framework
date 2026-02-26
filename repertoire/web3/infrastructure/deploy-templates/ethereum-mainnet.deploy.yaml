@@ -10,7 +10,7 @@ deploy:
     are critical (bridges, vaults, governance).
 
   runtime:
-    engine: copf-sync-engine
+    engine: clef-sync-engine
     transport: http
 
   concepts:

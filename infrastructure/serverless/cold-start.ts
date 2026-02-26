@@ -1,7 +1,7 @@
 // ============================================================
 // Cold Start Optimization for Serverless
 //
-// Strategies to minimize cold start latency when COPF concepts
+// Strategies to minimize cold start latency when Clef concepts
 // run on Lambda/GCF:
 //
 //   1. Pre-load compiled sync artifacts at module level
@@ -10,7 +10,7 @@
 //      across warm invocations
 //   3. Lazy-load concept handlers — only initialize the
 //      handler for the concept this function serves
-//   4. Cache compiled artifacts from .copf-cache/ in the
+//   4. Cache compiled artifacts from .clef-cache/ in the
 //      deployment package (not fetched at runtime)
 // ============================================================
 
@@ -29,7 +29,7 @@ let cachedSyncIndex: SyncIndex | null = null;
 /**
  * Load compiled syncs from bundled artifacts.
  * In production, these are bundled into the deployment package
- * from .copf-cache/compiled-syncs.json.
+ * from .clef-cache/compiled-syncs.json.
  *
  * This function is idempotent — subsequent calls return the
  * cached result without re-parsing.

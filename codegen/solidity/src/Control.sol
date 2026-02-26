@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Control
 /// @notice Concept-oriented UI control registry with type, label, value, binding, and action metadata
-/// @dev Implements the Control concept from COPF specification.
+/// @dev Implements the Control concept from Clef specification.
 ///      Supports creating controls with associated bindings and actions, and updating values.
 
 contract Control {

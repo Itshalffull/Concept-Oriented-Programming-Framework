@@ -1,5 +1,5 @@
 // Host Concept Implementation
-// Widget tree lifecycle orchestrator — implements coif.auto().
+// Widget tree lifecycle orchestrator — implements surface.auto().
 import type { ConceptHandler } from '../../../kernel/src/types.js';
 
 const RELATION = 'host';

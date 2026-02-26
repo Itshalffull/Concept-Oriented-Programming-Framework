@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Backlink
 /// @notice Concept-oriented reverse-link index tracking which entities reference a given target
-/// @dev Implements the Backlink concept from COPF specification.
+/// @dev Implements the Backlink concept from Clef specification.
 ///      Maintains an inverted index of source -> target relationships for efficient backlink queries.
 
 contract Backlink {

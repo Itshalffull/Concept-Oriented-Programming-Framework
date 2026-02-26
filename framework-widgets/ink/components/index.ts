@@ -1,7 +1,7 @@
 // ============================================================
-// COIF Ink Widgets — Index
+// Clef Surface Ink Widgets — Index
 //
-// Terminal-rendered widget components for all COIF concepts.
+// Terminal-rendered widget components for all Clef Surface concepts.
 // These target terminal/CLI rendering using Ink's concepts
 // (Box, Text, flexbox layout) mapped to character-cell output
 // with ANSI escape sequences.

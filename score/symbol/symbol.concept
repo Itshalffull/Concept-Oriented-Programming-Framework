@@ -4,7 +4,7 @@ concept Symbol [S] {
   purpose {
     Globally unique, cross-file identifier for any named entity in
     the project. Provides hierarchical symbol strings (e.g.
-    "copf/concept/Article", "ts/function/src/handlers/article.ts/createArticle")
+    "clef/concept/Article", "ts/function/src/handlers/article.ts/createArticle")
     that unify identity across languages, file formats, and project layers.
   }
 
@@ -86,17 +86,17 @@ concept Symbol [S] {
   }
 
   invariant {
-    after register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
-    then get(symbol: s) -> ok(symbol: s, symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", visibility: "public", definingFile: "specs/article.concept", namespace: "copf/concept")
+    after register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
+    then get(symbol: s) -> ok(symbol: s, symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", visibility: "public", definingFile: "specs/article.concept", namespace: "clef/concept")
   }
 
   invariant {
-    after register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
-    then resolve(symbolString: "copf/concept/Article") -> ok(symbol: s)
+    after register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
+    then resolve(symbolString: "clef/concept/Article") -> ok(symbol: s)
   }
 
   invariant {
-    after register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
-    then register(symbolString: "copf/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> alreadyExists(existing: s)
+    after register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
+    then register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> alreadyExists(existing: s)
   }
 }

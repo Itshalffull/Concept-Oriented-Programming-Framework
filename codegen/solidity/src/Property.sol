@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Property
 /// @notice Concept-oriented key-value property store for content nodes
-/// @dev Implements the Property concept from COPF specification.
+/// @dev Implements the Property concept from Clef specification.
 ///      Supports set, get, delete, type definitions, and property enumeration.
 
 contract Property {

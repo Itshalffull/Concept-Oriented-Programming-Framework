@@ -21,12 +21,12 @@ export const articleEditorWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Article',
+      concept: 'urn:clef/Article',
       actions: ['create', 'update'],
       queries: ['get'],
     },
     {
-      concept: 'urn:copf/Tag',
+      concept: 'urn:clef/Tag',
       actions: ['add', 'remove'],
       queries: ['list'],
     },

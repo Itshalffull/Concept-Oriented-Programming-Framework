@@ -1,6 +1,6 @@
 # Domain Concept Examples
 
-Real-world examples from the COPF codebase (`specs/app/`) with design rationale.
+Real-world examples from the Clef codebase (`specs/app/`) with design rationale.
 
 ## Example 1: Password — Authentication Concept
 

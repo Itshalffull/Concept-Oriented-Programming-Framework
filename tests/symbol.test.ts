@@ -22,7 +22,7 @@ describe('Symbol', () => {
   describe('register', () => {
     it('registers a symbol and returns ok with an id', async () => {
       const result = await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
@@ -34,7 +34,7 @@ describe('Symbol', () => {
 
     it('derives namespace from symbolString', async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
@@ -42,7 +42,7 @@ describe('Symbol', () => {
 
       const getResult = await symbolHandler.get({ symbol: 'symbol-1' }, storage);
       expect(getResult.variant).toBe('ok');
-      expect(getResult.namespace).toBe('copf/concept');
+      expect(getResult.namespace).toBe('clef/concept');
     });
 
     it('derives empty namespace for single-segment symbolString', async () => {
@@ -59,14 +59,14 @@ describe('Symbol', () => {
 
     it('rejects duplicate symbolString with alreadyExists', async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
       }, storage);
 
       const result = await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'other.concept',
@@ -78,13 +78,13 @@ describe('Symbol', () => {
 
     it('assigns sequential ids', async () => {
       const r1 = await symbolHandler.register({
-        symbolString: 'copf/concept/A',
+        symbolString: 'clef/concept/A',
         kind: 'concept',
         displayName: 'A',
         definingFile: 'a.concept',
       }, storage);
       const r2 = await symbolHandler.register({
-        symbolString: 'copf/concept/B',
+        symbolString: 'clef/concept/B',
         kind: 'concept',
         displayName: 'B',
         definingFile: 'b.concept',
@@ -116,7 +116,7 @@ describe('Symbol', () => {
 
     it('returns notfound for unknown symbolString', async () => {
       const result = await symbolHandler.resolve({
-        symbolString: 'copf/concept/NonExistent',
+        symbolString: 'clef/concept/NonExistent',
       }, storage);
 
       expect(result.variant).toBe('notfound');
@@ -128,7 +128,7 @@ describe('Symbol', () => {
   describe('findByKind', () => {
     beforeEach(async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
@@ -140,7 +140,7 @@ describe('Symbol', () => {
         definingFile: 'src/handler.ts',
       }, storage);
       await symbolHandler.register({
-        symbolString: 'copf/concept/Comment',
+        symbolString: 'clef/concept/Comment',
         kind: 'concept',
         displayName: 'Comment',
         definingFile: 'comment.concept',
@@ -156,7 +156,7 @@ describe('Symbol', () => {
     });
 
     it('filters by namespace', async () => {
-      const result = await symbolHandler.findByKind({ kind: '', namespace: 'copf/concept' }, storage);
+      const result = await symbolHandler.findByKind({ kind: '', namespace: 'clef/concept' }, storage);
       expect(result.variant).toBe('ok');
       const symbols = JSON.parse(result.symbols as string);
       expect(symbols).toHaveLength(2);
@@ -205,7 +205,7 @@ describe('Symbol', () => {
   describe('rename', () => {
     it('renames a symbol and updates its symbolString', async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
@@ -217,8 +217,8 @@ describe('Symbol', () => {
 
       const getResult = await symbolHandler.get({ symbol: 'symbol-1' }, storage);
       expect(getResult.displayName).toBe('Post');
-      expect(getResult.symbolString).toBe('copf/concept/Post');
-      expect(getResult.namespace).toBe('copf/concept');
+      expect(getResult.symbolString).toBe('clef/concept/Post');
+      expect(getResult.namespace).toBe('clef/concept');
     });
 
     it('returns notfound when symbol does not exist', async () => {
@@ -228,13 +228,13 @@ describe('Symbol', () => {
 
     it('returns conflict when new name collides', async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
       }, storage);
       await symbolHandler.register({
-        symbolString: 'copf/concept/Post',
+        symbolString: 'clef/concept/Post',
         kind: 'concept',
         displayName: 'Post',
         definingFile: 'post.concept',
@@ -247,7 +247,7 @@ describe('Symbol', () => {
 
     it('updates occurrences that reference the renamed symbol', async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
@@ -256,7 +256,7 @@ describe('Symbol', () => {
       // Manually store an occurrence referencing the old symbol string
       await storage.put('symbol-occurrence', 'occ-1', {
         id: 'occ-1',
-        symbol: 'copf/concept/Article',
+        symbol: 'clef/concept/Article',
         file: 'test.ts',
         startRow: 1, startCol: 1, endRow: 1, endCol: 8,
         startByte: 0, endByte: 7,
@@ -268,7 +268,7 @@ describe('Symbol', () => {
       expect(result.occurrencesUpdated).toBe(1);
 
       const occ = await storage.get('symbol-occurrence', 'occ-1');
-      expect(occ?.symbol).toBe('copf/concept/Post');
+      expect(occ?.symbol).toBe('clef/concept/Post');
     });
   });
 
@@ -277,7 +277,7 @@ describe('Symbol', () => {
   describe('get', () => {
     it('retrieves full symbol details', async () => {
       await symbolHandler.register({
-        symbolString: 'copf/concept/Article',
+        symbolString: 'clef/concept/Article',
         kind: 'concept',
         displayName: 'Article',
         definingFile: 'article.concept',
@@ -285,12 +285,12 @@ describe('Symbol', () => {
 
       const result = await symbolHandler.get({ symbol: 'symbol-1' }, storage);
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/concept/Article');
+      expect(result.symbolString).toBe('clef/concept/Article');
       expect(result.kind).toBe('concept');
       expect(result.displayName).toBe('Article');
       expect(result.definingFile).toBe('article.concept');
       expect(result.visibility).toBe('public');
-      expect(result.namespace).toBe('copf/concept');
+      expect(result.namespace).toBe('clef/concept');
     });
 
     it('returns notfound for missing symbol', async () => {

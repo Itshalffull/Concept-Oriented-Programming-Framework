@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/TypeSystem",
+  "uri": "urn:clef/TypeSystem",
   "name": "TypeSystem",
   "typeParams": [
     {
@@ -481,11 +481,11 @@
   "jsonSchemas": {
     "invocations": {
       "registerType": {
-        "$id": "urn:copf/TypeSystem/registerType/invocation",
+        "$id": "urn:clef/TypeSystem/registerType/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeSystem"
+            "const": "urn:clef/TypeSystem"
           },
           "action": {
             "const": "registerType"
@@ -512,11 +512,11 @@
         }
       },
       "resolve": {
-        "$id": "urn:copf/TypeSystem/resolve/invocation",
+        "$id": "urn:clef/TypeSystem/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeSystem"
+            "const": "urn:clef/TypeSystem"
           },
           "action": {
             "const": "resolve"
@@ -535,11 +535,11 @@
         }
       },
       "validate": {
-        "$id": "urn:copf/TypeSystem/validate/invocation",
+        "$id": "urn:clef/TypeSystem/validate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeSystem"
+            "const": "urn:clef/TypeSystem"
           },
           "action": {
             "const": "validate"
@@ -562,11 +562,11 @@
         }
       },
       "navigate": {
-        "$id": "urn:copf/TypeSystem/navigate/invocation",
+        "$id": "urn:clef/TypeSystem/navigate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeSystem"
+            "const": "urn:clef/TypeSystem"
           },
           "action": {
             "const": "navigate"
@@ -589,11 +589,11 @@
         }
       },
       "serialize": {
-        "$id": "urn:copf/TypeSystem/serialize/invocation",
+        "$id": "urn:clef/TypeSystem/serialize/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeSystem"
+            "const": "urn:clef/TypeSystem"
           },
           "action": {
             "const": "serialize"
@@ -619,11 +619,11 @@
     "completions": {
       "registerType": {
         "ok": {
-          "$id": "urn:copf/TypeSystem/registerType/completion/ok",
+          "$id": "urn:clef/TypeSystem/registerType/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "registerType"
@@ -645,11 +645,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/TypeSystem/registerType/completion/exists",
+          "$id": "urn:clef/TypeSystem/registerType/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "registerType"
@@ -673,11 +673,11 @@
       },
       "resolve": {
         "ok": {
-          "$id": "urn:copf/TypeSystem/resolve/completion/ok",
+          "$id": "urn:clef/TypeSystem/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "resolve"
@@ -703,11 +703,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/TypeSystem/resolve/completion/notfound",
+          "$id": "urn:clef/TypeSystem/resolve/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "resolve"
@@ -731,11 +731,11 @@
       },
       "validate": {
         "ok": {
-          "$id": "urn:copf/TypeSystem/validate/completion/ok",
+          "$id": "urn:clef/TypeSystem/validate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "validate"
@@ -757,11 +757,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/TypeSystem/validate/completion/notfound",
+          "$id": "urn:clef/TypeSystem/validate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "validate"
@@ -785,11 +785,11 @@
       },
       "navigate": {
         "ok": {
-          "$id": "urn:copf/TypeSystem/navigate/completion/ok",
+          "$id": "urn:clef/TypeSystem/navigate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "navigate"
@@ -815,11 +815,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/TypeSystem/navigate/completion/notfound",
+          "$id": "urn:clef/TypeSystem/navigate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "navigate"
@@ -843,11 +843,11 @@
       },
       "serialize": {
         "ok": {
-          "$id": "urn:copf/TypeSystem/serialize/completion/ok",
+          "$id": "urn:clef/TypeSystem/serialize/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "serialize"
@@ -869,11 +869,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/TypeSystem/serialize/completion/notfound",
+          "$id": "urn:clef/TypeSystem/serialize/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeSystem"
+              "const": "urn:clef/TypeSystem"
             },
             "action": {
               "const": "serialize"

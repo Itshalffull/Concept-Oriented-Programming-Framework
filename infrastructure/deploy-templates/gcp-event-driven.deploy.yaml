@@ -8,7 +8,7 @@
 # workloads on Google Cloud.
 #
 # Usage:
-#   copf deploy --manifest gcp-event-driven.deploy.yaml
+#   clef deploy --manifest gcp-event-driven.deploy.yaml
 
 deploy:
   name: gcp-event-driven

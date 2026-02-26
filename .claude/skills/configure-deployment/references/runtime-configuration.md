@@ -1,6 +1,6 @@
 # Runtime Configuration Reference
 
-How to configure runtimes, transport adapters, engine hierarchy, and query modes in a COPF deployment.
+How to configure runtimes, transport adapters, engine hierarchy, and query modes in a Clef deployment.
 
 ## Runtime Types
 
@@ -306,7 +306,7 @@ engine:
 **What gets reloaded:**
 - **Sync files changed**: `reloadSyncs()` — atomically replaces sync index. In-flight flows use old syncs, new completions use new index.
 - **Concept implementation changed**: `reloadConcept()` — new invocations route to new transport. In-flight invocations drain naturally.
-- **Concept spec changed**: Triggers recompilation (`copf compile-syncs`). If compilation fails, old syncs remain active.
+- **Concept spec changed**: Triggers recompilation (`clef compile-syncs`). If compilation fails, old syncs remain active.
 - **Concept removed**: `deregisterConcept()` — syncs referencing it are marked degraded (skipped with warning).
 
 **Production**: Always set `hotReload.enabled: false`. Use rolling deployments instead.

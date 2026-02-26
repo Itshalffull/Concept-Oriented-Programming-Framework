@@ -1,4 +1,4 @@
-// Surface Concept Implementation (Interface Kit)
+// Surface Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 export const interfaceSurfaceHandler: ConceptHandler = {

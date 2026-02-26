@@ -1,8 +1,8 @@
 // ============================================================
-// SurfaceRoot — Svelte-compatible COIF component
+// SurfaceRoot — Svelte-compatible Clef Surface component
 //
 // Root surface lifecycle manager. Acts as the top-level mount
-// point for a COIF-based UI. Manages surface kind detection
+// point for a Clef Surface-based UI. Manages surface kind detection
 // (browser-dom, ssr, etc.), global lifecycle hooks (mount,
 // hydrate, destroy), error boundaries, and coordinates the
 // provider tree (tokens, viewport, binding).
@@ -14,7 +14,7 @@ import type {
   Signal,
 } from '../../shared/types.js';
 
-import { createSignal } from '../../shared/coif-bridge.js';
+import { createSignal } from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -101,7 +101,7 @@ export function createSurfaceRoot(
   const { target } = options;
   let {
     kind,
-    appId = 'coif-app',
+    appId = 'surface-app',
     renderFn,
     onError,
     className,
@@ -131,7 +131,7 @@ export function createSurfaceRoot(
 
   // Create root element structure
   const rootElement = document.createElement('div');
-  rootElement.setAttribute('data-coif-surface', '');
+  rootElement.setAttribute('data-surface-surface', '');
   rootElement.setAttribute('data-surface-kind', surfaceKind);
   rootElement.setAttribute('data-app-id', appId);
   rootElement.setAttribute('data-phase', 'initializing');
@@ -140,12 +140,12 @@ export function createSurfaceRoot(
 
   // Content container (where child components mount)
   const contentElement = document.createElement('div');
-  contentElement.setAttribute('data-coif-surface-content', '');
+  contentElement.setAttribute('data-surface-surface-content', '');
   rootElement.appendChild(contentElement);
 
   // Error overlay (hidden by default)
   const errorOverlay = document.createElement('div');
-  errorOverlay.setAttribute('data-coif-error-overlay', '');
+  errorOverlay.setAttribute('data-surface-error-overlay', '');
   errorOverlay.setAttribute('role', 'alert');
   errorOverlay.setAttribute('aria-live', 'assertive');
   errorOverlay.style.cssText = [
@@ -200,14 +200,14 @@ export function createSurfaceRoot(
   // Error handling
   function handleError(error: Error, phase: SurfaceLifecyclePhase): void {
     setPhase('error');
-    errorOverlay.textContent = `[COIF Surface Error in "${phase}" phase]\n\n${error.message}\n\n${error.stack ?? ''}`;
+    errorOverlay.textContent = `[Clef Surface Surface Error in "${phase}" phase]\n\n${error.message}\n\n${error.stack ?? ''}`;
     errorOverlay.style.display = 'block';
     contentElement.style.display = 'none';
 
     if (onError) {
       onError(error, phase);
     } else {
-      console.error(`[COIF SurfaceRoot] Error in ${phase} phase:`, error);
+      console.error(`[Clef Surface SurfaceRoot] Error in ${phase} phase:`, error);
     }
   }
 
@@ -218,7 +218,7 @@ export function createSurfaceRoot(
       target.appendChild(rootElement);
 
       // Check if we're hydrating (target has existing content)
-      const hasExistingContent = target.querySelector('[data-coif-hydrate]') !== null;
+      const hasExistingContent = target.querySelector('[data-surface-hydrate]') !== null;
 
       if (hasExistingContent) {
         setPhase('hydrating');
@@ -296,7 +296,7 @@ export function createSurfaceRoot(
           try {
             hook();
           } catch (err) {
-            console.error('[COIF SurfaceRoot] Error in destroy hook:', err);
+            console.error('[Clef Surface SurfaceRoot] Error in destroy hook:', err);
           }
         }
 
@@ -307,7 +307,7 @@ export function createSurfaceRoot(
 
         setPhase('destroyed');
       } catch (err) {
-        console.error('[COIF SurfaceRoot] Error during destroy:', err);
+        console.error('[Clef Surface SurfaceRoot] Error during destroy:', err);
       }
     },
   };

@@ -16,7 +16,7 @@ import type {
 import {
   createViewportSignal,
   observeViewport,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
@@ -51,7 +51,7 @@ export class ViewportProvider {
     );
 
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-viewport', '');
+    this.el.setAttribute('data-surface-viewport', '');
 
     if (props.className) {
       this.el.classList.add(props.className);

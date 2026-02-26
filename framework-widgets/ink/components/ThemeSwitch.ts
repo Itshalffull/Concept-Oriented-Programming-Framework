@@ -1,5 +1,5 @@
 // ============================================================
-// COIF Ink Widget — ThemeSwitch
+// Clef Surface Ink Widget — ThemeSwitch
 //
 // Terminal-rendered theme selector. Shows available themes as
 // a selectable list with the active theme highlighted.
@@ -7,7 +7,7 @@
 // ============================================================
 
 import type { ThemeConfig, ResolvedTheme } from '../../shared/types.js';
-import { resolveTheme } from '../../shared/coif-bridge.js';
+import { resolveTheme } from '../../shared/surface-bridge.js';
 import type { TerminalNode } from './DesignTokenProvider.js';
 import { hexToAnsiFg } from './DesignTokenProvider.js';
 

@@ -7,7 +7,7 @@ export const grpcTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const protoPackage = (parsedConfig.protoPackage as string) || 'copf.generated';
+    const protoPackage = (parsedConfig.protoPackage as string) || 'clef.generated';
     const goPackage = (parsedConfig.goPackage as string) || '';
     const javaPackage = (parsedConfig.javaPackage as string) || '';
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Provenance
 /// @notice Lineage tracking and rollback for data provenance auditing
-/// @dev Implements the Provenance concept from COPF specification.
+/// @dev Implements the Provenance concept from Clef specification.
 ///      Supports recording provenance entries with entity/activity/agent triples,
 ///      tracing lineage chains, auditing batches, and rolling back batch operations.
 

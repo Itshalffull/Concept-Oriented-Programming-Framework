@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title DataSource
 /// @notice Registry of external systems with health-check and discovery support
-/// @dev Implements the DataSource concept from COPF specification.
+/// @dev Implements the DataSource concept from Clef specification.
 ///      Supports registering external data sources, connecting, discovering schemas,
 ///      running health checks, and deactivating sources.
 

@@ -9,7 +9,7 @@
 // Polygon) — different RPC endpoints, same adapter.
 //
 // Pre-conceptual infrastructure (Section 10.3). This is NOT a
-// concept — it's protocol plumbing that lives in the kit's
+// concept — it's protocol plumbing that lives in the suite's
 // infrastructure/ directory.
 //
 // Dependencies: ethers.js or viem (configured at instantiation)
@@ -53,7 +53,7 @@ interface Subscription {
 /**
  * EVM Transport Adapter.
  *
- * Bridges the COPF sync engine to EVM-compatible blockchains.
+ * Bridges the Clef sync engine to EVM-compatible blockchains.
  * Each instance connects to one chain; multi-chain setups use
  * multiple adapter instances configured in the deploy manifest.
  */

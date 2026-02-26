@@ -1,5 +1,5 @@
 // ============================================================
-// ThemeSwitch — Component to toggle between COIF themes.
+// ThemeSwitch — Component to toggle between Clef Surface themes.
 //
 // Renders a list of available themes with activate / deactivate
 // controls. Each theme entry can be a button, a radio group
@@ -111,13 +111,13 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
     <div
       className={className}
       style={style}
-      data-coif-theme-switch=""
+      data-surface-theme-switch=""
       data-mode={mode}
       {...roleProps}
       aria-label={label ?? 'Theme switcher'}
     >
       {label && (
-        <span data-coif-theme-switch-label="" aria-hidden="true">
+        <span data-surface-theme-switch-label="" aria-hidden="true">
           {label}
         </span>
       )}
@@ -138,12 +138,12 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
           return (
             <label
               key={theme.name}
-              data-coif-theme-item=""
+              data-surface-theme-item=""
               data-active={isActive ? '' : undefined}
             >
               <input
                 type="radio"
-                name="coif-theme-switch"
+                name="surface-theme-switch"
                 checked={isActive}
                 onChange={toggle}
                 aria-label={`Activate ${theme.name} theme`}
@@ -157,7 +157,7 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
           return (
             <label
               key={theme.name}
-              data-coif-theme-item=""
+              data-surface-theme-item=""
               data-active={isActive ? '' : undefined}
             >
               <input
@@ -176,7 +176,7 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
           <button
             key={theme.name}
             type="button"
-            data-coif-theme-item=""
+            data-surface-theme-item=""
             data-active={isActive ? '' : undefined}
             aria-pressed={isActive}
             onClick={toggle}

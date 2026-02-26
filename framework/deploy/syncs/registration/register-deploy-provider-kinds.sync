@@ -1,9 +1,9 @@
 # RegisterDeployProviderKinds — deploy kit registration sync
 #
 # Auto-populate KindSystem edges from deploy provider registrations
-# (IaC and GitOps providers). Mirrors the generation kit's
+# (IaC and GitOps providers). Mirrors the generation suite's
 # RegisterGeneratorKinds sync for the deploy pipeline.
-# See generation kit syncs: register-generator-kinds.sync
+# See generation suite syncs: register-generator-kinds.sync
 
 sync RegisterDeployProviderKinds [eager]
   purpose { Auto-populate KindSystem edges from deploy provider registrations. }

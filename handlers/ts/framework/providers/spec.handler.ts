@@ -3,7 +3,7 @@
 //
 // Routes specification document generation to format-specific
 // providers (OpenAPI, AsyncAPI).
-// Architecture doc: Interface Kit, Section 1.5
+// Architecture doc: Clef Bind, Section 1.5
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

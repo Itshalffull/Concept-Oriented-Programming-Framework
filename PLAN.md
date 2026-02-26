@@ -1,26 +1,26 @@
-# Generation Kit Implementation Plan
+# Generation Suite Implementation Plan
 
 ## Summary
 
-Implement the Generation Kit per `concept-generate/copf-generation-kit.md`. Creates 5 new concepts (Resource, KindSystem, BuildCache, GenerationPlan, Emitter) in `kits/generation/`, with 14 shared syncs, TypeScript implementations, and conformance + integration tests. Follows the doc's 6-phase ordering: Emitter → BuildCache → Resource → KindSystem → GenerationPlan → Traceability.
+Implement the Generation Suite per `concept-generate/clef-generation-suite.md`. Creates 5 new concepts (Resource, KindSystem, BuildCache, GenerationPlan, Emitter) in `kits/generation/`, with 14 shared syncs, TypeScript implementations, and conformance + integration tests. Follows the doc's 6-phase ordering: Emitter → BuildCache → Resource → KindSystem → GenerationPlan → Traceability.
 
 ## Existing State (what we're building on)
 
-- **Emitter already exists** at `kits/interface/concepts/emitter.concept` with impl at `implementations/typescript/framework/emitter.impl.ts`. It has `write`, `format`, `clean`, `manifest` actions. The generation kit version extends this with `writeBatch`, `trace`, `affected`, `audit`, and `sourceMap` state. This is a **promote + extend**, not a greenfield build.
+- **Emitter already exists** at `kits/interface/concepts/emitter.concept` with impl at `implementations/typescript/framework/emitter.impl.ts`. It has `write`, `format`, `clean`, `manifest` actions. The generation suite version extends this with `writeBatch`, `trace`, `affected`, `audit`, and `sourceMap` state. This is a **promote + extend**, not a greenfield build.
 - **PluginRegistry exists** at `kits/infrastructure/plugin-registry.concept` with `discover`, `getDefinitions`, `createInstance` etc. GenerationPlan can query this directly.
 - **Cache concept exists** at `kits/infrastructure/cache.concept` (tag-based `set`/`get`/`invalidate`). BuildCache is a different concept — specialized for generation step hashes, not general caching.
 - **CacheCompiler does NOT exist** — the doc's mention of migrating its caching concern is future-looking. BuildCache is greenfield.
 - **SchemaGen exists** with `generate(spec, ast) → ok(manifest)`. This is the upstream trigger for framework generators.
-- **Interface kit syncs** (plan → generate → dispatch → write → format → clean) stay unchanged. BuildCache wraps target providers via new syncs added to the interface kit.
+- **Interface suite syncs** (plan → generate → dispatch → write → format → clean) stay unchanged. BuildCache wraps target providers via new syncs added to the Clef Bind.
 
 ---
 
-## Phase 1: Kit Scaffolding + Emitter (promote + extend)
+## Phase 1: Suite Scaffolding + Emitter (promote + extend)
 
 ### Step 1.1 — Create directory structure
 ```
 kits/generation/
-├── kit.yaml
+├── suite.yaml
 ├── syncs/
 ├── implementations/typescript/
 └── tests/
@@ -29,7 +29,7 @@ kits/generation/
 ```
 
 ### Step 1.2 — Write `emitter.concept`
-Create `kits/generation/emitter.concept` — the full spec from architecture doc Section 1.5. This extends the existing interface kit Emitter with:
+Create `kits/generation/emitter.concept` — the full spec from architecture doc Section 1.5. This extends the existing Clef Bind Emitter with:
 - `writeBatch` action (atomic multi-file writes)
 - `sourceMap` state (source traceability)
 - `trace` action (output → source query)
@@ -57,8 +57,8 @@ Tests from the concept's invariants:
 ### Step 1.5 — Write `format-after-write.sync` and `format-batch-after-write.sync`
 Create `kits/generation/syncs/format-after-write.sync` and `kits/generation/syncs/format-batch-after-write.sync` — from doc Section 2.6.
 
-### Step 1.6 — Write stub `kit.yaml`
-Create `kits/generation/kit.yaml` with just the Emitter concept and format syncs. We'll add concepts incrementally as each phase completes.
+### Step 1.6 — Write stub `suite.yaml`
+Create `kits/generation/suite.yaml` with just the Emitter concept and format syncs. We'll add concepts incrementally as each phase completes.
 
 ---
 
@@ -85,8 +85,8 @@ Tests from invariants:
 - invalidateAll clears everything
 - staleSteps returns invalidated step keys
 
-### Step 2.4 — Update kit.yaml
-Add BuildCache concept to `kits/generation/kit.yaml`.
+### Step 2.4 — Update suite.yaml
+Add BuildCache concept to `kits/generation/suite.yaml`.
 
 ---
 
@@ -126,7 +126,7 @@ Create `kits/generation/tests/integration/incremental-rebuild.test.ts`:
 - Resource upsert with changed digest → BuildCache entries invalidated
 - Resource upsert with same digest → BuildCache entries untouched
 
-### Step 3.7 — Update kit.yaml
+### Step 3.7 — Update suite.yaml
 Add Resource concept and all syncs from this phase.
 
 ---
@@ -167,7 +167,7 @@ Create in `kits/generation/syncs/`:
 Create `kits/generation/tests/integration/cascade-invalidation.test.ts`:
 - Register kinds + edges → change source → verify all downstream cache entries invalidated
 
-### Step 4.7 — Update kit.yaml
+### Step 4.7 — Update suite.yaml
 Add KindSystem concept and all syncs from this phase.
 
 ---
@@ -204,8 +204,8 @@ Create `kits/generation/syncs/clean-orphans-after-run.sync` (GenerationPlan/comp
 Create `kits/generation/tests/integration/multi-family-generation.test.ts`:
 - Begin run → record steps from multiple families → complete → verify summary
 
-### Step 5.7 — Finalize kit.yaml
-Add GenerationPlan concept, all remaining syncs, and the `uses: infrastructure/PluginRegistry` dependency. This is the complete kit.yaml matching the architecture doc Part 4.
+### Step 5.7 — Finalize suite.yaml
+Add GenerationPlan concept, all remaining syncs, and the `uses: infrastructure/PluginRegistry` dependency. This is the complete suite.yaml matching the architecture doc Part 4.
 
 ---
 
@@ -255,7 +255,7 @@ These tests are already written in Phase 1. This step ensures they pass after al
 - `clean-orphans-after-run.sync`
 
 ### Kit manifest (1 file)
-- `kits/generation/kit.yaml`
+- `kits/generation/suite.yaml`
 
 ### TypeScript implementations (5 files in `kits/generation/implementations/typescript/`)
 - `resource.impl.ts`
@@ -284,10 +284,10 @@ These tests are already written in Phase 1. This step ensures they pass after al
 
 ## What is NOT in scope
 
-- **Per-generator syncs** (cache-check wrappers, output routing, cache-record, observer) — these live in each family's kit (framework, interface, deploy), not in the generation kit. The architecture doc says these are mechanical and auto-generatable.
-- **CLI commands** (`copf generate --plan`, `copf kinds`, `copf trace`, `copf impact`) — these depend on the CLI tool at `tools/copf-cli/` and are a separate integration task.
-- **Modifications to existing generators** (adding `register` action, returning `{ files }` instead of writing directly) — these are per-family changes, not generation kit work.
-- **Emitter removal from interface kit** — the interface kit will be updated to `uses: generation/Emitter` separately.
+- **Per-generator syncs** (cache-check wrappers, output routing, cache-record, observer) — these live in each family's kit (framework, interface, deploy), not in the generation suite. The architecture doc says these are mechanical and auto-generatable.
+- **CLI commands** (`clef generate --plan`, `clef kinds`, `clef trace`, `clef impact`) — these depend on the CLI tool at `tools/clef-cli/` and are a separate integration task.
+- **Modifications to existing generators** (adding `register` action, returning `{ files }` instead of writing directly) — these are per-family changes, not generation suite work.
+- **Emitter removal from Clef Bind** — the Clef Bind will be updated to `uses: generation/Emitter` separately.
 
 ## Execution approach
 

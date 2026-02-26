@@ -2,9 +2,9 @@
 concept ThemeSpecSymbolExtractor [I] {
 
   purpose {
-    Symbol extraction provider for COIF theme spec files. Extracts
+    Symbol extraction provider for Clef Surface theme spec files. Extracts
     token names, scale values, semantic aliases, and mode variants
-    as symbols in the coif/* namespace.
+    as symbols in the surface/* namespace.
   }
 
   state {

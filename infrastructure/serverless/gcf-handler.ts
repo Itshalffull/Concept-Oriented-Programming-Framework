@@ -1,7 +1,7 @@
 // ============================================================
 // Google Cloud Function Concept Handler Scaffold
 //
-// Wraps a COPF concept handler as a Google Cloud Function.
+// Wraps a Clef concept handler as a Google Cloud Function.
 // Receives ActionInvocations via HTTP or Pub/Sub trigger,
 // executes the concept handler, and returns ActionCompletions.
 //
@@ -75,7 +75,7 @@ export interface GCFHandlerConfig {
 // --- HTTP Handler ---
 
 /**
- * Create an HTTP Cloud Function handler for a COPF concept.
+ * Create an HTTP Cloud Function handler for a Clef concept.
  *
  * Routes (by path suffix):
  *   POST /invoke  — receive an ActionInvocation, return ActionCompletion
@@ -156,7 +156,7 @@ export function createHttpGCFHandler(config: GCFHandlerConfig) {
 // --- Pub/Sub Handler (Event-Driven) ---
 
 /**
- * Create a Pub/Sub Cloud Function handler for a COPF concept.
+ * Create a Pub/Sub Cloud Function handler for a Clef concept.
  *
  * Processes invocations from a Pub/Sub subscription and publishes
  * completions to the engine's completion topic.

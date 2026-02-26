@@ -1,4 +1,4 @@
-// Auto-generated entrypoint for kit "copf-devtools", target "cli"
+// Auto-generated entrypoint for kit "clef-devtools", target "cli"
 import { Command } from 'commander';
 import { SpecParserCommand } from './SpecParser/SpecParser.command';
 import { SchemaGenCommand } from './SchemaGen/SchemaGen.command';
@@ -8,14 +8,14 @@ import { FlowTraceCommand } from './FlowTrace/FlowTrace.command';
 import { DeploymentValidatorCommand } from './DeploymentValidator/DeploymentValidator.command';
 import { ProjectScaffoldCommand } from './ProjectScaffold/ProjectScaffold.command';
 import { DevServerCommand } from './DevServer/DevServer.command';
-import { KitManagerCommand } from './KitManager/KitManager.command';
+import { SuiteManagerCommand } from './SuiteManager/SuiteManager.command';
 import { EmitterCommand } from './Emitter/Emitter.command';
 import { BuildCacheCommand } from './BuildCache/BuildCache.command';
 import { ResourceCommand } from './Resource/Resource.command';
 import { KindSystemCommand } from './KindSystem/KindSystem.command';
 import { GenerationPlanCommand } from './GenerationPlan/GenerationPlan.command';
 import { BuilderCommand } from './Builder/Builder.command';
-import { KitScaffoldGenCommand } from './KitScaffoldGen/KitScaffoldGen.command';
+import { SuiteScaffoldGenCommand } from './SuiteScaffoldGen/SuiteScaffoldGen.command';
 import { DeployScaffoldGenCommand } from './DeployScaffoldGen/DeployScaffoldGen.command';
 import { InterfaceScaffoldGenCommand } from './InterfaceScaffoldGen/InterfaceScaffoldGen.command';
 import { ConceptScaffoldGenCommand } from './ConceptScaffoldGen/ConceptScaffoldGen.command';
@@ -23,8 +23,8 @@ import { SyncScaffoldGenCommand } from './SyncScaffoldGen/SyncScaffoldGen.comman
 import { HandlerScaffoldGenCommand } from './HandlerScaffoldGen/HandlerScaffoldGen.command';
 import { StorageAdapterScaffoldGenCommand } from './StorageAdapterScaffoldGen/StorageAdapterScaffoldGen.command';
 import { TransportAdapterScaffoldGenCommand } from './TransportAdapterScaffoldGen/TransportAdapterScaffoldGen.command';
-import { CoifComponentScaffoldGenCommand } from './CoifComponentScaffoldGen/CoifComponentScaffoldGen.command';
-import { CoifThemeScaffoldGenCommand } from './CoifThemeScaffoldGen/CoifThemeScaffoldGen.command';
+import { SurfaceComponentScaffoldGenCommand } from './SurfaceComponentScaffoldGen/SurfaceComponentScaffoldGen.command';
+import { SurfaceThemeScaffoldGenCommand } from './SurfaceThemeScaffoldGen/SurfaceThemeScaffoldGen.command';
 
 const program = new Command();
 
@@ -36,14 +36,14 @@ const program = new Command();
   program.addCommand(DeploymentValidatorCommand);
   program.addCommand(ProjectScaffoldCommand);
   program.addCommand(DevServerCommand);
-  program.addCommand(KitManagerCommand);
+  program.addCommand(SuiteManagerCommand);
   program.addCommand(EmitterCommand);
   program.addCommand(BuildCacheCommand);
   program.addCommand(ResourceCommand);
   program.addCommand(KindSystemCommand);
   program.addCommand(GenerationPlanCommand);
   program.addCommand(BuilderCommand);
-  program.addCommand(KitScaffoldGenCommand);
+  program.addCommand(SuiteScaffoldGenCommand);
   program.addCommand(DeployScaffoldGenCommand);
   program.addCommand(InterfaceScaffoldGenCommand);
   program.addCommand(ConceptScaffoldGenCommand);
@@ -51,7 +51,7 @@ const program = new Command();
   program.addCommand(HandlerScaffoldGenCommand);
   program.addCommand(StorageAdapterScaffoldGenCommand);
   program.addCommand(TransportAdapterScaffoldGenCommand);
-  program.addCommand(CoifComponentScaffoldGenCommand);
-  program.addCommand(CoifThemeScaffoldGenCommand);
+  program.addCommand(SurfaceComponentScaffoldGenCommand);
+  program.addCommand(SurfaceThemeScaffoldGenCommand);
 
 export default program;

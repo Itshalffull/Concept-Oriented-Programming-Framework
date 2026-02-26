@@ -1,5 +1,5 @@
 // ============================================================
-// copf generate [--target <lang>] [--concept <Name>]
+// clef generate [--target <lang>] [--concept <Name>]
 //
 // Generates schemas and code for all (or a single) concept.
 //
@@ -8,7 +8,7 @@
 //   2. SchemaGen (AST → ConceptManifest)
 //   3. CodeGen (Manifest → target-language files)
 //
-// Generation kit integration (copf-generation-kit.md Part 6):
+// Generation kit integration (clef-generation-suite.md Part 6):
 //   --plan       Show what would run without executing
 //   --dry-run    Show file changes without writing
 //   --force      Force full rebuild (invalidate all caches)
@@ -119,7 +119,7 @@ export async function generateCommand(
   const target = flags.target as string;
   if (!target || !SUPPORTED_TARGETS.includes(target as Target)) {
     console.error(
-      `Usage: copf generate --target <${SUPPORTED_TARGETS.join('|')}> [options]`,
+      `Usage: clef generate --target <${SUPPORTED_TARGETS.join('|')}> [options]`,
     );
     console.error('\nOptions:');
     console.error('  --concept <Name>   Generate for a single concept only');
@@ -143,7 +143,7 @@ export async function generateCommand(
   const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
   const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
 
-  // Initialize generation kit storages
+  // Initialize generation suite storages
   const cacheStorage = createInMemoryStorage();
   const planStorage = createInMemoryStorage();
   const emitStorage = createInMemoryStorage();
@@ -537,7 +537,7 @@ async function generateDryRun(
   const target = flags.target as string;
 
   if (!target || !SUPPORTED_TARGETS.includes(target as Target)) {
-    console.error('Usage: copf generate --dry-run --target <lang>');
+    console.error('Usage: clef generate --dry-run --target <lang>');
     process.exit(1);
   }
 

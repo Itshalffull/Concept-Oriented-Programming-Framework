@@ -1,9 +1,9 @@
 // ============================================================
-// TypographyText — Svelte-compatible COIF component
+// TypographyText — Svelte-compatible Clef Surface component
 //
 // Renders text with a named style. Applies computed font styles
 // derived from TypeScale, FontStack, and TextStyle definitions
-// using the COIF typography concept.
+// using the Clef Surface typography concept.
 // ============================================================
 
 import type {
@@ -12,7 +12,7 @@ import type {
   FontStack,
 } from '../../shared/types.js';
 
-import { textStyleToCSS } from '../../shared/coif-bridge.js';
+import { textStyleToCSS } from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -55,7 +55,7 @@ export function createTypographyText(
 
   // Create the text element
   let element = document.createElement(tag);
-  element.setAttribute('data-coif-typography', '');
+  element.setAttribute('data-surface-typography', '');
   element.setAttribute('data-style-name', style.name);
   if (className) element.className = className;
   target.appendChild(element);
@@ -110,7 +110,7 @@ export function createTypographyText(
       if (newProps.tag !== undefined && newProps.tag !== tag) {
         tag = newProps.tag;
         const newElement = document.createElement(tag);
-        newElement.setAttribute('data-coif-typography', '');
+        newElement.setAttribute('data-surface-typography', '');
         if (className) newElement.className = className;
         element.replaceWith(newElement);
         element = newElement;

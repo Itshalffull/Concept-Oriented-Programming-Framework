@@ -316,7 +316,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     `// generated: ${conceptName}/ConformanceTests.swift`,
     '',
     'import XCTest',
-    '@testable import COPF',
+    '@testable import Clef',
     '',
     `final class ${conceptName}ConformanceTests: XCTestCase {`,
     '',

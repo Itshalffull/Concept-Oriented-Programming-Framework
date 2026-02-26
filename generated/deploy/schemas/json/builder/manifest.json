@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Builder",
+  "uri": "urn:clef/Builder",
   "name": "Builder",
   "typeParams": [
     {
@@ -928,7 +928,7 @@
               }
             }
           ],
-          "prose": "Build history for a concept , optionally filtered by \n language Used by copf build history"
+          "prose": "Build history for a concept , optionally filtered by \n language Used by clef build history"
         }
       ]
     }
@@ -1004,7 +1004,7 @@
               "name": "artifactLocation",
               "value": {
                 "kind": "literal",
-                "value": ".copf-artifacts/swift/password"
+                "value": ".clef-artifacts/swift/password"
               }
             },
             {
@@ -1100,11 +1100,11 @@
   "jsonSchemas": {
     "invocations": {
       "build": {
-        "$id": "urn:copf/Builder/build/invocation",
+        "$id": "urn:clef/Builder/build/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Builder"
+            "const": "urn:clef/Builder"
           },
           "action": {
             "const": "build"
@@ -1161,11 +1161,11 @@
         }
       },
       "buildAll": {
-        "$id": "urn:copf/Builder/buildAll/invocation",
+        "$id": "urn:clef/Builder/buildAll/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Builder"
+            "const": "urn:clef/Builder"
           },
           "action": {
             "const": "buildAll"
@@ -1236,11 +1236,11 @@
         }
       },
       "test": {
-        "$id": "urn:copf/Builder/test/invocation",
+        "$id": "urn:clef/Builder/test/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Builder"
+            "const": "urn:clef/Builder"
           },
           "action": {
             "const": "test"
@@ -1267,11 +1267,11 @@
         }
       },
       "status": {
-        "$id": "urn:copf/Builder/status/invocation",
+        "$id": "urn:clef/Builder/status/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Builder"
+            "const": "urn:clef/Builder"
           },
           "action": {
             "const": "status"
@@ -1290,11 +1290,11 @@
         }
       },
       "history": {
-        "$id": "urn:copf/Builder/history/invocation",
+        "$id": "urn:clef/Builder/history/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Builder"
+            "const": "urn:clef/Builder"
           },
           "action": {
             "const": "history"
@@ -1327,11 +1327,11 @@
     "completions": {
       "build": {
         "ok": {
-          "$id": "urn:copf/Builder/build/completion/ok",
+          "$id": "urn:clef/Builder/build/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "build"
@@ -1365,11 +1365,11 @@
           }
         },
         "compilationError": {
-          "$id": "urn:copf/Builder/build/completion/compilationError",
+          "$id": "urn:clef/Builder/build/completion/compilationError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "build"
@@ -1418,11 +1418,11 @@
           }
         },
         "testFailure": {
-          "$id": "urn:copf/Builder/build/completion/testFailure",
+          "$id": "urn:clef/Builder/build/completion/testFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "build"
@@ -1475,11 +1475,11 @@
           }
         },
         "toolchainError": {
-          "$id": "urn:copf/Builder/build/completion/toolchainError",
+          "$id": "urn:clef/Builder/build/completion/toolchainError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "build"
@@ -1511,11 +1511,11 @@
       },
       "buildAll": {
         "ok": {
-          "$id": "urn:copf/Builder/buildAll/completion/ok",
+          "$id": "urn:clef/Builder/buildAll/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "buildAll"
@@ -1560,11 +1560,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/Builder/buildAll/completion/partial",
+          "$id": "urn:clef/Builder/buildAll/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "buildAll"
@@ -1630,11 +1630,11 @@
       },
       "test": {
         "ok": {
-          "$id": "urn:copf/Builder/test/completion/ok",
+          "$id": "urn:clef/Builder/test/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "test"
@@ -1668,11 +1668,11 @@
           }
         },
         "testFailure": {
-          "$id": "urn:copf/Builder/test/completion/testFailure",
+          "$id": "urn:clef/Builder/test/completion/testFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "test"
@@ -1717,11 +1717,11 @@
           }
         },
         "notBuilt": {
-          "$id": "urn:copf/Builder/test/completion/notBuilt",
+          "$id": "urn:clef/Builder/test/completion/notBuilt",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "test"
@@ -1749,11 +1749,11 @@
       },
       "status": {
         "ok": {
-          "$id": "urn:copf/Builder/status/completion/ok",
+          "$id": "urn:clef/Builder/status/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "status"
@@ -1792,11 +1792,11 @@
       },
       "history": {
         "ok": {
-          "$id": "urn:copf/Builder/history/completion/ok",
+          "$id": "urn:clef/Builder/history/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Builder"
+              "const": "urn:clef/Builder"
             },
             "action": {
               "const": "history"

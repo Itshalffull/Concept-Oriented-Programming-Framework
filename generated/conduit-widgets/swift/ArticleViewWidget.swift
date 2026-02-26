@@ -15,22 +15,22 @@ func articleViewWidgetSpec() -> WidgetSpec {
         category: .display,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/Article",
+                concept: "urn:clef/Article",
                 actions: [],
                 queries: ["get"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Favorite",
+                concept: "urn:clef/Favorite",
                 actions: ["favorite", "unfavorite"],
                 queries: ["isFavorited", "count"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Follow",
+                concept: "urn:clef/Follow",
                 actions: ["follow", "unfollow"],
                 queries: ["isFollowing"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Comment",
+                concept: "urn:clef/Comment",
                 actions: [],
                 queries: ["list"]
             ),

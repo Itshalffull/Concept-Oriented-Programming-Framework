@@ -1,4 +1,4 @@
-// Spec Concept Implementation (Interface Kit)
+// Spec Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 /** Known specification formats and their validators. */
@@ -26,7 +26,7 @@ export const specHandler: ConceptHandler = {
       };
     }
 
-    const kitName = (configData.kit as string) ?? 'default';
+    const suiteName = (configData.kit as string) ?? 'default';
     const version = (configData.version as string) ?? '1.0.0';
 
     // Generate specification content based on format
@@ -42,7 +42,7 @@ export const specHandler: ConceptHandler = {
       }
       content = JSON.stringify({
         openapi: '3.0.3',
-        info: { title: `${kitName} API`, version },
+        info: { title: `${suiteName} API`, version },
         paths,
       }, null, 2);
     } else if (format === 'asyncapi') {
@@ -54,7 +54,7 @@ export const specHandler: ConceptHandler = {
       }
       content = JSON.stringify({
         asyncapi: '2.6.0',
-        info: { title: `${kitName} Events`, version },
+        info: { title: `${suiteName} Events`, version },
         channels,
       }, null, 2);
     } else if (format === 'jsonschema') {
@@ -64,7 +64,7 @@ export const specHandler: ConceptHandler = {
       }
       content = JSON.stringify({
         $schema: 'https://json-schema.org/draft/2020-12/schema',
-        title: kitName,
+        title: suiteName,
         type: 'object',
         properties,
       }, null, 2);
@@ -75,16 +75,16 @@ export const specHandler: ConceptHandler = {
       const messages = projections.map(
         (p) => `message ${p} {\n  string id = 1;\n}`,
       );
-      content = `syntax = "proto3";\n\npackage ${kitName};\n\n${messages.join('\n\n')}`;
+      content = `syntax = "proto3";\n\npackage ${suiteName};\n\n${messages.join('\n\n')}`;
     }
 
-    const documentId = `spec-${format}-${kitName}-${Date.now()}`;
+    const documentId = `spec-${format}-${suiteName}-${Date.now()}`;
     const now = new Date().toISOString();
 
     await storage.put('document', documentId, {
       documentId,
       format,
-      kitName,
+      suiteName,
       version,
       generatedAt: now,
       content,

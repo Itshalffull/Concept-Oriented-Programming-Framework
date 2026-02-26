@@ -11,7 +11,7 @@ use gtk4::Application;
 use api_client::ApiClient;
 use window::build_window;
 
-const APP_ID: &str = "com.copf.conduit.gtk";
+const APP_ID: &str = "com.clef.conduit.gtk";
 
 fn main() {
     let app = Application::builder().application_id(APP_ID).build();

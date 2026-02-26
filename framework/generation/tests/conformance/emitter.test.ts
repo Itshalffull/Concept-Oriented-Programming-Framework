@@ -3,13 +3,13 @@
 //
 // Validates content-addressed writes, batch operations,
 // source traceability, drift detection, and orphan cleanup.
-// See copf-generation-kit.md Part 1.5
+// See clef-generation-suite.md Part 1.5
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('Emitter conformance', () => {
   let storage: ConceptStorage;

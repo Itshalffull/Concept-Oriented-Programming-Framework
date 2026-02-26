@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // Quality Rule Plugin — on-chain data quality validation and enforcement
-// for the COPF Data Integration Kit.
+// for the Clef Data Integration Kit.
 //
 // On-chain quality rules provide immutable quality attestation, audit trails
 // of validation results, and decentralized quality scoring. Individual field

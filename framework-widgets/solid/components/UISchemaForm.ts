@@ -1,7 +1,7 @@
 // ============================================================
 // UISchemaForm — Solid.js Component
 //
-// Auto-generated form from UISchema. Takes a COIF UISchema
+// Auto-generated form from UISchema. Takes a Clef Surface UISchema
 // definition and renders a complete form with fields mapped
 // through ElementRenderer. Manages form-level state, validation,
 // and submission reactively.
@@ -14,13 +14,13 @@ import type {
   ElementConfig,
 } from '../../shared/types.js';
 
-import { createSignal as coifCreateSignal } from '../../shared/coif-bridge.js';
+import { createSignal as surfaceCreateSignal } from '../../shared/surface-bridge.js';
 import { ElementRenderer } from './ElementRenderer.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -191,7 +191,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
 
   // Create the form element
   const form = document.createElement('form');
-  form.setAttribute('data-coif-widget', 'ui-schema-form');
+  form.setAttribute('data-surface-widget', 'ui-schema-form');
   form.setAttribute('data-concept', props.schema.concept);
   form.setAttribute('novalidate', '');
 
@@ -223,7 +223,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
 
     // Form header
     const header = document.createElement('div');
-    header.setAttribute('class', 'coif-form__header');
+    header.setAttribute('class', 'surface-form__header');
 
     const title = document.createElement('h2');
     title.textContent = `${props.schema.concept} — ${view.name}`;
@@ -232,7 +232,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
 
     // Field container
     const fieldContainer = document.createElement('div');
-    fieldContainer.setAttribute('class', 'coif-form__fields');
+    fieldContainer.setAttribute('class', 'surface-form__fields');
     fieldContainer.style.setProperty('display', 'flex');
     fieldContainer.style.setProperty('flex-direction', 'column');
     fieldContainer.style.setProperty('gap', '12px');
@@ -269,7 +269,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
 
     // Error display area
     const errorArea = document.createElement('div');
-    errorArea.setAttribute('class', 'coif-form__errors');
+    errorArea.setAttribute('class', 'surface-form__errors');
     errorArea.setAttribute('role', 'alert');
     errorArea.setAttribute('aria-live', 'polite');
     form.appendChild(errorArea);
@@ -285,7 +285,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
 
       if (errorKeys.length > 0) {
         const errorList = document.createElement('ul');
-        errorList.style.setProperty('color', 'var(--coif-error, #dc2626)');
+        errorList.style.setProperty('color', 'var(--surface-error, #dc2626)');
         errorList.style.setProperty('list-style', 'none');
         errorList.style.setProperty('padding', '0');
         errorList.style.setProperty('margin', '8px 0');
@@ -308,7 +308,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
     // Submit button (only for create/edit modes)
     if (!isReadOnly()) {
       const actions = document.createElement('div');
-      actions.setAttribute('class', 'coif-form__actions');
+      actions.setAttribute('class', 'surface-form__actions');
       actions.style.setProperty('display', 'flex');
       actions.style.setProperty('gap', '8px');
       actions.style.setProperty('margin-top', '16px');
@@ -342,7 +342,7 @@ export function UISchemaForm(props: UISchemaFormProps): UISchemaFormResult {
       }
 
       form.dispatchEvent(
-        new CustomEvent('coif:form-submit', {
+        new CustomEvent('surface:form-submit', {
           bubbles: true,
           detail: {
             concept: props.schema.concept,

@@ -1,7 +1,7 @@
 // ============================================================
 // CloudFormationProvider Handler
 //
-// Generate and apply AWS CloudFormation templates from COPF
+// Generate and apply AWS CloudFormation templates from Clef
 // deploy plans. Owns stack IDs, change set management,
 // rollback configurations, and stack event tracking.
 // ============================================================
@@ -17,7 +17,7 @@ function generateStackId(): string {
   const region = 'us-east-1';
   const accountId = '123456789012';
   const hex = Math.random().toString(16).substring(2, 14);
-  return `arn:aws:cloudformation:${region}:${accountId}:stack/copf-stack-${hex}`;
+  return `arn:aws:cloudformation:${region}:${accountId}:stack/clef-stack-${hex}`;
 }
 
 function generateChangeSetId(): string {
@@ -30,7 +30,7 @@ export const cloudFormationProviderHandler: ConceptHandler = {
     const plan = input.plan as string;
 
     // Derive stack name from plan identifier
-    const stackName = `copf-${plan}`;
+    const stackName = `clef-${plan}`;
     const region = 'us-east-1';
 
     // Generate a basic CloudFormation template

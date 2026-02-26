@@ -79,14 +79,14 @@ describe('SyncEngine Concept Handler', () => {
     const sync: CompiledSync = {
       name: 'TestSync',
       when: [{
-        concept: 'urn:copf/Test',
+        concept: 'urn:clef/Test',
         action: 'do',
         inputFields: [],
         outputFields: [],
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/Other',
+        concept: 'urn:clef/Other',
         action: 'respond',
         fields: [],
       }],
@@ -103,7 +103,7 @@ describe('SyncEngine Concept Handler', () => {
 
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Unknown',
+      concept: 'urn:clef/Unknown',
       action: 'nothing',
       input: {},
       variant: 'ok',
@@ -126,14 +126,14 @@ describe('SyncEngine Concept Handler', () => {
     const sync: CompiledSync = {
       name: 'TestReact',
       when: [{
-        concept: 'urn:copf/Test',
+        concept: 'urn:clef/Test',
         action: 'do',
         inputFields: [],
         outputFields: [{ name: 'value', match: { type: 'variable', name: 'val' } }],
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/Other',
+        concept: 'urn:clef/Other',
         action: 'respond',
         fields: [{ name: 'data', value: { type: 'variable', name: 'val' } }],
       }],
@@ -145,7 +145,7 @@ describe('SyncEngine Concept Handler', () => {
     const flowId = generateId();
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Test',
+      concept: 'urn:clef/Test',
       action: 'do',
       input: {},
       variant: 'ok',
@@ -159,7 +159,7 @@ describe('SyncEngine Concept Handler', () => {
 
     const invocations = result.invocations as any[];
     expect(invocations).toHaveLength(1);
-    expect(invocations[0].concept).toBe('urn:copf/Other');
+    expect(invocations[0].concept).toBe('urn:clef/Other');
     expect(invocations[0].action).toBe('respond');
     expect(invocations[0].input.data).toBe('hello');
     expect(invocations[0].flow).toBe(flowId);
@@ -174,14 +174,14 @@ describe('SyncEngine Concept Handler', () => {
     const sync: CompiledSync = {
       name: 'OnceOnly',
       when: [{
-        concept: 'urn:copf/A',
+        concept: 'urn:clef/A',
         action: 'x',
         inputFields: [],
         outputFields: [],
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/B',
+        concept: 'urn:clef/B',
         action: 'y',
         fields: [],
       }],
@@ -192,7 +192,7 @@ describe('SyncEngine Concept Handler', () => {
     const flowId = generateId();
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/A',
+      concept: 'urn:clef/A',
       action: 'x',
       input: {},
       variant: 'ok',

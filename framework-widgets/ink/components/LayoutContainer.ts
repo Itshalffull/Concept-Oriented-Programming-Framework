@@ -1,8 +1,8 @@
 // ============================================================
-// COIF Ink Widget — LayoutContainer
+// Clef Surface Ink Widget — LayoutContainer
 //
 // Arranges child nodes using Ink's flexbox-in-terminal model.
-// Maps COIF LayoutConfig kinds to terminal layout patterns:
+// Maps Clef Surface LayoutConfig kinds to terminal layout patterns:
 //
 //   stack  → vertical/horizontal flex with spacer-based gaps
 //   grid   → character-width column calculations
@@ -24,7 +24,7 @@ const ANSI_DIM = '\x1b[2m';
 // --- Gap Parsing ---
 
 /**
- * Parse a COIF gap value to a character count for terminal spacing.
+ * Parse a Clef Surface gap value to a character count for terminal spacing.
  * Handles token references (e.g., "spacing.md"), px values, rem values,
  * or plain numbers.
  */
@@ -125,7 +125,7 @@ function parseSingleColumn(spec: string, totalWidth: number, count: number): num
 // --- LayoutContainer Props ---
 
 export interface LayoutContainerProps {
-  /** COIF layout configuration. */
+  /** Clef Surface layout configuration. */
   layout: LayoutConfig;
   /** Child nodes to arrange. */
   children: (TerminalNode | string)[];
@@ -140,7 +140,7 @@ export interface LayoutContainerProps {
 /**
  * Creates a LayoutContainer terminal node.
  *
- * Translates COIF LayoutConfig to terminal-compatible flexbox
+ * Translates Clef Surface LayoutConfig to terminal-compatible flexbox
  * layout using character-width calculations and spacer nodes.
  */
 export function createLayoutContainer(props: LayoutContainerProps): TerminalNode {

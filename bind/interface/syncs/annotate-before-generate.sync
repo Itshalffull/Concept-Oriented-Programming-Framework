@@ -1,7 +1,7 @@
 # Generator resolves annotations before target rendering.
 # Annotations provide rich metadata (examples, references,
 # tool permissions) that targets consume during output generation.
-# Architecture doc: Interface Kit
+# Architecture doc: Clef Bind
 
 sync AnnotateBeforeGenerate [eager]
 when {

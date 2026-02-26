@@ -1,17 +1,17 @@
 ---
 name: add-language-target
-description: Add a new language target (code generator) to the Concept-Oriented Programming Framework. Use when adding support for generating code in a new programming language (e.g., Swift, Go, Python, Kotlin, C#) from concept specifications.
+description: Add a new language target (code generator) to the Clef. Use when adding support for generating code in a new programming language (e.g., Swift, Go, Python, Kotlin, C#) from concept specifications.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<language-name>"
 ---
 
-# Add Language Target to COPF
+# Add Language Target to Clef
 
-Create a new code generation target for **$ARGUMENTS** in the Concept-Oriented Programming Framework.
+Create a new code generation target for **$ARGUMENTS** in the Clef.
 
 ## Overview
 
-COPF generates code from `.concept` specification files through a pipeline:
+Clef generates code from `.concept` specification files through a pipeline:
 
 ```
 .concept file  -->  Parser  -->  ConceptAST  -->  SchemaGen  -->  ConceptManifest (IR)  -->  CodeGen  -->  Target files
@@ -38,7 +38,7 @@ Read [references/type-system.md](references/type-system.md) to understand `Resol
 
 Create a **type mapping table** for $ARGUMENTS before writing any code:
 
-| COPF Type | $ARGUMENTS Type |
+| Clef Type | $ARGUMENTS Type |
 |-----------|-----------------|
 | String | ? |
 | Int | ? |
@@ -124,7 +124,7 @@ Read [references/cli-integration.md](references/cli-integration.md), then update
 
 ### Step 7: Verify by Executing Directly
 
-Do NOT use the `copf` CLI binary. Instead, execute TypeScript files directly via `npx tsx`:
+Do NOT use the `clef` CLI binary. Instead, execute TypeScript files directly via `npx tsx`:
 
 ```bash
 # Verify the generator works on a known concept
@@ -184,7 +184,7 @@ This will generate $ARGUMENTS code for all concepts in `specs/` and write output
 - **Type params are always `string` on the wire** — they're opaque identifiers
 - **Idiomatic output** — use the target language's conventions (snake_case for Rust/Python, camelCase for Java/Kotlin, etc.)
 - **Deterministic output** — same manifest must always produce identical code
-- **No external dependencies in generated code** — only reference the COPF runtime types
+- **No external dependencies in generated code** — only reference the Clef runtime types
 
 ## Related Skills
 
@@ -192,4 +192,4 @@ This will generate $ARGUMENTS code for all concepts in `specs/` and write output
 |-------|------------|
 | `/create-concept` | Design concept specs that the language target generates code from |
 | `/create-implementation` | Write TypeScript implementations (the reference target) |
-| `/create-concept-kit` | Create kits whose concepts need code generation in the new language |
+| `/create-suite` | Create suites whose concepts need code generation in the new language |

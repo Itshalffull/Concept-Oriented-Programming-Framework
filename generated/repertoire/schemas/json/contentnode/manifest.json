@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ContentNode",
+  "uri": "urn:clef/ContentNode",
   "name": "ContentNode",
   "typeParams": [
     {
@@ -594,11 +594,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/ContentNode/create/invocation",
+        "$id": "urn:clef/ContentNode/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentNode"
+            "const": "urn:clef/ContentNode"
           },
           "action": {
             "const": "create"
@@ -629,11 +629,11 @@
         }
       },
       "update": {
-        "$id": "urn:copf/ContentNode/update/invocation",
+        "$id": "urn:clef/ContentNode/update/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentNode"
+            "const": "urn:clef/ContentNode"
           },
           "action": {
             "const": "update"
@@ -656,11 +656,11 @@
         }
       },
       "delete": {
-        "$id": "urn:copf/ContentNode/delete/invocation",
+        "$id": "urn:clef/ContentNode/delete/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentNode"
+            "const": "urn:clef/ContentNode"
           },
           "action": {
             "const": "delete"
@@ -679,11 +679,11 @@
         }
       },
       "get": {
-        "$id": "urn:copf/ContentNode/get/invocation",
+        "$id": "urn:clef/ContentNode/get/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentNode"
+            "const": "urn:clef/ContentNode"
           },
           "action": {
             "const": "get"
@@ -702,11 +702,11 @@
         }
       },
       "setMetadata": {
-        "$id": "urn:copf/ContentNode/setMetadata/invocation",
+        "$id": "urn:clef/ContentNode/setMetadata/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentNode"
+            "const": "urn:clef/ContentNode"
           },
           "action": {
             "const": "setMetadata"
@@ -729,11 +729,11 @@
         }
       },
       "changeType": {
-        "$id": "urn:copf/ContentNode/changeType/invocation",
+        "$id": "urn:clef/ContentNode/changeType/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentNode"
+            "const": "urn:clef/ContentNode"
           },
           "action": {
             "const": "changeType"
@@ -759,11 +759,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/ContentNode/create/completion/ok",
+          "$id": "urn:clef/ContentNode/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "create"
@@ -785,11 +785,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ContentNode/create/completion/exists",
+          "$id": "urn:clef/ContentNode/create/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "create"
@@ -813,11 +813,11 @@
       },
       "update": {
         "ok": {
-          "$id": "urn:copf/ContentNode/update/completion/ok",
+          "$id": "urn:clef/ContentNode/update/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "update"
@@ -839,11 +839,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentNode/update/completion/notfound",
+          "$id": "urn:clef/ContentNode/update/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "update"
@@ -867,11 +867,11 @@
       },
       "delete": {
         "ok": {
-          "$id": "urn:copf/ContentNode/delete/completion/ok",
+          "$id": "urn:clef/ContentNode/delete/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "delete"
@@ -893,11 +893,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentNode/delete/completion/notfound",
+          "$id": "urn:clef/ContentNode/delete/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "delete"
@@ -921,11 +921,11 @@
       },
       "get": {
         "ok": {
-          "$id": "urn:copf/ContentNode/get/completion/ok",
+          "$id": "urn:clef/ContentNode/get/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "get"
@@ -959,11 +959,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentNode/get/completion/notfound",
+          "$id": "urn:clef/ContentNode/get/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "get"
@@ -987,11 +987,11 @@
       },
       "setMetadata": {
         "ok": {
-          "$id": "urn:copf/ContentNode/setMetadata/completion/ok",
+          "$id": "urn:clef/ContentNode/setMetadata/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "setMetadata"
@@ -1013,11 +1013,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentNode/setMetadata/completion/notfound",
+          "$id": "urn:clef/ContentNode/setMetadata/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "setMetadata"
@@ -1041,11 +1041,11 @@
       },
       "changeType": {
         "ok": {
-          "$id": "urn:copf/ContentNode/changeType/completion/ok",
+          "$id": "urn:clef/ContentNode/changeType/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "changeType"
@@ -1067,11 +1067,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentNode/changeType/completion/notfound",
+          "$id": "urn:clef/ContentNode/changeType/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentNode"
+              "const": "urn:clef/ContentNode"
             },
             "action": {
               "const": "changeType"

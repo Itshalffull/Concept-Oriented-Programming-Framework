@@ -14,12 +14,12 @@ import type {
   Signal,
 } from '../../shared/types.js';
 
-import { createMachine } from '../../shared/coif-bridge.js';
+import { createMachine } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
 export interface WidgetMachineProps {
-  /** The COIF widget specification */
+  /** The Clef Surface widget specification */
   spec: WidgetSpec;
   /** Initial context to seed the machine */
   initialContext?: Record<string, unknown>;
@@ -51,12 +51,12 @@ export class WidgetMachine {
     const { target, props } = options;
     this.props = props;
 
-    // Create the headless machine from the COIF spec
+    // Create the headless machine from the Clef Surface spec
     this.machine = createMachine(props.spec, props.initialContext);
 
     // Root element
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-widget', props.spec.name);
+    this.el.setAttribute('data-surface-widget', props.spec.name);
     this.el.setAttribute('role', 'group');
     this.el.setAttribute('aria-label', props.spec.name);
 
@@ -152,7 +152,7 @@ export class WidgetMachine {
       const tag = partTags?.[partName] ?? 'div';
       const partEl = document.createElement(tag);
       partEl.setAttribute('data-part', partName);
-      partEl.setAttribute('data-coif-part', partName);
+      partEl.setAttribute('data-surface-part', partName);
 
       this.partElements.set(partName, partEl);
       this.el.appendChild(partEl);
@@ -163,7 +163,7 @@ export class WidgetMachine {
       for (const slotName of spec.anatomy.slots) {
         const slotEl = document.createElement('div');
         slotEl.setAttribute('data-slot', slotName);
-        slotEl.setAttribute('data-coif-slot', slotName);
+        slotEl.setAttribute('data-surface-slot', slotName);
         this.el.appendChild(slotEl);
       }
     }
@@ -188,12 +188,12 @@ export class WidgetMachine {
           if (typeof value === 'function') {
             const eventName = key.slice(2).toLowerCase();
             // Remove previous handler if exists
-            const prevHandler = (partEl as any)[`__coif_${eventName}`];
+            const prevHandler = (partEl as any)[`__surface_${eventName}`];
             if (prevHandler) {
               partEl.removeEventListener(eventName, prevHandler);
             }
             partEl.addEventListener(eventName, value as EventListener);
-            (partEl as any)[`__coif_${eventName}`] = value;
+            (partEl as any)[`__surface_${eventName}`] = value;
           }
         } else if (key === 'style' && typeof value === 'object') {
           // Style object
@@ -226,7 +226,7 @@ export class WidgetMachine {
 
       for (const [eventName, handler] of Object.entries(events)) {
         // Remove any previously bound handler with the same key
-        const storageKey = `__coif_user_${eventName}`;
+        const storageKey = `__surface_user_${eventName}`;
         const prev = (partEl as any)[storageKey];
         if (prev) {
           partEl.removeEventListener(eventName, prev);

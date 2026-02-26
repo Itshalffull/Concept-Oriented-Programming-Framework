@@ -1,11 +1,11 @@
 // ============================================================
-// Integration Tests — All Framework Targets (COIF)
+// Integration Tests — All Framework Targets (Clef Surface)
 //
-// Validates the Concept-Oriented Interface Framework (COIF)
+// Validates the Clef Surface
 // adapter pipeline across all framework targets: React, Vue,
 // Svelte, Solid, Ink, and Vanilla. Tests adapter registration,
 // mount/unmount lifecycle, sync file structure, generated code,
-// and concept file structure (syntax-level, since COIF adapter
+// and concept file structure (syntax-level, since Clef Surface adapter
 // concepts use a simplified invariant syntax not yet handled
 // by the runtime parser).
 // ============================================================
@@ -16,11 +16,11 @@ import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
 import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 
-const COIF_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-render');
-const COIF_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-core');
-const COIF_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-theme');
-const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-component');
-const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-integration');
+const Clef Surface_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-render');
+const Clef Surface_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-core');
+const Clef Surface_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-theme');
+const Clef Surface_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-component');
+const Clef Surface_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-integration');
 
 // All framework adapter concepts
 const frameworkAdapters = [
@@ -39,7 +39,7 @@ const frameworkAdapters = [
 describe('Framework Target Integration — Concept File Structure', () => {
   for (const adapter of frameworkAdapters) {
     it(`${adapter.displayName} concept file exists and has correct structure`, () => {
-      const path = resolve(COIF_RENDER_DIR, `${adapter.name}.concept`);
+      const path = resolve(Clef Surface_RENDER_DIR, `${adapter.name}.concept`);
       expect(existsSync(path)).toBe(true);
 
       const source = readFileSync(path, 'utf-8');
@@ -55,7 +55,7 @@ describe('Framework Target Integration — Concept File Structure', () => {
   }
 
   it('FrameworkAdapter (registry) concept file has register, mount, unmount actions', () => {
-    const source = readFileSync(resolve(COIF_RENDER_DIR, 'framework-adapter.concept'), 'utf-8');
+    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'framework-adapter.concept'), 'utf-8');
     expect(source).toContain('concept FrameworkAdapter');
     expect(source).toContain('action register(');
     expect(source).toContain('action mount(');
@@ -66,26 +66,26 @@ describe('Framework Target Integration — Concept File Structure', () => {
   });
 
   it('Surface concept file exists and has correct structure', () => {
-    const source = readFileSync(resolve(COIF_RENDER_DIR, 'surface.concept'), 'utf-8');
+    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'surface.concept'), 'utf-8');
     expect(source).toContain('concept Surface');
     expect(source).toContain('actions {');
   });
 
   it('Viewport concept file exists and has correct structure', () => {
-    const source = readFileSync(resolve(COIF_RENDER_DIR, 'viewport.concept'), 'utf-8');
+    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'viewport.concept'), 'utf-8');
     expect(source).toContain('concept Viewport');
     expect(source).toContain('actions {');
   });
 
   it('Layout concept file exists and has correct structure', () => {
-    const source = readFileSync(resolve(COIF_RENDER_DIR, 'layout.concept'), 'utf-8');
+    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'layout.concept'), 'utf-8');
     expect(source).toContain('concept Layout');
     expect(source).toContain('actions {');
   });
 
   it('all adapter concepts have identical action signatures', () => {
     for (const adapter of frameworkAdapters) {
-      const source = readFileSync(resolve(COIF_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(Clef Surface_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
       // All adapters should have normalize(adapter: A, props: String)
       expect(source).toContain('action normalize(adapter: A, props: String)');
       // All should have ok and error variants
@@ -96,7 +96,7 @@ describe('Framework Target Integration — Concept File Structure', () => {
 
   it('all adapter concepts have a type parameter [A]', () => {
     for (const adapter of frameworkAdapters) {
-      const source = readFileSync(resolve(COIF_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(Clef Surface_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
       expect(source).toMatch(/concept \w+Adapter \[A\]/);
     }
   });
@@ -269,7 +269,7 @@ describe('Framework Target Integration — Multi-Framework Coexistence', () => {
 // ============================================================
 
 describe('Framework Target Integration — Adapter Pipeline Syncs', () => {
-  const adapterPipelinePath = resolve(COIF_RENDER_DIR, 'syncs', 'adapter-pipeline.sync');
+  const adapterPipelinePath = resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync');
 
   it('adapter pipeline sync file exists', () => {
     expect(existsSync(adapterPipelinePath)).toBe(true);
@@ -326,11 +326,11 @@ describe('Framework Target Integration — Adapter Pipeline Syncs', () => {
 });
 
 // ============================================================
-// 5. COIF Integration Sync File Structure
+// 5. Clef Surface Integration Sync File Structure
 // ============================================================
 
-describe('Framework Target Integration — COIF Integration Syncs', () => {
-  const integrationSyncDir = resolve(COIF_INTEGRATION_DIR, 'syncs');
+describe('Framework Target Integration — Clef Surface Integration Syncs', () => {
+  const integrationSyncDir = resolve(Clef Surface_INTEGRATION_DIR, 'syncs');
 
   const integrationSyncs = [
     'view-embed-creates-surface',
@@ -369,11 +369,11 @@ describe('Framework Target Integration — COIF Integration Syncs', () => {
 });
 
 // ============================================================
-// 6. COIF Render Kit Additional Syncs
+// 6. Clef Surface Render Kit Additional Syncs
 // ============================================================
 
 describe('Framework Target Integration — Render Kit Syncs', () => {
-  const renderSyncDir = resolve(COIF_RENDER_DIR, 'syncs');
+  const renderSyncDir = resolve(Clef Surface_RENDER_DIR, 'syncs');
 
   const renderSyncs = [
     'attach-adapter-to-surface',
@@ -382,14 +382,14 @@ describe('Framework Target Integration — Render Kit Syncs', () => {
   ];
 
   for (const syncName of renderSyncs) {
-    it(`render kit sync file exists: ${syncName}`, () => {
+    it(`render suite sync file exists: ${syncName}`, () => {
       const path = resolve(renderSyncDir, `${syncName}.sync`);
       expect(existsSync(path)).toBe(true);
     });
   }
 
   for (const syncName of renderSyncs) {
-    it(`render kit sync ${syncName} has valid structure`, () => {
+    it(`render suite sync ${syncName} has valid structure`, () => {
       const source = readFileSync(resolve(renderSyncDir, `${syncName}.sync`), 'utf-8');
       expect(source).toMatch(/^sync \w+/m);
       expect(source).toContain('when {');
@@ -414,15 +414,15 @@ describe('Framework Target Integration — Generated Code', () => {
     expect(existsSync(resolve(generatedDir, 'frameworkadapter.test.ts'))).toBe(true);
   });
 
-  // Verify core COIF concepts have generated code
-  const coifConcepts = [
+  // Verify core Clef Surface concepts have generated code
+  const surfaceConcepts = [
     'anatomy', 'binding', 'designtoken', 'element', 'elevation',
     'layout', 'machine', 'motion', 'palette', 'signal', 'slot',
     'surface', 'theme', 'typography', 'uischema', 'viewport', 'widget',
   ];
 
-  for (const concept of coifConcepts) {
-    it(`generated code exists for COIF concept: ${concept}`, () => {
+  for (const concept of surfaceConcepts) {
+    it(`generated code exists for Clef Surface concept: ${concept}`, () => {
       expect(existsSync(resolve(generatedDir, `${concept}.handler.ts`))).toBe(true);
       expect(existsSync(resolve(generatedDir, `${concept}.handler.ts`))).toBe(true);
       expect(existsSync(resolve(generatedDir, `${concept}.types.ts`))).toBe(true);
@@ -431,43 +431,43 @@ describe('Framework Target Integration — Generated Code', () => {
 });
 
 // ============================================================
-// 8. COIF Kit Completeness
+// 8. Clef Surface Kit Completeness
 // ============================================================
 
-describe('Framework Target Integration — COIF Kit Completeness', () => {
-  it('coif-core has exactly 5 concept files', () => {
+describe('Framework Target Integration — Clef Surface Kit Completeness', () => {
+  it('surface-core has exactly 5 concept files', () => {
     const concepts = ['design-token', 'binding', 'signal', 'ui-schema', 'element'];
     for (const name of concepts) {
-      expect(existsSync(resolve(COIF_CORE_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(Clef Surface_CORE_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
-  it('coif-theme has exactly 5 concept files', () => {
+  it('surface-theme has exactly 5 concept files', () => {
     const concepts = ['typography', 'palette', 'elevation', 'theme', 'motion'];
     for (const name of concepts) {
-      expect(existsSync(resolve(COIF_THEME_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(Clef Surface_THEME_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
-  it('coif-component has exactly 6 concept files', () => {
+  it('surface-component has exactly 6 concept files', () => {
     const concepts = ['machine', 'slot', 'widget', 'affordance', 'interactor', 'widget-resolver'];
     for (const name of concepts) {
-      expect(existsSync(resolve(COIF_COMPONENT_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(Clef Surface_COMPONENT_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
-  it('coif-render has exactly 10 concept files (6 adapters + 4 infrastructure)', () => {
+  it('surface-render has exactly 10 concept files (6 adapters + 4 infrastructure)', () => {
     const concepts = [
       'react-adapter', 'vue-adapter', 'svelte-adapter', 'solid-adapter',
       'vanilla-adapter', 'ink-adapter',
       'framework-adapter', 'surface', 'viewport', 'layout',
     ];
     for (const name of concepts) {
-      expect(existsSync(resolve(COIF_RENDER_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(Clef Surface_RENDER_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
-  it('coif-integration has exactly 13 sync files', () => {
+  it('surface-integration has exactly 13 sync files', () => {
     const syncs = [
       'view-embed-creates-surface', 'parsed-content-to-richtext', 'intent-enriches-ui',
       'view-drives-layout', 'workflow-state-to-signal', 'schema-def-drives-ui',
@@ -476,7 +476,7 @@ describe('Framework Target Integration — COIF Kit Completeness', () => {
       'notification-to-toast',
     ];
     for (const name of syncs) {
-      expect(existsSync(resolve(COIF_INTEGRATION_DIR, 'syncs', `${name}.sync`))).toBe(true);
+      expect(existsSync(resolve(Clef Surface_INTEGRATION_DIR, 'syncs', `${name}.sync`))).toBe(true);
     }
   });
 });

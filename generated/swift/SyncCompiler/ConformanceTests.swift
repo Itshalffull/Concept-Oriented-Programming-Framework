@@ -1,7 +1,7 @@
 // generated: SyncCompiler/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class SyncCompilerConformanceTests: XCTestCase {
 
@@ -14,9 +14,9 @@ final class SyncCompilerConformanceTests: XCTestCase {
         let e = "u-test-invariant-002"
 
         // --- AFTER clause ---
-        // compile(sync: "s1", ast: ["name": "TestSync", "annotations": [], "when": [["concept": "urn:copf/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:copf/B", "action": "do", "fields": []]]]) -> ok(compiled: c)
+        // compile(sync: "s1", ast: ["name": "TestSync", "annotations": [], "when": [["concept": "urn:clef/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:clef/B", "action": "do", "fields": []]]]) -> ok(compiled: c)
         let step1 = try await handler.compile(
-            input: SyncCompilerCompileInput(sync: "s1", ast: ["name": "TestSync", "annotations": [], "when": [["concept": "urn:copf/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:copf/B", "action": "do", "fields": []]]]),
+            input: SyncCompilerCompileInput(sync: "s1", ast: ["name": "TestSync", "annotations": [], "when": [["concept": "urn:clef/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:clef/B", "action": "do", "fields": []]]]),
             storage: storage
         )
         if case .ok(let compiled) = step1 {
@@ -26,9 +26,9 @@ final class SyncCompilerConformanceTests: XCTestCase {
         }
 
         // --- THEN clause ---
-        // compile(sync: "s2", ast: ["name": "Bad", "annotations": [], "when": [["concept": "urn:copf/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": []]) -> error(message: e)
+        // compile(sync: "s2", ast: ["name": "Bad", "annotations": [], "when": [["concept": "urn:clef/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": []]) -> error(message: e)
         let step2 = try await handler.compile(
-            input: SyncCompilerCompileInput(sync: "s2", ast: ["name": "Bad", "annotations": [], "when": [["concept": "urn:copf/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": []]),
+            input: SyncCompilerCompileInput(sync: "s2", ast: ["name": "Bad", "annotations": [], "when": [["concept": "urn:clef/A", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": []]),
             storage: storage
         )
         if case .error(let message) = step2 {

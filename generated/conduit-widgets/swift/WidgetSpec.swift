@@ -1,10 +1,10 @@
 // =============================================================================
 // Conduit App Widget Specification Types (Swift)
 //
-// COIF-driven widget abstraction: each Conduit widget is described as a
+// Clef Surface-driven widget abstraction: each Conduit widget is described as a
 // WidgetSpec that declares its concept bindings, element tree, anatomy,
 // state machine, and accessibility contract. This spec is framework-agnostic --
-// the same WidgetSpec renders via SwiftUI, UIKit, or AppKit through the COIF
+// the same WidgetSpec renders via SwiftUI, UIKit, or AppKit through the Clef Surface
 // FrameworkAdapter pipeline.
 //
 // Architecture:
@@ -17,7 +17,7 @@ import Foundation
 
 // MARK: - Element Kinds
 
-/// Abstract interaction units from the COIF Element concept.
+/// Abstract interaction units from the Clef Surface Element concept.
 enum ElementKind: String, Codable {
     case inputText = "input-text"
     case inputNumber = "input-number"
@@ -117,7 +117,7 @@ struct ConceptBinding: Codable {
 
 // MARK: - Anatomy
 
-/// Named parts contract from the COIF Anatomy concept.
+/// Named parts contract from the Clef Surface Anatomy concept.
 struct AnatomySpec: Codable {
     let component: String
     let parts: [String]
@@ -151,7 +151,7 @@ struct MachineState: Codable {
     let on: [String: MachineTransition]
 }
 
-/// The headless state machine specification from COIF Widget/Machine.
+/// The headless state machine specification from Clef Surface Widget/Machine.
 struct MachineSpec: Codable {
     let initial: String
     let states: [String: MachineState]
@@ -160,7 +160,7 @@ struct MachineSpec: Codable {
 
 // MARK: - Accessibility
 
-/// ARIA and keyboard interaction contract from COIF Widget a11ySpec.
+/// ARIA and keyboard interaction contract from Clef Surface Widget a11ySpec.
 struct A11ySpec: Codable {
     let role: String
     let label: String

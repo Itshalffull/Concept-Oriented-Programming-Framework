@@ -45,7 +45,7 @@ concepts:
     spec: ./providers/dependence/universal.concept
     optional: true
 
-  # COIF dependence providers
+  # Clef Surface dependence providers
   WidgetDependenceProvider:
     spec: ./providers/dependence/widget.concept
     optional: true
@@ -87,17 +87,17 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
       - name: StructuralPattern
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
       - name: ScopeGraph
-  - kit: semantic
+  - suite: semantic
     concepts:
       - name: ConceptEntity
       - name: ActionEntity
@@ -106,10 +106,10 @@ uses:
       - name: WidgetEntity
       - name: ThemeEntity
       - name: InteractorEntity
-  - kit: data-organization
+  - suite: data-organization
     concepts:
       - name: Graph
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 

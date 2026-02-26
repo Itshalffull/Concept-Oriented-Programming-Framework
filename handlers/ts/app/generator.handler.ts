@@ -1,4 +1,4 @@
-// Generator Concept Implementation (Interface Kit)
+// Generator Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 export const generatorHandler: ConceptHandler = {

@@ -14,12 +14,12 @@ func loginWidgetSpec() -> WidgetSpec {
         category: .form,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/Password",
+                concept: "urn:clef/Password",
                 actions: ["check"],
                 queries: []
             ),
             ConceptBinding(
-                concept: "urn:copf/JWT",
+                concept: "urn:clef/JWT",
                 actions: ["generate"],
                 queries: []
             ),

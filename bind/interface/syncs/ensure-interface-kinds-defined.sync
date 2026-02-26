@@ -1,8 +1,8 @@
-# EnsureInterfaceKindsDefined — interface kit registration sync
+# EnsureInterfaceKindsDefined — Clef Bind registration sync
 #
 # Auto-define artifact kinds referenced by interface provider registrations.
-# Mirrors the generation kit's EnsureKindsDefined sync.
-# See generation kit syncs: ensure-kinds-defined.sync
+# Mirrors the generation suite's EnsureKindsDefined sync.
+# See generation suite syncs: ensure-kinds-defined.sync
 
 sync EnsureInterfaceKindsDefined [eager]
   purpose { Auto-define kinds referenced by interface provider registrations. }

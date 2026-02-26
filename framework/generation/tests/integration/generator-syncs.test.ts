@@ -1,13 +1,13 @@
 // ============================================================
 // Generator Sync Auto-Generation Tests
 //
-// Validates that `copf generate --generator-syncs` produces
+// Validates that `clef generate --generator-syncs` produces
 // correct sync files for both framework generators (SchemaGen
 // pipeline) and interface target providers (InterfaceGenerator
 // pipeline). Covers file naming, sync DSL structure, concept
 // references, and family filtering.
 //
-// See copf-generation-kit.md Parts 2.4–2.7
+// See clef-generation-suite.md Parts 2.4–2.7
 // ============================================================
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -18,14 +18,14 @@ import {
   generateFrameworkSyncs,
   generateInterfaceSyncs,
   INTERFACE_TARGET_META,
-} from '../../../../tools/copf-cli/src/commands/generate.js';
+} from '../../../../tools/clef-cli/src/commands/generate.js';
 import { createInMemoryStorage } from '../../../../kernel/src/index.js';
 
 let tempDir: string;
 let emitStorage: ReturnType<typeof createInMemoryStorage>;
 
 beforeEach(() => {
-  tempDir = mkdtempSync(join(tmpdir(), 'copf-syncs-'));
+  tempDir = mkdtempSync(join(tmpdir(), 'clef-syncs-'));
   emitStorage = createInMemoryStorage();
 });
 

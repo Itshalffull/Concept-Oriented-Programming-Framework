@@ -1,4 +1,4 @@
-# ObserveCacheHit — generation kit recommended sync
+# ObserveCacheHit — generation suite recommended sync
 sync ObserveCacheHit [eager]
   purpose { Record cache hits in GenerationPlan. }
 when {

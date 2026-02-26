@@ -1,4 +1,4 @@
-# Conduit COPF App — Docker Image
+# Conduit Clef App — Docker Image
 # Node.js 22 Alpine base with all 10 concepts and 7 syncs.
 
 FROM node:22-alpine AS builder
@@ -28,8 +28,8 @@ COPY --from=builder /app/specs ./specs
 COPY --from=builder /app/syncs ./syncs
 
 # Non-root user for security
-RUN addgroup -S copf && adduser -S copf -G copf
-USER copf
+RUN addgroup -S clef && adduser -S clef -G clef
+USER clef
 
 ENV NODE_ENV=production
 ENV PORT=3000

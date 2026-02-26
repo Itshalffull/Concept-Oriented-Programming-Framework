@@ -1,4 +1,4 @@
-# Layout Kit Manifest
+# Layout Suite Manifest
 name: layout
 version: 0.1.0
 description: "Page layout and composition — component placement, region management, and visibility evaluation."

@@ -1,7 +1,7 @@
 // ============================================================
 // ElevationBox — Vue 3 Component
 //
-// Wrapper element with box-shadow driven by COIF elevation
+// Wrapper element with box-shadow driven by Clef Surface elevation
 // levels (0..5). Supports custom shadow layers as an override,
 // and exposes reactive elevation changes through watchers.
 // ============================================================
@@ -19,7 +19,7 @@ import type { ElevationLevel, ShadowLayer } from '../../shared/types.js';
 import {
   elevationToCSS,
   shadowLayersToCSS,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 export const ElevationBox = defineComponent({
   name: 'ElevationBox',
@@ -96,8 +96,8 @@ export const ElevationBox = defineComponent({
         props.tag,
         {
           class: [
-            'coif-elevation-box',
-            `coif-elevation-box--level-${props.level}`,
+            'surface-elevation-box',
+            `surface-elevation-box--level-${props.level}`,
           ],
           style: style.value,
           'data-elevation': props.level,

@@ -27,7 +27,7 @@ async function initDesktopPlatform() {
   // Create main window
   const windowResult = await desktopadapterHandler.createWindow(
     {
-      title: 'Conduit — COPF Desktop',
+      title: 'Conduit — Clef Desktop',
       width: 1200,
       height: 800,
       url: 'http://localhost:3000',
@@ -57,7 +57,7 @@ export const electronConfig = {
   window: {
     width: 1200,
     height: 800,
-    title: 'Conduit — COPF Example App',
+    title: 'Conduit — Clef Example App',
   },
 };
 

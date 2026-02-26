@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Validator",
+  "uri": "urn:clef/Validator",
   "name": "Validator",
   "typeParams": [
     {
@@ -410,11 +410,11 @@
   "jsonSchemas": {
     "invocations": {
       "registerConstraint": {
-        "$id": "urn:copf/Validator/registerConstraint/invocation",
+        "$id": "urn:clef/Validator/registerConstraint/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Validator"
+            "const": "urn:clef/Validator"
           },
           "action": {
             "const": "registerConstraint"
@@ -437,11 +437,11 @@
         }
       },
       "addRule": {
-        "$id": "urn:copf/Validator/addRule/invocation",
+        "$id": "urn:clef/Validator/addRule/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Validator"
+            "const": "urn:clef/Validator"
           },
           "action": {
             "const": "addRule"
@@ -468,11 +468,11 @@
         }
       },
       "validate": {
-        "$id": "urn:copf/Validator/validate/invocation",
+        "$id": "urn:clef/Validator/validate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Validator"
+            "const": "urn:clef/Validator"
           },
           "action": {
             "const": "validate"
@@ -495,11 +495,11 @@
         }
       },
       "validateField": {
-        "$id": "urn:copf/Validator/validateField/invocation",
+        "$id": "urn:clef/Validator/validateField/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Validator"
+            "const": "urn:clef/Validator"
           },
           "action": {
             "const": "validateField"
@@ -526,11 +526,11 @@
         }
       },
       "coerce": {
-        "$id": "urn:copf/Validator/coerce/invocation",
+        "$id": "urn:clef/Validator/coerce/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Validator"
+            "const": "urn:clef/Validator"
           },
           "action": {
             "const": "coerce"
@@ -553,11 +553,11 @@
         }
       },
       "addCustomValidator": {
-        "$id": "urn:copf/Validator/addCustomValidator/invocation",
+        "$id": "urn:clef/Validator/addCustomValidator/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Validator"
+            "const": "urn:clef/Validator"
           },
           "action": {
             "const": "addCustomValidator"
@@ -587,11 +587,11 @@
     "completions": {
       "registerConstraint": {
         "ok": {
-          "$id": "urn:copf/Validator/registerConstraint/completion/ok",
+          "$id": "urn:clef/Validator/registerConstraint/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "registerConstraint"
@@ -607,11 +607,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Validator/registerConstraint/completion/exists",
+          "$id": "urn:clef/Validator/registerConstraint/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "registerConstraint"
@@ -629,11 +629,11 @@
       },
       "addRule": {
         "ok": {
-          "$id": "urn:copf/Validator/addRule/completion/ok",
+          "$id": "urn:clef/Validator/addRule/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "addRule"
@@ -649,11 +649,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Validator/addRule/completion/notfound",
+          "$id": "urn:clef/Validator/addRule/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "addRule"
@@ -671,11 +671,11 @@
       },
       "validate": {
         "ok": {
-          "$id": "urn:copf/Validator/validate/completion/ok",
+          "$id": "urn:clef/Validator/validate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "validate"
@@ -703,11 +703,11 @@
       },
       "validateField": {
         "ok": {
-          "$id": "urn:copf/Validator/validateField/completion/ok",
+          "$id": "urn:clef/Validator/validateField/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "validateField"
@@ -735,11 +735,11 @@
       },
       "coerce": {
         "ok": {
-          "$id": "urn:copf/Validator/coerce/completion/ok",
+          "$id": "urn:clef/Validator/coerce/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "coerce"
@@ -761,11 +761,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/Validator/coerce/completion/error",
+          "$id": "urn:clef/Validator/coerce/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "coerce"
@@ -789,11 +789,11 @@
       },
       "addCustomValidator": {
         "ok": {
-          "$id": "urn:copf/Validator/addCustomValidator/completion/ok",
+          "$id": "urn:clef/Validator/addCustomValidator/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "addCustomValidator"
@@ -809,11 +809,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Validator/addCustomValidator/completion/exists",
+          "$id": "urn:clef/Validator/addCustomValidator/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Validator"
+              "const": "urn:clef/Validator"
             },
             "action": {
               "const": "addCustomValidator"

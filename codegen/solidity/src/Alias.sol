@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Alias
 /// @notice Concept-oriented alias registry mapping human-readable names to entity IDs
-/// @dev Implements the Alias concept from COPF specification.
+/// @dev Implements the Alias concept from Clef specification.
 ///      Supports adding, removing, and resolving aliases with uniqueness enforcement.
 
 contract Alias {

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Runtime",
+  "uri": "urn:clef/Runtime",
   "name": "Runtime",
   "typeParams": [
     {
@@ -648,11 +648,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/Runtime/provision/invocation",
+        "$id": "urn:clef/Runtime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Runtime"
+            "const": "urn:clef/Runtime"
           },
           "action": {
             "const": "provision"
@@ -679,11 +679,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/Runtime/deploy/invocation",
+        "$id": "urn:clef/Runtime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Runtime"
+            "const": "urn:clef/Runtime"
           },
           "action": {
             "const": "deploy"
@@ -710,11 +710,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/Runtime/setTrafficWeight/invocation",
+        "$id": "urn:clef/Runtime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Runtime"
+            "const": "urn:clef/Runtime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -737,11 +737,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/Runtime/rollback/invocation",
+        "$id": "urn:clef/Runtime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Runtime"
+            "const": "urn:clef/Runtime"
           },
           "action": {
             "const": "rollback"
@@ -760,11 +760,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/Runtime/destroy/invocation",
+        "$id": "urn:clef/Runtime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Runtime"
+            "const": "urn:clef/Runtime"
           },
           "action": {
             "const": "destroy"
@@ -783,11 +783,11 @@
         }
       },
       "healthCheck": {
-        "$id": "urn:copf/Runtime/healthCheck/invocation",
+        "$id": "urn:clef/Runtime/healthCheck/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Runtime"
+            "const": "urn:clef/Runtime"
           },
           "action": {
             "const": "healthCheck"
@@ -809,11 +809,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/Runtime/provision/completion/ok",
+          "$id": "urn:clef/Runtime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "provision"
@@ -839,11 +839,11 @@
           }
         },
         "alreadyProvisioned": {
-          "$id": "urn:copf/Runtime/provision/completion/alreadyProvisioned",
+          "$id": "urn:clef/Runtime/provision/completion/alreadyProvisioned",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "provision"
@@ -869,11 +869,11 @@
           }
         },
         "provisionFailed": {
-          "$id": "urn:copf/Runtime/provision/completion/provisionFailed",
+          "$id": "urn:clef/Runtime/provision/completion/provisionFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "provision"
@@ -905,11 +905,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/Runtime/deploy/completion/ok",
+          "$id": "urn:clef/Runtime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "deploy"
@@ -935,11 +935,11 @@
           }
         },
         "deployFailed": {
-          "$id": "urn:copf/Runtime/deploy/completion/deployFailed",
+          "$id": "urn:clef/Runtime/deploy/completion/deployFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "deploy"
@@ -967,11 +967,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/Runtime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/Runtime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -999,11 +999,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/Runtime/rollback/completion/ok",
+          "$id": "urn:clef/Runtime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "rollback"
@@ -1029,11 +1029,11 @@
           }
         },
         "noHistory": {
-          "$id": "urn:copf/Runtime/rollback/completion/noHistory",
+          "$id": "urn:clef/Runtime/rollback/completion/noHistory",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "rollback"
@@ -1055,11 +1055,11 @@
           }
         },
         "rollbackFailed": {
-          "$id": "urn:copf/Runtime/rollback/completion/rollbackFailed",
+          "$id": "urn:clef/Runtime/rollback/completion/rollbackFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "rollback"
@@ -1087,11 +1087,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/Runtime/destroy/completion/ok",
+          "$id": "urn:clef/Runtime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "destroy"
@@ -1113,11 +1113,11 @@
           }
         },
         "destroyFailed": {
-          "$id": "urn:copf/Runtime/destroy/completion/destroyFailed",
+          "$id": "urn:clef/Runtime/destroy/completion/destroyFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "destroy"
@@ -1145,11 +1145,11 @@
       },
       "healthCheck": {
         "ok": {
-          "$id": "urn:copf/Runtime/healthCheck/completion/ok",
+          "$id": "urn:clef/Runtime/healthCheck/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "healthCheck"
@@ -1175,11 +1175,11 @@
           }
         },
         "unreachable": {
-          "$id": "urn:copf/Runtime/healthCheck/completion/unreachable",
+          "$id": "urn:clef/Runtime/healthCheck/completion/unreachable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "healthCheck"
@@ -1201,11 +1201,11 @@
           }
         },
         "degraded": {
-          "$id": "urn:copf/Runtime/healthCheck/completion/degraded",
+          "$id": "urn:clef/Runtime/healthCheck/completion/degraded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Runtime"
+              "const": "urn:clef/Runtime"
             },
             "action": {
               "const": "healthCheck"

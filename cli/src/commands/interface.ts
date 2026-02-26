@@ -1,12 +1,12 @@
 // ============================================================
-// copf interface <subcommand> [args...]
+// clef interface <subcommand> [args...]
 //
 // Interface generation commands:
-//   copf interface generate          Generate all configured interfaces
-//   copf interface plan              Show generation plan without executing
-//   copf interface validate          Validate interface manifest and projections
-//   copf interface files             List generated output files
-//   copf interface clean             Remove orphaned generated files
+//   clef interface generate          Generate all configured interfaces
+//   clef interface plan              Show generation plan without executing
+//   clef interface validate          Validate interface manifest and projections
+//   clef interface files             List generated output files
+//   clef interface clean             Remove orphaned generated files
 // ============================================================
 
 import { readFileSync, existsSync, readdirSync, statSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
@@ -302,7 +302,7 @@ export async function interfaceCommand(
       await interfaceClean(rest, flags);
       break;
     default:
-      console.error('Usage: copf interface <generate|plan|validate|files|clean> [args...]');
+      console.error('Usage: clef interface <generate|plan|validate|files|clean> [args...]');
       process.exit(1);
   }
 }
@@ -471,7 +471,7 @@ async function interfaceGenerate(
   }
 
   // 6. Load previous tracking manifest for orphan cleanup
-  const genManifestPath = resolve(dirname(manifestPath), '.copf-gen-manifest.json');
+  const genManifestPath = resolve(dirname(manifestPath), '.clef-gen-manifest.json');
   const oldGenManifest = loadGenManifest(genManifestPath);
 
   // 7. Write files to disk using per-target output dirs
@@ -761,7 +761,7 @@ async function interfaceFiles(
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
     : resolve(projectDir, 'app.interface.yaml');
-  const genManifestPath = resolve(dirname(manifestPath), '.copf-gen-manifest.json');
+  const genManifestPath = resolve(dirname(manifestPath), '.clef-gen-manifest.json');
   const genManifest = loadGenManifest(genManifestPath);
 
   if (genManifest) {
@@ -846,7 +846,7 @@ async function interfaceClean(
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
     : resolve(projectDir, 'app.interface.yaml');
-  const genManifestPath = resolve(dirname(manifestPath), '.copf-gen-manifest.json');
+  const genManifestPath = resolve(dirname(manifestPath), '.clef-gen-manifest.json');
   const genManifest = loadGenManifest(genManifestPath);
 
   if (genManifest) {

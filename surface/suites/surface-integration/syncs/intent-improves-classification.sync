@@ -1,0 +1,21 @@
+# ============================================================
+# IntentImprovesClassification — surface-integration recommended sync
+#
+# Use Intent semantic data to improve interactor classification.
+# When an Intent is defined for a target, re-classify the
+# corresponding elements with the intent's purpose as context.
+# ============================================================
+
+sync IntentImprovesClassification [eager]
+when {
+  Intent/define: [ targetId: ?target; purpose: ?purpose ]
+    => ok(intent: ?intentId)
+}
+where {
+  UISchema: { ?schema concept: ?target }
+}
+then {
+  Interactor/classify: [ interactor: ?target;
+    fieldType: ?target; constraints: ?target;
+    intent: ?purpose ]
+}

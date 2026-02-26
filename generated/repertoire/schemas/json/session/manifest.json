@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Session",
+  "uri": "urn:clef/Session",
   "name": "Session",
   "typeParams": [
     {
@@ -749,11 +749,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/Session/create/invocation",
+        "$id": "urn:clef/Session/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Session"
+            "const": "urn:clef/Session"
           },
           "action": {
             "const": "create"
@@ -780,11 +780,11 @@
         }
       },
       "validate": {
-        "$id": "urn:copf/Session/validate/invocation",
+        "$id": "urn:clef/Session/validate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Session"
+            "const": "urn:clef/Session"
           },
           "action": {
             "const": "validate"
@@ -803,11 +803,11 @@
         }
       },
       "refresh": {
-        "$id": "urn:copf/Session/refresh/invocation",
+        "$id": "urn:clef/Session/refresh/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Session"
+            "const": "urn:clef/Session"
           },
           "action": {
             "const": "refresh"
@@ -826,11 +826,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/Session/destroy/invocation",
+        "$id": "urn:clef/Session/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Session"
+            "const": "urn:clef/Session"
           },
           "action": {
             "const": "destroy"
@@ -849,11 +849,11 @@
         }
       },
       "destroyAll": {
-        "$id": "urn:copf/Session/destroyAll/invocation",
+        "$id": "urn:clef/Session/destroyAll/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Session"
+            "const": "urn:clef/Session"
           },
           "action": {
             "const": "destroyAll"
@@ -872,11 +872,11 @@
         }
       },
       "getContext": {
-        "$id": "urn:copf/Session/getContext/invocation",
+        "$id": "urn:clef/Session/getContext/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Session"
+            "const": "urn:clef/Session"
           },
           "action": {
             "const": "getContext"
@@ -898,11 +898,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/Session/create/completion/ok",
+          "$id": "urn:clef/Session/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "create"
@@ -924,11 +924,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/Session/create/completion/error",
+          "$id": "urn:clef/Session/create/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "create"
@@ -952,11 +952,11 @@
       },
       "validate": {
         "ok": {
-          "$id": "urn:copf/Session/validate/completion/ok",
+          "$id": "urn:clef/Session/validate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "validate"
@@ -978,11 +978,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Session/validate/completion/notfound",
+          "$id": "urn:clef/Session/validate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "validate"
@@ -1006,11 +1006,11 @@
       },
       "refresh": {
         "ok": {
-          "$id": "urn:copf/Session/refresh/completion/ok",
+          "$id": "urn:clef/Session/refresh/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "refresh"
@@ -1032,11 +1032,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Session/refresh/completion/notfound",
+          "$id": "urn:clef/Session/refresh/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "refresh"
@@ -1058,11 +1058,11 @@
           }
         },
         "expired": {
-          "$id": "urn:copf/Session/refresh/completion/expired",
+          "$id": "urn:clef/Session/refresh/completion/expired",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "refresh"
@@ -1086,11 +1086,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/Session/destroy/completion/ok",
+          "$id": "urn:clef/Session/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "destroy"
@@ -1112,11 +1112,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Session/destroy/completion/notfound",
+          "$id": "urn:clef/Session/destroy/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "destroy"
@@ -1140,11 +1140,11 @@
       },
       "destroyAll": {
         "ok": {
-          "$id": "urn:copf/Session/destroyAll/completion/ok",
+          "$id": "urn:clef/Session/destroyAll/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "destroyAll"
@@ -1168,11 +1168,11 @@
       },
       "getContext": {
         "ok": {
-          "$id": "urn:copf/Session/getContext/completion/ok",
+          "$id": "urn:clef/Session/getContext/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "getContext"
@@ -1198,11 +1198,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Session/getContext/completion/notfound",
+          "$id": "urn:clef/Session/getContext/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Session"
+              "const": "urn:clef/Session"
             },
             "action": {
               "const": "getContext"

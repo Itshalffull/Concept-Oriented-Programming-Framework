@@ -1,10 +1,10 @@
 // ============================================================
-// BindingProvider — Context provider for COIF backend binding.
+// BindingProvider — Context provider for Clef Surface backend binding.
 //
 // Subscribes to concept state signals defined in a BindingConfig
 // and provides the current state snapshot plus an invoke()
 // function for dispatching actions.  All state updates flow
-// through COIF signals; no external state management library
+// through Clef Surface signals; no external state management library
 // is used.
 // ============================================================
 
@@ -21,7 +21,7 @@ import React, {
 } from 'react';
 
 import type { BindingConfig, Signal } from '../../shared/types.js';
-import { createSignal, createComputed } from '../../shared/coif-bridge.js';
+import { createSignal, createComputed } from '../../shared/surface-bridge.js';
 
 // --------------- Types ---------------
 
@@ -85,12 +85,12 @@ export function useBoundSignal<T = unknown>(signalName: string): T | undefined {
 // --------------- Props ---------------
 
 export interface BindingProviderProps {
-  /** The COIF binding configuration. */
+  /** The Clef Surface binding configuration. */
   config: BindingConfig;
   /**
    * Optional invoke implementation.  By default, the provider
    * uses the binding mode to route invocations:
-   * - "coupled": direct function call (requires COPF runtime)
+   * - "coupled": direct function call (requires Clef runtime)
    * - "rest": HTTP fetch to config.endpoint
    * - "graphql": GraphQL mutation to config.endpoint
    * - "static": in-memory mutation on signals
@@ -162,8 +162,8 @@ function createDefaultInvoke(config: BindingConfig): InvokeFn {
 
       case 'coupled':
       default: {
-        // Coupled mode assumes a COPF runtime is available.
-        // In a real setup, the COPF engine is injected.
+        // Coupled mode assumes a Clef runtime is available.
+        // In a real setup, the Clef engine is injected.
         // For now, log and succeed.
         console.warn(
           `[BindingProvider] coupled invoke not wired: ${action}`,

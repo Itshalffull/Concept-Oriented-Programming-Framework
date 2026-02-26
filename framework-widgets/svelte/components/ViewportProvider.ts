@@ -1,5 +1,5 @@
 // ============================================================
-// ViewportProvider — Svelte-compatible COIF component
+// ViewportProvider — Svelte-compatible Clef Surface component
 //
 // Observes viewport size via ResizeObserver / window resize
 // and provides breakpoint state to descendant components.
@@ -20,7 +20,7 @@ import {
   observeViewport,
   getBreakpoint,
   getOrientation,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Context registry (module-scoped, mirrors Svelte setContext/getContext) ---
 
@@ -93,7 +93,7 @@ export function createViewportProvider(
 
   // Container element
   const container = document.createElement('div');
-  container.setAttribute('data-coif-viewport-provider', '');
+  container.setAttribute('data-surface-viewport-provider', '');
   if (className) container.className = className;
   target.appendChild(container);
 

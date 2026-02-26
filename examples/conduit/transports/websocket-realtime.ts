@@ -27,16 +27,16 @@ interface ConceptDef {
 }
 
 const CONCEPTS: ConceptDef[] = [
-  { uri: 'urn:copf/User', name: 'User', handler: userHandler },
-  { uri: 'urn:copf/Password', name: 'Password', handler: passwordHandler },
-  { uri: 'urn:copf/JWT', name: 'JWT', handler: jwtHandler },
-  { uri: 'urn:copf/Profile', name: 'Profile', handler: profileHandler },
-  { uri: 'urn:copf/Article', name: 'Article', handler: articleHandler },
-  { uri: 'urn:copf/Comment', name: 'Comment', handler: commentHandler },
-  { uri: 'urn:copf/Tag', name: 'Tag', handler: tagHandler },
-  { uri: 'urn:copf/Favorite', name: 'Favorite', handler: favoriteHandler },
-  { uri: 'urn:copf/Follow', name: 'Follow', handler: followHandler },
-  { uri: 'urn:copf/Echo', name: 'Echo', handler: echoHandler },
+  { uri: 'urn:clef/User', name: 'User', handler: userHandler },
+  { uri: 'urn:clef/Password', name: 'Password', handler: passwordHandler },
+  { uri: 'urn:clef/JWT', name: 'JWT', handler: jwtHandler },
+  { uri: 'urn:clef/Profile', name: 'Profile', handler: profileHandler },
+  { uri: 'urn:clef/Article', name: 'Article', handler: articleHandler },
+  { uri: 'urn:clef/Comment', name: 'Comment', handler: commentHandler },
+  { uri: 'urn:clef/Tag', name: 'Tag', handler: tagHandler },
+  { uri: 'urn:clef/Favorite', name: 'Favorite', handler: favoriteHandler },
+  { uri: 'urn:clef/Follow', name: 'Follow', handler: followHandler },
+  { uri: 'urn:clef/Echo', name: 'Echo', handler: echoHandler },
 ];
 
 // Push notification types that connected clients receive

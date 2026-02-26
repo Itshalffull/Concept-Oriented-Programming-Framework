@@ -2,7 +2,7 @@
 // Sdk Coordination Handler
 //
 // Routes SDK generation requests to language-specific providers.
-// Architecture doc: Interface Kit, Section 1.4
+// Architecture doc: Clef Bind, Section 1.4
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

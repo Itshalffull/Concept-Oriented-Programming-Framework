@@ -1,4 +1,4 @@
-# Computation Kit Manifest
+# Computation Suite Manifest
 name: computation
 version: 0.1.0
 description: "Dynamic computation — formulas, token replacement, and expression language parsing for evaluated content."

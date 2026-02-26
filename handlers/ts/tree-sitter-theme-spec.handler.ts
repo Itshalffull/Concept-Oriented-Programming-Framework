@@ -1,7 +1,7 @@
 // ============================================================
 // TreeSitterThemeSpec Handler
 //
-// Tree-sitter grammar provider for COIF theme spec files.
+// Tree-sitter grammar provider for Clef Surface theme spec files.
 // Sections: purpose, palette, typography, spacing, motion,
 // elevation, radius. Supports extends clause for theme
 // inheritance.

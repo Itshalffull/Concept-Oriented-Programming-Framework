@@ -13,7 +13,7 @@ import type {
 // --- Public Interface ---
 
 export interface SlotOutletProps {
-  /** Slot configuration from the COIF Slot concept */
+  /** Slot configuration from the Clef Surface Slot concept */
   slot: SlotConfig;
   /** The content element(s) to render into this slot */
   content?: HTMLElement | HTMLElement[] | null;
@@ -44,7 +44,7 @@ export class SlotOutlet {
 
     // Outer slot wrapper
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-slot', props.slot.name);
+    this.el.setAttribute('data-surface-slot', props.slot.name);
     this.el.setAttribute('data-slot-name', props.slot.name);
 
     if (props.slot.component) {
@@ -89,7 +89,7 @@ export class SlotOutlet {
   update(props: Partial<SlotOutletProps>): void {
     if (props.slot !== undefined) {
       this.props.slot = props.slot;
-      this.el.setAttribute('data-coif-slot', props.slot.name);
+      this.el.setAttribute('data-surface-slot', props.slot.name);
       this.el.setAttribute('data-slot-name', props.slot.name);
       if (props.slot.component) {
         this.el.setAttribute('data-slot-component', props.slot.component);

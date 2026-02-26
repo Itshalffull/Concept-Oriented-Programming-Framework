@@ -1,7 +1,7 @@
 // generated: Validator/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ValidatorConformanceTests: XCTestCase {
 

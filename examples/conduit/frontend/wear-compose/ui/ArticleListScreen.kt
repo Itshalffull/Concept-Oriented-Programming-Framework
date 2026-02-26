@@ -1,7 +1,7 @@
 // Conduit Example App -- Wear OS Compose Article List Screen
 // Scrollable list of articles optimized for the round watch display.
 
-package com.copf.conduit.wear.ui
+package com.clef.conduit.wear.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -14,8 +14,8 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.*
-import com.copf.conduit.wear.data.WearApiClient
-import com.copf.conduit.wear.data.WearArticle
+import com.clef.conduit.wear.data.WearApiClient
+import com.clef.conduit.wear.data.WearArticle
 import kotlinx.coroutines.launch
 
 @Composable

@@ -35,10 +35,10 @@ concepts:
   - specs/framework/deployment-validator.concept
   - specs/framework/project-scaffold.concept
   - specs/framework/dev-server.concept
-  - specs/framework/kit-manager.concept
+  - specs/framework/suite-manager.concept
   # (Generation and deploy kit concepts removed during restructure)
   # Scaffold generator concepts
-  - specs/framework/kit-scaffold-gen.concept
+  - specs/framework/suite-scaffold-gen.concept
   - specs/framework/deploy-scaffold-gen.concept
   - specs/framework/interface-scaffold-gen.concept
   - specs/framework/concept-scaffold-gen.concept
@@ -46,8 +46,8 @@ concepts:
   - specs/framework/handler-scaffold-gen.concept
   - specs/framework/storage-adapter-scaffold-gen.concept
   - specs/framework/transport-adapter-scaffold-gen.concept
-  - specs/framework/coif-component-scaffold-gen.concept
-  - specs/framework/coif-theme-scaffold-gen.concept
+  - specs/framework/surface-component-scaffold-gen.concept
+  - specs/framework/surface-theme-scaffold-gen.concept
   # Interface kit orchestration (bind/)
   - bind/interface/concepts/generator.concept
   - bind/interface/concepts/projection.concept
@@ -101,7 +101,7 @@ concepts:
   - repertoire/collaboration/pessimistic-lock.concept
   - repertoire/collaboration/replica.concept
   - repertoire/collaboration/signature.concept
-  # Interface kit additional (bind/)
+  # Interface suite additional (bind/)
   - bind/interface/concepts/action-guide.concept
   - bind/interface/concepts/enrichment-renderer.concept
 
@@ -1352,7 +1352,7 @@ workflows:
       - name: cache-build
         description: "Pre-compile artifacts for faster deployment"
       - name: kit-lifecycle
-        description: "Manage kits that bundle deployed concepts"
+        description: "Manage suites that bundle deployed concepts"
     anti-patterns:
       - title: "Missing transport for cross-runtime sync"
         description: "Two concepts in different runtimes connected by a sync but no transport adapter configured."
@@ -1416,7 +1416,7 @@ workflows:
           │   └── comment.handler.ts
           ├── kits/                  # Reusable concept packages
           │   └── auth-kit/
-          │       ├── kit.yaml
+          │       ├── suite.yaml
           │       ├── concepts/
           │       └── syncs/
           ├── tests/                 # Conformance and integration tests
@@ -1436,7 +1436,7 @@ workflows:
           | `specs/` | Concept definitions | `.concept` |
           | `syncs/` | Sync rules | `.sync` |
           | `implementations/` | Handler code | `.handler.ts` |
-          | `kits/` | Reusable packages | `kit.yaml` + subdirs |
+          | `kits/` | Reusable packages | `suite.yaml` + subdirs |
           | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
           | `tests/` | Tests | `.test.ts` |
 
@@ -1465,7 +1465,7 @@ workflows:
         | specs/ | Concept specifications | .concept files |
         | syncs/ | Synchronization rules | .sync files |
         | implementations/ | Handler code | .handler.ts files |
-        | kits/ | Kit manifests | kit.yaml + concepts + syncs |
+        | kits/ | Kit manifests | suite.yaml + concepts + syncs |
     related-workflows:
       - name: concept-designer
         description: "Design concepts for the new project"
@@ -1480,16 +1480,16 @@ workflows:
     steps:
       - action: init
         title: "Create Kit"
-        prose: "Scaffold a new kit directory with kit.yaml, concept and sync subdirectories, and example files."
+        prose: "Scaffold a new suite directory with suite.yaml, concept and sync subdirectories, and example files."
       - action: validate
         title: "Validate Kit"
-        prose: "Validate a kit manifest, its concept specs, sync definitions, and cross-kit references."
+        prose: "Validate a suite manifest, its concept specs, sync definitions, and cross-suite references."
       - action: test
         title: "Test Kit"
-        prose: "Run conformance and integration tests for the kit."
+        prose: "Run conformance and integration tests for the suite."
       - action: list
         title: "List Active Kits"
-        prose: "List all kits used by the current application."
+        prose: "List all suites used by the current application."
       - action: checkOverrides
         title: "Check Overrides"
         prose: "Verify that application sync overrides reference valid syncs in the target kit."
@@ -1501,7 +1501,7 @@ workflows:
       validate:
         - "All concept specs parse successfully?"
         - "All sync files compile?"
-        - "Cross-kit references resolve?"
+        - "Cross-suite references resolve?"
         - "Type parameters align across concepts?"
       test:
         - "Conformance tests pass?"
@@ -1512,25 +1512,25 @@ workflows:
         - "Override parameters match original sync signature?"
     design-principles:
       - title: "Kit as Reusable Unit"
-        rule: "A kit bundles related concepts and syncs into a single distributable package — like an npm package for CLEF."
+        rule: "A suite bundles related concepts and syncs into a single distributable package — like an npm package for CLEF."
       - title: "Cross-Kit Isolation"
-        rule: "Concepts in one kit never reference concepts in another kit directly — cross-kit integration happens through syncs and type parameter alignment."
+        rule: "Concepts in one kit never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment."
       - title: "Required vs Recommended Syncs"
-        rule: "Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other kits."
+        rule: "Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites."
     references:
-      - path: references/kit-structure.md
+      - path: references/suite-structure.md
         label: "Kit manifest and directory structure"
         tier: reference
         content: |
-          # Kit Manifest and Directory Structure
+          # Suite Manifest and Directory Structure
 
-          A kit bundles related concepts and syncs into a reusable package.
+          A suite bundles related concepts and syncs into a reusable package.
 
           ## Kit Directory
 
           ```
           my-kit/
-          ├── kit.yaml              # Kit manifest
+          ├── suite.yaml              # Kit manifest
           ├── concepts/             # Concept specs
           │   ├── user.concept
           │   └── profile.concept
@@ -1543,10 +1543,10 @@ workflows:
               └── conformance.test.ts
           ```
 
-          ## Kit Manifest (kit.yaml)
+          ## Suite Manifest (suite.yaml)
 
           ```yaml
-          kit:
+          suite:
             name: auth
             version: 1.0.0
             description: Authentication and identity management
@@ -1577,14 +1577,14 @@ workflows:
           |------|---------|-----------|
           | `required` | Load-bearing, must be active | No |
           | `recommended` | Useful defaults | Yes |
-          | `integration` | Wire to other kits | Yes |
+          | `integration` | Wire to other suites | Yes |
 
           ## Kit vs Application Syncs
 
-          Kit syncs wire concepts *within* the kit. Application syncs
-          wire *across* kits. Applications can override recommended
+          Kit syncs wire concepts *within* the suite. Application syncs
+          wire *across* suites. Applications can override recommended
           and integration syncs but not required syncs.
-      - path: references/kit-publishing.md
+      - path: references/suite-publishing.md
         label: "Publishing and versioning kits"
         tier: reference
         content: |
@@ -1599,11 +1599,11 @@ workflows:
 
           ## Publishing Workflow
 
-          1. **Validate** — `clef kit validate ./kits/my-kit`
-          2. **Test** — `clef kit test ./kits/my-kit`
-          3. **Version** — Update `kit.yaml` version field.
-          4. **Package** — `clef kit pack ./kits/my-kit`
-          5. **Publish** — `clef kit publish ./kits/my-kit`
+          1. **Validate** — `clef suite validate ./kits/my-kit`
+          2. **Test** — `clef suite test ./kits/my-kit`
+          3. **Version** — Update `suite.yaml` version field.
+          4. **Package** — `clef suite pack ./kits/my-kit`
+          5. **Publish** — `clef suite publish ./kits/my-kit`
 
           ## Registry
 
@@ -1611,19 +1611,19 @@ workflows:
 
           ```bash
           # Publish to default registry
-          clef kit publish ./kits/my-kit
+          clef suite publish ./kits/my-kit
 
           # Publish to custom registry
-          clef kit publish ./kits/my-kit --registry https://my-registry.com
+          clef suite publish ./kits/my-kit --registry https://my-registry.com
           ```
 
           ## Installing Kits
 
           ```bash
-          clef kit add auth@1.0.0
+          clef suite add auth@1.0.0
           ```
 
-          This adds the kit to the project's `clef.config.yaml`:
+          This adds the suite to the project's `clef.config.yaml`:
 
           ```yaml
           kits:
@@ -1641,7 +1641,7 @@ workflows:
           2. Document migration steps.
           3. Provide a migration sync if state schema changed.
     anti-patterns:
-      - title: "Cross-kit concept reference"
+      - title: "Cross-suite concept reference"
         description: "Kit A's concept imports Kit B's types directly instead of using type parameters."
         bad: |
           # In kit-a/concepts/order.concept
@@ -1656,37 +1656,37 @@ workflows:
       - title: "Monolithic kit"
         description: "Kit bundles unrelated concepts — violates the reusable unit principle."
         bad: |
-          # kit.yaml
-          kit: { name: everything }
+          # suite.yaml
+          suite: { name: everything }
           concepts: [User, Article, Payment, Analytics, Email, Notification]
         good: |
           # Split into focused kits
-          kit: { name: content }   # concepts: [Article, Tag, Comment]
-          kit: { name: commerce }  # concepts: [Payment, Invoice, Refund]
+          suite: { name: content }   # concepts: [Article, Tag, Comment]
+          suite: { name: commerce }  # concepts: [Payment, Invoice, Refund]
     validation-commands:
-      - label: "Validate a kit"
-        command: "npx tsx cli/src/index.ts kit validate ./kits/my-kit"
-      - label: "Run kit tests"
-        command: "npx tsx cli/src/index.ts kit test ./kits/my-kit"
-      - label: "List active kits"
-        command: "npx tsx cli/src/index.ts kit list"
+      - label: "Validate a suite"
+        command: "npx tsx cli/src/index.ts suite validate ./kits/my-kit"
+      - label: "Run suite tests"
+        command: "npx tsx cli/src/index.ts suite test ./kits/my-kit"
+      - label: "List active suites"
+        command: "npx tsx cli/src/index.ts suite list"
     quick-reference:
       heading: "Quick Reference"
       body: |
         | Action | Command | Purpose |
         |--------|---------|---------|
-        | init | `clef kit init <name>` | Scaffold a new kit |
-        | validate | `clef kit validate <path>` | Validate kit manifest |
-        | test | `clef kit test <path>` | Run kit tests |
-        | list | `clef kit list` | List active kits |
-        | checkOverrides | `clef kit check-overrides <path>` | Verify sync overrides |
+        | init | `clef suite init <name>` | Scaffold a new suite |
+        | validate | `clef suite validate <path>` | Validate suite manifest |
+        | test | `clef suite test <path>` | Run suite tests |
+        | list | `clef suite list` | List active suites |
+        | checkOverrides | `clef suite check-overrides <path>` | Verify sync overrides |
     related-workflows:
       - name: concept-designer
-        description: "Design concepts to include in the kit"
+        description: "Design concepts to include in the suite"
       - name: sync-designer
         description: "Write syncs that wire kit concepts together"
       - name: deployment-config
-        description: "Deploy kits to production runtimes"
+        description: "Deploy suites to production runtimes"
 
   # ─── DevServer: dev-workflow ───────────────────────
   dev-workflow:
@@ -1782,8 +1782,8 @@ workflows:
         description: "Debug flows generated during dev server sessions"
       - name: cache-build
         description: "Pre-compile for production after dev iteration"
-  # ─── KitScaffoldGen: kit-scaffold ──────────────────
-  kit-scaffold:
+  # ─── KitScaffoldGen: suite-scaffold ──────────────────
+  suite-scaffold:
     concept: KitScaffoldGen
     steps:
       - action: register
@@ -1793,8 +1793,8 @@ workflows:
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
-        title: "Generate Kit Manifest"
-        prose: "Generate a kit.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: kit-scaffold-emit.sync routes files through Emitter, kit-scaffold-record-cache.sync records output in BuildCache, and kit-scaffold-observer.sync tracks the run in GenerationPlan."
+        title: "Generate Suite Manifest"
+        prose: "Generate a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: suite-scaffold-emit.sync routes files through Emitter, suite-scaffold-record-cache.sync records output in BuildCache, and suite-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Kit name is kebab-case?"
@@ -1808,28 +1808,28 @@ workflows:
         - "Generation step recorded in GenerationPlan?"
     design-principles:
       - title: "Convention Over Configuration"
-        rule: "Generated kit.yaml follows the standard layout — concepts at top, syncs by tier, uses for external references. Tools work without extra configuration."
+        rule: "Generated suite.yaml follows the standard layout — concepts at top, syncs by tier, uses for external references. Tools work without extra configuration."
       - title: "Type Parameter Alignment"
         rule: "Every concept's type parameter has an `as` tag that enables cross-concept type alignment. Concepts sharing the same `as` tag share the same entity type."
       - title: "Sync Tier Discipline"
-        rule: "Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external kits. Never promote a recommended sync to required without justification."
+        rule: "Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external suites. Never promote a recommended sync to required without justification."
     references:
-      - path: references/kit-manifest-schema.md
-        label: "Kit manifest (kit.yaml) schema reference"
+      - path: references/suite-manifest-schema.md
+        label: "Kit manifest (suite.yaml) schema reference"
         tier: reference
         content: |
-          # Kit Manifest Schema Reference
+          # Suite Manifest Schema Reference
 
-          Complete schema for `kit.yaml` manifest files.
+          Complete schema for `suite.yaml` manifest files.
 
           ## Root Structure
 
           ```yaml
-          kit:
+          suite:
             name: my-kit           # kebab-case
             version: 0.1.0         # semver
             description: >         # Multi-line description
-              What this kit provides.
+              What this suite provides.
           ```
 
           ## Concepts Section
@@ -1869,23 +1869,23 @@ workflows:
           |------|------------|-------------|-------------|
           | required | No | No | Removal causes data corruption |
           | recommended | Yes | Yes | Useful defaults apps can customize |
-          | integration | Yes | Depends | Cross-kit wiring |
+          | integration | Yes | Depends | Cross-suite wiring |
 
           ## Uses Section
 
           ```yaml
           uses:
-            - kit: auth
+            - suite: auth
               concepts:
                 - name: User
                   params: { U: { as: user-ref } }
-            - kit: storage
+            - suite: storage
               optional: true
               concepts:
                 - name: Database
           ```
 
-          ## Infrastructure Section (domain kits only)
+          ## Infrastructure Section (domain suites only)
 
           ```yaml
           infrastructure:
@@ -1904,7 +1904,7 @@ workflows:
           ```yaml
           dependencies:
             - auth: ">=1.0.0"
-            - coif-core: ">=0.2.0"
+            - surface-core: ">=0.2.0"
           ```
       - path: references/type-alignment.md
         label: "Cross-concept type parameter alignment"
@@ -1938,10 +1938,10 @@ workflows:
           Now `Session`'s `U` and `User`'s `U` refer to the same entity,
           enabling syncs to pass user references between them.
     validation-commands:
-      - label: "Generate a kit scaffold"
+      - label: "Generate a suite scaffold"
         command: "npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session"
       - label: "Validate generated kit"
-        command: "npx tsx cli/src/index.ts kit validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts suite validate ./kits/my-kit"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -1959,12 +1959,12 @@ workflows:
       - name: kit-lifecycle
         description: "Manage kit versions and dependencies after scaffolding"
       - name: concept-scaffold
-        description: "Generate concept specs for the kit's concepts"
+        description: "Generate concept specs for the suite's concepts"
       - name: sync-scaffold
-        description: "Generate sync rules for the kit's syncs"
+        description: "Generate sync rules for the suite's syncs"
     anti-patterns:
       - title: "Missing type parameter alignment"
-        description: "Concepts in the same kit lack `as` tags, preventing cross-concept type unification."
+        description: "Concepts in the same suite lack `as` tags, preventing cross-concept type unification."
         bad: |
           concepts:
             User:
@@ -2139,8 +2139,8 @@ workflows:
     related-workflows:
       - name: deployment-config
         description: "Validate and refine generated deploy manifests"
-      - name: kit-scaffold
-        description: "Generate kits referenced by the deploy manifest"
+      - name: suite-scaffold
+        description: "Generate suites referenced by the deploy manifest"
       - name: build-orchestration
         description: "Build concepts for the declared runtimes"
     anti-patterns:
@@ -2317,8 +2317,8 @@ workflows:
         | openapi | Boolean | Generate OpenAPI spec (default: true) |
         | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |
     related-workflows:
-      - name: kit-scaffold
-        description: "Generate kits whose concepts the interface exposes"
+      - name: suite-scaffold
+        description: "Generate suites whose concepts the interface exposes"
       - name: concept-scaffold
         description: "Generate concept specs for interface concepts"
       - name: deployment-config
@@ -3065,8 +3065,8 @@ workflows:
             }
           }
 
-  # ─── CoifComponentScaffoldGen: coif-component-scaffold ─
-  coif-component-scaffold:
+  # ─── CoifComponentScaffoldGen: surface-component-scaffold ─
+  surface-component-scaffold:
     concept: CoifComponentScaffoldGen
     steps:
       - action: register
@@ -3076,8 +3076,8 @@ workflows:
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
-        title: "Generate COIF Component"
-        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and kit manifest. Sync rules then cascade: coif-component-scaffold-emit.sync routes files through Emitter, coif-component-scaffold-record-cache.sync records output in BuildCache, and coif-component-scaffold-observer.sync tracks the run in GenerationPlan."
+        title: "Generate Clef Surface Component"
+        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and suite manifest. Sync rules then cascade: surface-component-scaffold-emit.sync routes files through Emitter, surface-component-scaffold-record-cache.sync records output in BuildCache, and surface-component-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Component name is PascalCase?"
@@ -3086,7 +3086,7 @@ workflows:
         - "Events define all transitions?"
         - "Anatomy lists all parts and slots?"
         - "Machine implementation has spawn, send, connect, destroy actions?"
-        - "Kit manifest declares dependencies on coif-core and coif-component?"
+        - "Kit manifest declares dependencies on surface-core and surface-component?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
@@ -3100,13 +3100,13 @@ workflows:
       - title: "Props API via connect()"
         rule: "The machine's connect() action transforms internal state into framework-neutral props objects — one per anatomy part."
     references:
-      - path: references/coif-component-guide.md
-        label: "COIF headless component architecture"
+      - path: references/surface-component-guide.md
+        label: "Clef Surface headless component architecture"
         tier: reference
         content: |
-          # COIF Component Architecture
+          # Clef Surface Component Architecture
 
-          How headless components work in the Concept-Oriented Interface Framework.
+          How headless components work in the Clef Surface.
 
           ## Pipeline
 
@@ -3183,7 +3183,7 @@ workflows:
           | Select | root, trigger, content, item, indicator | closed, open | Selection |
           | Slider | root, track, range, thumb | idle, dragging | Range |
     validation-commands:
-      - label: "Generate a COIF component scaffold"
+      - label: "Generate a Clef Surface component scaffold"
         command: "npx tsx cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
@@ -3204,15 +3204,15 @@ workflows:
         |------|---------|
         | `{name}-widget.concept` | Widget FSM specification |
         | `{name}-anatomy.concept` | Parts contract definition |
-        | `kit.yaml` | Kit manifest with dependencies |
+        | `suite.yaml` | Kit manifest with dependencies |
         | `{name}-machine.handler.ts` | Machine handler implementation |
     related-workflows:
-      - name: coif-theme-scaffold
+      - name: surface-theme-scaffold
         description: "Generate themes to style the component"
       - name: concept-scaffold
         description: "Generate concept specs for custom component concepts"
-      - name: kit-scaffold
-        description: "Generate kit manifests for component libraries"
+      - name: suite-scaffold
+        description: "Generate suite manifests for component libraries"
     anti-patterns:
       - title: "Rendering logic in widget spec"
         description: "Widget spec includes CSS, HTML, or framework-specific code — violates behavior-rendering separation."
@@ -3249,8 +3249,8 @@ workflows:
             }
           }
 
-  # ─── CoifThemeScaffoldGen: coif-theme-scaffold ─────
-  coif-theme-scaffold:
+  # ─── CoifThemeScaffoldGen: surface-theme-scaffold ─────
+  surface-theme-scaffold:
     concept: CoifThemeScaffoldGen
     steps:
       - action: register
@@ -3260,8 +3260,8 @@ workflows:
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
-        title: "Generate COIF Theme"
-        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests. Sync rules then cascade: coif-theme-scaffold-emit.sync routes files through Emitter, coif-theme-scaffold-record-cache.sync records output in BuildCache, and coif-theme-scaffold-observer.sync tracks the run in GenerationPlan."
+        title: "Generate Clef Surface Theme"
+        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests. Sync rules then cascade: surface-theme-scaffold-emit.sync routes files through Emitter, surface-theme-scaffold-record-cache.sync records output in BuildCache, and surface-theme-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Theme name is kebab-case?"
@@ -3285,13 +3285,13 @@ workflows:
       - title: "Theme Layering"
         rule: "Themes are layered: base + variants. Multiple variants can be active simultaneously, resolved by priority then activation order."
     references:
-      - path: references/coif-theme-guide.md
-        label: "COIF design system and theme architecture"
+      - path: references/surface-theme-guide.md
+        label: "Clef Surface design system and theme architecture"
         tier: reference
         content: |
-          # COIF Theme Architecture
+          # Clef Surface Theme Architecture
 
-          How the design system works in the Concept-Oriented Interface Framework.
+          How the design system works in the Clef Surface.
 
           ## Token Hierarchy
 
@@ -3376,7 +3376,7 @@ workflows:
           | AA | 4.5:1 | 3:1 |
           | AAA | 7:1 | 4.5:1 |
     validation-commands:
-      - label: "Generate a COIF theme scaffold"
+      - label: "Generate a Clef Surface theme scaffold"
         command: "npx tsx cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
@@ -3397,7 +3397,7 @@ workflows:
         **Output Files:**
         | File | Purpose |
         |------|---------|
-        | `kit.yaml` | Theme kit manifest |
+        | `suite.yaml` | Theme suite manifest |
         | `themes/{name}-light.json` | Light theme tokens |
         | `themes/{name}-dark.json` | Dark theme tokens |
         | `tokens/palette.json` | Color scale configuration |
@@ -3405,10 +3405,10 @@ workflows:
         | `tokens/motion.json` | Animation timing and easing |
         | `tokens/elevation.json` | Shadow scale |
     related-workflows:
-      - name: coif-component-scaffold
+      - name: surface-component-scaffold
         description: "Generate components to use the theme tokens"
-      - name: kit-scaffold
-        description: "Generate kit manifests for theme packages"
+      - name: suite-scaffold
+        description: "Generate suite manifests for theme packages"
     anti-patterns:
       - title: "Hardcoded colors in components"
         description: "Component uses raw hex values instead of design tokens."
@@ -4104,30 +4104,30 @@ annotations:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
       argument-template: "$ARGUMENTS"
       trigger-description: >
-        Use when creating, validating, testing, or managing concept kits.
+        Use when creating, validating, testing, or managing suites.
         Covers the full kit lifecycle from scaffolding to publishing.
       intro-template: >
         Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish
         reusable concept packages.
       companion-docs:
-        - path: examples/create-a-kit.md
+        - path: examples/create-a-suite.md
           label: "Kit creation walkthrough"
           content: |
             # Walkthrough: Creating a Kit
 
             This walkthrough shows how to create, validate, and test
-            a reusable concept kit.
+            a reusable suite.
 
             ## Step 1: Scaffold
 
             ```bash
-            clef kit init auth-kit
+            clef suite init auth-kit
             ```
 
             Creates:
             ```
             auth-kit/
-            ├── kit.yaml
+            ├── suite.yaml
             ├── concepts/
             │   └── example.concept
             ├── syncs/
@@ -4144,10 +4144,10 @@ annotations:
             cp specs/session.concept auth-kit/concepts/
             ```
 
-            ## Step 3: Update kit.yaml
+            ## Step 3: Update suite.yaml
 
             ```yaml
-            kit:
+            suite:
               name: auth
               version: 1.0.0
               description: Authentication and identity management
@@ -4165,58 +4165,58 @@ annotations:
             ## Step 4: Validate and Test
 
             ```bash
-            clef kit validate ./auth-kit
-            clef kit test ./auth-kit
+            clef suite validate ./auth-kit
+            clef suite test ./auth-kit
             ```
       example-walkthroughs:
-        - path: examples/create-a-kit.md
-          label: "Create a reusable kit (auth example)"
+        - path: examples/create-a-suite.md
+          label: "Create a reusable suite (auth example)"
     init:
       examples:
-        - label: "Create a new kit"
+        - label: "Create a new suite"
           language: bash
-          code: "clef kit init my-kit"
+          code: "clef suite init my-kit"
     validate:
       examples:
-        - label: "Validate a kit"
+        - label: "Validate a suite"
           language: bash
-          code: "clef kit validate ./kits/my-kit"
+          code: "clef suite validate ./kits/my-kit"
     test:
       examples:
-        - label: "Test a kit"
+        - label: "Test a suite"
           language: bash
-          code: "clef kit test ./kits/my-kit"
+          code: "clef suite test ./kits/my-kit"
     list:
       examples:
-        - label: "List active kits"
+        - label: "List active suites"
           language: bash
-          code: "clef kit list"
+          code: "clef suite list"
     checkOverrides:
       examples:
         - label: "Check sync overrides"
           language: bash
-          code: "clef kit check-overrides ./kits/my-kit"
+          code: "clef suite check-overrides ./kits/my-kit"
   KitScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
-      argument-template: "--name <kit-name>"
+      argument-template: "--name <suite-name>"
       trigger-description: >
-        Use when creating a new CLEF kit from scratch. Generates a kit.yaml
+        Use when creating a new CLEF kit from scratch. Generates a suite.yaml
         manifest with concept declarations, sync tier groupings, type parameter
         alignment, and directory structure stubs.
       intro-template: >
-        Scaffold a new CLEF kit named **$ARGUMENTS** with a kit.yaml manifest,
+        Scaffold a new CLEF kit named **$ARGUMENTS** with a suite.yaml manifest,
         concept spec stubs, and sync directory structure.
       companion-docs:
-        - path: examples/scaffold-a-kit.md
-          label: "End-to-end kit scaffolding walkthrough"
+        - path: examples/scaffold-a-suite.md
+          label: "End-to-end suite scaffolding walkthrough"
           content: |
             # Walkthrough: Scaffolding a New Kit
 
             This walkthrough creates an `auth` kit with User, Session, and
             Password concepts.
 
-            ## Step 1: Generate the Kit Scaffold
+            ## Step 1: Generate the Suite Scaffold
 
             ```bash
             clef scaffold kit --name auth --concepts User,Session,Password
@@ -4224,7 +4224,7 @@ annotations:
 
             Output:
             ```
-            Created auth/kit.yaml
+            Created auth/suite.yaml
             Created auth/user.concept (stub)
             Created auth/session.concept (stub)
             Created auth/password.concept (stub)
@@ -4254,7 +4254,7 @@ annotations:
 
             ## Step 3: Add Type Alignment
 
-            Edit `auth/kit.yaml` to align type parameters:
+            Edit `auth/suite.yaml` to align type parameters:
 
             ```yaml
             concepts:
@@ -4269,11 +4269,11 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            clef kit validate ./kits/auth
+            clef suite validate ./kits/auth
             ```
     register:
       examples:
-        - label: "Register the kit scaffold generator"
+        - label: "Register the suite scaffold generator"
           language: typescript
           code: |
             const result = await kitScaffoldGenHandler.register({}, storage);
@@ -4283,13 +4283,13 @@ annotations:
         - label: "Generate a basic kit"
           language: bash
           code: "clef scaffold kit --name auth --concepts User,Session,Password"
-        - label: "Generate a domain kit with infrastructure"
+        - label: "Generate a domain suite with infrastructure"
           language: bash
           code: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
         - label: "Generate programmatically"
           language: typescript
           code: |
-            import { kitScaffoldGenHandler } from './kit-scaffold-gen.impl';
+            import { kitScaffoldGenHandler } from './suite-scaffold-gen.impl';
             const result = await kitScaffoldGenHandler.generate({
               name: 'auth',
               description: 'Authentication and identity management.',
@@ -4300,7 +4300,7 @@ annotations:
               ],
             }, storage);
       references:
-        - path: references/kit-manifest-schema.md
+        - path: references/suite-manifest-schema.md
           label: "Kit manifest schema reference"
 
   DeployScaffoldGen:
@@ -4873,17 +4873,17 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <ComponentName>"
       trigger-description: >
-        Use when creating a new COIF headless component. Generates a complete
+        Use when creating a new Clef Surface headless component. Generates a complete
         component scaffold including widget specification (FSM), anatomy
-        definition (parts contract), machine implementation, and kit manifest.
+        definition (parts contract), machine implementation, and suite manifest.
       intro-template: >
-        Scaffold a COIF headless component **$ARGUMENTS** with widget FSM,
-        anatomy parts, machine implementation, and kit manifest.
+        Scaffold a Clef Surface headless component **$ARGUMENTS** with widget FSM,
+        anatomy parts, machine implementation, and suite manifest.
       companion-docs:
-        - path: examples/scaffold-coif-component.md
-          label: "COIF component scaffolding walkthrough"
+        - path: examples/scaffold-surface-component.md
+          label: "Clef Surface component scaffolding walkthrough"
           content: |
-            # Walkthrough: Scaffolding a COIF Component
+            # Walkthrough: Scaffolding a Clef Surface Component
 
             This walkthrough creates a `Dialog` headless component.
 
@@ -4898,10 +4898,10 @@ annotations:
 
             Output:
             ```
-            Created coif-dialog/dialog-widget.concept
-            Created coif-dialog/dialog-anatomy.concept
-            Created coif-dialog/kit.yaml
-            Created coif-dialog/dialog-machine.handler.ts
+            Created surface-dialog/dialog-widget.concept
+            Created surface-dialog/dialog-anatomy.concept
+            Created surface-dialog/suite.yaml
+            Created surface-dialog/dialog-machine.handler.ts
             ```
 
             ## Step 2: Add Accessibility
@@ -4931,8 +4931,8 @@ annotations:
 
             ## Step 4: Register with Widget Catalog
 
-            The generated widget auto-registers via the coif-component
-            kit's Widget/register action.
+            The generated widget auto-registers via the surface-component
+            suite's Widget/register action.
 
             ## Standard Component Library
 
@@ -4950,7 +4950,7 @@ annotations:
         - label: "Register the component scaffold generator"
           language: typescript
           code: |
-            const result = await coifComponentScaffoldGenHandler.register({}, storage);
+            const result = await surfaceComponentScaffoldGenHandler.register({}, storage);
     generate:
       examples:
         - label: "Generate a dialog component"
@@ -4960,25 +4960,25 @@ annotations:
           language: bash
           code: "clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
       references:
-        - path: references/coif-component-guide.md
-          label: "COIF headless component architecture"
+        - path: references/surface-component-guide.md
+          label: "Clef Surface headless component architecture"
 
   CoifThemeScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <theme-name>"
       trigger-description: >
-        Use when creating a new COIF design system theme. Generates palette
+        Use when creating a new Clef Surface design system theme. Generates palette
         configuration, typography scale, motion definitions, elevation scale,
         and light/dark theme manifests with WCAG accessibility compliance.
       intro-template: >
-        Scaffold a COIF design system theme **$ARGUMENTS** with palette tokens,
+        Scaffold a Clef Surface design system theme **$ARGUMENTS** with palette tokens,
         typography scale, motion transitions, and elevation shadows.
       companion-docs:
-        - path: examples/scaffold-coif-theme.md
-          label: "COIF theme scaffolding walkthrough"
+        - path: examples/scaffold-surface-theme.md
+          label: "Clef Surface theme scaffolding walkthrough"
           content: |
-            # Walkthrough: Scaffolding a COIF Theme
+            # Walkthrough: Scaffolding a Clef Surface Theme
 
             This walkthrough creates an `ocean` design system theme.
 
@@ -4994,7 +4994,7 @@ annotations:
 
             Output:
             ```
-            Created theme-ocean/kit.yaml
+            Created theme-ocean/suite.yaml
             Created theme-ocean/themes/ocean-light.json
             Created theme-ocean/themes/ocean-dark.json
             Created theme-ocean/tokens/palette.json
@@ -5055,7 +5055,7 @@ annotations:
         - label: "Register the theme scaffold generator"
           language: typescript
           code: |
-            const result = await coifThemeScaffoldGenHandler.register({}, storage);
+            const result = await surfaceThemeScaffoldGenHandler.register({}, storage);
     generate:
       examples:
         - label: "Generate a theme with defaults"
@@ -5068,8 +5068,8 @@ annotations:
           language: bash
           code: "clef scaffold theme --name print --mode light"
       references:
-        - path: references/coif-theme-guide.md
-          label: "COIF design system and theme architecture"
+        - path: references/surface-theme-guide.md
+          label: "Clef Surface design system and theme architecture"
 
 # ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
 # CLI-specific: positional args, custom command names.
@@ -5112,7 +5112,7 @@ concept-overrides:
     cli:
       command-group: scaffold
       subcommand: kit
-      description: "Generate kit manifest (kit.yaml) and directory structure."
+      description: "Generate suite manifest (suite.yaml) and directory structure."
       actions:
         preview:
           command: preview
@@ -5130,7 +5130,7 @@ concept-overrides:
               description: "Comma-separated PascalCase concept names"
         generate:
           command: kit
-          description: "Scaffold a new CLEF kit with kit.yaml, concept stubs, and sync directories."
+          description: "Scaffold a new CLEF kit with suite.yaml, concept stubs, and sync directories."
           flags:
             name:
               type: string
@@ -5158,7 +5158,7 @@ concept-overrides:
             domain:
               type: boolean
               required: false
-              description: "Include infrastructure section for domain kit"
+              description: "Include infrastructure section for domain suite"
             output:
               type: string
               required: false
@@ -5167,7 +5167,7 @@ concept-overrides:
           examples:
             - description: "Scaffold a basic kit"
               command: "clef scaffold kit --name auth --concepts User,Session,Password"
-            - description: "Scaffold a domain kit with infrastructure"
+            - description: "Scaffold a domain suite with infrastructure"
               command: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
             - description: "Scaffold with syncs"
               command: "clef scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
@@ -5559,7 +5559,7 @@ concept-overrides:
     cli:
       command-group: scaffold
       subcommand: component
-      description: "Generate COIF headless component (widget, anatomy, machine, kit)."
+      description: "Generate Clef Surface headless component (widget, anatomy, machine, kit)."
       actions:
         preview:
           command: preview
@@ -5577,7 +5577,7 @@ concept-overrides:
               description: "Comma-separated anatomy part names"
         generate:
           command: component
-          description: "Scaffold a complete COIF headless component with FSM, anatomy, and machine."
+          description: "Scaffold a complete Clef Surface headless component with FSM, anatomy, and machine."
           flags:
             name:
               type: string
@@ -5628,7 +5628,7 @@ concept-overrides:
     cli:
       command-group: scaffold
       subcommand: theme
-      description: "Generate COIF design system theme (palette, typography, motion, elevation)."
+      description: "Generate Clef Surface design system theme (palette, typography, motion, elevation)."
       actions:
         preview:
           command: preview

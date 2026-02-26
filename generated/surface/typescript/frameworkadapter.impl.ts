@@ -83,7 +83,7 @@ export const frameworkadapterHandler: ConceptHandler = {
   /**
    * normalize(renderer, props) -> ok(normalized) | notfound(message)
    *
-   * Transform generic COIF props to framework-specific bindings
+   * Transform generic Clef Surface props to framework-specific bindings
    * using the adapter's registered normalizer.
    */
   async normalize(input, storage) {

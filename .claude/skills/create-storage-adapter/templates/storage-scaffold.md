@@ -168,7 +168,7 @@ export function createInMemoryStorage(): ConceptStorage {
         } else {
           if (existing.meta.lastWrittenAt > now) {
             console.warn(
-              `[copf/storage] LWW conflict: overwriting ${relation}/${key} ` +
+              `[clef/storage] LWW conflict: overwriting ${relation}/${key} ` +
               `(existing: ${existing.meta.lastWrittenAt}, incoming: ${now})`,
             );
           }
@@ -528,7 +528,7 @@ interface StoredEntry {
  * Each relation stored as a JSON string under `${namespace}:${relation}`.
  */
 export function createLocalStorage(
-  namespace: string = 'copf',
+  namespace: string = 'clef',
 ): ConceptStorage {
 
   function storageKey(relation: string): string {
@@ -855,8 +855,8 @@ describe('MyStorage', () => {
 ## Template 7: Wiring a Storage Adapter into the System
 
 ```typescript
-// bootstrap.ts — How to wire your storage adapter into COPF
-import { createInProcessAdapter, createConceptRegistry } from '@copf/kernel';
+// bootstrap.ts — How to wire your storage adapter into Clef
+import { createInProcessAdapter, createConceptRegistry } from '@clef/kernel';
 import { createMyStorage } from './my-storage.js';
 import { articleHandler } from './app/article.handler.js';
 import { userHandler } from './app/user.handler.js';

@@ -1,7 +1,7 @@
-# Conduit COPF App — Cloudflare Workers Configuration
+# Conduit Clef App — Cloudflare Workers Configuration
 # Deploys the conduit app as a Cloudflare Worker with Durable Objects storage.
 
-name = "conduit-copf"
+name = "conduit-clef"
 main = "dist/examples/conduit/server/server.js"
 compatibility_date = "2025-01-01"
 node_compat = true

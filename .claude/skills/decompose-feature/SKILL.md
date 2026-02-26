@@ -1,11 +1,11 @@
 ---
 name: decompose-feature
-description: Decompose a feature or app idea into independent COPF concepts and synchronizations following Daniel Jackson's methodology. Produces scaffolded .concept files and .sync files ready for refinement via the create-concept skill.
+description: Decompose a feature or app idea into independent Clef concepts and synchronizations following Daniel Jackson's methodology. Produces scaffolded .concept files and .sync files ready for refinement via the create-concept skill.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<feature or app description>"
 ---
 
-# Decompose Feature into COPF Concepts
+# Decompose Feature into Clef Concepts
 
 Break down **$ARGUMENTS** into independent concepts with synchronizations following Daniel Jackson's concept design methodology.
 
@@ -233,7 +233,7 @@ Before finalizing, verify:
 
 ## Full Decomposition Example
 
-See [examples/social-blogging-platform.md](examples/social-blogging-platform.md) for a complete worked example showing how the existing COPF app was decomposed from a "social blogging platform" feature description into 9 independent concepts with 7 sync files containing 30+ sync rules.
+See [examples/social-blogging-platform.md](examples/social-blogging-platform.md) for a complete worked example showing how the existing Clef app was decomposed from a "social blogging platform" feature description into 9 independent concepts with 7 sync files containing 30+ sync rules.
 
 ## Related Skills
 
@@ -241,5 +241,5 @@ See [examples/social-blogging-platform.md](examples/social-blogging-platform.md)
 |-------|------------|
 | `/create-concept` | Design each concept identified during decomposition |
 | `/create-sync` | Write the sync rules that connect decomposed concepts |
-| `/create-concept-kit` | Bundle the decomposed concepts into a reusable kit |
+| `/create-suite` | Bundle the decomposed concepts into a reusable suite |
 | `/create-implementation` | Write implementations for each decomposed concept |

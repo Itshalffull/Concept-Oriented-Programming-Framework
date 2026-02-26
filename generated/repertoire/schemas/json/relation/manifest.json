@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Relation",
+  "uri": "urn:clef/Relation",
   "name": "Relation",
   "typeParams": [
     {
@@ -559,11 +559,11 @@
   "jsonSchemas": {
     "invocations": {
       "defineRelation": {
-        "$id": "urn:copf/Relation/defineRelation/invocation",
+        "$id": "urn:clef/Relation/defineRelation/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Relation"
+            "const": "urn:clef/Relation"
           },
           "action": {
             "const": "defineRelation"
@@ -586,11 +586,11 @@
         }
       },
       "link": {
-        "$id": "urn:copf/Relation/link/invocation",
+        "$id": "urn:clef/Relation/link/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Relation"
+            "const": "urn:clef/Relation"
           },
           "action": {
             "const": "link"
@@ -617,11 +617,11 @@
         }
       },
       "unlink": {
-        "$id": "urn:copf/Relation/unlink/invocation",
+        "$id": "urn:clef/Relation/unlink/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Relation"
+            "const": "urn:clef/Relation"
           },
           "action": {
             "const": "unlink"
@@ -648,11 +648,11 @@
         }
       },
       "getRelated": {
-        "$id": "urn:copf/Relation/getRelated/invocation",
+        "$id": "urn:clef/Relation/getRelated/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Relation"
+            "const": "urn:clef/Relation"
           },
           "action": {
             "const": "getRelated"
@@ -675,11 +675,11 @@
         }
       },
       "defineRollup": {
-        "$id": "urn:copf/Relation/defineRollup/invocation",
+        "$id": "urn:clef/Relation/defineRollup/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Relation"
+            "const": "urn:clef/Relation"
           },
           "action": {
             "const": "defineRollup"
@@ -702,11 +702,11 @@
         }
       },
       "computeRollup": {
-        "$id": "urn:copf/Relation/computeRollup/invocation",
+        "$id": "urn:clef/Relation/computeRollup/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Relation"
+            "const": "urn:clef/Relation"
           },
           "action": {
             "const": "computeRollup"
@@ -732,11 +732,11 @@
     "completions": {
       "defineRelation": {
         "ok": {
-          "$id": "urn:copf/Relation/defineRelation/completion/ok",
+          "$id": "urn:clef/Relation/defineRelation/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "defineRelation"
@@ -758,11 +758,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Relation/defineRelation/completion/exists",
+          "$id": "urn:clef/Relation/defineRelation/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "defineRelation"
@@ -786,11 +786,11 @@
       },
       "link": {
         "ok": {
-          "$id": "urn:copf/Relation/link/completion/ok",
+          "$id": "urn:clef/Relation/link/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "link"
@@ -820,11 +820,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Relation/link/completion/invalid",
+          "$id": "urn:clef/Relation/link/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "link"
@@ -852,11 +852,11 @@
       },
       "unlink": {
         "ok": {
-          "$id": "urn:copf/Relation/unlink/completion/ok",
+          "$id": "urn:clef/Relation/unlink/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "unlink"
@@ -886,11 +886,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Relation/unlink/completion/notfound",
+          "$id": "urn:clef/Relation/unlink/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "unlink"
@@ -922,11 +922,11 @@
       },
       "getRelated": {
         "ok": {
-          "$id": "urn:copf/Relation/getRelated/completion/ok",
+          "$id": "urn:clef/Relation/getRelated/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "getRelated"
@@ -948,11 +948,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Relation/getRelated/completion/notfound",
+          "$id": "urn:clef/Relation/getRelated/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "getRelated"
@@ -980,11 +980,11 @@
       },
       "defineRollup": {
         "ok": {
-          "$id": "urn:copf/Relation/defineRollup/completion/ok",
+          "$id": "urn:clef/Relation/defineRollup/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "defineRollup"
@@ -1010,11 +1010,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Relation/defineRollup/completion/notfound",
+          "$id": "urn:clef/Relation/defineRollup/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "defineRollup"
@@ -1038,11 +1038,11 @@
       },
       "computeRollup": {
         "ok": {
-          "$id": "urn:copf/Relation/computeRollup/completion/ok",
+          "$id": "urn:clef/Relation/computeRollup/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "computeRollup"
@@ -1064,11 +1064,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Relation/computeRollup/completion/notfound",
+          "$id": "urn:clef/Relation/computeRollup/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Relation"
+              "const": "urn:clef/Relation"
             },
             "action": {
               "const": "computeRollup"

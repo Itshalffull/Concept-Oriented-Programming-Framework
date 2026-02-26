@@ -28,7 +28,7 @@ const RELOCATED_APP_SPECS: Record<string, string> = {
 };
 const IMPL_RUST = join(ROOT, 'codegen', 'rust', 'src');
 const IMPL_SOLIDITY = join(ROOT, 'codegen', 'solidity', 'src');
-const IMPL_SWIFT = join(ROOT, 'codegen', 'swift', 'Sources', 'COPF');
+const IMPL_SWIFT = join(ROOT, 'codegen', 'swift', 'Sources', 'Clef');
 const IMPL_TS = join(ROOT, 'handlers', 'ts', 'app');
 const GENERATED_RUST = join(ROOT, 'generated', 'rust');
 const GENERATED_SOLIDITY = join(ROOT, 'generated', 'solidity');

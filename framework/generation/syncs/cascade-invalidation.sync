@@ -1,4 +1,4 @@
-# CascadeInvalidation — generation kit recommended sync
+# CascadeInvalidation — generation suite recommended sync
 sync CascadeInvalidation [eager]
   purpose { After direct invalidation, find downstream kinds via KindSystem. }
 when {

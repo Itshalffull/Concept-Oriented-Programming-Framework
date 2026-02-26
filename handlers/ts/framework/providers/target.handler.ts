@@ -3,7 +3,7 @@
 //
 // Routes generation requests to the appropriate target provider
 // (RestTarget, GraphqlTarget, etc.) based on target type.
-// Architecture doc: Interface Kit, Section 1.3
+// Architecture doc: Clef Bind, Section 1.3
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

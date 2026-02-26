@@ -41,7 +41,7 @@ export class ThemeSwitch {
     this.props = props;
 
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-theme-switch', '');
+    this.el.setAttribute('data-surface-theme-switch', '');
     this.el.setAttribute('role', 'radiogroup');
     this.el.setAttribute('aria-label', 'Theme switcher');
 
@@ -122,7 +122,7 @@ export class ThemeSwitch {
       btn.setAttribute('data-theme-name', theme.name);
 
       if (theme.active) {
-        btn.classList.add('coif-theme-switch--active');
+        btn.classList.add('surface-theme-switch--active');
       }
 
       btn.style.cursor = 'pointer';
@@ -142,11 +142,11 @@ export class ThemeSwitch {
 
     const label = document.createElement('label');
     label.textContent = 'Theme';
-    label.setAttribute('for', 'coif-theme-select');
+    label.setAttribute('for', 'surface-theme-select');
     this.el.appendChild(label);
 
     const select = document.createElement('select');
-    select.id = 'coif-theme-select';
+    select.id = 'surface-theme-select';
     select.setAttribute('aria-label', 'Select theme');
 
     for (const theme of themes) {

@@ -1,7 +1,7 @@
 // ============================================================
-// COIF Framework Widgets — Svelte Components Index
+// Clef Surface Framework Widgets — Svelte Components Index
 //
-// Barrel export for all Svelte-compatible COIF components.
+// Barrel export for all Svelte-compatible Clef Surface components.
 // Each component uses the imperative factory pattern:
 //
 //   const instance = createXxxComponent({ target, props });

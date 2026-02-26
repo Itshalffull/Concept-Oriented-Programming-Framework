@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/FluxProvider",
+  "uri": "urn:clef/FluxProvider",
   "name": "FluxProvider",
   "typeParams": [
     {
@@ -480,11 +480,11 @@
   "jsonSchemas": {
     "invocations": {
       "emit": {
-        "$id": "urn:copf/FluxProvider/emit/invocation",
+        "$id": "urn:clef/FluxProvider/emit/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FluxProvider"
+            "const": "urn:clef/FluxProvider"
           },
           "action": {
             "const": "emit"
@@ -511,11 +511,11 @@
         }
       },
       "reconciliationStatus": {
-        "$id": "urn:copf/FluxProvider/reconciliationStatus/invocation",
+        "$id": "urn:clef/FluxProvider/reconciliationStatus/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FluxProvider"
+            "const": "urn:clef/FluxProvider"
           },
           "action": {
             "const": "reconciliationStatus"
@@ -534,11 +534,11 @@
         }
       },
       "helmRelease": {
-        "$id": "urn:copf/FluxProvider/helmRelease/invocation",
+        "$id": "urn:clef/FluxProvider/helmRelease/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FluxProvider"
+            "const": "urn:clef/FluxProvider"
           },
           "action": {
             "const": "helmRelease"
@@ -568,11 +568,11 @@
     "completions": {
       "emit": {
         "ok": {
-          "$id": "urn:copf/FluxProvider/emit/completion/ok",
+          "$id": "urn:clef/FluxProvider/emit/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FluxProvider"
+              "const": "urn:clef/FluxProvider"
             },
             "action": {
               "const": "emit"
@@ -603,11 +603,11 @@
       },
       "reconciliationStatus": {
         "ok": {
-          "$id": "urn:copf/FluxProvider/reconciliationStatus/completion/ok",
+          "$id": "urn:clef/FluxProvider/reconciliationStatus/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FluxProvider"
+              "const": "urn:clef/FluxProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -642,11 +642,11 @@
           }
         },
         "pending": {
-          "$id": "urn:copf/FluxProvider/reconciliationStatus/completion/pending",
+          "$id": "urn:clef/FluxProvider/reconciliationStatus/completion/pending",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FluxProvider"
+              "const": "urn:clef/FluxProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -675,11 +675,11 @@
           }
         },
         "failed": {
-          "$id": "urn:copf/FluxProvider/reconciliationStatus/completion/failed",
+          "$id": "urn:clef/FluxProvider/reconciliationStatus/completion/failed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FluxProvider"
+              "const": "urn:clef/FluxProvider"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -707,11 +707,11 @@
       },
       "helmRelease": {
         "ok": {
-          "$id": "urn:copf/FluxProvider/helmRelease/completion/ok",
+          "$id": "urn:clef/FluxProvider/helmRelease/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FluxProvider"
+              "const": "urn:clef/FluxProvider"
             },
             "action": {
               "const": "helmRelease"
@@ -737,11 +737,11 @@
           }
         },
         "chartNotFound": {
-          "$id": "urn:copf/FluxProvider/helmRelease/completion/chartNotFound",
+          "$id": "urn:clef/FluxProvider/helmRelease/completion/chartNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FluxProvider"
+              "const": "urn:clef/FluxProvider"
             },
             "action": {
               "const": "helmRelease"
@@ -770,5 +770,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate Flux CRDs from COPF deploy plans Owns Kustomization \n CRDs , HelmRelease objects , source controller references , \n and reconciliation status tracking"
+  "purpose": "Generate Flux CRDs from Clef deploy plans Owns Kustomization \n CRDs , HelmRelease objects , source controller references , \n and reconciliation status tracking"
 }

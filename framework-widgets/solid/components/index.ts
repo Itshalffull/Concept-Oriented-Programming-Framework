@@ -1,8 +1,8 @@
 // ============================================================
-// COIF Framework Widgets — Solid.js Components
+// Clef Surface Framework Widgets — Solid.js Components
 //
 // Barrel export for all Solid-style components that implement
-// the COIF concept rendering layer. Each component uses
+// the Clef Surface concept rendering layer. Each component uses
 // fine-grained reactivity (signals, effects, memos) with
 // direct DOM manipulation — no virtual DOM.
 // ============================================================

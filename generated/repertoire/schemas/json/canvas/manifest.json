@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Canvas",
+  "uri": "urn:clef/Canvas",
   "name": "Canvas",
   "typeParams": [
     {
@@ -424,11 +424,11 @@
   "jsonSchemas": {
     "invocations": {
       "addNode": {
-        "$id": "urn:copf/Canvas/addNode/invocation",
+        "$id": "urn:clef/Canvas/addNode/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Canvas"
+            "const": "urn:clef/Canvas"
           },
           "action": {
             "const": "addNode"
@@ -459,11 +459,11 @@
         }
       },
       "moveNode": {
-        "$id": "urn:copf/Canvas/moveNode/invocation",
+        "$id": "urn:clef/Canvas/moveNode/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Canvas"
+            "const": "urn:clef/Canvas"
           },
           "action": {
             "const": "moveNode"
@@ -494,11 +494,11 @@
         }
       },
       "connectNodes": {
-        "$id": "urn:copf/Canvas/connectNodes/invocation",
+        "$id": "urn:clef/Canvas/connectNodes/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Canvas"
+            "const": "urn:clef/Canvas"
           },
           "action": {
             "const": "connectNodes"
@@ -525,11 +525,11 @@
         }
       },
       "groupNodes": {
-        "$id": "urn:copf/Canvas/groupNodes/invocation",
+        "$id": "urn:clef/Canvas/groupNodes/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Canvas"
+            "const": "urn:clef/Canvas"
           },
           "action": {
             "const": "groupNodes"
@@ -556,11 +556,11 @@
         }
       },
       "embedFile": {
-        "$id": "urn:copf/Canvas/embedFile/invocation",
+        "$id": "urn:clef/Canvas/embedFile/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Canvas"
+            "const": "urn:clef/Canvas"
           },
           "action": {
             "const": "embedFile"
@@ -590,11 +590,11 @@
     "completions": {
       "addNode": {
         "ok": {
-          "$id": "urn:copf/Canvas/addNode/completion/ok",
+          "$id": "urn:clef/Canvas/addNode/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "addNode"
@@ -610,11 +610,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Canvas/addNode/completion/notfound",
+          "$id": "urn:clef/Canvas/addNode/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "addNode"
@@ -638,11 +638,11 @@
       },
       "moveNode": {
         "ok": {
-          "$id": "urn:copf/Canvas/moveNode/completion/ok",
+          "$id": "urn:clef/Canvas/moveNode/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "moveNode"
@@ -658,11 +658,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Canvas/moveNode/completion/notfound",
+          "$id": "urn:clef/Canvas/moveNode/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "moveNode"
@@ -686,11 +686,11 @@
       },
       "connectNodes": {
         "ok": {
-          "$id": "urn:copf/Canvas/connectNodes/completion/ok",
+          "$id": "urn:clef/Canvas/connectNodes/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "connectNodes"
@@ -706,11 +706,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Canvas/connectNodes/completion/notfound",
+          "$id": "urn:clef/Canvas/connectNodes/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "connectNodes"
@@ -734,11 +734,11 @@
       },
       "groupNodes": {
         "ok": {
-          "$id": "urn:copf/Canvas/groupNodes/completion/ok",
+          "$id": "urn:clef/Canvas/groupNodes/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "groupNodes"
@@ -754,11 +754,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Canvas/groupNodes/completion/notfound",
+          "$id": "urn:clef/Canvas/groupNodes/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "groupNodes"
@@ -782,11 +782,11 @@
       },
       "embedFile": {
         "ok": {
-          "$id": "urn:copf/Canvas/embedFile/completion/ok",
+          "$id": "urn:clef/Canvas/embedFile/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "embedFile"
@@ -802,11 +802,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Canvas/embedFile/completion/notfound",
+          "$id": "urn:clef/Canvas/embedFile/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Canvas"
+              "const": "urn:clef/Canvas"
             },
             "action": {
               "const": "embedFile"

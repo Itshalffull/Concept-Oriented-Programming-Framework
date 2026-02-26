@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title TypeSystem
 /// @notice Concept-oriented type registration and resolution system
-/// @dev Implements the TypeSystem concept from COPF specification.
+/// @dev Implements the TypeSystem concept from Clef specification.
 ///      Provides type registration, resolution, and existence checks.
 
 contract TypeSystem {

@@ -29,7 +29,7 @@ concept SwiftBuilder [S] {
     action build(source: String, toolchainPath: String, platform: String, config: { mode: String, features: option list String }) {
       -> ok(build: S, artifactPath: String, artifactHash: String) {
         Run `swift build` with the resolved toolchain.
-        Configuration maps from COPF modes:
+        Configuration maps from Clef modes:
         "debug" -> swift build (default)
         "release" -> swift build -c release
 
@@ -89,7 +89,7 @@ concept SwiftBuilder [S] {
 
   invariant {
     after build(source: "./generated/swift/password", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: { mode: "release" })
-      -> ok(build: s, artifactPath: ".copf-artifacts/swift/password", artifactHash: "sha256:abc")
+      -> ok(build: s, artifactPath: ".clef-artifacts/swift/password", artifactHash: "sha256:abc")
     then test(build: s, toolchainPath: "/usr/bin/swiftc",
               invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json", configFile: "Package.swift", env: null },
               testType: "unit")

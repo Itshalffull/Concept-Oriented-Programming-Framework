@@ -1,4 +1,4 @@
-# Concept-Oriented Programming Framework (COPF)
+# Clef
 
 ## Architecture & Implementation Specification
 
@@ -9,19 +9,19 @@
 
 | Version | Date | Summary |
 |---------|------|---------|
-| 0.19.0 | 2026-02-18 | §16.13 SDK vs Generator Distinction: generators (RustGen, SwiftGen, SolidityGen) for local concepts with complex type systems, SDKs (Python ~200 LOC, Go ~300 LOC) for remote concepts behind HTTP. Priority order defined. §16.14 Pre-Conceptual Taxonomy: concept test table (storage/transport/SDK/CLI = not concepts; REST gateway/rate limiter/auth/registry/cron = concepts; EVM adapter = split). Edge runtime in §8.1: `cloudflare-worker` and `vercel-edge` types, follow phone pattern. "All domains" boundary test added to §16.11. Phases 20-22: multi-language generators + SDKs, edge runtime storage adapters (Cloudflare KV/DO, Vercel KV), web3 domain kit (EVM/StarkNet transports, IPFS storage, ChainMonitor/Content/Wallet concepts, sync patterns). |
-| 0.18.0 | 2026-02-18 | Marked phases 1-18 complete, all bootstrap stages complete. Added §16.11 Engine/Concept Boundary Principle, §16.12 Async Gate Convention. `@gate` annotation in grammar. Domain kit directory structure with `infrastructure/` for pre-conceptual code. `copf check --pattern` and `copf trace --gates` CLI. Gate-aware `TraceNode`/`TraceSyncNode` interfaces. Phase 19 (async gate implementation) added as next. Version changelog added. |
+| 0.19.0 | 2026-02-18 | §16.13 SDK vs Generator Distinction: generators (RustGen, SwiftGen, SolidityGen) for local concepts with complex type systems, SDKs (Python ~200 LOC, Go ~300 LOC) for remote concepts behind HTTP. Priority order defined. §16.14 Pre-Conceptual Taxonomy: concept test table (storage/transport/SDK/CLI = not concepts; REST gateway/rate limiter/auth/registry/cron = concepts; EVM adapter = split). Edge runtime in §8.1: `cloudflare-worker` and `vercel-edge` types, follow phone pattern. "All domains" boundary test added to §16.11. Phases 20-22: multi-language generators + SDKs, edge runtime storage adapters (Cloudflare KV/DO, Vercel KV), web3 domain suite (EVM/StarkNet transports, IPFS storage, ChainMonitor/Content/Wallet concepts, sync patterns). |
+| 0.18.0 | 2026-02-18 | Marked phases 1-18 complete, all bootstrap stages complete. Added §16.11 Engine/Concept Boundary Principle, §16.12 Async Gate Convention. `@gate` annotation in grammar. Domain suite directory structure with `infrastructure/` for pre-conceptual code. `clef check --pattern` and `clef trace --gates` CLI. Gate-aware `TraceNode`/`TraceSyncNode` interfaces. Phase 19 (async gate implementation) added as next. Version changelog added. |
 | 0.17.0 | 2026-02-18 | Kernel shrinkage architecture: §17 with 6 subsections. FlowTrace, DeploymentValidator, Migration concept specs. SyncEngine eventual queue fold (§17.4). Stage 3.5 pre-compilation design (§17.5). Kernel target state table (§17.6). Phases 14-18 (kernel extraction through barrel cleanup). Bootstrap §10 updated with new concepts, syncs, Stage 3.5. Dependency graph updated. |
 | 0.16.0 | 2026-02-18 | Operational architecture integration across all sections. §16 added with 10 subsections (error tracing, observability, hot reloading, test helpers, schema migration, conflict resolution, lite query diagnostics, ordering, sync composition, authorization). Grammar extended with `@version(N)` annotation. Storage interface extended (`getMeta`, `getVersion`, `onConflict`). Telemetry concept + sync. Registry reload/deregister actions. Deploy manifest `engine:` config. Phases 10-13 added. §15 open questions all resolved. |
 | 0.9.0 | 2026-02-17 | CodeGen refactor pattern: SchemaGen → ConceptManifest → per-language generators. `ConceptManifest` interface defined. TypeScriptGen/RustGen concept specs. Compiler pipeline syncs updated. Stage 4/4.5 migration plan. Operational design decisions documented (appendix-style, later integrated into §16). |
-| 0.6.0 | 2026-02-16 | Phases 1-6 complete. Self-hosting achieved (Stage 3). Concept kits (§9) with kit manifest, type alignment, sync tiers. RealWorld benchmark validated. Distribution architecture (Phase 9 design). Web3 kit manifest example added to §9.1. |
+| 0.6.0 | 2026-02-16 | Phases 1-6 complete. Self-hosting achieved (Stage 3). Concept suites (§9) with suite manifest, type alignment, sync tiers. RealWorld benchmark validated. Distribution architecture (Phase 9 design). Web3 suite manifest example added to §9.1. |
 | 0.1.0 | 2025-02-15 | Initial draft. Sections 1-15: spec language, IR, GraphQL, sync language, sync engine, compiler pipeline, deployment manifest, bootstrapping plan, project structure, CLI, roadmap (phases 1-9), Stage 0 acceptance tests, open questions. |
 
 ---
 
 ## 1. Overview
 
-COPF is a framework for building software systems as compositions of fully independent, spec-driven services called **concepts**, coordinated by declarative **synchronizations**. It is language-agnostic, spec-first, and designed for distributed deployment — a concept may run on a server, a phone, an embedded device, or in-browser.
+Clef is a framework for building software systems as compositions of fully independent, spec-driven services called **concepts**, coordinated by declarative **synchronizations**. It is language-agnostic, spec-first, and designed for distributed deployment — a concept may run on a server, a phone, an embedded device, or in-browser.
 
 ### 1.1 Design Principles
 
@@ -298,7 +298,7 @@ concept Password [U] {
 
 **`@version(N)`** is an annotation on the concept declaration. It is an integer that increments when the state schema changes in a way that requires data migration (adding, removing, or renaming relations or fields). Non-breaking changes (new actions, new variants) do not require a version bump. The framework uses this at startup to detect version mismatches and block the concept until migration runs — see Section 16.5 for the full migration design.
 
-**`@gate`** marks a concept as an async gate — a concept whose actions may complete asynchronously after an arbitrarily long wait. The annotation is metadata for tooling: `copf check --pattern async-gate` validates the convention, and `copf trace` annotates gate steps with ⏳ icons and progress reporting. The engine ignores it entirely. See Section 16.12 for the full convention.
+**`@gate`** marks a concept as an async gate — a concept whose actions may complete asynchronously after an arbitrarily long wait. The annotation is metadata for tooling: `clef check --pattern async-gate` validates the convention, and `clef trace` annotates gate steps with ⏳ icons and progress reporting. The engine ignores it entirely. See Section 16.12 for the full convention.
 
 ---
 
@@ -1144,7 +1144,7 @@ Every action record is connected to its causal predecessors. The full provenance
 - "Which synchronization caused this invocation?"
 - "What was the full causal chain from the initial request to the final response?"
 
-This graph is itself exposed as a concept (see Section 10, bootstrapping) and queryable via GraphQL. The `FlowTrace` API (Section 16.1) provides a structured, annotated view of the provenance graph for debugging — including timing, failed branches, and syncs that did not fire. The `copf trace <flow-id>` CLI command renders this as a human-readable tree.
+This graph is itself exposed as a concept (see Section 10, bootstrapping) and queryable via GraphQL. The `FlowTrace` API (Section 16.1) provides a structured, annotated view of the provenance graph for debugging — including timing, failed branches, and syncs that did not fire. The `clef trace <flow-id>` CLI command renders this as a human-readable tree.
 
 ### 6.8 Concept Storage Interface
 
@@ -1432,7 +1432,7 @@ export type PasswordValidateOutput =
   | { variant: "ok"; valid: boolean };
 
 // generated: password.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./password.types";
 
 export interface PasswordHandler {
@@ -1448,7 +1448,7 @@ export interface PasswordHandler {
 import type {
   ActionInvocation, ActionCompletion,
   ConceptTransport, ConceptQuery
-} from "@copf/runtime";
+} from "@clef/runtime";
 import type { PasswordHandler } from "./password.handler";
 
 /**
@@ -1641,7 +1641,7 @@ The compiler generates:
 ```typescript
 // generated: password.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 // The handler import path comes from the deployment manifest
 // or a default convention: ./<concept>.impl
 import { passwordHandler } from "./password.impl";
@@ -1791,7 +1791,7 @@ runtimes:
     storage: cloudflare-kv   # or cloudflare-do, vercel-kv
 ```
 
-Edge concepts are ideal candidates for pre-compiled `.copf-cache/` artifacts (Section 17.5) — no parsing at runtime means minimal cold start. The deploy manifest lists the available edge runtime types:
+Edge concepts are ideal candidates for pre-compiled `.clef-cache/` artifacts (Section 17.5) — no parsing at runtime means minimal cold start. The deploy manifest lists the available edge runtime types:
 
 | Runtime Type | Storage Options | Notes |
 |-------------|----------------|-------|
@@ -1809,18 +1809,18 @@ When multiple runtimes have `engine: true`, the system forms an engine hierarchy
 
 ---
 
-## 9. Concept Kits
+## 9. Suites
 
-Some concepts are naturally designed to work together — they form a coherent system only when connected by syncs. A **kit** is a package of concepts, their standard syncs, and a type parameter mapping that declares how the concepts relate to each other.
+Some concepts are naturally designed to work together — they form a coherent system only when connected by syncs. A **suite** is a package of concepts, their standard syncs, and a type parameter mapping that declares how the concepts relate to each other.
 
-Kits are a packaging convention, not a language construct. The framework does not have first-class knowledge of kits — it loads the specs and syncs like any others. The kit manifest is metadata for humans, LLMs, package managers, and the compiler's validation tooling. A language construct may be added in the future once real usage patterns emerge.
+Kits are a packaging convention, not a language construct. The framework does not have first-class knowledge of suites — it loads the specs and syncs like any others. The suite manifest is metadata for humans, LLMs, package managers, and the compiler's validation tooling. A language construct may be added in the future once real usage patterns emerge.
 
-### 9.1 Kit Manifest Format
+### 9.1 Suite Manifest Format
 
-A kit is a directory with a `kit.yaml` manifest. Kits bundle concepts, syncs, implementations, and optionally **infrastructure** — transport adapters, storage backends, and deploy templates that the kit's concepts require.
+A suite is a directory with a `suite.yaml` manifest. Kits bundle concepts, syncs, implementations, and optionally **infrastructure** — transport adapters, storage backends, and deploy templates that the suite's concepts require.
 
 ```yaml
-# kits/content-management/kit.yaml
+# kits/content-management/suite.yaml
 kit:
   name: content-management
   version: 0.1.0
@@ -1829,7 +1829,7 @@ kit:
     Provides typed entities with attachable fields and inter-entity
     relationships, with cascade lifecycle management.
 
-# Concepts included in this kit and how their type parameters align.
+# Concepts included in this suite and how their type parameters align.
 # The 'as' field declares a shared type identity across concepts.
 concepts:
   Entity:
@@ -1854,7 +1854,7 @@ concepts:
     params:
       N: { as: entity-ref }    # Node IS an entity
 
-# Syncs bundled with the kit, with tier annotations.
+# Syncs bundled with the suite, with tier annotations.
 syncs:
   # Required syncs: removing these causes data corruption or
   # violates invariants that the concepts depend on. Apps cannot
@@ -1898,7 +1898,7 @@ syncs:
         When a field is attached or updated, touch the entity's
         updated timestamp. Disable if you manage timestamps differently.
 
-# External concepts from other kits that this kit's syncs reference.
+# External concepts from other suites that this suite's syncs reference.
 # Required by default; set optional: true for conditional syncs
 # that only load when the named kit is present.
 uses:
@@ -1911,11 +1911,11 @@ uses:
       - path: ./syncs/entity-ownership.sync
         description: >
           When a user creates an entity, record ownership.
-          Only loads if the auth kit is present.
+          Only loads if the auth suite is present.
 
-# Optional: infrastructure that the kit's concepts require.
+# Optional: infrastructure that the suite's concepts require.
 # Transports and storage adapters are pre-conceptual (Section 10.3)
-# but belong in the kit because the concepts can't function without them.
+# but belong in the suite because the concepts can't function without them.
 # infrastructure:
 #   transports:
 #     - name: evm
@@ -1929,19 +1929,19 @@ uses:
 #     - path: ./deploy-templates/mainnet.deploy.yaml
 ```
 
-Kits that introduce a new deployment target — a new chain, a new edge runtime, a new device class — bundle the pre-conceptual infrastructure alongside their concepts. The infrastructure section is optional; most kits (auth, content-management) only need concepts and syncs.
+Kits that introduce a new deployment target — a new chain, a new edge runtime, a new device class — bundle the pre-conceptual infrastructure alongside their concepts. The infrastructure section is optional; most suites (auth, content-management) only need concepts and syncs.
 
-**The `uses` section** declares external concepts from other kits that this kit's syncs reference. Required by default — the named kit must be present for this kit to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present. The `copf kit validate` command checks that every concept referenced in a sync is either a local concept, declared in `uses`, or a built-in like `Web`. Optional uses syncs are exempt from strict validation since they only load conditionally. Concepts remain fully independent per Design Principle 2; only syncs create cross-kit references, and `uses` makes those references explicit for the compiler.
+**The `uses` section** declares external concepts from other suites that this suite's syncs reference. Required by default — the named kit must be present for this suite to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present. The `clef suite validate` command checks that every concept referenced in a sync is either a local concept, declared in `uses`, or a built-in like `Web`. Optional uses syncs are exempt from strict validation since they only load conditionally. Concepts remain fully independent per Design Principle 2; only syncs create cross-suite references, and `uses` makes those references explicit for the compiler.
 
-**Example: web3 kit manifest**
+**Example: web3 suite manifest**
 
 ```yaml
-# kits/web3/kit.yaml
+# kits/web3/suite.yaml
 kit:
   name: web3
   version: 0.1.0
   description: >
-    Blockchain integration for COPF. Chain monitoring with
+    Blockchain integration for Clef. Chain monitoring with
     finality-aware gating, IPFS content storage with pinning,
     and wallet-based authentication via signature verification.
 
@@ -1993,7 +1993,7 @@ uses:
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >
-          Wire Wallet/verify into the auth kit's JWT flow.
+          Wire Wallet/verify into the auth suite's JWT flow.
           Wallet signature verification as an auth method.
 
 infrastructure:
@@ -2056,20 +2056,20 @@ chainConfigs:
 The `params` section declares a shared identity namespace across concepts using `as` tags. In the example above, Entity's `E`, Field's `T`, Relation's `T`, and Node's `N` all share `as: entity-ref`. This means:
 
 - They all carry the same kind of opaque identifier at runtime.
-- Syncs within the kit can safely pass values between them (a UUID from Entity/create flows into Field/attach as the target).
-- The compiler can validate that kit syncs respect these alignments — if a sync passes a `field-ref` where an `entity-ref` is expected, that's a warning.
+- Syncs within the suite can safely pass values between them (a UUID from Entity/create flows into Field/attach as the target).
+- The compiler can validate that suite syncs respect these alignments — if a sync passes a `field-ref` where an `entity-ref` is expected, that's a warning.
 
-This validation is **advisory, not enforcing**. At runtime, all type parameters are strings. But the alignment metadata lets the compiler catch likely mistakes in syncs, and it documents the intended relationships for humans and LLMs writing new syncs against the kit.
+This validation is **advisory, not enforcing**. At runtime, all type parameters are strings. But the alignment metadata lets the compiler catch likely mistakes in syncs, and it documents the intended relationships for humans and LLMs writing new syncs against the suite.
 
 ### 9.3 Sync Tiers
 
 Kit syncs are divided into two tiers:
 
-**Required syncs** enforce structural invariants that the kit's concepts depend on. If removed, concept state becomes inconsistent — orphaned records, dangling references, unpopulated fields. These are loaded automatically when the kit is used, and the compiler emits an error if an app attempts to disable them.
+**Required syncs** enforce structural invariants that the suite's concepts depend on. If removed, concept state becomes inconsistent — orphaned records, dangling references, unpopulated fields. These are loaded automatically when the suite is used, and the compiler emits an error if an app attempts to disable them.
 
 Required syncs should be kept to a minimum — only syncs where removal causes data corruption. "Cascade delete fields when entity is deleted" is required because without it, the Field concept silently accumulates garbage. "Send a notification when an entity is created" is not required — nothing breaks if you remove it, it's just a nice feature.
 
-**Recommended syncs** are loaded by default but can be overridden or disabled by the app. To override, the app declares a sync with the same `name` as the kit sync — the app's version replaces the kit's version. To disable, the app lists the sync name in a `disable` block in the deployment manifest.
+**Recommended syncs** are loaded by default but can be overridden or disabled by the app. To override, the app declares a sync with the same `name` as the suite sync — the app's version replaces the suite's version. To disable, the app lists the sync name in a `disable` block in the deployment manifest.
 
 ```yaml
 # In the app's deploy.yaml
@@ -2091,7 +2091,7 @@ kits:
 
 ### 9.4 Kit Syncs — The Content Management Example
 
-Here are the key syncs for the content management kit:
+Here are the key syncs for the content management suite:
 
 **Required: Cascade Delete Fields**
 
@@ -2176,7 +2176,7 @@ sync DefaultTitleField [recommended] {
 
 ### 9.5 Using a Kit in an App
 
-An app references kits in its deployment manifest. The compiler resolves kit paths, loads all concept specs and syncs, applies overrides and disables, validates type parameter alignment, and produces the final set of specs and syncs for compilation.
+An app references suites in its deployment manifest. The compiler resolves kit paths, loads all concept specs and syncs, applies overrides and disables, validates type parameter alignment, and produces the final set of specs and syncs for compilation.
 
 ```yaml
 # app.deploy.yaml
@@ -2216,12 +2216,12 @@ syncs:
 
 ### 9.6 Kit Directory Structure
 
-**Framework kits** (concepts + syncs only):
+**Framework suites** (concepts + syncs only):
 
 ```
 kits/
 ├── auth/
-│   ├── kit.yaml
+│   ├── suite.yaml
 │   ├── user.concept
 │   ├── password.concept
 │   ├── jwt.concept
@@ -2238,7 +2238,7 @@ kits/
 │       └── integration/
 │
 ├── rate-limiting/
-│   ├── kit.yaml
+│   ├── suite.yaml
 │   ├── rate-limiter.concept           # cross-domain, async gate pattern
 │   ├── syncs/
 │   │   └── rate-limit-check.sync      # recommended
@@ -2248,14 +2248,14 @@ kits/
 │   └── tests/
 ```
 
-**Domain kits** (concepts + syncs + infrastructure):
+**Domain suites** (concepts + syncs + infrastructure):
 
-Domain kits that introduce new deployment targets bundle pre-conceptual code (transport adapters, storage backends, deploy templates) alongside their concepts. The infrastructure section groups code that is below the concept abstraction but domain-specific — it doesn't belong in the framework kernel because it's useless outside the kit's domain.
+Domain suites that introduce new deployment targets bundle pre-conceptual code (transport adapters, storage backends, deploy templates) alongside their concepts. The infrastructure section groups code that is below the concept abstraction but domain-specific — it doesn't belong in the framework kernel because it's useless outside the suite's domain.
 
 ```
 kits/
 ├── web3/
-│   ├── kit.yaml
+│   ├── suite.yaml
 │   ├── chain-monitor.concept          # async gate: finality, reorgs
 │   ├── contract.concept               # on-chain concept wrapper
 │   ├── content.concept                # IPFS content management
@@ -2264,7 +2264,7 @@ kits/
 │   │   ├── finality-gate.sync         # required
 │   │   ├── reorg-compensation.sync    # recommended
 │   │   ├── content-pinning.sync       # recommended
-│   │   └── wallet-auth.sync           # integration (auth kit)
+│   │   └── wallet-auth.sync           # integration (auth suite)
 │   ├── implementations/
 │   │   └── typescript/
 │   │       ├── chain-monitor.impl.ts
@@ -2284,7 +2284,7 @@ kits/
 │   └── tests/
 │
 ├── iot/
-│   ├── kit.yaml
+│   ├── suite.yaml
 │   ├── freshness-gate.concept         # async gate: TTL, staleness
 │   ├── device.concept                 # device registration, heartbeat
 │   ├── telemetry-ingest.concept       # sensor data collection
@@ -2302,7 +2302,7 @@ kits/
 │   └── tests/
 │
 ├── workflow/
-│   ├── kit.yaml
+│   ├── suite.yaml
 │   ├── approval-queue.concept         # async gate: human approval
 │   ├── escalation.concept             # timeout → escalate
 │   ├── notification.concept           # email/slack on pending
@@ -2315,23 +2315,23 @@ kits/
 │   └── tests/
 ```
 
-The `infrastructure/` directory is reserved for pre-conceptual code per Section 10.3. It contains only transport adapters, storage backends, and deploy templates — never concepts, syncs, or implementations. The kit installer copies infrastructure into the appropriate kernel extension paths; the `copf kit validate` command verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
+The `infrastructure/` directory is reserved for pre-conceptual code per Section 10.3. It contains only transport adapters, storage backends, and deploy templates — never concepts, syncs, or implementations. The suite installer copies infrastructure into the appropriate kernel extension paths; the `clef suite validate` command verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
 
 ### 9.7 Kit Design Guidelines
 
 **Keep required syncs minimal.** A sync is required only if removing it causes data corruption — orphaned records, dangling references, violated uniqueness constraints. Behavioral preferences (notifications, defaults, formatting) are always recommended.
 
-**One purpose per concept, even within a kit.** A kit doesn't change the concept design rules. Entity handles lifecycle, Field handles attachment, Relation handles linking. Don't create a "Node" concept that combines all three — that defeats the modularity that makes kits composable.
+**One purpose per concept, even within a suite.** A suite doesn't change the concept design rules. Entity handles lifecycle, Field handles attachment, Relation handles linking. Don't create a "Node" concept that combines all three — that defeats the modularity that makes suites composable.
 
 **Design for override at the recommended level.** When writing a recommended sync, ask: "What would an app replace this with?" If the answer is "nothing, they'd just remove it," use `disable`. If the answer is "a different version of the same behavior," use `override` with a named sync.
 
-**Ship implementations, not just specs.** A kit should include default implementations for all its concepts. Apps can use them as-is, or provide their own implementations that conform to the same specs. The kit's integration tests validate that the default implementations work with the kit's syncs.
+**Ship implementations, not just specs.** A suite should include default implementations for all its concepts. Apps can use them as-is, or provide their own implementations that conform to the same specs. The suite's integration tests validate that the default implementations work with the suite's syncs.
 
 **Type parameter alignment is documentation, not enforcement.** The `as` tags help the compiler catch mistakes, but they don't prevent creative uses. An app might intentionally pass a User ID where an entity-ref is expected — if they've thought it through, the framework shouldn't stop them.
 
-**Bundle infrastructure when introducing new deployment targets.** If a kit's concepts require a transport adapter (EVM, StarkNet) or a storage backend (IPFS, CloudflareKV) that doesn't ship with the framework, include it in the kit's `infrastructure` section. Pre-conceptual code belongs in the kit when it's domain-specific — the EVM transport adapter is useless outside web3, so it ships with the web3 kit, not the framework kernel.
+**Bundle infrastructure when introducing new deployment targets.** If a suite's concepts require a transport adapter (EVM, StarkNet) or a storage backend (IPFS, CloudflareKV) that doesn't ship with the framework, include it in the suite's `infrastructure` section. Pre-conceptual code belongs in the suite when it's domain-specific — the EVM transport adapter is useless outside web3, so it ships with the web3 suite, not the framework kernel.
 
-**Domain gating is a concept, not an engine extension.** If your kit needs "wait for condition X before proceeding" (finality, batch size, approval, TTL), model X as a concept with a long-running action that completes when the condition is met. Don't add annotations to the sync engine. The engine handles delivery semantics (eager, eventual, local, idempotent). Domain semantics belong in concepts. See Section 16.11 for the full rationale.
+**Domain gating is a concept, not an engine extension.** If your suite needs "wait for condition X before proceeding" (finality, batch size, approval, TTL), model X as a concept with a long-running action that completes when the condition is met. Don't add annotations to the sync engine. The engine handles delivery semantics (eager, eventual, local, idempotent). Domain semantics belong in concepts. See Section 16.11 for the full rationale.
 
 ---
 
@@ -2962,9 +2962,9 @@ Eventually, even these responsibilities could be modeled as concepts (a Loader c
 
 > The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. `createKernel()` directly instantiates Stage 0 classes; even `createSelfHostedKernel()` still uses Stage 0 parsers to load files.
 
-This stage introduces a pre-compilation step. Instead of re-parsing specs at every boot, the kernel loads pre-compiled artifacts from a `.copf-cache/` directory. See Section 17.5 for full design.
+This stage introduces a pre-compilation step. Instead of re-parsing specs at every boot, the kernel loads pre-compiled artifacts from a `.clef-cache/` directory. See Section 17.5 for full design.
 
-1. `copf compile --cache` runs the full pipeline through concept implementations and writes compiled artifacts to `.copf-cache/`.
+1. `clef compile --cache` runs the full pipeline through concept implementations and writes compiled artifacts to `.clef-cache/`.
 2. On startup, the kernel loads pre-compiled `CompiledSync` objects and concept registrations directly — no parsing.
 3. `createSelfHostedKernel()` becomes the default (and only) boot path.
 4. All Stage 0 scaffolding (parser.ts, sync-parser.ts, Stage 0 SyncEngine/ActionLog classes) is deleted from the kernel.
@@ -3044,8 +3044,8 @@ Stage 3 (engine self-hosting) ✅
         │
 Stage 3.5 (eliminate bootstrap chain) ✅
   │
-  ├── .copf-cache/ pre-compiled artifact format
-  ├── copf compile --cache writes compiled artifacts
+  ├── .clef-cache/ pre-compiled artifact format
+  ├── clef compile --cache writes compiled artifacts
   ├── kernel boots from cache (no parsing at startup)
   ├── Stage 0 scaffolding deleted (~1,523 LOC)
   └── kernel reaches ~584 LOC target
@@ -3065,11 +3065,11 @@ Stage 5 (multi-target) ✅
         │
 Stage 6 (operational architecture) ✅
   │
-  ├── FlowTrace API + copf trace CLI
+  ├── FlowTrace API + clef trace CLI
   ├── createMockHandler test utility
   ├── Telemetry concept wired via ExportTelemetry sync
   ├── Hot reloading (reloadSyncs, reloadConcept, degraded marking)
-  ├── Schema migration (@version, startup check, copf migrate)
+  ├── Schema migration (@version, startup check, clef migrate)
   ├── Conflict resolution (LWW timestamps → onConflict hooks)
   └── Lite query diagnostics (snapshot size warnings)
 ```
@@ -3091,7 +3091,7 @@ See Section 16.14 for a comprehensive taxonomy of what is and isn't a concept �
 ## 11. Project Structure
 
 ```
-copf/
+clef/
 ├── kernel/                     # Stage 0: hand-written minimal runtime
 │   ├── src/
 │   │   ├── parser.ts           # minimal .concept parser
@@ -3158,9 +3158,9 @@ copf/
 ├── deploy/
 │   └── app.deploy.yaml
 │
-├── kits/                       # Concept kits (bundled concepts + syncs)
-│   ├── auth/                   # Auth kit
-│   │   ├── kit.yaml
+├── kits/                       # Concept suites (bundled concepts + syncs)
+│   ├── auth/                   # Auth suite
+│   │   ├── suite.yaml
 │   │   ├── user.concept
 │   │   ├── password.concept
 │   │   ├── jwt.concept
@@ -3173,8 +3173,8 @@ copf/
 │   │   │       ├── password.impl.ts
 │   │   │       └── jwt.impl.ts
 │   │   └── tests/
-│   └── content-management/     # Content management kit
-│       ├── kit.yaml
+│   └── content-management/     # Content management suite
+│       ├── suite.yaml
 │       ├── entity.concept
 │       ├── field.concept
 │       ├── relation.concept
@@ -3194,19 +3194,19 @@ copf/
 │   └── integration/            # Flow-level tests
 │
 └── tools/
-    └── copf-cli/               # CLI wrapping the compiler pipeline
+    └── clef-cli/               # CLI wrapping the compiler pipeline
         ├── src/
         │   ├── commands/
         │   │   ├── init.ts
-        │   │   ├── check.ts        # copf check + --pattern validation (Section 16.12)
+        │   │   ├── check.ts        # clef check + --pattern validation (Section 16.12)
         │   │   ├── compile.ts
         │   │   ├── generate.ts
         │   │   ├── test.ts
         │   │   ├── deploy.ts
-        │   │   ├── kit.ts          # kit init, validate, test, list
-        │   │   ├── trace.ts        # copf trace <flow-id> (Section 16.1)
-        │   │   └── migrate.ts      # copf migrate (Section 16.5)
-        │   ├── patterns/           # Convention validators for copf check --pattern
+        │   │   ├── kit.ts          # suite init, validate, test, list
+        │   │   ├── trace.ts        # clef trace <flow-id> (Section 16.1)
+        │   │   └── migrate.ts      # clef migrate (Section 16.5)
+        │   ├── patterns/           # Convention validators for clef check --pattern
         │   │   └── async-gate.ts   # validates @gate convention (Section 16.12)
         │   └── index.ts
         └── package.json
@@ -3217,55 +3217,55 @@ copf/
 ## 12. CLI Interface
 
 ```bash
-# Initialize a new COPF project
-copf init myapp
+# Initialize a new Clef project
+clef init myapp
 
 # Parse and validate all specs
-copf check
+clef check
 
 # Validate a concept against a known pattern (Section 16.12)
-copf check --pattern async-gate chain-monitor.concept
+clef check --pattern async-gate chain-monitor.concept
 
 # Generate schemas + code for all concepts
-copf generate --target typescript
-copf generate --target rust --concept Password
+clef generate --target typescript
+clef generate --target rust --concept Password
 
 # Run conformance tests for a concept
-copf test password
+clef test password
 
 # Run full integration test (start engine, register concepts, run flows)
-copf test --integration
+clef test --integration
 
 # Compile syncs and validate against concept manifests
-copf compile-syncs
+clef compile-syncs
 
 # Start the development server (engine + all local concepts)
 # Watches .concept, .sync, and implementation files for changes.
 # On .concept/.sync change: re-compiles via pipeline, calls reloadSyncs.
 # On implementation change: calls reloadConcept with new transport.
 # Shows compiler errors inline on failure; old sync set remains active.
-copf dev
+clef dev
 
 # Deploy according to manifest
-copf deploy --manifest deploy/app.deploy.yaml
+clef deploy --manifest deploy/app.deploy.yaml
 
 # Kit management
-copf kit init my-kit                    # scaffold a new kit directory
-copf kit validate ./kits/content-mgmt   # validate kit manifest, type alignment, sync tiers
-copf kit test ./kits/content-mgmt       # run kit's conformance + integration tests
-copf kit list                           # show kits used by the current app
-copf kit check-overrides                # verify app overrides reference valid sync names
+clef suite init my-kit                    # scaffold a new suite directory
+clef suite validate ./kits/content-mgmt   # validate suite manifest, type alignment, sync tiers
+clef suite test ./kits/content-mgmt       # run suite's conformance + integration tests
+clef suite list                           # show suites used by the current app
+clef suite check-overrides                # verify app overrides reference valid sync names
 
 # Flow tracing and debugging
-copf trace <flow-id>                    # render provenance graph with status per node
-copf trace <flow-id> --failed           # show only failed branches
-copf trace <flow-id> --gates            # highlight async gate steps with progress
-copf trace <flow-id> --json             # machine-readable trace output
+clef trace <flow-id>                    # render provenance graph with status per node
+clef trace <flow-id> --failed           # show only failed branches
+clef trace <flow-id> --gates            # highlight async gate steps with progress
+clef trace <flow-id> --json             # machine-readable trace output
 
 # Schema migration
-copf migrate <concept>                  # run pending migrations for a concept
-copf migrate --check                    # detect version mismatches without running
-copf migrate --all                      # run all pending migrations
+clef migrate <concept>                  # run pending migrations for a concept
+clef migrate --check                    # detect version mismatches without running
+clef migrate --all                      # run all pending migrations
 ```
 
 ---
@@ -3301,7 +3301,7 @@ copf migrate --all                      # run all pending migrations
 - [x] Implement TypeScript code generation (types, handler interface, adapter)
 - [x] Implement conformance test generation from invariants
 - [x] Implement `.sync` file parser and validator
-- [x] Build `copf` CLI with `check`, `generate`, `compile-syncs`, `test` commands
+- [x] Build `clef` CLI with `check`, `generate`, `compile-syncs`, `test` commands
 
 ### Phase 4: RealWorld Benchmark (Weeks 9-11) ✅ Complete
 
@@ -3311,16 +3311,16 @@ copf migrate --all                      # run all pending migrations
 - [x] Document design rules and compare with conventional implementations
 - [x] Package the auth-related concepts (User, Password, JWT) as a first kit
 
-### Phase 5: Concept Kits (Weeks 12-13) ✅ Complete
+### Phase 5: Suites (Weeks 12-13) ✅ Complete
 
-- [x] Implement kit.yaml manifest parser and loader
+- [x] Implement suite.yaml manifest parser and loader
 - [x] Implement type parameter alignment validation (advisory warnings)
 - [x] Implement sync tier enforcement (required vs recommended, compile-time checks)
 - [x] Implement override and disable mechanics in the deployment manifest
-- [x] Build a content-management kit (Entity, Field, Relation, Node) as the reference kit
-- [x] Build an auth kit (User, Password, JWT, Session) extracted from Phase 4
-- [x] Add `copf kit init`, `copf kit validate`, `copf kit test` CLI commands
-- [x] Test: app using two kits together with overrides and integration syncs
+- [x] Build a content-management kit (Entity, Field, Relation, Node) as the reference suite
+- [x] Build an auth suite (User, Password, JWT, Session) extracted from Phase 4
+- [x] Add `clef suite init`, `clef suite validate`, `clef suite test` CLI commands
+- [x] Test: app using two suites together with overrides and integration syncs
 
 ### Phase 6: Self-Hosting (Weeks 14-16) ✅ Complete
 
@@ -3388,7 +3388,7 @@ This phase addresses the highest-impact developer experience gaps. See Section 1
   - [x] For each completion, check sync index for candidate syncs and mark unfired ones
   - [x] Compute per-action timing from ActionLog timestamps
   - [x] Build `FlowTrace` / `TraceNode` / `TraceSyncNode` tree
-- [x] Implement `copf trace <flow-id>` CLI renderer
+- [x] Implement `clef trace <flow-id>` CLI renderer
   - [x] Tree-formatted output with status icons, timing, sync names
   - [x] `--failed` flag: filter to only failed/unfired branches
   - [x] `--json` flag: output `FlowTrace` as JSON for tooling
@@ -3408,13 +3408,13 @@ See Section 16.2 and 16.3 for full design.
   - [x] Implement reference exporter (stdout for dev, OTLP for production)
   - [x] Map ActionLog records to OpenTelemetry spans (flow → trace, action → span, provenance → parent)
 - [x] Wire `ExportTelemetry` sync (`ActionLog/append → Telemetry/export`)
-- [x] Add Telemetry to default concept kit (recommended sync, overridable/disableable)
+- [x] Add Telemetry to default suite (recommended sync, overridable/disableable)
 - [x] Implement hot reloading
   - [x] `SyncEngine.reloadSyncs(syncs[])` — atomic index swap, in-flight flows use old set
   - [x] `Registry.reloadConcept(uri, transport)` — transport swap with drain
   - [x] `Registry.deregisterConcept(uri)` — mark dependent syncs as degraded with warning log
   - [x] Un-degrade syncs automatically when concept re-registers
-- [x] Implement `copf dev` file watcher
+- [x] Implement `clef dev` file watcher
   - [x] Watch `.concept` and `.sync` files
   - [x] Re-compile on change via compiler pipeline
   - [x] Call `reloadSyncs` on success, show compiler errors on failure
@@ -3430,11 +3430,11 @@ See Section 16.5 for full design.
   - [x] On concept load, compare spec `@version` against `_meta.version` in storage
   - [x] If mismatch, set concept to migration-required state
   - [x] Reject all invocations except `migrate` with `→ needsMigration` error
-- [x] Implement `copf migrate` CLI
-  - [x] `copf migrate <concept>` — invoke concept's `migrate` action, update `_meta.version`
-  - [x] `copf migrate --check` — report version status for all concepts
-  - [x] `copf migrate --all` — run pending migrations in dependency order
-- [x] Add `migrate` action convention to documentation and concept kit templates
+- [x] Implement `clef migrate` CLI
+  - [x] `clef migrate <concept>` — invoke concept's `migrate` action, update `_meta.version`
+  - [x] `clef migrate --check` — report version status for all concepts
+  - [x] `clef migrate --all` — run pending migrations in dependency order
+- [x] Add `migrate` action convention to documentation and suite templates
 - [x] Test: bump a concept version, verify startup blocks, migrate, verify service resumes
 
 ### Phase 13: Conflict Resolution (Weeks 34-35) ✅ Complete
@@ -3478,19 +3478,19 @@ Extract three kernel modules into proper concept specs + implementations. See Se
   - [x] Write `flow-trace.concept` spec (Section 17.1)
   - [x] Move `kernel/src/flow-trace.ts` logic into `flow-trace.impl.ts`
   - [x] Wire sync: `ActionLog/query → ok ⟹ FlowTrace/build`
-  - [x] Verify `copf trace` CLI works through the concept (not direct kernel calls)
+  - [x] Verify `clef trace` CLI works through the concept (not direct kernel calls)
   - [x] Delete `kernel/src/flow-trace.ts`
 - [x] Implement `DeploymentValidator` concept
   - [x] Write `deployment-validator.concept` spec (Section 17.2)
   - [x] Move `kernel/src/deploy.ts` logic into `deployment-validator.impl.ts`
   - [x] Wire sync: `SchemaGen/generate → ok ⟹ DeploymentValidator/validate`
-  - [x] Verify `copf deploy` CLI works through the concept
+  - [x] Verify `clef deploy` CLI works through the concept
   - [x] Delete `kernel/src/deploy.ts`
 - [x] Implement `Migration` concept
   - [x] Write `migration.concept` spec (Section 17.3)
   - [x] Move `kernel/src/migration.ts` logic into `migration.impl.ts`
   - [x] Wire sync: `Registry/register → ok ⟹ Migration/check`
-  - [x] Verify `copf migrate` CLI works through the concept
+  - [x] Verify `clef migrate` CLI works through the concept
   - [x] Delete `kernel/src/migration.ts`
 - [x] Verify kernel LOC reduced by ~722 lines
 - [x] All conformance and integration tests pass
@@ -3515,17 +3515,17 @@ Fold the `DistributedSyncEngine` into the `SyncEngine` concept rather than keepi
 
 The largest single kernel shrinkage step. The kernel currently carries ~1,523 LOC of Stage 0 scaffolding (parsers, engine, action-log, registry) that is load-bearing — it runs on every startup even though concept implementations exist. This phase introduces a pre-compilation step so the kernel boots from compiled artifacts instead of re-parsing specs.
 
-- [x] Design `.copf-cache/` pre-compiled artifact format
+- [x] Design `.clef-cache/` pre-compiled artifact format
   - [x] Serialized `CompiledSync` objects (JSON or binary)
   - [x] Concept registrations with transport configs
   - [x] ConceptManifest snapshots for each loaded concept
   - [x] Cache invalidation: hash of source `.concept` + `.sync` files
-- [x] Implement `copf compile --cache` command
+- [x] Implement `clef compile --cache` command
   - [x] Runs full compile pipeline (parse → schema → codegen → sync compile)
-  - [x] Writes compiled artifacts to `.copf-cache/`
+  - [x] Writes compiled artifacts to `.clef-cache/`
   - [x] Records source file hashes for staleness detection
 - [x] Implement cached boot path in kernel
-  - [x] On startup, check for `.copf-cache/` with valid hashes
+  - [x] On startup, check for `.clef-cache/` with valid hashes
   - [x] If valid: load pre-compiled syncs and registrations directly (no parsing)
   - [x] If stale or missing: fall back to full compile (with deprecation warning)
   - [x] `createSelfHostedKernel()` becomes the default (and only) path
@@ -3536,8 +3536,8 @@ The largest single kernel shrinkage step. The kernel currently carries ~1,523 LO
   - [x] Remove Stage 0 `ActionLog` class from `kernel/src/engine.ts` (~100 LOC)
   - [x] Remove inline registry from `kernel/src/transport.ts` (~40 LOC)
 - [x] Verify all startup paths work through cached boot
-  - [x] `copf dev` uses cached boot with file watcher for incremental recompile
-  - [x] `copf deploy` uses cached boot
+  - [x] `clef dev` uses cached boot with file watcher for incremental recompile
+  - [x] `clef deploy` uses cached boot
   - [x] Integration tests use cached boot
 - [x] Verify kernel LOC reduced by ~1,523 lines
 
@@ -3561,11 +3561,11 @@ Implements the engine/concept boundary principle (Section 16.11) and async gate 
   - [ ] Propagate to `ConceptManifest.gate` field in SchemaGen output
   - [ ] Verify round-trip: parse → manifest → generated skeleton includes `@gate` metadata
 - [ ] Pattern validator framework
-  - [ ] Implement `copf check --pattern <name> <concept>` CLI command
+  - [ ] Implement `clef check --pattern <name> <concept>` CLI command
   - [ ] Pattern validators are pluggable: each is a function `(ast: ConceptAST) → ValidationResult`
   - [ ] `ValidationResult` contains errors, warnings, and info-level messages
-  - [ ] Pattern validators live in `tools/copf-cli/src/patterns/`
-  - [ ] `copf check` (no flags) runs structural validation only; `--pattern` runs convention checks
+  - [ ] Pattern validators live in `tools/clef-cli/src/patterns/`
+  - [ ] `clef check` (no flags) runs structural validation only; `--pattern` runs convention checks
 - [ ] `async-gate` pattern validator
   - [ ] Check: concept has `@gate` annotation
   - [ ] Check: at least one action has an `ok` variant (proceed signal)
@@ -3585,7 +3585,7 @@ Implements the engine/concept boundary principle (Section 16.11) and async gate 
   - [ ] Human-friendly duration for gate actions (`14m 18s` instead of `858000ms`)
   - [ ] "waited for:" line showing `waitDescription` when gate completes
   - [ ] Progress bar or fraction when `progress` data available on pending gates
-  - [ ] `copf trace --gates` flag: filter output to show only gate steps and their downstream chains
+  - [ ] `clef trace --gates` flag: filter output to show only gate steps and their downstream chains
 - [ ] Tests
   - [ ] Pattern validator: validate conforming gate concept passes, non-gate concept fails gracefully
   - [ ] FlowTrace: synthetic flow with a gate action, verify `TraceNode.gate` populated correctly
@@ -3651,12 +3651,12 @@ Folds into the distribution architecture (Phase 9 design). Edge concepts follow 
   - [ ] Validate: edge concept with Cloudflare KV storage, lite query mode, upstream coordination
 - [ ] Documentation: "edge concepts follow the phone pattern"
   - [ ] Edge functions are thin handlers with lite query mode
-  - [ ] Pre-compiled `.copf-cache/` artifacts minimize cold start (no parsing at runtime)
+  - [ ] Pre-compiled `.clef-cache/` artifacts minimize cold start (no parsing at runtime)
   - [ ] Server-side engine coordinates all cross-concept syncs
 
 ### Phase 22: Web3 Kit (Weeks 55-60)
 
-Implement the web3 domain kit. All domain logic lives in concepts + syncs — zero engine extensions. See Section 16.11 for the engine/concept boundary principle.
+Implement the web3 domain suite. All domain logic lives in concepts + syncs — zero engine extensions. See Section 16.11 for the engine/concept boundary principle.
 
 - [ ] Pre-conceptual infrastructure
   - [ ] EVM transport adapter (~300 LOC)
@@ -3690,14 +3690,14 @@ Implement the web3 domain kit. All domain logic lives in concepts + syncs — ze
   - [ ] Wallet concept
     - [ ] Wraps signature verification (ecrecover / EIP-712)
     - [ ] Same auth pattern as JWT: syncs check `Wallet/verify → ok` before protected actions
-    - [ ] Integrates with auth kit via integration sync
+    - [ ] Integrates with auth suite via integration sync
 - [ ] Chain configs in deploy manifest
-  - [ ] Finality policy per chain (Section 9.1, web3 kit manifest)
+  - [ ] Finality policy per chain (Section 9.1, web3 suite manifest)
   - [ ] EVM chain deploy templates (~30 LOC per chain): Ethereum mainnet, Arbitrum, Optimism, Base, multi-chain
 - [ ] Sync patterns (examples + templates, not engine code)
   - [ ] Finality-gated bridge pattern: two-sync chain through ChainMonitor/awaitFinality
   - [ ] Reorg compensation pattern: `ChainMonitor/onBlock → reorg` triggers compensating actions (freeze, burn, flag). Provenance graph for causal chain walkback
-  - [ ] Wallet auth integration: `Wallet/verify` wired into auth kit's JWT flow via integration sync
+  - [ ] Wallet auth integration: `Wallet/verify` wired into auth suite's JWT flow via integration sync
 
 ---
 
@@ -3786,7 +3786,7 @@ sync EchoResponse {
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { createKernel } from "@copf/kernel";
+import { createKernel } from "@clef/kernel";
 import { echoHandler } from "./echo.impl";
 
 describe("Stage 0 — Test A: Echo", () => {
@@ -3803,7 +3803,7 @@ describe("Stage 0 — Test A: Echo", () => {
       name: "HandleEcho",
       when: [
         {
-          concept: "urn:copf/Web", action: "request",
+          concept: "urn:clef/Web", action: "request",
           inputFields: [
             { name: "method", match: { type: "literal", value: "echo" } },
             { name: "text", match: { type: "variable", name: "text" } },
@@ -3829,7 +3829,7 @@ describe("Stage 0 — Test A: Echo", () => {
       name: "EchoResponse",
       when: [
         {
-          concept: "urn:copf/Web", action: "request",
+          concept: "urn:clef/Web", action: "request",
           inputFields: [
             { name: "method", match: { type: "literal", value: "echo" } },
           ],
@@ -3848,7 +3848,7 @@ describe("Stage 0 — Test A: Echo", () => {
       where: [],
       then: [
         {
-          concept: "urn:copf/Web", action: "respond",
+          concept: "urn:clef/Web", action: "respond",
           fields: [
             { name: "request", value: { type: "variable", name: "request" } },
             { name: "body", value: {
@@ -3873,10 +3873,10 @@ describe("Stage 0 — Test A: Echo", () => {
     const flow = kernel.getFlowLog(response.flowId);
     expect(flow).toHaveLength(4); // request completion, send invocation, send completion, respond invocation
     expect(flow.map(r => `${r.concept}/${r.action}`)).toEqual([
-      "urn:copf/Web/request",
+      "urn:clef/Web/request",
       "urn:test/Echo/send",
       "urn:test/Echo/send",    // completion
-      "urn:copf/Web/respond",
+      "urn:clef/Web/respond",
     ]);
   });
 });
@@ -4079,7 +4079,7 @@ sync RegistrationError {
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { createKernel } from "@copf/kernel";
+import { createKernel } from "@clef/kernel";
 import { userHandler } from "./user.impl";
 import { passwordHandler } from "./password.impl";
 import { jwtHandler } from "./jwt.impl";
@@ -4191,12 +4191,12 @@ describe("Stage 0 — Test B: Registration Flow", () => {
       .filter(r => r.type === "completion")
       .map(r => `${r.concept}/${r.action}:${r.variant}`);
 
-    expect(actionNames).toContain("urn:copf/Web/request:ok");
+    expect(actionNames).toContain("urn:clef/Web/request:ok");
     expect(actionNames).toContain("urn:app/Password/validate:ok");
     expect(actionNames).toContain("urn:app/User/register:ok");
     expect(actionNames).toContain("urn:app/Password/set:ok");
     expect(actionNames).toContain("urn:app/JWT/generate:ok");
-    expect(actionNames).toContain("urn:copf/Web/respond:ok");
+    expect(actionNames).toContain("urn:clef/Web/respond:ok");
 
     // Every action should have a sync edge back to its cause
     const invocations = flow.filter(r => r.type === "invocation" && r.sync);
@@ -4230,11 +4230,11 @@ All nine original open questions have been addressed by implementation review an
 
 3. **Sync composition.** ✅ Resolved — Section 16.9. No meta-syncs. Composition through completion chaining. Validated by RealWorld implementation.
 
-4. **Hot reloading.** ✅ Resolved — Section 16.3. Four scenarios: (A) `reloadSyncs` with atomic index swap, (B) `reloadConcept` for transport updates with drain, (C) `deregisterConcept` with degraded sync marking, (D) spec changes go through compiler pipeline — `copf dev` watches files and re-compiles.
+4. **Hot reloading.** ✅ Resolved — Section 16.3. Four scenarios: (A) `reloadSyncs` with atomic index swap, (B) `reloadConcept` for transport updates with drain, (C) `deregisterConcept` with degraded sync marking, (D) spec changes go through compiler pipeline — `clef dev` watches files and re-compiles.
 
 5. **Testing syncs in isolation.** ✅ Resolved — Section 16.4. `createMockHandler(ast, overrides)` utility generates default ok responses from concept ASTs. ~20 lines, eliminates test boilerplate.
 
-6. **Schema migration.** ✅ Resolved — Section 16.5. `@version(N)` on concept specs. Convention: `migrate` action on versioned concepts. Framework: startup version check, refuse-to-serve until migrated, `copf migrate` CLI.
+6. **Schema migration.** ✅ Resolved — Section 16.5. `@version(N)` on concept specs. Convention: `migrate` action on versioned concepts. Framework: startup version check, refuse-to-serve until migrated, `clef migrate` CLI.
 
 7. **Authorization model.** ✅ Resolved — Section 16.10. Syncs are sufficient. JWT/RBAC/OAuth/API-key patterns all work as concepts + syncs. No engine-level auth layer needed.
 
@@ -4244,7 +4244,7 @@ All nine original open questions have been addressed by implementation review an
 
 **Additionally identified and resolved:**
 
-10. **Error propagation DX.** Section 16.1. `copf trace <flow-id>` renders provenance graph as annotated tree with timing, failed branches, and unfired syncs. Programmatic `FlowTrace` interface for tooling.
+10. **Error propagation DX.** Section 16.1. `clef trace <flow-id>` renders provenance graph as annotated tree with timing, failed branches, and unfired syncs. Programmatic `FlowTrace` interface for tooling.
 
 ---
 
@@ -4256,12 +4256,12 @@ This section addresses runtime concerns beyond the core spec/sync/engine loop: h
 
 When a sync chain fails partway through — action A completes ok, triggers Sync B, whose `then` action returns an error variant — the developer needs to understand what happened. The ActionLog already captures the full provenance graph, but raw log entries are not a debugging tool.
 
-**Design: `copf trace`**
+**Design: `clef trace`**
 
-The `copf trace <flow-id>` CLI command renders the provenance graph as a tree, annotated with status and timing:
+The `clef trace <flow-id>` CLI command renders the provenance graph as a tree, annotated with status and timing:
 
 ```
-$ copf trace flow-abc-123
+$ clef trace flow-abc-123
 
 flow-abc-123  Registration Flow  (142ms total, FAILED)
 │
@@ -4475,9 +4475,9 @@ Design choice: syncs referencing a deregistered concept are marked **degraded**,
 
 **Scenario D: Concept spec changed**
 
-If someone changes an action's signature, existing syncs may have stale field patterns. This is NOT a runtime hot-reload scenario — it's a compile-time error. Changing a spec requires re-running `copf compile-syncs`, which will fail if any sync references fields that no longer exist. Hot reload of specs should go through the compiler pipeline, not bypass it.
+If someone changes an action's signature, existing syncs may have stale field patterns. This is NOT a runtime hot-reload scenario — it's a compile-time error. Changing a spec requires re-running `clef compile-syncs`, which will fail if any sync references fields that no longer exist. Hot reload of specs should go through the compiler pipeline, not bypass it.
 
-The `copf dev` command handles this by watching `.concept` and `.sync` files, re-compiling on change, and calling `reloadSyncs` with the new compiled set. If a spec change breaks a sync, the compiler error is shown in the terminal and the old sync set remains active.
+The `clef dev` command handles this by watching `.concept` and `.sync` files, re-compiling on change, and calling `reloadSyncs` with the new compiled set. If a spec change breaks a sync, the compiler error is shown in the terminal and the old sync set remains active.
 
 ### 16.4 Test Helpers
 
@@ -4583,20 +4583,20 @@ actions {
 
 2. **Refuse to serve until migrated.** A concept in migration-required state rejects all action invocations except `migrate` with a `-> needsMigration(currentVersion: Int, requiredVersion: Int)` error. This is fail-safe — no silent data corruption from schema mismatch.
 
-3. **`copf migrate` CLI.** The CLI command calls the concept's `migrate` action and updates `_meta.version` on success:
+3. **`clef migrate` CLI.** The CLI command calls the concept's `migrate` action and updates `_meta.version` on success:
 
 ```
-$ copf migrate User
+$ clef migrate User
 User: migrating from version 2 → 3...
 User: migrated 1,247 entries. Version now 3.
 
-$ copf migrate --check
+$ clef migrate --check
 User: version 3 (current) ✅
 Password: version 1 → needs migration to version 2 ⚠
 JWT: version 1 (current) ✅
 ```
 
-4. **`copf migrate --all`** runs migrations for all concepts with version mismatches, in dependency order (concepts referenced in syncs are migrated before concepts that depend on their state).
+4. **`clef migrate --all`** runs migrations for all concepts with version mismatches, in dependency order (concepts referenced in syncs are migrated before concepts that depend on their state).
 
 **What the framework does NOT do:**
 
@@ -4727,10 +4727,10 @@ The advantages of flat syncs over meta-syncs:
 
 - Every sync is independently testable (inject a synthetic completion, observe the output)
 - The provenance graph is a flat trace of actions, not a nested tree of sync activations
-- Debugging uses `copf trace`, which shows the causal chain without needing to recurse into sync definitions
+- Debugging uses `clef trace`, which shows the causal chain without needing to recurse into sync definitions
 - There is no need for a "sync lifecycle" (enable/disable/pause) — syncs are either registered or not
 
-If a pattern emerges where a group of syncs always activate together, that's a concept kit (Section 9) with required syncs, not a meta-sync.
+If a pattern emerges where a group of syncs always activate together, that's a suite (Section 9) with required syncs, not a meta-sync.
 
 ### 16.10 Authorization Model
 
@@ -4850,12 +4850,12 @@ concept ChainMonitor [B] {
 
 The `@gate` annotation is metadata — the engine ignores it entirely. It enables two pieces of tooling:
 
-**`copf check --pattern async-gate <concept>`**
+**`clef check --pattern async-gate <concept>`**
 
 Validates that a concept follows the async gate convention:
 
 ```
-$ copf check --pattern async-gate chain-monitor.concept
+$ clef check --pattern async-gate chain-monitor.concept
 
 chain-monitor.concept: async-gate pattern validation
   ✅ Has @gate annotation
@@ -4870,12 +4870,12 @@ chain-monitor.concept: async-gate pattern validation
 
 The checker validates structural conformance: presence of `@gate`, at least one ok and one non-ok variant on a gate action, state for tracking pending items. It does not enforce specific variant names — `reorged` and `stale` and `throttled` are all valid non-ok variants. The warning about timeouts is a heuristic: long-running actions without explicit timeout handling are a common source of stuck flows.
 
-**`copf trace` — async gate annotation in output**
+**`clef trace` — async gate annotation in output**
 
 When the trace renderer encounters an action on a `@gate` concept, it annotates the output differently from normal actions:
 
 ```
-$ copf trace flow-bridge-001
+$ clef trace flow-bridge-001
 
 flow-bridge-001  Cross-Chain Bridge  (14m 23s total, OK)
 │
@@ -4900,7 +4900,7 @@ Key differences from normal trace output:
 For pending (not yet completed) gate actions:
 
 ```
-$ copf trace flow-bridge-002
+$ clef trace flow-bridge-002
 
 flow-bridge-002  Cross-Chain Bridge  (3m 12s elapsed, IN PROGRESS)
 │
@@ -4998,14 +4998,14 @@ SDKs are NOT concepts — they're pre-conceptual protocol libraries (Section 10.
 
 ### 16.14 Pre-Conceptual Taxonomy
 
-Not everything in a COPF system is a concept. The concept test (Section 1.1): does this thing have **independent state**, **meaningful actions with domain-specific variants**, and **operational principles that compose via syncs**? If all three, it's a concept. Otherwise, it's pre-conceptual infrastructure.
+Not everything in a Clef system is a concept. The concept test (Section 1.1): does this thing have **independent state**, **meaningful actions with domain-specific variants**, and **operational principles that compose via syncs**? If all three, it's a concept. Otherwise, it's pre-conceptual infrastructure.
 
 | Component | Is it a concept? | Why / Why not |
 |-----------|:---:|---|
 | Storage adapters (SQLite, Postgres, in-memory) | No | No independent state. Implements a generic interface. Different adapters are interchangeable. |
 | Transport adapters (HTTP, WebSocket, in-process) | No | No independent state. Protocol plumbing. The engine calls `invoke()` and `query()` without caring which adapter. |
 | SDKs (Python, Go) | No | Protocol libraries. No state, no actions, no variants. |
-| CLI (`copf` commands) | No | User-facing shell. Invokes concepts but has no state or actions of its own. |
+| CLI (`clef` commands) | No | User-facing shell. Invokes concepts but has no state or actions of its own. |
 | REST gateway | **Yes** | Has state (route table), actions (register/deregister route), domain-specific variants (methodNotAllowed, notFound). Web/request sync triggers downstream. |
 | Rate limiter | **Yes** | Has state (counters per key, window config), actions (check → ok/throttled), meaningful variants. |
 | Auth (JWT, Password) | **Yes** | Has state (credentials, tokens), actions (verify → ok/invalid), domain-specific variants. |
@@ -5013,7 +5013,7 @@ Not everything in a COPF system is a concept. The concept test (Section 1.1): do
 | Cron scheduler | **Yes** | Has state (scheduled jobs, last run), actions (schedule, tick → ok/missed), meaningful variants. |
 | EVM adapter | **Split** | Transport adapter is pre-conceptual (maps invoke → contract call). But specific contract wrappers like Vault or TokenBridge are concepts (state, actions, variants). |
 
-**The split case** is important: when a domain requires both infrastructure and concepts, the infrastructure goes in the kit's `infrastructure/` directory (Section 9.6) and the concepts go in the kit's root as `.concept` files. The web3 kit demonstrates this — the EVM transport adapter is pre-conceptual, but ChainMonitor, Content, and Wallet are concepts.
+**The split case** is important: when a domain requires both infrastructure and concepts, the infrastructure goes in the suite's `infrastructure/` directory (Section 9.6) and the concepts go in the suite's root as `.concept` files. The web3 suite demonstrates this — the EVM transport adapter is pre-conceptual, but ChainMonitor, Content, and Wallet are concepts.
 
 ---
 
@@ -5081,7 +5081,7 @@ sync BuildFlowTrace {
 }
 ```
 
-The `copf trace <flow-id>` CLI calls `FlowTrace/build` then `FlowTrace/render` through the concept transport, not via direct kernel function calls.
+The `clef trace <flow-id>` CLI calls `FlowTrace/build` then `FlowTrace/render` through the concept transport, not via direct kernel function calls.
 
 ### 17.2 DeploymentValidator Concept (from `kernel/src/deploy.ts`, 254 LOC)
 
@@ -5248,10 +5248,10 @@ This eliminates the 60% code duplication because evaluation logic is shared with
 
 The kernel currently re-parses all `.concept` and `.sync` files on every startup, even though concept implementations of the parsers exist. This is the Stage 0 bootstrap chain — it works but prevents removing the ~1,523 LOC of Stage 0 scaffolding.
 
-**Design: `.copf-cache/` compiled artifact directory**
+**Design: `.clef-cache/` compiled artifact directory**
 
 ```
-.copf-cache/
+.clef-cache/
 ├── manifest.json              # cache metadata
 │   ├── version: "1"
 │   ├── sourceHashes: { "specs/password.concept": "abc123...", ... }
@@ -5271,12 +5271,12 @@ The kernel currently re-parses all `.concept` and `.sync` files on every startup
 **Boot sequence after Stage 3.5:**
 
 1. Kernel starts (pre-conceptual: process entry, transport factory, storage factory)
-2. Check `.copf-cache/manifest.json` — if valid, load pre-compiled artifacts directly
+2. Check `.clef-cache/manifest.json` — if valid, load pre-compiled artifacts directly
 3. Instantiate concept transports from `registrations.json`
 4. Load `CompiledSync` objects from `syncs/` into the SyncEngine concept
 5. Ready to serve — no parsing, no schema generation, no code generation at boot time
 
-The `copf compile --cache` command runs the full pipeline through the concept implementations (SpecParser, SchemaGen, TypeScriptGen, SyncParser, SyncCompiler) and writes the output to `.copf-cache/`. This is a build step, not a boot step.
+The `clef compile --cache` command runs the full pipeline through the concept implementations (SpecParser, SchemaGen, TypeScriptGen, SyncParser, SyncCompiler) and writes the output to `.clef-cache/`. This is a build step, not a boot step.
 
 **After Stage 3.5, `createSelfHostedKernel()` becomes the only boot path.** The Stage 0 `createKernel()` factory and all Stage 0 parser/engine/log code are deleted.
 
@@ -5299,7 +5299,7 @@ Everything above this layer is spec-driven and self-hosting. The kernel's only j
 
 ## Appendix A: Comparison with the Paper
 
-| Aspect | Paper (Meng & Jackson 2025) | COPF |
+| Aspect | Paper (Meng & Jackson 2025) | Clef |
 |--------|---------------------------|------|
 | Spec language | Semi-formal, Alloy-style state | Formal grammar, machine-parseable |
 | IR | RDF triples, Turtle format | JSON with JSON Schema validation |
@@ -5315,8 +5315,8 @@ Everything above this layer is spec-driven and self-hosting. The kernel's only j
 | Conflict resolution | Not addressed | LWW default, optional onConflict hooks with escalation |
 | Schema migration | Not addressed | @version annotation, migrate action convention, CLI |
 | Hot reloading | Not addressed | Atomic sync swap, concept transport drain, degraded marking |
-| Debugging | Not addressed | `copf trace` provenance graph renderer, FlowTrace API |
+| Debugging | Not addressed | `clef trace` provenance graph renderer, FlowTrace API |
 | Domain extensibility | Not addressed | Engine/concept boundary: engine handles delivery, domains add gating concepts in sync chains |
-| Convention validation | Not addressed | `@gate` annotation + `copf check --pattern` for structural conformance |
+| Convention validation | Not addressed | `@gate` annotation + `clef check --pattern` for structural conformance |
 | Multi-language strategy | Not addressed | Generators for local concepts (TS, Rust, Swift, Solidity), SDKs for remote services (Python, Go) |
 | Edge deployment | Not addressed | Edge runtimes follow phone pattern: thin handlers, lite queries, server-coordinated |

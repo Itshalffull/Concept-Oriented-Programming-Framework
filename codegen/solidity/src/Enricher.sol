@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Enricher
 /// @notice AI/API metadata augmentation with accept/reject workflow and trigger registration
-/// @dev Implements the Enricher concept from COPF specification.
+/// @dev Implements the Enricher concept from Clef specification.
 ///      Supports enriching items via plugins, accepting or rejecting enrichment results,
 ///      and registering automated triggers for enrichment.
 

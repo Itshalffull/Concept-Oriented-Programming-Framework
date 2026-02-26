@@ -1,5 +1,5 @@
 // ============================================================
-// SlotOutlet — Svelte-compatible COIF component
+// SlotOutlet — Svelte-compatible Clef Surface component
 //
 // Named content slot with defaults. Mirrors Svelte's <slot>
 // element with name and fallback content. Provides a mount point
@@ -61,7 +61,7 @@ export function createSlotOutlet(
 
   // Create slot container
   const slotElement = document.createElement('div');
-  slotElement.setAttribute('data-coif-slot', '');
+  slotElement.setAttribute('data-surface-slot', '');
   slotElement.setAttribute('data-slot-name', config.name);
   if (className) slotElement.className = className;
   target.appendChild(slotElement);

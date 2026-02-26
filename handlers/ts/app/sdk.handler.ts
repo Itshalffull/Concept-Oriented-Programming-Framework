@@ -1,4 +1,4 @@
-// Sdk Concept Implementation (Interface Kit)
+// Sdk Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 /** Map of language to package manifest filename. */

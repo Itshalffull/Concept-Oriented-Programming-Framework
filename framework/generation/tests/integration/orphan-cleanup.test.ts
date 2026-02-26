@@ -4,13 +4,13 @@
 // Validates the full orphan detection and cleanup pipeline:
 //   Emitter/manifest → diff with current → Emitter/clean
 //
-// See copf-generation-kit.md Part 5 (Emitter Clean).
+// See clef-generation-suite.md Part 5 (Emitter Clean).
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('Orphan cleanup integration', () => {
   let storage: ConceptStorage;

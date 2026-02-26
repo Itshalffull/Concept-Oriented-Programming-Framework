@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/TerraformProvider",
+  "uri": "urn:clef/TerraformProvider",
   "name": "TerraformProvider",
   "typeParams": [
     {
@@ -454,11 +454,11 @@
   "jsonSchemas": {
     "invocations": {
       "generate": {
-        "$id": "urn:copf/TerraformProvider/generate/invocation",
+        "$id": "urn:clef/TerraformProvider/generate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TerraformProvider"
+            "const": "urn:clef/TerraformProvider"
           },
           "action": {
             "const": "generate"
@@ -477,11 +477,11 @@
         }
       },
       "preview": {
-        "$id": "urn:copf/TerraformProvider/preview/invocation",
+        "$id": "urn:clef/TerraformProvider/preview/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TerraformProvider"
+            "const": "urn:clef/TerraformProvider"
           },
           "action": {
             "const": "preview"
@@ -500,11 +500,11 @@
         }
       },
       "apply": {
-        "$id": "urn:copf/TerraformProvider/apply/invocation",
+        "$id": "urn:clef/TerraformProvider/apply/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TerraformProvider"
+            "const": "urn:clef/TerraformProvider"
           },
           "action": {
             "const": "apply"
@@ -523,11 +523,11 @@
         }
       },
       "teardown": {
-        "$id": "urn:copf/TerraformProvider/teardown/invocation",
+        "$id": "urn:clef/TerraformProvider/teardown/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TerraformProvider"
+            "const": "urn:clef/TerraformProvider"
           },
           "action": {
             "const": "teardown"
@@ -549,11 +549,11 @@
     "completions": {
       "generate": {
         "ok": {
-          "$id": "urn:copf/TerraformProvider/generate/completion/ok",
+          "$id": "urn:clef/TerraformProvider/generate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "generate"
@@ -584,11 +584,11 @@
       },
       "preview": {
         "ok": {
-          "$id": "urn:copf/TerraformProvider/preview/completion/ok",
+          "$id": "urn:clef/TerraformProvider/preview/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "preview"
@@ -622,11 +622,11 @@
           }
         },
         "stateLocked": {
-          "$id": "urn:copf/TerraformProvider/preview/completion/stateLocked",
+          "$id": "urn:clef/TerraformProvider/preview/completion/stateLocked",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "preview"
@@ -656,11 +656,11 @@
           }
         },
         "backendInitRequired": {
-          "$id": "urn:copf/TerraformProvider/preview/completion/backendInitRequired",
+          "$id": "urn:clef/TerraformProvider/preview/completion/backendInitRequired",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "preview"
@@ -684,11 +684,11 @@
       },
       "apply": {
         "ok": {
-          "$id": "urn:copf/TerraformProvider/apply/completion/ok",
+          "$id": "urn:clef/TerraformProvider/apply/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "apply"
@@ -724,11 +724,11 @@
           }
         },
         "stateLocked": {
-          "$id": "urn:copf/TerraformProvider/apply/completion/stateLocked",
+          "$id": "urn:clef/TerraformProvider/apply/completion/stateLocked",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "apply"
@@ -754,11 +754,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/TerraformProvider/apply/completion/partial",
+          "$id": "urn:clef/TerraformProvider/apply/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "apply"
@@ -796,11 +796,11 @@
       },
       "teardown": {
         "ok": {
-          "$id": "urn:copf/TerraformProvider/teardown/completion/ok",
+          "$id": "urn:clef/TerraformProvider/teardown/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TerraformProvider"
+              "const": "urn:clef/TerraformProvider"
             },
             "action": {
               "const": "teardown"
@@ -832,5 +832,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate and apply Terraform HCL modules from COPF deploy \n plans Owns Terraform state file management , lock handling , \n and workspace configuration"
+  "purpose": "Generate and apply Terraform HCL modules from Clef deploy \n plans Owns Terraform state file management , lock handling , \n and workspace configuration"
 }

@@ -14,13 +14,13 @@ import type {
 
 import {
   contrastRatio,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -111,7 +111,7 @@ export function PalettePreview(props: PalettePreviewProps): PalettePreviewResult
 
   // Root container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-widget', 'palette-preview');
+  container.setAttribute('data-surface-widget', 'palette-preview');
   container.setAttribute('role', 'grid');
   container.setAttribute('aria-label', 'Color palette preview');
   if (props.class) {
@@ -222,7 +222,7 @@ export function PalettePreview(props: PalettePreviewProps): PalettePreviewResult
             navigator.clipboard.writeText(color).catch(() => { /* noop */ });
           }
           swatch.dispatchEvent(
-            new CustomEvent('coif:swatch-click', {
+            new CustomEvent('surface:swatch-click', {
               bubbles: true,
               detail: { palette: entry.name, step, color },
             })

@@ -109,7 +109,7 @@ export class LiteQueryAdapter {
       .reduce((sum, entries) => sum + entries.length, 0);
     if (totalEntries > this.warnThreshold) {
       console.warn(
-        `[copf/lite-query] Snapshot returned ${totalEntries} entries ` +
+        `[clef/lite-query] Snapshot returned ${totalEntries} entries ` +
         `(threshold: ${this.warnThreshold}). Consider using filter() or ` +
         `lookup() instead of snapshot() for large datasets.`,
       );

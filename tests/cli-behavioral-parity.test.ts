@@ -14,7 +14,7 @@
 //   2. kernel.invokeConcept (transport-layer dispatch)
 //   3. kernel.handleRequest (full sync-driven dispatch)
 //
-// See Architecture doc: Interface Kit, Section 2.4
+// See Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -57,7 +57,7 @@ const INVALID_CONCEPT_SOURCE = `concept Broken {`;
 const VALID_SYNC_AST: CompiledSync = {
   name: 'TestSync',
   when: [{
-    concept: 'urn:copf/Echo',
+    concept: 'urn:clef/Echo',
     action: 'send',
     inputFields: [
       { name: 'id', match: { type: 'variable', name: 'id' } },
@@ -69,7 +69,7 @@ const VALID_SYNC_AST: CompiledSync = {
   }],
   where: [],
   then: [{
-    concept: 'urn:copf/Web',
+    concept: 'urn:clef/Web',
     action: 'respond',
     fields: [
       { name: 'body', value: { type: 'variable', name: 'echo' } },
@@ -80,7 +80,7 @@ const VALID_SYNC_AST: CompiledSync = {
 const INVALID_SYNC_AST: CompiledSync = {
   name: 'BadSync',
   when: [{
-    concept: 'urn:copf/User',
+    concept: 'urn:clef/User',
     action: 'register',
     inputFields: [],
     outputFields: [
@@ -89,7 +89,7 @@ const INVALID_SYNC_AST: CompiledSync = {
   }],
   where: [],
   then: [{
-    concept: 'urn:copf/Log',
+    concept: 'urn:clef/Log',
     action: 'write',
     fields: [
       { name: 'message', value: { type: 'variable', name: 'undefinedVar' } },
@@ -117,9 +117,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
 
       // Path 2: Kernel dispatch (generated CLI approach)
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source: VALID_CONCEPT_SOURCE },
       );
@@ -149,9 +149,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source: INVALID_CONCEPT_SOURCE },
       );
@@ -166,9 +166,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       const directResult = await specParserHandler.parse({}, directStorage);
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         {},
       );
@@ -186,9 +186,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source: 42 },
       );
@@ -208,9 +208,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       const directResult = await specParserHandler.parse({ source }, directStorage);
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source },
       );
@@ -244,9 +244,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         const directResult = await specParserHandler.parse({ source }, directStorage);
 
         const kernel = createKernel();
-        kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+        kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
         const kernelResult = await kernel.invokeConcept(
-          'urn:copf/SpecParser',
+          'urn:clef/SpecParser',
           'parse',
           { source },
         );
@@ -286,9 +286,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SchemaGen',
+        'urn:clef/SchemaGen',
         'generate',
         { spec: 'password.concept', ast: passwordAST },
       );
@@ -341,9 +341,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SchemaGen',
+        'urn:clef/SchemaGen',
         'generate',
         { spec: 'bad.concept', ast: null },
       );
@@ -361,9 +361,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SchemaGen',
+        'urn:clef/SchemaGen',
         'generate',
         { spec: 'noname.concept', ast: { typeParams: [] } },
       );
@@ -390,9 +390,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         );
 
         const kernel = createKernel();
-        kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+        kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
         const kernelResult = await kernel.invokeConcept(
-          'urn:copf/SchemaGen',
+          'urn:clef/SchemaGen',
           'generate',
           { spec: file, ast },
         );
@@ -415,9 +415,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SchemaGen',
+        'urn:clef/SchemaGen',
         'generate',
         { spec: 'password.concept', ast: passwordAST },
       );
@@ -449,9 +449,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'TestSync', ast: VALID_SYNC_AST },
       );
@@ -476,9 +476,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'BadSync', ast: INVALID_SYNC_AST },
       );
@@ -497,9 +497,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'empty', ast: null },
       );
@@ -524,9 +524,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'NoWhen', ast: noWhen },
       );
@@ -557,9 +557,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'NoThen', ast: noThen },
       );
@@ -582,9 +582,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         );
 
         const kernel = createKernel();
-        kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+        kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
         const kernelResult = await kernel.invokeConcept(
-          'urn:copf/SyncCompiler',
+          'urn:clef/SyncCompiler',
           'compile',
           { sync: sync.name, ast: sync },
         );
@@ -619,13 +619,13 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
 
     it('SpecParser/parse via handleRequest returns same AST as direct call', async () => {
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
 
       // Route sync: Web/request{method:'parse'} → SpecParser/parse
       kernel.registerSync({
         name: 'RouteSpecParse',
         when: [{
-          concept: 'urn:copf/Web',
+          concept: 'urn:clef/Web',
           action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'parse' } },
@@ -637,7 +637,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         }],
         where: [],
         then: [{
-          concept: 'urn:copf/SpecParser',
+          concept: 'urn:clef/SpecParser',
           action: 'parse',
           fields: [
             { name: 'source', value: { type: 'variable', name: 'source' } },
@@ -650,7 +650,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         name: 'RespondSpecParse',
         when: [
           {
-            concept: 'urn:copf/Web',
+            concept: 'urn:clef/Web',
             action: 'request',
             inputFields: [
               { name: 'method', match: { type: 'literal', value: 'parse' } },
@@ -660,7 +660,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
             ],
           },
           {
-            concept: 'urn:copf/SpecParser',
+            concept: 'urn:clef/SpecParser',
             action: 'parse',
             inputFields: [],
             outputFields: [
@@ -670,7 +670,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         ],
         where: [],
         then: [{
-          concept: 'urn:copf/Web',
+          concept: 'urn:clef/Web',
           action: 'respond',
           fields: [
             { name: 'request', value: { type: 'variable', name: 'request' } },
@@ -712,13 +712,13 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       const ast = parseConceptFile(source);
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
 
       // Route sync: Web/request{method:'generate'} → SchemaGen/generate
       kernel.registerSync({
         name: 'RouteSchemaGen',
         when: [{
-          concept: 'urn:copf/Web',
+          concept: 'urn:clef/Web',
           action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'generate' } },
@@ -731,7 +731,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         }],
         where: [],
         then: [{
-          concept: 'urn:copf/SchemaGen',
+          concept: 'urn:clef/SchemaGen',
           action: 'generate',
           fields: [
             { name: 'spec', value: { type: 'variable', name: 'spec' } },
@@ -745,7 +745,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         name: 'RespondSchemaGen',
         when: [
           {
-            concept: 'urn:copf/Web',
+            concept: 'urn:clef/Web',
             action: 'request',
             inputFields: [
               { name: 'method', match: { type: 'literal', value: 'generate' } },
@@ -755,7 +755,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
             ],
           },
           {
-            concept: 'urn:copf/SchemaGen',
+            concept: 'urn:clef/SchemaGen',
             action: 'generate',
             inputFields: [],
             outputFields: [
@@ -765,7 +765,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         ],
         where: [],
         then: [{
-          concept: 'urn:copf/Web',
+          concept: 'urn:clef/Web',
           action: 'respond',
           fields: [
             { name: 'request', value: { type: 'variable', name: 'request' } },
@@ -806,13 +806,13 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
 
     it('SyncCompiler/compile via handleRequest returns same result as direct call', async () => {
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
 
       // Route sync
       kernel.registerSync({
         name: 'RouteSyncCompile',
         when: [{
-          concept: 'urn:copf/Web',
+          concept: 'urn:clef/Web',
           action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'compile' } },
@@ -825,7 +825,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         }],
         where: [],
         then: [{
-          concept: 'urn:copf/SyncCompiler',
+          concept: 'urn:clef/SyncCompiler',
           action: 'compile',
           fields: [
             { name: 'sync', value: { type: 'variable', name: 'sync' } },
@@ -839,7 +839,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         name: 'RespondSyncCompile',
         when: [
           {
-            concept: 'urn:copf/Web',
+            concept: 'urn:clef/Web',
             action: 'request',
             inputFields: [
               { name: 'method', match: { type: 'literal', value: 'compile' } },
@@ -849,7 +849,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
             ],
           },
           {
-            concept: 'urn:copf/SyncCompiler',
+            concept: 'urn:clef/SyncCompiler',
             action: 'compile',
             inputFields: [],
             outputFields: [
@@ -859,7 +859,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         ],
         where: [],
         then: [{
-          concept: 'urn:copf/Web',
+          concept: 'urn:clef/Web',
           action: 'respond',
           fields: [
             { name: 'request', value: { type: 'variable', name: 'request' } },
@@ -955,10 +955,10 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
 
     it('kernel.invokeConcept also stores in concept storage', async () => {
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
 
       const result = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source: VALID_CONCEPT_SOURCE },
       );
@@ -996,12 +996,12 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
 
       const kernelParse = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source },
       );
@@ -1019,7 +1019,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernelGen = await kernel.invokeConcept(
-        'urn:copf/SchemaGen',
+        'urn:clef/SchemaGen',
         'generate',
         { spec: 'password.concept', ast: kernelParse.ast },
       );
@@ -1044,7 +1044,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         );
 
         const kernelCompile = await kernel.invokeConcept(
-          'urn:copf/SyncCompiler',
+          'urn:clef/SyncCompiler',
           'compile',
           { sync: sync.name, ast: sync },
         );
@@ -1071,10 +1071,10 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
 
     it('kernel.invokeConcept returns error for unknown action', async () => {
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
 
       const result = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'nonexistent',
         {},
       );
@@ -1087,7 +1087,7 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       const kernel = createKernel();
 
       await expect(
-        kernel.invokeConcept('urn:copf/DoesNotExist', 'parse', {}),
+        kernel.invokeConcept('urn:clef/DoesNotExist', 'parse', {}),
       ).rejects.toThrow('Concept not found');
     });
   });
@@ -1109,9 +1109,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source: VALID_CONCEPT_SOURCE },
       );
@@ -1130,9 +1130,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
+      kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source: INVALID_CONCEPT_SOURCE },
       );
@@ -1156,9 +1156,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
+      kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SchemaGen',
+        'urn:clef/SchemaGen',
         'generate',
         { spec: 'password.concept', ast },
       );
@@ -1176,9 +1176,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'TestSync', ast: VALID_SYNC_AST },
       );
@@ -1196,9 +1196,9 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       const kernel = createKernel();
-      kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
+      kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
       const kernelResult = await kernel.invokeConcept(
-        'urn:copf/SyncCompiler',
+        'urn:clef/SyncCompiler',
         'compile',
         { sync: 'BadSync', ast: INVALID_SYNC_AST },
       );

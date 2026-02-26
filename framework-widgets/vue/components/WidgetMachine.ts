@@ -1,7 +1,7 @@
 // ============================================================
 // WidgetMachine — Vue 3 Component
 //
-// Spawns a headless COIF state machine and connects its state
+// Spawns a headless Clef Surface state machine and connects its state
 // to Vue's reactivity system. Exposes machine state, connected
 // props, and a send() method to descendant components through
 // provide/inject. Uses Vue-specific v-on event handler format
@@ -29,7 +29,7 @@ import type {
   ConnectedProps,
 } from '../../shared/types.js';
 
-import { createMachine } from '../../shared/coif-bridge.js';
+import { createMachine } from '../../shared/surface-bridge.js';
 
 // --- Injection types ---
 
@@ -44,7 +44,7 @@ export interface WidgetMachineContext {
   spec: WidgetSpec;
 }
 
-export const WIDGET_MACHINE_KEY: InjectionKey<WidgetMachineContext> = Symbol('coif-widget-machine');
+export const WIDGET_MACHINE_KEY: InjectionKey<WidgetMachineContext> = Symbol('surface-widget-machine');
 
 // --- Component ---
 
@@ -153,10 +153,10 @@ export const WidgetMachine = defineComponent({
 
     // Class binding object (Vue-specific pattern)
     const rootClasses = computed(() => ({
-      'coif-widget-machine': true,
-      [`coif-widget-machine--${props.spec.name}`]: true,
-      [`coif-widget-machine--state-${machineState.current}`]: true,
-      'coif-widget-machine--has-context': Object.keys(machineState.context).length > 0,
+      'surface-widget-machine': true,
+      [`surface-widget-machine--${props.spec.name}`]: true,
+      [`surface-widget-machine--state-${machineState.current}`]: true,
+      'surface-widget-machine--has-context': Object.keys(machineState.context).length > 0,
     }));
 
     // Build data attributes from boolean context flags

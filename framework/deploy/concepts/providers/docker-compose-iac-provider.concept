@@ -2,7 +2,7 @@
 concept DockerComposeIacProvider [I] {
 
   purpose {
-    Generate and apply Docker Compose files from COPF deploy
+    Generate and apply Docker Compose files from Clef deploy
     plans. Owns the compose file path, service definitions,
     and running container state for local IaC management.
   }

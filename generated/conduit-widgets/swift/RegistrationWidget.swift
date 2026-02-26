@@ -14,12 +14,12 @@ func registrationWidgetSpec() -> WidgetSpec {
         category: .form,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/User",
+                concept: "urn:clef/User",
                 actions: ["register"],
                 queries: []
             ),
             ConceptBinding(
-                concept: "urn:copf/Password",
+                concept: "urn:clef/Password",
                 actions: ["validate", "set"],
                 queries: []
             ),

@@ -4,7 +4,7 @@
 # and 2 spec documents from the 10 Conduit app concepts.
 #
 # Usage:
-#   copf interface generate --manifest examples/conduit/app.interface.yaml
+#   clef interface generate --manifest examples/conduit/app.interface.yaml
 
 interface:
   name: conduit
@@ -701,10 +701,10 @@ workflows:
         afterStep: 3
     validation-commands:
       - label: Run article tests
-        command: copf test Article
+        command: clef test Article
         afterStep: 5
       - label: Validate article spec
-        command: copf check --pattern crud Article
+        command: clef check --pattern crud Article
     quick-reference:
       heading: Quick Reference
       body: |
@@ -756,9 +756,9 @@ workflows:
         label: User API Reference
     validation-commands:
       - label: Run user tests
-        command: copf test User
+        command: clef test User
       - label: Validate uniqueness constraint
-        command: copf check --pattern uniqueness User
+        command: clef check --pattern uniqueness User
     quick-reference:
       heading: Quick Reference
       body: |
@@ -823,7 +823,7 @@ workflows:
         label: Comment Threading Patterns
     validation-commands:
       - label: Run comment tests
-        command: copf test Comment
+        command: clef test Comment
     quick-reference:
       heading: Quick Reference
       body: |
@@ -882,7 +882,7 @@ workflows:
         label: Social Relationships API
     validation-commands:
       - label: Run follow tests
-        command: copf test Follow
+        command: clef test Follow
     quick-reference:
       heading: Quick Reference
       body: |
@@ -947,7 +947,7 @@ workflows:
         label: Social Engagement API
     validation-commands:
       - label: Run favorite tests
-        command: copf test Favorite
+        command: clef test Favorite
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1032,9 +1032,9 @@ workflows:
         label: Security Best Practices
     validation-commands:
       - label: Run password tests
-        command: copf test Password
+        command: clef test Password
       - label: Verify crypto capability
-        command: copf check --capability crypto Password
+        command: clef check --capability crypto Password
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1102,9 +1102,9 @@ workflows:
         label: JWT Best Practices
     validation-commands:
       - label: Run JWT tests
-        command: copf test JWT
+        command: clef test JWT
       - label: Validate token roundtrip
-        command: copf check --pattern roundtrip JWT
+        command: clef check --pattern roundtrip JWT
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1152,7 +1152,7 @@ workflows:
         label: Profile API Reference
     validation-commands:
       - label: Run profile tests
-        command: copf test Profile
+        command: clef test Profile
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1211,7 +1211,7 @@ workflows:
         label: Tag API Reference
     validation-commands:
       - label: Run tag tests
-        command: copf test Tag
+        command: clef test Tag
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1240,7 +1240,7 @@ workflows:
         rule: Echo is used to verify the system is alive, not to store data permanently
     validation-commands:
       - label: Run echo tests
-        command: copf test Echo
+        command: clef test Echo
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1288,9 +1288,9 @@ annotations:
           label: Conduit Specification
       validation-commands:
         - label: Run all article tests
-          command: copf test Article --integration
+          command: clef test Article --integration
         - label: Validate generated interfaces
-          command: copf interface validate
+          command: clef interface validate
     create:
       examples:
         - label: Create a simple article

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Migration",
+  "uri": "urn:clef/Migration",
   "name": "Migration",
   "typeParams": [
     {
@@ -520,11 +520,11 @@
   "jsonSchemas": {
     "invocations": {
       "plan": {
-        "$id": "urn:copf/Migration/plan/invocation",
+        "$id": "urn:clef/Migration/plan/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Migration"
+            "const": "urn:clef/Migration"
           },
           "action": {
             "const": "plan"
@@ -551,11 +551,11 @@
         }
       },
       "expand": {
-        "$id": "urn:copf/Migration/expand/invocation",
+        "$id": "urn:clef/Migration/expand/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Migration"
+            "const": "urn:clef/Migration"
           },
           "action": {
             "const": "expand"
@@ -574,11 +574,11 @@
         }
       },
       "migrate": {
-        "$id": "urn:copf/Migration/migrate/invocation",
+        "$id": "urn:clef/Migration/migrate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Migration"
+            "const": "urn:clef/Migration"
           },
           "action": {
             "const": "migrate"
@@ -597,11 +597,11 @@
         }
       },
       "contract": {
-        "$id": "urn:copf/Migration/contract/invocation",
+        "$id": "urn:clef/Migration/contract/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Migration"
+            "const": "urn:clef/Migration"
           },
           "action": {
             "const": "contract"
@@ -620,11 +620,11 @@
         }
       },
       "status": {
-        "$id": "urn:copf/Migration/status/invocation",
+        "$id": "urn:clef/Migration/status/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Migration"
+            "const": "urn:clef/Migration"
           },
           "action": {
             "const": "status"
@@ -646,11 +646,11 @@
     "completions": {
       "plan": {
         "ok": {
-          "$id": "urn:copf/Migration/plan/completion/ok",
+          "$id": "urn:clef/Migration/plan/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "plan"
@@ -683,11 +683,11 @@
           }
         },
         "noMigrationNeeded": {
-          "$id": "urn:copf/Migration/plan/completion/noMigrationNeeded",
+          "$id": "urn:clef/Migration/plan/completion/noMigrationNeeded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "plan"
@@ -709,11 +709,11 @@
           }
         },
         "incompatible": {
-          "$id": "urn:copf/Migration/plan/completion/incompatible",
+          "$id": "urn:clef/Migration/plan/completion/incompatible",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "plan"
@@ -741,11 +741,11 @@
       },
       "expand": {
         "ok": {
-          "$id": "urn:copf/Migration/expand/completion/ok",
+          "$id": "urn:clef/Migration/expand/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "expand"
@@ -767,11 +767,11 @@
           }
         },
         "failed": {
-          "$id": "urn:copf/Migration/expand/completion/failed",
+          "$id": "urn:clef/Migration/expand/completion/failed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "expand"
@@ -799,11 +799,11 @@
       },
       "migrate": {
         "ok": {
-          "$id": "urn:copf/Migration/migrate/completion/ok",
+          "$id": "urn:clef/Migration/migrate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "migrate"
@@ -829,11 +829,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/Migration/migrate/completion/partial",
+          "$id": "urn:clef/Migration/migrate/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "migrate"
@@ -872,11 +872,11 @@
       },
       "contract": {
         "ok": {
-          "$id": "urn:copf/Migration/contract/completion/ok",
+          "$id": "urn:clef/Migration/contract/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "contract"
@@ -898,11 +898,11 @@
           }
         },
         "rollback": {
-          "$id": "urn:copf/Migration/contract/completion/rollback",
+          "$id": "urn:clef/Migration/contract/completion/rollback",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "contract"
@@ -926,11 +926,11 @@
       },
       "status": {
         "ok": {
-          "$id": "urn:copf/Migration/status/completion/ok",
+          "$id": "urn:clef/Migration/status/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Migration"
+              "const": "urn:clef/Migration"
             },
             "action": {
               "const": "status"

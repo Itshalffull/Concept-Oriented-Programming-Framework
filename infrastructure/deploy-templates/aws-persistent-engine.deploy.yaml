@@ -6,7 +6,7 @@
 # Transport: HTTP between Lambda concepts and ECS engine.
 #
 # Usage:
-#   copf deploy --manifest aws-persistent-engine.deploy.yaml
+#   clef deploy --manifest aws-persistent-engine.deploy.yaml
 
 deploy:
   name: aws-persistent-engine

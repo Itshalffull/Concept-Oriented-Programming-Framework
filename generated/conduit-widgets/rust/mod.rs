@@ -1,6 +1,6 @@
 // generated: conduit-widgets/rust/mod.rs
 //
-// Module declarations and re-exports for all Conduit COIF widgets.
+// Module declarations and re-exports for all Conduit Clef Surface widgets.
 
 pub mod widget_spec;
 pub mod registry;

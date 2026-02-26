@@ -2,7 +2,7 @@
 // LayoutContainer — Solid.js Component
 //
 // Reactive flex/grid layout from LayoutConfig. Computes CSS
-// layout properties from the COIF layout configuration and
+// layout properties from the Clef Surface layout configuration and
 // applies responsive overrides based on viewport breakpoint.
 // ============================================================
 
@@ -13,13 +13,13 @@ import type {
 
 import {
   layoutToCSS,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -109,7 +109,7 @@ export function LayoutContainer(props: LayoutContainerProps): LayoutContainerRes
   // Create the container element
   const tag = props.tag ?? 'div';
   const el = document.createElement(tag);
-  el.setAttribute('data-coif-widget', 'layout-container');
+  el.setAttribute('data-surface-widget', 'layout-container');
   el.setAttribute('data-layout-kind', props.layout.kind);
 
   if (props.class) {

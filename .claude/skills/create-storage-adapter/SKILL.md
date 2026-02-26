@@ -1,11 +1,11 @@
 ---
 name: create-storage-adapter
-description: Write a COPF storage adapter that implements the ConceptStorage interface for a specific persistence backend (SQLite, PostgreSQL, Core Data, localStorage, or custom). Use when adding a new storage backend or customizing how concepts persist their data.
+description: Write a Clef storage adapter that implements the ConceptStorage interface for a specific persistence backend (SQLite, PostgreSQL, Core Data, localStorage, or custom). Use when adding a new storage backend or customizing how concepts persist their data.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<backend-name>"
 ---
 
-# Create a COPF Storage Adapter
+# Create a Clef Storage Adapter
 
 Write a storage adapter for **$ARGUMENTS** that implements the `ConceptStorage` interface, giving concepts a persistence backend they can use to store and retrieve state.
 
@@ -55,7 +55,7 @@ See [references/storage-interface.md](references/storage-interface.md) for full 
 
 ### Step 1: Understand the Data Model
 
-COPF storage is **document-oriented by relation**. Each storage instance contains named relations (like tables or collections), and each relation contains records keyed by a string ID.
+Clef storage is **document-oriented by relation**. Each storage instance contains named relations (like tables or collections), and each relation contains records keyed by a string ID.
 
 ```
 Storage Instance (one per concept)
@@ -277,4 +277,4 @@ See [templates/storage-scaffold.md](templates/storage-scaffold.md) for copy-past
 | `/create-transport-adapter` | Write the transport adapter that delivers actions to concepts |
 | `/create-implementation` | Write the concept handler that uses this storage |
 | `/configure-deployment` | Wire this storage into a deployment manifest |
-| `/create-concept-kit` | Bundle this storage into a domain kit's infrastructure |
+| `/create-suite` | Bundle this storage into a domain suite's infrastructure |

@@ -1,7 +1,7 @@
 // ============================================================
 // SelectionPipelineDependenceProvider Handler Tests
 //
-// Tests for the COIF selection pipeline dependence analysis
+// Tests for the Clef Surface selection pipeline dependence analysis
 // provider: registration, idempotent initialization, and
 // plugin-registry integration.
 // ============================================================

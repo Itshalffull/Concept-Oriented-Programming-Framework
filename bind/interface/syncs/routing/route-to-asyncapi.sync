@@ -1,4 +1,4 @@
-# Route Spec/emit to AsyncApiTarget — Architecture doc: Interface Kit, Sync Section 3.5
+# Route Spec/emit to AsyncApiTarget — Architecture doc: Clef Bind, Sync Section 3.5
 
 sync RouteToAsyncApi [eager]
 when {

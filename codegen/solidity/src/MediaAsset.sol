@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title MediaAsset
 /// @notice Concept-oriented media asset management with metadata and thumbnail support
-/// @dev Implements the MediaAsset concept from COPF specification.
+/// @dev Implements the MediaAsset concept from Clef specification.
 ///      Supports creating media records, extracting metadata, and generating thumbnails.
 
 contract MediaAsset {

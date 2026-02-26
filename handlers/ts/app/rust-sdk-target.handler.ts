@@ -7,7 +7,7 @@ export const rustSdkTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const crateName = (parsedConfig.crateName as string) || 'copf-sdk';
+    const crateName = (parsedConfig.crateName as string) || 'clef-sdk';
     const edition = (parsedConfig.edition as string) || '2021';
 
     const conceptName = projection.replace(/-projection$/, '').replace(/-/g, '_');

@@ -7,7 +7,7 @@ State is the concept's memory — what it remembers across action invocations. I
 1. **Sufficiency**: State is rich enough that every action can compute its result and update state correctly
 2. **Necessity**: No state component exists that is never read or written by any action
 
-## State Patterns in COPF
+## State Patterns in Clef
 
 ### Pattern A: Entity Collection (set + relations)
 

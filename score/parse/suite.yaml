@@ -3,7 +3,7 @@ suite:
   version: 0.1.0
   description: >
     Universal file parsing, structural identity, and pattern matching.
-    Provides lossless syntax trees for every file in a COPF project
+    Provides lossless syntax trees for every file in a Clef project
     via Tree-sitter WASM integration. Uses coordination + provider
     pattern for grammar registration and structural pattern engines.
 
@@ -94,15 +94,15 @@ syncs:
   integration: []
 
 uses:
-  - kit: foundation
+  - suite: foundation
     concepts:
       - name: ContentNode
       - name: ContentParser
       - name: ContentStorage
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Resource
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 

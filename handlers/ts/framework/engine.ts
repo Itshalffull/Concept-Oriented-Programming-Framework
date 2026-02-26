@@ -503,7 +503,7 @@ export class SyncEngine {
     for (const sync of candidates) {
       // Skip degraded syncs with warning
       if (this.degradedSyncs.has(sync.name)) {
-        console.warn(`[copf] Skipping degraded sync: ${sync.name}`);
+        console.warn(`[clef] Skipping degraded sync: ${sync.name}`);
         continue;
       }
       // 4. Gather all completions in this flow

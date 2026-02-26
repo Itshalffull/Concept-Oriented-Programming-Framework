@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Named Entity Recognition enricher provider
+// Clef Data Integration Kit - Named Entity Recognition enricher provider
 // Tokenizes text, applies NER rules (pattern-based for known entity types), returns entity spans.
 
 use std::collections::HashMap;

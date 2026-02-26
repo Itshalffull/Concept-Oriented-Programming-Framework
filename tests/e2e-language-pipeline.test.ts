@@ -171,11 +171,11 @@ describe('E2E Language Pipeline — Kernel-Driven via Syncs', () => {
   it('SpecParser → SchemaGen fires via compiler-pipeline sync', async () => {
     const kernel = createKernel();
 
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
@@ -188,7 +188,7 @@ describe('E2E Language Pipeline — Kernel-Driven via Syncs', () => {
 
     const passwordSpec = readSpec('app', 'password');
     const parseResult = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: passwordSpec },
     );
@@ -200,14 +200,14 @@ describe('E2E Language Pipeline — Kernel-Driven via Syncs', () => {
   it('full self-compilation: SpecParser spec through the kernel pipeline', async () => {
     const kernel = createKernel();
 
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/RustGen', rustGenHandler);
-    kernel.registerConcept('urn:copf/SyncParser', syncParserHandler);
-    kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/RustGen', rustGenHandler);
+    kernel.registerConcept('urn:clef/SyncParser', syncParserHandler);
+    kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
@@ -220,7 +220,7 @@ describe('E2E Language Pipeline — Kernel-Driven via Syncs', () => {
 
     const specParserSpec = readSpec('framework', 'spec-parser');
     const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: specParserSpec },
     );
@@ -232,11 +232,11 @@ describe('E2E Language Pipeline — Kernel-Driven via Syncs', () => {
   it('pipeline processes multiple concepts sequentially', async () => {
     const kernel = createKernel();
 
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
@@ -251,7 +251,7 @@ describe('E2E Language Pipeline — Kernel-Driven via Syncs', () => {
     for (const conceptName of concepts) {
       const source = readSpec('app', conceptName);
       const result = await kernel.invokeConcept(
-        'urn:copf/SpecParser',
+        'urn:clef/SpecParser',
         'parse',
         { source },
       );
@@ -350,7 +350,7 @@ describe('E2E Language Pipeline — Framework Self-Compilation', () => {
 
       // Schema
       const manifest = await generateManifest(ast);
-      expect(manifest.uri).toContain('urn:copf/');
+      expect(manifest.uri).toContain('urn:clef/');
 
       // TypeScript gen (the primary target)
       const tsStorage = createInMemoryStorage();
@@ -393,9 +393,9 @@ describe('E2E Language Pipeline — Pipeline Sync Structure', () => {
     const genTS = syncs.find(s => s.name === 'GenerateTypeScript')!;
     const genRust = syncs.find(s => s.name === 'GenerateRust')!;
 
-    expect(genTS.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(genTS.when[0].concept).toBe('urn:clef/SchemaGen');
     expect(genTS.when[0].action).toBe('generate');
-    expect(genRust.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(genRust.when[0].concept).toBe('urn:clef/SchemaGen');
     expect(genRust.when[0].action).toBe('generate');
   });
 

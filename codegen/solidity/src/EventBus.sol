@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title EventBus
 /// @notice Concept-oriented event bus with typed events, prioritized listeners, and dispatch
-/// @dev Implements the EventBus concept from COPF specification.
+/// @dev Implements the EventBus concept from Clef specification.
 ///      Supports registering event types, subscribing/unsubscribing listeners with priority,
 ///      and dispatching events.
 

@@ -1,0 +1,38 @@
+@version(1)
+concept ReactNativeAdapter [A] {
+
+  purpose {
+    Normalize framework-neutral props into React Native-specific
+    bindings. Transforms Clef Surface's generic event model into React
+    Native conventions: Pressable/TouchableOpacity handlers,
+    StyleSheet objects, platform-specific props (iOS/Android).
+    Maps layout to Yoga flexbox. Implementation in TypeScript,
+    runs on Hermes/JSC.
+  }
+
+  state {
+    outputs: A -> String
+  }
+
+  actions {
+    action normalize(adapter: A, props: String) {
+      -> ok(adapter: A, normalized: String) {
+        Map framework-neutral props to React Native bindings.
+        Convert class to StyleSheet. Convert onclick to onPress.
+        Map layout props to Yoga flexbox. Resolve platform-specific
+        variants (Platform.select).
+      }
+      -> error(message: String) {
+        Props contain patterns not mappable to React Native.
+      }
+    }
+  }
+
+  invariant {
+    after normalize(adapter: a,
+                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+      -> ok(adapter: a, normalized: _)
+    then normalize(adapter: a, props: "")
+      -> error(message: _)
+  }
+}

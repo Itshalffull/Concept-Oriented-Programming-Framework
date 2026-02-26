@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Taxonomy",
+  "uri": "urn:clef/Taxonomy",
   "name": "Taxonomy",
   "typeParams": [
     {
@@ -423,11 +423,11 @@
   "jsonSchemas": {
     "invocations": {
       "createVocabulary": {
-        "$id": "urn:copf/Taxonomy/createVocabulary/invocation",
+        "$id": "urn:clef/Taxonomy/createVocabulary/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Taxonomy"
+            "const": "urn:clef/Taxonomy"
           },
           "action": {
             "const": "createVocabulary"
@@ -450,11 +450,11 @@
         }
       },
       "addTerm": {
-        "$id": "urn:copf/Taxonomy/addTerm/invocation",
+        "$id": "urn:clef/Taxonomy/addTerm/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Taxonomy"
+            "const": "urn:clef/Taxonomy"
           },
           "action": {
             "const": "addTerm"
@@ -488,11 +488,11 @@
         }
       },
       "setParent": {
-        "$id": "urn:copf/Taxonomy/setParent/invocation",
+        "$id": "urn:clef/Taxonomy/setParent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Taxonomy"
+            "const": "urn:clef/Taxonomy"
           },
           "action": {
             "const": "setParent"
@@ -519,11 +519,11 @@
         }
       },
       "tagEntity": {
-        "$id": "urn:copf/Taxonomy/tagEntity/invocation",
+        "$id": "urn:clef/Taxonomy/tagEntity/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Taxonomy"
+            "const": "urn:clef/Taxonomy"
           },
           "action": {
             "const": "tagEntity"
@@ -550,11 +550,11 @@
         }
       },
       "untagEntity": {
-        "$id": "urn:copf/Taxonomy/untagEntity/invocation",
+        "$id": "urn:clef/Taxonomy/untagEntity/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Taxonomy"
+            "const": "urn:clef/Taxonomy"
           },
           "action": {
             "const": "untagEntity"
@@ -584,11 +584,11 @@
     "completions": {
       "createVocabulary": {
         "ok": {
-          "$id": "urn:copf/Taxonomy/createVocabulary/completion/ok",
+          "$id": "urn:clef/Taxonomy/createVocabulary/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "createVocabulary"
@@ -604,11 +604,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Taxonomy/createVocabulary/completion/exists",
+          "$id": "urn:clef/Taxonomy/createVocabulary/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "createVocabulary"
@@ -632,11 +632,11 @@
       },
       "addTerm": {
         "ok": {
-          "$id": "urn:copf/Taxonomy/addTerm/completion/ok",
+          "$id": "urn:clef/Taxonomy/addTerm/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "addTerm"
@@ -652,11 +652,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Taxonomy/addTerm/completion/notfound",
+          "$id": "urn:clef/Taxonomy/addTerm/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "addTerm"
@@ -680,11 +680,11 @@
       },
       "setParent": {
         "ok": {
-          "$id": "urn:copf/Taxonomy/setParent/completion/ok",
+          "$id": "urn:clef/Taxonomy/setParent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "setParent"
@@ -700,11 +700,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Taxonomy/setParent/completion/notfound",
+          "$id": "urn:clef/Taxonomy/setParent/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "setParent"
@@ -728,11 +728,11 @@
       },
       "tagEntity": {
         "ok": {
-          "$id": "urn:copf/Taxonomy/tagEntity/completion/ok",
+          "$id": "urn:clef/Taxonomy/tagEntity/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "tagEntity"
@@ -748,11 +748,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Taxonomy/tagEntity/completion/notfound",
+          "$id": "urn:clef/Taxonomy/tagEntity/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "tagEntity"
@@ -776,11 +776,11 @@
       },
       "untagEntity": {
         "ok": {
-          "$id": "urn:copf/Taxonomy/untagEntity/completion/ok",
+          "$id": "urn:clef/Taxonomy/untagEntity/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "untagEntity"
@@ -796,11 +796,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Taxonomy/untagEntity/completion/notfound",
+          "$id": "urn:clef/Taxonomy/untagEntity/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Taxonomy"
+              "const": "urn:clef/Taxonomy"
             },
             "action": {
               "const": "untagEntity"

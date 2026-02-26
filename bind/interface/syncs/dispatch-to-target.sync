@@ -1,5 +1,5 @@
 # Generator dispatches to Target for each configured target type
-# Architecture doc: Interface Kit, Sync Section 3.3
+# Architecture doc: Clef Bind, Sync Section 3.3
 
 sync DispatchToTarget [eager]
 when {

@@ -1,5 +1,5 @@
 // ============================================================
-// ThemeSwitch — Svelte-compatible COIF component
+// ThemeSwitch — Svelte-compatible Clef Surface component
 //
 // Theme toggle UI that renders a button for each available theme.
 // Activating a theme updates the parent DesignTokenProvider
@@ -11,7 +11,7 @@ import type {
   WritableSignal,
 } from '../../shared/types.js';
 
-import { createSignal } from '../../shared/coif-bridge.js';
+import { createSignal } from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -50,7 +50,7 @@ export function createThemeSwitch(
 
   // Create root container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-theme-switch', '');
+  container.setAttribute('data-surface-theme-switch', '');
   container.setAttribute('role', 'radiogroup');
   container.setAttribute('aria-label', 'Theme selector');
   if (className) container.className = className;

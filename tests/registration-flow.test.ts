@@ -30,16 +30,16 @@ describe('Registration Flow', () => {
 
   function setupRegistrationKernel() {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/User', userHandler);
-    kernel.registerConcept('urn:copf/Password', passwordHandler);
-    kernel.registerConcept('urn:copf/JWT', jwtHandler);
+    kernel.registerConcept('urn:clef/User', userHandler);
+    kernel.registerConcept('urn:clef/Password', passwordHandler);
+    kernel.registerConcept('urn:clef/JWT', jwtHandler);
 
     // Register syncs inline for precise control over matching
     // ValidatePassword
     kernel.registerSync({
       name: 'ValidatePassword',
       when: [{
-        concept: 'urn:copf/Web', action: 'request',
+        concept: 'urn:clef/Web', action: 'request',
         inputFields: [
           { name: 'method', match: { type: 'literal', value: 'register' } },
           { name: 'password', match: { type: 'variable', name: 'password' } },
@@ -50,7 +50,7 @@ describe('Registration Flow', () => {
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/Password', action: 'validate',
+        concept: 'urn:clef/Password', action: 'validate',
         fields: [
           { name: 'password', value: { type: 'variable', name: 'password' } },
         ],
@@ -62,7 +62,7 @@ describe('Registration Flow', () => {
       name: 'ValidatePasswordError',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
           ],
@@ -71,7 +71,7 @@ describe('Registration Flow', () => {
           ],
         },
         {
-          concept: 'urn:copf/Password', action: 'validate',
+          concept: 'urn:clef/Password', action: 'validate',
           inputFields: [],
           outputFields: [
             { name: 'valid', match: { type: 'literal', value: false } },
@@ -80,7 +80,7 @@ describe('Registration Flow', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'error', value: { type: 'literal', value: 'Password does not meet requirements' } },
@@ -94,7 +94,7 @@ describe('Registration Flow', () => {
       name: 'RegisterUser',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
             { name: 'username', match: { type: 'variable', name: 'username' } },
@@ -103,7 +103,7 @@ describe('Registration Flow', () => {
           outputFields: [],
         },
         {
-          concept: 'urn:copf/Password', action: 'validate',
+          concept: 'urn:clef/Password', action: 'validate',
           inputFields: [],
           outputFields: [
             { name: 'valid', match: { type: 'literal', value: true } },
@@ -112,7 +112,7 @@ describe('Registration Flow', () => {
       ],
       where: [{ type: 'bind', expr: 'uuid()', as: 'user' }],
       then: [{
-        concept: 'urn:copf/User', action: 'register',
+        concept: 'urn:clef/User', action: 'register',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
           { name: 'name', value: { type: 'variable', name: 'username' } },
@@ -126,7 +126,7 @@ describe('Registration Flow', () => {
       name: 'SetPassword',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
             { name: 'password', match: { type: 'variable', name: 'password' } },
@@ -134,7 +134,7 @@ describe('Registration Flow', () => {
           outputFields: [],
         },
         {
-          concept: 'urn:copf/User', action: 'register',
+          concept: 'urn:clef/User', action: 'register',
           inputFields: [],
           outputFields: [
             { name: 'user', match: { type: 'variable', name: 'user' } },
@@ -143,7 +143,7 @@ describe('Registration Flow', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Password', action: 'set',
+        concept: 'urn:clef/Password', action: 'set',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
           { name: 'password', value: { type: 'variable', name: 'password' } },
@@ -155,7 +155,7 @@ describe('Registration Flow', () => {
     kernel.registerSync({
       name: 'GenerateToken',
       when: [{
-        concept: 'urn:copf/User', action: 'register',
+        concept: 'urn:clef/User', action: 'register',
         inputFields: [],
         outputFields: [
           { name: 'user', match: { type: 'variable', name: 'user' } },
@@ -163,7 +163,7 @@ describe('Registration Flow', () => {
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/JWT', action: 'generate',
+        concept: 'urn:clef/JWT', action: 'generate',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
         ],
@@ -175,7 +175,7 @@ describe('Registration Flow', () => {
       name: 'RegistrationResponse',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
           ],
@@ -184,21 +184,21 @@ describe('Registration Flow', () => {
           ],
         },
         {
-          concept: 'urn:copf/User', action: 'register',
+          concept: 'urn:clef/User', action: 'register',
           inputFields: [],
           outputFields: [
             { name: 'user', match: { type: 'variable', name: 'user' } },
           ],
         },
         {
-          concept: 'urn:copf/Password', action: 'set',
+          concept: 'urn:clef/Password', action: 'set',
           inputFields: [],
           outputFields: [
             { name: 'user', match: { type: 'variable', name: 'user' } },
           ],
         },
         {
-          concept: 'urn:copf/JWT', action: 'generate',
+          concept: 'urn:clef/JWT', action: 'generate',
           inputFields: [],
           outputFields: [
             { name: 'token', match: { type: 'variable', name: 'token' } },
@@ -207,7 +207,7 @@ describe('Registration Flow', () => {
       ],
       where: [{
         type: 'query',
-        concept: 'urn:copf/User',
+        concept: 'urn:clef/User',
         bindings: [
           { variable: 'u', field: '__key' },
           { variable: 'username', field: 'name' },
@@ -215,7 +215,7 @@ describe('Registration Flow', () => {
         ],
       }],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'body', value: { type: 'literal', value: {
@@ -234,7 +234,7 @@ describe('Registration Flow', () => {
       name: 'RegistrationError',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'register' } },
           ],
@@ -243,7 +243,7 @@ describe('Registration Flow', () => {
           ],
         },
         {
-          concept: 'urn:copf/User', action: 'register',
+          concept: 'urn:clef/User', action: 'register',
           inputFields: [],
           outputFields: [
             { name: 'message', match: { type: 'variable', name: 'error' } },
@@ -252,7 +252,7 @@ describe('Registration Flow', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'error', value: { type: 'variable', name: 'error' } },
@@ -287,7 +287,7 @@ describe('Registration Flow', () => {
 
     // The JWT should be verifiable
     const verifyResult = await kernel.invokeConcept(
-      'urn:copf/JWT', 'verify',
+      'urn:clef/JWT', 'verify',
       { token: user.token },
     );
     expect(verifyResult.variant).toBe('ok');
@@ -309,7 +309,7 @@ describe('Registration Flow', () => {
 
     // User should NOT have been created
     const userQuery = await kernel.queryConcept(
-      'urn:copf/User', 'user', { name: 'bob' },
+      'urn:clef/User', 'user', { name: 'bob' },
     );
     expect(userQuery).toHaveLength(0);
   });
@@ -354,12 +354,12 @@ describe('Registration Flow', () => {
     const completions = flow.filter(r => r.type === 'completion');
     const actionNames = completions.map(r => `${r.concept}/${r.action}:${r.variant}`);
 
-    expect(actionNames).toContain('urn:copf/Web/request:ok');
-    expect(actionNames).toContain('urn:copf/Password/validate:ok');
-    expect(actionNames).toContain('urn:copf/User/register:ok');
-    expect(actionNames).toContain('urn:copf/Password/set:ok');
-    expect(actionNames).toContain('urn:copf/JWT/generate:ok');
-    expect(actionNames).toContain('urn:copf/Web/respond:ok');
+    expect(actionNames).toContain('urn:clef/Web/request:ok');
+    expect(actionNames).toContain('urn:clef/Password/validate:ok');
+    expect(actionNames).toContain('urn:clef/User/register:ok');
+    expect(actionNames).toContain('urn:clef/Password/set:ok');
+    expect(actionNames).toContain('urn:clef/JWT/generate:ok');
+    expect(actionNames).toContain('urn:clef/Web/respond:ok');
 
     // Every invocation with a sync should have parent defined
     const invocations = flow.filter(r => r.type === 'invocation' && r.sync);

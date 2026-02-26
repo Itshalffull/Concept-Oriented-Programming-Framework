@@ -1,0 +1,22 @@
+# ============================================================
+# ClassifiedElementsResolved — surface-component recommended sync
+#
+# Resolve classified elements to concrete widgets. Combines
+# interactor type with runtime context (viewport, platform)
+# to query affordance declarations.
+# ============================================================
+
+sync ClassifiedElementsResolved [eager]
+when {
+  Interactor/classify: [ interactor: ?element ]
+    => ok(interactor: ?interactorType; confidence: ?_)
+}
+where {
+  Viewport: { ?viewport breakpoint: ?bp }
+  PlatformAdapter: { ?adapter platform: ?platform }
+}
+then {
+  WidgetResolver/resolve: [ resolver: ?element;
+    element: ?interactorType;
+    context: "{ \"platform\": ?platform, \"viewport\": ?bp }" ]
+}

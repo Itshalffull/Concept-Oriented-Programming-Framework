@@ -5,15 +5,15 @@
 //   Resource change → BuildCache invalidate → KindSystem
 //   dependents → cascade invalidation of downstream steps.
 //
-// See copf-generation-kit.md Part 3 (Sync Graph).
+// See clef-generation-suite.md Part 3 (Sync Graph).
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { resourceHandler } from '../../implementations/typescript/resource.impl.js';
 import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
 import { kindSystemHandler } from '../../implementations/typescript/kind-system.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('Cascade invalidation integration', () => {
   let resourceStorage: ConceptStorage;

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Reference
 /// @notice Concept-oriented typed reference links between entities
-/// @dev Implements the Reference concept from COPF specification.
+/// @dev Implements the Reference concept from Clef specification.
 ///      Supports adding, removing, querying, and existence-checking of typed references.
 
 contract Reference {

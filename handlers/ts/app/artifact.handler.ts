@@ -44,7 +44,7 @@ export const artifactHandler: ConceptHandler = {
 
     await storage.put('artifact', hash, {
       hash,
-      kitName: concept,
+      suiteName: concept,
       kitVersion: '1.0.0',
       conceptName: concept,
       builtAt,

@@ -14,7 +14,7 @@ func commentWidgetSpec() -> WidgetSpec {
         category: .composite,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/Comment",
+                concept: "urn:clef/Comment",
                 actions: ["create", "delete"],
                 queries: ["list"]
             ),

@@ -1,11 +1,11 @@
 ---
 name: create-implementation
-description: Write a TypeScript implementation for a COPF concept — the handler that implements each action defined in the concept spec. Covers storage patterns, variant returns, input extraction, and testing.
+description: Write a TypeScript implementation for a Clef concept — the handler that implements each action defined in the concept spec. Covers storage patterns, variant returns, input extraction, and testing.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<concept-name>"
 ---
 
-# Create a COPF Concept Implementation
+# Create a Clef Concept Implementation
 
 Write a TypeScript handler for the concept **$ARGUMENTS** that implements every action from its `.concept` spec.
 
@@ -14,7 +14,7 @@ Write a TypeScript handler for the concept **$ARGUMENTS** that implements every 
 A concept implementation is a **handler object** that provides one async function per action declared in the concept spec. Each function receives untyped `input` and a `storage` interface, and returns a **variant completion** (a discriminated union like `{ variant: 'ok', ... }` or `{ variant: 'error', ... }`).
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const myHandler: ConceptHandler = {
   async actionName(input, storage) {
@@ -79,7 +79,7 @@ handlers/ts/framework/<name>.handler.ts   # Framework concepts
 Start with the imports and handler skeleton:
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const <name>Handler: ConceptHandler = {
   // One async method per action from the spec
@@ -223,9 +223,9 @@ import { myHandler } from '../handlers/ts/app/my.impl';
 describe('My Concept', () => {
   it('performs action correctly', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/My', myHandler);
+    kernel.registerConcept('urn:clef/My', myHandler);
 
-    const result = await kernel.invokeConcept('urn:copf/My', 'action', {
+    const result = await kernel.invokeConcept('urn:clef/My', 'action', {
       field: 'value',
     });
 
@@ -242,16 +242,16 @@ The spec's `invariant` section defines behavioral contracts. Implement them as s
 ```typescript
 it('satisfies invariant: after set, check returns true', async () => {
   const kernel = createKernel();
-  kernel.registerConcept('urn:copf/Password', passwordHandler);
+  kernel.registerConcept('urn:clef/Password', passwordHandler);
 
   // AFTER clause
-  const step1 = await kernel.invokeConcept('urn:copf/Password', 'set', {
+  const step1 = await kernel.invokeConcept('urn:clef/Password', 'set', {
     user: 'test-user', password: 'secret123',
   });
   expect(step1.variant).toBe('ok');
 
   // THEN clause
-  const step2 = await kernel.invokeConcept('urn:copf/Password', 'check', {
+  const step2 = await kernel.invokeConcept('urn:clef/Password', 'check', {
     user: 'test-user', password: 'secret123',
   });
   expect(step2.variant).toBe('ok');
@@ -268,7 +268,7 @@ it('satisfies invariant: generates from manifest', async () => {
   const result = await handler.generate({
     spec: 's1',
     manifest: {
-      name: 'Ping', uri: 'urn:copf/Ping', typeParams: [], relations: [],
+      name: 'Ping', uri: 'urn:clef/Ping', typeParams: [], relations: [],
       actions: [{ name: 'ping', params: [],
         variants: [{ tag: 'ok', fields: [], prose: 'Pong.' }] }],
       invariants: [], graphqlSchema: '',
@@ -285,7 +285,7 @@ it('satisfies invariant: generates from manifest', async () => {
 ```typescript
 it('processes full flow', async () => {
   const kernel = createKernel();
-  kernel.registerConcept('urn:copf/My', myHandler);
+  kernel.registerConcept('urn:clef/My', myHandler);
   await kernel.loadSyncs(resolve(SYNCS_DIR, 'my.sync'));
 
   const response = await kernel.handleRequest({ method: 'my_action', ... });
@@ -305,13 +305,13 @@ import { createKernel } from './kernel-factory';
 import { myHandler } from './my.impl';
 
 const kernel = createKernel();
-kernel.registerConcept('urn:copf/My', myHandler);
+kernel.registerConcept('urn:clef/My', myHandler);
 ```
 
 For versioned concepts (with schema migration support):
 
 ```typescript
-await kernel.registerVersionedConcept('urn:copf/My', myHandler, 2);
+await kernel.registerVersionedConcept('urn:clef/My', myHandler, 2);
 ```
 
 ## Projection Sync Pattern — How Implementations Shape API Responses
@@ -399,4 +399,4 @@ See [templates/implementation-scaffold.md](templates/implementation-scaffold.md)
 | `/create-sync` | Write syncs that invoke actions on this implementation |
 | `/create-storage-adapter` | Write the storage backend this implementation uses |
 | `/create-transport-adapter` | Write the transport that delivers actions to this implementation |
-| `/create-concept-kit` | Bundle this implementation into a kit with its concept and syncs |
+| `/create-suite` | Bundle this implementation into a suite with its concept and syncs |

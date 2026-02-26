@@ -4,7 +4,7 @@ concept Spec [D] {
   purpose {
     Coordinate specification document generation. Owns the
     spec registry, versioning, and cross-concept composition
-    (a single OpenAPI document covers all concepts in a kit).
+    (a single OpenAPI document covers all concepts in a suite).
     Generator talks to Spec, never to format providers directly.
   }
 
@@ -23,7 +23,7 @@ concept Spec [D] {
     action emit(projections: list String, format: String, config: String) {
       -> ok(document: D, content: String) {
         Specification document generated covering all concepts
-        in the projections list. Single document per kit per format.
+        in the projections list. Single document per suite per format.
       }
       -> formatError(format: String, reason: String) {
         Provider-specific spec generation failure.

@@ -1,7 +1,7 @@
 // ============================================================
 // MotionBox — Vue 3 Component
 //
-// Container that applies CSS transitions from COIF motion
+// Container that applies CSS transitions from Clef Surface motion
 // configuration. Watches the prefers-reduced-motion media
 // query and suppresses animations when the user requests it.
 // ============================================================
@@ -23,7 +23,7 @@ import type {
   MotionEasing,
 } from '../../shared/types.js';
 
-import { motionToCSS } from '../../shared/coif-bridge.js';
+import { motionToCSS } from '../../shared/surface-bridge.js';
 
 export const MotionBox = defineComponent({
   name: 'MotionBox',
@@ -121,8 +121,8 @@ export const MotionBox = defineComponent({
         props.tag,
         {
           class: [
-            'coif-motion-box',
-            { 'coif-motion-box--reduced': isReduced.value },
+            'surface-motion-box',
+            { 'surface-motion-box--reduced': isReduced.value },
           ],
           style: style.value,
           'data-reduced-motion': isReduced.value ? 'true' : 'false',

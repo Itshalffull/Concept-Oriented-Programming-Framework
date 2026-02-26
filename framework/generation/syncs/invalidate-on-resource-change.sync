@@ -1,4 +1,4 @@
-# InvalidateOnResourceChange — generation kit recommended sync
+# InvalidateOnResourceChange — generation suite recommended sync
 sync InvalidateOnResourceChange [eager]
   purpose { Source change triggers direct cache invalidation. }
 when {

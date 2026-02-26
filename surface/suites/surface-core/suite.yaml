@@ -1,0 +1,67 @@
+# kits/surface-core/suite.yaml
+suite:
+  name: surface-core
+  version: 0.4.0
+  description: >
+    Foundation concepts for Clef Surface: design tokens, abstract elements,
+    UI schemas, concept bindings, and reactive signals. Required by
+    all other Clef Surface suites. Inspection pipeline: inspect → classify
+    interaction types → apply defaults → apply overrides → produce
+    element tree.
+
+concepts:
+  DesignToken:
+    spec: ./design-token.concept
+    params:
+      T: { as: token-ref, description: "Reference to a design token" }
+
+  Element:
+    spec: ./element.concept
+    params:
+      E: { as: element-ref, description: "Reference to an abstract interaction element" }
+
+  UISchema:
+    spec: ./ui-schema.concept
+    params:
+      S: { as: schema-ref, description: "Reference to a UI schema instance" }
+      C: { as: concept-ref, description: "Reference to the source Clef concept" }
+
+  Binding:
+    spec: ./binding.concept
+    params:
+      B: { as: binding-ref, description: "Reference to a surface binding" }
+      C: { as: concept-ref, description: "Reference to the bound Clef concept" }
+
+  Signal:
+    spec: ./signal.concept
+    params:
+      G: { as: signal-ref, description: "Reference to a reactive signal" }
+
+syncs:
+  required:
+    - path: ./syncs/inspect-and-generate.sync
+      name: InspectAndGenerate
+      description: >
+        When a binding is created, auto-generate UI schema from
+        the bound concept spec. Entry point for the Clef Surface pipeline.
+
+    - path: ./syncs/concept-state-to-signal.sync
+      name: ConceptStateToSignal
+      description: >
+        When a binding syncs from backend, batch-update all mapped
+        signals. Backend → UI direction of the reactive loop.
+
+    - path: ./syncs/binding-state-sync.sync
+      name: BindingStateSync
+      description: >
+        When a signal is written (user input), sync back to the
+        bound concept. UI → backend direction of the reactive loop.
+
+  recommended:
+    - path: ./syncs/schema-to-elements.sync
+      name: UISchemaToElements
+      description: >
+        When a UI schema is generated, extract abstract element tree
+        for consumption by the Widget concept.
+
+dependencies: []

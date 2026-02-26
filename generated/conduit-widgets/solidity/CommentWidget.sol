@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title CommentWidget
-/// @notice Self-describing COIF widget for viewing and posting comments on Conduit.
+/// @notice Self-describing Clef Surface widget for viewing and posting comments on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -87,7 +87,7 @@ contract CommentWidget {
         commentActions[1] = "delete";
         commentActions[2] = "list";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Comment",
+            concept: "urn:clef/Comment",
             actions: commentActions
         });
 

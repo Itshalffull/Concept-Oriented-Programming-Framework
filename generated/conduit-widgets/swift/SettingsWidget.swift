@@ -14,12 +14,12 @@ func settingsWidgetSpec() -> WidgetSpec {
         category: .form,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/Profile",
+                concept: "urn:clef/Profile",
                 actions: ["update"],
                 queries: ["get"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Password",
+                concept: "urn:clef/Password",
                 actions: ["validate", "set"],
                 queries: []
             ),

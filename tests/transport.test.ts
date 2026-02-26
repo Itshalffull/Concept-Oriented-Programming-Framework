@@ -265,7 +265,7 @@ describe('Cross-Language Interop', () => {
     const shKernel = createSelfHostedKernel(handler, log, registry);
 
     // Register local concepts
-    shKernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
+    shKernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
 
     // Register the "Rust" Password concept via HTTP transport
     registry.register('urn:app/Password', httpAdapter);
@@ -422,7 +422,7 @@ describe('WebSocket Transport Adapter', () => {
 
     const completion = await adapter.invoke({
       id: 'inv-1',
-      concept: 'urn:copf/Echo',
+      concept: 'urn:clef/Echo',
       action: 'echo',
       input: { text: 'hello' },
       flow: 'flow-1',
@@ -479,7 +479,7 @@ describe('WebSocket Transport Adapter', () => {
         id: 'push-1',
         payload: {
           id: 'comp-1',
-          concept: 'urn:copf/Echo',
+          concept: 'urn:clef/Echo',
           action: 'echo',
           input: {},
           variant: 'ok',

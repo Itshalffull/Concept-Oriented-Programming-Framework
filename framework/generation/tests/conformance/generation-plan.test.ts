@@ -4,13 +4,13 @@
 // Validates passive run tracking: begin, recordStep, complete,
 // status, summary, and history. GenerationPlan does NOT plan
 // or query other concepts — syncs feed it all data.
-// See copf-generation-kit.md Part 1.4
+// See clef-generation-suite.md Part 1.4
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { generationPlanHandler } from '../../implementations/typescript/generation-plan.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('GenerationPlan conformance', () => {
   let storage: ConceptStorage;

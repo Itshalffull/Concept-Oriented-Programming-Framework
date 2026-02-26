@@ -8,7 +8,7 @@
 # rich SQL queries, or hybrid cloud deployments.
 #
 # Usage:
-#   copf deploy --manifest hybrid-postgres.deploy.yaml
+#   clef deploy --manifest hybrid-postgres.deploy.yaml
 
 deploy:
   name: hybrid-postgres

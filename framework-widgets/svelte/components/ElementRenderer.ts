@@ -1,7 +1,7 @@
 // ============================================================
-// ElementRenderer — Svelte-compatible COIF component
+// ElementRenderer — Svelte-compatible Clef Surface component
 //
-// Renders form elements from COIF ElementConfig. Maps each
+// Renders form elements from Clef Surface ElementConfig. Maps each
 // ElementKind to the appropriate HTML element, input type,
 // ARIA role, and attributes. Supports nested children (groups,
 // containers) and reactive value binding.
@@ -16,9 +16,9 @@ import type {
 import {
   mapElementToHTML,
   createSignal,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
-import type { ElementRenderHint } from '../../shared/coif-bridge.js';
+import type { ElementRenderHint } from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -119,7 +119,7 @@ export function createElementRenderer(
 
   // Create wrapper div
   const wrapper = document.createElement('div');
-  wrapper.setAttribute('data-coif-element', '');
+  wrapper.setAttribute('data-surface-element', '');
   wrapper.setAttribute('data-element-id', config.id);
   wrapper.setAttribute('data-element-kind', config.kind);
   if (className) wrapper.className = className;
@@ -141,7 +141,7 @@ export function createElementRenderer(
     // Render label for input elements
     if (isInputKind(config.kind) || config.kind === 'trigger') {
       const label = document.createElement('label');
-      label.setAttribute('for', `coif-el-${config.id}`);
+      label.setAttribute('for', `surface-el-${config.id}`);
       label.textContent = config.label;
       label.style.cssText = 'display: block; margin-bottom: 0.25em; font-size: 0.875em;';
 
@@ -158,7 +158,7 @@ export function createElementRenderer(
 
     // Create the element
     const el = document.createElement(hint.tag) as HTMLElement;
-    el.id = `coif-el-${config.id}`;
+    el.id = `surface-el-${config.id}`;
     renderedElement = el;
 
     // Apply input type

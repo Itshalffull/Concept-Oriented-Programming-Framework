@@ -1,7 +1,7 @@
 // ============================================================
 // ProjectScaffold Handler Tests
 //
-// Initialize new COPF projects with the standard directory
+// Initialize new Clef projects with the standard directory
 // structure, example concept specs, and configuration files.
 // ============================================================
 
@@ -71,10 +71,10 @@ describe('ProjectScaffold', () => {
 
     it('derives path from project name', async () => {
       const result = await projectScaffoldHandler.scaffold!(
-        { name: 'copf-demo' },
+        { name: 'clef-demo' },
         storage,
       );
-      expect(result.path).toBe('./copf-demo/');
+      expect(result.path).toBe('./clef-demo/');
     });
   });
 });

@@ -19,13 +19,13 @@ contract SyncCompilerTest is Test {
         bytes32 e = keccak256(abi.encodePacked("u-test-invariant-002"));
 
         // --- Setup ---
-        // compile(sync: "s1", ast: { name: "TestSync", annotations: [], when: [{ concept: "urn:copf/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:copf/B", action: "do", fields: [] }] }) -> ok
-        // target.compile("s1", /* struct { name: "TestSync", annotations: /* [] */, when: /* [/* struct { concept: "urn:copf/A", action: "act", inputFields: /* [] */, outputFields: /* [] */ } */] */, where: /* [] */, then: /* [/* struct { concept: "urn:copf/B", action: "do", fields: /* [] */ } */] */ } */);
+        // compile(sync: "s1", ast: { name: "TestSync", annotations: [], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/B", action: "do", fields: [] }] }) -> ok
+        // target.compile("s1", /* struct { name: "TestSync", annotations: /* [] */, when: /* [/* struct { concept: "urn:clef/A", action: "act", inputFields: /* [] */, outputFields: /* [] */ } */] */, where: /* [] */, then: /* [/* struct { concept: "urn:clef/B", action: "do", fields: /* [] */ } */] */ } */);
         // TODO: Assert ok variant
 
         // --- Assertions ---
-        // compile(sync: "s2", ast: { name: "Bad", annotations: [], when: [{ concept: "urn:copf/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [] }) -> error
-        // target.compile("s2", /* struct { name: "Bad", annotations: /* [] */, when: /* [/* struct { concept: "urn:copf/A", action: "act", inputFields: /* [] */, outputFields: /* [] */ } */] */, where: /* [] */, then: /* [] */ } */);
+        // compile(sync: "s2", ast: { name: "Bad", annotations: [], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [] }) -> error
+        // target.compile("s2", /* struct { name: "Bad", annotations: /* [] */, when: /* [/* struct { concept: "urn:clef/A", action: "act", inputFields: /* [] */, outputFields: /* [] */ } */] */, where: /* [] */, then: /* [] */ } */);
         // TODO: Assert error variant
     }
 

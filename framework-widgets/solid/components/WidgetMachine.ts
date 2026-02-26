@@ -16,13 +16,13 @@ import type {
 
 import {
   createMachine,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -102,7 +102,7 @@ export function WidgetMachine(props: WidgetMachineProps): WidgetMachineResult {
 
   // Root container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-widget', 'widget-machine');
+  container.setAttribute('data-surface-widget', 'widget-machine');
   container.setAttribute('data-widget-name', props.spec.name);
 
   if (props.class) {
@@ -156,7 +156,7 @@ export function WidgetMachine(props: WidgetMachineProps): WidgetMachineResult {
 
     // Dispatch native DOM event on state transition
     container.dispatchEvent(
-      new CustomEvent('coif:state-change', {
+      new CustomEvent('surface:state-change', {
         bubbles: true,
         detail: {
           widget: props.spec.name,
@@ -174,7 +174,7 @@ export function WidgetMachine(props: WidgetMachineProps): WidgetMachineResult {
 
     // Dispatch native DOM event for the action
     container.dispatchEvent(
-      new CustomEvent('coif:action', {
+      new CustomEvent('surface:action', {
         bubbles: true,
         detail: {
           widget: props.spec.name,

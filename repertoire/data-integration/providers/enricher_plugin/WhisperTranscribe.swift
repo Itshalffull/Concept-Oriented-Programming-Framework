@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Audio/video transcription enricher provider via Whisper
+// Clef Data Integration Kit - Audio/video transcription enricher provider via Whisper
 // Sends audio to Whisper API or runs locally, parses timestamped segments.
 
 import Foundation
@@ -85,7 +85,7 @@ public final class WhisperTranscribeEnricherProvider {
             throw EnricherError.parseError("Failed to decode base64 audio content")
         }
 
-        let tmpPath = NSTemporaryDirectory() + "copf_audio_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).wav"
+        let tmpPath = NSTemporaryDirectory() + "clef_audio_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).wav"
         try audioData.write(to: URL(fileURLWithPath: tmpPath))
         defer { try? FileManager.default.removeItem(atPath: tmpPath) }
 

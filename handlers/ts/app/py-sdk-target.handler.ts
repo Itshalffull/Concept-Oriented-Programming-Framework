@@ -7,7 +7,7 @@ export const pySdkTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const packageName = (parsedConfig.packageName as string) || 'copf_sdk';
+    const packageName = (parsedConfig.packageName as string) || 'clef_sdk';
     const asyncSupport = (parsedConfig.asyncSupport as boolean) ?? true;
 
     const conceptName = projection.replace(/-projection$/, '').replace(/-/g, '_');

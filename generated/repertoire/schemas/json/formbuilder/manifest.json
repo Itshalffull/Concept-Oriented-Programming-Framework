@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/FormBuilder",
+  "uri": "urn:clef/FormBuilder",
   "name": "FormBuilder",
   "typeParams": [
     {
@@ -468,11 +468,11 @@
   "jsonSchemas": {
     "invocations": {
       "buildForm": {
-        "$id": "urn:copf/FormBuilder/buildForm/invocation",
+        "$id": "urn:clef/FormBuilder/buildForm/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FormBuilder"
+            "const": "urn:clef/FormBuilder"
           },
           "action": {
             "const": "buildForm"
@@ -495,11 +495,11 @@
         }
       },
       "validate": {
-        "$id": "urn:copf/FormBuilder/validate/invocation",
+        "$id": "urn:clef/FormBuilder/validate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FormBuilder"
+            "const": "urn:clef/FormBuilder"
           },
           "action": {
             "const": "validate"
@@ -522,11 +522,11 @@
         }
       },
       "processSubmission": {
-        "$id": "urn:copf/FormBuilder/processSubmission/invocation",
+        "$id": "urn:clef/FormBuilder/processSubmission/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FormBuilder"
+            "const": "urn:clef/FormBuilder"
           },
           "action": {
             "const": "processSubmission"
@@ -549,11 +549,11 @@
         }
       },
       "registerWidget": {
-        "$id": "urn:copf/FormBuilder/registerWidget/invocation",
+        "$id": "urn:clef/FormBuilder/registerWidget/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FormBuilder"
+            "const": "urn:clef/FormBuilder"
           },
           "action": {
             "const": "registerWidget"
@@ -580,11 +580,11 @@
         }
       },
       "getWidget": {
-        "$id": "urn:copf/FormBuilder/getWidget/invocation",
+        "$id": "urn:clef/FormBuilder/getWidget/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/FormBuilder"
+            "const": "urn:clef/FormBuilder"
           },
           "action": {
             "const": "getWidget"
@@ -610,11 +610,11 @@
     "completions": {
       "buildForm": {
         "ok": {
-          "$id": "urn:copf/FormBuilder/buildForm/completion/ok",
+          "$id": "urn:clef/FormBuilder/buildForm/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "buildForm"
@@ -636,11 +636,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/FormBuilder/buildForm/completion/error",
+          "$id": "urn:clef/FormBuilder/buildForm/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "buildForm"
@@ -664,11 +664,11 @@
       },
       "validate": {
         "ok": {
-          "$id": "urn:copf/FormBuilder/validate/completion/ok",
+          "$id": "urn:clef/FormBuilder/validate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "validate"
@@ -696,11 +696,11 @@
       },
       "processSubmission": {
         "ok": {
-          "$id": "urn:copf/FormBuilder/processSubmission/completion/ok",
+          "$id": "urn:clef/FormBuilder/processSubmission/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "processSubmission"
@@ -722,11 +722,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/FormBuilder/processSubmission/completion/invalid",
+          "$id": "urn:clef/FormBuilder/processSubmission/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "processSubmission"
@@ -750,11 +750,11 @@
       },
       "registerWidget": {
         "ok": {
-          "$id": "urn:copf/FormBuilder/registerWidget/completion/ok",
+          "$id": "urn:clef/FormBuilder/registerWidget/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "registerWidget"
@@ -776,11 +776,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/FormBuilder/registerWidget/completion/exists",
+          "$id": "urn:clef/FormBuilder/registerWidget/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "registerWidget"
@@ -804,11 +804,11 @@
       },
       "getWidget": {
         "ok": {
-          "$id": "urn:copf/FormBuilder/getWidget/completion/ok",
+          "$id": "urn:clef/FormBuilder/getWidget/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "getWidget"
@@ -830,11 +830,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/FormBuilder/getWidget/completion/notfound",
+          "$id": "urn:clef/FormBuilder/getWidget/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/FormBuilder"
+              "const": "urn:clef/FormBuilder"
             },
             "action": {
               "const": "getWidget"

@@ -42,7 +42,7 @@ describe('InteractorEntity Handler', () => {
       );
       const record = await storage.get('interactor-entity', 'interactor-entity-1');
       expect(record).not.toBeNull();
-      expect(record!.symbol).toBe('copf/interactor/Toggle');
+      expect(record!.symbol).toBe('clef/interactor/Toggle');
       expect(record!.classificationRules).toBe('[]');
     });
   });

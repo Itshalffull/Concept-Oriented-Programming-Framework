@@ -1,4 +1,4 @@
-// Auto-generated entrypoint for kit "copf-devtools", target "claude-skills"
+// Auto-generated entrypoint for kit "clef-devtools", target "claude-skills"
 import { SpecParserModule } from './SpecParser/SpecParser.module';
 import { SchemaGenModule } from './SchemaGen/SchemaGen.module';
 import { SyncParserModule } from './SyncParser/SyncParser.module';
@@ -7,7 +7,7 @@ import { FlowTraceModule } from './FlowTrace/FlowTrace.module';
 import { DeploymentValidatorModule } from './DeploymentValidator/DeploymentValidator.module';
 import { ProjectScaffoldModule } from './ProjectScaffold/ProjectScaffold.module';
 import { DevServerModule } from './DevServer/DevServer.module';
-import { KitManagerModule } from './KitManager/KitManager.module';
+import { SuiteManagerModule } from './SuiteManager/SuiteManager.module';
 import { EmitterModule } from './Emitter/Emitter.module';
 import { BuildCacheModule } from './BuildCache/BuildCache.module';
 import { ResourceModule } from './Resource/Resource.module';
@@ -15,7 +15,7 @@ import { KindSystemModule } from './KindSystem/KindSystem.module';
 import { GenerationPlanModule } from './GenerationPlan/GenerationPlan.module';
 import { BuilderModule } from './Builder/Builder.module';
 import { ToolchainModule } from './Toolchain/Toolchain.module';
-import { KitScaffoldGenModule } from './KitScaffoldGen/KitScaffoldGen.module';
+import { SuiteScaffoldGenModule } from './SuiteScaffoldGen/SuiteScaffoldGen.module';
 import { DeployScaffoldGenModule } from './DeployScaffoldGen/DeployScaffoldGen.module';
 import { InterfaceScaffoldGenModule } from './InterfaceScaffoldGen/InterfaceScaffoldGen.module';
 import { ConceptScaffoldGenModule } from './ConceptScaffoldGen/ConceptScaffoldGen.module';
@@ -23,8 +23,8 @@ import { SyncScaffoldGenModule } from './SyncScaffoldGen/SyncScaffoldGen.module'
 import { HandlerScaffoldGenModule } from './HandlerScaffoldGen/HandlerScaffoldGen.module';
 import { StorageAdapterScaffoldGenModule } from './StorageAdapterScaffoldGen/StorageAdapterScaffoldGen.module';
 import { TransportAdapterScaffoldGenModule } from './TransportAdapterScaffoldGen/TransportAdapterScaffoldGen.module';
-import { CoifComponentScaffoldGenModule } from './CoifComponentScaffoldGen/CoifComponentScaffoldGen.module';
-import { CoifThemeScaffoldGenModule } from './CoifThemeScaffoldGen/CoifThemeScaffoldGen.module';
+import { SurfaceComponentScaffoldGenModule } from './SurfaceComponentScaffoldGen/SurfaceComponentScaffoldGen.module';
+import { SurfaceThemeScaffoldGenModule } from './SurfaceThemeScaffoldGen/SurfaceThemeScaffoldGen.module';
 import { GeneratorModule } from './Generator/Generator.module';
 import { ProjectionModule } from './Projection/Projection.module';
 import { ApiSurfaceModule } from './ApiSurface/ApiSurface.module';
@@ -34,4 +34,4 @@ import { FlakyTestModule } from './FlakyTest/FlakyTest.module';
 import { ContractTestModule } from './ContractTest/ContractTest.module';
 import { SnapshotModule } from './Snapshot/Snapshot.module';
 
-export const modules = [SpecParserModule, SchemaGenModule, SyncParserModule, SyncCompilerModule, FlowTraceModule, DeploymentValidatorModule, ProjectScaffoldModule, DevServerModule, KitManagerModule, EmitterModule, BuildCacheModule, ResourceModule, KindSystemModule, GenerationPlanModule, BuilderModule, ToolchainModule, KitScaffoldGenModule, DeployScaffoldGenModule, InterfaceScaffoldGenModule, ConceptScaffoldGenModule, SyncScaffoldGenModule, HandlerScaffoldGenModule, StorageAdapterScaffoldGenModule, TransportAdapterScaffoldGenModule, CoifComponentScaffoldGenModule, CoifThemeScaffoldGenModule, GeneratorModule, ProjectionModule, ApiSurfaceModule, ConformanceModule, TestSelectionModule, FlakyTestModule, ContractTestModule, SnapshotModule];
+export const modules = [SpecParserModule, SchemaGenModule, SyncParserModule, SyncCompilerModule, FlowTraceModule, DeploymentValidatorModule, ProjectScaffoldModule, DevServerModule, SuiteManagerModule, EmitterModule, BuildCacheModule, ResourceModule, KindSystemModule, GenerationPlanModule, BuilderModule, ToolchainModule, SuiteScaffoldGenModule, DeployScaffoldGenModule, InterfaceScaffoldGenModule, ConceptScaffoldGenModule, SyncScaffoldGenModule, HandlerScaffoldGenModule, StorageAdapterScaffoldGenModule, TransportAdapterScaffoldGenModule, SurfaceComponentScaffoldGenModule, SurfaceThemeScaffoldGenModule, GeneratorModule, ProjectionModule, ApiSurfaceModule, ConformanceModule, TestSelectionModule, FlakyTestModule, ContractTestModule, SnapshotModule];

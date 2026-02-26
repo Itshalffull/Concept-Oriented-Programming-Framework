@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title PageAsRecord
 /// @notice Concept-oriented page-as-database-record with schema binding and ordered body
-/// @dev Implements the PageAsRecord concept from COPF specification.
+/// @dev Implements the PageAsRecord concept from Clef specification.
 ///      Each page has key-value properties, an ordered body of child nodes, and optional schema binding.
 
 contract PageAsRecord {

@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Video summarization enricher provider
+// Clef Data Integration Kit - Video summarization enricher provider
 // Extracts keyframes at intervals, generates transcript via whisper, combines for chapter markers.
 
 import Foundation
@@ -29,9 +29,9 @@ public final class VideoSummaryEnricherProvider {
             throw EnricherError.parseError("Failed to decode base64 video content")
         }
 
-        let videoPath = NSTemporaryDirectory() + "copf_video_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).mp4"
-        let audioPath = NSTemporaryDirectory() + "copf_audio_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).wav"
-        let keyframeDir = NSTemporaryDirectory() + "copf_keyframes_\(item.id)/"
+        let videoPath = NSTemporaryDirectory() + "clef_video_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).mp4"
+        let audioPath = NSTemporaryDirectory() + "clef_audio_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).wav"
+        let keyframeDir = NSTemporaryDirectory() + "clef_keyframes_\(item.id)/"
 
         try videoData.write(to: URL(fileURLWithPath: videoPath))
         try FileManager.default.createDirectory(atPath: keyframeDir, withIntermediateDirectories: true)

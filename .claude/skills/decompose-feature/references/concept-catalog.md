@@ -1,6 +1,6 @@
 # Concept Catalog
 
-Reusable concept patterns organized by category. When decomposing a feature, check this catalog first — many purposes map directly to well-known concepts. Based on Daniel Jackson's concept catalog from *The Essence of Software* and the patterns implemented in the COPF codebase.
+Reusable concept patterns organized by category. When decomposing a feature, check this catalog first — many purposes map directly to well-known concepts. Based on Daniel Jackson's concept catalog from *The Essence of Software* and the patterns implemented in the Clef codebase.
 
 ## Identity Concepts
 

@@ -1,7 +1,7 @@
 // ============================================================
 // ArgoCDProvider Handler Tests
 //
-// Generate ArgoCD Application CRDs from COPF deploy plans.
+// Generate ArgoCD Application CRDs from Clef deploy plans.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -27,7 +27,7 @@ describe('ArgoCDProvider', () => {
       );
       expect(result.variant).toBe('ok');
       expect(result.application).toBe('argo-cd-provider-1');
-      expect(result.files).toContain('copf-myapp-application.yaml');
+      expect(result.files).toContain('clef-myapp-application.yaml');
     });
 
     it('stores application metadata in storage', async () => {
@@ -37,7 +37,7 @@ describe('ArgoCDProvider', () => {
       );
       const stored = await storage.get('argo-cd-provider', 'argo-cd-provider-1');
       expect(stored).not.toBeNull();
-      expect(stored!.appName).toBe('copf-staging');
+      expect(stored!.appName).toBe('clef-staging');
       expect(stored!.syncStatus).toBe('OutOfSync');
       expect(stored!.healthStatus).toBe('Missing');
     });

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/LocalRuntime",
+  "uri": "urn:clef/LocalRuntime",
   "name": "LocalRuntime",
   "typeParams": [
     {
@@ -439,11 +439,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/LocalRuntime/provision/invocation",
+        "$id": "urn:clef/LocalRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LocalRuntime"
+            "const": "urn:clef/LocalRuntime"
           },
           "action": {
             "const": "provision"
@@ -470,11 +470,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/LocalRuntime/deploy/invocation",
+        "$id": "urn:clef/LocalRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LocalRuntime"
+            "const": "urn:clef/LocalRuntime"
           },
           "action": {
             "const": "deploy"
@@ -497,11 +497,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/LocalRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/LocalRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LocalRuntime"
+            "const": "urn:clef/LocalRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -524,11 +524,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/LocalRuntime/rollback/invocation",
+        "$id": "urn:clef/LocalRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LocalRuntime"
+            "const": "urn:clef/LocalRuntime"
           },
           "action": {
             "const": "rollback"
@@ -551,11 +551,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/LocalRuntime/destroy/invocation",
+        "$id": "urn:clef/LocalRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LocalRuntime"
+            "const": "urn:clef/LocalRuntime"
           },
           "action": {
             "const": "destroy"
@@ -577,11 +577,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/LocalRuntime/provision/completion/ok",
+          "$id": "urn:clef/LocalRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LocalRuntime"
+              "const": "urn:clef/LocalRuntime"
             },
             "action": {
               "const": "provision"
@@ -611,11 +611,11 @@
           }
         },
         "portInUse": {
-          "$id": "urn:copf/LocalRuntime/provision/completion/portInUse",
+          "$id": "urn:clef/LocalRuntime/provision/completion/portInUse",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LocalRuntime"
+              "const": "urn:clef/LocalRuntime"
             },
             "action": {
               "const": "provision"
@@ -643,11 +643,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/LocalRuntime/deploy/completion/ok",
+          "$id": "urn:clef/LocalRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LocalRuntime"
+              "const": "urn:clef/LocalRuntime"
             },
             "action": {
               "const": "deploy"
@@ -675,11 +675,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/LocalRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/LocalRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LocalRuntime"
+              "const": "urn:clef/LocalRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -703,11 +703,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/LocalRuntime/rollback/completion/ok",
+          "$id": "urn:clef/LocalRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LocalRuntime"
+              "const": "urn:clef/LocalRuntime"
             },
             "action": {
               "const": "rollback"
@@ -735,11 +735,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/LocalRuntime/destroy/completion/ok",
+          "$id": "urn:clef/LocalRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LocalRuntime"
+              "const": "urn:clef/LocalRuntime"
             },
             "action": {
               "const": "destroy"

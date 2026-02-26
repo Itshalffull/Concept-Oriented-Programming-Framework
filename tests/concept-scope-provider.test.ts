@@ -63,7 +63,7 @@ describe('ConceptScopeProvider', () => {
       const conceptDecl = declarations.find((d: Record<string, string>) => d.name === 'Article');
       expect(conceptDecl).toBeDefined();
       expect(conceptDecl.scopeId).toBe(scopes[0].id); // declared in global scope
-      expect(conceptDecl.symbolString).toBe('copf/concept/Article');
+      expect(conceptDecl.symbolString).toBe('clef/concept/Article');
       expect(conceptDecl.kind).toBe('concept');
     });
 
@@ -226,7 +226,7 @@ describe('ConceptScopeProvider', () => {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/concept/Article/state/title');
+      expect(result.symbolString).toBe('clef/concept/Article/state/title');
     });
 
     it('resolves a name from parent scope', async () => {
@@ -251,7 +251,7 @@ describe('ConceptScopeProvider', () => {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/concept/Article/state/title');
+      expect(result.symbolString).toBe('clef/concept/Article/state/title');
     });
 
     it('resolves concept name from global scope', async () => {
@@ -273,7 +273,7 @@ describe('ConceptScopeProvider', () => {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/concept/Article');
+      expect(result.symbolString).toBe('clef/concept/Article');
     });
 
     it('returns unresolved for unknown name', async () => {
@@ -317,7 +317,7 @@ describe('ConceptScopeProvider', () => {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/concept/Collection/type/T');
+      expect(result.symbolString).toBe('clef/concept/Collection/type/T');
     });
   });
 

@@ -200,7 +200,7 @@ pub trait CaptureModePlugin: Send + Sync {
 async fn fetch_url(url: &str, timeout_ms: u64, extra_headers: Option<&HashMap<String, String>>) -> Result<(Vec<u8>, u16), CaptureError> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_millis(timeout_ms))
-        .user_agent("COPF-Capture/1.0")
+        .user_agent("Clef-Capture/1.0")
         .build()
         .map_err(|e| CaptureError::NetworkError {
             url: url.to_string(),
@@ -554,7 +554,7 @@ impl CaptureModePlugin for WebFullPageProvider {
 
         // 3. Inject capture metadata
         let meta_tags = format!(
-            r#"<meta name="copf:captured-at" content="{}" /><meta name="copf:source-url" content="{}" />"#,
+            r#"<meta name="clef:captured-at" content="{}" /><meta name="clef:source-url" content="{}" />"#,
             Utc::now().to_rfc3339(),
             url
         );

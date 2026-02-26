@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title AutomationRule
 /// @notice Concept-oriented automation rule management with trigger-condition-action patterns
-/// @dev Implements the AutomationRule concept from COPF specification.
+/// @dev Implements the AutomationRule concept from Clef specification.
 ///      Supports defining rules with triggers, conditions, and actions, plus enable/disable toggling.
 
 contract AutomationRule {

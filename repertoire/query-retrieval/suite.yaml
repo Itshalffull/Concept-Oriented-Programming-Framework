@@ -1,4 +1,4 @@
-# Query-Retrieval Kit Manifest
+# Query-Retrieval Suite Manifest
 name: query-retrieval
 version: 0.1.0
 description: "Structured data retrieval — queries, search indexes, and exposed filters for building search pipelines."

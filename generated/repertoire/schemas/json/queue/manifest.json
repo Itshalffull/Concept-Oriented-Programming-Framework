@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Queue",
+  "uri": "urn:clef/Queue",
   "name": "Queue",
   "typeParams": [
     {
@@ -403,11 +403,11 @@
   "jsonSchemas": {
     "invocations": {
       "enqueue": {
-        "$id": "urn:copf/Queue/enqueue/invocation",
+        "$id": "urn:clef/Queue/enqueue/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Queue"
+            "const": "urn:clef/Queue"
           },
           "action": {
             "const": "enqueue"
@@ -434,11 +434,11 @@
         }
       },
       "claim": {
-        "$id": "urn:copf/Queue/claim/invocation",
+        "$id": "urn:clef/Queue/claim/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Queue"
+            "const": "urn:clef/Queue"
           },
           "action": {
             "const": "claim"
@@ -461,11 +461,11 @@
         }
       },
       "process": {
-        "$id": "urn:copf/Queue/process/invocation",
+        "$id": "urn:clef/Queue/process/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Queue"
+            "const": "urn:clef/Queue"
           },
           "action": {
             "const": "process"
@@ -492,11 +492,11 @@
         }
       },
       "release": {
-        "$id": "urn:copf/Queue/release/invocation",
+        "$id": "urn:clef/Queue/release/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Queue"
+            "const": "urn:clef/Queue"
           },
           "action": {
             "const": "release"
@@ -519,11 +519,11 @@
         }
       },
       "delete": {
-        "$id": "urn:copf/Queue/delete/invocation",
+        "$id": "urn:clef/Queue/delete/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Queue"
+            "const": "urn:clef/Queue"
           },
           "action": {
             "const": "delete"
@@ -549,11 +549,11 @@
     "completions": {
       "enqueue": {
         "ok": {
-          "$id": "urn:copf/Queue/enqueue/completion/ok",
+          "$id": "urn:clef/Queue/enqueue/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "enqueue"
@@ -575,11 +575,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Queue/enqueue/completion/notfound",
+          "$id": "urn:clef/Queue/enqueue/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "enqueue"
@@ -603,11 +603,11 @@
       },
       "claim": {
         "ok": {
-          "$id": "urn:copf/Queue/claim/completion/ok",
+          "$id": "urn:clef/Queue/claim/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "claim"
@@ -629,11 +629,11 @@
           }
         },
         "empty": {
-          "$id": "urn:copf/Queue/claim/completion/empty",
+          "$id": "urn:clef/Queue/claim/completion/empty",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "claim"
@@ -657,11 +657,11 @@
       },
       "process": {
         "ok": {
-          "$id": "urn:copf/Queue/process/completion/ok",
+          "$id": "urn:clef/Queue/process/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "process"
@@ -677,11 +677,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Queue/process/completion/notfound",
+          "$id": "urn:clef/Queue/process/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "process"
@@ -705,11 +705,11 @@
       },
       "release": {
         "ok": {
-          "$id": "urn:copf/Queue/release/completion/ok",
+          "$id": "urn:clef/Queue/release/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "release"
@@ -725,11 +725,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Queue/release/completion/notfound",
+          "$id": "urn:clef/Queue/release/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "release"
@@ -753,11 +753,11 @@
       },
       "delete": {
         "ok": {
-          "$id": "urn:copf/Queue/delete/completion/ok",
+          "$id": "urn:clef/Queue/delete/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "delete"
@@ -773,11 +773,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Queue/delete/completion/notfound",
+          "$id": "urn:clef/Queue/delete/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Queue"
+              "const": "urn:clef/Queue"
             },
             "action": {
               "const": "delete"

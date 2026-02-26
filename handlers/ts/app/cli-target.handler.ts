@@ -7,7 +7,7 @@ export const cliTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const binaryName = (parsedConfig.binaryName as string) || 'copf';
+    const binaryName = (parsedConfig.binaryName as string) || 'clef';
     const shell = (parsedConfig.shell as string) || 'bash';
     const outputFormats = (parsedConfig.outputFormats as string[]) || ['json', 'table'];
 
@@ -171,7 +171,7 @@ export const cliTargetHandler: ConceptHandler = {
       }
     } else {
       // Return defaults based on concept name
-      allCommands.push(`copf ${commandBase}`);
+      allCommands.push(`clef ${commandBase}`);
       allSubcommands.push('create', 'get', 'list', 'update', 'delete');
     }
 

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Formula",
+  "uri": "urn:clef/Formula",
   "name": "Formula",
   "typeParams": [
     {
@@ -278,11 +278,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/Formula/create/invocation",
+        "$id": "urn:clef/Formula/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Formula"
+            "const": "urn:clef/Formula"
           },
           "action": {
             "const": "create"
@@ -305,11 +305,11 @@
         }
       },
       "evaluate": {
-        "$id": "urn:copf/Formula/evaluate/invocation",
+        "$id": "urn:clef/Formula/evaluate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Formula"
+            "const": "urn:clef/Formula"
           },
           "action": {
             "const": "evaluate"
@@ -328,11 +328,11 @@
         }
       },
       "getDependencies": {
-        "$id": "urn:copf/Formula/getDependencies/invocation",
+        "$id": "urn:clef/Formula/getDependencies/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Formula"
+            "const": "urn:clef/Formula"
           },
           "action": {
             "const": "getDependencies"
@@ -351,11 +351,11 @@
         }
       },
       "invalidate": {
-        "$id": "urn:copf/Formula/invalidate/invocation",
+        "$id": "urn:clef/Formula/invalidate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Formula"
+            "const": "urn:clef/Formula"
           },
           "action": {
             "const": "invalidate"
@@ -374,11 +374,11 @@
         }
       },
       "setExpression": {
-        "$id": "urn:copf/Formula/setExpression/invocation",
+        "$id": "urn:clef/Formula/setExpression/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Formula"
+            "const": "urn:clef/Formula"
           },
           "action": {
             "const": "setExpression"
@@ -404,11 +404,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/Formula/create/completion/ok",
+          "$id": "urn:clef/Formula/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "create"
@@ -424,11 +424,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Formula/create/completion/exists",
+          "$id": "urn:clef/Formula/create/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "create"
@@ -446,11 +446,11 @@
       },
       "evaluate": {
         "ok": {
-          "$id": "urn:copf/Formula/evaluate/completion/ok",
+          "$id": "urn:clef/Formula/evaluate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "evaluate"
@@ -472,11 +472,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Formula/evaluate/completion/notfound",
+          "$id": "urn:clef/Formula/evaluate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "evaluate"
@@ -494,11 +494,11 @@
       },
       "getDependencies": {
         "ok": {
-          "$id": "urn:copf/Formula/getDependencies/completion/ok",
+          "$id": "urn:clef/Formula/getDependencies/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "getDependencies"
@@ -520,11 +520,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Formula/getDependencies/completion/notfound",
+          "$id": "urn:clef/Formula/getDependencies/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "getDependencies"
@@ -542,11 +542,11 @@
       },
       "invalidate": {
         "ok": {
-          "$id": "urn:copf/Formula/invalidate/completion/ok",
+          "$id": "urn:clef/Formula/invalidate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "invalidate"
@@ -562,11 +562,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Formula/invalidate/completion/notfound",
+          "$id": "urn:clef/Formula/invalidate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "invalidate"
@@ -584,11 +584,11 @@
       },
       "setExpression": {
         "ok": {
-          "$id": "urn:copf/Formula/setExpression/completion/ok",
+          "$id": "urn:clef/Formula/setExpression/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "setExpression"
@@ -604,11 +604,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Formula/setExpression/completion/notfound",
+          "$id": "urn:clef/Formula/setExpression/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Formula"
+              "const": "urn:clef/Formula"
             },
             "action": {
               "const": "setExpression"

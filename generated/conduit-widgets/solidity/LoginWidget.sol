@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title LoginWidget
-/// @notice Self-describing COIF widget for user login on Conduit.
+/// @notice Self-describing Clef Surface widget for user login on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -83,14 +83,14 @@ contract LoginWidget {
         string[] memory passwordActions = new string[](1);
         passwordActions[0] = "check";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Password",
+            concept: "urn:clef/Password",
             actions: passwordActions
         });
 
         string[] memory jwtActions = new string[](1);
         jwtActions[0] = "generate";
         bindings[1] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/JWT",
+            concept: "urn:clef/JWT",
             actions: jwtActions
         });
 

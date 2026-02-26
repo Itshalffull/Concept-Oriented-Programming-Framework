@@ -1,7 +1,7 @@
 // ============================================================
 // TreeSitterSyncSpec Handler Tests
 //
-// Tree-sitter grammar provider for COPF sync spec files.
+// Tree-sitter grammar provider for Clef sync spec files.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';

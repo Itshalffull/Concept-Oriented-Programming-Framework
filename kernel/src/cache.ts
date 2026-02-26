@@ -1,9 +1,9 @@
 // ============================================================
 // Clef Kernel - Compiled Artifact Cache
 //
-// Reads and writes pre-compiled artifacts from .copf-cache/.
+// Reads and writes pre-compiled artifacts from .clef-cache/.
 // Used by the cached boot path to skip parsing on startup
-// and by `copf compile --cache` to persist build output.
+// and by `clef compile --cache` to persist build output.
 // ============================================================
 
 import { createHash } from 'crypto';
@@ -36,7 +36,7 @@ export interface RegistrationEntry {
 
 // --- Cache Directory Layout ---
 
-const CACHE_DIR = '.copf-cache';
+const CACHE_DIR = '.clef-cache';
 const MANIFEST_FILE = 'manifest.json';
 const CONCEPTS_DIR = 'concepts';
 const SYNCS_DIR = 'syncs';

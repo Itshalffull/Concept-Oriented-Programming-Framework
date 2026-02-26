@@ -1,5 +1,5 @@
 // ============================================================
-// copf compile-syncs
+// clef compile-syncs
 //
 // Parse and validate all .sync files against concept manifests.
 //

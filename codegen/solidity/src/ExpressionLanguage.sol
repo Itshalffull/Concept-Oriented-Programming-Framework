@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ExpressionLanguage
 /// @notice Concept-oriented expression language registry with grammar and function definitions
-/// @dev Implements the ExpressionLanguage concept from COPF specification.
+/// @dev Implements the ExpressionLanguage concept from Clef specification.
 ///      Supports registering languages with grammars and their associated functions.
 
 contract ExpressionLanguage {

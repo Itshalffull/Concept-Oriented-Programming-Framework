@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Renderer",
+  "uri": "urn:clef/Renderer",
   "name": "Renderer",
   "typeParams": [
     {
@@ -377,11 +377,11 @@
   "jsonSchemas": {
     "invocations": {
       "render": {
-        "$id": "urn:copf/Renderer/render/invocation",
+        "$id": "urn:clef/Renderer/render/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Renderer"
+            "const": "urn:clef/Renderer"
           },
           "action": {
             "const": "render"
@@ -404,11 +404,11 @@
         }
       },
       "autoPlaceholder": {
-        "$id": "urn:copf/Renderer/autoPlaceholder/invocation",
+        "$id": "urn:clef/Renderer/autoPlaceholder/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Renderer"
+            "const": "urn:clef/Renderer"
           },
           "action": {
             "const": "autoPlaceholder"
@@ -431,11 +431,11 @@
         }
       },
       "stream": {
-        "$id": "urn:copf/Renderer/stream/invocation",
+        "$id": "urn:clef/Renderer/stream/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Renderer"
+            "const": "urn:clef/Renderer"
           },
           "action": {
             "const": "stream"
@@ -458,11 +458,11 @@
         }
       },
       "mergeCacheability": {
-        "$id": "urn:copf/Renderer/mergeCacheability/invocation",
+        "$id": "urn:clef/Renderer/mergeCacheability/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Renderer"
+            "const": "urn:clef/Renderer"
           },
           "action": {
             "const": "mergeCacheability"
@@ -488,11 +488,11 @@
     "completions": {
       "render": {
         "ok": {
-          "$id": "urn:copf/Renderer/render/completion/ok",
+          "$id": "urn:clef/Renderer/render/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Renderer"
+              "const": "urn:clef/Renderer"
             },
             "action": {
               "const": "render"
@@ -514,11 +514,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/Renderer/render/completion/error",
+          "$id": "urn:clef/Renderer/render/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Renderer"
+              "const": "urn:clef/Renderer"
             },
             "action": {
               "const": "render"
@@ -542,11 +542,11 @@
       },
       "autoPlaceholder": {
         "ok": {
-          "$id": "urn:copf/Renderer/autoPlaceholder/completion/ok",
+          "$id": "urn:clef/Renderer/autoPlaceholder/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Renderer"
+              "const": "urn:clef/Renderer"
             },
             "action": {
               "const": "autoPlaceholder"
@@ -570,11 +570,11 @@
       },
       "stream": {
         "ok": {
-          "$id": "urn:copf/Renderer/stream/completion/ok",
+          "$id": "urn:clef/Renderer/stream/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Renderer"
+              "const": "urn:clef/Renderer"
             },
             "action": {
               "const": "stream"
@@ -596,11 +596,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/Renderer/stream/completion/error",
+          "$id": "urn:clef/Renderer/stream/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Renderer"
+              "const": "urn:clef/Renderer"
             },
             "action": {
               "const": "stream"
@@ -624,11 +624,11 @@
       },
       "mergeCacheability": {
         "ok": {
-          "$id": "urn:copf/Renderer/mergeCacheability/completion/ok",
+          "$id": "urn:clef/Renderer/mergeCacheability/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Renderer"
+              "const": "urn:clef/Renderer"
             },
             "action": {
               "const": "mergeCacheability"

@@ -1,4 +1,4 @@
-# Presentation Kit Manifest
+# Presentation Suite Manifest
 name: presentation
 version: 0.1.0
 description: "View rendering and display — views, display modes, form building, and renderers for presenting content to users."

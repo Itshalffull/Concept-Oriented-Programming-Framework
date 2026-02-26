@@ -126,7 +126,7 @@ private func iso8601Now() -> String {
 
 private func fetchData(from url: URL, timeout: TimeInterval, headers: [String: String] = [:]) async throws -> (Data, HTTPURLResponse) {
     var request = URLRequest(url: url, timeoutInterval: timeout)
-    request.setValue("COPF-Capture/1.0", forHTTPHeaderField: "User-Agent")
+    request.setValue("Clef-Capture/1.0", forHTTPHeaderField: "User-Agent")
     for (key, value) in headers {
         request.setValue(value, forHTTPHeaderField: key)
     }
@@ -427,8 +427,8 @@ struct WebFullPageProvider: CaptureModePlugin {
         // 3. Inject capture metadata
         let timestamp = iso8601Now()
         let metaTags = """
-        <meta name="copf:captured-at" content="\(timestamp)" />
-        <meta name="copf:source-url" content="\(url.absoluteString)" />
+        <meta name="clef:captured-at" content="\(timestamp)" />
+        <meta name="clef:source-url" content="\(url.absoluteString)" />
         """
         let finalHtml: String
         if let headRange = withStyles.range(of: "<head>", options: .caseInsensitive) {
@@ -1380,7 +1380,7 @@ struct ApiPollProvider: CaptureModePlugin {
         // 1. Build request headers
         var requestHeaders: [String: String] = [
             "Accept": "application/json",
-            "User-Agent": "COPF-Capture/1.0",
+            "User-Agent": "Clef-Capture/1.0",
         ]
         if let extra = inputHeaders { requestHeaders.merge(extra) { _, new in new } }
 

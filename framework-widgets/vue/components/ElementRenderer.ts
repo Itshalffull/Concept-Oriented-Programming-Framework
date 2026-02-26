@@ -17,7 +17,7 @@ import {
 
 import type { ElementConfig } from '../../shared/types.js';
 
-import { mapElementToHTML } from '../../shared/coif-bridge.js';
+import { mapElementToHTML } from '../../shared/surface-bridge.js';
 
 export const ElementRenderer = defineComponent({
   name: 'ElementRenderer',
@@ -132,7 +132,7 @@ export const ElementRenderer = defineComponent({
           onInput: handleInput,
           onBlur: (e: FocusEvent) => emit('blur', e),
           onFocus: (e: FocusEvent) => emit('focus', e),
-          class: 'coif-element-renderer__input',
+          class: 'surface-element-renderer__input',
         });
       }
 
@@ -149,7 +149,7 @@ export const ElementRenderer = defineComponent({
             onChange: handleInput,
             onBlur: (e: FocusEvent) => emit('blur', e),
             onFocus: (e: FocusEvent) => emit('focus', e),
-            class: 'coif-element-renderer__select',
+            class: 'surface-element-renderer__select',
           },
           // Placeholder option; real options come from slot or constraints
           slots.options?.() ?? [
@@ -166,7 +166,7 @@ export const ElementRenderer = defineComponent({
             ...baseAttrs,
             type: 'button',
             onClick: handleClick,
-            class: 'coif-element-renderer__trigger',
+            class: 'surface-element-renderer__trigger',
           },
           slots.default?.() ?? config.label,
         );
@@ -179,7 +179,7 @@ export const ElementRenderer = defineComponent({
           {
             ...baseAttrs,
             href: (config.constraints?.['href'] as string) ?? '#',
-            class: 'coif-element-renderer__navigation',
+            class: 'surface-element-renderer__navigation',
           },
           slots.default?.() ?? config.label,
         );
@@ -191,7 +191,7 @@ export const ElementRenderer = defineComponent({
           hint.tag,
           {
             ...baseAttrs,
-            class: 'coif-element-renderer__output',
+            class: 'surface-element-renderer__output',
           },
           String(localValue.value ?? ''),
         );
@@ -202,7 +202,7 @@ export const ElementRenderer = defineComponent({
         return h(hint.tag, {
           ...baseAttrs,
           contenteditable: !props.disabled ? 'true' : 'false',
-          class: 'coif-element-renderer__rich-text',
+          class: 'surface-element-renderer__rich-text',
           onInput: (e: Event) => {
             const target = e.target as HTMLElement;
             localValue.value = target.innerHTML;
@@ -217,7 +217,7 @@ export const ElementRenderer = defineComponent({
         hint.tag,
         {
           ...baseAttrs,
-          class: 'coif-element-renderer__generic',
+          class: 'surface-element-renderer__generic',
         },
         slots.default?.(),
       );
@@ -230,7 +230,7 @@ export const ElementRenderer = defineComponent({
 
       // Fieldset legend for groups
       if (config.kind === 'group' && config.label) {
-        children.push(h('legend', { class: 'coif-element-renderer__legend' }, config.label));
+        children.push(h('legend', { class: 'surface-element-renderer__legend' }, config.label));
       }
 
       // Recursively render child elements
@@ -251,8 +251,8 @@ export const ElementRenderer = defineComponent({
           id: config.id,
           role: hint.role ?? undefined,
           class: [
-            'coif-element-renderer__group',
-            `coif-element-renderer__group--${config.kind}`,
+            'surface-element-renderer__group',
+            `surface-element-renderer__group--${config.kind}`,
           ],
         },
         children,
@@ -270,12 +270,12 @@ export const ElementRenderer = defineComponent({
             'label',
             {
               for: config.id,
-              class: 'coif-element-renderer__label',
+              class: 'surface-element-renderer__label',
             },
             [
               config.label,
               config.required
-                ? h('span', { class: 'coif-element-renderer__required', 'aria-hidden': 'true' }, ' *')
+                ? h('span', { class: 'surface-element-renderer__required', 'aria-hidden': 'true' }, ' *')
                 : null,
             ],
           ),
@@ -292,7 +292,7 @@ export const ElementRenderer = defineComponent({
             'span',
             {
               id: `${config.id}-error`,
-              class: 'coif-element-renderer__error',
+              class: 'surface-element-renderer__error',
               role: 'alert',
             },
             props.errorMessage,
@@ -304,8 +304,8 @@ export const ElementRenderer = defineComponent({
         'div',
         {
           class: [
-            'coif-element-renderer__field',
-            { 'coif-element-renderer__field--error': props.showErrors && props.errorMessage },
+            'surface-element-renderer__field',
+            { 'surface-element-renderer__field--error': props.showErrors && props.errorMessage },
           ],
         },
         children,
@@ -320,7 +320,7 @@ export const ElementRenderer = defineComponent({
       return h(
         'div',
         {
-          class: 'coif-element-renderer',
+          class: 'surface-element-renderer',
           'data-element-kind': config.kind,
           'data-element-id': config.id,
         },

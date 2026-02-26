@@ -1,7 +1,7 @@
 // ============================================================
 // TreeSitterWidgetSpec Handler Tests
 //
-// Tree-sitter grammar provider for COIF widget spec files.
+// Tree-sitter grammar provider for Clef Surface widget spec files.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';

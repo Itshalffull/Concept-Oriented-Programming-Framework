@@ -28,7 +28,7 @@ import { ElementRenderer } from './ElementRenderer.js';
 // --------------- Props ---------------
 
 export interface UISchemaFormProps {
-  /** The COIF UI schema describing the concept's presentation. */
+  /** The Clef Surface UI schema describing the concept's presentation. */
   schema: UISchema;
   /**
    * Which view to render.
@@ -278,7 +278,7 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
   if (!activeView) {
     return (
       <div
-        data-coif-form=""
+        data-surface-form=""
         data-form-error="no-view"
         className={className}
         style={style}
@@ -292,7 +292,7 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
     <form
       className={className}
       style={style}
-      data-coif-form=""
+      data-surface-form=""
       data-form-view={view}
       data-form-concept={schema.concept}
       onSubmit={handleSubmit}
@@ -312,14 +312,14 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
           return (
             <div
               key={field.name}
-              data-coif-form-field=""
+              data-surface-form-field=""
               data-field-name={field.name}
               data-field-error={fieldError ? '' : undefined}
             >
               {renderField(field, fieldValue, fieldOnChange, elementConfig)}
               {fieldError && (
                 <span
-                  data-coif-form-error=""
+                  data-surface-form-error=""
                   role="alert"
                   style={{ color: 'var(--color-error, #dc2626)', fontSize: '0.85em' }}
                 >
@@ -333,7 +333,7 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
         return (
           <div
             key={field.name}
-            data-coif-form-field=""
+            data-surface-form-field=""
             data-field-name={field.name}
             data-field-error={fieldError ? '' : undefined}
             style={{ marginBottom: '12px' }}
@@ -348,7 +348,7 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
             />
             {fieldError && (
               <span
-                data-coif-form-error=""
+                data-surface-form-error=""
                 role="alert"
                 style={{ color: 'var(--color-error, #dc2626)', fontSize: '0.85em' }}
               >
@@ -360,11 +360,11 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
       })}
 
       {!hideActions && !isReadOnly && (
-        <div data-coif-form-actions="" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+        <div data-surface-form-actions="" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <button
             type="submit"
             disabled={disabled}
-            data-coif-form-submit=""
+            data-surface-form-submit=""
           >
             {submitLabel}
           </button>
@@ -373,7 +373,7 @@ export const UISchemaForm: React.FC<UISchemaFormProps> = ({
               type="button"
               onClick={handleCancel}
               disabled={disabled}
-              data-coif-form-cancel=""
+              data-surface-form-cancel=""
             >
               {cancelLabel}
             </button>

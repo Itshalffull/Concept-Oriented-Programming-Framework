@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Authentication
 /// @notice Concept-oriented credential-based authentication with register, login, logout, and password reset
-/// @dev Implements the Authentication concept from COPF specification.
+/// @dev Implements the Authentication concept from Clef specification.
 ///      Stores credential hashes on-chain; actual password hashing should occur off-chain.
 
 contract Authentication {

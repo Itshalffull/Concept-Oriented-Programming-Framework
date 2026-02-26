@@ -1,11 +1,11 @@
 ---
 name: create-concept
-description: Design and create a new concept for the Concept-Oriented Programming Framework following Daniel Jackson's concept design methodology. Ensures proper scoping, independence, state sufficiency, and operational principles.
+description: Design and create a new concept for the Clef following Daniel Jackson's concept design methodology. Ensures proper scoping, independence, state sufficiency, and operational principles.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<concept-name> [--domain app|framework]"
 ---
 
-# Create a New COPF Concept
+# Create a New Clef Concept
 
 Design and implement a new concept named **$ARGUMENTS** following Daniel Jackson's concept design methodology from "The Essence of Software."
 
@@ -45,7 +45,7 @@ Read [references/jackson-methodology.md](references/jackson-methodology.md) for 
 
 ### Step 2: Identify the Type Parameter
 
-Every COPF concept is parameterized by exactly one type parameter — the primary entity or resource it manages. This makes the concept polymorphic and independent.
+Every Clef concept is parameterized by exactly one type parameter — the primary entity or resource it manages. This makes the concept polymorphic and independent.
 
 Choose a single uppercase letter:
 - **U** for user-keyed concepts (Password, Profile, Follow, JWT)
@@ -120,7 +120,7 @@ Every variant description MUST be a clear, concise explanation of *when this out
 
 Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns, anti-patterns, and detailed guidance.
 
-The operational principle is a "defining story" — a scenario that proves the concept fulfills its purpose. In COPF, these are expressed as `invariant` blocks.
+The operational principle is a "defining story" — a scenario that proves the concept fulfills its purpose. In Clef, these are expressed as `invariant` blocks.
 
 **Every concept MUST have at least one invariant.** A concept without invariants has no machine-verifiable behavioral contract and cannot generate meaningful conformance tests.
 
@@ -180,7 +180,7 @@ For concepts that process structured data (ASTs, manifests, configs), use record
 ```
 invariant {
   after generate(spec: "s1", manifest: {
-    name: "Ping", uri: "urn:copf/Ping", typeParams: [],
+    name: "Ping", uri: "urn:clef/Ping", typeParams: [],
     actions: [{ name: "ping", params: [],
       variants: [{ tag: "ok", fields: [] }] }],
     invariants: [], graphqlSchema: "",
@@ -371,7 +371,7 @@ For complete examples with design rationale:
 
 | Skill | When to Use |
 |-------|------------|
-| `/create-concept-kit` | Bundle multiple related concepts into a reusable kit |
+| `/create-suite` | Bundle multiple related concepts into a reusable suite |
 | `/create-sync` | Write sync rules that connect this concept to others |
 | `/create-implementation` | Write the TypeScript implementation for this concept |
 | `/decompose-feature` | Break down a feature into concepts before designing each one |

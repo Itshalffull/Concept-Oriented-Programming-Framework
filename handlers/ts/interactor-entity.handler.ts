@@ -21,7 +21,7 @@ export const interactorEntityHandler: ConceptHandler = {
     const properties = input.properties as string;
 
     const id = nextId();
-    const symbol = `copf/interactor/${name}`;
+    const symbol = `clef/interactor/${name}`;
 
     await storage.put('interactor-entity', id, {
       id,

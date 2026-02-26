@@ -136,7 +136,7 @@ export class WebArticleProvider implements CaptureModePlugin {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": "COPF-Capture/1.0" } });
+      const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": "Clef-Capture/1.0" } });
       if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
       return await res.text();
     } finally {
@@ -419,7 +419,7 @@ export class WebFullPageProvider implements CaptureModePlugin {
   }
 
   private injectCaptureMetadata(html: string, sourceUrl: string): string {
-    const meta = `<meta name="copf:captured-at" content="${now()}" />\n<meta name="copf:source-url" content="${sourceUrl}" />`;
+    const meta = `<meta name="clef:captured-at" content="${now()}" />\n<meta name="clef:source-url" content="${sourceUrl}" />`;
     if (html.includes("<head>")) {
       return html.replace("<head>", `<head>\n${meta}`);
     }
@@ -1269,7 +1269,7 @@ export class ApiPollProvider implements CaptureModePlugin {
     // 2. Build request with delta parameters
     const requestHeaders: Record<string, string> = {
       "Accept": "application/json",
-      "User-Agent": "COPF-Capture/1.0",
+      "User-Agent": "Clef-Capture/1.0",
       ...inputHeaders,
     };
 

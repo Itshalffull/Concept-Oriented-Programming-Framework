@@ -1,0 +1,18 @@
+# ============================================================
+# ParsedAffordanceRegistered — surface-spec required sync
+#
+# Register affordance declarations extracted from .widget spec
+# affordance sections. Populates the Affordance concept for
+# downstream widget resolution.
+# ============================================================
+
+sync ParsedAffordanceRegistered [eager]
+when {
+  WidgetParser/parse: [ widget: ?w ]
+    => ok(widget: ?w; ast: ?ast)
+}
+then {
+  Affordance/declare: [ affordance: ?w;
+    widget: ?w; interactor: ?ast; specificity: ?ast;
+    conditions: ?ast ]
+}

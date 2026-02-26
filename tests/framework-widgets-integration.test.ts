@@ -1,5 +1,5 @@
 // ============================================================
-// Tests for COIF Framework Widgets — Integration
+// Tests for Clef Surface Framework Widgets — Integration
 //
 // Verifies shared module exports and end-to-end concept
 // integration flows. Framework-specific modules (React, Vue,

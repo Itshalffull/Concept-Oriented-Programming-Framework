@@ -1,4 +1,4 @@
-# Media Kit Manifest
+# Media Suite Manifest
 name: media
 version: 0.1.0
 description: "Media and file handling — file uploads, media asset creation, metadata extraction, and usage tracking."

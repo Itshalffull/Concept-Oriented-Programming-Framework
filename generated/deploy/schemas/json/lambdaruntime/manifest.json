@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/LambdaRuntime",
+  "uri": "urn:clef/LambdaRuntime",
   "name": "LambdaRuntime",
   "typeParams": [
     {
@@ -558,11 +558,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/LambdaRuntime/provision/invocation",
+        "$id": "urn:clef/LambdaRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LambdaRuntime"
+            "const": "urn:clef/LambdaRuntime"
           },
           "action": {
             "const": "provision"
@@ -593,11 +593,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/LambdaRuntime/deploy/invocation",
+        "$id": "urn:clef/LambdaRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LambdaRuntime"
+            "const": "urn:clef/LambdaRuntime"
           },
           "action": {
             "const": "deploy"
@@ -620,11 +620,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/LambdaRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/LambdaRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LambdaRuntime"
+            "const": "urn:clef/LambdaRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -647,11 +647,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/LambdaRuntime/rollback/invocation",
+        "$id": "urn:clef/LambdaRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LambdaRuntime"
+            "const": "urn:clef/LambdaRuntime"
           },
           "action": {
             "const": "rollback"
@@ -674,11 +674,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/LambdaRuntime/destroy/invocation",
+        "$id": "urn:clef/LambdaRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/LambdaRuntime"
+            "const": "urn:clef/LambdaRuntime"
           },
           "action": {
             "const": "destroy"
@@ -700,11 +700,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/LambdaRuntime/provision/completion/ok",
+          "$id": "urn:clef/LambdaRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "provision"
@@ -734,11 +734,11 @@
           }
         },
         "quotaExceeded": {
-          "$id": "urn:copf/LambdaRuntime/provision/completion/quotaExceeded",
+          "$id": "urn:clef/LambdaRuntime/provision/completion/quotaExceeded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "provision"
@@ -764,11 +764,11 @@
           }
         },
         "iamError": {
-          "$id": "urn:copf/LambdaRuntime/provision/completion/iamError",
+          "$id": "urn:clef/LambdaRuntime/provision/completion/iamError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "provision"
@@ -796,11 +796,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/LambdaRuntime/deploy/completion/ok",
+          "$id": "urn:clef/LambdaRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "deploy"
@@ -826,11 +826,11 @@
           }
         },
         "packageTooLarge": {
-          "$id": "urn:copf/LambdaRuntime/deploy/completion/packageTooLarge",
+          "$id": "urn:clef/LambdaRuntime/deploy/completion/packageTooLarge",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "deploy"
@@ -860,11 +860,11 @@
           }
         },
         "runtimeUnsupported": {
-          "$id": "urn:copf/LambdaRuntime/deploy/completion/runtimeUnsupported",
+          "$id": "urn:clef/LambdaRuntime/deploy/completion/runtimeUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "deploy"
@@ -892,11 +892,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/LambdaRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/LambdaRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -920,11 +920,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/LambdaRuntime/rollback/completion/ok",
+          "$id": "urn:clef/LambdaRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "rollback"
@@ -952,11 +952,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/LambdaRuntime/destroy/completion/ok",
+          "$id": "urn:clef/LambdaRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "destroy"
@@ -978,11 +978,11 @@
           }
         },
         "resourceInUse": {
-          "$id": "urn:copf/LambdaRuntime/destroy/completion/resourceInUse",
+          "$id": "urn:clef/LambdaRuntime/destroy/completion/resourceInUse",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/LambdaRuntime"
+              "const": "urn:clef/LambdaRuntime"
             },
             "action": {
               "const": "destroy"

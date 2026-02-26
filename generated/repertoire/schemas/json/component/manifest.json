@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Component",
+  "uri": "urn:clef/Component",
   "name": "Component",
   "typeParams": [
     {
@@ -372,11 +372,11 @@
   "jsonSchemas": {
     "invocations": {
       "register": {
-        "$id": "urn:copf/Component/register/invocation",
+        "$id": "urn:clef/Component/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Component"
+            "const": "urn:clef/Component"
           },
           "action": {
             "const": "register"
@@ -399,11 +399,11 @@
         }
       },
       "render": {
-        "$id": "urn:copf/Component/render/invocation",
+        "$id": "urn:clef/Component/render/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Component"
+            "const": "urn:clef/Component"
           },
           "action": {
             "const": "render"
@@ -426,11 +426,11 @@
         }
       },
       "place": {
-        "$id": "urn:copf/Component/place/invocation",
+        "$id": "urn:clef/Component/place/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Component"
+            "const": "urn:clef/Component"
           },
           "action": {
             "const": "place"
@@ -453,11 +453,11 @@
         }
       },
       "setVisibility": {
-        "$id": "urn:copf/Component/setVisibility/invocation",
+        "$id": "urn:clef/Component/setVisibility/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Component"
+            "const": "urn:clef/Component"
           },
           "action": {
             "const": "setVisibility"
@@ -480,11 +480,11 @@
         }
       },
       "evaluateVisibility": {
-        "$id": "urn:copf/Component/evaluateVisibility/invocation",
+        "$id": "urn:clef/Component/evaluateVisibility/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Component"
+            "const": "urn:clef/Component"
           },
           "action": {
             "const": "evaluateVisibility"
@@ -510,11 +510,11 @@
     "completions": {
       "register": {
         "ok": {
-          "$id": "urn:copf/Component/register/completion/ok",
+          "$id": "urn:clef/Component/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "register"
@@ -530,11 +530,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Component/register/completion/exists",
+          "$id": "urn:clef/Component/register/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "register"
@@ -558,11 +558,11 @@
       },
       "render": {
         "ok": {
-          "$id": "urn:copf/Component/render/completion/ok",
+          "$id": "urn:clef/Component/render/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "render"
@@ -584,11 +584,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Component/render/completion/notfound",
+          "$id": "urn:clef/Component/render/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "render"
@@ -612,11 +612,11 @@
       },
       "place": {
         "ok": {
-          "$id": "urn:copf/Component/place/completion/ok",
+          "$id": "urn:clef/Component/place/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "place"
@@ -632,11 +632,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Component/place/completion/notfound",
+          "$id": "urn:clef/Component/place/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "place"
@@ -660,11 +660,11 @@
       },
       "setVisibility": {
         "ok": {
-          "$id": "urn:copf/Component/setVisibility/completion/ok",
+          "$id": "urn:clef/Component/setVisibility/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "setVisibility"
@@ -680,11 +680,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Component/setVisibility/completion/notfound",
+          "$id": "urn:clef/Component/setVisibility/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "setVisibility"
@@ -708,11 +708,11 @@
       },
       "evaluateVisibility": {
         "ok": {
-          "$id": "urn:copf/Component/evaluateVisibility/completion/ok",
+          "$id": "urn:clef/Component/evaluateVisibility/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "evaluateVisibility"
@@ -734,11 +734,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Component/evaluateVisibility/completion/notfound",
+          "$id": "urn:clef/Component/evaluateVisibility/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Component"
+              "const": "urn:clef/Component"
             },
             "action": {
               "const": "evaluateVisibility"

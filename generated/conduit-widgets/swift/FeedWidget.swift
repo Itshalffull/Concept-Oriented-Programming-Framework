@@ -15,17 +15,17 @@ func feedWidgetSpec() -> WidgetSpec {
         category: .composite,
         concepts: [
             ConceptBinding(
-                concept: "urn:copf/Article",
+                concept: "urn:clef/Article",
                 actions: [],
                 queries: ["get"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Tag",
+                concept: "urn:clef/Tag",
                 actions: [],
                 queries: ["list"]
             ),
             ConceptBinding(
-                concept: "urn:copf/Favorite",
+                concept: "urn:clef/Favorite",
                 actions: [],
                 queries: ["isFavorited", "count"]
             ),

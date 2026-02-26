@@ -22,7 +22,7 @@ export const anatomyPartEntityHandler: ConceptHandler = {
     const required = input.required as string;
 
     const id = nextId();
-    const symbol = `copf/anatomy/${widget}/${name}`;
+    const symbol = `clef/anatomy/${widget}/${name}`;
 
     await storage.put('anatomy-part-entity', id, {
       id,

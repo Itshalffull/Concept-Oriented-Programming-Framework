@@ -5,7 +5,7 @@
 # Ultra-low latency at the edge with global distribution.
 #
 # Usage:
-#   copf deploy --manifest deploy/cloudflare.deploy.yaml
+#   clef deploy --manifest deploy/cloudflare.deploy.yaml
 
 app:
   name: conduit

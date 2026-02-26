@@ -174,13 +174,13 @@ describe('Sync Field Validation', () => {
     const badSync: CompiledSync = {
       name: 'BadListSync',
       when: [{
-        concept: 'urn:copf/Article',
+        concept: 'urn:clef/Article',
         action: 'list',
         inputFields: [],
         outputFields: [{ name: 'tagList', match: { type: 'variable', name: 'tags' } }],
       }],
       where: [],
-      then: [{ concept: 'urn:copf/Web', action: 'respond', fields: [] }],
+      then: [{ concept: 'urn:clef/Web', action: 'respond', fields: [] }],
     };
 
     const warnings = validateSyncFields(badSync, conceptMap);
@@ -198,13 +198,13 @@ describe('Sync Field Validation', () => {
     const badSync: CompiledSync = {
       name: 'BadGetSync',
       when: [{
-        concept: 'urn:copf/Article',
+        concept: 'urn:clef/Article',
         action: 'get',
         inputFields: [{ name: 'slug', match: { type: 'variable', name: 's' } }],
         outputFields: [],
       }],
       where: [],
-      then: [{ concept: 'urn:copf/Web', action: 'respond', fields: [] }],
+      then: [{ concept: 'urn:clef/Web', action: 'respond', fields: [] }],
     };
 
     const warnings = validateSyncFields(badSync, conceptMap);
@@ -220,10 +220,10 @@ describe('Sync Field Validation', () => {
     // Sync only provides: article, title — missing 3
     const badSync: CompiledSync = {
       name: 'IncompleteCreate',
-      when: [{ concept: 'urn:copf/Web', action: 'request', inputFields: [], outputFields: [] }],
+      when: [{ concept: 'urn:clef/Web', action: 'request', inputFields: [], outputFields: [] }],
       where: [],
       then: [{
-        concept: 'urn:copf/Article',
+        concept: 'urn:clef/Article',
         action: 'create',
         fields: [
           { name: 'article', value: { type: 'variable', name: 'a' } },
@@ -255,14 +255,14 @@ describe('Sync Field Validation', () => {
     const badSync: CompiledSync = {
       name: 'WebOnly',
       when: [{
-        concept: 'urn:copf/Web',
+        concept: 'urn:clef/Web',
         action: 'request',
         inputFields: [{ name: 'anything', match: { type: 'variable', name: 'x' } }],
         outputFields: [{ name: 'whatever', match: { type: 'variable', name: 'y' } }],
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/Web',
+        concept: 'urn:clef/Web',
         action: 'respond',
         fields: [{ name: 'body', value: { type: 'variable', name: 'y' } }],
       }],

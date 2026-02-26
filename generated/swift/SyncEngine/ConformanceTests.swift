@@ -1,7 +1,7 @@
 // generated: SyncEngine/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class SyncEngineConformanceTests: XCTestCase {
 
@@ -13,9 +13,9 @@ final class SyncEngineConformanceTests: XCTestCase {
         let inv = "u-test-invariant-001"
 
         // --- AFTER clause ---
-        // registerSync(sync: ["name": "TestSync", "annotations": ["eager"], "when": [["concept": "urn:copf/Test", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:copf/Other", "action": "do", "fields": []]]]) -> ok()
+        // registerSync(sync: ["name": "TestSync", "annotations": ["eager"], "when": [["concept": "urn:clef/Test", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:clef/Other", "action": "do", "fields": []]]]) -> ok()
         let step1 = try await handler.registerSync(
-            input: SyncEngineRegisterSyncInput(sync: ["name": "TestSync", "annotations": ["eager"], "when": [["concept": "urn:copf/Test", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:copf/Other", "action": "do", "fields": []]]]),
+            input: SyncEngineRegisterSyncInput(sync: ["name": "TestSync", "annotations": ["eager"], "when": [["concept": "urn:clef/Test", "action": "act", "inputFields": [], "outputFields": []]], "where": [], "then": [["concept": "urn:clef/Other", "action": "do", "fields": []]]]),
             storage: storage
         )
         guard case .ok = step1 else {
@@ -24,9 +24,9 @@ final class SyncEngineConformanceTests: XCTestCase {
         }
 
         // --- THEN clause ---
-        // onCompletion(completion: ["id": "c1", "concept": "urn:copf/Test", "action": "act", "input": [], "variant": "ok", "output": [], "flow": "f1", "timestamp": "2024-01-01T00:00:00Z"]) -> ok(invocations: inv)
+        // onCompletion(completion: ["id": "c1", "concept": "urn:clef/Test", "action": "act", "input": [], "variant": "ok", "output": [], "flow": "f1", "timestamp": "2024-01-01T00:00:00Z"]) -> ok(invocations: inv)
         let step2 = try await handler.onCompletion(
-            input: SyncEngineOnCompletionInput(completion: ["id": "c1", "concept": "urn:copf/Test", "action": "act", "input": [], "variant": "ok", "output": [], "flow": "f1", "timestamp": "2024-01-01T00:00:00Z"]),
+            input: SyncEngineOnCompletionInput(completion: ["id": "c1", "concept": "urn:clef/Test", "action": "act", "input": [], "variant": "ok", "output": [], "flow": "f1", "timestamp": "2024-01-01T00:00:00Z"]),
             storage: storage
         )
         if case .ok(let invocations) = step2 {

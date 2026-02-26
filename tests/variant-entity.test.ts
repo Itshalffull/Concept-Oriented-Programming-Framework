@@ -41,7 +41,7 @@ describe('VariantEntity Handler', () => {
       );
       const record = await storage.get('variant-entity', 'variant-entity-1');
       expect(record).not.toBeNull();
-      expect(record!.symbol).toBe('copf/variant/Todo/create/error');
+      expect(record!.symbol).toBe('clef/variant/Todo/create/error');
       expect(record!.tag).toBe('error');
       expect(record!.fields).toBe('["message"]');
     });
@@ -170,7 +170,7 @@ describe('VariantEntity Handler', () => {
 
       await storage.put('runtime-coverage', 'rc-1', {
         id: 'rc-1',
-        symbol: 'copf/variant/Todo/create/ok',
+        symbol: 'clef/variant/Todo/create/ok',
         executionCount: 5,
       });
 

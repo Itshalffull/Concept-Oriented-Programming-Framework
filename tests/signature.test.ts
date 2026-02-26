@@ -2,7 +2,7 @@
 // Signature Concept Handler Tests
 //
 // Validates sign, verify, timestamp, and addTrustedSigner
-// actions for the collaboration kit's signature concept.
+// actions for the collaboration suite's signature concept.
 // Covers sign/verify cycle, expired certificates, untrusted
 // signers, timestamp proofs, and identity management.
 // ============================================================

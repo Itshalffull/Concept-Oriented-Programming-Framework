@@ -5,7 +5,7 @@
 # Ideal for rapid development and debugging.
 #
 # Usage:
-#   copf deploy --manifest deploy/local.deploy.yaml
+#   clef deploy --manifest deploy/local.deploy.yaml
 
 app:
   name: conduit

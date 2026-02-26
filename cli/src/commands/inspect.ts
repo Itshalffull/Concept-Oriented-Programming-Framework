@@ -1,5 +1,5 @@
 // ============================================================
-// copf inspect tree <file> [--node-at <line:col>] [--query <s-expr>]
+// clef inspect tree <file> [--node-at <line:col>] [--query <s-expr>]
 //
 // Parses a file using Tree-sitter and displays the syntax tree.
 // Optionally runs S-expression queries or finds nodes at a
@@ -44,14 +44,14 @@ export async function runInspect(positional: string[], flags: Record<string, str
   const subcommand = positional[0];
 
   if (subcommand !== 'tree') {
-    console.error('Usage: copf inspect tree <file> [--node-at <line:col>] [--query <s-expr>]');
+    console.error('Usage: clef inspect tree <file> [--node-at <line:col>] [--query <s-expr>]');
     process.exit(1);
   }
 
   const filePath = positional[1];
   if (!filePath) {
     console.error('Error: file path is required');
-    console.error('Usage: copf inspect tree <file> [--node-at <line:col>] [--query <s-expr>]');
+    console.error('Usage: clef inspect tree <file> [--node-at <line:col>] [--query <s-expr>]');
     process.exit(1);
   }
 

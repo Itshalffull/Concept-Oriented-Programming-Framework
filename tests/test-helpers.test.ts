@@ -116,7 +116,7 @@ describe('createMockHandler', () => {
     kernel.registerSync({
       name: 'HandleEcho',
       when: [{
-        concept: 'urn:copf/Web', action: 'request',
+        concept: 'urn:clef/Web', action: 'request',
         inputFields: [
           { name: 'method', match: { type: 'literal', value: 'echo' } },
           { name: 'text', match: { type: 'variable', name: 'text' } },
@@ -139,7 +139,7 @@ describe('createMockHandler', () => {
       name: 'EchoResponse',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'echo' } },
           ],
@@ -157,7 +157,7 @@ describe('createMockHandler', () => {
       ],
       where: [],
       then: [{
-        concept: 'urn:copf/Web', action: 'respond',
+        concept: 'urn:clef/Web', action: 'respond',
         fields: [
           { name: 'request', value: { type: 'variable', name: 'request' } },
           { name: 'body', value: { type: 'variable', name: 'echo' } },
@@ -211,14 +211,14 @@ describe('createMockHandler', () => {
 
     // Mock concepts — only override what matters for this sync
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/User', createMockHandler(userAst));
-    kernel.registerConcept('urn:copf/JWT', createMockHandler(jwtAst));
+    kernel.registerConcept('urn:clef/User', createMockHandler(userAst));
+    kernel.registerConcept('urn:clef/JWT', createMockHandler(jwtAst));
 
     // Load only the sync under test
     kernel.registerSync({
       name: 'GenerateToken',
       when: [{
-        concept: 'urn:copf/User', action: 'register',
+        concept: 'urn:clef/User', action: 'register',
         inputFields: [],
         outputFields: [
           { name: 'user', match: { type: 'variable', name: 'user' } },
@@ -226,7 +226,7 @@ describe('createMockHandler', () => {
       }],
       where: [],
       then: [{
-        concept: 'urn:copf/JWT', action: 'generate',
+        concept: 'urn:clef/JWT', action: 'generate',
         fields: [
           { name: 'user', value: { type: 'variable', name: 'user' } },
         ],
@@ -235,7 +235,7 @@ describe('createMockHandler', () => {
 
     // Directly invoke User/register to produce a completion
     const registerResult = await kernel.invokeConcept(
-      'urn:copf/User', 'register',
+      'urn:clef/User', 'register',
       { user: 'u-test-001', name: 'test', email: 'test@test.com' },
     );
 

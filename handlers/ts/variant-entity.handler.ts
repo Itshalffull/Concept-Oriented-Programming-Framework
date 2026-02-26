@@ -20,7 +20,7 @@ export const variantEntityHandler: ConceptHandler = {
     const fields = input.fields as string;
 
     const id = nextId();
-    const symbol = `copf/variant/${action}/${tag}`;
+    const symbol = `clef/variant/${action}/${tag}`;
 
     await storage.put('variant-entity', id, {
       id,

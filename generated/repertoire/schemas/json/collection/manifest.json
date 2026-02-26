@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Collection",
+  "uri": "urn:clef/Collection",
   "name": "Collection",
   "typeParams": [
     {
@@ -398,11 +398,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/Collection/create/invocation",
+        "$id": "urn:clef/Collection/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "create"
@@ -429,11 +429,11 @@
         }
       },
       "addMember": {
-        "$id": "urn:copf/Collection/addMember/invocation",
+        "$id": "urn:clef/Collection/addMember/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "addMember"
@@ -456,11 +456,11 @@
         }
       },
       "removeMember": {
-        "$id": "urn:copf/Collection/removeMember/invocation",
+        "$id": "urn:clef/Collection/removeMember/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "removeMember"
@@ -483,11 +483,11 @@
         }
       },
       "getMembers": {
-        "$id": "urn:copf/Collection/getMembers/invocation",
+        "$id": "urn:clef/Collection/getMembers/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "getMembers"
@@ -506,11 +506,11 @@
         }
       },
       "setSchema": {
-        "$id": "urn:copf/Collection/setSchema/invocation",
+        "$id": "urn:clef/Collection/setSchema/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "setSchema"
@@ -533,11 +533,11 @@
         }
       },
       "createVirtual": {
-        "$id": "urn:copf/Collection/createVirtual/invocation",
+        "$id": "urn:clef/Collection/createVirtual/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "createVirtual"
@@ -560,11 +560,11 @@
         }
       },
       "materialize": {
-        "$id": "urn:copf/Collection/materialize/invocation",
+        "$id": "urn:clef/Collection/materialize/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Collection"
+            "const": "urn:clef/Collection"
           },
           "action": {
             "const": "materialize"
@@ -586,11 +586,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/Collection/create/completion/ok",
+          "$id": "urn:clef/Collection/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "create"
@@ -606,11 +606,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Collection/create/completion/exists",
+          "$id": "urn:clef/Collection/create/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "create"
@@ -628,11 +628,11 @@
       },
       "addMember": {
         "ok": {
-          "$id": "urn:copf/Collection/addMember/completion/ok",
+          "$id": "urn:clef/Collection/addMember/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "addMember"
@@ -648,11 +648,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Collection/addMember/completion/notfound",
+          "$id": "urn:clef/Collection/addMember/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "addMember"
@@ -670,11 +670,11 @@
       },
       "removeMember": {
         "ok": {
-          "$id": "urn:copf/Collection/removeMember/completion/ok",
+          "$id": "urn:clef/Collection/removeMember/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "removeMember"
@@ -690,11 +690,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Collection/removeMember/completion/notfound",
+          "$id": "urn:clef/Collection/removeMember/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "removeMember"
@@ -712,11 +712,11 @@
       },
       "getMembers": {
         "ok": {
-          "$id": "urn:copf/Collection/getMembers/completion/ok",
+          "$id": "urn:clef/Collection/getMembers/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "getMembers"
@@ -738,11 +738,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Collection/getMembers/completion/notfound",
+          "$id": "urn:clef/Collection/getMembers/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "getMembers"
@@ -760,11 +760,11 @@
       },
       "setSchema": {
         "ok": {
-          "$id": "urn:copf/Collection/setSchema/completion/ok",
+          "$id": "urn:clef/Collection/setSchema/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "setSchema"
@@ -780,11 +780,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Collection/setSchema/completion/notfound",
+          "$id": "urn:clef/Collection/setSchema/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "setSchema"
@@ -802,11 +802,11 @@
       },
       "createVirtual": {
         "ok": {
-          "$id": "urn:copf/Collection/createVirtual/completion/ok",
+          "$id": "urn:clef/Collection/createVirtual/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "createVirtual"
@@ -822,11 +822,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Collection/createVirtual/completion/exists",
+          "$id": "urn:clef/Collection/createVirtual/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "createVirtual"
@@ -844,11 +844,11 @@
       },
       "materialize": {
         "ok": {
-          "$id": "urn:copf/Collection/materialize/completion/ok",
+          "$id": "urn:clef/Collection/materialize/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "materialize"
@@ -870,11 +870,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Collection/materialize/completion/notfound",
+          "$id": "urn:clef/Collection/materialize/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Collection"
+              "const": "urn:clef/Collection"
             },
             "action": {
               "const": "materialize"

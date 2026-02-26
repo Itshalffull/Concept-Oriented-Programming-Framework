@@ -12,12 +12,12 @@ export type EnvResolveOutput =
 export interface EnvPromoteInput {
   fromEnv: string;
   toEnv: string;
-  kitName: string;
+  suiteName: string;
 }
 
 export type EnvPromoteOutput =
   { variant: "ok"; toEnv: string; version: string }
-  | { variant: "notValidated"; fromEnv: string; kitName: string }
+  | { variant: "notValidated"; fromEnv: string; suiteName: string }
   | { variant: "versionMismatch"; fromEnv: string; toEnv: string; details: string };
 
 export interface EnvDiffInput {

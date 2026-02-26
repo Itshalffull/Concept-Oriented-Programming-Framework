@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Video summarization enricher provider
+// Clef Data Integration Kit - Video summarization enricher provider
 // Extracts keyframes at intervals, generates transcript via whisper, combines for chapter markers.
 
 use std::collections::HashMap;
@@ -280,9 +280,9 @@ impl VideoSummaryEnricherProvider {
 
         let tmp = std::env::temp_dir();
         let pid = std::process::id();
-        let video_path = tmp.join(format!("copf_video_{}_{}.mp4", item.id, pid));
-        let audio_path = tmp.join(format!("copf_audio_{}_{}.wav", item.id, pid));
-        let keyframe_dir = tmp.join(format!("copf_keyframes_{}_{}", item.id, pid));
+        let video_path = tmp.join(format!("clef_video_{}_{}.mp4", item.id, pid));
+        let audio_path = tmp.join(format!("clef_audio_{}_{}.wav", item.id, pid));
+        let keyframe_dir = tmp.join(format!("clef_keyframes_{}_{}", item.id, pid));
         std::fs::create_dir_all(&keyframe_dir)?;
 
         // Decode and write video

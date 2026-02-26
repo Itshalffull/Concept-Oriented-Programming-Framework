@@ -1,7 +1,7 @@
 // ============================================================
 // BindingProvider — Solid.js Component
 //
-// COIF concept binding with Solid stores. Creates a reactive
+// Clef Surface concept binding with Solid stores. Creates a reactive
 // data store that synchronizes with concept signals and
 // provides fine-grained reactivity for descendant components.
 // Supports coupled, REST, GraphQL, and static binding modes.
@@ -13,12 +13,12 @@ import type {
   Signal,
 } from '../../shared/types.js';
 
-import { createSignal as coifCreateSignal } from '../../shared/coif-bridge.js';
+import { createSignal as surfaceCreateSignal } from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -221,7 +221,7 @@ export function BindingProvider(props: BindingProviderProps): BindingProviderRes
 
   // Create provider container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-provider', 'binding');
+  container.setAttribute('data-surface-provider', 'binding');
   container.setAttribute('data-concept', config.concept);
   container.setAttribute('data-binding-mode', config.mode);
   container.style.setProperty('display', 'contents');
@@ -252,7 +252,7 @@ export function BindingProvider(props: BindingProviderProps): BindingProviderRes
   // Reactive effect: dispatch store change events
   const unsubStore = store.subscribe((data) => {
     container.dispatchEvent(
-      new CustomEvent('coif:binding-change', {
+      new CustomEvent('surface:binding-change', {
         bubbles: true,
         detail: {
           concept: config.concept,

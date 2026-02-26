@@ -3,7 +3,7 @@
 //
 // Boots the sync engine inside the same Lambda/GCF function as
 // the concept handler. The engine runs per-request:
-//   1. Loads compiled syncs from bundled .copf-cache/ artifacts
+//   1. Loads compiled syncs from bundled .clef-cache/ artifacts
 //   2. Builds sync index (fast Map construction, no parsing)
 //   3. Recovers flow state from durable action log
 //   4. Evaluates sync matching for the incoming completion

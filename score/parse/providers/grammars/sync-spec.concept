@@ -2,7 +2,7 @@
 concept TreeSitterSyncSpec [I] {
 
   purpose {
-    Tree-sitter grammar provider for COPF sync spec files.
+    Tree-sitter grammar provider for Clef sync spec files.
     Uses the YAML WASM parser as an approximation for .sync
     files until a custom Tree-sitter grammar is available.
   }

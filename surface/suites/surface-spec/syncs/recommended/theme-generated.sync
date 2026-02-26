@@ -1,0 +1,18 @@
+# ============================================================
+# ThemeGenerated — surface-spec recommended sync
+#
+# Generate platform-specific style implementations from
+# parsed theme ASTs for each active surface.
+# ============================================================
+
+sync ThemeGenerated [eager]
+when {
+  ThemeParser/parse: [ theme: ?h ]
+    => ok(theme: ?h; ast: ?ast)
+}
+where {
+  Surface: { ?surface kind: ?kind }
+}
+then {
+  ThemeGen/generate: [ gen: ?h; target: ?kind; themeAst: ?ast ]
+}

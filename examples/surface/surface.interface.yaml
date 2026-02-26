@@ -1,0 +1,2511 @@
+# Clef Surface — Clef Surface
+#
+# Interface generation manifest for the 44 Clef Surface UI concepts
+# across 5 sub-kits: surface-core, surface-component, surface-app,
+# surface-render, and surface-theme.
+#
+# Usage:
+#   clef interface generate --manifest examples/surface/surface.interface.yaml
+
+interface:
+  name: surface
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  claude-skills:
+    name: surface
+    progressive: true
+
+  cli:
+    name: surface
+    shell: bash,zsh,fish
+
+  mcp:
+    name: surface-mcp
+    transport: stdio
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/surface
+  formatting:
+    typescript: prettier
+  clean: true
+
+# ─── GLOBAL TRAITS ────────────────────────────────────
+traits:
+  - name: validated
+    scope: kit
+
+# ─── GROUPING ─────────────────────────────────────────
+grouping:
+  strategy: per-concept
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+#
+# Organized by sub-kit: surface-core, surface-component,
+# surface-app, surface-render, surface-theme.
+
+concepts:
+
+  # ── surface-core ────────────────────────────────────────
+
+  Signal:
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            kind: { positional: true }
+          examples:
+            - description: Create a state signal
+              command: surface signal create state --value "hello"
+        read:
+          command: read
+          args:
+            signal: { positional: true }
+        write:
+          command: write
+          args:
+            signal: { positional: true }
+          examples:
+            - description: Write to a signal
+              command: surface signal write s1 --value "updated"
+        batch:
+          command: batch
+        dispose:
+          command: dispose
+          args:
+            signal: { positional: true }
+    mcp:
+      actions:
+        create:
+          type: tool
+          description: "Create a reactive signal (state, computed, or effect)"
+        read:
+          type: resource-template
+          uriTemplate: "surface://signals/{signal}"
+        write:
+          type: tool
+          description: "Write a new value to a state signal"
+        batch:
+          type: tool
+          description: "Batch multiple signal writes into one update cycle"
+        dispose:
+          type: tool
+          description: "Dispose a signal and release its subscriptions"
+
+  Binding:
+    cli:
+      actions:
+        bind:
+          command: bind
+          args:
+            concept: { positional: true }
+          examples:
+            - description: Bind to a concept
+              command: surface binding bind Article --mode coupled
+        sync:
+          command: sync
+          args:
+            binding: { positional: true }
+        invoke:
+          command: invoke
+          args:
+            binding: { positional: true }
+          examples:
+            - description: Invoke a concept action through binding
+              command: surface binding invoke b1 --action create --title "Hello"
+        unbind:
+          command: unbind
+          args:
+            binding: { positional: true }
+    mcp:
+      actions:
+        bind:
+          type: tool
+          description: "Create a binding between a Clef concept and UI signals"
+        sync:
+          type: tool
+          description: "Synchronize binding state with backend"
+        invoke:
+          type: tool
+          description: "Invoke a concept action through a binding"
+        unbind:
+          type: tool
+          description: "Disconnect a binding and release resources"
+
+  UISchema:
+    cli:
+      actions:
+        inspect:
+          command: inspect
+          args:
+            concept: { positional: true }
+          examples:
+            - description: Inspect a concept and generate UI schema
+              command: surface ui-schema inspect Article
+        override:
+          command: override
+          args:
+            schema: { positional: true }
+        getSchema:
+          command: get-schema
+          args:
+            concept: { positional: true }
+        getElements:
+          command: get-elements
+          args:
+            concept: { positional: true }
+          examples:
+            - description: Get abstract elements for a concept
+              command: surface ui-schema get-elements Article --json
+    mcp:
+      actions:
+        inspect:
+          type: tool
+          description: "Inspect a Clef concept spec and generate a UI schema"
+        getSchema:
+          type: resource-template
+          uriTemplate: "surface://ui-schemas/{concept}"
+        getElements:
+          type: resource-template
+          uriTemplate: "surface://ui-schemas/{concept}/elements"
+        override:
+          type: tool
+          description: "Apply field-level UI overrides to a schema"
+
+  Element:
+    traits:
+      - name: hierarchical
+        config:
+          relation: children
+          labelField: label
+          maxDepth: 8
+          style: nested
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            kind: { positional: true }
+          examples:
+            - description: Create an input element
+              command: surface element create input-text --label "Name" --required true
+        nest:
+          command: nest
+          args:
+            parent: { positional: true }
+          examples:
+            - description: Nest an element under a group
+              command: surface element nest group1 --child input1
+        setConstraints:
+          command: set-constraints
+          args:
+            element: { positional: true }
+        remove:
+          command: remove
+          args:
+            element: { positional: true }
+    mcp:
+      actions:
+        create:
+          type: tool
+          description: "Create a modality-independent interaction element"
+        nest:
+          type: tool
+          description: "Nest an element under a parent container"
+        setConstraints:
+          type: tool
+          description: "Set validation constraints on an element"
+        remove:
+          type: tool
+          description: "Remove an element from the tree"
+
+  DesignToken:
+    cli:
+      actions:
+        define:
+          command: define
+          args:
+            name: { positional: true }
+          examples:
+            - description: Define a color token
+              command: surface design-token define primary-500 --value "#3b82f6" --type color --tier semantic
+        alias:
+          command: alias
+          args:
+            name: { positional: true }
+          examples:
+            - description: Create a token alias
+              command: surface design-token alias button-bg --reference primary-500
+        resolve:
+          command: resolve
+          args:
+            name: { positional: true }
+        update:
+          command: update
+          args:
+            name: { positional: true }
+        remove:
+          command: remove
+          args:
+            name: { positional: true }
+        export:
+          command: export
+          examples:
+            - description: Export tokens as CSS custom properties
+              command: surface design-token export --format css
+    mcp:
+      actions:
+        define:
+          type: tool
+          description: "Define a design token (color, dimension, font, etc.)"
+        alias:
+          type: tool
+          description: "Create a token alias referencing another token"
+        resolve:
+          type: resource-template
+          uriTemplate: "surface://tokens/{name}"
+        export:
+          type: tool
+          description: "Export all tokens in a specified format"
+        update:
+          type: tool
+          description: "Update a token value"
+        remove:
+          type: tool
+          description: "Remove a design token"
+
+  # ── surface-component ───────────────────────────────────
+
+  Widget:
+    cli:
+      actions:
+        register:
+          command: register
+          args:
+            name: { positional: true }
+          examples:
+            - description: Register a dialog widget
+              command: surface widget register dialog --category overlay
+        configure:
+          command: configure
+          args:
+            name: { positional: true }
+        get:
+          command: get
+          args:
+            name: { positional: true }
+          examples:
+            - description: Get widget specification
+              command: surface widget get dialog --json
+        list:
+          command: list
+          examples:
+            - description: List all registered widgets
+              command: surface widget list --category input
+        unregister:
+          command: unregister
+          args:
+            name: { positional: true }
+    mcp:
+      actions:
+        register:
+          type: tool
+          description: "Register a headless widget FSM specification"
+        get:
+          type: resource-template
+          uriTemplate: "surface://widgets/{name}"
+        list:
+          type: resource
+          uriTemplate: "surface://widgets"
+        configure:
+          type: tool
+          description: "Configure a widget with custom options"
+        unregister:
+          type: tool
+          description: "Unregister a widget from the catalog"
+
+  Machine:
+    cli:
+      actions:
+        spawn:
+          command: spawn
+          args:
+            component: { positional: true }
+          examples:
+            - description: Spawn a dialog machine
+              command: surface machine spawn dialog --id d1
+        send:
+          command: send
+          args:
+            machine: { positional: true }
+          examples:
+            - description: Send an event to a machine
+              command: surface machine send d1 --event OPEN
+        connect:
+          command: connect
+          args:
+            machine: { positional: true }
+          examples:
+            - description: Get framework-neutral props
+              command: surface machine connect d1 --json
+        destroy:
+          command: destroy
+          args:
+            machine: { positional: true }
+    mcp:
+      actions:
+        spawn:
+          type: tool
+          description: "Instantiate a widget FSM as a running machine"
+        send:
+          type: tool
+          description: "Send an event to a running machine"
+        connect:
+          type: resource-template
+          uriTemplate: "surface://machines/{machine}/props"
+        destroy:
+          type: tool
+          description: "Destroy a machine instance"
+
+  Anatomy:
+    cli:
+      actions:
+        define:
+          command: define
+          args:
+            component: { positional: true }
+          examples:
+            - description: Define dialog anatomy
+              command: surface anatomy define dialog --parts root,trigger,backdrop,content,title,closeTrigger
+        getParts:
+          command: get-parts
+          args:
+            component: { positional: true }
+        getSlots:
+          command: get-slots
+          args:
+            component: { positional: true }
+        extend:
+          command: extend
+          args:
+            component: { positional: true }
+    mcp:
+      actions:
+        define:
+          type: tool
+          description: "Define the named parts contract for a component"
+        getParts:
+          type: resource-template
+          uriTemplate: "surface://anatomy/{component}/parts"
+        getSlots:
+          type: resource-template
+          uriTemplate: "surface://anatomy/{component}/slots"
+        extend:
+          type: tool
+          description: "Extend an existing anatomy with additional parts"
+
+  Slot:
+    cli:
+      actions:
+        define:
+          command: define
+          args:
+            name: { positional: true }
+          examples:
+            - description: Define a content slot
+              command: surface slot define content --component dialog
+        fill:
+          command: fill
+          args:
+            slot: { positional: true }
+        clear:
+          command: clear
+          args:
+            slot: { positional: true }
+        list:
+          command: list
+          args:
+            component: { positional: true }
+    mcp:
+      actions:
+        define:
+          type: tool
+          description: "Define a named insertion point for component composition"
+        fill:
+          type: tool
+          description: "Fill a slot with content"
+        clear:
+          type: tool
+          description: "Clear a slot's content"
+        list:
+          type: resource-template
+          uriTemplate: "surface://slots/{component}"
+
+  # ── surface-app ─────────────────────────────────────────
+
+  Host:
+    cli:
+      actions:
+        mount:
+          command: mount
+          args:
+            concept: { positional: true }
+          examples:
+            - description: Mount a concept view
+              command: surface host mount Article --view list --zone main
+        unmount:
+          command: unmount
+          args:
+            host: { positional: true }
+        refresh:
+          command: refresh
+          args:
+            host: { positional: true }
+        setError:
+          command: set-error
+          args:
+            host: { positional: true }
+        updateConfig:
+          command: update-config
+          args:
+            host: { positional: true }
+    mcp:
+      actions:
+        mount:
+          type: tool
+          description: "Mount a concept into a rendering zone with full lifecycle"
+        unmount:
+          type: tool
+          description: "Unmount a host and clean up resources"
+        refresh:
+          type: tool
+          description: "Refresh a mounted host's data"
+        setError:
+          type: tool
+          description: "Set error state on a host"
+        updateConfig:
+          type: tool
+          description: "Update host configuration"
+
+  Navigator:
+    cli:
+      actions:
+        register:
+          command: register
+          args:
+            destination: { positional: true }
+          examples:
+            - description: Register a navigation destination
+              command: surface navigator register /articles --concept Article --view list
+        go:
+          command: go
+          args:
+            destination: { positional: true }
+          examples:
+            - description: Navigate to a destination
+              command: surface navigator go /articles/hello-world
+        back:
+          command: back
+        forward:
+          command: forward
+        replace:
+          command: replace
+          args:
+            destination: { positional: true }
+        reset:
+          command: reset
+        addGuard:
+          command: add-guard
+          args:
+            name: { positional: true }
+        removeGuard:
+          command: remove-guard
+          args:
+            name: { positional: true }
+        canGo:
+          command: can-go
+          args:
+            destination: { positional: true }
+    mcp:
+      actions:
+        register:
+          type: tool
+          description: "Register a navigation destination"
+        go:
+          type: tool
+          description: "Navigate to a registered destination"
+        back:
+          type: tool
+          description: "Navigate backward in history"
+        forward:
+          type: tool
+          description: "Navigate forward in history"
+        addGuard:
+          type: tool
+          description: "Add a navigation guard"
+        canGo:
+          type: resource-template
+          uriTemplate: "surface://navigator/can-go/{destination}"
+
+  Shell:
+    cli:
+      actions:
+        initialize:
+          command: initialize
+          examples:
+            - description: Initialize the application shell
+              command: surface shell initialize --platform browser
+        assignHost:
+          command: assign-host
+          args:
+            zone: { positional: true }
+          examples:
+            - description: Assign a host to a zone
+              command: surface shell assign-host main --host h1
+        removeHost:
+          command: remove-host
+          args:
+            zone: { positional: true }
+        pushOverlay:
+          command: push-overlay
+          args:
+            type: { positional: true }
+          examples:
+            - description: Push a modal overlay
+              command: surface shell push-overlay modal --host h2
+        popOverlay:
+          command: pop-overlay
+        setGlobalState:
+          command: set-global-state
+        destroy:
+          command: destroy
+    mcp:
+      actions:
+        initialize:
+          type: tool
+          description: "Initialize the root application shell"
+        assignHost:
+          type: tool
+          description: "Assign a host to a named zone"
+        pushOverlay:
+          type: tool
+          description: "Push an overlay (modal, toast, drawer)"
+        popOverlay:
+          type: tool
+          description: "Pop the topmost overlay"
+        destroy:
+          type: tool
+          description: "Destroy the shell and all zones"
+
+  Transport:
+    cli:
+      actions:
+        configure:
+          command: configure
+          examples:
+            - description: Configure REST transport
+              command: surface transport configure --baseUrl https://api.example.com --type rest
+        fetch:
+          command: fetch
+          args:
+            path: { positional: true }
+          examples:
+            - description: Fetch data
+              command: surface transport fetch /articles --json
+        mutate:
+          command: mutate
+          args:
+            path: { positional: true }
+        subscribe:
+          command: subscribe
+          args:
+            channel: { positional: true }
+        unsubscribe:
+          command: unsubscribe
+          args:
+            channel: { positional: true }
+        setAuth:
+          command: set-auth
+        flushQueue:
+          command: flush-queue
+    mcp:
+      actions:
+        configure:
+          type: tool
+          description: "Configure a transport backend (REST, GraphQL, WebSocket)"
+        fetch:
+          type: tool
+          description: "Fetch data via the configured transport"
+        mutate:
+          type: tool
+          description: "Send a mutation via the configured transport"
+        subscribe:
+          type: tool
+          description: "Subscribe to real-time updates on a channel"
+        setAuth:
+          type: tool
+          description: "Set authentication credentials"
+
+  PlatformAdapter:
+    cli:
+      actions:
+        register:
+          command: register
+          args:
+            platform: { positional: true }
+          examples:
+            - description: Register a platform adapter
+              command: surface platform register browser
+        detect:
+          command: detect
+        getCapabilities:
+          command: get-capabilities
+          args:
+            platform: { positional: true }
+    mcp:
+      actions:
+        register:
+          type: tool
+          description: "Register a platform adapter"
+        detect:
+          type: tool
+          description: "Auto-detect the current platform"
+        getCapabilities:
+          type: resource-template
+          uriTemplate: "surface://platforms/{platform}/capabilities"
+
+  BrowserAdapter:
+    cli:
+      actions:
+        initialize:
+          command: init-browser
+          examples:
+            - description: Initialize browser adapter
+              command: surface browser-adapter init-browser --root "#app"
+    mcp:
+      actions:
+        initialize:
+          type: tool
+          description: "Initialize browser DOM adapter"
+
+  MobileAdapter:
+    cli:
+      actions:
+        initialize:
+          command: init-mobile
+    mcp:
+      actions:
+        initialize:
+          type: tool
+          description: "Initialize mobile adapter (React Native / NativeScript)"
+
+  DesktopAdapter:
+    cli:
+      actions:
+        initialize:
+          command: init-desktop
+    mcp:
+      actions:
+        initialize:
+          type: tool
+          description: "Initialize desktop adapter (Electron / Tauri)"
+
+  WatchAdapter:
+    cli:
+      actions:
+        initialize:
+          command: init-watch
+    mcp:
+      actions:
+        initialize:
+          type: tool
+          description: "Initialize wearable adapter (WatchKit / Wear Compose)"
+
+  TerminalAdapter:
+    cli:
+      actions:
+        initialize:
+          command: init-terminal
+    mcp:
+      actions:
+        initialize:
+          type: tool
+          description: "Initialize terminal adapter (Ink / Blessed)"
+
+  # ── surface-render ──────────────────────────────────────
+
+  Surface:
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            kind: { positional: true }
+          examples:
+            - description: Create a browser DOM surface
+              command: surface surface create browser-dom --mountPoint "#app"
+        attach:
+          command: attach
+          args:
+            surface: { positional: true }
+        resize:
+          command: resize
+          args:
+            surface: { positional: true }
+        mount:
+          command: mount
+          args:
+            surface: { positional: true }
+        unmount:
+          command: unmount
+          args:
+            surface: { positional: true }
+        destroy:
+          command: destroy
+          args:
+            surface: { positional: true }
+    mcp:
+      actions:
+        create:
+          type: tool
+          description: "Create a rendering surface (DOM, terminal, native, SSR)"
+        attach:
+          type: tool
+          description: "Attach a surface to its mount point"
+        mount:
+          type: tool
+          description: "Mount content onto the surface"
+        destroy:
+          type: tool
+          description: "Destroy a surface and release resources"
+
+  Layout:
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            kind: { positional: true }
+          examples:
+            - description: Create a sidebar layout
+              command: surface layout create sidebar --gap 16
+        configure:
+          command: configure
+          args:
+            layout: { positional: true }
+        nest:
+          command: nest
+          args:
+            parent: { positional: true }
+          examples:
+            - description: Nest a layout inside another
+              command: surface layout nest sidebar1 --child stack1
+        setResponsive:
+          command: set-responsive
+          args:
+            layout: { positional: true }
+        remove:
+          command: remove
+          args:
+            layout: { positional: true }
+    mcp:
+      actions:
+        create:
+          type: tool
+          description: "Create a spatial layout (stack, grid, split, sidebar, etc.)"
+        configure:
+          type: tool
+          description: "Configure layout properties"
+        nest:
+          type: tool
+          description: "Nest a child layout inside a parent"
+        setResponsive:
+          type: tool
+          description: "Set responsive breakpoint overrides"
+        remove:
+          type: tool
+          description: "Remove a layout"
+
+  Viewport:
+    cli:
+      actions:
+        observe:
+          command: observe
+          examples:
+            - description: Start observing viewport dimensions
+              command: surface viewport observe
+        setBreakpoints:
+          command: set-breakpoints
+          examples:
+            - description: Set custom breakpoints
+              command: surface viewport set-breakpoints --sm 480 --md 768 --lg 1024
+        getBreakpoint:
+          command: get-breakpoint
+          examples:
+            - description: Get current breakpoint
+              command: surface viewport get-breakpoint --json
+    mcp:
+      actions:
+        observe:
+          type: tool
+          description: "Start observing surface dimensions for responsive layout"
+        setBreakpoints:
+          type: tool
+          description: "Configure custom responsive breakpoints"
+        getBreakpoint:
+          type: resource
+          uriTemplate: "surface://viewport/breakpoint"
+
+  # Framework adapters — all share the normalize action pattern
+  FrameworkAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+          args:
+            framework: { positional: true }
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Normalize framework-neutral props to framework-specific bindings"
+
+  ReactAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+          examples:
+            - description: Normalize props for React
+              command: surface react-adapter normalize --props '{"onclick":"handler"}'
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to React conventions (className, SyntheticEvent)"
+
+  VueAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to Vue conventions (v-bind, v-on)"
+
+  SvelteAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to Svelte conventions (on:click, bind:)"
+
+  SolidAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to Solid conventions (createSignal)"
+
+  VanillaAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to vanilla DOM APIs"
+
+  ReactNativeAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to React Native components"
+
+  NativescriptAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to NativeScript views"
+
+  SwiftuiAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to SwiftUI view modifiers"
+
+  WatchkitAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to WatchKit interface objects"
+
+  AppkitAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to AppKit (macOS) views"
+
+  ComposeAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to Jetpack Compose composables"
+
+  WearComposeAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to Wear Compose composables"
+
+  GtkAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to GTK widgets"
+
+  InkAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to Ink (terminal React) components"
+
+  WinuiAdapter:
+    cli:
+      actions:
+        normalize:
+          command: normalize
+    mcp:
+      actions:
+        normalize:
+          type: tool
+          description: "Map generic props to WinUI XAML controls"
+
+  # ── surface-theme ───────────────────────────────────────
+
+  Theme:
+    cli:
+      actions:
+        create:
+          command: create
+          args:
+            name: { positional: true }
+          examples:
+            - description: Create a dark theme
+              command: surface theme create dark --base default
+        extend:
+          command: extend
+          args:
+            name: { positional: true }
+          examples:
+            - description: Extend a theme with overrides
+              command: surface theme extend dark --override primary-500 "#60a5fa"
+        activate:
+          command: activate
+          args:
+            name: { positional: true }
+          examples:
+            - description: Activate a theme
+              command: surface theme activate dark
+        deactivate:
+          command: deactivate
+          args:
+            name: { positional: true }
+        resolve:
+          command: resolve
+          args:
+            token: { positional: true }
+    mcp:
+      actions:
+        create:
+          type: tool
+          description: "Create a named theme with token overrides"
+        extend:
+          type: tool
+          description: "Extend a theme with additional overrides"
+        activate:
+          type: tool
+          description: "Activate a theme layer"
+        deactivate:
+          type: tool
+          description: "Deactivate a theme layer"
+        resolve:
+          type: resource-template
+          uriTemplate: "surface://themes/{name}/{token}"
+
+  Palette:
+    cli:
+      actions:
+        generate:
+          command: generate
+          args:
+            name: { positional: true }
+          examples:
+            - description: Generate a color palette from a seed hue
+              command: surface palette generate primary --hue 220 --lightness 50
+        assignRole:
+          command: assign-role
+          args:
+            name: { positional: true }
+          examples:
+            - description: Assign a semantic role
+              command: surface palette assign-role primary --role accent
+        checkContrast:
+          command: check-contrast
+          examples:
+            - description: Check WCAG contrast ratio
+              command: surface palette check-contrast --fg primary-900 --bg primary-50
+    mcp:
+      actions:
+        generate:
+          type: tool
+          description: "Generate a color scale from a seed hue using OKLCH"
+        assignRole:
+          type: tool
+          description: "Assign a semantic role (primary, accent, error, etc.)"
+        checkContrast:
+          type: tool
+          description: "Check WCAG contrast ratio between two colors"
+
+  Typography:
+    cli:
+      actions:
+        define:
+          command: define
+          args:
+            name: { positional: true }
+          examples:
+            - description: Define a heading style
+              command: surface typography define heading-lg --family "Inter" --size 32 --weight 700
+        list:
+          command: list
+    mcp:
+      actions:
+        define:
+          type: tool
+          description: "Define a named typography style"
+        list:
+          type: resource
+          uriTemplate: "surface://typography"
+
+  Motion:
+    cli:
+      actions:
+        defineDuration:
+          command: define-duration
+          args:
+            name: { positional: true }
+          examples:
+            - description: Define a transition duration
+              command: surface motion define-duration fast --ms 100
+        defineEasing:
+          command: define-easing
+          args:
+            name: { positional: true }
+          examples:
+            - description: Define an easing curve
+              command: surface motion define-easing ease-out --cubic "0.0,0.0,0.2,1.0"
+        defineTransition:
+          command: define-transition
+          args:
+            name: { positional: true }
+    mcp:
+      actions:
+        defineDuration:
+          type: tool
+          description: "Define a named animation duration"
+        defineEasing:
+          type: tool
+          description: "Define a named easing curve"
+        defineTransition:
+          type: tool
+          description: "Define a named transition (duration + easing + property)"
+
+  Elevation:
+    cli:
+      actions:
+        define:
+          command: define
+          args:
+            level: { positional: true }
+          examples:
+            - description: Define an elevation level
+              command: surface elevation define 2 --shadow "0 2px 4px rgba(0,0,0,0.1)"
+        resolve:
+          command: resolve
+          args:
+            level: { positional: true }
+        list:
+          command: list
+    mcp:
+      actions:
+        define:
+          type: tool
+          description: "Define an elevation level with shadow values"
+        resolve:
+          type: resource-template
+          uriTemplate: "surface://elevation/{level}"
+        list:
+          type: resource
+          uriTemplate: "surface://elevation"
+
+# ─── WORKFLOWS ──────────────────────────────────────
+# Organized by sub-kit. Each workflow maps a concept
+# to a step-by-step process with checklists, design
+# principles, and supplemental info.
+workflows:
+
+  # ── surface-core workflows ──────────────────────────────
+
+  signal-lifecycle:
+    concept: Signal
+    steps:
+      - action: create
+        title: Create Signal
+        prose: >
+          Create a reactive signal. State signals hold a value,
+          computed signals derive from other signals, and effect
+          signals run side effects when dependencies change.
+      - action: read
+        title: Read Value
+        prose: >
+          Read the current value of a signal. For computed signals,
+          this triggers lazy evaluation if dependencies changed.
+      - action: write
+        title: Write Value
+        prose: >
+          Write a new value to a state signal. Notifies all
+          subscribers and triggers dependent computed/effect
+          signals in the next microtask.
+      - action: batch
+        title: Batch Updates
+        prose: >
+          Batch multiple signal writes into a single update cycle.
+          Subscribers are notified only once after all writes
+          complete, preventing unnecessary re-renders.
+      - action: dispose
+        title: Dispose Signal
+        prose: >
+          Dispose a signal, releasing subscriptions and removing
+          it from the dependency graph. Computed and effect signals
+          that depend on it are also invalidated.
+    checklists:
+      create:
+        - Signal kind is valid (state, computed, or effect)
+        - Initial value provided for state signals
+        - Compute function provided for computed signals
+      write:
+        - Signal is a state signal (not computed or effect)
+        - Value type matches signal's expected type
+      dispose:
+        - All dependent effects cleaned up
+        - No dangling references in dependency graph
+    design-principles:
+      - title: TC39 Signals Alignment
+        rule: Follow the TC39 Signals proposal semantics for interoperability
+      - title: Pull-Based Evaluation
+        rule: Computed signals evaluate lazily on read, not eagerly on dependency change
+      - title: Glitch-Free Updates
+        rule: Batch ensures consistent state — no intermediate states visible to subscribers
+    anti-patterns:
+      - title: Eager Computed Evaluation
+        description: >
+          Computing derived values eagerly on every dependency
+          change wastes cycles if the result is not read.
+        bad: "dependencyChanged() => recompute() => notify()"
+        good: "dependencyChanged() => markDirty(); read() => recompute()"
+    references:
+      - path: references/signal-api.md
+        label: Signal API Reference
+    validation-commands:
+      - label: Run signal tests
+        command: clef test Signal
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Kind | Description |
+        |--------|------|-------------|
+        | create | state | Hold a mutable value |
+        | create | computed | Derive from other signals |
+        | create | effect | Side effect on change |
+        | read | all | Get current value |
+        | write | state | Set new value |
+        | batch | - | Group writes |
+        | dispose | all | Release resources |
+    related-workflows:
+      - name: binding-flow
+        description: Connect signals to Clef concepts
+
+  binding-flow:
+    concept: Binding
+    steps:
+      - action: bind
+        title: Create Binding
+        prose: >
+          Connect a Clef backend concept to UI signals. Choose
+          a mode: coupled (via Clef engine), REST, GraphQL, or
+          standalone. The binding creates signals for each
+          concept state field.
+      - action: sync
+        title: Synchronize State
+        prose: >
+          Pull latest state from the backend concept and update
+          bound signals. In coupled mode this happens automatically
+          via the sync engine; in REST/GraphQL modes it triggers
+          a network request.
+      - action: invoke
+        title: Invoke Action
+        prose: >
+          Invoke a concept action through the binding. The binding
+          handles serialization, transport, and updates bound
+          signals with the response.
+      - action: unbind
+        title: Unbind
+        prose: >
+          Disconnect the binding, dispose bound signals, and
+          release network/engine resources.
+    checklists:
+      bind:
+        - Concept name references a valid Clef concept
+        - Mode is compatible with deployment (coupled requires engine)
+        - Transport configured for REST/GraphQL modes
+      invoke:
+        - Action name exists on the bound concept
+        - Required parameters provided
+      unbind:
+        - All pending requests completed or cancelled
+        - Bound signals disposed
+    design-principles:
+      - title: Mode Transparency
+        rule: UI code is identical regardless of binding mode — only configuration differs
+      - title: Signal Ownership
+        rule: Binding owns the signals it creates — unbind disposes them
+      - title: Optimistic Updates
+        rule: Write to local signals immediately, reconcile with backend response
+    references:
+      - path: references/binding-api.md
+        label: Binding API Reference
+    validation-commands:
+      - label: Run binding tests
+        command: clef test Binding
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | bind | Connect concept to signals |
+        | sync | Pull latest state |
+        | invoke | Call concept action |
+        | unbind | Disconnect and cleanup |
+    related-workflows:
+      - name: signal-lifecycle
+        description: Manage the reactive signals that bindings create
+      - name: host-orchestration
+        description: Host manages binding lifecycle
+
+  schema-inspection:
+    concept: UISchema
+    steps:
+      - action: inspect
+        title: Inspect Concept
+        prose: >
+          Parse a Clef concept spec and generate a UI schema
+          mapping concept state and actions to abstract UI
+          elements. Uses Metawidget-style inspection.
+      - action: override
+        title: Apply Overrides
+        prose: >
+          Apply field-level UI overrides — change element types,
+          labels, visibility, ordering, or validation rules
+          without modifying the concept spec.
+      - action: getSchema
+        title: Get Schema
+        prose: >
+          Return the merged UI schema (inspected + overrides)
+          for a concept. Used by renderers and code generators.
+      - action: getElements
+        title: Get Elements
+        prose: >
+          Return the abstract element tree derived from the
+          UI schema. Elements are modality-independent — the
+          same tree renders as GUI forms, CLI prompts, or
+          API docs.
+    design-principles:
+      - title: Dual Schema
+        rule: Data schema (Clef) and UI schema (Clef Surface) are separate — UI schema adds presentation, not data
+      - title: Convention Over Configuration
+        rule: Sensible defaults from inspection; overrides only for exceptions
+      - title: Modality Independence
+        rule: Elements describe WHAT, not HOW — the same schema works for GUI, CLI, and API
+    references:
+      - path: references/ui-schema-api.md
+        label: UISchema API Reference
+    validation-commands:
+      - label: Run UISchema tests
+        command: clef test UISchema
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | inspect | Parse concept → UI schema |
+        | override | Customize field presentation |
+        | getSchema | Return merged schema |
+        | getElements | Return abstract element tree |
+    related-workflows:
+      - name: binding-flow
+        description: Bindings use schemas for data mapping
+
+  token-management:
+    concept: DesignToken
+    steps:
+      - action: define
+        title: Define Token
+        prose: >
+          Define a design token with name, value, type, and tier.
+          Tokens follow the W3C Design Tokens Community Group
+          specification. Three tiers: primitive (raw values),
+          semantic (role-based aliases), component (scoped to widgets).
+      - action: alias
+        title: Create Alias
+        prose: >
+          Create a token that references another token's value.
+          Aliases resolve at runtime, enabling theme switching
+          by changing the referenced source token.
+      - action: resolve
+        title: Resolve Token
+        prose: >
+          Resolve a token to its final value, following alias
+          chains. Returns the concrete value regardless of
+          tier or indirection depth.
+      - action: export
+        title: Export Tokens
+        prose: >
+          Export all tokens in a target format: CSS custom
+          properties, SCSS variables, JSON, Swift constants,
+          Kotlin resources, or Compose theme values.
+    checklists:
+      define:
+        - Name follows naming convention (category-property-variant)
+        - Type is valid (color, dimension, fontFamily, etc.)
+        - Tier specified (primitive, semantic, or component)
+      alias:
+        - Referenced token exists
+        - No circular reference chains
+    design-principles:
+      - title: W3C DTCG Compliance
+        rule: Token format follows the W3C Design Tokens Community Group specification
+      - title: Three-Tier Hierarchy
+        rule: Primitive → Semantic → Component creates stable API boundaries
+      - title: Platform Agnostic
+        rule: Tokens are abstract — export adapts to each platform's conventions
+    references:
+      - path: references/design-token-api.md
+        label: DesignToken API Reference
+    validation-commands:
+      - label: Run token tests
+        command: clef test DesignToken
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | define | Create a token |
+        | alias | Reference another token |
+        | resolve | Get final value |
+        | update | Change token value |
+        | remove | Delete a token |
+        | export | Output in target format |
+    related-workflows:
+      - name: theme-management
+        description: Themes compose and override tokens
+      - name: palette-generation
+        description: Palettes generate color tokens
+
+  # ── surface-component workflows ─────────────────────────
+
+  widget-registry:
+    concept: Widget
+    steps:
+      - action: register
+        title: Register Widget
+        prose: >
+          Register a headless widget specification in the
+          catalog. Each widget defines an FSM (states, events,
+          transitions), an anatomy (named parts), accessibility
+          spec, and default configuration. Inspired by Zag.js.
+      - action: configure
+        title: Configure Widget
+        prose: >
+          Apply configuration overrides to a registered widget.
+          Changes default state, transition behavior, or
+          accessibility attributes without modifying the spec.
+      - action: get
+        title: Get Widget Spec
+        prose: >
+          Retrieve a widget's full specification including
+          FSM definition, anatomy, a11y spec, and config.
+      - action: list
+        title: List Widgets
+        prose: >
+          List all registered widgets, optionally filtered by
+          category (input, overlay, navigation, layout, data,
+          feedback).
+    checklists:
+      register:
+        - Widget name is unique in the catalog
+        - FSM has valid states, events, and transitions
+        - Anatomy defines all required parts
+        - Accessibility spec includes ARIA roles and keyboard handling
+    design-principles:
+      - title: Headless Architecture
+        rule: Widget specs define behavior without rendering — connect() produces props for any framework
+      - title: Catalog Pattern
+        rule: Standard library of widgets with known FSM contracts enables code generation
+      - title: Accessibility First
+        rule: Every widget includes ARIA roles, keyboard navigation, and focus management
+    references:
+      - path: references/widget-api.md
+        label: Widget API Reference
+    validation-commands:
+      - label: Run widget tests
+        command: clef test Widget
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | register | Add widget to catalog |
+        | configure | Override defaults |
+        | get | Retrieve spec |
+        | list | List by category |
+        | unregister | Remove from catalog |
+    related-workflows:
+      - name: machine-lifecycle
+        description: Spawn running instances from widget specs
+
+  machine-lifecycle:
+    concept: Machine
+    steps:
+      - action: spawn
+        title: Spawn Machine
+        prose: >
+          Instantiate a widget FSM as a running machine with
+          initial state and context. The machine starts in the
+          widget's initial state and is ready to process events.
+      - action: send
+        title: Send Event
+        prose: >
+          Send an event to a running machine. The FSM processes
+          the event, transitions to the next state, and updates
+          context. Guards and actions execute during transitions.
+      - action: connect
+        title: Connect Props
+        prose: >
+          Transform the current machine state into a framework-
+          neutral props API. The props object contains event
+          handlers, ARIA attributes, data attributes, and state
+          flags for each anatomy part.
+      - action: destroy
+        title: Destroy Machine
+        prose: >
+          Destroy a machine instance, releasing resources and
+          invoking exit actions for the current state.
+    checklists:
+      spawn:
+        - Component references a registered widget
+        - Initial context values are valid
+      send:
+        - Event type is valid for the current state
+        - Guards evaluate before transition
+    design-principles:
+      - title: FSM Purity
+        rule: Machine state transitions are deterministic — same state + event = same next state
+      - title: Connect Pattern
+        rule: connect() is the only way to get framework-specific props — no direct state access
+      - title: Lifecycle Symmetry
+        rule: spawn/destroy are symmetric — every spawned machine must be destroyed
+    references:
+      - path: references/machine-api.md
+        label: Machine API Reference
+    validation-commands:
+      - label: Run machine tests
+        command: clef test Machine
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | spawn | Instantiate an FSM |
+        | send | Process an event |
+        | connect | Get props API |
+        | destroy | Release resources |
+    related-workflows:
+      - name: widget-registry
+        description: Get widget specs to spawn machines from
+      - name: host-orchestration
+        description: Host manages machine lifecycle
+
+  # ── surface-app workflows ──────────────────────────────
+
+  host-orchestration:
+    concept: Host
+    steps:
+      - action: mount
+        title: Mount Host
+        prose: >
+          Mount a concept into a rendering zone. Host creates a
+          binding, inspects the UI schema, spawns machines for
+          each widget, and renders via the framework adapter.
+          Lifecycle: loading → hydrating → interactive.
+      - action: refresh
+        title: Refresh Host
+        prose: >
+          Re-sync the binding and re-render. Use after external
+          data changes or when the user requests a manual refresh.
+      - action: setError
+        title: Handle Error
+        prose: >
+          Set an error state on the host. Renders error UI and
+          optionally retries the failed operation.
+      - action: unmount
+        title: Unmount Host
+        prose: >
+          Unmount the host, destroying machines, unbinding
+          signals, and cleaning up DOM/native resources.
+      - action: updateConfig
+        title: Update Config
+        prose: >
+          Update host configuration (view, zone, rendering
+          options) without a full unmount/remount cycle.
+    checklists:
+      mount:
+        - Concept exists and is bound
+        - Zone is available in the shell
+        - Framework adapter is registered
+      unmount:
+        - All machines destroyed
+        - Binding unbound
+        - DOM/native resources cleaned up
+    design-principles:
+      - title: Progressive Customization
+        rule: >
+          Five levels of customization: Level 0 (zero config),
+          Level 1 (field overrides), Level 2 (custom widgets),
+          Level 3 (custom layout), Level 4 (full control)
+      - title: Lifecycle Management
+        rule: Host owns the full lifecycle — binding, schema, machines, rendering
+      - title: Error Boundary
+        rule: Errors in any stage are caught and surfaced via setError
+    references:
+      - path: references/host-api.md
+        label: Host API Reference
+    validation-commands:
+      - label: Run host tests
+        command: clef test Host
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | mount | Start full rendering pipeline |
+        | refresh | Re-sync and re-render |
+        | setError | Enter error state |
+        | unmount | Clean up everything |
+        | updateConfig | Change settings live |
+    related-workflows:
+      - name: binding-flow
+        description: Host creates and manages bindings
+      - name: machine-lifecycle
+        description: Host spawns and destroys machines
+      - name: shell-composition
+        description: Shell assigns hosts to zones
+
+  navigation:
+    concept: Navigator
+    steps:
+      - action: register
+        title: Register Destination
+        prose: >
+          Register a named navigation destination with its
+          associated concept and view. Destinations carry
+          platform hints (URL patterns, stack behavior, tab
+          groups) in their metadata.
+      - action: go
+        title: Navigate
+        prose: >
+          Navigate to a registered destination. Platform adapters
+          translate to the appropriate primitive (URL push,
+          screen stack push, tab switch, etc). Guards are checked
+          before navigation proceeds.
+      - action: back
+        title: Go Back
+        prose: >
+          Navigate backward in history. Respects platform
+          conventions (browser back, screen pop, etc).
+      - action: addGuard
+        title: Add Guard
+        prose: >
+          Add a navigation guard that runs before each navigation.
+          Guards can block navigation (e.g., unsaved changes
+          confirmation) or redirect to a different destination.
+    checklists:
+      register:
+        - Destination path is unique
+        - Concept and view are valid references
+      go:
+        - Destination is registered
+        - All guards pass
+      addGuard:
+        - Guard name is unique
+    design-principles:
+      - title: Platform Abstraction
+        rule: Navigation destinations are abstract — platform adapters handle URLs, stacks, and tabs
+      - title: Guard Composition
+        rule: Multiple guards compose — all must pass for navigation to proceed
+      - title: History Management
+        rule: Navigation maintains a history stack for back/forward support
+    references:
+      - path: references/navigator-api.md
+        label: Navigator API Reference
+    validation-commands:
+      - label: Run navigator tests
+        command: clef test Navigator
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | register | Add a destination |
+        | go | Navigate to destination |
+        | back | Go backward in history |
+        | forward | Go forward in history |
+        | replace | Replace current entry |
+        | addGuard | Add navigation guard |
+    related-workflows:
+      - name: shell-composition
+        description: Shell provides the zone structure for navigation
+      - name: host-orchestration
+        description: Host mounts the concept at the destination
+
+  shell-composition:
+    concept: Shell
+    steps:
+      - action: initialize
+        title: Initialize Shell
+        prose: >
+          Initialize the root application shell with named zones
+          (navigated, persistent, transient). The shell provides
+          the top-level layout structure and manages overlays.
+      - action: assignHost
+        title: Assign Host to Zone
+        prose: >
+          Assign a mounted host to a named zone. The shell
+          renders the host in the zone's designated area.
+          Platform adapters map zones to platform-specific
+          containers.
+      - action: pushOverlay
+        title: Push Overlay
+        prose: >
+          Push an overlay (modal, toast, drawer) onto the
+          overlay stack. Overlays render above all zones.
+      - action: popOverlay
+        title: Pop Overlay
+        prose: >
+          Remove the topmost overlay from the stack.
+      - action: destroy
+        title: Destroy Shell
+        prose: >
+          Tear down the shell, unmounting all hosts and
+          clearing all zones and overlays.
+    checklists:
+      initialize:
+        - Platform adapter is registered
+        - Zone names are unique
+      assignHost:
+        - Zone exists
+        - Host is mounted
+      pushOverlay:
+        - Overlay host is mounted
+    design-principles:
+      - title: Zone-Based Composition
+        rule: Applications are composed of named zones, not hardcoded layouts
+      - title: Overlay Stack
+        rule: Overlays are managed as a stack — push/pop for modals, toasts, drawers
+      - title: Platform Mapping
+        rule: Zone names map to platform-specific containers (browser main/sidebar, mobile stack/tab)
+    references:
+      - path: references/shell-api.md
+        label: Shell API Reference
+    validation-commands:
+      - label: Run shell tests
+        command: clef test Shell
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | initialize | Create root shell |
+        | assignHost | Place host in zone |
+        | removeHost | Remove host from zone |
+        | pushOverlay | Show overlay |
+        | popOverlay | Dismiss overlay |
+        | destroy | Tear down everything |
+    related-workflows:
+      - name: host-orchestration
+        description: Hosts are assigned to shell zones
+      - name: navigation
+        description: Navigator drives which host is in the navigated zone
+
+  # ── surface-theme workflows ────────────────────────────
+
+  theme-management:
+    concept: Theme
+    steps:
+      - action: create
+        title: Create Theme
+        prose: >
+          Create a named theme as a collection of token overrides.
+          Themes layer on top of a base set of tokens. Multiple
+          themes can be active simultaneously with priority ordering.
+      - action: extend
+        title: Extend Theme
+        prose: >
+          Extend a theme with additional overrides. Creates a
+          derivative that inherits the parent's overrides and
+          adds its own.
+      - action: activate
+        title: Activate Theme
+        prose: >
+          Activate a theme layer. Token resolution now includes
+          this theme's overrides. Multiple themes can be active
+          with configurable priority.
+      - action: deactivate
+        title: Deactivate Theme
+        prose: >
+          Deactivate a theme layer, removing its overrides from
+          the resolution chain.
+      - action: resolve
+        title: Resolve Token
+        prose: >
+          Resolve a token through all active theme layers. Returns
+          the effective value considering all overrides and aliases.
+    checklists:
+      create:
+        - Theme name is unique
+        - Base theme exists (if extending)
+      activate:
+        - Theme is created
+        - Priority does not conflict with other active themes
+    design-principles:
+      - title: Layered Composition
+        rule: Themes layer and compose — dark + compact + high-contrast can all be active
+      - title: Override Semantics
+        rule: Themes override semantic tokens, not primitive values — preserving the design system
+      - title: Runtime Switching
+        rule: Theme activation is instant — no rebuild or reload required
+    references:
+      - path: references/theme-api.md
+        label: Theme API Reference
+    validation-commands:
+      - label: Run theme tests
+        command: clef test Theme
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | create | Define a theme |
+        | extend | Derive from existing |
+        | activate | Enable theme layer |
+        | deactivate | Disable theme layer |
+        | resolve | Get effective value |
+    related-workflows:
+      - name: token-management
+        description: Themes override design tokens
+      - name: palette-generation
+        description: Palettes generate the color tokens that themes override
+
+  palette-generation:
+    concept: Palette
+    steps:
+      - action: generate
+        title: Generate Palette
+        prose: >
+          Generate a full color scale (50-950 stops) from a seed
+          hue using the OKLCH perceptual color space. Every color
+          pair is validated against WCAG contrast requirements.
+      - action: assignRole
+        title: Assign Semantic Role
+        prose: >
+          Assign a semantic role (primary, secondary, accent,
+          success, warning, error, neutral, surface) to a
+          generated palette. Semantic roles provide stable
+          references independent of specific color values.
+      - action: checkContrast
+        title: Check Contrast
+        prose: >
+          Check WCAG contrast ratio between two colors. Reports
+          AA (4.5:1 normal, 3:1 large) and AAA (7:1 normal)
+          compliance status.
+    checklists:
+      generate:
+        - Seed hue is 0-360
+        - Scale produces sufficient contrast between endpoints
+      assignRole:
+        - Role is a valid semantic role
+        - Palette is generated
+      checkContrast:
+        - Both colors exist (as tokens or raw values)
+    design-principles:
+      - title: Perceptual Uniformity
+        rule: OKLCH color space ensures perceptually uniform lightness steps across hues
+      - title: Accessibility Enforcement
+        rule: Every generated color pair is validated against WCAG contrast requirements
+      - title: Semantic Indirection
+        rule: Code references roles (primary, error) not colors (blue-500, red-600)
+    anti-patterns:
+      - title: Direct Color References
+        description: >
+          Using specific color values (hex, rgb) in component
+          code instead of semantic tokens.
+        bad: "color: #3b82f6"
+        good: "color: var(--color-primary)"
+    references:
+      - path: references/palette-api.md
+        label: Palette API Reference
+    validation-commands:
+      - label: Run palette tests
+        command: clef test Palette
+      - label: Check WCAG compliance
+        command: clef check --wcag Palette
+    quick-reference:
+      heading: Quick Reference
+      body: |
+        | Action | Description |
+        |--------|-------------|
+        | generate | Create color scale from hue |
+        | assignRole | Map palette to semantic role |
+        | checkContrast | Validate WCAG compliance |
+    related-workflows:
+      - name: token-management
+        description: Palette output becomes design tokens
+      - name: theme-management
+        description: Themes can override palette-generated tokens
+
+# ─── ANNOTATIONS ─────────────────────────────────────
+# Concept-level and action-level metadata for skill and
+# CLI generation.
+annotations:
+
+  # ── surface-core ────────────────────────────────────────
+
+  Signal:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<kind> [--value <initial>]"
+      trigger-description: >
+        Use when creating or managing reactive signals for
+        UI state. Signals are the core reactive primitive.
+      trigger-patterns: ["signal", "reactive", "state", "computed"]
+      trigger-exclude: ["binding", "token"]
+    create:
+      examples:
+        - label: Create a state signal
+          language: bash
+          code: |
+            surface signal create state --value "initial"
+    batch:
+      examples:
+        - label: Batch multiple updates
+          language: bash
+          code: |
+            surface signal batch --signals s1,s2 --values "a","b"
+
+  Binding:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<concept> [--mode coupled|rest|graphql|standalone]"
+      trigger-description: >
+        Use when connecting Clef backend concepts to UI signals.
+        The binding bridges data and actions across the boundary.
+      trigger-patterns: ["bind", "binding", "connect", "concept bridge"]
+      trigger-exclude: ["signal", "theme"]
+    bind:
+      examples:
+        - label: Bind to a concept in coupled mode
+          language: bash
+          code: |
+            surface binding bind Article --mode coupled
+    invoke:
+      examples:
+        - label: Invoke an action
+          language: bash
+          code: |
+            surface binding invoke b1 --action create --title "Hello"
+
+  UISchema:
+    concept:
+      tool-permissions: [Read, Grep, Bash]
+      argument-template: "<concept>"
+      trigger-description: >
+        Use when inspecting Clef concepts to generate UI schemas
+        or when customizing field-level presentation overrides.
+      trigger-patterns: ["ui schema", "inspect", "form", "fields"]
+      trigger-exclude: ["design token", "theme"]
+    inspect:
+      examples:
+        - label: Inspect a concept
+          language: bash
+          code: |
+            surface ui-schema inspect Article --json
+
+  Element:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<kind> [--label <label>]"
+      trigger-description: >
+        Use when working with abstract, modality-independent
+        interaction elements derived from UI schemas.
+      trigger-patterns: ["element", "input", "form field", "interaction"]
+      trigger-exclude: ["widget", "machine"]
+    create:
+      examples:
+        - label: Create an input element
+          language: bash
+          code: |
+            surface element create input-text --label "Name" --required true
+
+  DesignToken:
+    concept:
+      tool-permissions: [Read, Edit, Write, Bash]
+      argument-template: "<name> [--value <value>] [--type <type>] [--tier <tier>]"
+      trigger-description: >
+        Use when defining, aliasing, or exporting design tokens
+        following the W3C DTCG specification.
+      trigger-patterns: ["token", "design token", "css variable", "style"]
+      trigger-exclude: ["theme", "palette"]
+    define:
+      examples:
+        - label: Define a color token
+          language: bash
+          code: |
+            surface design-token define primary-500 --value "#3b82f6" --type color --tier semantic
+    export:
+      examples:
+        - label: Export as CSS
+          language: bash
+          code: |
+            surface design-token export --format css
+
+  # ── surface-component ───────────────────────────────────
+
+  Widget:
+    concept:
+      tool-permissions: [Read, Grep, Bash]
+      argument-template: "<name> [--category <category>]"
+      trigger-description: >
+        Use when registering or querying headless widget
+        specifications. Widgets define behavioral FSMs
+        without rendering.
+      trigger-patterns: ["widget", "component", "headless", "FSM"]
+      trigger-exclude: ["machine", "element"]
+    register:
+      examples:
+        - label: Register a dialog widget
+          language: bash
+          code: |
+            surface widget register dialog --category overlay
+    list:
+      examples:
+        - label: List input widgets
+          language: bash
+          code: |
+            surface widget list --category input --json
+
+  Machine:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<component> [--id <id>]"
+      trigger-description: >
+        Use when spawning, controlling, or connecting running
+        widget FSM instances.
+      trigger-patterns: ["machine", "FSM", "state machine", "spawn"]
+      trigger-exclude: ["widget", "signal"]
+    spawn:
+      examples:
+        - label: Spawn a dialog machine
+          language: bash
+          code: |
+            surface machine spawn dialog --id d1
+    send:
+      examples:
+        - label: Send an event
+          language: bash
+          code: |
+            surface machine send d1 --event OPEN
+    connect:
+      examples:
+        - label: Get current props
+          language: bash
+          code: |
+            surface machine connect d1 --json
+
+  Anatomy:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<component>"
+      trigger-description: >
+        Use when defining or querying the named parts contract
+        for a UI component.
+      trigger-patterns: ["anatomy", "parts", "component structure"]
+      trigger-exclude: ["widget", "slot"]
+    define:
+      examples:
+        - label: Define dialog anatomy
+          language: bash
+          code: |
+            surface anatomy define dialog --parts root,trigger,backdrop,content,title,closeTrigger
+
+  Slot:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<name> [--component <component>]"
+      trigger-description: >
+        Use when defining or managing named insertion points
+        for flexible component composition.
+      trigger-patterns: ["slot", "insertion point", "composition"]
+      trigger-exclude: ["anatomy", "layout"]
+
+  # ── surface-app ─────────────────────────────────────────
+
+  Host:
+    concept:
+      tool-permissions: [Read, Grep, Edit, Write, Bash]
+      argument-template: "<concept> [--view <view>] [--zone <zone>]"
+      trigger-description: >
+        Use when mounting concepts into rendering zones.
+        Host orchestrates the full pipeline from concept
+        to rendered UI.
+      trigger-patterns: ["host", "mount", "render", "view"]
+      trigger-exclude: ["shell", "navigator"]
+    mount:
+      examples:
+        - label: Mount a concept
+          language: bash
+          code: |
+            surface host mount Article --view list --zone main
+
+  Navigator:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<destination> [--params <params>]"
+      trigger-description: >
+        Use when managing navigation between application
+        destinations across platforms.
+      trigger-patterns: ["navigate", "route", "go", "destination"]
+      trigger-exclude: ["host", "shell"]
+    register:
+      examples:
+        - label: Register a destination
+          language: bash
+          code: |
+            surface navigator register /articles --concept Article --view list
+    go:
+      examples:
+        - label: Navigate to a destination
+          language: bash
+          code: |
+            surface navigator go /articles/hello-world
+
+  Shell:
+    concept:
+      tool-permissions: [Read, Edit, Write, Bash]
+      argument-template: "[--platform <platform>]"
+      trigger-description: >
+        Use when initializing the root application shell,
+        managing zones, and controlling overlays.
+      trigger-patterns: ["shell", "app", "layout", "zone", "overlay"]
+      trigger-exclude: ["host", "surface"]
+    initialize:
+      examples:
+        - label: Initialize the shell
+          language: bash
+          code: |
+            surface shell initialize --platform browser
+    pushOverlay:
+      examples:
+        - label: Push a modal
+          language: bash
+          code: |
+            surface shell push-overlay modal --host h2
+
+  Transport:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "[--type rest|graphql|websocket|grpc|local]"
+      trigger-description: >
+        Use when configuring network transports for data
+        fetching, mutations, and real-time subscriptions.
+      trigger-patterns: ["transport", "fetch", "API", "network", "http"]
+      trigger-exclude: ["binding", "host"]
+    configure:
+      examples:
+        - label: Configure REST transport
+          language: bash
+          code: |
+            surface transport configure --baseUrl https://api.example.com --type rest
+    fetch:
+      examples:
+        - label: Fetch data
+          language: bash
+          code: |
+            surface transport fetch /articles --json
+
+  PlatformAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<platform>"
+      trigger-description: >
+        Use when registering or detecting platform adapters
+        for cross-platform deployment.
+      trigger-patterns: ["platform", "adapter", "browser", "mobile", "desktop"]
+      trigger-exclude: ["framework adapter", "surface"]
+
+  BrowserAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "[--root <selector>]"
+      trigger-description: "Initialize the browser DOM platform adapter."
+      trigger-patterns: ["browser", "DOM", "web"]
+
+  MobileAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Initialize the mobile platform adapter."
+      trigger-patterns: ["mobile", "iOS", "Android"]
+
+  DesktopAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Initialize the desktop platform adapter."
+      trigger-patterns: ["desktop", "Electron", "Tauri"]
+
+  WatchAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Initialize the wearable platform adapter."
+      trigger-patterns: ["watch", "wearable", "WatchKit"]
+
+  TerminalAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Initialize the terminal platform adapter."
+      trigger-patterns: ["terminal", "CLI", "TUI", "Ink"]
+
+  # ── surface-render ──────────────────────────────────────
+
+  Surface:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<kind> [--mountPoint <selector>]"
+      trigger-description: >
+        Use when creating rendering surfaces (DOM, terminal,
+        native, SSR, static HTML).
+      trigger-patterns: ["surface", "DOM", "render target"]
+      trigger-exclude: ["layout", "viewport"]
+    create:
+      examples:
+        - label: Create a browser surface
+          language: bash
+          code: |
+            surface surface create browser-dom --mountPoint "#app"
+
+  Layout:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<kind> [--gap <gap>]"
+      trigger-description: >
+        Use when creating constraint-based spatial layouts
+        (stack, grid, split, sidebar, etc.).
+      trigger-patterns: ["layout", "grid", "stack", "sidebar"]
+      trigger-exclude: ["surface", "viewport"]
+    create:
+      examples:
+        - label: Create a sidebar layout
+          language: bash
+          code: |
+            surface layout create sidebar --gap 16
+
+  Viewport:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "[--breakpoints <sizes>]"
+      trigger-description: >
+        Use when observing viewport dimensions and managing
+        responsive breakpoints.
+      trigger-patterns: ["viewport", "responsive", "breakpoint", "resize"]
+      trigger-exclude: ["layout", "surface"]
+    observe:
+      examples:
+        - label: Start observing
+          language: bash
+          code: |
+            surface viewport observe --json
+
+  FrameworkAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: >
+        Base framework adapter for normalizing props.
+      trigger-patterns: ["framework", "adapter", "normalize"]
+
+  ReactAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for React (className, SyntheticEvent, hooks)."
+      trigger-patterns: ["react", "jsx", "hooks"]
+
+  VueAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for Vue (v-bind, v-on, composition API)."
+      trigger-patterns: ["vue", "v-bind", "composition API"]
+
+  SvelteAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for Svelte (on:click, bind:, stores)."
+      trigger-patterns: ["svelte", "stores", "runes"]
+
+  SolidAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for Solid (createSignal, JSX)."
+      trigger-patterns: ["solid", "solidjs", "createSignal"]
+
+  VanillaAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for vanilla DOM APIs."
+      trigger-patterns: ["vanilla", "DOM", "plain JS"]
+
+  ReactNativeAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for React Native components."
+      trigger-patterns: ["react native", "RN", "mobile react"]
+
+  NativescriptAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for NativeScript views."
+      trigger-patterns: ["nativescript", "NS"]
+
+  SwiftuiAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for SwiftUI view modifiers."
+      trigger-patterns: ["swiftui", "swift UI", "iOS native"]
+
+  WatchkitAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for WatchKit interface objects."
+      trigger-patterns: ["watchkit", "apple watch"]
+
+  AppkitAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for AppKit (macOS) views."
+      trigger-patterns: ["appkit", "macOS", "NSView"]
+
+  ComposeAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for Jetpack Compose composables."
+      trigger-patterns: ["compose", "jetpack", "android"]
+
+  WearComposeAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for Wear Compose composables."
+      trigger-patterns: ["wear compose", "wear OS"]
+
+  GtkAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for GTK widgets."
+      trigger-patterns: ["gtk", "GNOME", "linux UI"]
+
+  InkAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for Ink (terminal React) components."
+      trigger-patterns: ["ink", "terminal react", "CLI UI"]
+
+  WinuiAdapter:
+    concept:
+      tool-permissions: [Read, Bash]
+      trigger-description: "Normalize props for WinUI XAML controls."
+      trigger-patterns: ["winui", "XAML", "windows"]
+
+  # ── surface-theme ───────────────────────────────────────
+
+  Theme:
+    concept:
+      tool-permissions: [Read, Edit, Write, Bash]
+      argument-template: "<name> [--base <base-theme>]"
+      trigger-description: >
+        Use when creating, extending, or activating visual
+        themes that compose design token overrides.
+      trigger-patterns: ["theme", "dark mode", "light mode", "visual"]
+      trigger-exclude: ["token", "palette"]
+    create:
+      examples:
+        - label: Create a dark theme
+          language: bash
+          code: |
+            surface theme create dark --base default
+    activate:
+      examples:
+        - label: Activate a theme
+          language: bash
+          code: |
+            surface theme activate dark
+
+  Palette:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<name> [--hue <hue>] [--lightness <lightness>]"
+      trigger-description: >
+        Use when generating WCAG-compliant color palettes
+        from seed hues using the OKLCH color space.
+      trigger-patterns: ["palette", "color", "WCAG", "contrast"]
+      trigger-exclude: ["theme", "token"]
+    generate:
+      examples:
+        - label: Generate a primary palette
+          language: bash
+          code: |
+            surface palette generate primary --hue 220 --lightness 50
+    checkContrast:
+      examples:
+        - label: Check WCAG contrast
+          language: bash
+          code: |
+            surface palette check-contrast --fg primary-900 --bg primary-50
+
+  Typography:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<name> [--family <family>] [--size <size>]"
+      trigger-description: >
+        Use when defining named typography styles (families,
+        sizes, weights, line heights).
+      trigger-patterns: ["typography", "font", "text style"]
+      trigger-exclude: ["token", "theme"]
+    define:
+      examples:
+        - label: Define a heading style
+          language: bash
+          code: |
+            surface typography define heading-lg --family "Inter" --size 32 --weight 700
+
+  Motion:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<name>"
+      trigger-description: >
+        Use when defining animation durations, easing curves,
+        and transitions that respect prefers-reduced-motion.
+      trigger-patterns: ["motion", "animation", "easing", "transition"]
+      trigger-exclude: ["theme", "token"]
+    defineDuration:
+      examples:
+        - label: Define a fast duration
+          language: bash
+          code: |
+            surface motion define-duration fast --ms 100
+    defineEasing:
+      examples:
+        - label: Define ease-out
+          language: bash
+          code: |
+            surface motion define-easing ease-out --cubic "0.0,0.0,0.2,1.0"
+
+  Elevation:
+    concept:
+      tool-permissions: [Read, Bash]
+      argument-template: "<level>"
+      trigger-description: >
+        Use when defining shadow/depth elevation levels for
+        layered UI surfaces.
+      trigger-patterns: ["elevation", "shadow", "depth", "z-index"]
+      trigger-exclude: ["theme", "layout"]
+    define:
+      examples:
+        - label: Define elevation level 2
+          language: bash
+          code: |
+            surface elevation define 2 --shadow "0 2px 4px rgba(0,0,0,0.1)"

@@ -1,0 +1,18 @@
+# ============================================================
+# LayoutComponentRendersViaWidget — surface-integration recommended sync
+#
+# Render library layout components (Drupal Block-style content
+# units) through Clef Surface widget state machines.
+# ============================================================
+
+sync LayoutComponentRendersViaWidget [eager]
+when {
+  Component/render: [ component: ?comp; context: ?ctx ]
+    => ok(component: ?comp)
+}
+where {
+  Widget: { ?widget name: ?comp }
+}
+then {
+  Machine/spawn: [ machine: ?comp; widget: ?widget; context: ?ctx ]
+}

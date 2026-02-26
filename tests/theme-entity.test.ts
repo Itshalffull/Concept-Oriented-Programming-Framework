@@ -331,7 +331,7 @@ describe('ThemeEntity Handler', () => {
 
       await storage.put('provenance', 'prov-1', {
         id: 'prov-1',
-        sourceSymbol: 'copf/theme/Light',
+        sourceSymbol: 'clef/theme/Light',
         platform: 'css',
         targetFile: 'generated/light.css',
       });

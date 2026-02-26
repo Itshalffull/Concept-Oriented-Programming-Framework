@@ -582,7 +582,7 @@ describe('SyncParser + SyncCompiler Self-Compilation', () => {
 
     // When: SpecParser/parse completion with spec and ast output
     expect(compiled.when).toHaveLength(1);
-    expect(compiled.when[0].concept).toBe('urn:copf/SpecParser');
+    expect(compiled.when[0].concept).toBe('urn:clef/SpecParser');
     expect(compiled.when[0].action).toBe('parse');
     // Output fields should capture ?spec and ?ast
     const outputVars = compiled.when[0].outputFields
@@ -593,7 +593,7 @@ describe('SyncParser + SyncCompiler Self-Compilation', () => {
 
     // Then: SchemaGen/generate with spec and ast inputs
     expect(compiled.then).toHaveLength(1);
-    expect(compiled.then[0].concept).toBe('urn:copf/SchemaGen');
+    expect(compiled.then[0].concept).toBe('urn:clef/SchemaGen');
     expect(compiled.then[0].action).toBe('generate');
     const thenFields = compiled.then[0].fields.map(f => f.name);
     expect(thenFields).toContain('spec');
@@ -618,12 +618,12 @@ describe('SyncParser + SyncCompiler Self-Compilation', () => {
 
     // When: single pattern — SchemaGen/generate with spec input and manifest output
     expect(compiled.when).toHaveLength(1);
-    expect(compiled.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(compiled.when[0].concept).toBe('urn:clef/SchemaGen');
     expect(compiled.when[0].action).toBe('generate');
 
     // Then: TypeScriptGen/generate with spec and manifest
     expect(compiled.then).toHaveLength(1);
-    expect(compiled.then[0].concept).toBe('urn:copf/TypeScriptGen');
+    expect(compiled.then[0].concept).toBe('urn:clef/TypeScriptGen');
     expect(compiled.then[0].action).toBe('generate');
     const thenFields = compiled.then[0].fields.map(f => f.name);
     expect(thenFields).toContain('spec');
@@ -647,11 +647,11 @@ describe('SyncParser + SyncCompiler Self-Compilation', () => {
     const compiled = result.compiled as CompiledSync;
 
     // When: Registry/register with concept output
-    expect(compiled.when[0].concept).toBe('urn:copf/Registry');
+    expect(compiled.when[0].concept).toBe('urn:clef/Registry');
     expect(compiled.when[0].action).toBe('register');
 
     // Then: ActionLog/append
-    expect(compiled.then[0].concept).toBe('urn:copf/ActionLog');
+    expect(compiled.then[0].concept).toBe('urn:clef/ActionLog');
     expect(compiled.then[0].action).toBe('append');
   });
 

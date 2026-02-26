@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/GitOps",
+  "uri": "urn:clef/GitOps",
   "name": "GitOps",
   "typeParams": [
     {
@@ -361,11 +361,11 @@
   "jsonSchemas": {
     "invocations": {
       "emit": {
-        "$id": "urn:copf/GitOps/emit/invocation",
+        "$id": "urn:clef/GitOps/emit/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GitOps"
+            "const": "urn:clef/GitOps"
           },
           "action": {
             "const": "emit"
@@ -396,11 +396,11 @@
         }
       },
       "reconciliationStatus": {
-        "$id": "urn:copf/GitOps/reconciliationStatus/invocation",
+        "$id": "urn:clef/GitOps/reconciliationStatus/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GitOps"
+            "const": "urn:clef/GitOps"
           },
           "action": {
             "const": "reconciliationStatus"
@@ -422,11 +422,11 @@
     "completions": {
       "emit": {
         "ok": {
-          "$id": "urn:copf/GitOps/emit/completion/ok",
+          "$id": "urn:clef/GitOps/emit/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GitOps"
+              "const": "urn:clef/GitOps"
             },
             "action": {
               "const": "emit"
@@ -455,11 +455,11 @@
           }
         },
         "controllerUnsupported": {
-          "$id": "urn:copf/GitOps/emit/completion/controllerUnsupported",
+          "$id": "urn:clef/GitOps/emit/completion/controllerUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GitOps"
+              "const": "urn:clef/GitOps"
             },
             "action": {
               "const": "emit"
@@ -483,11 +483,11 @@
       },
       "reconciliationStatus": {
         "ok": {
-          "$id": "urn:copf/GitOps/reconciliationStatus/completion/ok",
+          "$id": "urn:clef/GitOps/reconciliationStatus/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GitOps"
+              "const": "urn:clef/GitOps"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -518,11 +518,11 @@
           }
         },
         "pending": {
-          "$id": "urn:copf/GitOps/reconciliationStatus/completion/pending",
+          "$id": "urn:clef/GitOps/reconciliationStatus/completion/pending",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GitOps"
+              "const": "urn:clef/GitOps"
             },
             "action": {
               "const": "reconciliationStatus"
@@ -551,11 +551,11 @@
           }
         },
         "failed": {
-          "$id": "urn:copf/GitOps/reconciliationStatus/completion/failed",
+          "$id": "urn:clef/GitOps/reconciliationStatus/completion/failed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GitOps"
+              "const": "urn:clef/GitOps"
             },
             "action": {
               "const": "reconciliationStatus"

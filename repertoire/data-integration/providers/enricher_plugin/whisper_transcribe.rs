@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Audio/video transcription enricher provider via Whisper
+// Clef Data Integration Kit - Audio/video transcription enricher provider via Whisper
 // Sends audio to Whisper API or runs locally, parses timestamped segments.
 
 use std::collections::HashMap;
@@ -133,7 +133,7 @@ fn transcribe_local(
     language: &str,
 ) -> Result<Vec<TranscriptSegment>, EnricherError> {
     let tmp_dir = std::env::temp_dir();
-    let output_stem = format!("copf_whisper_{}", std::process::id());
+    let output_stem = format!("clef_whisper_{}", std::process::id());
     let output_path = tmp_dir.join(&output_stem);
 
     let result = Command::new("whisper")
@@ -278,7 +278,7 @@ impl WhisperTranscribeEnricherProvider {
             transcribe_api(&item.content, api_key, model, language)?
         } else {
             let tmp_path = std::env::temp_dir()
-                .join(format!("copf_audio_{}_{}.wav", item.id, std::process::id()));
+                .join(format!("clef_audio_{}_{}.wav", item.id, std::process::id()));
             let audio_bytes = base64_decode_bytes(&item.content);
             std::fs::write(&tmp_path, &audio_bytes)?;
             let result = transcribe_local(tmp_path.to_str().unwrap_or(""), model_size, language);

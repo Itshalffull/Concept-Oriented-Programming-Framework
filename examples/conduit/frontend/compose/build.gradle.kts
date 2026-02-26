@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.copf.conduit"
+    namespace = "com.clef.conduit"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.copf.conduit"
+        applicationId = "com.clef.conduit"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

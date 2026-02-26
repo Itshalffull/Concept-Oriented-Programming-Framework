@@ -20,7 +20,7 @@ export const widgetStateEntityHandler: ConceptHandler = {
     const initial = input.initial as string;
 
     const id = nextId();
-    const symbol = `copf/widget-state/${widget}/${name}`;
+    const symbol = `clef/widget-state/${widget}/${name}`;
 
     await storage.put('widget-state-entity', id, {
       id,

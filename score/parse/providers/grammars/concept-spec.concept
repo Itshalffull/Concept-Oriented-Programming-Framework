@@ -2,7 +2,7 @@
 concept TreeSitterConceptSpec [I] {
 
   purpose {
-    Tree-sitter grammar provider for COPF concept spec files.
+    Tree-sitter grammar provider for Clef concept spec files.
     Uses the YAML WASM parser as an approximation for .concept
     files until a custom Tree-sitter grammar is available.
   }

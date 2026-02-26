@@ -1,7 +1,7 @@
 // Conduit Example App -- Jetpack Compose API Service
 // Retrofit-based HTTP client for the Conduit REST API.
 
-package com.copf.conduit.data
+package com.clef.conduit.data
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient

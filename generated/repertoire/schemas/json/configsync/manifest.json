@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ConfigSync",
+  "uri": "urn:clef/ConfigSync",
   "name": "ConfigSync",
   "typeParams": [
     {
@@ -366,11 +366,11 @@
   "jsonSchemas": {
     "invocations": {
       "export": {
-        "$id": "urn:copf/ConfigSync/export/invocation",
+        "$id": "urn:clef/ConfigSync/export/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ConfigSync"
+            "const": "urn:clef/ConfigSync"
           },
           "action": {
             "const": "export"
@@ -389,11 +389,11 @@
         }
       },
       "import": {
-        "$id": "urn:copf/ConfigSync/import/invocation",
+        "$id": "urn:clef/ConfigSync/import/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ConfigSync"
+            "const": "urn:clef/ConfigSync"
           },
           "action": {
             "const": "import"
@@ -416,11 +416,11 @@
         }
       },
       "override": {
-        "$id": "urn:copf/ConfigSync/override/invocation",
+        "$id": "urn:clef/ConfigSync/override/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ConfigSync"
+            "const": "urn:clef/ConfigSync"
           },
           "action": {
             "const": "override"
@@ -447,11 +447,11 @@
         }
       },
       "diff": {
-        "$id": "urn:copf/ConfigSync/diff/invocation",
+        "$id": "urn:clef/ConfigSync/diff/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ConfigSync"
+            "const": "urn:clef/ConfigSync"
           },
           "action": {
             "const": "diff"
@@ -477,11 +477,11 @@
     "completions": {
       "export": {
         "ok": {
-          "$id": "urn:copf/ConfigSync/export/completion/ok",
+          "$id": "urn:clef/ConfigSync/export/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "export"
@@ -503,11 +503,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ConfigSync/export/completion/notfound",
+          "$id": "urn:clef/ConfigSync/export/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "export"
@@ -525,11 +525,11 @@
       },
       "import": {
         "ok": {
-          "$id": "urn:copf/ConfigSync/import/completion/ok",
+          "$id": "urn:clef/ConfigSync/import/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "import"
@@ -545,11 +545,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/ConfigSync/import/completion/error",
+          "$id": "urn:clef/ConfigSync/import/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "import"
@@ -573,11 +573,11 @@
       },
       "override": {
         "ok": {
-          "$id": "urn:copf/ConfigSync/override/completion/ok",
+          "$id": "urn:clef/ConfigSync/override/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "override"
@@ -593,11 +593,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ConfigSync/override/completion/notfound",
+          "$id": "urn:clef/ConfigSync/override/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "override"
@@ -615,11 +615,11 @@
       },
       "diff": {
         "ok": {
-          "$id": "urn:copf/ConfigSync/diff/completion/ok",
+          "$id": "urn:clef/ConfigSync/diff/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "diff"
@@ -641,11 +641,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ConfigSync/diff/completion/notfound",
+          "$id": "urn:clef/ConfigSync/diff/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ConfigSync"
+              "const": "urn:clef/ConfigSync"
             },
             "action": {
               "const": "diff"

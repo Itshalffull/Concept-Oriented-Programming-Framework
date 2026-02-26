@@ -1,10 +1,10 @@
 // ============================================================
 // BindingProvider — Vanilla DOM Component
 //
-// Manages COIF concept signal subscriptions. Provides an
+// Manages Clef Surface concept signal subscriptions. Provides an
 // invoke() method via closure for triggering actions. Updates
 // DOM elements when signal values change, bridging the gap
-// between headless COIF bindings and the DOM.
+// between headless Clef Surface bindings and the DOM.
 // ============================================================
 
 import type {
@@ -16,7 +16,7 @@ import type {
 // --- Public Interface ---
 
 export interface BindingProviderProps {
-  /** COIF binding configuration */
+  /** Clef Surface binding configuration */
   binding: BindingConfig;
   /** DOM elements to update when signals change: { signalKey: updateFn } */
   updaters?: Record<string, (el: HTMLElement, value: unknown) => void>;
@@ -62,7 +62,7 @@ export class BindingProvider {
 
     // Root element
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-binding', props.binding.concept);
+    this.el.setAttribute('data-surface-binding', props.binding.concept);
     this.el.setAttribute('data-binding-mode', props.binding.mode);
 
     if (props.binding.endpoint) {
@@ -142,7 +142,7 @@ export class BindingProvider {
       // Unsubscribe from old signals and resubscribe to new ones
       this.unsubscribeAll();
       this.props.binding = props.binding;
-      this.el.setAttribute('data-coif-binding', props.binding.concept);
+      this.el.setAttribute('data-surface-binding', props.binding.concept);
       this.el.setAttribute('data-binding-mode', props.binding.mode);
       this.subscribeToSignals(props.binding);
     }

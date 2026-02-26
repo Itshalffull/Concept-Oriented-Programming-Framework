@@ -1,9 +1,9 @@
 // ============================================================
 // BindingProvider — Vue 3 Component
 //
-// Provide/inject for COIF concept binding. Creates a reactive
+// Provide/inject for Clef Surface concept binding. Creates a reactive
 // signal map that descendant components can consume. Bridges
-// COIF WritableSignals into Vue refs so that changes propagate
+// Clef Surface WritableSignals into Vue refs so that changes propagate
 // through Vue's reactivity system.
 // ============================================================
 
@@ -46,7 +46,7 @@ export interface BindingContext {
   subscribe: (name: string, listener: (value: unknown) => void) => (() => void) | undefined;
 }
 
-export const BINDING_KEY: InjectionKey<BindingContext> = Symbol('coif-binding');
+export const BINDING_KEY: InjectionKey<BindingContext> = Symbol('surface-binding');
 
 // --- Component ---
 
@@ -77,7 +77,7 @@ export const BindingProvider = defineComponent({
   },
 
   setup(props, { slots, emit }) {
-    // Internal map of COIF signals (from config or freshly created)
+    // Internal map of Clef Surface signals (from config or freshly created)
     const signalMap = new Map<string, Signal | WritableSignal>();
 
     // Reactive Vue refs mirroring each signal's current value
@@ -96,7 +96,7 @@ export const BindingProvider = defineComponent({
         const vueRef = ref(initial);
         values[name] = vueRef;
 
-        // Subscribe to COIF signal changes -> update Vue ref
+        // Subscribe to Clef Surface signal changes -> update Vue ref
         const unsub = signal.subscribe((newValue: unknown) => {
           vueRef.value = newValue;
           emit('signal-change', { name, value: newValue });
@@ -171,7 +171,7 @@ export const BindingProvider = defineComponent({
       h(
         props.tag,
         {
-          class: 'coif-binding-provider',
+          class: 'surface-binding-provider',
           'data-concept': props.config.concept,
           'data-binding-mode': props.config.mode,
         },

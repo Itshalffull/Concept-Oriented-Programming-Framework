@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/VaultProvider",
+  "uri": "urn:clef/VaultProvider",
   "name": "VaultProvider",
   "typeParams": [
     {
@@ -351,11 +351,11 @@
   "jsonSchemas": {
     "invocations": {
       "fetch": {
-        "$id": "urn:copf/VaultProvider/fetch/invocation",
+        "$id": "urn:clef/VaultProvider/fetch/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VaultProvider"
+            "const": "urn:clef/VaultProvider"
           },
           "action": {
             "const": "fetch"
@@ -374,11 +374,11 @@
         }
       },
       "renewLease": {
-        "$id": "urn:copf/VaultProvider/renewLease/invocation",
+        "$id": "urn:clef/VaultProvider/renewLease/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VaultProvider"
+            "const": "urn:clef/VaultProvider"
           },
           "action": {
             "const": "renewLease"
@@ -397,11 +397,11 @@
         }
       },
       "rotate": {
-        "$id": "urn:copf/VaultProvider/rotate/invocation",
+        "$id": "urn:clef/VaultProvider/rotate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/VaultProvider"
+            "const": "urn:clef/VaultProvider"
           },
           "action": {
             "const": "rotate"
@@ -423,11 +423,11 @@
     "completions": {
       "fetch": {
         "ok": {
-          "$id": "urn:copf/VaultProvider/fetch/completion/ok",
+          "$id": "urn:clef/VaultProvider/fetch/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "fetch"
@@ -457,11 +457,11 @@
           }
         },
         "sealed": {
-          "$id": "urn:copf/VaultProvider/fetch/completion/sealed",
+          "$id": "urn:clef/VaultProvider/fetch/completion/sealed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "fetch"
@@ -483,11 +483,11 @@
           }
         },
         "tokenExpired": {
-          "$id": "urn:copf/VaultProvider/fetch/completion/tokenExpired",
+          "$id": "urn:clef/VaultProvider/fetch/completion/tokenExpired",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "fetch"
@@ -509,11 +509,11 @@
           }
         },
         "pathNotFound": {
-          "$id": "urn:copf/VaultProvider/fetch/completion/pathNotFound",
+          "$id": "urn:clef/VaultProvider/fetch/completion/pathNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "fetch"
@@ -537,11 +537,11 @@
       },
       "renewLease": {
         "ok": {
-          "$id": "urn:copf/VaultProvider/renewLease/completion/ok",
+          "$id": "urn:clef/VaultProvider/renewLease/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "renewLease"
@@ -567,11 +567,11 @@
           }
         },
         "leaseExpired": {
-          "$id": "urn:copf/VaultProvider/renewLease/completion/leaseExpired",
+          "$id": "urn:clef/VaultProvider/renewLease/completion/leaseExpired",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "renewLease"
@@ -595,11 +595,11 @@
       },
       "rotate": {
         "ok": {
-          "$id": "urn:copf/VaultProvider/rotate/completion/ok",
+          "$id": "urn:clef/VaultProvider/rotate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/VaultProvider"
+              "const": "urn:clef/VaultProvider"
             },
             "action": {
               "const": "rotate"
