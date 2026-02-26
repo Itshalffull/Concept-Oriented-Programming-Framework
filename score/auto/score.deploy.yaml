@@ -11,7 +11,7 @@
 app:
   name: score
   version: "0.1.0"
-  uri: urn:copf/score
+  uri: urn:clef/score
   builtin: true
 
 # Score always runs in the app's engine runtime — it

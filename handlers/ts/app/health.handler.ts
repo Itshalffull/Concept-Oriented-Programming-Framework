@@ -1,5 +1,5 @@
 // Health Concept Implementation (Deploy Kit)
-// Verify deployment health at concept, sync, and kit levels.
+// Verify deployment health at concept, sync, and suite levels.
 import type { ConceptHandler } from '@clef/kernel';
 
 export const healthHandler: ConceptHandler = {
@@ -58,7 +58,7 @@ export const healthHandler: ConceptHandler = {
     const checkId = `hk-${kit}-${Date.now()}`;
     const checkedAt = new Date().toISOString();
 
-    // Retrieve all recent concept checks for this kit
+    // Retrieve all recent concept checks for this suite
     const allChecks = await storage.find('check');
     const conceptResults: string[] = [];
     const syncResults: string[] = [];

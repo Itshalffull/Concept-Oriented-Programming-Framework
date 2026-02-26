@@ -1,6 +1,6 @@
-# kits/coif-render/kit.yaml
+# kits/surface-render/suite.yaml
 suite:
-  name: coif-render
+  name: surface-render
   version: 0.4.0
   description: >
     Framework adapters, surfaces, layouts, and viewports.
@@ -70,5 +70,5 @@ infrastructure:
       description: Framework-free DOM APIs
 
 dependencies:
-  - coif-core: ">=0.4.0"
-  - coif-component: ">=0.4.0"
+  - surface-core: ">=0.4.0"
+  - surface-component: ">=0.4.0"

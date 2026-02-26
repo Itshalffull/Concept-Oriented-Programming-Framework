@@ -9,7 +9,7 @@
 //
 // Supports strict mode (additionalProperties: false) for
 // OpenAI structured outputs.
-// Architecture doc: Interface Kit
+// Architecture doc: Clef Bind
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema } from '../../../../kernel/src/types.js';

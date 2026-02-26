@@ -1,7 +1,7 @@
 """
-HTTP transport server for COPF concept handlers.
+HTTP transport server for Clef concept handlers.
 
-Starts an HTTP server that speaks the COPF wire protocol:
+Starts an HTTP server that speaks the Clef wire protocol:
   POST /invoke → ActionInvocation → handler → ActionCompletion
   POST /query  → ConceptQuery → storage.find → results
   GET  /health → {"healthy": true, "latencyMs": 0}
@@ -17,8 +17,8 @@ import time
 import uuid
 from typing import Any
 
-from copf.registry import _REGISTRY
-from copf.storage import InMemoryStorage
+from clef.registry import _REGISTRY
+from clef.storage import InMemoryStorage
 
 
 async def _handle_invoke(body: dict[str, Any]) -> dict[str, Any]:
@@ -107,7 +107,7 @@ def serve(host: str = "0.0.0.0", port: int = 8090) -> None:
     app.router.add_get("/health", health_handler)
 
     registered = list(_REGISTRY.keys())
-    print(f"COPF Python SDK v0.1.0")
+    print(f"Clef Python SDK v0.1.0")
     print(f"Serving {len(registered)} concept(s) on {host}:{port}")
     for uri in registered:
         print(f"  - {uri}")
@@ -155,7 +155,7 @@ def _serve_stdlib(host: str, port: int) -> None:
             pass  # Suppress default logging
 
     registered = list(_REGISTRY.keys())
-    print(f"COPF Python SDK v0.1.0 (stdlib fallback — install aiohttp for async)")
+    print(f"Clef Python SDK v0.1.0 (stdlib fallback — install aiohttp for async)")
     print(f"Serving {len(registered)} concept(s) on {host}:{port}")
     for uri in registered:
         print(f"  - {uri}")

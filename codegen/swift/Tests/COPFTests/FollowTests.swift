@@ -1,7 +1,7 @@
 // FollowTests.swift — Tests for Follow concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class FollowTests: XCTestCase {
 

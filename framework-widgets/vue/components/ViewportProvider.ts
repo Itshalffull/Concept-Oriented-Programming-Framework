@@ -23,11 +23,11 @@ import type { ViewportState, Breakpoint } from '../../shared/types.js';
 import {
   getBreakpoint,
   getOrientation,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Injection Key ---
 
-export const VIEWPORT_KEY: InjectionKey<ViewportState> = Symbol('coif-viewport');
+export const VIEWPORT_KEY: InjectionKey<ViewportState> = Symbol('surface-viewport');
 
 // --- Default breakpoints ---
 
@@ -135,7 +135,7 @@ export const ViewportProvider = defineComponent({
       h(
         props.tag,
         {
-          class: 'coif-viewport-provider',
+          class: 'surface-viewport-provider',
           'data-breakpoint': state.breakpoint,
           'data-orientation': state.orientation,
         },

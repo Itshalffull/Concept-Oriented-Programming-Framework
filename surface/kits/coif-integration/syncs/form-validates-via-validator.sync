@@ -1,5 +1,5 @@
 # ============================================================
-# FormValidatesViaValidator — coif-integration recommended sync
+# FormValidatesViaValidator — surface-integration recommended sync
 #
 # Delegate form submission validation to the library Validator
 # concept. When a form machine enters the "validating" state,

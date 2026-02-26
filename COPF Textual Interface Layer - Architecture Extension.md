@@ -1,4 +1,4 @@
-# COPF Interface Kit — Architecture Extension (v4)
+# Clef Clef Bind — Architecture Extension (v4)
 
 > **Changelog**
 >
@@ -39,7 +39,7 @@
 > - Added enrichment pipeline syncs (§3.3) — AnnotateBeforeGenerate, WorkflowBeforeRender, RenderEnrichment
 > - Added Claude Skills routing and middleware syncs (§3.5, §3.8)
 > - Added Opaque Content Model architectural decision (Part 8)
-> - Updated concept count table, kit.yaml, and integration diagrams
+> - Updated concept count table, suite.yaml, and integration diagrams
 >
 > **v1 (initial):**
 > - Original architecture with 21 concepts across 5 categories
@@ -48,7 +48,7 @@
 
 The same principle as the deploy kit: **the engine owns coordination mechanics, concepts own domain logic.** Interface generation is a domain — it has state (what interfaces have been generated, which versions, what broke), actions with meaningful variants (generate → ok | breakingChange | targetUnsupported), and coordination needs (syncs between parsing, projecting, generating, and emitting).
 
-The interface kit plugs into the existing compiler pipeline at `SchemaGen/generate → ok(manifest)` — the same integration point as TypeScriptGen and RustGen. **ConceptManifest is already the IR.** The interface kit does not re-parse concept specs. It reads ConceptManifests, enriches them with interface-specific annotations from a manifest file, and generates target-specific output through the coordination + provider pattern.
+The Clef Bind plugs into the existing compiler pipeline at `SchemaGen/generate → ok(manifest)` — the same integration point as TypeScriptGen and RustGen. **ConceptManifest is already the IR.** The Clef Bind does not re-parse concept specs. It reads ConceptManifests, enriches them with interface-specific annotations from a manifest file, and generates target-specific output through the coordination + provider pattern.
 
 ### Integration with Existing Pipeline
 
@@ -59,7 +59,7 @@ SpecParser/parse → SchemaGen/generate → ConceptManifest
                     │                        │
               TypeScriptGen/generate    RustGen/generate
                                              │
-                    ┌────────────────────────┤ (new — interface kit)
+                    ┌────────────────────────┤ (new — Clef Bind)
                     │                        │
               Projection/project    ──▶  Generator/generate
                                              │
@@ -87,11 +87,11 @@ SpecParser/parse → SchemaGen/generate → ConceptManifest
                     ClaudeSkillsTarget
 ```
 
-### Relationship to COIF
+### Relationship to Clef Surface
 
-COIF generates **visual** interfaces (forms, tables, dashboards) from concept specs. This kit generates **text-based, structured, composable** interfaces (APIs, CLIs, MCP servers, SDKs, spec documents) from the same specs. They share the same source of truth (ConceptManifest) and the same progressive customization principle:
+Clef Surface generates **visual** interfaces (forms, tables, dashboards) from concept specs. This suite generates **text-based, structured, composable** interfaces (APIs, CLIs, MCP servers, SDKs, spec documents) from the same specs. They share the same source of truth (ConceptManifest) and the same progressive customization principle:
 
-| Level | COIF (UI) | Interface Kit (Non-UI) |
+| Level | Clef Surface (UI) | Clef Bind (Non-UI) |
 |-------|-----------|----------------------|
 | Zero-config | Auto-generated CRUD forms | Auto-generated REST API + CLI |
 | Annotated | Field display hints, layout overrides | `@http`, `@graphql`, `@cli` annotations |
@@ -103,7 +103,7 @@ COIF generates **visual** interfaces (forms, tables, dashboards) from concept sp
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                         COPF Interface Kit                                    │
+│                         Clef Clef Bind                                    │
 │                                                                              │
 │  Orchestration Concepts:                                                     │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐               │
@@ -206,7 +206,7 @@ concept Projection [P] {
         Parse interface annotations. Merge with ConceptManifest.
         Compute resource mappings from state relations and action
         signatures. Bind traits to actions. Resolve cross-concept
-        type references within the kit. Enrichment data from
+        type references within the suite. Enrichment data from
         workflows, annotations, and target configs is serialized
         as opaque JSON into the content field.
       }
@@ -561,7 +561,7 @@ concept Spec [D] {
   purpose {
     Coordinate specification document generation. Owns the
     spec registry, versioning, and cross-concept composition
-    (a single OpenAPI document covers all concepts in a kit).
+    (a single OpenAPI document covers all concepts in a suite).
     Generator talks to Spec — never to format providers directly.
   }
 
@@ -580,7 +580,7 @@ concept Spec [D] {
     action emit(projections: list String, format: String, config: String) {
       -> ok(document: D, content: String) {
         Specification document generated covering all concepts
-        in the projections list. Single document per kit per format.
+        in the projections list. Single document per suite per format.
       }
       -> formatError(format: String, reason: String) {
         Provider-specific spec generation failure.
@@ -603,7 +603,7 @@ concept Spec [D] {
 
 ### 1.6 Emitter
 
-Manages file output. Content-addressed (same input → same output hash → skip write). Handles formatting, diffing, and directory structure. The interface kit analogue of Artifact in the deploy kit.
+Manages file output. Content-addressed (same input → same output hash → skip write). Handles formatting, diffing, and directory structure. The Clef Bind analogue of Artifact in the deploy kit.
 
 ```
 @version(1)
@@ -678,7 +678,7 @@ concept Emitter [E] {
 
 ### 1.7 Surface
 
-Composes multiple concepts' generated interfaces into a cohesive API surface. A kit with 5 concepts should produce one REST API with routes for all 5, one GraphQL schema merging all 5, one CLI with subcommands for all 5 — not 5 separate interfaces.
+Composes multiple concepts' generated interfaces into a cohesive API surface. A suite with 5 concepts should produce one REST API with routes for all 5, one GraphQL schema merging all 5, one CLI with subcommands for all 5 — not 5 separate interfaces.
 
 ```
 @version(1)
@@ -712,7 +712,7 @@ concept Surface [S] {
       -> ok(surface: S, entrypoint: String, conceptCount: Int) {
         Merge per-concept generated outputs into a unified surface.
         Create shared entrypoint (router, schema, command root, etc.).
-        Deduplicate shared types. Apply kit-level middleware.
+        Deduplicate shared types. Apply suite-level middleware.
       }
       -> conflictingRoutes(target: String, conflicts: list String) {
         Two concepts generate the same route/command/tool name.
@@ -812,7 +812,7 @@ concept Middleware [M] {
     action register(trait: String, target: String, implementation: String, position: String) {
       -> ok(middleware: M) {
         Register a new trait→target implementation.
-        Used by custom kits to extend middleware for their domains.
+        Used by custom suites to extend middleware for their domains.
       }
       -> duplicateRegistration(trait: String, target: String) {
         Implementation already registered. Use replace instead.
@@ -1033,7 +1033,7 @@ concepts:
         examples:
           - label: "Create a draft"
             language: bash
-            code: "copf article create --title 'My Post' --draft"
+            code: "clef article create --title 'My Post' --draft"
 ```
 
 
@@ -1321,7 +1321,7 @@ concepts:
           rule: Once assigned, article slugs never change
       validation-commands:
         - label: Verify article created
-          command: copf article list --limit 1
+          command: clef article list --limit 1
 ```
 
 #### Step-Interleaved Content
@@ -1336,10 +1336,10 @@ content-sections:
 
 validation-commands:
   - label: "Verify creation"
-    command: "copf article list"
+    command: "clef article list"
     afterStep: 1    # Rendered inline after step 1
   - label: "Verify full workflow"
-    command: "copf article get --slug my-article"
+    command: "clef article get --slug my-article"
     # No afterStep → rendered in global validation section
 ```
 
@@ -1963,7 +1963,7 @@ argument-hint: {argument template or per-action hints}
 allowed-tools: Read, Bash, Grep, Glob
 ---
 
-# Create a New COPF Concept
+# Create a New Clef Concept
 
 > **When to use:** {trigger description or intro-template with $ARGUMENTS interpolated}
 
@@ -1987,7 +1987,7 @@ Read [Concept Design Guide](references/concept-design.md) for context.
 
 *Verify creation:*
 ```bash
-copf article list --limit 1
+clef article list --limit 1
 \```
 
 #### Important Note
@@ -2014,7 +2014,7 @@ copf article list --limit 1
 
 | Feature | Annotation/Workflow Key | Behavior |
 |---------|----------------------|----------|
-| **Skill title** | `skill-title` (annotation) | Descriptive heading (e.g. "Create a New COPF Concept") instead of PascalCase concept name |
+| **Skill title** | `skill-title` (annotation) | Descriptive heading (e.g. "Create a New Clef Concept") instead of PascalCase concept name |
 | **Intro-template** | `intro-template` (annotation) | Customized introduction with `$ARGUMENTS` and `$CONCEPT` variable interpolation |
 | **Step references** | `step-references` (workflow) | Per-step inline reference links rendered as "Read [label](path) for context." |
 | **Checklist labels** | `checklist-labels` (workflow) | Named checklists per step (e.g. "Purpose checklist") instead of generic "Checklist" |
@@ -2064,7 +2064,7 @@ concept OpenApiTarget [O] {
 
   purpose {
     Generate OpenAPI 3.1 specification documents from concept
-    projections. Produces a single document per kit covering
+    projections. Produces a single document per suite covering
     all concepts. Includes paths, schemas, security schemes,
     and examples derived from concept invariants.
   }
@@ -2291,7 +2291,7 @@ sync ProjectOnManifest [eager] {
       => ok[ manifest: ?manifest ]
   }
   where {
-    # Only if interface generation is configured for this kit
+    # Only if interface generation is configured for this suite
     Generator: { ?plan config.targets: ?targets }
     filter(length(?targets) > 0)
   }
@@ -2659,7 +2659,7 @@ sync FormatOnWrite [eager] {
 ### 3.10 Surface Composition
 
 ```
-# All targets for a kit complete → compose surface
+# All targets for a suite complete → compose surface
 sync ComposeOnComplete [eager] {
   when {
     Generator/generate: [ plan: ?plan ]
@@ -2699,7 +2699,7 @@ sync CleanOrphans [eventual] {
 
 ## Part 4: Interface Manifest
 
-The interface manifest (`app.interface.yaml`) declares generation targets and concept-level annotations. It's the interface kit analogue of `app.deploy.yaml`.
+The interface manifest (`app.interface.yaml`) declares generation targets and concept-level annotations. It's the Clef Bind analogue of `app.deploy.yaml`.
 
 ```yaml
 # app.interface.yaml
@@ -2798,7 +2798,7 @@ concepts:
         examples:
           - label: "Create a simple todo"
             language: bash
-            code: "copf todo add 'Buy groceries'"
+            code: "clef todo add 'Buy groceries'"
 
     workflows:
       steps:
@@ -2881,7 +2881,7 @@ concepts:
 
 ### Progressive Customization
 
-The manifest supports three levels, matching COIF's ladder:
+The manifest supports three levels, matching Clef Surface's ladder:
 
 **Level 0 — Zero-config:** Omit the `concepts:` section entirely. All mappings are inferred from action names and types using the rules in §1.1.
 
@@ -2894,12 +2894,12 @@ The manifest supports three levels, matching COIF's ladder:
 ## Part 5: Kit Packaging
 
 ```yaml
-# kit.yaml for the interface kit
+# suite.yaml for the Clef Bind
 kit:
   name: interface
   version: 0.1.0
   description: >
-    Multi-target interface generation for COPF applications.
+    Multi-target interface generation for Clef applications.
     Generates REST APIs, GraphQL schemas, gRPC services, CLIs,
     MCP servers, SDKs, and specification documents from concept
     specs and an interface manifest.
@@ -3118,43 +3118,43 @@ syncs:
 
 ```bash
 # ─── Generation ──────────────────────────────────────
-copf interface generate                          # all configured targets
-copf interface generate --target rest            # single target
-copf interface generate --target rest,cli,mcp    # multiple targets
-copf interface generate --sdk typescript         # single SDK language
-copf interface generate --breaking               # allow breaking changes
-copf interface generate --dry-run                # show what would be generated
+clef interface generate                          # all configured targets
+clef interface generate --target rest            # single target
+clef interface generate --target rest,cli,mcp    # multiple targets
+clef interface generate --sdk typescript         # single SDK language
+clef interface generate --breaking               # allow breaking changes
+clef interface generate --dry-run                # show what would be generated
 
 # ─── Inspection ──────────────────────────────────────
-copf interface plan                              # show generation plan
-copf interface diff                              # diff against previous run
-copf interface diff --target rest                # diff specific target
-copf interface breaking                          # list breaking changes only
+clef interface plan                              # show generation plan
+clef interface diff                              # diff against previous run
+clef interface diff --target rest                # diff specific target
+clef interface breaking                          # list breaking changes only
 
 # ─── Projection ──────────────────────────────────────
-copf interface project                           # project all concepts
-copf interface project --concept Todo            # project single concept
-copf interface project --show-inference          # show inferred mappings
-copf interface project --show-traits             # show trait bindings
+clef interface project                           # project all concepts
+clef interface project --concept Todo            # project single concept
+clef interface project --show-inference          # show inferred mappings
+clef interface project --show-traits             # show trait bindings
 
 # ─── Surface ─────────────────────────────────────────
-copf interface surface --target rest             # show composed REST surface
-copf interface surface --target cli              # show CLI command tree
-copf interface surface --target mcp              # show MCP tool listing
+clef interface surface --target rest             # show composed REST surface
+clef interface surface --target cli              # show CLI command tree
+clef interface surface --target mcp              # show MCP tool listing
 
 # ─── Validation ──────────────────────────────────────
-copf interface validate                          # validate manifest + projections
-copf interface lint --target openapi             # lint generated spec
+clef interface validate                          # validate manifest + projections
+clef interface lint --target openapi             # lint generated spec
 
 # ─── SDK Publishing ──────────────────────────────────
-copf interface publish --sdk typescript          # publish to npm
-copf interface publish --sdk python              # publish to PyPI
-copf interface publish --all                     # publish all configured SDKs
+clef interface publish --sdk typescript          # publish to npm
+clef interface publish --sdk python              # publish to PyPI
+clef interface publish --all                     # publish all configured SDKs
 
 # ─── Emitter ─────────────────────────────────────────
-copf interface files                             # list generated files
-copf interface files --target rest               # list REST files only
-copf interface clean                             # remove orphaned files
+clef interface files                             # list generated files
+clef interface files --target rest               # list REST files only
+clef interface clean                             # remove orphaned files
 ```
 
 ---
@@ -3178,7 +3178,7 @@ cat app.interface.yaml
 #   openapi: true
 
 # One command to generate everything:
-copf interface generate
+clef interface generate
 
 # Output:
 # Interface Generation Plan
@@ -3249,27 +3249,27 @@ copf interface generate
 
 ### Integration with deploy kit
 
-The interface kit and deploy kit compose naturally:
+The Clef Bind and deploy kit compose naturally:
 
 ```yaml
 # app.deploy.yaml references generated interfaces
 runtimes:
   api:
     type: ecs-fargate
-    entrypoint: ./generated/rest/router.ts    # from interface kit
+    entrypoint: ./generated/rest/router.ts    # from Clef Bind
   mcp:
     type: aws-lambda
-    entrypoint: ./generated/mcp/server.ts     # from interface kit
+    entrypoint: ./generated/mcp/server.ts     # from Clef Bind
 
 # Claude Skills are deployed to .claude/skills/ (local, not remote)
-# copf interface generate --target claude-skills copies to .claude/skills/
+# clef interface generate --target claude-skills copies to .claude/skills/
 ```
 
-The deploy kit deploys what the interface kit generates. The interface kit generates what concept specs declare. Concept specs are the single source of truth.
+The deploy kit deploys what the Clef Bind generates. The Clef Bind generates what concept specs declare. Concept specs are the single source of truth.
 
 ### Parity Testing
 
-The interface kit includes comprehensive parity tests ensuring generated output matches the quality and structure of handmade equivalents:
+The Clef Bind includes comprehensive parity tests ensuring generated output matches the quality and structure of handmade equivalents:
 
 | Test Suite | Tests | Coverage |
 |-----------|-------|---------|
@@ -3290,7 +3290,7 @@ These tests guard against convention drift — if a handmade skill is updated, t
 SchemaGen produces ConceptManifest — the language-neutral IR for code generation (types, handlers, tests). Projection enriches this with interface-specific metadata (HTTP mappings, CLI argument rules, trait bindings). Keeping them separate means:
 
 1. ConceptManifest stays pure — no interface concerns leak into the core IR
-2. The same ConceptManifest feeds TypeScriptGen, RustGen, AND the interface kit
+2. The same ConceptManifest feeds TypeScriptGen, RustGen, AND the Clef Bind
 3. Interface annotations can change without re-running SchemaGen
 4. Multiple interface manifests can project the same concepts differently (e.g. internal API vs public API)
 
@@ -3309,12 +3309,12 @@ Different state, different lifecycle, different consumers. They pass the concept
 Traits on Projection declare _intent_ (`@auth(bearer)`). Middleware owns the _implementation_ mapping from intent to per-target code. This separation means:
 
 1. Adding a new target only requires registering middleware implementations — not changing trait definitions
-2. Custom kits can register domain-specific middleware without modifying the interface kit
+2. Custom suites can register domain-specific middleware without modifying the Clef Bind
 3. Middleware composition ordering is a real domain concern with its own state and conflict rules
 
 ### Why Surface exists
 
-Without Surface, generating a kit with 5 concepts produces 5 independent REST APIs, 5 separate CLI binaries, 5 MCP servers. Surface composes them into cohesive interfaces — one API, one CLI, one MCP server. This is the interface kit analogue of COIF's Composition kit (Dashboard, Workflow, App).
+Without Surface, generating a suite with 5 concepts produces 5 independent REST APIs, 5 separate CLI binaries, 5 MCP servers. Surface composes them into cohesive interfaces — one API, one CLI, one MCP server. This is the Clef Bind analogue of Clef Surface's Composition kit (Dashboard, Workflow, App).
 
 ### Why Annotation, Workflow, and Renderer are separate concepts
 
@@ -3345,13 +3345,13 @@ The trade-off is weaker static guarantees — enrichment keys are strings, not t
 
 ### Why `@hierarchical` is a trait, not a Tree concept
 
-The parent/children/depth pattern appears in at least 6 concepts across the COPF codebase (CliTarget, Outline, Namespace, Taxonomy, COIF Element, COIF Navigator). A general `Tree [T]` concept was considered — it would own reparent, getSubtree, cycle detection, and tree traversal as a reusable concept that domain concepts sync with.
+The parent/children/depth pattern appears in at least 6 concepts across the Clef codebase (CliTarget, Outline, Namespace, Taxonomy, Clef Surface Element, Clef Surface Navigator). A general `Tree [T]` concept was considered — it would own reparent, getSubtree, cycle detection, and tree traversal as a reusable concept that domain concepts sync with.
 
 The trait approach was chosen instead because:
 
 1. **No shared state.** The tree structure _is_ the domain concept's state — a Category's parent-child relation is Category state, not Tree state. A Tree concept would either duplicate state or own state that belongs to Category. This violates concept independence.
 2. **No shared actions.** "Reparent" means different things in different domains. Moving a CLI command is a generation-time restructuring. Moving an Outline node is a user action. Moving a Category is a domain operation with business rules. A generic `reparent` action would need domain-specific variants, defeating the purpose of generalization.
-3. **The interface kit only needs the _shape_, not the _behavior_.** When Projection sees `@hierarchical(relation: parentOf)`, it reads the concept's state relation to derive nesting structure. It doesn't need tree traversal or cycle detection — those are implementation concerns handled by the concept's own handler.
+3. **The Clef Bind only needs the _shape_, not the _behavior_.** When Projection sees `@hierarchical(relation: parentOf)`, it reads the concept's state relation to derive nesting structure. It doesn't need tree traversal or cycle detection — those are implementation concerns handled by the concept's own handler.
 4. **The trait composes with other traits.** `@hierarchical` + `@paginated` produces paginated children endpoints. `@hierarchical` + `@cached` produces cached subtree queries. A Tree concept would need explicit syncs to coordinate with each of these.
 
 The trade-off is that concepts with hierarchical state must each implement their own tree operations (cycle detection, subtree queries, etc.). This is acceptable because those operations have domain-specific semantics — and existing concepts (Outline, Namespace, Taxonomy) already implement them independently.

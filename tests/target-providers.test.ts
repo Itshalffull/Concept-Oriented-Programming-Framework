@@ -15,7 +15,7 @@ import type { ConceptManifest } from '../kernel/src/types.js';
 // --- Test Fixtures ---
 
 const ECHO_MANIFEST: ConceptManifest = {
-  uri: 'urn:copf/Echo',
+  uri: 'urn:clef/Echo',
   name: 'Echo',
   purpose: 'Echo messages back for health checking.',
   actions: [
@@ -32,7 +32,7 @@ const ECHO_MANIFEST: ConceptManifest = {
 };
 
 const SPEC_PARSER_MANIFEST: ConceptManifest = {
-  uri: 'urn:copf/SpecParser',
+  uri: 'urn:clef/SpecParser',
   name: 'SpecParser',
   purpose: 'Parse .concept specification files into ConceptAST.',
   category: 'devtools',
@@ -54,8 +54,8 @@ const SPEC_PARSER_MANIFEST: ConceptManifest = {
 
 // Manifest YAML with workflow + annotation data for SpecParser
 const DEVTOOLS_MANIFEST_YAML = {
-  interface: { name: 'copf-devtools', version: '0.1.0' },
-  targets: { 'claude-skills': { name: 'copf-devtools', grouping: 'per-concept' } },
+  interface: { name: 'clef-devtools', version: '0.1.0' },
+  targets: { 'claude-skills': { name: 'clef-devtools', grouping: 'per-concept' } },
   workflows: {
     'concept-validator': {
       concept: 'SpecParser',
@@ -94,7 +94,7 @@ const DEVTOOLS_MANIFEST_YAML = {
       concept: {
         'tool-permissions': ['Read', 'Grep', 'Glob', 'Edit', 'Write', 'Bash'],
         'argument-template': '$ARGUMENTS',
-        'skill-title': 'Validate COPF Concept Specs',
+        'skill-title': 'Validate Clef Concept Specs',
       },
       parse: {
         examples: [
@@ -355,7 +355,7 @@ describe('Claude Skills Target — Workflow Rendering', () => {
       .find(f => f.path.endsWith('SKILL.md'))!;
 
     // Uses skill-title from annotations instead of PascalCase concept name
-    expect(skillMd.content).toContain('# Validate COPF Concept Specs');
+    expect(skillMd.content).toContain('# Validate Clef Concept Specs');
   });
 
   it('renders per-step inline references', async () => {

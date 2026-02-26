@@ -1,30 +1,30 @@
-# kits/coif-integration/kit.yaml
+# kits/surface-integration/suite.yaml
 suite:
-  name: coif-integration
+  name: surface-integration
   version: 0.4.0
   description: >
-    Syncs that bridge COPF Concept Library domain concepts to COIF
-    interface concepts. Requires both COIF kits and the relevant
-    library kits to be active. No new concepts — this kit is
+    Syncs that bridge Clef Concept Library domain concepts to Clef Surface
+    interface concepts. Requires both Clef Surface suites and the relevant
+    library suites to be active. No new concepts — this suite is
     syncs-only.
 
 uses:
-  "@copf/classification":
+  "@clef/classification":
     concepts: [Schema]
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentParser, Intent]
-  "@copf/presentation":
+  "@clef/presentation":
     concepts: [View, Renderer]
-  "@copf/infrastructure":
+  "@clef/infrastructure":
     concepts: [EventBus, Validator]
-  "@copf/automation":
+  "@clef/automation":
     concepts: [Workflow, Control]
-  "@copf/layout":
+  "@clef/layout":
     concepts: [Component]
-  "@copf/notification":
+  "@clef/notification":
     concepts: [Notification]
 
-concepts: []  # No new concepts — this kit is syncs-only
+concepts: []  # No new concepts — this suite is syncs-only
 
 syncs:
   required:
@@ -57,7 +57,7 @@ syncs:
     - path: ./syncs/view-drives-layout.sync
       name: ViewDrivesLayout
       description: >
-        Map View layout type to COIF spatial arrangement.
+        Map View layout type to Clef Surface spatial arrangement.
 
     - path: ./syncs/view-fields-drive-uischema.sync
       name: ViewFieldsDriveUISchema
@@ -67,7 +67,7 @@ syncs:
     - path: ./syncs/view-embed-creates-surface.sync
       name: ViewEmbedCreatesInlineSurface
       description: >
-        Embed a View inside a ContentNode as an inline COIF surface.
+        Embed a View inside a ContentNode as an inline Clef Surface surface.
 
     - path: ./syncs/form-validates-via-validator.sync
       name: FormValidatesViaValidator
@@ -107,10 +107,10 @@ syncs:
     - path: ./syncs/layout-component-via-widget.sync
       name: LayoutComponentRendersViaWidget
       description: >
-        Render layout components through COIF widget state machines.
+        Render layout components through Clef Surface widget state machines.
 
 dependencies:
-  - coif-core: ">=0.2.0"
-  - coif-component: ">=0.2.0"
-  - coif-render: ">=0.2.0"
-  - coif-theme: ">=0.2.0"
+  - surface-core: ">=0.2.0"
+  - surface-component: ">=0.2.0"
+  - surface-render: ">=0.2.0"
+  - surface-theme: ">=0.2.0"

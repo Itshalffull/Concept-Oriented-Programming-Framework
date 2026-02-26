@@ -1,5 +1,5 @@
 # ============================================================
-# Adapter Pipeline — coif-render framework adapter syncs
+# Adapter Pipeline — surface-render framework adapter syncs
 #
 # Multi-framework adapter pipeline: both Machine/connect and
 # Renderer/render produce framework-neutral props, and
@@ -8,7 +8,7 @@
 #
 # Adding a new framework adapter requires only a new adapter
 # concept + two sync rules in THIS file — no other code changes.
-# This is the single file to edit, matching how COPF's
+# This is the single file to edit, matching how Clef's
 # compiler-pipeline.sync is the single file for adding
 # language targets.
 #
@@ -32,7 +32,7 @@
 # ── Desktop ──
 #   → WinUIAdapter, AppKitAdapter, GTKAdapter
 #
-# Compare: syncs/framework/compiler-pipeline.sync in COPF
+# Compare: syncs/framework/compiler-pipeline.sync in Clef
 # ============================================================
 
 

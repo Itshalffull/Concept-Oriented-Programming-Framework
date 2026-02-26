@@ -1,7 +1,7 @@
 // generated: Comment/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class CommentConformanceTests: XCTestCase {
 

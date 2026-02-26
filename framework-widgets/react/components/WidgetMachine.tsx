@@ -1,5 +1,5 @@
 // ============================================================
-// WidgetMachine — Takes a WidgetSpec, spawns a headless COIF
+// WidgetMachine — Takes a WidgetSpec, spawns a headless Clef Surface
 // state machine, calls connect() to obtain anatomy part props,
 // and renders each part.
 //
@@ -26,7 +26,7 @@ import type {
   ConnectedProps,
   Signal,
 } from '../../shared/types.js';
-import { createMachine } from '../../shared/coif-bridge.js';
+import { createMachine } from '../../shared/surface-bridge.js';
 
 // --------------- Types ---------------
 
@@ -62,7 +62,7 @@ export interface WidgetRenderAPI {
 // --------------- Props ---------------
 
 export interface WidgetMachineProps {
-  /** The COIF widget specification (state machine + anatomy). */
+  /** The Clef Surface widget specification (state machine + anatomy). */
   spec: WidgetSpec;
   /** Optional initial context merged into the machine. */
   initialContext?: Record<string, unknown>;
@@ -226,7 +226,7 @@ export const WidgetMachine: React.FC<WidgetMachineProps> = ({
       <div
         className={className}
         style={style}
-        data-coif-widget=""
+        data-surface-widget=""
         data-widget-name={spec.name}
         data-widget-state={machineState.current}
       >

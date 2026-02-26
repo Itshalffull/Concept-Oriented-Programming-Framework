@@ -2,9 +2,9 @@
 concept Binding [B, C] {
 
   purpose {
-    Bridge between COPF backend concepts and COIF frontend
+    Bridge between Clef backend concepts and Clef Surface frontend
     signals. In coupled mode, subscribes to concept state changes
-    via COPF's action completion stream and pushes updates to
+    via Clef's action completion stream and pushes updates to
     signals. Routes user-triggered actions back as invocations.
     In standalone mode, wraps a data source (REST, GraphQL,
     static) and presents it through the same signal interface.
@@ -26,7 +26,7 @@ concept Binding [B, C] {
   actions {
     action bind(binding: B, concept: C, mode: String) {
       -> ok(binding: B) {
-        Create a binding. Mode: "coupled" (direct COPF engine),
+        Create a binding. Mode: "coupled" (direct Clef engine),
         "rest" (REST API), "graphql" (subscription),
         "static" (in-memory). Generates signal map: one signal
         per state field, one command per action.

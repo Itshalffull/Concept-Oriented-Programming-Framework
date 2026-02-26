@@ -5,7 +5,7 @@
 // projections. Each concept produces a .command.ts file with
 // subcommands for every action, and a command tree structure
 // with help text, examples, and argument mappings.
-// Architecture doc: Interface Kit, Section 2.4
+// Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';
@@ -204,16 +204,16 @@ function buildSubcommand(
   return lines.join('\n');
 }
 
-// --- Generation Kit Subcommands ---
+// --- Generation Suite Subcommands ---
 
 /**
  * When a concept is declared as a generator in the manifest's
  * generation.generators section, emit extra subcommands that
- * integrate with the Clef generation kit:
+ * integrate with the Clef generation suite:
  *   --plan, --force, --audit, --status, --summary, --history, --clean
  *
  * These use the same pattern as the handwritten CLI but dispatch
- * through the kernel's generation kit concepts (GenerationPlan,
+ * through the kernel's generation suite concepts (GenerationPlan,
  * BuildCache, Emitter, KindSystem).
  */
 // --- Generate Command File ---
@@ -298,7 +298,7 @@ function generateCliHelpMd(
   const kebab = toKebabCase(conceptName);
 
   lines.push(generateMarkdownFileHeader('cli', conceptName));
-  lines.push(`# copf ${kebab} — Help`);
+  lines.push(`# clef ${kebab} — Help`);
   lines.push('');
 
   // Intro line with CLI variable vocabulary

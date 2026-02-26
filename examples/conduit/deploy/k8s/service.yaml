@@ -1,13 +1,13 @@
-# Conduit COPF App — Kubernetes Service
+# Conduit Clef App — Kubernetes Service
 # Exposes the conduit app on port 3000 within the cluster.
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: conduit-copf
+  name: conduit-clef
   namespace: conduit
   labels:
-    app: conduit-copf
+    app: conduit-clef
 spec:
   type: ClusterIP
   ports:
@@ -16,4 +16,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: conduit-copf
+    app: conduit-clef

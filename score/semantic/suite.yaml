@@ -2,7 +2,7 @@ suite:
   name: semantic
   version: 0.3.0
   description: >
-    Semantic entities for COPF and COIF — concepts, actions, variants,
+    Semantic entities for Clef and Clef Surface — concepts, actions, variants,
     syncs, state fields, widgets, anatomy parts, widget states, widget
     props, themes, interactors, runtime flows, runtime coverage,
     performance profiles, and error correlations as first-class
@@ -10,7 +10,7 @@ suite:
     to generated artifacts, runtime behavior, and cross-system data flow.
 
 concepts:
-  # COPF semantic entities
+  # Clef semantic entities
   ConceptEntity:
     spec: ./concept-entity.concept
     params:
@@ -36,7 +36,7 @@ concepts:
     params:
       Y: { as: sync-entity-id, description: "Sync entity identifier" }
 
-  # COIF semantic entities
+  # Clef Surface semantic entities
   WidgetEntity:
     spec: ./widget-entity.concept
     params:
@@ -90,7 +90,7 @@ concepts:
 
 syncs:
   required:
-    # COPF syncs
+    # Clef syncs
     - path: ./syncs/spec-semantic.sync
       name: SpecSemanticSync
       description: >
@@ -109,7 +109,7 @@ syncs:
         Record provenance when code generators produce output,
         linking specs to generated artifacts.
 
-    # COIF syncs
+    # Clef Surface syncs
     - path: ./syncs/widget-semantic.sync
       name: WidgetSemanticSync
       description: >
@@ -134,7 +134,7 @@ syncs:
         linking theme specs to generated CSS/tokens.
 
   recommended:
-    # COPF syncs
+    # Clef syncs
     - path: ./syncs/flow-graph.sync
       name: FlowGraphSync
       description: >
@@ -144,7 +144,7 @@ syncs:
     - path: ./syncs/type-binding-resolution.sync
       name: TypeBindingResolutionSync
       description: >
-        Resolve type parameter mappings from kit.yaml via FieldMapping.
+        Resolve type parameter mappings from suite.yaml via FieldMapping.
 
     - path: ./syncs/invariant-validation.sync
       name: InvariantValidationSync
@@ -156,7 +156,7 @@ syncs:
       description: >
         Find variants no sync pattern-matches on.
 
-    # COIF cross-system syncs
+    # Clef Surface cross-system syncs
     - path: ./syncs/field-to-interactor.sync
       name: FieldToInteractorSync
       description: >
@@ -177,7 +177,7 @@ syncs:
         concept state fields or actions.
 
   integration:
-    # COPF runtime correlation syncs
+    # Clef runtime correlation syncs
     - path: ./syncs/action-log-correlation.sync
       name: ActionLogCorrelationSync
       description: >
@@ -218,7 +218,7 @@ syncs:
         Detect sync failures where expected patterns don't match
         actual action completions.
 
-    # COIF runtime correlation syncs
+    # Clef Surface runtime correlation syncs
     - path: ./syncs/machine-state-correlation.sync
       name: MachineStateCorrelationSync
       description: >
@@ -285,30 +285,30 @@ syncs:
         flushes, computing timing statistics and breakdowns.
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
       - name: SymbolRelationship
-  - kit: data-integration
+  - suite: data-integration
     concepts:
       - name: Transform
       - name: Enricher
       - name: FieldMapping
       - name: DataQuality
       - name: Provenance
-  - kit: data-organization
+  - suite: data-organization
     concepts:
       - name: Graph
-  - kit: generation
+  - suite: generation
     concepts:
       - name: GenerationPlan
       - name: Emitter
-  - kit: coif-app
+  - suite: surface-app
     concepts:
       - name: Widget
       - name: Machine
@@ -322,7 +322,7 @@ uses:
       - name: Signal
       - name: Host
       - name: Slot
-  - kit: runtime
+  - suite: runtime
     concepts:
       - name: ActionLog
       - name: FlowTrace

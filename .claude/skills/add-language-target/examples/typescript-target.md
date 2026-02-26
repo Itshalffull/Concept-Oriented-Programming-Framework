@@ -127,7 +127,7 @@ function generateTypesFile(manifest: ConceptManifest): string {
 
 ```typescript
 // generated: password.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./password.types";
 
 export interface PasswordHandler {
@@ -152,9 +152,9 @@ export interface PasswordHandler {
 import type {
   ActionInvocation, ActionCompletion,
   ConceptTransport, ConceptQuery
-} from "@copf/runtime";
+} from "@clef/runtime";
 import type { PasswordHandler } from "./password.handler";
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 
 export function createPasswordLiteAdapter(
   handler: PasswordHandler,
@@ -200,7 +200,7 @@ export function createPasswordLiteAdapter(
 ```typescript
 // generated: password.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { passwordHandler } from "./password.impl";
 
 describe("Password conformance", () => {

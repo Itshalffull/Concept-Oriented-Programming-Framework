@@ -1,6 +1,6 @@
-# Template: Kit Manifest
+# Template: Suite Manifest
 
-Copy the appropriate template for `kit.yaml` and replace all `TODO` markers.
+Copy the appropriate template for `suite.yaml` and replace all `TODO` markers.
 
 ## Prerequisites
 
@@ -9,16 +9,16 @@ Copy the appropriate template for `kit.yaml` and replace all `TODO` markers.
 - Type parameter alignment is mapped
 - Kit type determined (framework vs. domain)
 
-## Framework Kit Template
+## Framework Suite Template
 
-Use this template for kits that contain only concepts and syncs — no custom transports, storage, or deploy templates.
+Use this template for suites that contain only concepts and syncs — no custom transports, storage, or deploy templates.
 
 ```yaml
 kit:
   name: TODO-kit-name
   version: 0.1.0
   description: >
-    TODO: 1-3 sentence description of what this kit provides.
+    TODO: 1-3 sentence description of what this suite provides.
     What domain does it cover? What value does bundling these
     concepts together deliver?
 
@@ -50,7 +50,7 @@ syncs:
         TODO: Describe what this sync does and how apps might customize it.
         What would an app replace this with?
 
-# External concepts from other kits that this kit's syncs reference.
+# External concepts from other suites that this suite's syncs reference.
 # Required by default; set optional: true for conditional syncs.
 # uses:
 #   - kit: TODO-other-kit
@@ -70,16 +70,16 @@ syncs:
 dependencies: []
 ```
 
-## Domain Kit Template
+## Domain Suite Template
 
-Use this template for kits that introduce a new deployment target and bundle infrastructure (transport adapters, storage backends, deploy templates) alongside concepts.
+Use this template for suites that introduce a new deployment target and bundle infrastructure (transport adapters, storage backends, deploy templates) alongside concepts.
 
 ```yaml
 kit:
   name: TODO-kit-name
   version: 0.1.0
   description: >
-    TODO: 1-3 sentence description of what this kit provides.
+    TODO: 1-3 sentence description of what this suite provides.
     What deployment target does it introduce? What infrastructure
     does it bundle?
 
@@ -107,7 +107,7 @@ syncs:
       description: >
         TODO: Describe what this sync does and how apps might customize it.
 
-# Optional: syncs that activate when another kit is present
+# Optional: syncs that activate when another suite is present
 # integrations:
 #   - kit: TODO-other-kit
 #     syncs:
@@ -115,7 +115,7 @@ syncs:
 #         description: >
 #           TODO: What this integration provides.
 
-# Domain kit infrastructure — pre-conceptual code
+# Domain suite infrastructure — pre-conceptual code
 infrastructure:
   transports:
     - name: TODO-transport-name
@@ -124,7 +124,7 @@ infrastructure:
         TODO: What protocol this transport speaks, what it maps
         invoke() and query() to.
 
-  # Optional: only if the kit needs custom storage
+  # Optional: only if the suite needs custom storage
   # storage:
   #   - name: TODO-storage-name
   #     path: ./storage/TODO-storage.ts
@@ -166,20 +166,20 @@ dependencies: []
 
 ## After Customization
 
-### Framework Kit
+### Framework Suite
 
 1. Scaffold the directory:
    ```bash
-   npx tsx cli/src/index.ts kit init <kit-name>
+   npx tsx cli/src/index.ts suite init <kit-name>
    ```
-   Then replace the generated `kit.yaml` with your filled template.
+   Then replace the generated `suite.yaml` with your filled template.
 
 2. Write each concept spec (use `create-concept` skill):
    ```bash
-   # For each concept in the kit
+   # For each concept in the suite
    /create-concept <ConceptName> --domain app
    ```
-   Place concept files directly in the kit directory (not in `specs/app/`).
+   Place concept files directly in the suite directory (not in `specs/app/`).
 
 3. Write syncs under `kits/<kit-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
 
@@ -187,15 +187,15 @@ dependencies: []
 
 5. Validate:
    ```bash
-   npx tsx cli/src/index.ts kit validate kits/<kit-name>
-   npx tsx cli/src/index.ts kit test kits/<kit-name>
+   npx tsx cli/src/index.ts suite validate kits/<kit-name>
+   npx tsx cli/src/index.ts suite test kits/<kit-name>
    ```
 
-### Domain Kit
+### Domain Suite
 
 1. Scaffold the directory:
    ```bash
-   npx tsx cli/src/index.ts kit init <kit-name>
+   npx tsx cli/src/index.ts suite init <kit-name>
    mkdir -p kits/<kit-name>/infrastructure/{transports,storage,deploy-templates}
    ```
 
@@ -222,8 +222,8 @@ dependencies: []
 
 8. Validate:
    ```bash
-   npx tsx cli/src/index.ts kit validate kits/<kit-name>
-   npx tsx cli/src/index.ts kit test kits/<kit-name>
+   npx tsx cli/src/index.ts suite validate kits/<kit-name>
+   npx tsx cli/src/index.ts suite test kits/<kit-name>
    # For gate concepts:
    npx tsx cli/src/index.ts check --pattern async-gate kits/<kit-name>/<gate>.concept
    ```

@@ -3,7 +3,7 @@ concept SvelteAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into Svelte 5-specific bindings.
-    Transforms COIF's generic event model into Svelte conventions:
+    Transforms Clef Surface's generic event model into Svelte conventions:
     on:event directive handlers, bind: two-way bindings, rune-based
     reactivity ($state, $derived). Maps class using Svelte's
     class: directive shorthand.

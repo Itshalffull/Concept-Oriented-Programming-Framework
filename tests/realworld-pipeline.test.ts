@@ -185,7 +185,7 @@ describe('RealWorld Sync Parsing', () => {
     expect(loginCheck.where.length).toBeGreaterThan(0);
     expect(loginCheck.where[0].type).toBe('query');
     const loginWhere = loginCheck.where[0] as { type: 'query'; concept: string };
-    expect(loginWhere.concept).toBe('urn:copf/User');
+    expect(loginWhere.concept).toBe('urn:clef/User');
   });
 
   it('articles.sync includes CascadeDeleteComments', () => {
@@ -198,7 +198,7 @@ describe('RealWorld Sync Parsing', () => {
     const cascade = syncs.find(s => s.name === 'CascadeDeleteComments')!;
     expect(cascade.where.length).toBeGreaterThan(0);
     const cascadeWhere = cascade.where[0] as { type: 'query'; concept: string };
-    expect(cascadeWhere.concept).toBe('urn:copf/Comment');
+    expect(cascadeWhere.concept).toBe('urn:clef/Comment');
   });
 
   it('social.sync covers follow and favorite flows', () => {

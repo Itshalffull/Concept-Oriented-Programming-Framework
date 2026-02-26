@@ -4,13 +4,13 @@
 // Validates the end-to-end source traceability pipeline:
 //   write with sources → trace → affected → audit
 //
-// See copf-generation-kit.md Part 5 (Emitter Traceability).
+// See clef-generation-suite.md Part 5 (Emitter Traceability).
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('Source traceability integration', () => {
   let storage: ConceptStorage;

@@ -438,7 +438,7 @@ function getRequiredLiterals(pattern: WhenPattern): string | null {
 
 /**
  * Format a concept URI to a short name.
- * "urn:copf/User" → "User"
+ * "urn:clef/User" → "User"
  * "urn:test/Echo" → "Echo"
  */
 function formatConceptName(uri: string): string {

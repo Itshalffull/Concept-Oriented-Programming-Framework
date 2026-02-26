@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ConfigSync
 /// @notice Concept-oriented configuration management with layered overrides
-/// @dev Implements the ConfigSync concept from COPF specification.
+/// @dev Implements the ConfigSync concept from Clef specification.
 ///      Supports setting base configuration values and layer-specific overrides.
 
 contract ConfigSync {

@@ -1,14 +1,14 @@
 // ============================================================
-// COIF Ink Widget — MotionBox
+// Clef Surface Ink Widget — MotionBox
 //
-// Terminal spinner/progress component that maps COIF motion
+// Terminal spinner/progress component that maps Clef Surface motion
 // concepts to terminal animation. Since terminals cannot render
 // CSS transitions, this provides:
 //
 //   - Spinner animation using frame-based character cycling
 //   - Progress bar with filled/empty block characters
 //   - Static rendering when reduced motion is preferred
-//   - Respects COIF MotionTransition/MotionDuration/MotionEasing
+//   - Respects Clef Surface MotionTransition/MotionDuration/MotionEasing
 // ============================================================
 
 import type {
@@ -97,9 +97,9 @@ export interface MotionBoxProps {
   color?: string;
   /** Color of the progress track (hex). */
   trackColor?: string;
-  /** COIF motion transition reference. */
+  /** Clef Surface motion transition reference. */
   transition?: MotionTransition;
-  /** COIF motion duration reference. */
+  /** Clef Surface motion duration reference. */
   duration?: MotionDuration;
   /** Whether to show percentage text for progress. */
   showPercentage?: boolean;

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/EcsRuntime",
+  "uri": "urn:clef/EcsRuntime",
   "name": "EcsRuntime",
   "typeParams": [
     {
@@ -530,11 +530,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/EcsRuntime/provision/invocation",
+        "$id": "urn:clef/EcsRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EcsRuntime"
+            "const": "urn:clef/EcsRuntime"
           },
           "action": {
             "const": "provision"
@@ -565,11 +565,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/EcsRuntime/deploy/invocation",
+        "$id": "urn:clef/EcsRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EcsRuntime"
+            "const": "urn:clef/EcsRuntime"
           },
           "action": {
             "const": "deploy"
@@ -592,11 +592,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/EcsRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/EcsRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EcsRuntime"
+            "const": "urn:clef/EcsRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -619,11 +619,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/EcsRuntime/rollback/invocation",
+        "$id": "urn:clef/EcsRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EcsRuntime"
+            "const": "urn:clef/EcsRuntime"
           },
           "action": {
             "const": "rollback"
@@ -646,11 +646,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/EcsRuntime/destroy/invocation",
+        "$id": "urn:clef/EcsRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/EcsRuntime"
+            "const": "urn:clef/EcsRuntime"
           },
           "action": {
             "const": "destroy"
@@ -672,11 +672,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/EcsRuntime/provision/completion/ok",
+          "$id": "urn:clef/EcsRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "provision"
@@ -706,11 +706,11 @@
           }
         },
         "capacityUnavailable": {
-          "$id": "urn:copf/EcsRuntime/provision/completion/capacityUnavailable",
+          "$id": "urn:clef/EcsRuntime/provision/completion/capacityUnavailable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "provision"
@@ -736,11 +736,11 @@
           }
         },
         "clusterNotFound": {
-          "$id": "urn:copf/EcsRuntime/provision/completion/clusterNotFound",
+          "$id": "urn:clef/EcsRuntime/provision/completion/clusterNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "provision"
@@ -764,11 +764,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/EcsRuntime/deploy/completion/ok",
+          "$id": "urn:clef/EcsRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "deploy"
@@ -794,11 +794,11 @@
           }
         },
         "imageNotFound": {
-          "$id": "urn:copf/EcsRuntime/deploy/completion/imageNotFound",
+          "$id": "urn:clef/EcsRuntime/deploy/completion/imageNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "deploy"
@@ -820,11 +820,11 @@
           }
         },
         "healthCheckFailed": {
-          "$id": "urn:copf/EcsRuntime/deploy/completion/healthCheckFailed",
+          "$id": "urn:clef/EcsRuntime/deploy/completion/healthCheckFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "deploy"
@@ -852,11 +852,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/EcsRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/EcsRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -880,11 +880,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/EcsRuntime/rollback/completion/ok",
+          "$id": "urn:clef/EcsRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "rollback"
@@ -908,11 +908,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/EcsRuntime/destroy/completion/ok",
+          "$id": "urn:clef/EcsRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "destroy"
@@ -934,11 +934,11 @@
           }
         },
         "drainTimeout": {
-          "$id": "urn:copf/EcsRuntime/destroy/completion/drainTimeout",
+          "$id": "urn:clef/EcsRuntime/destroy/completion/drainTimeout",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/EcsRuntime"
+              "const": "urn:clef/EcsRuntime"
             },
             "action": {
               "const": "destroy"

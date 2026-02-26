@@ -6,7 +6,7 @@
 # Transport: HTTP between Cloud Functions concepts and Cloud Run engine.
 #
 # Usage:
-#   copf deploy --manifest gcp-persistent-engine.deploy.yaml
+#   clef deploy --manifest gcp-persistent-engine.deploy.yaml
 
 deploy:
   name: gcp-persistent-engine

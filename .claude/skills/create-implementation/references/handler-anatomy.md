@@ -23,7 +23,7 @@ Every handler is a plain object where each key is an action name and each value 
 ## Handler Structure
 
 ```typescript
-import type { ConceptHandler } from '@copf/kernel';
+import type { ConceptHandler } from '@clef/kernel';
 
 export const conceptNameHandler: ConceptHandler = {
   async action1(input, storage) {

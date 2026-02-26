@@ -1,18 +1,18 @@
 // ============================================================
-// CLI Generation Kit Integration Tests
+// CLI Generation Suite Integration Tests
 //
 // Validates that CliTarget generates correct CLI subcommands
-// from generation kit concept actions. CLI surface for generation
+// from generation suite concept actions. CLI surface for generation
 // kit concepts is driven by the devtools interface manifest
 // (concept-overrides), not hardcoded in the provider.
 //
-// See copf-generation-kit.md Part 6 (CLI Integration).
+// See clef-generation-suite.md Part 6 (CLI Integration).
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { cliTargetHandler } from '../../../../implementations/typescript/framework/providers/cli-target.impl.js';
-import type { ConceptManifest } from '@copf/kernel';
+import type { ConceptManifest } from '@clef/kernel';
 
 function makeProjection(manifest: ConceptManifest, name: string): string {
   return JSON.stringify({
@@ -23,7 +23,7 @@ function makeProjection(manifest: ConceptManifest, name: string): string {
 
 // Emitter manifest — matches the emitter.concept spec
 const EMITTER_MANIFEST: ConceptManifest = {
-  uri: 'urn:copf/Emitter',
+  uri: 'urn:clef/Emitter',
   name: 'Emitter',
   typeParams: ['F'],
   relations: [],
@@ -102,7 +102,7 @@ const EMITTER_MANIFEST: ConceptManifest = {
 
 // KindSystem manifest — matches the kind-system.concept spec
 const KIND_SYSTEM_MANIFEST: ConceptManifest = {
-  uri: 'urn:copf/KindSystem',
+  uri: 'urn:clef/KindSystem',
   name: 'KindSystem',
   typeParams: ['K'],
   relations: [],
@@ -155,7 +155,7 @@ const KIND_SYSTEM_MANIFEST: ConceptManifest = {
   purpose: 'Model the pipeline topology as a directed acyclic graph of IR kinds.',
 };
 
-describe('CLI generation kit — manifest-driven commands', () => {
+describe('CLI generation suite — manifest-driven commands', () => {
   it('generates CLI subcommands from Emitter concept actions', async () => {
     const storage = createInMemoryStorage();
     const result = await cliTargetHandler.generate(

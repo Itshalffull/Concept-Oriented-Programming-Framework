@@ -1,7 +1,7 @@
 // GroupTests.swift — Tests for Group concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class GroupTests: XCTestCase {
 

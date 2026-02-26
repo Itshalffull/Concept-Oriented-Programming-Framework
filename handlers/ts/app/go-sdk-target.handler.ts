@@ -7,7 +7,7 @@ export const goSdkTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const modulePath = (parsedConfig.modulePath as string) || `github.com/copf/sdk-go`;
+    const modulePath = (parsedConfig.modulePath as string) || `github.com/clef/sdk-go`;
     const goVersion = (parsedConfig.goVersion as string) || '1.21';
 
     const conceptName = projection.replace(/-projection$/, '').replace(/-/g, '');

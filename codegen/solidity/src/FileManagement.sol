@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title FileManagement
 /// @notice Concept-oriented file management with usage tracking and garbage collection
-/// @dev Implements the FileManagement concept from COPF specification.
+/// @dev Implements the FileManagement concept from Clef specification.
 ///      Supports uploading file records, tracking entity usages, and garbage collection
 ///      of unused files.
 

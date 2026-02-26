@@ -1,5 +1,5 @@
 # ============================================================
-# MachineToFrameworkAdapter — coif-component recommended sync
+# MachineToFrameworkAdapter — surface-component recommended sync
 #
 # When a machine produces framework-neutral props via connect(),
 # route them to the active framework adapter for rendering.

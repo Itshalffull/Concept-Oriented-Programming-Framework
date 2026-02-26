@@ -1,8 +1,8 @@
 // ============================================================
-// BindingProvider — Svelte-compatible COIF component
+// BindingProvider — Svelte-compatible Clef Surface component
 //
-// COIF concept binding with reactive store integration. Connects
-// a COIF concept's signal map to the component tree, providing
+// Clef Surface concept binding with reactive store integration. Connects
+// a Clef Surface concept's signal map to the component tree, providing
 // read/write access to bound data. Supports coupled, REST,
 // GraphQL, and static binding modes. Mirrors Svelte's store
 // contract ($-prefix auto-subscription pattern).
@@ -15,7 +15,7 @@ import type {
   WritableSignal,
 } from '../../shared/types.js';
 
-import { createSignal } from '../../shared/coif-bridge.js';
+import { createSignal } from '../../shared/surface-bridge.js';
 
 // --- Context registry (module-scoped, mirrors Svelte setContext/getContext) ---
 
@@ -85,7 +85,7 @@ export function createBindingProvider(
 
   // Container element
   const container = document.createElement('div');
-  container.setAttribute('data-coif-binding', '');
+  container.setAttribute('data-surface-binding', '');
   container.setAttribute('data-concept', config.concept);
   container.setAttribute('data-binding-mode', config.mode);
   if (className) container.className = className;

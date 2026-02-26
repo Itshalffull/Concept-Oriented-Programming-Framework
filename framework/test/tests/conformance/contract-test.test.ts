@@ -9,9 +9,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { contractTestHandler } from '../../implementations/typescript/contract-test.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('ContractTest conformance', () => {
   let storage: ConceptStorage;

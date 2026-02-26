@@ -3,7 +3,7 @@
 //
 // Validates detect, resolve, manualResolve, and registerPolicy
 // actions including happy paths, error cases, and multi-step
-// sequences for the collaboration kit's conflict resolution concept.
+// sequences for the collaboration suite's conflict resolution concept.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';

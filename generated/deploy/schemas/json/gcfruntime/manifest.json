@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/GcfRuntime",
+  "uri": "urn:clef/GcfRuntime",
   "name": "GcfRuntime",
   "typeParams": [
     {
@@ -498,11 +498,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/GcfRuntime/provision/invocation",
+        "$id": "urn:clef/GcfRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcfRuntime"
+            "const": "urn:clef/GcfRuntime"
           },
           "action": {
             "const": "provision"
@@ -537,11 +537,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/GcfRuntime/deploy/invocation",
+        "$id": "urn:clef/GcfRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcfRuntime"
+            "const": "urn:clef/GcfRuntime"
           },
           "action": {
             "const": "deploy"
@@ -564,11 +564,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/GcfRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/GcfRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcfRuntime"
+            "const": "urn:clef/GcfRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -591,11 +591,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/GcfRuntime/rollback/invocation",
+        "$id": "urn:clef/GcfRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcfRuntime"
+            "const": "urn:clef/GcfRuntime"
           },
           "action": {
             "const": "rollback"
@@ -618,11 +618,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/GcfRuntime/destroy/invocation",
+        "$id": "urn:clef/GcfRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/GcfRuntime"
+            "const": "urn:clef/GcfRuntime"
           },
           "action": {
             "const": "destroy"
@@ -644,11 +644,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/GcfRuntime/provision/completion/ok",
+          "$id": "urn:clef/GcfRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "provision"
@@ -674,11 +674,11 @@
           }
         },
         "gen2Required": {
-          "$id": "urn:copf/GcfRuntime/provision/completion/gen2Required",
+          "$id": "urn:clef/GcfRuntime/provision/completion/gen2Required",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "provision"
@@ -704,11 +704,11 @@
           }
         },
         "triggerConflict": {
-          "$id": "urn:copf/GcfRuntime/provision/completion/triggerConflict",
+          "$id": "urn:clef/GcfRuntime/provision/completion/triggerConflict",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "provision"
@@ -736,11 +736,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/GcfRuntime/deploy/completion/ok",
+          "$id": "urn:clef/GcfRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "deploy"
@@ -766,11 +766,11 @@
           }
         },
         "buildFailed": {
-          "$id": "urn:copf/GcfRuntime/deploy/completion/buildFailed",
+          "$id": "urn:clef/GcfRuntime/deploy/completion/buildFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "deploy"
@@ -801,11 +801,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/GcfRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/GcfRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -829,11 +829,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/GcfRuntime/rollback/completion/ok",
+          "$id": "urn:clef/GcfRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "rollback"
@@ -861,11 +861,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/GcfRuntime/destroy/completion/ok",
+          "$id": "urn:clef/GcfRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/GcfRuntime"
+              "const": "urn:clef/GcfRuntime"
             },
             "action": {
               "const": "destroy"

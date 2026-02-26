@@ -6,7 +6,7 @@ const RELATION = 'schema';
 
 /**
  * Minimal concept spec parser. Extracts concept name, state fields, and actions
- * from a COPF concept spec string.
+ * from a Clef concept spec string.
  *
  * Expects patterns like:
  *   concept Name [T] { state { field: T -> Type } actions { action name(...) { -> variant(...) } } }

@@ -83,7 +83,7 @@ export function createInMemoryStorage(): ConceptStorage {
           // Default LWW: log warning if overwriting a more recent entry
           if (existing.meta.lastWrittenAt > now) {
             console.warn(
-              `[copf/storage] LWW conflict: overwriting ${relation}/${key} ` +
+              `[clef/storage] LWW conflict: overwriting ${relation}/${key} ` +
               `(existing: ${existing.meta.lastWrittenAt}, incoming: ${now})`,
             );
           }

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Intent",
+  "uri": "urn:clef/Intent",
   "name": "Intent",
   "typeParams": [
     {
@@ -386,11 +386,11 @@
   "jsonSchemas": {
     "invocations": {
       "define": {
-        "$id": "urn:copf/Intent/define/invocation",
+        "$id": "urn:clef/Intent/define/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Intent"
+            "const": "urn:clef/Intent"
           },
           "action": {
             "const": "define"
@@ -421,11 +421,11 @@
         }
       },
       "update": {
-        "$id": "urn:copf/Intent/update/invocation",
+        "$id": "urn:clef/Intent/update/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Intent"
+            "const": "urn:clef/Intent"
           },
           "action": {
             "const": "update"
@@ -452,11 +452,11 @@
         }
       },
       "verify": {
-        "$id": "urn:copf/Intent/verify/invocation",
+        "$id": "urn:clef/Intent/verify/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Intent"
+            "const": "urn:clef/Intent"
           },
           "action": {
             "const": "verify"
@@ -475,11 +475,11 @@
         }
       },
       "discover": {
-        "$id": "urn:copf/Intent/discover/invocation",
+        "$id": "urn:clef/Intent/discover/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Intent"
+            "const": "urn:clef/Intent"
           },
           "action": {
             "const": "discover"
@@ -498,11 +498,11 @@
         }
       },
       "suggestFromDescription": {
-        "$id": "urn:copf/Intent/suggestFromDescription/invocation",
+        "$id": "urn:clef/Intent/suggestFromDescription/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Intent"
+            "const": "urn:clef/Intent"
           },
           "action": {
             "const": "suggestFromDescription"
@@ -524,11 +524,11 @@
     "completions": {
       "define": {
         "ok": {
-          "$id": "urn:copf/Intent/define/completion/ok",
+          "$id": "urn:clef/Intent/define/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "define"
@@ -550,11 +550,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Intent/define/completion/exists",
+          "$id": "urn:clef/Intent/define/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "define"
@@ -578,11 +578,11 @@
       },
       "update": {
         "ok": {
-          "$id": "urn:copf/Intent/update/completion/ok",
+          "$id": "urn:clef/Intent/update/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "update"
@@ -604,11 +604,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Intent/update/completion/notfound",
+          "$id": "urn:clef/Intent/update/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "update"
@@ -632,11 +632,11 @@
       },
       "verify": {
         "ok": {
-          "$id": "urn:copf/Intent/verify/completion/ok",
+          "$id": "urn:clef/Intent/verify/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "verify"
@@ -662,11 +662,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Intent/verify/completion/notfound",
+          "$id": "urn:clef/Intent/verify/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "verify"
@@ -690,11 +690,11 @@
       },
       "discover": {
         "ok": {
-          "$id": "urn:copf/Intent/discover/completion/ok",
+          "$id": "urn:clef/Intent/discover/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "discover"
@@ -718,11 +718,11 @@
       },
       "suggestFromDescription": {
         "ok": {
-          "$id": "urn:copf/Intent/suggestFromDescription/completion/ok",
+          "$id": "urn:clef/Intent/suggestFromDescription/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Intent"
+              "const": "urn:clef/Intent"
             },
             "action": {
               "const": "suggestFromDescription"

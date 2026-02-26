@@ -1,4 +1,4 @@
-package copf
+package clef
 
 // registryEntry holds a handler and its associated storage.
 type registryEntry struct {
@@ -14,7 +14,7 @@ var registry = make(map[string]registryEntry)
 //
 // Example:
 //
-//	copf.Register("urn:app/RateLimiter", &RateLimiterHandler{}, nil)
+//	clef.Register("urn:app/RateLimiter", &RateLimiterHandler{}, nil)
 func Register(uri string, handler ConceptHandler, storage Storage) {
 	if storage == nil {
 		storage = NewInMemoryStorage()

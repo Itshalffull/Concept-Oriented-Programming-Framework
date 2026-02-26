@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // Capture Mode Plugin — on-chain capture strategy registry and provider implementations
-// for the Capture concept in the COPF Data Integration Kit.
+// for the Capture concept in the Clef Data Integration Kit.
 //
 // On-chain capture records provide an immutable audit trail of content provenance,
 // timestamp attestation, and hash-based deduplication. Actual content is stored

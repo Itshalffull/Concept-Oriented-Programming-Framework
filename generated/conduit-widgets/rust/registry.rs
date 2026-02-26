@@ -1,7 +1,7 @@
 // generated: conduit-widgets/rust/registry.rs
 //
 // Widget registry for the Conduit application.
-// Provides registration, lookup, and enumeration of COIF widget specs.
+// Provides registration, lookup, and enumeration of Clef Surface widget specs.
 
 use std::collections::HashMap;
 

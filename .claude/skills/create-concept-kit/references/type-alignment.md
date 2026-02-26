@@ -1,10 +1,10 @@
 # Type Parameter Alignment
 
-How to declare shared type identities across concepts within a kit, so the compiler can validate sync correctness and humans can understand the intended relationships.
+How to declare shared type identities across concepts within a suite, so the compiler can validate sync correctness and humans can understand the intended relationships.
 
 ## The Problem
 
-Consider a content management kit with Entity, Field, and Relation concepts. Each is independently designed with its own type parameter:
+Consider a content management suite with Entity, Field, and Relation concepts. Each is independently designed with its own type parameter:
 
 ```
 concept Entity [E] { ... }
@@ -31,7 +31,7 @@ The `?entity` variable flows from Entity (where it's an `E`) to Field's `target`
 
 ## The Solution: `as` Tags
 
-The `params` section in `kit.yaml` assigns shared identity tags using `as`:
+The `params` section in `suite.yaml` assigns shared identity tags using `as`:
 
 ```yaml
 concepts:
@@ -79,7 +79,7 @@ At runtime, ALL type parameters are strings. The alignment is advisory:
 
 ### Every parameter needs an `as` tag
 
-If a concept has a type parameter, it must be declared in the kit manifest with an `as` tag. This is how the compiler knows which parameters to compare.
+If a concept has a type parameter, it must be declared in the suite manifest with an `as` tag. This is how the compiler knows which parameters to compare.
 
 ## Writing Alignment Tags
 
@@ -106,9 +106,9 @@ Field:
 
 The primary parameter (`F`) is the concept's own entity type. The secondary parameter (`T`) connects to another concept's entity type.
 
-### Cross-kit alignment
+### Cross-suite alignment
 
-When a kit uses concepts from another kit, use the same `as` tags:
+When a suite uses concepts from another suite, use the same `as` tags:
 
 ```yaml
 # content-management kit
@@ -124,11 +124,11 @@ uses:
         description: Record which user created an entity.
 ```
 
-In the uses sync, the `?user` variable would carry `user-ref` (from the auth kit) and `?entity` would carry `entity-ref` (from this kit). Even though the kits are separate, the `as` tags let the compiler check consistency.
+In the uses sync, the `?user` variable would carry `user-ref` (from the auth suite) and `?entity` would carry `entity-ref` (from this suite). Even though the suites are separate, the `as` tags let the compiler check consistency.
 
 ## Compiler Validation
 
-When the compiler processes a kit's syncs, it checks:
+When the compiler processes a suite's syncs, it checks:
 
 1. **Variable flow**: When `?var` flows from one concept to another in a sync, check if the source parameter's `as` tag matches the destination's
 2. **Lookup bindings**: When `where { Concept: { ?entity field: ?var } }` binds a variable, check if the entity lookup's type aligns with the variable's source
@@ -145,7 +145,7 @@ WARNING: In sync CascadeDeleteReactions, variable ?entity flows from
 ## Alignment in the Auth Kit Example
 
 ```yaml
-# kits/auth/kit.yaml
+# kits/auth/suite.yaml
 concepts:
   User:
     spec: ./user.concept

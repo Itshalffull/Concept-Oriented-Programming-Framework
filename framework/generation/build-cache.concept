@@ -27,7 +27,7 @@ concept BuildCache [E] {
         same output). The generator can skip execution.
 
         Returns outputRef if available — the caller can load the
-        cached output directly from .copf-cache/ without re-running.
+        cached output directly from .clef-cache/ without re-running.
 
         If deterministic is false, this variant is never returned —
         nondeterministic transforms always re-run.
@@ -45,7 +45,7 @@ concept BuildCache [E] {
         timestamp, optional output reference path, and the source
         locator that produced this step's input.
 
-        outputRef points to the cached output in .copf-cache/ so
+        outputRef points to the cached output in .clef-cache/ so
         future cache hits can retrieve the output without re-running.
 
         sourceLocator tracks which Resource produced this step's input,
@@ -104,8 +104,8 @@ concept BuildCache [E] {
   }
 
   invariant {
-    after record(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".copf-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true) -> ok(entry: e)
-    then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> unchanged(lastRun: t, outputRef: ".copf-cache/ts/password")
+    after record(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true) -> ok(entry: e)
+    then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> unchanged(lastRun: t, outputRef: ".clef-cache/ts/password")
     and   check(stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true) -> changed(previousHash: "abc")
   }
 

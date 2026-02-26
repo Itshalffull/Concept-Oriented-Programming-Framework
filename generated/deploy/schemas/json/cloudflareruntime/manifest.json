@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/CloudflareRuntime",
+  "uri": "urn:clef/CloudflareRuntime",
   "name": "CloudflareRuntime",
   "typeParams": [
     {
@@ -466,11 +466,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/CloudflareRuntime/provision/invocation",
+        "$id": "urn:clef/CloudflareRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudflareRuntime"
+            "const": "urn:clef/CloudflareRuntime"
           },
           "action": {
             "const": "provision"
@@ -500,11 +500,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/CloudflareRuntime/deploy/invocation",
+        "$id": "urn:clef/CloudflareRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudflareRuntime"
+            "const": "urn:clef/CloudflareRuntime"
           },
           "action": {
             "const": "deploy"
@@ -527,11 +527,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/CloudflareRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/CloudflareRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudflareRuntime"
+            "const": "urn:clef/CloudflareRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -554,11 +554,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/CloudflareRuntime/rollback/invocation",
+        "$id": "urn:clef/CloudflareRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudflareRuntime"
+            "const": "urn:clef/CloudflareRuntime"
           },
           "action": {
             "const": "rollback"
@@ -581,11 +581,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/CloudflareRuntime/destroy/invocation",
+        "$id": "urn:clef/CloudflareRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudflareRuntime"
+            "const": "urn:clef/CloudflareRuntime"
           },
           "action": {
             "const": "destroy"
@@ -607,11 +607,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/CloudflareRuntime/provision/completion/ok",
+          "$id": "urn:clef/CloudflareRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "provision"
@@ -641,11 +641,11 @@
           }
         },
         "routeConflict": {
-          "$id": "urn:copf/CloudflareRuntime/provision/completion/routeConflict",
+          "$id": "urn:clef/CloudflareRuntime/provision/completion/routeConflict",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "provision"
@@ -673,11 +673,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/CloudflareRuntime/deploy/completion/ok",
+          "$id": "urn:clef/CloudflareRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "deploy"
@@ -703,11 +703,11 @@
           }
         },
         "scriptTooLarge": {
-          "$id": "urn:copf/CloudflareRuntime/deploy/completion/scriptTooLarge",
+          "$id": "urn:clef/CloudflareRuntime/deploy/completion/scriptTooLarge",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "deploy"
@@ -739,11 +739,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/CloudflareRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/CloudflareRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -767,11 +767,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/CloudflareRuntime/rollback/completion/ok",
+          "$id": "urn:clef/CloudflareRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "rollback"
@@ -799,11 +799,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/CloudflareRuntime/destroy/completion/ok",
+          "$id": "urn:clef/CloudflareRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudflareRuntime"
+              "const": "urn:clef/CloudflareRuntime"
             },
             "action": {
               "const": "destroy"

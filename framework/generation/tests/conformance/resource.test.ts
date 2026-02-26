@@ -3,13 +3,13 @@
 //
 // Validates input resource tracking: upsert (created/changed/
 // unchanged), get, list, remove, and diff.
-// See copf-generation-kit.md Part 1.1
+// See clef-generation-suite.md Part 1.1
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { resourceHandler } from '../../implementations/typescript/resource.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('Resource conformance', () => {
   let storage: ConceptStorage;

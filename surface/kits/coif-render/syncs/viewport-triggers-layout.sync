@@ -1,5 +1,5 @@
 # ============================================================
-# ViewportTriggersLayout — coif-render recommended sync
+# ViewportTriggersLayout — surface-render recommended sync
 #
 # When a viewport breakpoint changes, reconfigure any responsive
 # layouts that have rules for the new breakpoint. This drives

@@ -62,7 +62,7 @@ describe('WidgetScopeProvider', () => {
       const widgetDecl = declarations.find((d: Record<string, string>) => d.name === 'Button');
       expect(widgetDecl).toBeDefined();
       expect(widgetDecl.scopeId).toBe(scopes[0].id);
-      expect(widgetDecl.symbolString).toBe('coif/widget/Button');
+      expect(widgetDecl.symbolString).toBe('surface/widget/Button');
       expect(widgetDecl.kind).toBe('concept');
     });
 
@@ -101,7 +101,7 @@ anatomy {
       const parts = declarations.filter((d: Record<string, string>) => d.kind === 'state-field');
       expect(parts.some((p: Record<string, string>) => p.name === 'root')).toBe(true);
       expect(parts.some((p: Record<string, string>) => p.name === 'label')).toBe(true);
-      expect(parts[0].symbolString).toMatch(/coif\/widget\/Button\/part\//);
+      expect(parts[0].symbolString).toMatch(/surface\/widget\/Button\/part\//);
     });
 
     it('declares state names', async () => {
@@ -287,7 +287,7 @@ props {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('coif/widget/Button');
+      expect(result.symbolString).toBe('surface/widget/Button');
     });
 
     it('resolves part name from section scope via parent chain', async () => {
@@ -323,7 +323,7 @@ props {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('coif/widget/Button/prop/label');
+      expect(result.symbolString).toBe('surface/widget/Button/prop/label');
     });
 
     it('resolves widget name from section scope', async () => {
@@ -349,7 +349,7 @@ anatomy {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('coif/widget/Button');
+      expect(result.symbolString).toBe('surface/widget/Button');
     });
 
     it('returns unresolved for unknown name', async () => {

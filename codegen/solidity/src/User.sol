@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title User
 /// @notice Concept-oriented User registration with name and email uniqueness
-/// @dev Implements the User concept from COPF specification
+/// @dev Implements the User concept from Clef specification
 
 contract User {
     // --- Storage ---

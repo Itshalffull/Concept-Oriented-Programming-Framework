@@ -1,12 +1,12 @@
 // ============================================================
-// copf kit <subcommand> [args...]
+// clef suite <subcommand> [args...]
 //
-// Kit management commands per Section 12:
-//   copf kit init <name>          Scaffold a new kit directory
-//   copf kit validate <path>      Validate kit manifest, type alignment, sync tiers
-//   copf kit test <path>          Run kit's conformance + integration tests
-//   copf kit list                 Show kits used by the current app
-//   copf kit check-overrides      Verify app overrides reference valid sync names
+// Suite management commands per Section 12:
+//   clef suite init <name>          Scaffold a new suite directory
+//   clef suite validate <path>      Validate suite manifest, type alignment, sync tiers
+//   clef suite test <path>          Run suite's conformance + integration tests
+//   clef suite list                 Show suites used by the current app
+//   clef suite check-overrides      Verify app overrides reference valid sync names
 // ============================================================
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
@@ -16,10 +16,10 @@ import { parseSyncFile } from '../../../handlers/ts/framework/sync-parser.handle
 import { findFiles } from '../util.js';
 import type { CompiledSync, UsesEntry } from '../../../kernel/src/types.js';
 
-const KIT_YAML_TEMPLATE = `# Kit Manifest
+const KIT_YAML_TEMPLATE = `# Suite Manifest
 name: {{NAME}}
 version: 0.1.0
-description: "{{NAME}} concept kit"
+description: "{{NAME}} suite"
 
 concepts:
   - name: Example
@@ -30,8 +30,8 @@ syncs:
     file: syncs/example.sync
     tier: recommended
 
-# External concepts from other kits that this kit's syncs reference.
-# Required uses: concepts must be available for the kit to function.
+# External concepts from other suites that this suite's syncs reference.
+# Required uses: concepts must be available for the suite to function.
 # Optional uses: syncs only load if the named kit is present.
 # uses:
 #   - kit: other-kit-name
@@ -88,7 +88,7 @@ then {
 /**
  * Extract all unique concept names referenced in a compiled sync's
  * when, where, and then clauses. Concept references are stored as
- * URNs (urn:copf/Name) by the sync parser.
+ * URNs (urn:clef/Name) by the sync parser.
  */
 export function extractConceptRefs(sync: CompiledSync): Set<string> {
   const refs = new Set<string>();
@@ -107,13 +107,13 @@ export function extractConceptRefs(sync: CompiledSync): Set<string> {
 }
 
 function stripUrn(conceptRef: string): string {
-  // urn:copf/ConceptName -> ConceptName
+  // urn:clef/ConceptName -> ConceptName
   const slash = conceptRef.lastIndexOf('/');
   return slash >= 0 ? conceptRef.slice(slash + 1) : conceptRef;
 }
 
 /**
- * Parse the `uses` section from a kit manifest YAML source.
+ * Parse the `uses` section from a suite manifest YAML source.
  * Uses line-by-line parsing to handle the nested structure:
  *
  *   uses:
@@ -126,7 +126,7 @@ function stripUrn(conceptRef: string): string {
  *         - name: JWT
  *       syncs:
  *         - path: ./syncs/entity-ownership.sync
- *           description: Only loads if auth kit is present.
+ *           description: Only loads if auth suite is present.
  */
 export function parseUsesSection(source: string): UsesEntry[] {
   const lines = source.split('\n');
@@ -293,13 +293,13 @@ export function parseUsesSection(source: string): UsesEntry[] {
  * load when the external kit is present — exempt from strict validation.
  * Returns a set of resolved absolute paths.
  */
-export function getOptionalSyncPaths(uses: UsesEntry[], kitDir: string): Set<string> {
+export function getOptionalSyncPaths(uses: UsesEntry[], suiteDir: string): Set<string> {
   const paths = new Set<string>();
   for (const entry of uses) {
     if (entry.optional && entry.syncs) {
       for (const s of entry.syncs) {
         const syncPath = s.path.replace(/^\.\//, '');
-        paths.add(resolve(kitDir, syncPath));
+        paths.add(resolve(suiteDir, syncPath));
       }
     }
   }
@@ -372,7 +372,7 @@ export async function kitCommand(
       await kitCheckOverrides(flags);
       break;
     default:
-      console.error(`Usage: copf kit <init|validate|test|list|check-overrides> [args...]`);
+      console.error(`Usage: clef suite <init|validate|test|list|check-overrides> [args...]`);
       process.exit(1);
   }
 }
@@ -383,13 +383,13 @@ async function kitInit(
 ): Promise<void> {
   const name = positional[0];
   if (!name) {
-    console.error('Usage: copf kit init <kit-name>');
+    console.error('Usage: clef suite init <kit-name>');
     process.exit(1);
   }
 
-  const kitDir = resolve(process.cwd(), 'kits', name);
-  if (existsSync(kitDir)) {
-    console.error(`Kit directory already exists: kits/${name}`);
+  const suiteDir = resolve(process.cwd(), 'kits', name);
+  if (existsSync(suiteDir)) {
+    console.error(`Suite directory already exists: kits/${name}`);
     process.exit(1);
   }
 
@@ -403,36 +403,36 @@ async function kitInit(
   ];
 
   for (const dir of dirs) {
-    mkdirSync(join(kitDir, dir), { recursive: true });
+    mkdirSync(join(suiteDir, dir), { recursive: true });
   }
 
   writeFileSync(
-    join(kitDir, 'kit.yaml'),
+    join(suiteDir, 'suite.yaml'),
     KIT_YAML_TEMPLATE.replace(/\{\{NAME\}\}/g, name),
   );
 
   writeFileSync(
-    join(kitDir, 'example.concept'),
+    join(suiteDir, 'example.concept'),
     KIT_CONCEPT_TEMPLATE.replace(/\{\{NAME\}\}/g, name),
   );
 
   writeFileSync(
-    join(kitDir, 'syncs/example.sync'),
+    join(suiteDir, 'syncs/example.sync'),
     KIT_SYNC_TEMPLATE,
   );
 
   console.log(`
-Kit created at kits/${name}/
+Suite created at kits/${name}/
 
-  kit.yaml                    Kit manifest
+  suite.yaml                    Suite manifest
   example.concept             Example concept spec
   syncs/example.sync          Example synchronization
   implementations/            Concept implementations
-  tests/                      Kit tests
+  tests/                      Suite tests
 
 Next steps:
-  copf kit validate kits/${name}
-  copf kit test kits/${name}
+  clef suite validate kits/${name}
+  clef suite test kits/${name}
 `);
 }
 
@@ -440,35 +440,35 @@ async function kitValidate(
   positional: string[],
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
-  const kitPath = positional[0];
-  if (!kitPath) {
-    console.error('Usage: copf kit validate <path>');
+  const suitePath = positional[0];
+  if (!suitePath) {
+    console.error('Usage: clef suite validate <path>');
     process.exit(1);
   }
 
-  const kitDir = resolve(process.cwd(), kitPath);
-  if (!existsSync(kitDir)) {
-    console.error(`Kit directory not found: ${kitPath}`);
+  const suiteDir = resolve(process.cwd(), suitePath);
+  if (!existsSync(suiteDir)) {
+    console.error(`Suite directory not found: ${suitePath}`);
     process.exit(1);
   }
 
-  const manifestPath = join(kitDir, 'kit.yaml');
+  const manifestPath = join(suiteDir, 'suite.yaml');
   if (!existsSync(manifestPath)) {
-    console.error(`Kit manifest not found: ${kitPath}/kit.yaml`);
+    console.error(`Suite manifest not found: ${suitePath}/suite.yaml`);
     process.exit(1);
   }
 
-  console.log(`Validating kit: ${kitPath}\n`);
+  console.log(`Validating kit: ${suitePath}\n`);
 
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Parse kit manifest (basic YAML parsing for key fields)
+  // Parse suite manifest (basic YAML parsing for key fields)
   const manifestSource = readFileSync(manifestPath, 'utf-8');
   const nameMatch = manifestSource.match(/^name:\s*(.+)$/m);
-  const kitName = nameMatch ? nameMatch[1].trim() : '(unnamed)';
+  const suiteName = nameMatch ? nameMatch[1].trim() : '(unnamed)';
 
-  console.log(`  Kit: ${kitName}`);
+  console.log(`  Kit: ${suiteName}`);
 
   // Parse uses declarations
   const uses = parseUsesSection(manifestSource);
@@ -501,11 +501,11 @@ async function kitValidate(
   const localConceptNames = parseLocalConceptNames(manifestSource);
 
   // Validate concept specs
-  const conceptFiles = findFiles(kitDir, '.concept');
+  const conceptFiles = findFiles(suiteDir, '.concept');
   console.log(`  Concepts: ${conceptFiles.length}`);
 
   for (const file of conceptFiles) {
-    const relPath = relative(kitDir, file);
+    const relPath = relative(suiteDir, file);
     const source = readFileSync(file, 'utf-8');
     try {
       const ast = parseConceptFile(source);
@@ -526,15 +526,15 @@ async function kitValidate(
   ]);
 
   // Get optional uses sync paths (exempt from strict validation)
-  const optionalSyncPaths = getOptionalSyncPaths(uses, kitDir);
+  const optionalSyncPaths = getOptionalSyncPaths(uses, suiteDir);
 
   // Validate sync files and check concept references
-  const syncFiles = findFiles(join(kitDir, 'syncs'), '.sync');
+  const syncFiles = findFiles(join(suiteDir, 'syncs'), '.sync');
   console.log(`  Syncs: ${syncFiles.length}`);
   const referencedUsesNames = new Set<string>();
 
   for (const file of syncFiles) {
-    const relPath = relative(kitDir, file);
+    const relPath = relative(suiteDir, file);
     const source = readFileSync(file, 'utf-8');
     const isOptionalSync = optionalSyncPaths.has(resolve(file));
 
@@ -567,7 +567,7 @@ async function kitValidate(
             // uses section exists — strict mode: unknown refs are errors
             for (const ref of unknownRefs) {
               errors.push(
-                `${relPath}: Sync "${s.name}" references unknown concept "${ref}" — declare it in 'uses' if it comes from another kit`,
+                `${relPath}: Sync "${s.name}" references unknown concept "${ref}" — declare it in 'uses' if it comes from another suite`,
               );
             }
             console.log(`    [FAIL] ${s.name} (${relPath}) — unknown concept(s): ${unknownRefs.join(', ')}`);
@@ -605,7 +605,7 @@ async function kitValidate(
     }
   }
 
-  // Warn about uses kits not in dependencies
+  // Warn about uses suites not in dependencies
   const depsMatch = manifestSource.match(/^dependencies:\s*$/m);
   if (depsMatch && uses.length > 0) {
     for (const entry of uses) {
@@ -631,29 +631,29 @@ async function kitValidate(
     process.exit(1);
   }
 
-  console.log('\nKit is valid.');
+  console.log('\nSuite is valid.');
 }
 
 async function kitTest(
   positional: string[],
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
-  const kitPath = positional[0];
-  if (!kitPath) {
-    console.error('Usage: copf kit test <path>');
+  const suitePath = positional[0];
+  if (!suitePath) {
+    console.error('Usage: clef suite test <path>');
     process.exit(1);
   }
 
-  const kitDir = resolve(process.cwd(), kitPath);
-  if (!existsSync(kitDir)) {
-    console.error(`Kit directory not found: ${kitPath}`);
+  const suiteDir = resolve(process.cwd(), suitePath);
+  if (!existsSync(suiteDir)) {
+    console.error(`Suite directory not found: ${suitePath}`);
     process.exit(1);
   }
 
-  console.log(`Testing kit: ${kitPath}\n`);
+  console.log(`Testing kit: ${suitePath}\n`);
 
   // Find and validate all concept specs
-  const conceptFiles = findFiles(kitDir, '.concept');
+  const conceptFiles = findFiles(suiteDir, '.concept');
   let totalInvariants = 0;
 
   for (const file of conceptFiles) {
@@ -671,17 +671,17 @@ async function kitTest(
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`  [FAIL] ${relative(kitDir, file)}: ${message}`);
+      console.error(`  [FAIL] ${relative(suiteDir, file)}: ${message}`);
     }
   }
 
   // Check for test files
-  const testDir = join(kitDir, 'tests');
+  const testDir = join(suiteDir, 'tests');
   if (existsSync(testDir)) {
     const testFiles = findFiles(testDir, '.test.ts');
     console.log(`\n  Test files found: ${testFiles.length}`);
     for (const f of testFiles) {
-      console.log(`    ${relative(kitDir, f)}`);
+      console.log(`    ${relative(suiteDir, f)}`);
     }
   }
 
@@ -694,34 +694,34 @@ async function kitList(
   const projectDir = resolve(process.cwd());
   const kitsDir = join(projectDir, 'kits');
 
-  if (!existsSync(kitsDir)) {
+  if (!existsSync(suitesDir)) {
     console.log('No kits/ directory found.');
     return;
   }
 
-  // Find kit manifests
-  const kitManifests = findFiles(kitsDir, 'kit.yaml');
+  // Find suite manifests
+  const suiteManifests = findFiles(suitesDir, 'suite.yaml');
 
-  if (kitManifests.length === 0) {
-    console.log('No kits found in kits/ directory.');
+  if (suiteManifests.length === 0) {
+    console.log('No suites found in kits/ directory.');
     return;
   }
 
-  console.log(`Kits in this project:\n`);
+  console.log(`Suites in this project:\n`);
 
-  for (const manifestFile of kitManifests) {
-    const kitDir = join(manifestFile, '..');
-    const relPath = relative(projectDir, kitDir);
+  for (const manifestFile of suiteManifests) {
+    const suiteDir = join(manifestFile, '..');
+    const relPath = relative(projectDir, suiteDir);
     const source = readFileSync(manifestFile, 'utf-8');
     const nameMatch = source.match(/^name:\s*(.+)$/m);
     const versionMatch = source.match(/^version:\s*(.+)$/m);
     const descMatch = source.match(/^description:\s*"?(.+?)"?\s*$/m);
-    const name = nameMatch ? nameMatch[1].trim() : basename(kitDir);
+    const name = nameMatch ? nameMatch[1].trim() : basename(suiteDir);
     const version = versionMatch ? versionMatch[1].trim() : '0.0.0';
     const desc = descMatch ? descMatch[1].trim() : '';
 
-    const conceptCount = findFiles(kitDir, '.concept').length;
-    const syncCount = findFiles(join(kitDir, 'syncs'), '.sync').length;
+    const conceptCount = findFiles(suiteDir, '.concept').length;
+    const syncCount = findFiles(join(suiteDir, 'syncs'), '.sync').length;
 
     console.log(`  ${name} v${version} (${relPath})`);
     if (desc) console.log(`    ${desc}`);
@@ -737,16 +737,16 @@ async function kitCheckOverrides(
   const kitsDir = join(projectDir, 'kits');
   const syncsDir = join(projectDir, 'syncs');
 
-  if (!existsSync(kitsDir)) {
+  if (!existsSync(suitesDir)) {
     console.log('No kits/ directory found.');
     return;
   }
 
   console.log('Checking sync overrides...\n');
 
-  // Collect all kit sync names
+  // Collect all suite sync names
   const kitSyncNames = new Set<string>();
-  const kitSyncFiles = findFiles(join(kitsDir), '.sync');
+  const kitSyncFiles = findFiles(join(suitesDir), '.sync');
 
   for (const file of kitSyncFiles) {
     const source = readFileSync(file, 'utf-8');
@@ -776,18 +776,18 @@ async function kitCheckOverrides(
     }
   }
 
-  // Check for overrides (app syncs that share names with kit syncs)
+  // Check for overrides (app syncs that share names with suite syncs)
   const overrides = [...appSyncNames].filter(n => kitSyncNames.has(n));
   const invalid = overrides.length === 0 ? [] : [];
 
   if (overrides.length > 0) {
-    console.log('App syncs that override kit syncs:');
+    console.log('App syncs that override suite syncs:');
     for (const name of overrides) {
-      console.log(`  ${name} (overrides kit sync)`);
+      console.log(`  ${name} (overrides suite sync)`);
     }
   } else {
     console.log('No sync overrides found.');
   }
 
-  console.log(`\n${kitSyncNames.size} kit sync(s), ${appSyncNames.size} app sync(s), ${overrides.length} override(s)`);
+  console.log(`\n${kitSyncNames.size} suite sync(s), ${appSyncNames.size} app sync(s), ${overrides.length} override(s)`);
 }

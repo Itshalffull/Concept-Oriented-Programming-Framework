@@ -1,5 +1,5 @@
 // ============================================================
-// CLI Tests — copf command-line interface
+// CLI Tests — clef command-line interface
 //
 // Tests the CLI argument parser, command routing, and each
 // command's core logic against the project's own specs.
@@ -33,33 +33,33 @@ const TMP_DIR = resolve(PROJECT_ROOT, 'tests/.tmp-cli-test');
 
 describe('CLI Argument Parser', () => {
   it('parses command with no args', () => {
-    const result = parseArgs(['node', 'copf', 'check']);
+    const result = parseArgs(['node', 'clef', 'check']);
     expect(result.command).toBe('check');
     expect(result.positional).toEqual([]);
     expect(result.flags).toEqual({});
   });
 
   it('parses command with positional args', () => {
-    const result = parseArgs(['node', 'copf', 'init', 'myapp']);
+    const result = parseArgs(['node', 'clef', 'init', 'myapp']);
     expect(result.command).toBe('init');
     expect(result.positional).toEqual(['myapp']);
   });
 
   it('parses --flag with value', () => {
-    const result = parseArgs(['node', 'copf', 'generate', '--target', 'typescript']);
+    const result = parseArgs(['node', 'clef', 'generate', '--target', 'typescript']);
     expect(result.command).toBe('generate');
     expect(result.flags.target).toBe('typescript');
   });
 
   it('parses --flag without value (boolean)', () => {
-    const result = parseArgs(['node', 'copf', 'test', '--integration']);
+    const result = parseArgs(['node', 'clef', 'test', '--integration']);
     expect(result.command).toBe('test');
     expect(result.flags.integration).toBe(true);
   });
 
   it('parses mixed args and flags', () => {
     const result = parseArgs([
-      'node', 'copf', 'generate',
+      'node', 'clef', 'generate',
       '--target', 'rust',
       '--concept', 'Password',
     ]);
@@ -69,12 +69,12 @@ describe('CLI Argument Parser', () => {
   });
 
   it('defaults to help when no command given', () => {
-    const result = parseArgs(['node', 'copf']);
+    const result = parseArgs(['node', 'clef']);
     expect(result.command).toBe('help');
   });
 
   it('parses kit subcommand with positional', () => {
-    const result = parseArgs(['node', 'copf', 'kit', 'init', 'my-kit']);
+    const result = parseArgs(['node', 'clef', 'kit', 'init', 'my-kit']);
     expect(result.command).toBe('kit');
     expect(result.positional).toEqual(['init', 'my-kit']);
   });
@@ -162,7 +162,7 @@ describe('generate command (schema + code generation)', () => {
 
   it('produces a valid ConceptManifest from Password spec', () => {
     expect(passwordManifest.name).toBe('Password');
-    expect(passwordManifest.uri).toBe('urn:copf/Password');
+    expect(passwordManifest.uri).toBe('urn:clef/Password');
     expect(passwordManifest.actions.length).toBeGreaterThan(0);
     expect(passwordManifest.relations.length).toBeGreaterThan(0);
     expect(passwordManifest.graphqlSchema).toContain('Password');

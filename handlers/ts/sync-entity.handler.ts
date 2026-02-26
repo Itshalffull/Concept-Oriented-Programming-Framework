@@ -27,7 +27,7 @@ export const syncEntityHandler: ConceptHandler = {
     }
 
     const id = nextId();
-    const symbol = `copf/sync/${name}`;
+    const symbol = `clef/sync/${name}`;
 
     // Extract metadata from compiled payload
     let annotations = '[]';

@@ -1,4 +1,4 @@
-package copf
+package clef
 
 import (
 	"sync"

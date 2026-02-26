@@ -1,2 +1,2 @@
 export * from './types.js';
-export * from './coif-bridge.js';
+export * from './surface-bridge.js';

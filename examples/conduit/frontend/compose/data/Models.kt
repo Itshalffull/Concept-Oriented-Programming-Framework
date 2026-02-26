@@ -1,7 +1,7 @@
 // Conduit Example App -- Jetpack Compose Data Models
 // Data classes matching the Conduit REST API response structures.
 
-package com.copf.conduit.data
+package com.clef.conduit.data
 
 import com.google.gson.annotations.SerializedName
 

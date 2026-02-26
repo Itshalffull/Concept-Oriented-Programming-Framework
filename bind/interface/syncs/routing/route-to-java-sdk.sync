@@ -1,4 +1,4 @@
-# Route Sdk/generate to JavaSdkTarget — Architecture doc: Interface Kit, Sync Section 3.4
+# Route Sdk/generate to JavaSdkTarget — Architecture doc: Clef Bind, Sync Section 3.4
 
 sync RouteToJavaSdk [eager]
 when {

@@ -41,7 +41,7 @@ describe('AnatomyPartEntity Handler', () => {
       );
       const record = await storage.get('anatomy-part-entity', 'anatomy-part-entity-1');
       expect(record).not.toBeNull();
-      expect(record!.symbol).toBe('copf/anatomy/Button/label');
+      expect(record!.symbol).toBe('clef/anatomy/Button/label');
       expect(record!.semanticRole).toBe('text');
       expect(record!.connectProps).toBe('[]');
       expect(record!.boundField).toBe('');

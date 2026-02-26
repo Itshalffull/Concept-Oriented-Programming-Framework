@@ -1,4 +1,4 @@
-# Notification Kit Manifest
+# Notification Suite Manifest
 name: notification
 version: 0.1.0
 description: "User notifications — delivery, read tracking, and automatic status management for notification channels."

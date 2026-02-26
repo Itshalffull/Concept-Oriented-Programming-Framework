@@ -1,10 +1,10 @@
 suite:
-  name: coif-app
+  name: surface-app
   version: 0.4.0
   description: >
     Application orchestration: navigation, view lifecycle, data
     transport, root composition, and platform adaptation. All
-    specs corrected per COPF independence rule — action bodies
+    specs corrected per Clef independence rule — action bodies
     describe own state only, sync chains declare all coordination.
 
 concepts:
@@ -134,6 +134,6 @@ syncs:
         Create root Surface and Layout on shell initialization.
 
 dependencies:
-  - coif-core: ">=0.4.0"
-  - coif-component: ">=0.4.0"
-  - coif-render: ">=0.4.0"
+  - surface-core: ">=0.4.0"
+  - surface-component: ">=0.4.0"
+  - surface-render: ">=0.4.0"

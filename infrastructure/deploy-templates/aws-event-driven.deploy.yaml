@@ -8,7 +8,7 @@
 # workloads, and environments where zero idle cost is required.
 #
 # Usage:
-#   copf deploy --manifest aws-event-driven.deploy.yaml
+#   clef deploy --manifest aws-event-driven.deploy.yaml
 
 deploy:
   name: aws-event-driven

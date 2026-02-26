@@ -1,7 +1,7 @@
 // CanvasTests.swift — Tests for Canvas concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class CanvasTests: XCTestCase {
 

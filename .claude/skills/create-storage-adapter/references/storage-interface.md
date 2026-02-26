@@ -1,6 +1,6 @@
 # Storage Interface Reference
 
-Complete type definitions for the COPF storage layer. All storage adapters implement `ConceptStorage`.
+Complete type definitions for the Clef storage layer. All storage adapters implement `ConceptStorage`.
 
 ## ConceptStorage
 

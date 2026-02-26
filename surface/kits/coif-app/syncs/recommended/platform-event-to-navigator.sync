@@ -1,5 +1,5 @@
 # ============================================================
-# PlatformEventToNavigator — coif-app recommended sync
+# PlatformEventToNavigator — surface-app recommended sync
 #
 # When a platform event translates to a "back" action,
 # trigger Navigator/back.

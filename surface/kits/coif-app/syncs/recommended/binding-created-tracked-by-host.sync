@@ -1,5 +1,5 @@
 # ============================================================
-# BindingCreatedTrackedByHost — coif-app recommended sync
+# BindingCreatedTrackedByHost — surface-app recommended sync
 #
 # When a binding is created, track it as a subordinate
 # resource on the loading host.

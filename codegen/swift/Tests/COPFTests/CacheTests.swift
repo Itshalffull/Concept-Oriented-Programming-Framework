@@ -1,7 +1,7 @@
 // CacheTests.swift — Tests for Cache concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class CacheTests: XCTestCase {
 

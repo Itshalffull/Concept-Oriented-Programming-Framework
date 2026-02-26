@@ -1,10 +1,10 @@
 // ============================================================
-// LayoutContainer — Svelte-compatible COIF component
+// LayoutContainer — Svelte-compatible Clef Surface component
 //
-// Flex/grid layout container driven by COIF LayoutConfig.
+// Flex/grid layout container driven by Clef Surface LayoutConfig.
 // Supports all layout kinds (stack, grid, split, overlay, flow,
 // sidebar, center) and responsive overrides keyed by breakpoint.
-// Uses the COIF layout engine to compute CSS properties.
+// Uses the Clef Surface layout engine to compute CSS properties.
 // ============================================================
 
 import type {
@@ -16,7 +16,7 @@ import type {
 import {
   layoutToCSS,
   createSignal,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -53,7 +53,7 @@ export function createLayoutContainer(
 
   // Create container element
   let element = document.createElement(tag);
-  element.setAttribute('data-coif-layout', '');
+  element.setAttribute('data-surface-layout', '');
   element.setAttribute('data-layout-kind', config.kind);
   element.setAttribute('data-layout-name', config.name);
   if (className) element.className = className;
@@ -155,7 +155,7 @@ export function createLayoutContainer(
       if (newProps.tag !== undefined && newProps.tag !== tag) {
         tag = newProps.tag;
         const newElement = document.createElement(tag);
-        newElement.setAttribute('data-coif-layout', '');
+        newElement.setAttribute('data-surface-layout', '');
         if (className) newElement.className = className;
         while (element.firstChild) {
           newElement.appendChild(element.firstChild);

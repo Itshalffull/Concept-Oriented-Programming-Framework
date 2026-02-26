@@ -85,7 +85,7 @@ concept TypeScriptBuilder [N] {
 
   invariant {
     after build(source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: { mode: "release" })
-      -> ok(build: n, artifactPath: ".copf-artifacts/typescript/password", artifactHash: "sha256:def")
+      -> ok(build: n, artifactPath: ".clef-artifacts/typescript/password", artifactHash: "sha256:def")
     then test(build: n, toolchainPath: "/usr/local/bin/tsc",
               invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json", configFile: "vitest.config.ts", env: null },
               testType: "unit")

@@ -1,5 +1,5 @@
 # Projection complete triggers validation
-# Architecture doc: Interface Kit, Sync Section 3.2
+# Architecture doc: Clef Bind, Sync Section 3.2
 
 sync ValidateProjection [eager]
 when {

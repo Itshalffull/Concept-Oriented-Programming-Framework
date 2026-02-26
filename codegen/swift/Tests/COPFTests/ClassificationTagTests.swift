@@ -1,7 +1,7 @@
 // ClassificationTagTests.swift — Tests for ClassificationTag concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ClassificationTagTests: XCTestCase {
 

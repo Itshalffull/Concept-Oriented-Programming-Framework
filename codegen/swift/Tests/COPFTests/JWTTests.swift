@@ -1,7 +1,7 @@
 // JWTTests.swift — Tests for JWT concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class JWTTests: XCTestCase {
 

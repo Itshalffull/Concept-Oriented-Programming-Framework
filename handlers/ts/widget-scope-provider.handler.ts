@@ -87,7 +87,7 @@ function buildWidgetScopes(source: string, file: string): {
 
         declarations.push({
           name: widgetName,
-          symbolString: `coif/widget/${widgetName}`,
+          symbolString: `surface/widget/${widgetName}`,
           scopeId: globalScope.id,
           kind: 'concept',
         });
@@ -119,7 +119,7 @@ function buildWidgetScopes(source: string, file: string): {
         'required', 'optional'].includes(itemName)) continue;
 
       const scopeId = sectionScope?.id || widgetScope.id;
-      const prefix = `coif/widget/${widgetName}`;
+      const prefix = `surface/widget/${widgetName}`;
 
       if (currentSection === 'anatomy') {
         declarations.push({

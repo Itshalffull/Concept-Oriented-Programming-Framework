@@ -10,7 +10,7 @@
 // generated counterpart for subcommand names, all flags, all
 // positional arguments, and parameter types.
 //
-// See Architecture doc: Interface Kit, Section 2.4
+// See Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -161,7 +161,7 @@ describe('CLI Generation Regression', () => {
   // required options, optional flags, and --json flag.
   // ================================================================
 
-  // ---- copf init <name> → project-scaffold init <name> ----
+  // ---- clef init <name> → project-scaffold init <name> ----
 
   describe('init → ProjectScaffold parity', () => {
     it('generated group "project-scaffold" exists', () => {
@@ -204,7 +204,7 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf check → spec-parser check ----
+  // ---- clef check → spec-parser check ----
 
   describe('check → SpecParser parity', () => {
     it('generated group "spec-parser" exists', () => {
@@ -247,7 +247,7 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf generate --target <lang> → schema-gen generate ----
+  // ---- clef generate --target <lang> → schema-gen generate ----
 
   describe('generate → SchemaGen parity', () => {
     it('generated group "schema-gen" exists', () => {
@@ -285,7 +285,7 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf compile-syncs → sync-compiler compile ----
+  // ---- clef compile-syncs → sync-compiler compile ----
 
   describe('compile-syncs → SyncCompiler parity', () => {
     it('generated group "sync-compiler" exists', () => {
@@ -323,8 +323,8 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf compile --cache → build-cache check ----
-  // CacheCompiler superseded by generation kit BuildCache concept
+  // ---- clef compile --cache → build-cache check ----
+  // CacheCompiler superseded by generation suite BuildCache concept
 
   describe('compile --cache → BuildCache parity', () => {
     it('generated group "build-cache" exists', () => {
@@ -338,7 +338,7 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf dev → dev-server start/stop/status ----
+  // ---- clef dev → dev-server start/stop/status ----
 
   describe('dev → DevServer parity', () => {
     it('generated group "dev-server" exists', () => {
@@ -403,7 +403,7 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf deploy --manifest <file> → deployment-validator parse/validate ----
+  // ---- clef deploy --manifest <file> → deployment-validator parse/validate ----
 
   describe('deploy → DeploymentValidator parity', () => {
     it('generated group "deployment-validator" exists', () => {
@@ -457,7 +457,7 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf trace <flow-id> → flow-trace build/render ----
+  // ---- clef trace <flow-id> → flow-trace build/render ----
 
   describe('trace → FlowTrace parity', () => {
     it('generated group "flow-trace" exists', () => {
@@ -501,9 +501,9 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- copf kit <sub> → kit-manager <sub> ----
+  // ---- clef suite <sub> → kit-manager <sub> ----
 
-  describe('kit → KitManager parity', () => {
+  describe('kit → SuiteManager parity', () => {
     it('generated group "kit-manager" exists', () => {
       expect(generatedCommands.has('kit-manager')).toBe(true);
     });
@@ -519,7 +519,7 @@ describe('CLI Generation Regression', () => {
       expect(names).toEqual(['check-overrides', 'init', 'list', 'test', 'validate']);
     });
 
-    // ---- kit init <name> ----
+    // ---- suite init <name> ----
     it('init: has positional "name" arg (via concept-override)', () => {
       const cmd = generatedCommands.get('kit-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'init')!;
@@ -544,7 +544,7 @@ describe('CLI Generation Regression', () => {
       expect(sub.requiredOptions).toEqual([]);
     });
 
-    // ---- kit validate <path> ----
+    // ---- suite validate <path> ----
     it('validate: has positional "path" arg (via concept-override)', () => {
       const cmd = generatedCommands.get('kit-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'validate')!;
@@ -563,7 +563,7 @@ describe('CLI Generation Regression', () => {
       expect(sub.hasJsonFlag).toBe(true);
     });
 
-    // ---- kit test <path> ----
+    // ---- suite test <path> ----
     it('test: has positional "path" arg (via concept-override)', () => {
       const cmd = generatedCommands.get('kit-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'test')!;
@@ -582,7 +582,7 @@ describe('CLI Generation Regression', () => {
       expect(sub.hasJsonFlag).toBe(true);
     });
 
-    // ---- kit list ----
+    // ---- suite list ----
     it('list: has no positional args (handmade has none)', () => {
       const cmd = generatedCommands.get('kit-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'list')!;
@@ -601,7 +601,7 @@ describe('CLI Generation Regression', () => {
       expect(sub.hasJsonFlag).toBe(true);
     });
 
-    // ---- kit check-overrides ----
+    // ---- suite check-overrides ----
     it('check-overrides: has --json flag', () => {
       const cmd = generatedCommands.get('kit-manager')!;
       const sub = getGeneratedSubcommand(cmd, 'check-overrides')!;
@@ -786,7 +786,7 @@ describe('CLI Generation Regression', () => {
       DevServer: 'dev-server',
       DeploymentValidator: 'deployment-validator',
       FlowTrace: 'flow-trace',
-      KitManager: 'kit-manager',
+      SuiteManager: 'kit-manager',
     };
 
     it('generated CLI has a command group for each successfully parsed concept in manifest', () => {
@@ -821,7 +821,7 @@ describe('CLI Generation Regression', () => {
       const handmadeConcepts = [
         'ProjectScaffold', 'SpecParser', 'SchemaGen', 'SyncCompiler',
         'BuildCache', 'DevServer', 'DeploymentValidator', 'FlowTrace',
-        'KitManager',
+        'SuiteManager',
       ];
 
       for (const concept of handmadeConcepts) {
@@ -835,7 +835,7 @@ describe('CLI Generation Regression', () => {
     });
 
     it('handmade "test" command has no generated counterpart (no TestRunner concept in manifest)', () => {
-      // The handmade CLI has `copf test` but no TestRunner concept spec is in
+      // The handmade CLI has `clef test` but no TestRunner concept spec is in
       // the devtools manifest, so it should NOT appear in the generated CLI.
       expect(generatedCommands.has('test-runner')).toBe(false);
     });
@@ -872,7 +872,7 @@ describe('CLI Generation Regression', () => {
         const filePath = resolve(GENERATED_CLI_DIR, group, `${group}.command.ts`);
         if (!existsSync(filePath)) continue;
         const content = readFileSync(filePath, 'utf-8');
-        expect(content).toContain('Auto-generated by COPF Interface Kit');
+        expect(content).toContain('Auto-generated by Clef Clef Bind');
         expect(content).toContain('Do not edit manually');
       }
     });

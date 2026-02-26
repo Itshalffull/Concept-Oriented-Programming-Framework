@@ -1,7 +1,7 @@
 // PropertyTests.swift — Tests for Property concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class PropertyTests: XCTestCase {
 

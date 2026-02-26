@@ -30,7 +30,7 @@ describe('ConceptEntity Handler', () => {
       const result = await conceptEntityHandler.register(
         {
           name: 'Todo',
-          source: 'concepts/todo.copf',
+          source: 'concepts/todo.clef',
           ast: JSON.stringify({
             purpose: 'Manage todo items',
             version: 1,
@@ -51,7 +51,7 @@ describe('ConceptEntity Handler', () => {
       await conceptEntityHandler.register(
         {
           name: 'Todo',
-          source: 'concepts/todo.copf',
+          source: 'concepts/todo.clef',
           ast: JSON.stringify({
             purpose: 'Tasks',
             version: 2,
@@ -78,11 +78,11 @@ describe('ConceptEntity Handler', () => {
 
     it('returns alreadyRegistered for a duplicate name', async () => {
       const first = await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.copf', ast: '{}' },
+        { name: 'Todo', source: 'a.clef', ast: '{}' },
         storage,
       );
       const second = await conceptEntityHandler.register(
-        { name: 'Todo', source: 'b.copf', ast: '{}' },
+        { name: 'Todo', source: 'b.clef', ast: '{}' },
         storage,
       );
       expect(second.variant).toBe('alreadyRegistered');
@@ -91,7 +91,7 @@ describe('ConceptEntity Handler', () => {
 
     it('handles non-JSON AST gracefully', async () => {
       const result = await conceptEntityHandler.register(
-        { name: 'Broken', source: 'x.copf', ast: 'not-json' },
+        { name: 'Broken', source: 'x.clef', ast: 'not-json' },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -108,7 +108,7 @@ describe('ConceptEntity Handler', () => {
   describe('get', () => {
     it('returns the entity by name', async () => {
       const reg = await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.copf', ast: '{}' },
+        { name: 'Todo', source: 'a.clef', ast: '{}' },
         storage,
       );
       const result = await conceptEntityHandler.get({ name: 'Todo' }, storage);
@@ -129,11 +129,11 @@ describe('ConceptEntity Handler', () => {
   describe('findByCapability', () => {
     it('finds concepts with a given capability', async () => {
       await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.copf', ast: JSON.stringify({ capabilities: ['persistence', 'notification'] }) },
+        { name: 'Todo', source: 'a.clef', ast: JSON.stringify({ capabilities: ['persistence', 'notification'] }) },
         storage,
       );
       await conceptEntityHandler.register(
-        { name: 'User', source: 'b.copf', ast: JSON.stringify({ capabilities: ['auth'] }) },
+        { name: 'User', source: 'b.clef', ast: JSON.stringify({ capabilities: ['auth'] }) },
         storage,
       );
 
@@ -158,11 +158,11 @@ describe('ConceptEntity Handler', () => {
   describe('findByKit', () => {
     it('finds concepts in a given kit', async () => {
       await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.copf', ast: JSON.stringify({ kit: 'core-kit' }) },
+        { name: 'Todo', source: 'a.clef', ast: JSON.stringify({ kit: 'core-kit' }) },
         storage,
       );
       await conceptEntityHandler.register(
-        { name: 'User', source: 'b.copf', ast: JSON.stringify({ kit: 'auth-kit' }) },
+        { name: 'User', source: 'b.clef', ast: JSON.stringify({ kit: 'auth-kit' }) },
         storage,
       );
 
@@ -181,13 +181,13 @@ describe('ConceptEntity Handler', () => {
   describe('generatedArtifacts', () => {
     it('returns provenance records for the concept symbol', async () => {
       const reg = await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.copf', ast: '{}' },
+        { name: 'Todo', source: 'a.clef', ast: '{}' },
         storage,
       );
 
       await storage.put('provenance', 'prov-1', {
         id: 'prov-1',
-        sourceSymbol: 'copf/concept/Todo',
+        sourceSymbol: 'clef/concept/Todo',
         targetFile: 'generated/Todo.ts',
       });
 
@@ -211,7 +211,7 @@ describe('ConceptEntity Handler', () => {
   describe('participatingSyncs', () => {
     it('finds syncs referencing this concept in when or then', async () => {
       const reg = await conceptEntityHandler.register(
-        { name: 'Todo', source: 'a.copf', ast: '{}' },
+        { name: 'Todo', source: 'a.clef', ast: '{}' },
         storage,
       );
 
@@ -253,11 +253,11 @@ describe('ConceptEntity Handler', () => {
   describe('checkCompatibility', () => {
     it('returns compatible with shared type params', async () => {
       const a = await conceptEntityHandler.register(
-        { name: 'A', source: 'a.copf', ast: JSON.stringify({ typeParams: ['T', 'U'] }) },
+        { name: 'A', source: 'a.clef', ast: JSON.stringify({ typeParams: ['T', 'U'] }) },
         storage,
       );
       const b = await conceptEntityHandler.register(
-        { name: 'B', source: 'b.copf', ast: JSON.stringify({ typeParams: ['U', 'V'] }) },
+        { name: 'B', source: 'b.clef', ast: JSON.stringify({ typeParams: ['U', 'V'] }) },
         storage,
       );
 
@@ -272,11 +272,11 @@ describe('ConceptEntity Handler', () => {
 
     it('returns compatible with empty shared params when no conflicts', async () => {
       const a = await conceptEntityHandler.register(
-        { name: 'A', source: 'a.copf', ast: JSON.stringify({ typeParams: ['T'], capabilities: ['read'] }) },
+        { name: 'A', source: 'a.clef', ast: JSON.stringify({ typeParams: ['T'], capabilities: ['read'] }) },
         storage,
       );
       const b = await conceptEntityHandler.register(
-        { name: 'B', source: 'b.copf', ast: JSON.stringify({ typeParams: ['U'], capabilities: ['write'] }) },
+        { name: 'B', source: 'b.clef', ast: JSON.stringify({ typeParams: ['U'], capabilities: ['write'] }) },
         storage,
       );
 
@@ -290,11 +290,11 @@ describe('ConceptEntity Handler', () => {
 
     it('returns incompatible for conflicting exclusive capabilities', async () => {
       const a = await conceptEntityHandler.register(
-        { name: 'A', source: 'a.copf', ast: JSON.stringify({ typeParams: [], capabilities: ['exclusive-owner'] }) },
+        { name: 'A', source: 'a.clef', ast: JSON.stringify({ typeParams: [], capabilities: ['exclusive-owner'] }) },
         storage,
       );
       const b = await conceptEntityHandler.register(
-        { name: 'B', source: 'b.copf', ast: JSON.stringify({ typeParams: [], capabilities: ['exclusive-owner'] }) },
+        { name: 'B', source: 'b.clef', ast: JSON.stringify({ typeParams: [], capabilities: ['exclusive-owner'] }) },
         storage,
       );
 
@@ -308,7 +308,7 @@ describe('ConceptEntity Handler', () => {
 
     it('returns incompatible when one entity is missing', async () => {
       const a = await conceptEntityHandler.register(
-        { name: 'A', source: 'a.copf', ast: '{}' },
+        { name: 'A', source: 'a.clef', ast: '{}' },
         storage,
       );
 

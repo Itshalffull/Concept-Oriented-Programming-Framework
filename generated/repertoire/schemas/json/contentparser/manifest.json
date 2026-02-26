@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ContentParser",
+  "uri": "urn:clef/ContentParser",
   "name": "ContentParser",
   "typeParams": [
     {
@@ -494,11 +494,11 @@
   "jsonSchemas": {
     "invocations": {
       "registerFormat": {
-        "$id": "urn:copf/ContentParser/registerFormat/invocation",
+        "$id": "urn:clef/ContentParser/registerFormat/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "registerFormat"
@@ -521,11 +521,11 @@
         }
       },
       "registerExtractor": {
-        "$id": "urn:copf/ContentParser/registerExtractor/invocation",
+        "$id": "urn:clef/ContentParser/registerExtractor/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "registerExtractor"
@@ -548,11 +548,11 @@
         }
       },
       "parse": {
-        "$id": "urn:copf/ContentParser/parse/invocation",
+        "$id": "urn:clef/ContentParser/parse/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "parse"
@@ -579,11 +579,11 @@
         }
       },
       "extractRefs": {
-        "$id": "urn:copf/ContentParser/extractRefs/invocation",
+        "$id": "urn:clef/ContentParser/extractRefs/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "extractRefs"
@@ -602,11 +602,11 @@
         }
       },
       "extractTags": {
-        "$id": "urn:copf/ContentParser/extractTags/invocation",
+        "$id": "urn:clef/ContentParser/extractTags/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "extractTags"
@@ -625,11 +625,11 @@
         }
       },
       "extractProperties": {
-        "$id": "urn:copf/ContentParser/extractProperties/invocation",
+        "$id": "urn:clef/ContentParser/extractProperties/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "extractProperties"
@@ -648,11 +648,11 @@
         }
       },
       "serialize": {
-        "$id": "urn:copf/ContentParser/serialize/invocation",
+        "$id": "urn:clef/ContentParser/serialize/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentParser"
+            "const": "urn:clef/ContentParser"
           },
           "action": {
             "const": "serialize"
@@ -678,11 +678,11 @@
     "completions": {
       "registerFormat": {
         "ok": {
-          "$id": "urn:copf/ContentParser/registerFormat/completion/ok",
+          "$id": "urn:clef/ContentParser/registerFormat/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "registerFormat"
@@ -704,11 +704,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ContentParser/registerFormat/completion/exists",
+          "$id": "urn:clef/ContentParser/registerFormat/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "registerFormat"
@@ -732,11 +732,11 @@
       },
       "registerExtractor": {
         "ok": {
-          "$id": "urn:copf/ContentParser/registerExtractor/completion/ok",
+          "$id": "urn:clef/ContentParser/registerExtractor/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "registerExtractor"
@@ -758,11 +758,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ContentParser/registerExtractor/completion/exists",
+          "$id": "urn:clef/ContentParser/registerExtractor/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "registerExtractor"
@@ -786,11 +786,11 @@
       },
       "parse": {
         "ok": {
-          "$id": "urn:copf/ContentParser/parse/completion/ok",
+          "$id": "urn:clef/ContentParser/parse/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "parse"
@@ -812,11 +812,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/ContentParser/parse/completion/error",
+          "$id": "urn:clef/ContentParser/parse/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "parse"
@@ -840,11 +840,11 @@
       },
       "extractRefs": {
         "ok": {
-          "$id": "urn:copf/ContentParser/extractRefs/completion/ok",
+          "$id": "urn:clef/ContentParser/extractRefs/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "extractRefs"
@@ -866,11 +866,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentParser/extractRefs/completion/notfound",
+          "$id": "urn:clef/ContentParser/extractRefs/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "extractRefs"
@@ -894,11 +894,11 @@
       },
       "extractTags": {
         "ok": {
-          "$id": "urn:copf/ContentParser/extractTags/completion/ok",
+          "$id": "urn:clef/ContentParser/extractTags/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "extractTags"
@@ -920,11 +920,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentParser/extractTags/completion/notfound",
+          "$id": "urn:clef/ContentParser/extractTags/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "extractTags"
@@ -948,11 +948,11 @@
       },
       "extractProperties": {
         "ok": {
-          "$id": "urn:copf/ContentParser/extractProperties/completion/ok",
+          "$id": "urn:clef/ContentParser/extractProperties/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "extractProperties"
@@ -974,11 +974,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentParser/extractProperties/completion/notfound",
+          "$id": "urn:clef/ContentParser/extractProperties/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "extractProperties"
@@ -1002,11 +1002,11 @@
       },
       "serialize": {
         "ok": {
-          "$id": "urn:copf/ContentParser/serialize/completion/ok",
+          "$id": "urn:clef/ContentParser/serialize/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "serialize"
@@ -1028,11 +1028,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentParser/serialize/completion/notfound",
+          "$id": "urn:clef/ContentParser/serialize/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentParser"
+              "const": "urn:clef/ContentParser"
             },
             "action": {
               "const": "serialize"

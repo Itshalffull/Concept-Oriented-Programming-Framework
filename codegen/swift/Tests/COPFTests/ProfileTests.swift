@@ -1,7 +1,7 @@
 // ProfileTests.swift — Tests for Profile concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ProfileTests: XCTestCase {
 

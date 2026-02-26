@@ -1,7 +1,7 @@
 # ============================================================
-# ViewFieldsDriveUISchema — coif-integration recommended sync
+# ViewFieldsDriveUISchema — surface-integration recommended sync
 #
-# Reflect visible field changes from library View in COIF
+# Reflect visible field changes from library View in Clef Surface
 # UI schema overrides.
 # ============================================================
 

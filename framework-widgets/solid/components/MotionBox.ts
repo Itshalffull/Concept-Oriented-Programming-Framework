@@ -1,7 +1,7 @@
 // ============================================================
 // MotionBox — Solid.js Component
 //
-// Animated container with CSS transitions driven by COIF
+// Animated container with CSS transitions driven by Clef Surface
 // motion tokens. Supports reduced-motion preferences via
 // matchMedia and reactive transition property updates.
 // ============================================================
@@ -14,13 +14,13 @@ import type {
 
 import {
   motionToCSS,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -123,7 +123,7 @@ export function MotionBox(props: MotionBoxProps): MotionBoxResult {
   // Create the container element
   const tag = props.tag ?? 'div';
   const el = document.createElement(tag);
-  el.setAttribute('data-coif-widget', 'motion-box');
+  el.setAttribute('data-surface-widget', 'motion-box');
 
   if (props.class) {
     el.setAttribute('class', props.class);
@@ -152,7 +152,7 @@ export function MotionBox(props: MotionBoxProps): MotionBoxResult {
   // Listen for transitionend events
   el.addEventListener('transitionend', (e: TransitionEvent) => {
     el.dispatchEvent(
-      new CustomEvent('coif:transition-end', {
+      new CustomEvent('surface:transition-end', {
         bubbles: true,
         detail: {
           property: e.propertyName,

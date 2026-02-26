@@ -1,4 +1,4 @@
-// Annotation Concept Implementation (Interface Kit)
+// Annotation Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 export const annotationHandler: ConceptHandler = {

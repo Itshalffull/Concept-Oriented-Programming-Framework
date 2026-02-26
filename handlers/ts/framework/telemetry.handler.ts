@@ -158,15 +158,15 @@ function mapRecordToSpan(record: Record<string, unknown>): TelemetrySpan {
   const input = record.input as Record<string, unknown> | undefined;
   const attributes: Record<string, unknown> = {};
 
-  if (variant) attributes['copf.variant'] = variant;
-  if (record.sync) attributes['copf.sync'] = record.sync;
-  if (record.type) attributes['copf.record_type'] = record.type;
+  if (variant) attributes['clef.variant'] = variant;
+  if (record.sync) attributes['clef.sync'] = record.sync;
+  if (record.type) attributes['clef.record_type'] = record.type;
 
   // Add output fields as attributes
   if (output) {
     for (const [key, value] of Object.entries(output)) {
       if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        attributes[`copf.output.${key}`] = value;
+        attributes[`clef.output.${key}`] = value;
       }
     }
   }
@@ -175,7 +175,7 @@ function mapRecordToSpan(record: Record<string, unknown>): TelemetrySpan {
   if (input) {
     for (const [key, value] of Object.entries(input)) {
       if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        attributes[`copf.input.${key}`] = value;
+        attributes[`clef.input.${key}`] = value;
       }
     }
   }
@@ -239,11 +239,11 @@ async function exportToOtlp(
     resourceSpans: [{
       resource: {
         attributes: [
-          { key: 'service.name', value: { stringValue: 'copf' } },
+          { key: 'service.name', value: { stringValue: 'clef' } },
         ],
       },
       scopeSpans: [{
-        scope: { name: 'copf-telemetry' },
+        scope: { name: 'clef-telemetry' },
         spans: [{
           traceId: span.traceId,
           spanId: span.spanId,

@@ -16,8 +16,8 @@ function nextId(): string {
 /**
  * Map a Clef type name to a TypeScript type string.
  */
-function mapType(copfType: string): string {
-  switch (copfType) {
+function mapType(clefType: string): string {
+  switch (clefType) {
     case 'String': return 'string';
     case 'Int': return 'number';
     case 'Float': return 'number';
@@ -25,8 +25,8 @@ function mapType(copfType: string): string {
     case 'DateTime': return 'string';
     case 'Bytes': return 'Uint8Array';
     default:
-      if (copfType.startsWith('list')) return `Array<${mapType(copfType.replace(/^list\s*/, ''))}>`;
-      if (copfType.startsWith('option')) return `${mapType(copfType.replace(/^option\s*/, ''))} | null`;
+      if (clefType.startsWith('list')) return `Array<${mapType(clefType.replace(/^list\s*/, ''))}>`;
+      if (clefType.startsWith('option')) return `${mapType(clefType.replace(/^option\s*/, ''))} | null`;
       return 'unknown';
   }
 }

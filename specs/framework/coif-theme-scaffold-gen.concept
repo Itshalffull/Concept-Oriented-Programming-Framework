@@ -3,7 +3,7 @@
 concept CoifThemeScaffoldGen [X] {
 
   purpose {
-    Generate COIF design system theme scaffolds including palette
+    Generate Clef Surface design system theme scaffolds including palette
     configuration, typography scale, motion definitions, elevation
     scale, and light/dark theme manifests. Follows WCAG
     accessibility guidelines for contrast ratios.
@@ -18,7 +18,7 @@ concept CoifThemeScaffoldGen [X] {
     action generate(name: String, primaryColor: String, fontFamily: String,
                     baseSize: Int, mode: String) {
       description {
-        Generate a complete COIF theme scaffold with palette tokens,
+        Generate a complete Clef Surface theme scaffold with palette tokens,
         typography scale, motion transitions, elevation shadows,
         and light/dark theme JSON files.
       }

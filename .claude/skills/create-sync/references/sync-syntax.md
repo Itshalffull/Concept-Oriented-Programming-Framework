@@ -112,8 +112,8 @@ The purpose string is preserved in the parsed AST (`CompiledSync.purpose`) and a
 | `[eventual]` | Deferred. Queued if concepts unavailable, retried on availability. | No |
 | `[local]` | Same runtime only. Used for latency-sensitive or offline-capable flows. | No |
 | `[idempotent]` | Safe to re-execute. Engine may retry without side-effect concerns. | No |
-| `[required]` | Kit tier: removal causes data corruption. Can't override/disable. | No (kit syncs only) |
-| `[recommended]` | Kit tier: useful default, overridable/disableable by apps. | No (kit syncs only) |
+| `[required]` | Kit tier: removal causes data corruption. Can't override/disable. | No (suite syncs only) |
+| `[recommended]` | Kit tier: useful default, overridable/disableable by apps. | No (suite syncs only) |
 
 Multiple annotations are allowed:
 

@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Audio/video transcription enricher provider via Whisper
+// Clef Data Integration Kit - Audio/video transcription enricher provider via Whisper
 // Sends audio to Whisper API or runs locally, parses timestamped segments.
 
 import * as https from 'https';
@@ -105,7 +105,7 @@ async function transcribeLocal(
   modelSize: WhisperModel,
   language: string,
 ): Promise<TranscriptSegment[]> {
-  const outputPath = join(tmpdir(), `copf_whisper_${Date.now()}`);
+  const outputPath = join(tmpdir(), `clef_whisper_${Date.now()}`);
 
   try {
     await execFileAsync('whisper', [
@@ -200,7 +200,7 @@ export class WhisperTranscribeEnricherProvider {
       segments = await transcribeApi(item.content, config.apiKey!, config.model ?? 'whisper-1', language);
     } else {
       // Write audio to temp file for local processing
-      const tmpPath = join(tmpdir(), `copf_audio_${item.id}_${Date.now()}.wav`);
+      const tmpPath = join(tmpdir(), `clef_audio_${item.id}_${Date.now()}.wav`);
       writeFileSync(tmpPath, Buffer.from(item.content, 'base64'));
       try {
         segments = await transcribeLocal(tmpPath, modelSize, language);

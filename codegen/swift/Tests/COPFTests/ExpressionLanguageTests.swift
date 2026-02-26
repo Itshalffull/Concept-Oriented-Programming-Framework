@@ -1,7 +1,7 @@
 // ExpressionLanguageTests.swift — Tests for ExpressionLanguage concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ExpressionLanguageTests: XCTestCase {
 

@@ -1,5 +1,5 @@
 // Conduit Example App — Web3 Wallet Authentication
-// Alternative login via Ethereum wallet using the Web3 kit's Wallet concept
+// Alternative login via Ethereum wallet using the Web3 suite's Wallet concept
 // and the wallet-auth sync.
 
 import { createInMemoryStorage } from '../../../kernel/src/storage.js';

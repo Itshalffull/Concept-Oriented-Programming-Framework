@@ -5,15 +5,15 @@
 // generator families (framework, interface, deploy) with
 // independent cache entries and kind chains.
 //
-// See copf-generation-kit.md Part 2 (Kind System).
+// See clef-generation-suite.md Part 2 (Kind System).
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
 import { kindSystemHandler } from '../../implementations/typescript/kind-system.impl.js';
 import { generationPlanHandler } from '../../implementations/typescript/generation-plan.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('Multi-family integration', () => {
   let cacheStorage: ConceptStorage;

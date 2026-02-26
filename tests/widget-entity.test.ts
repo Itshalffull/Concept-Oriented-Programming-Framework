@@ -252,7 +252,7 @@ describe('WidgetEntity Handler', () => {
 
       await storage.put('provenance', 'prov-1', {
         id: 'prov-1',
-        sourceSymbol: 'copf/widget/Button',
+        sourceSymbol: 'clef/widget/Button',
         framework: 'react',
         targetFile: 'generated/Button.tsx',
       });

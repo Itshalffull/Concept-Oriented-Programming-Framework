@@ -22,7 +22,7 @@ export const widgetPropEntityHandler: ConceptHandler = {
     const defaultValue = input.defaultValue as string;
 
     const id = nextId();
-    const symbol = `copf/prop/${widget}/${name}`;
+    const symbol = `clef/prop/${widget}/${name}`;
 
     await storage.put('widget-prop-entity', id, {
       id,

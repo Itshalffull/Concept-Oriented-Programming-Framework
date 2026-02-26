@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Transform
 /// @notice Individual value conversion with plugin-based transforms and chaining
-/// @dev Implements the Transform concept from COPF specification.
+/// @dev Implements the Transform concept from Clef specification.
 ///      Supports registering named transforms backed by plugins, applying a single
 ///      transform to a value, and chaining multiple transforms in sequence.
 

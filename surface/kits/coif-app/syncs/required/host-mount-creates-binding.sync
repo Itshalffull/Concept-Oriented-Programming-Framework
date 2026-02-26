@@ -1,5 +1,5 @@
 # ============================================================
-# HostMountCreatesBinding — coif-app required sync
+# HostMountCreatesBinding — surface-app required sync
 #
 # When a Host is mounted, create a Binding to the concept
 # in coupled mode.

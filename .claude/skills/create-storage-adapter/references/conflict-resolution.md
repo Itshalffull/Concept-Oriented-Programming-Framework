@@ -1,6 +1,6 @@
 # Conflict Resolution Reference
 
-How COPF storage adapters detect and resolve concurrent write conflicts. Two-phase system: LWW timestamps + `onConflict` hooks with four resolution strategies.
+How Clef storage adapters detect and resolve concurrent write conflicts. Two-phase system: LWW timestamps + `onConflict` hooks with four resolution strategies.
 
 ## Overview
 
@@ -25,7 +25,7 @@ Every `put()` automatically stores a `lastWrittenAt` timestamp alongside the rec
 // Default behavior in put() when overwriting
 if (existing.meta.lastWrittenAt > now) {
   console.warn(
-    `[copf/storage] LWW conflict: overwriting ${relation}/${key} ` +
+    `[clef/storage] LWW conflict: overwriting ${relation}/${key} ` +
     `(existing: ${existing.meta.lastWrittenAt}, incoming: ${now})`,
   );
 }
@@ -206,7 +206,7 @@ async put(relation, key, value) {
     } else {
       // Default LWW: warn if overwriting a more recent entry
       if (existing.meta.lastWrittenAt > now) {
-        console.warn(`[copf/storage] LWW conflict: ...`);
+        console.warn(`[clef/storage] LWW conflict: ...`);
       }
     }
   }
@@ -222,7 +222,7 @@ When `escalate` is returned, the sync engine produces a conflict completion:
 ```typescript
 // In the DistributedSyncEngine
 const completion = engine.produceConflictCompletion(
-  'urn:copf/Article',
+  'urn:clef/Article',
   conflictInfo,
   flowId,
 );

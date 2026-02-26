@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ProgressiveSchema
 /// @notice Freeform-to-structured data emergence with structure detection and promotion
-/// @dev Implements the ProgressiveSchema concept from COPF specification.
+/// @dev Implements the ProgressiveSchema concept from Clef specification.
 ///      Supports capturing freeform content, detecting structure candidates,
 ///      accepting or rejecting suggestions, and promoting items to formal schemas.
 

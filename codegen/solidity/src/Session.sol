@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Session
 /// @notice Concept-oriented session management with creation, validation, refresh, and destruction
-/// @dev Implements the Session concept from COPF specification.
+/// @dev Implements the Session concept from Clef specification.
 ///      Supports time-bounded sessions with device info and per-user session tracking.
 
 contract Session {

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Toolchain",
+  "uri": "urn:clef/Toolchain",
   "name": "Toolchain",
   "typeParams": [
     {
@@ -388,7 +388,7 @@
               }
             }
           ],
-          "prose": "List all resolved toolchains , optionally filtered by \n language Used by copf toolchain list"
+          "prose": "List all resolved toolchains , optionally filtered by \n language Used by clef toolchain list"
         }
       ]
     },
@@ -559,11 +559,11 @@
   "jsonSchemas": {
     "invocations": {
       "resolve": {
-        "$id": "urn:copf/Toolchain/resolve/invocation",
+        "$id": "urn:clef/Toolchain/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Toolchain"
+            "const": "urn:clef/Toolchain"
           },
           "action": {
             "const": "resolve"
@@ -597,11 +597,11 @@
         }
       },
       "validate": {
-        "$id": "urn:copf/Toolchain/validate/invocation",
+        "$id": "urn:clef/Toolchain/validate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Toolchain"
+            "const": "urn:clef/Toolchain"
           },
           "action": {
             "const": "validate"
@@ -620,11 +620,11 @@
         }
       },
       "list": {
-        "$id": "urn:copf/Toolchain/list/invocation",
+        "$id": "urn:clef/Toolchain/list/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Toolchain"
+            "const": "urn:clef/Toolchain"
           },
           "action": {
             "const": "list"
@@ -650,11 +650,11 @@
         }
       },
       "capabilities": {
-        "$id": "urn:copf/Toolchain/capabilities/invocation",
+        "$id": "urn:clef/Toolchain/capabilities/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Toolchain"
+            "const": "urn:clef/Toolchain"
           },
           "action": {
             "const": "capabilities"
@@ -676,11 +676,11 @@
     "completions": {
       "resolve": {
         "ok": {
-          "$id": "urn:copf/Toolchain/resolve/completion/ok",
+          "$id": "urn:clef/Toolchain/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "resolve"
@@ -717,11 +717,11 @@
           }
         },
         "notInstalled": {
-          "$id": "urn:copf/Toolchain/resolve/completion/notInstalled",
+          "$id": "urn:clef/Toolchain/resolve/completion/notInstalled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "resolve"
@@ -751,11 +751,11 @@
           }
         },
         "versionMismatch": {
-          "$id": "urn:copf/Toolchain/resolve/completion/versionMismatch",
+          "$id": "urn:clef/Toolchain/resolve/completion/versionMismatch",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "resolve"
@@ -785,11 +785,11 @@
           }
         },
         "platformUnsupported": {
-          "$id": "urn:copf/Toolchain/resolve/completion/platformUnsupported",
+          "$id": "urn:clef/Toolchain/resolve/completion/platformUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "resolve"
@@ -817,11 +817,11 @@
       },
       "validate": {
         "ok": {
-          "$id": "urn:copf/Toolchain/validate/completion/ok",
+          "$id": "urn:clef/Toolchain/validate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "validate"
@@ -847,11 +847,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Toolchain/validate/completion/invalid",
+          "$id": "urn:clef/Toolchain/validate/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "validate"
@@ -879,11 +879,11 @@
       },
       "list": {
         "ok": {
-          "$id": "urn:copf/Toolchain/list/completion/ok",
+          "$id": "urn:clef/Toolchain/list/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "list"
@@ -934,11 +934,11 @@
       },
       "capabilities": {
         "ok": {
-          "$id": "urn:copf/Toolchain/capabilities/completion/ok",
+          "$id": "urn:clef/Toolchain/capabilities/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Toolchain"
+              "const": "urn:clef/Toolchain"
             },
             "action": {
               "const": "capabilities"

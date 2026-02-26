@@ -2,12 +2,12 @@
 # Framework Generator Registration
 #
 # Wire each framework generator's register() action to
-# PluginRegistry, enabling the generation kit's existing
+# PluginRegistry, enabling the generation suite's existing
 # syncs (RegisterGeneratorKinds, EnsureKindsDefined) to
 # populate the KindSystem taxonomy automatically.
 #
 # Flow: Generator/register → PluginRegistry/register
-#       → (generation kit) → KindSystem/define + connect
+#       → (generation suite) → KindSystem/define + connect
 # ============================================================
 
 # --- Code generators ---

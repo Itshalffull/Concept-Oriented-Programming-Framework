@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Cache",
+  "uri": "urn:clef/Cache",
   "name": "Cache",
   "typeParams": [
     {
@@ -406,11 +406,11 @@
   "jsonSchemas": {
     "invocations": {
       "set": {
-        "$id": "urn:copf/Cache/set/invocation",
+        "$id": "urn:clef/Cache/set/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Cache"
+            "const": "urn:clef/Cache"
           },
           "action": {
             "const": "set"
@@ -445,11 +445,11 @@
         }
       },
       "get": {
-        "$id": "urn:copf/Cache/get/invocation",
+        "$id": "urn:clef/Cache/get/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Cache"
+            "const": "urn:clef/Cache"
           },
           "action": {
             "const": "get"
@@ -472,11 +472,11 @@
         }
       },
       "invalidate": {
-        "$id": "urn:copf/Cache/invalidate/invocation",
+        "$id": "urn:clef/Cache/invalidate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Cache"
+            "const": "urn:clef/Cache"
           },
           "action": {
             "const": "invalidate"
@@ -499,11 +499,11 @@
         }
       },
       "invalidateByTags": {
-        "$id": "urn:copf/Cache/invalidateByTags/invocation",
+        "$id": "urn:clef/Cache/invalidateByTags/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Cache"
+            "const": "urn:clef/Cache"
           },
           "action": {
             "const": "invalidateByTags"
@@ -525,11 +525,11 @@
     "completions": {
       "set": {
         "ok": {
-          "$id": "urn:copf/Cache/set/completion/ok",
+          "$id": "urn:clef/Cache/set/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Cache"
+              "const": "urn:clef/Cache"
             },
             "action": {
               "const": "set"
@@ -547,11 +547,11 @@
       },
       "get": {
         "ok": {
-          "$id": "urn:copf/Cache/get/completion/ok",
+          "$id": "urn:clef/Cache/get/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Cache"
+              "const": "urn:clef/Cache"
             },
             "action": {
               "const": "get"
@@ -573,11 +573,11 @@
           }
         },
         "miss": {
-          "$id": "urn:copf/Cache/get/completion/miss",
+          "$id": "urn:clef/Cache/get/completion/miss",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Cache"
+              "const": "urn:clef/Cache"
             },
             "action": {
               "const": "get"
@@ -595,11 +595,11 @@
       },
       "invalidate": {
         "ok": {
-          "$id": "urn:copf/Cache/invalidate/completion/ok",
+          "$id": "urn:clef/Cache/invalidate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Cache"
+              "const": "urn:clef/Cache"
             },
             "action": {
               "const": "invalidate"
@@ -615,11 +615,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Cache/invalidate/completion/notfound",
+          "$id": "urn:clef/Cache/invalidate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Cache"
+              "const": "urn:clef/Cache"
             },
             "action": {
               "const": "invalidate"
@@ -637,11 +637,11 @@
       },
       "invalidateByTags": {
         "ok": {
-          "$id": "urn:copf/Cache/invalidateByTags/completion/ok",
+          "$id": "urn:clef/Cache/invalidateByTags/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Cache"
+              "const": "urn:clef/Cache"
             },
             "action": {
               "const": "invalidateByTags"

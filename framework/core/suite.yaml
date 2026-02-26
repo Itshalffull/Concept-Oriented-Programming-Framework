@@ -1,12 +1,12 @@
-# kits/framework/kit.yaml
-kit:
+# kits/framework/suite.yaml
+suite:
   name: framework
   version: 0.1.0
   description: >
-    Core framework generation kit for COPF. Provides concept-to-code
+    Core framework generation suite for Clef. Provides concept-to-code
     generators that transform parsed concept ASTs into language-neutral
     manifests and then into language-specific skeleton code. Each
-    generator self-registers with PluginRegistry so the generation kit's
+    generator self-registers with PluginRegistry so the generation suite's
     KindSystem can auto-populate transformation edges.
 
 concepts:
@@ -60,7 +60,7 @@ syncs:
       description: "SolidityGen/register → PluginRegistry/register"
 
 uses:
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
         params:
@@ -75,6 +75,6 @@ uses:
         params:
           E: { as: cache-entry-ref, description: "Reference to a cache entry" }
 
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

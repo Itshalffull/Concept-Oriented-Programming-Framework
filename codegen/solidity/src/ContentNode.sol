@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ContentNode
 /// @notice Concept-oriented content node with typed content, metadata, and lifecycle management
-/// @dev Implements the ContentNode concept from COPF specification.
+/// @dev Implements the ContentNode concept from Clef specification.
 ///      Supports create, update, delete, metadata, and type-change operations.
 
 contract ContentNode {

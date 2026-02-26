@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Follow
 /// @notice Concept-oriented follow/unfollow relationship management
-/// @dev Implements the Follow concept from COPF specification.
+/// @dev Implements the Follow concept from Clef specification.
 ///      Tracks directional following relationships between users.
 
 contract Follow {

@@ -418,14 +418,14 @@ function determineOutputPath(manifest: ConceptManifest, specPath: string): strin
   if (specPath.startsWith('kits/')) {
     // Extract kit name: kits/<kit-name>/...
     const parts = specPath.split('/');
-    const kitName = parts[1];
+    const suiteName = parts[1];
     // Providers go under providers/ subfolder
     if (specPath.includes('/providers/')) {
       const providerPath = specPath.slice(specPath.indexOf('/providers/') + 1);
       const dir = providerPath.replace(/\/[^/]+\.concept$/, '');
-      return `kits/${kitName}/handlers/ts/${dir}/${kebab}.handler.ts`;
+      return `kits/${suiteName}/handlers/ts/${dir}/${kebab}.handler.ts`;
     }
-    return `kits/${kitName}/handlers/ts/${kebab}.handler.ts`;
+    return `kits/${suiteName}/handlers/ts/${kebab}.handler.ts`;
   }
   if (specPath.startsWith('specs/framework/')) {
     return `handlers/ts/framework/${kebab}.handler.ts`;

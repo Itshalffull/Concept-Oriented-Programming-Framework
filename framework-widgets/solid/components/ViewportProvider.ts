@@ -17,13 +17,13 @@ import {
   observeViewport,
   getBreakpoint,
   getOrientation,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -155,7 +155,7 @@ export function ViewportProvider(props: ViewportProviderProps): ViewportProvider
 
   // Create provider container
   const container = document.createElement('div');
-  container.setAttribute('data-coif-provider', 'viewport');
+  container.setAttribute('data-surface-provider', 'viewport');
   container.style.setProperty('display', 'contents');
 
   // Register context
@@ -171,7 +171,7 @@ export function ViewportProvider(props: ViewportProviderProps): ViewportProvider
 
     // Dispatch event for consumers
     container.dispatchEvent(
-      new CustomEvent('coif:viewport-change', {
+      new CustomEvent('surface:viewport-change', {
         bubbles: true,
         detail: vp,
       })

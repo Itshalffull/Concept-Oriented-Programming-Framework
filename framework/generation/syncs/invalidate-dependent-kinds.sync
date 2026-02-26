@@ -1,4 +1,4 @@
-# InvalidateDependentKinds — generation kit recommended sync
+# InvalidateDependentKinds — generation suite recommended sync
 sync InvalidateDependentKinds [eager]
   purpose { Invalidate cache entries for all downstream kinds. }
 when {

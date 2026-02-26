@@ -1,7 +1,7 @@
 // generated: Favorite/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class FavoriteConformanceTests: XCTestCase {
 

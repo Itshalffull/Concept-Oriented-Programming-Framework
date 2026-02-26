@@ -1,10 +1,10 @@
 suite:
-  name: coif-spec
+  name: surface-spec
   version: 0.1.0
   description: >
-    Spec file parsing and generation for COIF. Defines .widget
+    Spec file parsing and generation for Clef Surface. Defines .widget
     and .theme file formats with parsers and generators. Uses
-    COPF generation kit infrastructure (Resource, KindSystem,
+    Clef generation suite infrastructure (Resource, KindSystem,
     BuildCache, Emitter).
 
 concepts:
@@ -73,20 +73,20 @@ syncs:
         for each active surface.
 
 uses:
-  - kit: "@copf/generation"
+  - suite: "@clef/generation"
     concepts:
       - name: Resource
       - name: KindSystem
       - name: BuildCache
       - name: Emitter
-  - kit: coif-core
+  - suite: surface-core
     concepts:
       - name: DesignToken
-  - kit: coif-component
+  - suite: surface-component
     concepts:
       - name: Widget
       - name: Affordance
-  - kit: coif-render
+  - suite: surface-render
     concepts:
       - name: FrameworkAdapter
       - name: Surface

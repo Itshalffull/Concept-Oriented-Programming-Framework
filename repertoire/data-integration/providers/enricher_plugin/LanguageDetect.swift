@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Language detection enricher provider
+// Clef Data Integration Kit - Language detection enricher provider
 // Uses character n-gram frequency profiles compared against language profiles.
 
 import Foundation

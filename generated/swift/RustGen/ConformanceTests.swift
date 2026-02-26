@@ -1,7 +1,7 @@
 // generated: RustGen/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class RustGenConformanceTests: XCTestCase {
 
@@ -14,9 +14,9 @@ final class RustGenConformanceTests: XCTestCase {
         let e = "u-test-invariant-002"
 
         // --- AFTER clause ---
-        // generate(spec: "s1", manifest: ["name": "Ping", "uri": "urn:copf/Ping", "typeParams": [], "relations": [], "actions": [["name": "ping", "params": [], "variants": [["tag": "ok", "fields": [], "prose": "Pong."]]]], "invariants": [], "graphqlSchema": "", "jsonSchemas": ["invocations": [], "completions": []], "capabilities": [], "purpose": "A test."]) -> ok(files: f)
+        // generate(spec: "s1", manifest: ["name": "Ping", "uri": "urn:clef/Ping", "typeParams": [], "relations": [], "actions": [["name": "ping", "params": [], "variants": [["tag": "ok", "fields": [], "prose": "Pong."]]]], "invariants": [], "graphqlSchema": "", "jsonSchemas": ["invocations": [], "completions": []], "capabilities": [], "purpose": "A test."]) -> ok(files: f)
         let step1 = try await handler.generate(
-            input: RustGenGenerateInput(spec: "s1", manifest: ["name": "Ping", "uri": "urn:copf/Ping", "typeParams": [], "relations": [], "actions": [["name": "ping", "params": [], "variants": [["tag": "ok", "fields": [], "prose": "Pong."]]]], "invariants": [], "graphqlSchema": "", "jsonSchemas": ["invocations": [], "completions": []], "capabilities": [], "purpose": "A test."]),
+            input: RustGenGenerateInput(spec: "s1", manifest: ["name": "Ping", "uri": "urn:clef/Ping", "typeParams": [], "relations": [], "actions": [["name": "ping", "params": [], "variants": [["tag": "ok", "fields": [], "prose": "Pong."]]]], "invariants": [], "graphqlSchema": "", "jsonSchemas": ["invocations": [], "completions": []], "capabilities": [], "purpose": "A test."]),
             storage: storage
         )
         if case .ok(let files) = step1 {

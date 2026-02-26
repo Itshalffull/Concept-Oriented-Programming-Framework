@@ -3,7 +3,7 @@ concept ReactNativeAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into React Native-specific
-    bindings. Transforms COIF's generic event model into React
+    bindings. Transforms Clef Surface's generic event model into React
     Native conventions: Pressable/TouchableOpacity handlers,
     StyleSheet objects, platform-specific props (iOS/Android).
     Maps layout to Yoga flexbox. Implementation in TypeScript,

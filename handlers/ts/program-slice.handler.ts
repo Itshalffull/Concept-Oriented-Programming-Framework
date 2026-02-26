@@ -86,7 +86,7 @@ async function computeSlice(
 
   // Extract file information from symbols
   // Symbol format: "ts/function/src/handlers/article.ts/createArticle"
-  // or "copf/state-field/Article/title" or "src/handler.ts"
+  // or "clef/state-field/Article/title" or "src/handler.ts"
   const files = new Set<string>();
   for (const sym of symbols) {
     // Look for file-like segments in the symbol
@@ -99,7 +99,7 @@ async function computeSlice(
         const idx = parts.indexOf(part);
         // Try to build a reasonable file path
         const fileParts = parts.slice(0, idx + 1).filter(
-          (p) => !['ts', 'tsx', 'js', 'copf', 'function', 'class', 'variable', 'type'].includes(p),
+          (p) => !['ts', 'tsx', 'js', 'clef', 'function', 'class', 'variable', 'type'].includes(p),
         );
         if (fileParts.length > 0) {
           files.add(fileParts.join('/'));

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Tag
 /// @notice Concept-oriented tag management for articles
-/// @dev Implements the Tag concept from COPF specification.
+/// @dev Implements the Tag concept from Clef specification.
 ///      Tags are identified by bytes32 and associated with articles.
 
 contract Tag {

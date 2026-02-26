@@ -1,7 +1,7 @@
 // ============================================================
-// COIF Ink Widget — TypographyText
+// Clef Surface Ink Widget — TypographyText
 //
-// Renders text with terminal formatting that maps COIF typography
+// Renders text with terminal formatting that maps Clef Surface typography
 // concepts to ANSI escape sequences. Font weights map to bold/dim,
 // text styles map to underline/italic, and scale maps to visual
 // emphasis patterns in the terminal.
@@ -89,7 +89,7 @@ export interface TypographyTextProps {
   text: string;
   /** Typography variant for preset formatting. */
   variant?: TypographyVariant;
-  /** COIF TextStyle for precise typography control. */
+  /** Clef Surface TextStyle for precise typography control. */
   textStyle?: TextStyle;
   /** Font weight override (100-900). */
   weight?: number;
@@ -122,7 +122,7 @@ export interface TypographyTextProps {
 /**
  * Creates a TypographyText terminal node.
  *
- * Maps COIF typography concepts to terminal ANSI formatting.
+ * Maps Clef Surface typography concepts to terminal ANSI formatting.
  * Headings get bold/underline, captions get dim, etc.
  */
 export function createTypographyText(props: TypographyTextProps): TerminalNode {

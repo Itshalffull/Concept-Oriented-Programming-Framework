@@ -102,7 +102,7 @@ concept Conformance [C] {
   invariant {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(suite: c, testVectors: vs)
-    and  verify(suite: c, language: "typescript", artifactLocation: ".copf-artifacts/ts/password")
+    and  verify(suite: c, language: "typescript", artifactLocation: ".clef-artifacts/ts/password")
       -> ok(passed: 12, total: 12, coveredRequirements: reqs)
     then matrix(concepts: ["password"]) -> ok(matrix: m)
   }

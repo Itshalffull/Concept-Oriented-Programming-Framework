@@ -3,7 +3,7 @@
 //
 // Tracks input resources to generation pipelines. Each resource
 // has a content digest for change detection.
-// See copf-generation-kit.md Part 1.1
+// See clef-generation-suite.md Part 1.1
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

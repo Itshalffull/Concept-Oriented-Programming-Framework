@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/PluginRegistry",
+  "uri": "urn:clef/PluginRegistry",
   "name": "PluginRegistry",
   "typeParams": [
     {
@@ -335,11 +335,11 @@
   "jsonSchemas": {
     "invocations": {
       "discover": {
-        "$id": "urn:copf/PluginRegistry/discover/invocation",
+        "$id": "urn:clef/PluginRegistry/discover/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PluginRegistry"
+            "const": "urn:clef/PluginRegistry"
           },
           "action": {
             "const": "discover"
@@ -358,11 +358,11 @@
         }
       },
       "createInstance": {
-        "$id": "urn:copf/PluginRegistry/createInstance/invocation",
+        "$id": "urn:clef/PluginRegistry/createInstance/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PluginRegistry"
+            "const": "urn:clef/PluginRegistry"
           },
           "action": {
             "const": "createInstance"
@@ -385,11 +385,11 @@
         }
       },
       "getDefinitions": {
-        "$id": "urn:copf/PluginRegistry/getDefinitions/invocation",
+        "$id": "urn:clef/PluginRegistry/getDefinitions/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PluginRegistry"
+            "const": "urn:clef/PluginRegistry"
           },
           "action": {
             "const": "getDefinitions"
@@ -408,11 +408,11 @@
         }
       },
       "alterDefinitions": {
-        "$id": "urn:copf/PluginRegistry/alterDefinitions/invocation",
+        "$id": "urn:clef/PluginRegistry/alterDefinitions/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PluginRegistry"
+            "const": "urn:clef/PluginRegistry"
           },
           "action": {
             "const": "alterDefinitions"
@@ -435,11 +435,11 @@
         }
       },
       "derivePlugins": {
-        "$id": "urn:copf/PluginRegistry/derivePlugins/invocation",
+        "$id": "urn:clef/PluginRegistry/derivePlugins/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PluginRegistry"
+            "const": "urn:clef/PluginRegistry"
           },
           "action": {
             "const": "derivePlugins"
@@ -465,11 +465,11 @@
     "completions": {
       "discover": {
         "ok": {
-          "$id": "urn:copf/PluginRegistry/discover/completion/ok",
+          "$id": "urn:clef/PluginRegistry/discover/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "discover"
@@ -493,11 +493,11 @@
       },
       "createInstance": {
         "ok": {
-          "$id": "urn:copf/PluginRegistry/createInstance/completion/ok",
+          "$id": "urn:clef/PluginRegistry/createInstance/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "createInstance"
@@ -519,11 +519,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PluginRegistry/createInstance/completion/notfound",
+          "$id": "urn:clef/PluginRegistry/createInstance/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "createInstance"
@@ -541,11 +541,11 @@
       },
       "getDefinitions": {
         "ok": {
-          "$id": "urn:copf/PluginRegistry/getDefinitions/completion/ok",
+          "$id": "urn:clef/PluginRegistry/getDefinitions/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "getDefinitions"
@@ -569,11 +569,11 @@
       },
       "alterDefinitions": {
         "ok": {
-          "$id": "urn:copf/PluginRegistry/alterDefinitions/completion/ok",
+          "$id": "urn:clef/PluginRegistry/alterDefinitions/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "alterDefinitions"
@@ -591,11 +591,11 @@
       },
       "derivePlugins": {
         "ok": {
-          "$id": "urn:copf/PluginRegistry/derivePlugins/completion/ok",
+          "$id": "urn:clef/PluginRegistry/derivePlugins/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "derivePlugins"
@@ -617,11 +617,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PluginRegistry/derivePlugins/completion/notfound",
+          "$id": "urn:clef/PluginRegistry/derivePlugins/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PluginRegistry"
+              "const": "urn:clef/PluginRegistry"
             },
             "action": {
               "const": "derivePlugins"

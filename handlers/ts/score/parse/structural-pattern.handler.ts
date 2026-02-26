@@ -2,7 +2,7 @@
 // StructuralPattern Handler — Stub
 //
 // Full implementation deferred to Phase 6 (Search & Discovery).
-// Concept spec is present in the Parse Kit manifest; this stub
+// Concept spec is present in the Parse Suite manifest; this stub
 // returns unsupported for all actions.
 // ============================================================
 

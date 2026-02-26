@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/SolidityBuilder",
+  "uri": "urn:clef/SolidityBuilder",
   "name": "SolidityBuilder",
   "typeParams": [
     {
@@ -474,7 +474,7 @@
               "name": "artifactPath",
               "value": {
                 "kind": "literal",
-                "value": ".copf-artifacts/solidity/password"
+                "value": ".clef-artifacts/solidity/password"
               }
             },
             {
@@ -551,11 +551,11 @@
   "jsonSchemas": {
     "invocations": {
       "build": {
-        "$id": "urn:copf/SolidityBuilder/build/invocation",
+        "$id": "urn:clef/SolidityBuilder/build/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SolidityBuilder"
+            "const": "urn:clef/SolidityBuilder"
           },
           "action": {
             "const": "build"
@@ -608,11 +608,11 @@
         }
       },
       "test": {
-        "$id": "urn:copf/SolidityBuilder/test/invocation",
+        "$id": "urn:clef/SolidityBuilder/test/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SolidityBuilder"
+            "const": "urn:clef/SolidityBuilder"
           },
           "action": {
             "const": "test"
@@ -635,11 +635,11 @@
         }
       },
       "package": {
-        "$id": "urn:copf/SolidityBuilder/package/invocation",
+        "$id": "urn:clef/SolidityBuilder/package/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SolidityBuilder"
+            "const": "urn:clef/SolidityBuilder"
           },
           "action": {
             "const": "package"
@@ -662,11 +662,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/SolidityBuilder/register/invocation",
+        "$id": "urn:clef/SolidityBuilder/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SolidityBuilder"
+            "const": "urn:clef/SolidityBuilder"
           },
           "action": {
             "const": "register"
@@ -682,11 +682,11 @@
     "completions": {
       "build": {
         "ok": {
-          "$id": "urn:copf/SolidityBuilder/build/completion/ok",
+          "$id": "urn:clef/SolidityBuilder/build/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "build"
@@ -716,11 +716,11 @@
           }
         },
         "compilationError": {
-          "$id": "urn:copf/SolidityBuilder/build/completion/compilationError",
+          "$id": "urn:clef/SolidityBuilder/build/completion/compilationError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "build"
@@ -761,11 +761,11 @@
           }
         },
         "pragmaMismatch": {
-          "$id": "urn:copf/SolidityBuilder/build/completion/pragmaMismatch",
+          "$id": "urn:clef/SolidityBuilder/build/completion/pragmaMismatch",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "build"
@@ -793,11 +793,11 @@
       },
       "test": {
         "ok": {
-          "$id": "urn:copf/SolidityBuilder/test/completion/ok",
+          "$id": "urn:clef/SolidityBuilder/test/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "test"
@@ -831,11 +831,11 @@
           }
         },
         "testFailure": {
-          "$id": "urn:copf/SolidityBuilder/test/completion/testFailure",
+          "$id": "urn:clef/SolidityBuilder/test/completion/testFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "test"
@@ -882,11 +882,11 @@
       },
       "package": {
         "ok": {
-          "$id": "urn:copf/SolidityBuilder/package/completion/ok",
+          "$id": "urn:clef/SolidityBuilder/package/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "package"
@@ -912,11 +912,11 @@
           }
         },
         "formatUnsupported": {
-          "$id": "urn:copf/SolidityBuilder/package/completion/formatUnsupported",
+          "$id": "urn:clef/SolidityBuilder/package/completion/formatUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "package"
@@ -940,11 +940,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/SolidityBuilder/register/completion/ok",
+          "$id": "urn:clef/SolidityBuilder/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityBuilder"
+              "const": "urn:clef/SolidityBuilder"
             },
             "action": {
               "const": "register"

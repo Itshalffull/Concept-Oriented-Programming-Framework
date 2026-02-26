@@ -3,7 +3,7 @@ suite:
   version: 0.1.0
   description: >
     Automatic Score integration for Clef apps. Provides a unified
-    ScoreApi facade over the five Score kits (parse, symbol, semantic,
+    ScoreApi facade over the five Score suites (parse, symbol, semantic,
     analysis, discovery) and auto-registers Score as a built-in
     concept in every Clef runtime. Includes pre-built interface
     manifests for GraphQL, MCP, Claude Skills, and OpenAI function
@@ -25,7 +25,7 @@ syncs:
     - path: ./syncs/auto-register.sync
       name: ScoreAutoRegisterSync
       description: >
-        Automatically register all Score kits when a Clef app
+        Automatically register all Score suites when a Clef app
         boots. Fires on Registry/register completion for any
         concept, ensuring Score is available before user concepts
         begin executing.
@@ -52,40 +52,40 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
       - name: ContentDigest
       - name: DefinitionUnit
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
       - name: ScopeGraph
       - name: SymbolRelationship
-  - kit: semantic
+  - suite: semantic
     concepts:
       - name: ConceptEntity
       - name: ActionEntity
       - name: VariantEntity
       - name: StateField
       - name: SyncEntity
-  - kit: analysis
+  - suite: analysis
     concepts:
       - name: DependenceGraph
       - name: DataFlowPath
       - name: ProgramSlice
-  - kit: discovery
+  - suite: discovery
     concepts:
       - name: SemanticEmbedding
-  - kit: runtime
+  - suite: runtime
     concepts:
       - name: Registry
 
 dependencies:
-  - kit: parse
-  - kit: symbol
-  - kit: semantic
-  - kit: analysis
-  - kit: discovery
+  - suite: parse
+  - suite: symbol
+  - suite: semantic
+  - suite: analysis
+  - suite: discovery

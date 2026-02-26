@@ -73,12 +73,12 @@ concept SyncEngine [F] {
   invariant {
     after registerSync(sync: {
       name: "TestSync", annotations: ["eager"],
-      when: [{ concept: "urn:copf/Test", action: "act", inputFields: [], outputFields: [] }],
+      when: [{ concept: "urn:clef/Test", action: "act", inputFields: [], outputFields: [] }],
       where: [],
-      then: [{ concept: "urn:copf/Other", action: "do", fields: [] }]
+      then: [{ concept: "urn:clef/Other", action: "do", fields: [] }]
     }) -> ok()
     then onCompletion(completion: {
-      id: "c1", concept: "urn:copf/Test", action: "act",
+      id: "c1", concept: "urn:clef/Test", action: "act",
       input: {}, variant: "ok", output: {}, flow: "f1",
       timestamp: "2024-01-01T00:00:00Z"
     }) -> ok(invocations: inv)

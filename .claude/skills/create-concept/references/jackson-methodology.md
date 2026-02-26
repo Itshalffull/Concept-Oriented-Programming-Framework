@@ -46,7 +46,7 @@ The term comes from chemist-philosopher Michael Polanyi and was brought to softw
 Key properties of OPs:
 - They are **not** use cases — they don't cover all scenarios, just the essential story
 - They prove the concept fulfills its purpose
-- They can be formalized as invariants in COPF
+- They can be formalized as invariants in Clef
 
 ### 4. State
 What the concept remembers at runtime. Expressed as a relational model:
@@ -79,7 +79,7 @@ This is Jackson's most radical and important idea. It has two concrete requireme
 ### Polymorphic Types
 A concept's types **cannot reference** the types of other concepts. It must be polymorphic.
 
-Example: The Upvote concept operates on "items" of any type. At runtime, items might be posts, but the Upvote concept itself knows nothing about posts. In COPF, this is achieved through type parameters: `concept Upvote [I]`.
+Example: The Upvote concept operates on "items" of any type. At runtime, items might be posts, but the Upvote concept itself knows nothing about posts. In Clef, this is achieved through type parameters: `concept Upvote [I]`.
 
 ### No Cross-Concept Action Calls
 The actions of one concept **cannot call** the actions of another. Coordination happens only through synchronization.

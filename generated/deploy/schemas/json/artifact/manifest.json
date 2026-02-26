@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Artifact",
+  "uri": "urn:clef/Artifact",
   "name": "Artifact",
   "typeParams": [
     {
@@ -519,11 +519,11 @@
   "jsonSchemas": {
     "invocations": {
       "build": {
-        "$id": "urn:copf/Artifact/build/invocation",
+        "$id": "urn:clef/Artifact/build/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Artifact"
+            "const": "urn:clef/Artifact"
           },
           "action": {
             "const": "build"
@@ -557,11 +557,11 @@
         }
       },
       "store": {
-        "$id": "urn:copf/Artifact/store/invocation",
+        "$id": "urn:clef/Artifact/store/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Artifact"
+            "const": "urn:clef/Artifact"
           },
           "action": {
             "const": "store"
@@ -623,11 +623,11 @@
         }
       },
       "resolve": {
-        "$id": "urn:copf/Artifact/resolve/invocation",
+        "$id": "urn:clef/Artifact/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Artifact"
+            "const": "urn:clef/Artifact"
           },
           "action": {
             "const": "resolve"
@@ -646,11 +646,11 @@
         }
       },
       "gc": {
-        "$id": "urn:copf/Artifact/gc/invocation",
+        "$id": "urn:clef/Artifact/gc/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Artifact"
+            "const": "urn:clef/Artifact"
           },
           "action": {
             "const": "gc"
@@ -677,11 +677,11 @@
     "completions": {
       "build": {
         "ok": {
-          "$id": "urn:copf/Artifact/build/completion/ok",
+          "$id": "urn:clef/Artifact/build/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "build"
@@ -711,11 +711,11 @@
           }
         },
         "compilationError": {
-          "$id": "urn:copf/Artifact/build/completion/compilationError",
+          "$id": "urn:clef/Artifact/build/completion/compilationError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "build"
@@ -746,11 +746,11 @@
       },
       "store": {
         "ok": {
-          "$id": "urn:copf/Artifact/store/completion/ok",
+          "$id": "urn:clef/Artifact/store/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "store"
@@ -772,11 +772,11 @@
           }
         },
         "alreadyExists": {
-          "$id": "urn:copf/Artifact/store/completion/alreadyExists",
+          "$id": "urn:clef/Artifact/store/completion/alreadyExists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "store"
@@ -800,11 +800,11 @@
       },
       "resolve": {
         "ok": {
-          "$id": "urn:copf/Artifact/resolve/completion/ok",
+          "$id": "urn:clef/Artifact/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "resolve"
@@ -830,11 +830,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Artifact/resolve/completion/notfound",
+          "$id": "urn:clef/Artifact/resolve/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "resolve"
@@ -858,11 +858,11 @@
       },
       "gc": {
         "ok": {
-          "$id": "urn:copf/Artifact/gc/completion/ok",
+          "$id": "urn:clef/Artifact/gc/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Artifact"
+              "const": "urn:clef/Artifact"
             },
             "action": {
               "const": "gc"

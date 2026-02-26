@@ -1,7 +1,7 @@
 // GraphTests.swift — Tests for Graph concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class GraphTests: XCTestCase {
 

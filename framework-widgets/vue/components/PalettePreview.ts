@@ -16,7 +16,7 @@ import {
 
 import type { ColorScale, SemanticRole } from '../../shared/types.js';
 
-import { contrastRatio } from '../../shared/coif-bridge.js';
+import { contrastRatio } from '../../shared/surface-bridge.js';
 
 // --- Types ---
 
@@ -78,7 +78,7 @@ export const PalettePreview = defineComponent({
       return h(
         'div',
         {
-          class: 'coif-palette-preview__swatch',
+          class: 'surface-palette-preview__swatch',
           style: {
             'background-color': color,
             color: textColor,
@@ -98,10 +98,10 @@ export const PalettePreview = defineComponent({
         },
         [
           props.showSteps
-            ? h('span', { class: 'coif-palette-preview__step' }, step)
+            ? h('span', { class: 'surface-palette-preview__step' }, step)
             : null,
           props.showValues
-            ? h('span', { class: 'coif-palette-preview__value' }, color)
+            ? h('span', { class: 'surface-palette-preview__value' }, color)
             : null,
         ],
       );
@@ -116,7 +116,7 @@ export const PalettePreview = defineComponent({
       return h(
         'div',
         {
-          class: 'coif-palette-preview__row',
+          class: 'surface-palette-preview__row',
           'data-palette': entry.name,
           'data-role': entry.role ?? undefined,
         },
@@ -124,7 +124,7 @@ export const PalettePreview = defineComponent({
           h(
             'div',
             {
-              class: 'coif-palette-preview__label',
+              class: 'surface-palette-preview__label',
               style: {
                 'font-weight': '600',
                 'margin-bottom': '4px',
@@ -137,7 +137,7 @@ export const PalettePreview = defineComponent({
                 ? h(
                     'span',
                     {
-                      class: 'coif-palette-preview__role',
+                      class: 'surface-palette-preview__role',
                       style: { 'margin-left': '8px', opacity: '0.6' },
                     },
                     `(${entry.role})`,
@@ -147,7 +147,7 @@ export const PalettePreview = defineComponent({
           ),
           h(
             'div',
-            { class: 'coif-palette-preview__swatches', style: gridStyle.value },
+            { class: 'surface-palette-preview__swatches', style: gridStyle.value },
             swatches,
           ),
         ],
@@ -158,7 +158,7 @@ export const PalettePreview = defineComponent({
       h(
         'div',
         {
-          class: 'coif-palette-preview',
+          class: 'surface-palette-preview',
           role: 'presentation',
           style: { display: 'flex', 'flex-direction': 'column', gap: '16px' },
         },

@@ -19,7 +19,7 @@ function makeProjection(manifest: Partial<ConceptManifest>, conceptName: string)
     conceptName,
     conceptManifest: JSON.stringify({
       name: conceptName,
-      uri: `urn:copf/${conceptName}`,
+      uri: `urn:clef/${conceptName}`,
       purpose: manifest.purpose || `Manage ${conceptName}`,
       actions: manifest.actions || [],
       stateFields: [],

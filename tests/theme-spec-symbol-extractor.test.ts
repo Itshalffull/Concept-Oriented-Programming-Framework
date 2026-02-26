@@ -1,7 +1,7 @@
 // ============================================================
 // ThemeSpecSymbolExtractor Handler Tests
 //
-// Tests for extracting symbols from COIF theme spec files:
+// Tests for extracting symbols from Clef Surface theme spec files:
 // theme names, token definitions, scale values, semantic aliases,
 // mode variants, and token references.
 // ============================================================
@@ -49,7 +49,7 @@ describe('ThemeSpecSymbolExtractor', () => {
         s.kind === 'concept' && s.role === 'definition'
       );
       expect(themeDef).toBeDefined();
-      expect(themeDef.symbolString).toBe('coif/theme/MyTheme');
+      expect(themeDef.symbolString).toBe('surface/theme/MyTheme');
     });
 
     it('extracts theme declaration using name: key', async () => {
@@ -62,7 +62,7 @@ tokens {
 
       const symbols = JSON.parse(result.symbols as string);
       const themeDef = symbols.find((s: Record<string, string>) =>
-        s.symbolString === 'coif/theme/dark-theme'
+        s.symbolString === 'surface/theme/dark-theme'
       );
       expect(themeDef).toBeDefined();
     });
@@ -84,7 +84,7 @@ tokens {
         s.symbolString.includes('/token/')
       );
       expect(tokens).toHaveLength(3);
-      expect(tokens[0].symbolString).toBe('coif/theme/Brand/token/primary');
+      expect(tokens[0].symbolString).toBe('surface/theme/Brand/token/primary');
       expect(tokens[0].kind).toBe('config-key');
     });
 
@@ -123,7 +123,7 @@ scale {
         s.symbolString.includes('/scale/')
       );
       expect(scales).toHaveLength(3);
-      expect(scales[0].symbolString).toBe('coif/theme/Design/scale/sm');
+      expect(scales[0].symbolString).toBe('surface/theme/Design/scale/sm');
     });
 
     it('extracts semantic aliases', async () => {
@@ -142,7 +142,7 @@ semantic {
         s.symbolString.includes('/semantic/')
       );
       expect(semantics).toHaveLength(2);
-      expect(semantics[0].symbolString).toBe('coif/theme/MyTheme/semantic/text-primary');
+      expect(semantics[0].symbolString).toBe('surface/theme/MyTheme/semantic/text-primary');
     });
 
     it('extracts mode variants', async () => {
@@ -162,7 +162,7 @@ modes {
       );
       expect(modes).toHaveLength(2);
       expect(modes[0].kind).toBe('variant');
-      expect(modes[0].symbolString).toBe('coif/theme/MyTheme/mode/light');
+      expect(modes[0].symbolString).toBe('surface/theme/MyTheme/mode/light');
     });
 
     it('extracts token references in {path} syntax', async () => {
@@ -179,8 +179,8 @@ semantic {
       const symbols = JSON.parse(result.symbols as string);
       const refs = symbols.filter((s: Record<string, string>) => s.role === 'reference');
       expect(refs).toHaveLength(2);
-      expect(refs[0].symbolString).toBe('coif/theme-ref/tokens.primary');
-      expect(refs[1].symbolString).toBe('coif/theme-ref/colors.white');
+      expect(refs[0].symbolString).toBe('surface/theme-ref/tokens.primary');
+      expect(refs[1].symbolString).toBe('surface/theme-ref/colors.white');
     });
 
     it('skips structural keywords in token positions', async () => {

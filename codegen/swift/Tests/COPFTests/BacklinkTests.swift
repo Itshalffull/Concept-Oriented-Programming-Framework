@@ -1,7 +1,7 @@
 // BacklinkTests.swift — Tests for Backlink concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class BacklinkTests: XCTestCase {
 

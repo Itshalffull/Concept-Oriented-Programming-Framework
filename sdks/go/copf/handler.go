@@ -1,8 +1,8 @@
-// Package copf implements the COPF concept handler protocol for Go.
+// Package clef implements the Clef concept handler protocol for Go.
 //
 // This is a thin protocol library (~300 LOC total), NOT a code generator.
 // It lets Go developers write concept handlers that communicate with the
-// COPF sync engine over HTTP.
+// Clef sync engine over HTTP.
 //
 // Target: infrastructure concepts behind HTTP transport.
 //
@@ -10,7 +10,7 @@
 //
 //	type RateLimiterHandler struct{}
 //
-//	func (h *RateLimiterHandler) Handle(action string, input map[string]any, storage copf.Storage) map[string]any {
+//	func (h *RateLimiterHandler) Handle(action string, input map[string]any, storage clef.Storage) map[string]any {
 //	    switch action {
 //	    case "check":
 //	        key := input["key"].(string)
@@ -22,15 +22,15 @@
 //	}
 //
 //	func main() {
-//	    copf.Register("urn:app/RateLimiter", &RateLimiterHandler{}, nil)
-//	    copf.Serve(":8091")
+//	    clef.Register("urn:app/RateLimiter", &RateLimiterHandler{}, nil)
+//	    clef.Serve(":8091")
 //	}
 //
 // Architecture (Section 16.13):
 //
 //	SDKs are pre-conceptual protocol libraries. They don't generate code,
 //	don't use ConceptManifest, and don't integrate with the compiler pipeline.
-package copf
+package clef
 
 // ConceptHandler is the interface that concept handler implementations must satisfy.
 // Each action method receives the action name, input fields, and a storage instance.

@@ -1,7 +1,7 @@
 // TagTests.swift — Tests for Tag concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class TagTests: XCTestCase {
 

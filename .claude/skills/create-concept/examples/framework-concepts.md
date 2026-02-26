@@ -1,6 +1,6 @@
 # Framework Concept Examples
 
-Examples from the COPF framework layer (`specs/framework/`) — these are infrastructure concepts that the framework itself uses. They demonstrate how to apply concept design to tools, pipelines, and runtime infrastructure.
+Examples from the Clef framework layer (`specs/framework/`) — these are infrastructure concepts that the framework itself uses. They demonstrate how to apply concept design to tools, pipelines, and runtime infrastructure.
 
 ## Example 1: SchemaGen — Pure Transformation
 
@@ -155,13 +155,13 @@ concept SyncEngine [F] {
   invariant {
     after registerSync(sync: {
       name: "TestSync", annotations: ["eager"],
-      when: [{ concept: "urn:copf/Test", action: "act",
+      when: [{ concept: "urn:clef/Test", action: "act",
                inputFields: [], outputFields: [] }],
       where: [],
-      then: [{ concept: "urn:copf/Other", action: "do", fields: [] }]
+      then: [{ concept: "urn:clef/Other", action: "do", fields: [] }]
     }) -> ok()
     then onCompletion(completion: {
-      id: "c1", concept: "urn:copf/Test", action: "act",
+      id: "c1", concept: "urn:clef/Test", action: "act",
       input: {}, variant: "ok", output: {}, flow: "f1",
       timestamp: "2024-01-01T00:00:00Z"
     }) -> ok(invocations: inv)
@@ -310,7 +310,7 @@ concept TypeScriptGen [S] {
 
   invariant {
     after generate(spec: "s1", manifest: {
-      name: "Ping", uri: "urn:copf/Ping", typeParams: [], relations: [],
+      name: "Ping", uri: "urn:clef/Ping", typeParams: [], relations: [],
       actions: [{ name: "ping", params: [],
         variants: [{ tag: "ok", fields: [], prose: "Pong." }] }],
       invariants: [], graphqlSchema: "",
@@ -344,7 +344,7 @@ concept TypeScriptGen [S] {
 Create a framework concept when:
 - The functionality is about **processing concept specifications** (parsing, generating, validating)
 - The functionality is about **runtime infrastructure** (registry, logging, transport)
-- The concept will be used by the COPF toolchain itself
+- The concept will be used by the Clef toolchain itself
 - Users of the concept are developers, not end users
 
 **Always include at least one invariant**, even for framework concepts. Use record `{ }` and list `[ ]` literals to pass minimal-but-real structured inputs (see Pattern 8 in [invariant-design.md](../references/invariant-design.md)).

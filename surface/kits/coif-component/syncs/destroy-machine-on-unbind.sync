@@ -1,5 +1,5 @@
 # ============================================================
-# DestroyMachineOnUnbind — coif-component required sync
+# DestroyMachineOnUnbind — surface-component required sync
 #
 # When a binding is removed, destroy all associated machine
 # instances to clean up timers, subscriptions, and state.

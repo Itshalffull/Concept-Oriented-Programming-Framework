@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/SolidityToolchain",
+  "uri": "urn:clef/SolidityToolchain",
   "name": "SolidityToolchain",
   "typeParams": [
     {
@@ -328,11 +328,11 @@
   "jsonSchemas": {
     "invocations": {
       "resolve": {
-        "$id": "urn:copf/SolidityToolchain/resolve/invocation",
+        "$id": "urn:clef/SolidityToolchain/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SolidityToolchain"
+            "const": "urn:clef/SolidityToolchain"
           },
           "action": {
             "const": "resolve"
@@ -362,11 +362,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/SolidityToolchain/register/invocation",
+        "$id": "urn:clef/SolidityToolchain/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SolidityToolchain"
+            "const": "urn:clef/SolidityToolchain"
           },
           "action": {
             "const": "register"
@@ -382,11 +382,11 @@
     "completions": {
       "resolve": {
         "ok": {
-          "$id": "urn:copf/SolidityToolchain/resolve/completion/ok",
+          "$id": "urn:clef/SolidityToolchain/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityToolchain"
+              "const": "urn:clef/SolidityToolchain"
             },
             "action": {
               "const": "resolve"
@@ -423,11 +423,11 @@
           }
         },
         "notInstalled": {
-          "$id": "urn:copf/SolidityToolchain/resolve/completion/notInstalled",
+          "$id": "urn:clef/SolidityToolchain/resolve/completion/notInstalled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityToolchain"
+              "const": "urn:clef/SolidityToolchain"
             },
             "action": {
               "const": "resolve"
@@ -449,11 +449,11 @@
           }
         },
         "evmVersionUnsupported": {
-          "$id": "urn:copf/SolidityToolchain/resolve/completion/evmVersionUnsupported",
+          "$id": "urn:clef/SolidityToolchain/resolve/completion/evmVersionUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityToolchain"
+              "const": "urn:clef/SolidityToolchain"
             },
             "action": {
               "const": "resolve"
@@ -484,11 +484,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/SolidityToolchain/register/completion/ok",
+          "$id": "urn:clef/SolidityToolchain/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SolidityToolchain"
+              "const": "urn:clef/SolidityToolchain"
             },
             "action": {
               "const": "register"

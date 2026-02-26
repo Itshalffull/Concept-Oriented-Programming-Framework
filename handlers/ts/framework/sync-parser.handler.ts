@@ -25,7 +25,7 @@ interface Manifest {
 function astToManifest(ast: ConceptAST): Manifest {
   return {
     name: ast.name,
-    uri: `urn:copf/${ast.name}`,
+    uri: `urn:clef/${ast.name}`,
     actions: ast.actions.map(a => a.name),
   };
 }

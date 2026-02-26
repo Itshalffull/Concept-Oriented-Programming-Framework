@@ -1,5 +1,5 @@
 {
-  "name": "conduit-copf",
+  "name": "conduit-clef",
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
@@ -12,8 +12,8 @@
   },
   "rewrites": [
     {
-      "source": "/api/copf/:path*",
-      "destination": "/api/copf/index.ts"
+      "source": "/api/clef/:path*",
+      "destination": "/api/clef/index.ts"
     },
     {
       "source": "/health",

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/SyncedContent",
+  "uri": "urn:clef/SyncedContent",
   "name": "SyncedContent",
   "typeParams": [
     {
@@ -265,11 +265,11 @@
   "jsonSchemas": {
     "invocations": {
       "createReference": {
-        "$id": "urn:copf/SyncedContent/createReference/invocation",
+        "$id": "urn:clef/SyncedContent/createReference/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SyncedContent"
+            "const": "urn:clef/SyncedContent"
           },
           "action": {
             "const": "createReference"
@@ -292,11 +292,11 @@
         }
       },
       "editOriginal": {
-        "$id": "urn:copf/SyncedContent/editOriginal/invocation",
+        "$id": "urn:clef/SyncedContent/editOriginal/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SyncedContent"
+            "const": "urn:clef/SyncedContent"
           },
           "action": {
             "const": "editOriginal"
@@ -319,11 +319,11 @@
         }
       },
       "deleteReference": {
-        "$id": "urn:copf/SyncedContent/deleteReference/invocation",
+        "$id": "urn:clef/SyncedContent/deleteReference/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SyncedContent"
+            "const": "urn:clef/SyncedContent"
           },
           "action": {
             "const": "deleteReference"
@@ -342,11 +342,11 @@
         }
       },
       "convertToIndependent": {
-        "$id": "urn:copf/SyncedContent/convertToIndependent/invocation",
+        "$id": "urn:clef/SyncedContent/convertToIndependent/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SyncedContent"
+            "const": "urn:clef/SyncedContent"
           },
           "action": {
             "const": "convertToIndependent"
@@ -368,11 +368,11 @@
     "completions": {
       "createReference": {
         "ok": {
-          "$id": "urn:copf/SyncedContent/createReference/completion/ok",
+          "$id": "urn:clef/SyncedContent/createReference/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "createReference"
@@ -388,11 +388,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SyncedContent/createReference/completion/notfound",
+          "$id": "urn:clef/SyncedContent/createReference/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "createReference"
@@ -416,11 +416,11 @@
       },
       "editOriginal": {
         "ok": {
-          "$id": "urn:copf/SyncedContent/editOriginal/completion/ok",
+          "$id": "urn:clef/SyncedContent/editOriginal/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "editOriginal"
@@ -436,11 +436,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SyncedContent/editOriginal/completion/notfound",
+          "$id": "urn:clef/SyncedContent/editOriginal/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "editOriginal"
@@ -464,11 +464,11 @@
       },
       "deleteReference": {
         "ok": {
-          "$id": "urn:copf/SyncedContent/deleteReference/completion/ok",
+          "$id": "urn:clef/SyncedContent/deleteReference/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "deleteReference"
@@ -484,11 +484,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SyncedContent/deleteReference/completion/notfound",
+          "$id": "urn:clef/SyncedContent/deleteReference/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "deleteReference"
@@ -512,11 +512,11 @@
       },
       "convertToIndependent": {
         "ok": {
-          "$id": "urn:copf/SyncedContent/convertToIndependent/completion/ok",
+          "$id": "urn:clef/SyncedContent/convertToIndependent/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "convertToIndependent"
@@ -532,11 +532,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SyncedContent/convertToIndependent/completion/notfound",
+          "$id": "urn:clef/SyncedContent/convertToIndependent/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SyncedContent"
+              "const": "urn:clef/SyncedContent"
             },
             "action": {
               "const": "convertToIndependent"

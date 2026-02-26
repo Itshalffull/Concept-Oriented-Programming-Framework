@@ -1,7 +1,7 @@
 // ============================================================
-// COIF React Components — Barrel Export
+// Clef Surface React Components — Barrel Export
 //
-// Re-exports all COIF concept widget components, their props
+// Re-exports all Clef Surface concept widget components, their props
 // interfaces, context values, and hooks for external consumers.
 // ============================================================
 

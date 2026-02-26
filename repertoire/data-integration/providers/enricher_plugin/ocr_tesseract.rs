@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Local OCR via Tesseract enricher provider
+// Clef Data Integration Kit - Local OCR via Tesseract enricher provider
 // Shells out to the tesseract binary, parses HOCR output for word-level bounding boxes.
 
 use std::collections::HashMap;
@@ -169,7 +169,7 @@ impl OcrTesseractEnricherProvider {
         let image_bytes = base64_decode(&item.content)
             .map_err(|e| EnricherError::ParseError(format!("Base64 decode failed: {}", e)))?;
 
-        let tmp_path = std::env::temp_dir().join(format!("copf_ocr_{}_{}.png", item.id, std::process::id()));
+        let tmp_path = std::env::temp_dir().join(format!("clef_ocr_{}_{}.png", item.id, std::process::id()));
         {
             let mut file = std::fs::File::create(&tmp_path)?;
             file.write_all(&image_bytes)?;

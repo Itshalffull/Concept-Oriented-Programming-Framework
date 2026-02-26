@@ -6,9 +6,9 @@
 // orphan cleanup, batch writes, source traceability, and
 // drift detection.
 //
-// Promoted from interface kit to generation kit as shared
+// Promoted from Clef Bind to generation suite as shared
 // infrastructure for all generation families.
-// See copf-generation-kit.md Part 1.5
+// See clef-generation-suite.md Part 1.5
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
@@ -169,8 +169,8 @@ export const emitterHandler: ConceptHandler = {
    * skipped (written: false) so downstream build tools can rely on
    * file timestamps.
    *
-   * Supports both the generation kit signature (path, content,
-   * formatHint, sources) and the legacy interface kit signature
+   * Supports both the generation suite signature (path, content,
+   * formatHint, sources) and the legacy Clef Bind signature
    * (path, content, target, concept).
    */
   async write(
@@ -281,7 +281,7 @@ export const emitterHandler: ConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ): Promise<{ variant: string; [key: string]: unknown }> {
-    // Support both path-based (generation kit) and file-ID-based (legacy) signatures
+    // Support both path-based (generation suite) and file-ID-based (legacy) signatures
     const pathInput = input.path as string | undefined;
     const fileId = input.file as string | undefined;
     const explicitFormatter = input.formatter as string | undefined;
@@ -290,11 +290,11 @@ export const emitterHandler: ConceptHandler = {
     let key: string;
 
     if (pathInput) {
-      // Path-based lookup (generation kit pattern)
+      // Path-based lookup (generation suite pattern)
       key = fileKey(pathInput);
       fileRecord = await storage.get(FILES_RELATION, key);
     } else if (fileId) {
-      // File ID-based lookup (legacy interface kit pattern)
+      // File ID-based lookup (legacy Clef Bind pattern)
       const allFiles = await storage.find(FILES_RELATION, { id: fileId });
       if (allFiles.length === 0) {
         return { variant: 'error', message: `file ${fileId} not found in storage` };

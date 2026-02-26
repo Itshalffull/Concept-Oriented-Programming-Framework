@@ -1,7 +1,7 @@
 // ArticleTests.swift — Tests for Article concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ArticleTests: XCTestCase {
 

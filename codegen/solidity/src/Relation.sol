@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Relation
 /// @notice Concept-oriented relation definitions with typed, directional links between entities
-/// @dev Implements the Relation concept from COPF specification.
+/// @dev Implements the Relation concept from Clef specification.
 ///      Supports defining relation schemas (name, types, cardinality, bidirectionality)
 ///      and creating/removing links that conform to those definitions.
 

@@ -1,7 +1,7 @@
 // ============================================================
 // TreeSitterThemeSpec Handler Tests
 //
-// Tree-sitter grammar provider for COIF theme spec files.
+// Tree-sitter grammar provider for Clef Surface theme spec files.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';

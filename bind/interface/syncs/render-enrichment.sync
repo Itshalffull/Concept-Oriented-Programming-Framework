@@ -2,7 +2,7 @@
 # After action guide and annotation resolution, the EnrichmentRenderer
 # processes opaque JSON into format-specific output that
 # targets embed in their generated files.
-# Architecture doc: Interface Kit
+# Architecture doc: Clef Bind
 
 sync RenderEnrichment [eager]
 when {

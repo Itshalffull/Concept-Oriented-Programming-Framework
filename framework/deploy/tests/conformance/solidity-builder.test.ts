@@ -8,9 +8,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { solidityBuilderHandler } from '../../../../implementations/typescript/deploy/solidity-builder.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('SolidityBuilder conformance', () => {
   let storage: ConceptStorage;

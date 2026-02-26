@@ -1,7 +1,7 @@
 // ============================================================
-// ElevationBox — Svelte-compatible COIF component
+// ElevationBox — Svelte-compatible Clef Surface component
 //
-// Container with elevation-based box-shadow. Maps COIF
+// Container with elevation-based box-shadow. Maps Clef Surface
 // ElevationLevel (0-5) to CSS box-shadow values. Supports
 // custom ShadowLayer overrides and smooth transition between
 // elevation levels.
@@ -15,7 +15,7 @@ import type {
 import {
   elevationToCSS,
   shadowLayersToCSS,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -63,7 +63,7 @@ export function createElevationBox(
 
   // Create the element
   let element = document.createElement(tag);
-  element.setAttribute('data-coif-elevation', '');
+  element.setAttribute('data-surface-elevation', '');
   element.setAttribute('data-level', String(level));
   if (className) element.className = className;
   target.appendChild(element);
@@ -141,7 +141,7 @@ export function createElevationBox(
       if (newProps.tag !== undefined && newProps.tag !== tag) {
         tag = newProps.tag;
         const newElement = document.createElement(tag);
-        newElement.setAttribute('data-coif-elevation', '');
+        newElement.setAttribute('data-surface-elevation', '');
         if (className) newElement.className = className;
         // Migrate children
         while (element.firstChild) {

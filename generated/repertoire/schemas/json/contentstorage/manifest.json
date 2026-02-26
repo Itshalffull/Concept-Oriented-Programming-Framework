@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ContentStorage",
+  "uri": "urn:clef/ContentStorage",
   "name": "ContentStorage",
   "typeParams": [
     {
@@ -427,11 +427,11 @@
   "jsonSchemas": {
     "invocations": {
       "save": {
-        "$id": "urn:copf/ContentStorage/save/invocation",
+        "$id": "urn:clef/ContentStorage/save/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentStorage"
+            "const": "urn:clef/ContentStorage"
           },
           "action": {
             "const": "save"
@@ -454,11 +454,11 @@
         }
       },
       "load": {
-        "$id": "urn:copf/ContentStorage/load/invocation",
+        "$id": "urn:clef/ContentStorage/load/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentStorage"
+            "const": "urn:clef/ContentStorage"
           },
           "action": {
             "const": "load"
@@ -477,11 +477,11 @@
         }
       },
       "delete": {
-        "$id": "urn:copf/ContentStorage/delete/invocation",
+        "$id": "urn:clef/ContentStorage/delete/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentStorage"
+            "const": "urn:clef/ContentStorage"
           },
           "action": {
             "const": "delete"
@@ -500,11 +500,11 @@
         }
       },
       "query": {
-        "$id": "urn:copf/ContentStorage/query/invocation",
+        "$id": "urn:clef/ContentStorage/query/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentStorage"
+            "const": "urn:clef/ContentStorage"
           },
           "action": {
             "const": "query"
@@ -523,11 +523,11 @@
         }
       },
       "generateSchema": {
-        "$id": "urn:copf/ContentStorage/generateSchema/invocation",
+        "$id": "urn:clef/ContentStorage/generateSchema/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ContentStorage"
+            "const": "urn:clef/ContentStorage"
           },
           "action": {
             "const": "generateSchema"
@@ -549,11 +549,11 @@
     "completions": {
       "save": {
         "ok": {
-          "$id": "urn:copf/ContentStorage/save/completion/ok",
+          "$id": "urn:clef/ContentStorage/save/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "save"
@@ -575,11 +575,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/ContentStorage/save/completion/error",
+          "$id": "urn:clef/ContentStorage/save/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "save"
@@ -603,11 +603,11 @@
       },
       "load": {
         "ok": {
-          "$id": "urn:copf/ContentStorage/load/completion/ok",
+          "$id": "urn:clef/ContentStorage/load/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "load"
@@ -633,11 +633,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentStorage/load/completion/notfound",
+          "$id": "urn:clef/ContentStorage/load/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "load"
@@ -661,11 +661,11 @@
       },
       "delete": {
         "ok": {
-          "$id": "urn:copf/ContentStorage/delete/completion/ok",
+          "$id": "urn:clef/ContentStorage/delete/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "delete"
@@ -687,11 +687,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentStorage/delete/completion/notfound",
+          "$id": "urn:clef/ContentStorage/delete/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "delete"
@@ -715,11 +715,11 @@
       },
       "query": {
         "ok": {
-          "$id": "urn:copf/ContentStorage/query/completion/ok",
+          "$id": "urn:clef/ContentStorage/query/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "query"
@@ -743,11 +743,11 @@
       },
       "generateSchema": {
         "ok": {
-          "$id": "urn:copf/ContentStorage/generateSchema/completion/ok",
+          "$id": "urn:clef/ContentStorage/generateSchema/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "generateSchema"
@@ -769,11 +769,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ContentStorage/generateSchema/completion/notfound",
+          "$id": "urn:clef/ContentStorage/generateSchema/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ContentStorage"
+              "const": "urn:clef/ContentStorage"
             },
             "action": {
               "const": "generateSchema"

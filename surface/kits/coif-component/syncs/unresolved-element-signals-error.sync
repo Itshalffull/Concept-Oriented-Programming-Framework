@@ -1,5 +1,5 @@
 # ============================================================
-# UnresolvedElementSignalsError — coif-component recommended sync
+# UnresolvedElementSignalsError — surface-component recommended sync
 #
 # When no widget matches an element during resolution,
 # signal an error to the loading host.

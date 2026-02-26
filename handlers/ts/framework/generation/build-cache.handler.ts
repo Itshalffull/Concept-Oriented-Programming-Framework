@@ -4,7 +4,7 @@
 // Tracks input/output hashes for generation steps. Enables
 // incremental rebuilds by skipping generation when inputs
 // haven't changed since the last successful run.
-// See copf-generation-kit.md Part 1.3
+// See clef-generation-suite.md Part 1.3
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Tag",
+  "uri": "urn:clef/Tag",
   "name": "Tag",
   "typeParams": [
     {
@@ -312,11 +312,11 @@
   "jsonSchemas": {
     "invocations": {
       "addTag": {
-        "$id": "urn:copf/Tag/addTag/invocation",
+        "$id": "urn:clef/Tag/addTag/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Tag"
+            "const": "urn:clef/Tag"
           },
           "action": {
             "const": "addTag"
@@ -339,11 +339,11 @@
         }
       },
       "removeTag": {
-        "$id": "urn:copf/Tag/removeTag/invocation",
+        "$id": "urn:clef/Tag/removeTag/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Tag"
+            "const": "urn:clef/Tag"
           },
           "action": {
             "const": "removeTag"
@@ -366,11 +366,11 @@
         }
       },
       "getByTag": {
-        "$id": "urn:copf/Tag/getByTag/invocation",
+        "$id": "urn:clef/Tag/getByTag/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Tag"
+            "const": "urn:clef/Tag"
           },
           "action": {
             "const": "getByTag"
@@ -389,11 +389,11 @@
         }
       },
       "getChildren": {
-        "$id": "urn:copf/Tag/getChildren/invocation",
+        "$id": "urn:clef/Tag/getChildren/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Tag"
+            "const": "urn:clef/Tag"
           },
           "action": {
             "const": "getChildren"
@@ -412,11 +412,11 @@
         }
       },
       "rename": {
-        "$id": "urn:copf/Tag/rename/invocation",
+        "$id": "urn:clef/Tag/rename/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Tag"
+            "const": "urn:clef/Tag"
           },
           "action": {
             "const": "rename"
@@ -442,11 +442,11 @@
     "completions": {
       "addTag": {
         "ok": {
-          "$id": "urn:copf/Tag/addTag/completion/ok",
+          "$id": "urn:clef/Tag/addTag/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "addTag"
@@ -462,11 +462,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Tag/addTag/completion/notfound",
+          "$id": "urn:clef/Tag/addTag/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "addTag"
@@ -490,11 +490,11 @@
       },
       "removeTag": {
         "ok": {
-          "$id": "urn:copf/Tag/removeTag/completion/ok",
+          "$id": "urn:clef/Tag/removeTag/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "removeTag"
@@ -510,11 +510,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Tag/removeTag/completion/notfound",
+          "$id": "urn:clef/Tag/removeTag/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "removeTag"
@@ -538,11 +538,11 @@
       },
       "getByTag": {
         "ok": {
-          "$id": "urn:copf/Tag/getByTag/completion/ok",
+          "$id": "urn:clef/Tag/getByTag/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "getByTag"
@@ -566,11 +566,11 @@
       },
       "getChildren": {
         "ok": {
-          "$id": "urn:copf/Tag/getChildren/completion/ok",
+          "$id": "urn:clef/Tag/getChildren/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "getChildren"
@@ -592,11 +592,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Tag/getChildren/completion/notfound",
+          "$id": "urn:clef/Tag/getChildren/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "getChildren"
@@ -620,11 +620,11 @@
       },
       "rename": {
         "ok": {
-          "$id": "urn:copf/Tag/rename/completion/ok",
+          "$id": "urn:clef/Tag/rename/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "rename"
@@ -640,11 +640,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Tag/rename/completion/notfound",
+          "$id": "urn:clef/Tag/rename/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Tag"
+              "const": "urn:clef/Tag"
             },
             "action": {
               "const": "rename"

@@ -1,4 +1,4 @@
-# ObserveRunBegin — generation kit recommended sync
+# ObserveRunBegin — generation suite recommended sync
 sync ObserveRunBegin [eager]
   purpose { Mark a generation run as started. }
 when {

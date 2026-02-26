@@ -85,7 +85,7 @@ async put(relation, key, value) {
       // No callback — default LWW with warning
       if (existing.meta.lastWrittenAt > now) {
         console.warn(
-          `[copf/storage] LWW conflict: overwriting ${relation}/${key} ` +
+          `[clef/storage] LWW conflict: overwriting ${relation}/${key} ` +
           `(existing: ${existing.meta.lastWrittenAt}, incoming: ${now})`,
         );
       }
@@ -266,7 +266,7 @@ export function createStorageLiteProtocol(
 The test suite verifies the storage contract:
 
 ```typescript
-import { createInMemoryStorage, type ConceptStorage } from '@copf/kernel';
+import { createInMemoryStorage, type ConceptStorage } from '@clef/kernel';
 
 describe('In-Memory Storage', () => {
   let storage: ConceptStorage;

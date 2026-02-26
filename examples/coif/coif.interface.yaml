@@ -1,33 +1,33 @@
-# COIF — Concept-Oriented Interface Framework
+# Clef Surface — Clef Surface
 #
-# Interface generation manifest for the 44 COIF UI concepts
-# across 5 sub-kits: coif-core, coif-component, coif-app,
-# coif-render, and coif-theme.
+# Interface generation manifest for the 44 Clef Surface UI concepts
+# across 5 sub-kits: surface-core, surface-component, surface-app,
+# surface-render, and surface-theme.
 #
 # Usage:
-#   copf interface generate --manifest examples/coif/coif.interface.yaml
+#   clef interface generate --manifest examples/surface/surface.interface.yaml
 
 interface:
-  name: coif
+  name: surface
   version: 0.1.0
 
 # ─── GENERATION TARGETS ──────────────────────────────
 targets:
   claude-skills:
-    name: coif
+    name: surface
     progressive: true
 
   cli:
-    name: coif
+    name: surface
     shell: bash,zsh,fish
 
   mcp:
-    name: coif-mcp
+    name: surface-mcp
     transport: stdio
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
-  dir: ./generated/coif
+  dir: ./generated/surface
   formatting:
     typescript: prettier
   clean: true
@@ -43,12 +43,12 @@ grouping:
 
 # ─── PER-CONCEPT OVERRIDES ───────────────────────────
 #
-# Organized by sub-kit: coif-core, coif-component,
-# coif-app, coif-render, coif-theme.
+# Organized by sub-kit: surface-core, surface-component,
+# surface-app, surface-render, surface-theme.
 
 concepts:
 
-  # ── coif-core ────────────────────────────────────────
+  # ── surface-core ────────────────────────────────────────
 
   Signal:
     cli:
@@ -59,7 +59,7 @@ concepts:
             kind: { positional: true }
           examples:
             - description: Create a state signal
-              command: coif signal create state --value "hello"
+              command: surface signal create state --value "hello"
         read:
           command: read
           args:
@@ -70,7 +70,7 @@ concepts:
             signal: { positional: true }
           examples:
             - description: Write to a signal
-              command: coif signal write s1 --value "updated"
+              command: surface signal write s1 --value "updated"
         batch:
           command: batch
         dispose:
@@ -84,7 +84,7 @@ concepts:
           description: "Create a reactive signal (state, computed, or effect)"
         read:
           type: resource-template
-          uriTemplate: "coif://signals/{signal}"
+          uriTemplate: "surface://signals/{signal}"
         write:
           type: tool
           description: "Write a new value to a state signal"
@@ -104,7 +104,7 @@ concepts:
             concept: { positional: true }
           examples:
             - description: Bind to a concept
-              command: coif binding bind Article --mode coupled
+              command: surface binding bind Article --mode coupled
         sync:
           command: sync
           args:
@@ -115,7 +115,7 @@ concepts:
             binding: { positional: true }
           examples:
             - description: Invoke a concept action through binding
-              command: coif binding invoke b1 --action create --title "Hello"
+              command: surface binding invoke b1 --action create --title "Hello"
         unbind:
           command: unbind
           args:
@@ -124,7 +124,7 @@ concepts:
       actions:
         bind:
           type: tool
-          description: "Create a binding between a COPF concept and UI signals"
+          description: "Create a binding between a Clef concept and UI signals"
         sync:
           type: tool
           description: "Synchronize binding state with backend"
@@ -144,7 +144,7 @@ concepts:
             concept: { positional: true }
           examples:
             - description: Inspect a concept and generate UI schema
-              command: coif ui-schema inspect Article
+              command: surface ui-schema inspect Article
         override:
           command: override
           args:
@@ -159,18 +159,18 @@ concepts:
             concept: { positional: true }
           examples:
             - description: Get abstract elements for a concept
-              command: coif ui-schema get-elements Article --json
+              command: surface ui-schema get-elements Article --json
     mcp:
       actions:
         inspect:
           type: tool
-          description: "Inspect a COPF concept spec and generate a UI schema"
+          description: "Inspect a Clef concept spec and generate a UI schema"
         getSchema:
           type: resource-template
-          uriTemplate: "coif://ui-schemas/{concept}"
+          uriTemplate: "surface://ui-schemas/{concept}"
         getElements:
           type: resource-template
-          uriTemplate: "coif://ui-schemas/{concept}/elements"
+          uriTemplate: "surface://ui-schemas/{concept}/elements"
         override:
           type: tool
           description: "Apply field-level UI overrides to a schema"
@@ -191,14 +191,14 @@ concepts:
             kind: { positional: true }
           examples:
             - description: Create an input element
-              command: coif element create input-text --label "Name" --required true
+              command: surface element create input-text --label "Name" --required true
         nest:
           command: nest
           args:
             parent: { positional: true }
           examples:
             - description: Nest an element under a group
-              command: coif element nest group1 --child input1
+              command: surface element nest group1 --child input1
         setConstraints:
           command: set-constraints
           args:
@@ -231,14 +231,14 @@ concepts:
             name: { positional: true }
           examples:
             - description: Define a color token
-              command: coif design-token define primary-500 --value "#3b82f6" --type color --tier semantic
+              command: surface design-token define primary-500 --value "#3b82f6" --type color --tier semantic
         alias:
           command: alias
           args:
             name: { positional: true }
           examples:
             - description: Create a token alias
-              command: coif design-token alias button-bg --reference primary-500
+              command: surface design-token alias button-bg --reference primary-500
         resolve:
           command: resolve
           args:
@@ -255,7 +255,7 @@ concepts:
           command: export
           examples:
             - description: Export tokens as CSS custom properties
-              command: coif design-token export --format css
+              command: surface design-token export --format css
     mcp:
       actions:
         define:
@@ -266,7 +266,7 @@ concepts:
           description: "Create a token alias referencing another token"
         resolve:
           type: resource-template
-          uriTemplate: "coif://tokens/{name}"
+          uriTemplate: "surface://tokens/{name}"
         export:
           type: tool
           description: "Export all tokens in a specified format"
@@ -277,7 +277,7 @@ concepts:
           type: tool
           description: "Remove a design token"
 
-  # ── coif-component ───────────────────────────────────
+  # ── surface-component ───────────────────────────────────
 
   Widget:
     cli:
@@ -288,7 +288,7 @@ concepts:
             name: { positional: true }
           examples:
             - description: Register a dialog widget
-              command: coif widget register dialog --category overlay
+              command: surface widget register dialog --category overlay
         configure:
           command: configure
           args:
@@ -299,12 +299,12 @@ concepts:
             name: { positional: true }
           examples:
             - description: Get widget specification
-              command: coif widget get dialog --json
+              command: surface widget get dialog --json
         list:
           command: list
           examples:
             - description: List all registered widgets
-              command: coif widget list --category input
+              command: surface widget list --category input
         unregister:
           command: unregister
           args:
@@ -316,10 +316,10 @@ concepts:
           description: "Register a headless widget FSM specification"
         get:
           type: resource-template
-          uriTemplate: "coif://widgets/{name}"
+          uriTemplate: "surface://widgets/{name}"
         list:
           type: resource
-          uriTemplate: "coif://widgets"
+          uriTemplate: "surface://widgets"
         configure:
           type: tool
           description: "Configure a widget with custom options"
@@ -336,21 +336,21 @@ concepts:
             component: { positional: true }
           examples:
             - description: Spawn a dialog machine
-              command: coif machine spawn dialog --id d1
+              command: surface machine spawn dialog --id d1
         send:
           command: send
           args:
             machine: { positional: true }
           examples:
             - description: Send an event to a machine
-              command: coif machine send d1 --event OPEN
+              command: surface machine send d1 --event OPEN
         connect:
           command: connect
           args:
             machine: { positional: true }
           examples:
             - description: Get framework-neutral props
-              command: coif machine connect d1 --json
+              command: surface machine connect d1 --json
         destroy:
           command: destroy
           args:
@@ -365,7 +365,7 @@ concepts:
           description: "Send an event to a running machine"
         connect:
           type: resource-template
-          uriTemplate: "coif://machines/{machine}/props"
+          uriTemplate: "surface://machines/{machine}/props"
         destroy:
           type: tool
           description: "Destroy a machine instance"
@@ -379,7 +379,7 @@ concepts:
             component: { positional: true }
           examples:
             - description: Define dialog anatomy
-              command: coif anatomy define dialog --parts root,trigger,backdrop,content,title,closeTrigger
+              command: surface anatomy define dialog --parts root,trigger,backdrop,content,title,closeTrigger
         getParts:
           command: get-parts
           args:
@@ -399,10 +399,10 @@ concepts:
           description: "Define the named parts contract for a component"
         getParts:
           type: resource-template
-          uriTemplate: "coif://anatomy/{component}/parts"
+          uriTemplate: "surface://anatomy/{component}/parts"
         getSlots:
           type: resource-template
-          uriTemplate: "coif://anatomy/{component}/slots"
+          uriTemplate: "surface://anatomy/{component}/slots"
         extend:
           type: tool
           description: "Extend an existing anatomy with additional parts"
@@ -416,7 +416,7 @@ concepts:
             name: { positional: true }
           examples:
             - description: Define a content slot
-              command: coif slot define content --component dialog
+              command: surface slot define content --component dialog
         fill:
           command: fill
           args:
@@ -442,9 +442,9 @@ concepts:
           description: "Clear a slot's content"
         list:
           type: resource-template
-          uriTemplate: "coif://slots/{component}"
+          uriTemplate: "surface://slots/{component}"
 
-  # ── coif-app ─────────────────────────────────────────
+  # ── surface-app ─────────────────────────────────────────
 
   Host:
     cli:
@@ -455,7 +455,7 @@ concepts:
             concept: { positional: true }
           examples:
             - description: Mount a concept view
-              command: coif host mount Article --view list --zone main
+              command: surface host mount Article --view list --zone main
         unmount:
           command: unmount
           args:
@@ -499,14 +499,14 @@ concepts:
             destination: { positional: true }
           examples:
             - description: Register a navigation destination
-              command: coif navigator register /articles --concept Article --view list
+              command: surface navigator register /articles --concept Article --view list
         go:
           command: go
           args:
             destination: { positional: true }
           examples:
             - description: Navigate to a destination
-              command: coif navigator go /articles/hello-world
+              command: surface navigator go /articles/hello-world
         back:
           command: back
         forward:
@@ -548,7 +548,7 @@ concepts:
           description: "Add a navigation guard"
         canGo:
           type: resource-template
-          uriTemplate: "coif://navigator/can-go/{destination}"
+          uriTemplate: "surface://navigator/can-go/{destination}"
 
   Shell:
     cli:
@@ -557,14 +557,14 @@ concepts:
           command: initialize
           examples:
             - description: Initialize the application shell
-              command: coif shell initialize --platform browser
+              command: surface shell initialize --platform browser
         assignHost:
           command: assign-host
           args:
             zone: { positional: true }
           examples:
             - description: Assign a host to a zone
-              command: coif shell assign-host main --host h1
+              command: surface shell assign-host main --host h1
         removeHost:
           command: remove-host
           args:
@@ -575,7 +575,7 @@ concepts:
             type: { positional: true }
           examples:
             - description: Push a modal overlay
-              command: coif shell push-overlay modal --host h2
+              command: surface shell push-overlay modal --host h2
         popOverlay:
           command: pop-overlay
         setGlobalState:
@@ -607,14 +607,14 @@ concepts:
           command: configure
           examples:
             - description: Configure REST transport
-              command: coif transport configure --baseUrl https://api.example.com --type rest
+              command: surface transport configure --baseUrl https://api.example.com --type rest
         fetch:
           command: fetch
           args:
             path: { positional: true }
           examples:
             - description: Fetch data
-              command: coif transport fetch /articles --json
+              command: surface transport fetch /articles --json
         mutate:
           command: mutate
           args:
@@ -658,7 +658,7 @@ concepts:
             platform: { positional: true }
           examples:
             - description: Register a platform adapter
-              command: coif platform register browser
+              command: surface platform register browser
         detect:
           command: detect
         getCapabilities:
@@ -675,7 +675,7 @@ concepts:
           description: "Auto-detect the current platform"
         getCapabilities:
           type: resource-template
-          uriTemplate: "coif://platforms/{platform}/capabilities"
+          uriTemplate: "surface://platforms/{platform}/capabilities"
 
   BrowserAdapter:
     cli:
@@ -684,7 +684,7 @@ concepts:
           command: init-browser
           examples:
             - description: Initialize browser adapter
-              command: coif browser-adapter init-browser --root "#app"
+              command: surface browser-adapter init-browser --root "#app"
     mcp:
       actions:
         initialize:
@@ -735,7 +735,7 @@ concepts:
           type: tool
           description: "Initialize terminal adapter (Ink / Blessed)"
 
-  # ── coif-render ──────────────────────────────────────
+  # ── surface-render ──────────────────────────────────────
 
   Surface:
     cli:
@@ -746,7 +746,7 @@ concepts:
             kind: { positional: true }
           examples:
             - description: Create a browser DOM surface
-              command: coif surface create browser-dom --mountPoint "#app"
+              command: surface surface create browser-dom --mountPoint "#app"
         attach:
           command: attach
           args:
@@ -791,7 +791,7 @@ concepts:
             kind: { positional: true }
           examples:
             - description: Create a sidebar layout
-              command: coif layout create sidebar --gap 16
+              command: surface layout create sidebar --gap 16
         configure:
           command: configure
           args:
@@ -802,7 +802,7 @@ concepts:
             parent: { positional: true }
           examples:
             - description: Nest a layout inside another
-              command: coif layout nest sidebar1 --child stack1
+              command: surface layout nest sidebar1 --child stack1
         setResponsive:
           command: set-responsive
           args:
@@ -836,17 +836,17 @@ concepts:
           command: observe
           examples:
             - description: Start observing viewport dimensions
-              command: coif viewport observe
+              command: surface viewport observe
         setBreakpoints:
           command: set-breakpoints
           examples:
             - description: Set custom breakpoints
-              command: coif viewport set-breakpoints --sm 480 --md 768 --lg 1024
+              command: surface viewport set-breakpoints --sm 480 --md 768 --lg 1024
         getBreakpoint:
           command: get-breakpoint
           examples:
             - description: Get current breakpoint
-              command: coif viewport get-breakpoint --json
+              command: surface viewport get-breakpoint --json
     mcp:
       actions:
         observe:
@@ -857,7 +857,7 @@ concepts:
           description: "Configure custom responsive breakpoints"
         getBreakpoint:
           type: resource
-          uriTemplate: "coif://viewport/breakpoint"
+          uriTemplate: "surface://viewport/breakpoint"
 
   # Framework adapters — all share the normalize action pattern
   FrameworkAdapter:
@@ -880,7 +880,7 @@ concepts:
           command: normalize
           examples:
             - description: Normalize props for React
-              command: coif react-adapter normalize --props '{"onclick":"handler"}'
+              command: surface react-adapter normalize --props '{"onclick":"handler"}'
     mcp:
       actions:
         normalize:
@@ -1041,7 +1041,7 @@ concepts:
           type: tool
           description: "Map generic props to WinUI XAML controls"
 
-  # ── coif-theme ───────────────────────────────────────
+  # ── surface-theme ───────────────────────────────────────
 
   Theme:
     cli:
@@ -1052,21 +1052,21 @@ concepts:
             name: { positional: true }
           examples:
             - description: Create a dark theme
-              command: coif theme create dark --base default
+              command: surface theme create dark --base default
         extend:
           command: extend
           args:
             name: { positional: true }
           examples:
             - description: Extend a theme with overrides
-              command: coif theme extend dark --override primary-500 "#60a5fa"
+              command: surface theme extend dark --override primary-500 "#60a5fa"
         activate:
           command: activate
           args:
             name: { positional: true }
           examples:
             - description: Activate a theme
-              command: coif theme activate dark
+              command: surface theme activate dark
         deactivate:
           command: deactivate
           args:
@@ -1091,7 +1091,7 @@ concepts:
           description: "Deactivate a theme layer"
         resolve:
           type: resource-template
-          uriTemplate: "coif://themes/{name}/{token}"
+          uriTemplate: "surface://themes/{name}/{token}"
 
   Palette:
     cli:
@@ -1102,19 +1102,19 @@ concepts:
             name: { positional: true }
           examples:
             - description: Generate a color palette from a seed hue
-              command: coif palette generate primary --hue 220 --lightness 50
+              command: surface palette generate primary --hue 220 --lightness 50
         assignRole:
           command: assign-role
           args:
             name: { positional: true }
           examples:
             - description: Assign a semantic role
-              command: coif palette assign-role primary --role accent
+              command: surface palette assign-role primary --role accent
         checkContrast:
           command: check-contrast
           examples:
             - description: Check WCAG contrast ratio
-              command: coif palette check-contrast --fg primary-900 --bg primary-50
+              command: surface palette check-contrast --fg primary-900 --bg primary-50
     mcp:
       actions:
         generate:
@@ -1136,7 +1136,7 @@ concepts:
             name: { positional: true }
           examples:
             - description: Define a heading style
-              command: coif typography define heading-lg --family "Inter" --size 32 --weight 700
+              command: surface typography define heading-lg --family "Inter" --size 32 --weight 700
         list:
           command: list
     mcp:
@@ -1146,7 +1146,7 @@ concepts:
           description: "Define a named typography style"
         list:
           type: resource
-          uriTemplate: "coif://typography"
+          uriTemplate: "surface://typography"
 
   Motion:
     cli:
@@ -1157,14 +1157,14 @@ concepts:
             name: { positional: true }
           examples:
             - description: Define a transition duration
-              command: coif motion define-duration fast --ms 100
+              command: surface motion define-duration fast --ms 100
         defineEasing:
           command: define-easing
           args:
             name: { positional: true }
           examples:
             - description: Define an easing curve
-              command: coif motion define-easing ease-out --cubic "0.0,0.0,0.2,1.0"
+              command: surface motion define-easing ease-out --cubic "0.0,0.0,0.2,1.0"
         defineTransition:
           command: define-transition
           args:
@@ -1190,7 +1190,7 @@ concepts:
             level: { positional: true }
           examples:
             - description: Define an elevation level
-              command: coif elevation define 2 --shadow "0 2px 4px rgba(0,0,0,0.1)"
+              command: surface elevation define 2 --shadow "0 2px 4px rgba(0,0,0,0.1)"
         resolve:
           command: resolve
           args:
@@ -1204,10 +1204,10 @@ concepts:
           description: "Define an elevation level with shadow values"
         resolve:
           type: resource-template
-          uriTemplate: "coif://elevation/{level}"
+          uriTemplate: "surface://elevation/{level}"
         list:
           type: resource
-          uriTemplate: "coif://elevation"
+          uriTemplate: "surface://elevation"
 
 # ─── WORKFLOWS ──────────────────────────────────────
 # Organized by sub-kit. Each workflow maps a concept
@@ -1215,7 +1215,7 @@ concepts:
 # principles, and supplemental info.
 workflows:
 
-  # ── coif-core workflows ──────────────────────────────
+  # ── surface-core workflows ──────────────────────────────
 
   signal-lifecycle:
     concept: Signal
@@ -1279,7 +1279,7 @@ workflows:
         label: Signal API Reference
     validation-commands:
       - label: Run signal tests
-        command: copf test Signal
+        command: clef test Signal
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1294,7 +1294,7 @@ workflows:
         | dispose | all | Release resources |
     related-workflows:
       - name: binding-flow
-        description: Connect signals to COPF concepts
+        description: Connect signals to Clef concepts
 
   binding-flow:
     concept: Binding
@@ -1302,8 +1302,8 @@ workflows:
       - action: bind
         title: Create Binding
         prose: >
-          Connect a COPF backend concept to UI signals. Choose
-          a mode: coupled (via COPF engine), REST, GraphQL, or
+          Connect a Clef backend concept to UI signals. Choose
+          a mode: coupled (via Clef engine), REST, GraphQL, or
           standalone. The binding creates signals for each
           concept state field.
       - action: sync
@@ -1326,7 +1326,7 @@ workflows:
           release network/engine resources.
     checklists:
       bind:
-        - Concept name references a valid COPF concept
+        - Concept name references a valid Clef concept
         - Mode is compatible with deployment (coupled requires engine)
         - Transport configured for REST/GraphQL modes
       invoke:
@@ -1347,7 +1347,7 @@ workflows:
         label: Binding API Reference
     validation-commands:
       - label: Run binding tests
-        command: copf test Binding
+        command: clef test Binding
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1369,7 +1369,7 @@ workflows:
       - action: inspect
         title: Inspect Concept
         prose: >
-          Parse a COPF concept spec and generate a UI schema
+          Parse a Clef concept spec and generate a UI schema
           mapping concept state and actions to abstract UI
           elements. Uses Metawidget-style inspection.
       - action: override
@@ -1392,7 +1392,7 @@ workflows:
           API docs.
     design-principles:
       - title: Dual Schema
-        rule: Data schema (COPF) and UI schema (COIF) are separate — UI schema adds presentation, not data
+        rule: Data schema (Clef) and UI schema (Clef Surface) are separate — UI schema adds presentation, not data
       - title: Convention Over Configuration
         rule: Sensible defaults from inspection; overrides only for exceptions
       - title: Modality Independence
@@ -1402,7 +1402,7 @@ workflows:
         label: UISchema API Reference
     validation-commands:
       - label: Run UISchema tests
-        command: copf test UISchema
+        command: clef test UISchema
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1464,7 +1464,7 @@ workflows:
         label: DesignToken API Reference
     validation-commands:
       - label: Run token tests
-        command: copf test DesignToken
+        command: clef test DesignToken
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1482,7 +1482,7 @@ workflows:
       - name: palette-generation
         description: Palettes generate color tokens
 
-  # ── coif-component workflows ─────────────────────────
+  # ── surface-component workflows ─────────────────────────
 
   widget-registry:
     concept: Widget
@@ -1529,7 +1529,7 @@ workflows:
         label: Widget API Reference
     validation-commands:
       - label: Run widget tests
-        command: copf test Widget
+        command: clef test Widget
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1590,7 +1590,7 @@ workflows:
         label: Machine API Reference
     validation-commands:
       - label: Run machine tests
-        command: copf test Machine
+        command: clef test Machine
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1606,7 +1606,7 @@ workflows:
       - name: host-orchestration
         description: Host manages machine lifecycle
 
-  # ── coif-app workflows ──────────────────────────────
+  # ── surface-app workflows ──────────────────────────────
 
   host-orchestration:
     concept: Host
@@ -1662,7 +1662,7 @@ workflows:
         label: Host API Reference
     validation-commands:
       - label: Run host tests
-        command: copf test Host
+        command: clef test Host
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1730,7 +1730,7 @@ workflows:
         label: Navigator API Reference
     validation-commands:
       - label: Run navigator tests
-        command: copf test Navigator
+        command: clef test Navigator
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1799,7 +1799,7 @@ workflows:
         label: Shell API Reference
     validation-commands:
       - label: Run shell tests
-        command: copf test Shell
+        command: clef test Shell
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1817,7 +1817,7 @@ workflows:
       - name: navigation
         description: Navigator drives which host is in the navigated zone
 
-  # ── coif-theme workflows ────────────────────────────
+  # ── surface-theme workflows ────────────────────────────
 
   theme-management:
     concept: Theme
@@ -1869,7 +1869,7 @@ workflows:
         label: Theme API Reference
     validation-commands:
       - label: Run theme tests
-        command: copf test Theme
+        command: clef test Theme
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1936,9 +1936,9 @@ workflows:
         label: Palette API Reference
     validation-commands:
       - label: Run palette tests
-        command: copf test Palette
+        command: clef test Palette
       - label: Check WCAG compliance
-        command: copf check --wcag Palette
+        command: clef check --wcag Palette
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1958,7 +1958,7 @@ workflows:
 # CLI generation.
 annotations:
 
-  # ── coif-core ────────────────────────────────────────
+  # ── surface-core ────────────────────────────────────────
 
   Signal:
     concept:
@@ -1974,20 +1974,20 @@ annotations:
         - label: Create a state signal
           language: bash
           code: |
-            coif signal create state --value "initial"
+            surface signal create state --value "initial"
     batch:
       examples:
         - label: Batch multiple updates
           language: bash
           code: |
-            coif signal batch --signals s1,s2 --values "a","b"
+            surface signal batch --signals s1,s2 --values "a","b"
 
   Binding:
     concept:
       tool-permissions: [Read, Bash]
       argument-template: "<concept> [--mode coupled|rest|graphql|standalone]"
       trigger-description: >
-        Use when connecting COPF backend concepts to UI signals.
+        Use when connecting Clef backend concepts to UI signals.
         The binding bridges data and actions across the boundary.
       trigger-patterns: ["bind", "binding", "connect", "concept bridge"]
       trigger-exclude: ["signal", "theme"]
@@ -1996,20 +1996,20 @@ annotations:
         - label: Bind to a concept in coupled mode
           language: bash
           code: |
-            coif binding bind Article --mode coupled
+            surface binding bind Article --mode coupled
     invoke:
       examples:
         - label: Invoke an action
           language: bash
           code: |
-            coif binding invoke b1 --action create --title "Hello"
+            surface binding invoke b1 --action create --title "Hello"
 
   UISchema:
     concept:
       tool-permissions: [Read, Grep, Bash]
       argument-template: "<concept>"
       trigger-description: >
-        Use when inspecting COPF concepts to generate UI schemas
+        Use when inspecting Clef concepts to generate UI schemas
         or when customizing field-level presentation overrides.
       trigger-patterns: ["ui schema", "inspect", "form", "fields"]
       trigger-exclude: ["design token", "theme"]
@@ -2018,7 +2018,7 @@ annotations:
         - label: Inspect a concept
           language: bash
           code: |
-            coif ui-schema inspect Article --json
+            surface ui-schema inspect Article --json
 
   Element:
     concept:
@@ -2034,7 +2034,7 @@ annotations:
         - label: Create an input element
           language: bash
           code: |
-            coif element create input-text --label "Name" --required true
+            surface element create input-text --label "Name" --required true
 
   DesignToken:
     concept:
@@ -2050,15 +2050,15 @@ annotations:
         - label: Define a color token
           language: bash
           code: |
-            coif design-token define primary-500 --value "#3b82f6" --type color --tier semantic
+            surface design-token define primary-500 --value "#3b82f6" --type color --tier semantic
     export:
       examples:
         - label: Export as CSS
           language: bash
           code: |
-            coif design-token export --format css
+            surface design-token export --format css
 
-  # ── coif-component ───────────────────────────────────
+  # ── surface-component ───────────────────────────────────
 
   Widget:
     concept:
@@ -2075,13 +2075,13 @@ annotations:
         - label: Register a dialog widget
           language: bash
           code: |
-            coif widget register dialog --category overlay
+            surface widget register dialog --category overlay
     list:
       examples:
         - label: List input widgets
           language: bash
           code: |
-            coif widget list --category input --json
+            surface widget list --category input --json
 
   Machine:
     concept:
@@ -2097,19 +2097,19 @@ annotations:
         - label: Spawn a dialog machine
           language: bash
           code: |
-            coif machine spawn dialog --id d1
+            surface machine spawn dialog --id d1
     send:
       examples:
         - label: Send an event
           language: bash
           code: |
-            coif machine send d1 --event OPEN
+            surface machine send d1 --event OPEN
     connect:
       examples:
         - label: Get current props
           language: bash
           code: |
-            coif machine connect d1 --json
+            surface machine connect d1 --json
 
   Anatomy:
     concept:
@@ -2125,7 +2125,7 @@ annotations:
         - label: Define dialog anatomy
           language: bash
           code: |
-            coif anatomy define dialog --parts root,trigger,backdrop,content,title,closeTrigger
+            surface anatomy define dialog --parts root,trigger,backdrop,content,title,closeTrigger
 
   Slot:
     concept:
@@ -2137,7 +2137,7 @@ annotations:
       trigger-patterns: ["slot", "insertion point", "composition"]
       trigger-exclude: ["anatomy", "layout"]
 
-  # ── coif-app ─────────────────────────────────────────
+  # ── surface-app ─────────────────────────────────────────
 
   Host:
     concept:
@@ -2154,7 +2154,7 @@ annotations:
         - label: Mount a concept
           language: bash
           code: |
-            coif host mount Article --view list --zone main
+            surface host mount Article --view list --zone main
 
   Navigator:
     concept:
@@ -2170,13 +2170,13 @@ annotations:
         - label: Register a destination
           language: bash
           code: |
-            coif navigator register /articles --concept Article --view list
+            surface navigator register /articles --concept Article --view list
     go:
       examples:
         - label: Navigate to a destination
           language: bash
           code: |
-            coif navigator go /articles/hello-world
+            surface navigator go /articles/hello-world
 
   Shell:
     concept:
@@ -2192,13 +2192,13 @@ annotations:
         - label: Initialize the shell
           language: bash
           code: |
-            coif shell initialize --platform browser
+            surface shell initialize --platform browser
     pushOverlay:
       examples:
         - label: Push a modal
           language: bash
           code: |
-            coif shell push-overlay modal --host h2
+            surface shell push-overlay modal --host h2
 
   Transport:
     concept:
@@ -2214,13 +2214,13 @@ annotations:
         - label: Configure REST transport
           language: bash
           code: |
-            coif transport configure --baseUrl https://api.example.com --type rest
+            surface transport configure --baseUrl https://api.example.com --type rest
     fetch:
       examples:
         - label: Fetch data
           language: bash
           code: |
-            coif transport fetch /articles --json
+            surface transport fetch /articles --json
 
   PlatformAdapter:
     concept:
@@ -2263,7 +2263,7 @@ annotations:
       trigger-description: "Initialize the terminal platform adapter."
       trigger-patterns: ["terminal", "CLI", "TUI", "Ink"]
 
-  # ── coif-render ──────────────────────────────────────
+  # ── surface-render ──────────────────────────────────────
 
   Surface:
     concept:
@@ -2279,7 +2279,7 @@ annotations:
         - label: Create a browser surface
           language: bash
           code: |
-            coif surface create browser-dom --mountPoint "#app"
+            surface surface create browser-dom --mountPoint "#app"
 
   Layout:
     concept:
@@ -2295,7 +2295,7 @@ annotations:
         - label: Create a sidebar layout
           language: bash
           code: |
-            coif layout create sidebar --gap 16
+            surface layout create sidebar --gap 16
 
   Viewport:
     concept:
@@ -2311,7 +2311,7 @@ annotations:
         - label: Start observing
           language: bash
           code: |
-            coif viewport observe --json
+            surface viewport observe --json
 
   FrameworkAdapter:
     concept:
@@ -2410,7 +2410,7 @@ annotations:
       trigger-description: "Normalize props for WinUI XAML controls."
       trigger-patterns: ["winui", "XAML", "windows"]
 
-  # ── coif-theme ───────────────────────────────────────
+  # ── surface-theme ───────────────────────────────────────
 
   Theme:
     concept:
@@ -2426,13 +2426,13 @@ annotations:
         - label: Create a dark theme
           language: bash
           code: |
-            coif theme create dark --base default
+            surface theme create dark --base default
     activate:
       examples:
         - label: Activate a theme
           language: bash
           code: |
-            coif theme activate dark
+            surface theme activate dark
 
   Palette:
     concept:
@@ -2448,13 +2448,13 @@ annotations:
         - label: Generate a primary palette
           language: bash
           code: |
-            coif palette generate primary --hue 220 --lightness 50
+            surface palette generate primary --hue 220 --lightness 50
     checkContrast:
       examples:
         - label: Check WCAG contrast
           language: bash
           code: |
-            coif palette check-contrast --fg primary-900 --bg primary-50
+            surface palette check-contrast --fg primary-900 --bg primary-50
 
   Typography:
     concept:
@@ -2470,7 +2470,7 @@ annotations:
         - label: Define a heading style
           language: bash
           code: |
-            coif typography define heading-lg --family "Inter" --size 32 --weight 700
+            surface typography define heading-lg --family "Inter" --size 32 --weight 700
 
   Motion:
     concept:
@@ -2486,13 +2486,13 @@ annotations:
         - label: Define a fast duration
           language: bash
           code: |
-            coif motion define-duration fast --ms 100
+            surface motion define-duration fast --ms 100
     defineEasing:
       examples:
         - label: Define ease-out
           language: bash
           code: |
-            coif motion define-easing ease-out --cubic "0.0,0.0,0.2,1.0"
+            surface motion define-easing ease-out --cubic "0.0,0.0,0.2,1.0"
 
   Elevation:
     concept:
@@ -2508,4 +2508,4 @@ annotations:
         - label: Define elevation level 2
           language: bash
           code: |
-            coif elevation define 2 --shadow "0 2px 4px rgba(0,0,0,0.1)"
+            surface elevation define 2 --shadow "0 2px 4px rgba(0,0,0,0.1)"

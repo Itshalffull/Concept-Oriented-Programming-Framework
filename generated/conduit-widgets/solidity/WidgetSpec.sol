@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /// @title WidgetTypes
-/// @notice Shared COIF widget abstraction types for the Conduit application.
+/// @notice Shared Clef Surface widget abstraction types for the Conduit application.
 /// @dev Each widget is described by a WidgetSpec containing concept bindings,
 ///      anatomy, abstract element trees, finite state machines, and accessibility
 ///      metadata. This library provides the canonical on-chain type definitions
@@ -16,7 +16,7 @@ pragma solidity ^0.8.20;
 library WidgetTypes {
 
     // ---------------------------------------------------------------------------
-    // Element kinds — abstract interaction units from COIF Element concept
+    // Element kinds — abstract interaction units from Clef Surface Element concept
     // ---------------------------------------------------------------------------
 
     enum ElementKind {
@@ -68,12 +68,12 @@ library WidgetTypes {
     // ---------------------------------------------------------------------------
 
     struct ConceptBinding {
-        string concept;    // URI: "urn:copf/Article"
+        string concept;    // URI: "urn:clef/Article"
         string[] actions;  // actions this widget can invoke
     }
 
     // ---------------------------------------------------------------------------
-    // Anatomy — named parts contract (from COIF Anatomy concept)
+    // Anatomy — named parts contract (from Clef Surface Anatomy concept)
     // ---------------------------------------------------------------------------
 
     struct AnatomySpec {
@@ -83,7 +83,7 @@ library WidgetTypes {
     }
 
     // ---------------------------------------------------------------------------
-    // Accessibility — ARIA + keyboard interactions (from COIF Widget a11ySpec)
+    // Accessibility — ARIA + keyboard interactions (from Clef Surface Widget a11ySpec)
     // ---------------------------------------------------------------------------
 
     struct A11ySpec {

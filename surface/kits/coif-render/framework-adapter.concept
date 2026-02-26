@@ -4,7 +4,7 @@ concept FrameworkAdapter [R] {
   purpose {
     Framework adapter registry. Translates Machine connect() output
     into framework-specific bindings. Implements normalizeProps()
-    — the thin layer between COIF's generic event model and
+    — the thin layer between Clef Surface's generic event model and
     framework conventions (React SyntheticEvent, Solid native
     events, Vue v-on). Each adapter is ~200 LOC.
   }

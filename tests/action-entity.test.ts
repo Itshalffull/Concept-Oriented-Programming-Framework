@@ -42,7 +42,7 @@ describe('ActionEntity Handler', () => {
       );
       const record = await storage.get('action-entity', 'action-entity-1');
       expect(record).not.toBeNull();
-      expect(record!.symbol).toBe('copf/action/Todo/create');
+      expect(record!.symbol).toBe('clef/action/Todo/create');
       expect(record!.variantCount).toBe(1);
     });
 
@@ -256,7 +256,7 @@ describe('ActionEntity Handler', () => {
 
       await storage.put('interface-exposure', 'exp-1', {
         id: 'exp-1',
-        actionSymbol: 'copf/action/Todo/create',
+        actionSymbol: 'clef/action/Todo/create',
         surface: 'REST',
       });
 

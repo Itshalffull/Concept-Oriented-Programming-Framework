@@ -45,7 +45,7 @@ describe('SyncSpecSymbolExtractor', () => {
       const symbols = JSON.parse(result.symbols as string);
       const syncDef = symbols.find((s: Record<string, string>) => s.kind === 'sync');
       expect(syncDef).toBeDefined();
-      expect(syncDef.symbolString).toBe('copf/sync/ArticleLabel');
+      expect(syncDef.symbolString).toBe('clef/sync/ArticleLabel');
       expect(syncDef.displayName).toBe('ArticleLabel');
       expect(syncDef.role).toBe('definition');
     });
@@ -82,8 +82,8 @@ describe('SyncSpecSymbolExtractor', () => {
         s.kind === 'action' && s.role === 'reference'
       );
       expect(actionRefs).toHaveLength(2);
-      expect(actionRefs[0].symbolString).toBe('copf/concept/Article/action/create');
-      expect(actionRefs[1].symbolString).toBe('copf/concept/Label/action/assign');
+      expect(actionRefs[0].symbolString).toBe('clef/concept/Article/action/create');
+      expect(actionRefs[1].symbolString).toBe('clef/concept/Label/action/assign');
     });
 
     it('extracts variable bindings', async () => {

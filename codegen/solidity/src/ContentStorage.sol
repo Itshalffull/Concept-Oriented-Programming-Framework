@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ContentStorage
 /// @notice Concept-oriented persistence layer for content node data
-/// @dev Implements the ContentStorage concept from COPF specification.
+/// @dev Implements the ContentStorage concept from Clef specification.
 ///      Provides save, load, remove, and count operations for persisted content.
 
 contract ContentStorage {

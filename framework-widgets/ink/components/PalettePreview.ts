@@ -1,5 +1,5 @@
 // ============================================================
-// COIF Ink Widget — PalettePreview
+// Clef Surface Ink Widget — PalettePreview
 //
 // Renders color swatches as colored block characters in the
 // terminal. Shows color name, hex value, and a visual swatch
@@ -8,7 +8,7 @@
 // ============================================================
 
 import type { ColorScale, SemanticRole } from '../../shared/types.js';
-import { generateColorScale, contrastRatio } from '../../shared/coif-bridge.js';
+import { generateColorScale, contrastRatio } from '../../shared/surface-bridge.js';
 import type { TerminalNode } from './DesignTokenProvider.js';
 import { hexToAnsiFg, hexToAnsiBg, parseHex } from './DesignTokenProvider.js';
 

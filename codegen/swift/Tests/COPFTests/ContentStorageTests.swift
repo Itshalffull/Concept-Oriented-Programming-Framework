@@ -1,7 +1,7 @@
 // ContentStorageTests.swift — Tests for ContentStorage concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ContentStorageTests: XCTestCase {
 

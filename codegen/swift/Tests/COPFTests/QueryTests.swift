@@ -1,7 +1,7 @@
 // QueryTests.swift — Tests for Query concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class QueryTests: XCTestCase {
 

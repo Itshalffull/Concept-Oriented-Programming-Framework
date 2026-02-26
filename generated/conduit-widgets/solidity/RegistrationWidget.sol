@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title RegistrationWidget
-/// @notice Self-describing COIF widget for user registration on Conduit.
+/// @notice Self-describing Clef Surface widget for user registration on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -94,7 +94,7 @@ contract RegistrationWidget {
         string[] memory userActions = new string[](1);
         userActions[0] = "register";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/User",
+            concept: "urn:clef/User",
             actions: userActions
         });
 
@@ -102,7 +102,7 @@ contract RegistrationWidget {
         passwordActions[0] = "validate";
         passwordActions[1] = "set";
         bindings[1] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Password",
+            concept: "urn:clef/Password",
             actions: passwordActions
         });
 

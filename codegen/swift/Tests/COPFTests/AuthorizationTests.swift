@@ -1,7 +1,7 @@
 // AuthorizationTests.swift — Tests for Authorization concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class AuthorizationTests: XCTestCase {
 

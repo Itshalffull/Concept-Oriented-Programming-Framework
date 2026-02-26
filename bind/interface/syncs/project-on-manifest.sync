@@ -1,5 +1,5 @@
 # Pipeline integration — ConceptManifest generated triggers projection
-# Architecture doc: Interface Kit, Sync Section 3.1
+# Architecture doc: Clef Bind, Sync Section 3.1
 
 sync ProjectOnManifest [eager]
 when {

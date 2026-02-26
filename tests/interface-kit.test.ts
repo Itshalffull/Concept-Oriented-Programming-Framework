@@ -1,8 +1,8 @@
 // ============================================================
-// Interface Kit Tests
+// Clef Bind Tests
 //
 // Validates all concept specs, sync definitions, and suite.yaml
-// for the interface generation kit parse correctly.
+// for the interface generation suite parse correctly.
 // See Architecture doc: Textual Interface Layer Extension.
 // ============================================================
 
@@ -71,7 +71,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.invariants).toHaveLength(1);
   });
 
-  // Emitter: imported from generation kit (see suite.yaml uses section)
+  // Emitter: imported from generation suite (see suite.yaml uses section)
 
   it('parses ApiSurface', () => {
     const ast = readConcept('api-surface.concept');
@@ -739,10 +739,10 @@ describe('Bulk Sync Validation', () => {
 describe('Kit YAML', () => {
 
   it('suite.yaml exists and references valid files', () => {
-    const kitPath = resolve(INTERFACE_DIR, 'suite.yaml');
-    expect(existsSync(kitPath)).toBe(true);
+    const suitePath = resolve(INTERFACE_DIR, 'suite.yaml');
+    expect(existsSync(suitePath)).toBe(true);
 
-    const content = readFileSync(kitPath, 'utf-8');
+    const content = readFileSync(suitePath, 'utf-8');
     expect(content).toContain('name: interface');
     expect(content).toContain('version: 0.1.0');
 

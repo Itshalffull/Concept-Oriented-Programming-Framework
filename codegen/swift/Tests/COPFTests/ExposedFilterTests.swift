@@ -1,7 +1,7 @@
 // ExposedFilterTests.swift — Tests for ExposedFilter concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ExposedFilterTests: XCTestCase {
 

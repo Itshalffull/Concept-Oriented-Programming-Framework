@@ -30,7 +30,7 @@ describe('RuntimeCoverage Handler', () => {
   describe('record', () => {
     it('creates a new coverage entry on first record', async () => {
       const result = await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/create', kind: 'action', flowId: 'flow-1' },
+        { symbol: 'clef/action/Todo/create', kind: 'action', flowId: 'flow-1' },
         storage,
       );
       expect(result.variant).toBe('created');
@@ -39,11 +39,11 @@ describe('RuntimeCoverage Handler', () => {
 
     it('increments execution count on subsequent records', async () => {
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/create', kind: 'action', flowId: 'flow-1' },
+        { symbol: 'clef/action/Todo/create', kind: 'action', flowId: 'flow-1' },
         storage,
       );
       const second = await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/create', kind: 'action', flowId: 'flow-2' },
+        { symbol: 'clef/action/Todo/create', kind: 'action', flowId: 'flow-2' },
         storage,
       );
       expect(second.variant).toBe('ok');
@@ -57,13 +57,13 @@ describe('RuntimeCoverage Handler', () => {
 
     it('stores entityKind and symbol correctly', async () => {
       const result = await runtimeCoverageHandler.record(
-        { symbol: 'copf/sync/mySync', kind: 'sync', flowId: 'flow-1' },
+        { symbol: 'clef/sync/mySync', kind: 'sync', flowId: 'flow-1' },
         storage,
       );
       const record = await storage.get('runtime-coverage', result.entry as string);
       expect(record!.entityKind).toBe('sync');
-      expect(record!.symbol).toBe('copf/sync/mySync');
-      expect(record!.entitySymbol).toBe('copf/sync/mySync');
+      expect(record!.symbol).toBe('clef/sync/mySync');
+      expect(record!.entitySymbol).toBe('clef/sync/mySync');
       expect(record!.executionCount).toBe(1);
     });
   });
@@ -75,17 +75,17 @@ describe('RuntimeCoverage Handler', () => {
   describe('coverageReport', () => {
     it('computes coverage percentage against registered entities', async () => {
       // Seed 3 action entities
-      await storage.put('action-entity', 'a1', { id: 'a1', symbol: 'copf/action/Todo/create' });
-      await storage.put('action-entity', 'a2', { id: 'a2', symbol: 'copf/action/Todo/delete' });
-      await storage.put('action-entity', 'a3', { id: 'a3', symbol: 'copf/action/Todo/get' });
+      await storage.put('action-entity', 'a1', { id: 'a1', symbol: 'clef/action/Todo/create' });
+      await storage.put('action-entity', 'a2', { id: 'a2', symbol: 'clef/action/Todo/delete' });
+      await storage.put('action-entity', 'a3', { id: 'a3', symbol: 'clef/action/Todo/get' });
 
       // Record coverage for 2 of 3
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/create', kind: 'action', flowId: 'f1' },
+        { symbol: 'clef/action/Todo/create', kind: 'action', flowId: 'f1' },
         storage,
       );
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/delete', kind: 'action', flowId: 'f2' },
+        { symbol: 'clef/action/Todo/delete', kind: 'action', flowId: 'f2' },
         storage,
       );
 
@@ -99,7 +99,7 @@ describe('RuntimeCoverage Handler', () => {
     });
 
     it('returns 0% coverage when no entries recorded', async () => {
-      await storage.put('action-entity', 'a1', { id: 'a1', symbol: 'copf/action/Todo/create' });
+      await storage.put('action-entity', 'a1', { id: 'a1', symbol: 'clef/action/Todo/create' });
 
       const result = await runtimeCoverageHandler.coverageReport({ kind: 'action', since: '' }, storage);
       const report = JSON.parse(result.report as string);
@@ -119,24 +119,24 @@ describe('RuntimeCoverage Handler', () => {
         id: 'a1',
         concept: 'Todo',
         name: 'create',
-        symbol: 'copf/action/Todo/create',
+        symbol: 'clef/action/Todo/create',
       });
       await storage.put('variant-entity', 'v1', {
         id: 'v1',
         action: 'Todo/create',
         tag: 'ok',
-        symbol: 'copf/variant/Todo/create/ok',
+        symbol: 'clef/variant/Todo/create/ok',
       });
       await storage.put('variant-entity', 'v2', {
         id: 'v2',
         action: 'Todo/create',
         tag: 'error',
-        symbol: 'copf/variant/Todo/create/error',
+        symbol: 'clef/variant/Todo/create/error',
       });
 
       // Record coverage for the 'ok' variant only
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/variant/Todo/create/ok', kind: 'variant', flowId: 'f1' },
+        { symbol: 'clef/variant/Todo/create/ok', kind: 'variant', flowId: 'f1' },
         storage,
       );
 
@@ -163,18 +163,18 @@ describe('RuntimeCoverage Handler', () => {
       await storage.put('sync-entity', 's1', {
         id: 's1',
         name: 'onTodoCreate',
-        symbol: 'copf/sync/onTodoCreate',
+        symbol: 'clef/sync/onTodoCreate',
         tier: 'critical',
       });
       await storage.put('sync-entity', 's2', {
         id: 's2',
         name: 'onUserSignup',
-        symbol: 'copf/sync/onUserSignup',
+        symbol: 'clef/sync/onUserSignup',
         tier: 'standard',
       });
 
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/sync/onTodoCreate', kind: 'sync', flowId: 'f1' },
+        { symbol: 'clef/sync/onTodoCreate', kind: 'sync', flowId: 'f1' },
         storage,
       );
 
@@ -201,19 +201,19 @@ describe('RuntimeCoverage Handler', () => {
         id: 'ws1',
         widget: 'Button',
         name: 'idle',
-        symbol: 'copf/widget-state/Button/idle',
+        symbol: 'clef/widget-state/Button/idle',
         transitions: JSON.stringify([{ event: 'click', target: 'pressed' }]),
       });
       await storage.put('widget-state-entity', 'ws2', {
         id: 'ws2',
         widget: 'Button',
         name: 'pressed',
-        symbol: 'copf/widget-state/Button/pressed',
+        symbol: 'clef/widget-state/Button/pressed',
         transitions: '[]',
       });
 
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/widget-state/Button/idle', kind: 'widget-state', flowId: 'f1' },
+        { symbol: 'clef/widget-state/Button/idle', kind: 'widget-state', flowId: 'f1' },
         storage,
       );
 
@@ -235,7 +235,7 @@ describe('RuntimeCoverage Handler', () => {
 
   describe('widgetLifecycleReport', () => {
     it('aggregates lifecycle events for a widget', async () => {
-      const widgetSymbol = 'copf/widget/Button';
+      const widgetSymbol = 'clef/widget/Button';
 
       // Seed mount/unmount/render entries
       await storage.put('runtime-coverage', 'rc-mount', {
@@ -332,13 +332,13 @@ describe('RuntimeCoverage Handler', () => {
 
       await storage.put('runtime-coverage', 'rc-btn-render', {
         id: 'rc-btn-render',
-        symbol: 'copf/widget/Button/render',
+        symbol: 'clef/widget/Button/render',
         entityKind: 'widget-render',
         executionCount: 100,
       });
       await storage.put('runtime-coverage', 'rc-card-render', {
         id: 'rc-card-render',
-        symbol: 'copf/widget/Card/render',
+        symbol: 'clef/widget/Card/render',
         entityKind: 'widget-render',
         executionCount: 50,
       });
@@ -360,20 +360,20 @@ describe('RuntimeCoverage Handler', () => {
     it('identifies entities never exercised at runtime', async () => {
       await storage.put('action-entity', 'a1', {
         id: 'a1',
-        symbol: 'copf/action/Todo/create',
+        symbol: 'clef/action/Todo/create',
       });
       await storage.put('action-entity', 'a2', {
         id: 'a2',
-        symbol: 'copf/action/Todo/delete',
+        symbol: 'clef/action/Todo/delete',
       });
       await storage.put('action-entity', 'a3', {
         id: 'a3',
-        symbol: 'copf/action/Todo/get',
+        symbol: 'clef/action/Todo/get',
       });
 
       // Only 'create' has been exercised
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/create', kind: 'action', flowId: 'f1' },
+        { symbol: 'clef/action/Todo/create', kind: 'action', flowId: 'f1' },
         storage,
       );
 
@@ -381,16 +381,16 @@ describe('RuntimeCoverage Handler', () => {
       expect(result.variant).toBe('ok');
       const neverExercised = JSON.parse(result.neverExercised as string);
       expect(neverExercised).toHaveLength(2);
-      expect(neverExercised).toContain('copf/action/Todo/delete');
-      expect(neverExercised).toContain('copf/action/Todo/get');
-      expect(neverExercised).not.toContain('copf/action/Todo/create');
+      expect(neverExercised).toContain('clef/action/Todo/delete');
+      expect(neverExercised).toContain('clef/action/Todo/get');
+      expect(neverExercised).not.toContain('clef/action/Todo/create');
     });
 
     it('returns empty when all entities exercised', async () => {
-      await storage.put('action-entity', 'a1', { id: 'a1', symbol: 'copf/action/Todo/create' });
+      await storage.put('action-entity', 'a1', { id: 'a1', symbol: 'clef/action/Todo/create' });
 
       await runtimeCoverageHandler.record(
-        { symbol: 'copf/action/Todo/create', kind: 'action', flowId: 'f1' },
+        { symbol: 'clef/action/Todo/create', kind: 'action', flowId: 'f1' },
         storage,
       );
 

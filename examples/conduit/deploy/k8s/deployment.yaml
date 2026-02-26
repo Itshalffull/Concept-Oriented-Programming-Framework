@@ -1,33 +1,33 @@
-# Conduit COPF App — Kubernetes Deployment
+# Conduit Clef App — Kubernetes Deployment
 # Runs the conduit app with 2 replicas, Redis storage, and Vault secrets.
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: conduit-copf
+  name: conduit-clef
   namespace: conduit
   labels:
-    app: conduit-copf
+    app: conduit-clef
     version: "0.1.0"
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: conduit-copf
+      app: conduit-clef
   template:
     metadata:
       labels:
-        app: conduit-copf
+        app: conduit-clef
         version: "0.1.0"
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: conduit
         vault.hashicorp.com/agent-inject-secret-config: secret/data/conduit/prod
     spec:
-      serviceAccountName: conduit-copf
+      serviceAccountName: conduit-clef
       containers:
         - name: conduit
-          image: conduit-copf:latest
+          image: conduit-clef:latest
           ports:
             - containerPort: 3000
               protocol: TCP

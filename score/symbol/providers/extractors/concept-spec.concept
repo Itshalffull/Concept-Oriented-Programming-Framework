@@ -4,7 +4,7 @@ concept ConceptSpecSymbolExtractor [I] {
   purpose {
     Symbol extraction provider for .concept files. Extracts
     concept name, action names, variant names, and state field
-    names as symbols in the copf/* namespace.
+    names as symbols in the clef/* namespace.
   }
 
   state {

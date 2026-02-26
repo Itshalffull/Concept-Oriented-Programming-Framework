@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Authorization
 /// @notice Concept-oriented role-based access control with role creation, permission grants, and user assignment
-/// @dev Implements the Authorization concept from COPF specification.
+/// @dev Implements the Authorization concept from Clef specification.
 ///      Supports roles, permissions, and multi-role permission checking.
 
 contract Authorization {

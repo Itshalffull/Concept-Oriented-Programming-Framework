@@ -1,7 +1,7 @@
 // ScoreApi Concept Implementation
 //
-// Unified facade over the five Score kits providing a single
-// LLM-friendly surface for querying any COPF project's structure,
+// Unified facade over the five Score suites providing a single
+// LLM-friendly surface for querying any Clef project's structure,
 // symbols, semantics, data flows, and search indexes. Every Clef
 // app gets ScoreApi registered automatically.
 //
@@ -241,7 +241,7 @@ export const scoreApiHandler: ConceptHandler = {
 
     // References come from the Symbol/SymbolOccurrence layer.
     // This returns what's indexed; full cross-file resolution
-    // requires the symbol kit's scope graph.
+    // requires the symbol suite's scope graph.
     const references = allSymbols.slice(1).map(s => ({
       file: s.file as string,
       line: s.line as number,

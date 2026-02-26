@@ -1,4 +1,4 @@
-// Target Concept Implementation (Interface Kit)
+// Target Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 function computeHash(content: string): string {

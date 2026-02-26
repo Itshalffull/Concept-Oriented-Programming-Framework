@@ -1,7 +1,7 @@
 // PathautoTests.swift — Tests for Pathauto concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class PathautoTests: XCTestCase {
 

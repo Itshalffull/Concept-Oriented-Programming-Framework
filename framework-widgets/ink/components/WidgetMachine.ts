@@ -1,9 +1,9 @@
 // ============================================================
-// COIF Ink Widget — WidgetMachine
+// Clef Surface Ink Widget — WidgetMachine
 //
 // Terminal-rendered headless component. Displays the state
 // machine status as a status line and maps anatomy parts
-// to terminal layout regions. Connects COIF WidgetSpec to
+// to terminal layout regions. Connects Clef Surface WidgetSpec to
 // terminal rendering through the machine runner.
 // ============================================================
 
@@ -15,7 +15,7 @@ import type {
   Signal,
 } from '../../shared/types.js';
 
-import { createMachine, createSignal } from '../../shared/coif-bridge.js';
+import { createMachine, createSignal } from '../../shared/surface-bridge.js';
 import type { TerminalNode } from './DesignTokenProvider.js';
 import { hexToAnsiFg } from './DesignTokenProvider.js';
 
@@ -84,7 +84,7 @@ function getStateColor(stateName: string): string {
 // --- WidgetMachine Props ---
 
 export interface WidgetMachineProps {
-  /** COIF widget specification. */
+  /** Clef Surface widget specification. */
   spec: WidgetSpec;
   /** Initial context for the state machine. */
   initialContext?: Record<string, unknown>;

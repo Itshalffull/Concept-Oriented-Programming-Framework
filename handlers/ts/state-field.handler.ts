@@ -35,7 +35,7 @@ export const stateFieldHandler: ConceptHandler = {
     const typeExpr = input.typeExpr as string;
 
     const id = nextId();
-    const symbol = `copf/field/${concept}/${name}`;
+    const symbol = `clef/field/${concept}/${name}`;
     const cardinality = inferCardinality(typeExpr);
 
     await storage.put('state-field', id, {

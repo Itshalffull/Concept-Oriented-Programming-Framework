@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Authorization",
+  "uri": "urn:clef/Authorization",
   "name": "Authorization",
   "typeParams": [
     {
@@ -545,11 +545,11 @@
   "jsonSchemas": {
     "invocations": {
       "grantPermission": {
-        "$id": "urn:copf/Authorization/grantPermission/invocation",
+        "$id": "urn:clef/Authorization/grantPermission/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authorization"
+            "const": "urn:clef/Authorization"
           },
           "action": {
             "const": "grantPermission"
@@ -572,11 +572,11 @@
         }
       },
       "revokePermission": {
-        "$id": "urn:copf/Authorization/revokePermission/invocation",
+        "$id": "urn:clef/Authorization/revokePermission/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authorization"
+            "const": "urn:clef/Authorization"
           },
           "action": {
             "const": "revokePermission"
@@ -599,11 +599,11 @@
         }
       },
       "assignRole": {
-        "$id": "urn:copf/Authorization/assignRole/invocation",
+        "$id": "urn:clef/Authorization/assignRole/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authorization"
+            "const": "urn:clef/Authorization"
           },
           "action": {
             "const": "assignRole"
@@ -626,11 +626,11 @@
         }
       },
       "checkPermission": {
-        "$id": "urn:copf/Authorization/checkPermission/invocation",
+        "$id": "urn:clef/Authorization/checkPermission/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authorization"
+            "const": "urn:clef/Authorization"
           },
           "action": {
             "const": "checkPermission"
@@ -656,11 +656,11 @@
     "completions": {
       "grantPermission": {
         "ok": {
-          "$id": "urn:copf/Authorization/grantPermission/completion/ok",
+          "$id": "urn:clef/Authorization/grantPermission/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "grantPermission"
@@ -686,11 +686,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Authorization/grantPermission/completion/notfound",
+          "$id": "urn:clef/Authorization/grantPermission/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "grantPermission"
@@ -714,11 +714,11 @@
       },
       "revokePermission": {
         "ok": {
-          "$id": "urn:copf/Authorization/revokePermission/completion/ok",
+          "$id": "urn:clef/Authorization/revokePermission/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "revokePermission"
@@ -744,11 +744,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Authorization/revokePermission/completion/notfound",
+          "$id": "urn:clef/Authorization/revokePermission/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "revokePermission"
@@ -772,11 +772,11 @@
       },
       "assignRole": {
         "ok": {
-          "$id": "urn:copf/Authorization/assignRole/completion/ok",
+          "$id": "urn:clef/Authorization/assignRole/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "assignRole"
@@ -802,11 +802,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Authorization/assignRole/completion/notfound",
+          "$id": "urn:clef/Authorization/assignRole/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "assignRole"
@@ -830,11 +830,11 @@
       },
       "checkPermission": {
         "ok": {
-          "$id": "urn:copf/Authorization/checkPermission/completion/ok",
+          "$id": "urn:clef/Authorization/checkPermission/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authorization"
+              "const": "urn:clef/Authorization"
             },
             "action": {
               "const": "checkPermission"

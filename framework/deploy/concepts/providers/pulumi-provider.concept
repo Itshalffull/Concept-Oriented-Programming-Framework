@@ -2,7 +2,7 @@
 concept PulumiProvider [P] {
 
   purpose {
-    Generate and apply Pulumi TypeScript programs from COPF
+    Generate and apply Pulumi TypeScript programs from Clef
     deploy plans. Owns Pulumi stack state, backend configuration,
     and plugin versioning.
   }

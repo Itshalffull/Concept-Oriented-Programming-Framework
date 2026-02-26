@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/K8sRuntime",
+  "uri": "urn:clef/K8sRuntime",
   "name": "K8sRuntime",
   "typeParams": [
     {
@@ -529,11 +529,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/K8sRuntime/provision/invocation",
+        "$id": "urn:clef/K8sRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/K8sRuntime"
+            "const": "urn:clef/K8sRuntime"
           },
           "action": {
             "const": "provision"
@@ -564,11 +564,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/K8sRuntime/deploy/invocation",
+        "$id": "urn:clef/K8sRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/K8sRuntime"
+            "const": "urn:clef/K8sRuntime"
           },
           "action": {
             "const": "deploy"
@@ -591,11 +591,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/K8sRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/K8sRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/K8sRuntime"
+            "const": "urn:clef/K8sRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -618,11 +618,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/K8sRuntime/rollback/invocation",
+        "$id": "urn:clef/K8sRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/K8sRuntime"
+            "const": "urn:clef/K8sRuntime"
           },
           "action": {
             "const": "rollback"
@@ -645,11 +645,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/K8sRuntime/destroy/invocation",
+        "$id": "urn:clef/K8sRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/K8sRuntime"
+            "const": "urn:clef/K8sRuntime"
           },
           "action": {
             "const": "destroy"
@@ -671,11 +671,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/K8sRuntime/provision/completion/ok",
+          "$id": "urn:clef/K8sRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "provision"
@@ -705,11 +705,11 @@
           }
         },
         "resourceQuotaExceeded": {
-          "$id": "urn:copf/K8sRuntime/provision/completion/resourceQuotaExceeded",
+          "$id": "urn:clef/K8sRuntime/provision/completion/resourceQuotaExceeded",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "provision"
@@ -743,11 +743,11 @@
           }
         },
         "namespaceNotFound": {
-          "$id": "urn:copf/K8sRuntime/provision/completion/namespaceNotFound",
+          "$id": "urn:clef/K8sRuntime/provision/completion/namespaceNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "provision"
@@ -771,11 +771,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/K8sRuntime/deploy/completion/ok",
+          "$id": "urn:clef/K8sRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "deploy"
@@ -801,11 +801,11 @@
           }
         },
         "podCrashLoop": {
-          "$id": "urn:copf/K8sRuntime/deploy/completion/podCrashLoop",
+          "$id": "urn:clef/K8sRuntime/deploy/completion/podCrashLoop",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "deploy"
@@ -835,11 +835,11 @@
           }
         },
         "imageNotFound": {
-          "$id": "urn:copf/K8sRuntime/deploy/completion/imageNotFound",
+          "$id": "urn:clef/K8sRuntime/deploy/completion/imageNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "deploy"
@@ -863,11 +863,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/K8sRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/K8sRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -891,11 +891,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/K8sRuntime/rollback/completion/ok",
+          "$id": "urn:clef/K8sRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "rollback"
@@ -923,11 +923,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/K8sRuntime/destroy/completion/ok",
+          "$id": "urn:clef/K8sRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/K8sRuntime"
+              "const": "urn:clef/K8sRuntime"
             },
             "action": {
               "const": "destroy"

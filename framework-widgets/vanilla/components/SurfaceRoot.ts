@@ -1,10 +1,10 @@
 // ============================================================
 // SurfaceRoot — Vanilla DOM Component
 //
-// Creates and manages the root mount point for a COIF
+// Creates and manages the root mount point for a Clef Surface
 // application surface. Handles surface lifecycle including
 // mount, unmount, and hydration. Provides the top-level
-// container that other COIF components render into.
+// container that other Clef Surface components render into.
 // ============================================================
 
 import type {
@@ -68,7 +68,7 @@ export class SurfaceRoot {
       target.appendChild(this.el);
     }
 
-    this.el.setAttribute('data-coif-surface', props.kind);
+    this.el.setAttribute('data-surface-surface', props.kind);
     this.el.setAttribute('data-surface-lifecycle', 'idle');
 
     if (props.className) {

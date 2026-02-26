@@ -30,7 +30,7 @@ export interface StarkNetConfig {
 /**
  * StarkNet Transport Adapter.
  *
- * Bridges the COPF sync engine to StarkNet chains.
+ * Bridges the Clef sync engine to StarkNet chains.
  * Cairo VM is not EVM — different ABI encoding, account
  * abstraction model, and transaction lifecycle.
  */

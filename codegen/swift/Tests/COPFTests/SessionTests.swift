@@ -1,7 +1,7 @@
 // SessionTests.swift — Tests for Session concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class SessionTests: XCTestCase {
 

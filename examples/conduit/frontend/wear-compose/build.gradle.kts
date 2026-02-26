@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.copf.conduit.wear"
+    namespace = "com.clef.conduit.wear"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.copf.conduit.wear"
+        applicationId = "com.clef.conduit.wear"
         minSdk = 30
         targetSdk = 34
         versionCode = 1

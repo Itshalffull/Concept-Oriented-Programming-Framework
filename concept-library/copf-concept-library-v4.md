@@ -1,4 +1,4 @@
-# COPF Concept Library: Unified Kit Architecture
+# Clef Concept Library: Unified Kit Architecture
 
 **Version 0.4.0 — 2026-02-19**
 
@@ -18,20 +18,20 @@ Unifies concepts extracted from three architectural analyses, an infrastructure 
 - The **infrastructure audit** ensures every sync can actually execute at runtime — no magic assumed.
 - **Runtime concept definition**: Concepts can be both static (`.concept` files compiled into the kernel) and dynamic (defined at runtime via Intent + Schema + behavioral associations). Users can create new concepts through the UI without code deployment.
 
-**Total: 54 concepts across 15 kits.**
+**Total: 54 concepts across 15 suites.**
 
 ---
 
 ## 1. Cross-Kit Reference Mechanism
 
-A kit declares which external concepts its syncs reference via `uses`. This is not a dependency — concepts remain independent. It tells the compiler "my syncs mention these concepts; resolve them from these kits."
+A suite declares which external concepts its syncs reference via `uses`. This is not a dependency — concepts remain independent. It tells the compiler "my syncs mention these concepts; resolve them from these suites."
 
 ```yaml
-# kits/classification/kit.yaml
-name: "@copf/classification"
+# kits/classification/suite.yaml
+name: "@clef/classification"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, Property]
 concepts:
   - Tag
@@ -56,7 +56,7 @@ syncs:
 
 ### From the Drupal report
 
-The report explicitly states: *"Drupal's Entity API is a 'God concept' — it serves as content storage, configuration storage, routing target, form source, render source, and access target simultaneously. A COPF redesign would split this into: **ContentStorage** (CRUD persistence), **FieldDefinition** (data schema composition), **FormBuilder** (input rendering), **ViewRenderer** (output rendering), **DisplayMode** (presentation profiles), and **TypeSystem** (self-describing metadata)."*
+The report explicitly states: *"Drupal's Entity API is a 'God concept' — it serves as content storage, configuration storage, routing target, form source, render source, and access target simultaneously. A Clef redesign would split this into: **ContentStorage** (CRUD persistence), **FieldDefinition** (data schema composition), **FormBuilder** (input rendering), **ViewRenderer** (output rendering), **DisplayMode** (presentation profiles), and **TypeSystem** (self-describing metadata)."*
 
 Similarly for Views: *"Views would decompose into: **QueryBuilder** (filter/sort/join construction), **QueryExecutor** (backend-specific execution), **ResultRenderer** (style/row/field display), and **ExposedInterface** (user-facing filter/sort controls)."*
 
@@ -87,7 +87,7 @@ Six concepts that existing concepts silently assumed existed:
 
 ### From the Runtime Concept Analysis (v0.4)
 
-Audit asked: "can concepts be defined at runtime, not just compile time?" Every system we studied does this — Drupal's content types are config entities created through the admin UI, Tana's supertags are user-created concepts, Notion databases are runtime-defined. COPF already has the pieces (Schema for structure, AutomationRule for behavior, View for presentation, Workflow for state machines) but lacked two things:
+Audit asked: "can concepts be defined at runtime, not just compile time?" Every system we studied does this — Drupal's content types are config entities created through the admin UI, Tana's supertags are user-created concepts, Notion databases are runtime-defined. Clef already has the pieces (Schema for structure, AutomationRule for behavior, View for presentation, Workflow for state machines) but lacked two things:
 
 1. **No semantic layer** — Schema stores *what fields* a concept has, but not *why it exists* or *what it promises*. The purpose and operational principles from `.concept` files had no runtime equivalent. This led to the **Intent** concept.
 
@@ -99,7 +99,7 @@ The plugin-type question (are EmailChannel, MarkdownFormat, etc. concepts?) reso
 
 ## 3. Concept Inventory
 
-54 concepts across 15 kits. NEW marks additions since v0.2.
+54 concepts across 15 suites. NEW marks additions since v0.2.
 
 | # | Concept | Kit | Source |
 |---|---------|-----|--------|
@@ -162,12 +162,12 @@ The plugin-type question (are EmailChannel, MarkdownFormat, etc. concepts?) reso
 
 ## 4. Kit Specifications
 
-### Kit 1: Foundation (`@copf/foundation`)
+### Kit 1: Foundation (`@clef/foundation`)
 
-The universal primitives. Every other kit's syncs reference these.
+The universal primitives. Every other suite's syncs reference these.
 
 ```yaml
-name: "@copf/foundation"
+name: "@clef/foundation"
 version: 1.0.0
 concepts:
   - ContentNode
@@ -318,10 +318,10 @@ Drupal's Typed Data creates a navigable tree: Entity → FieldItemList → Field
 
 ---
 
-### Kit 2: Identity (`@copf/identity`)
+### Kit 2: Identity (`@clef/identity`)
 
 ```yaml
-name: "@copf/identity"
+name: "@clef/identity"
 version: 1.0.0
 concepts:
   - Authentication
@@ -385,15 +385,15 @@ The Drupal report calls this Drupal's most sophisticated access innovation. Ever
 
 ---
 
-### Kit 3: Linking (`@copf/linking`)
+### Kit 3: Linking (`@clef/linking`)
 
 Four concepts: **Reference**, **Backlink**, **Relation**, **Alias**.
 
 ```yaml
-name: "@copf/linking"
+name: "@clef/linking"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode]
 concepts:
   - Reference
@@ -448,15 +448,15 @@ Architecturally: Reference stores forward links (written by the user). Backlink 
 
 ---
 
-### Kit 4: Classification (`@copf/classification`)
+### Kit 4: Classification (`@clef/classification`)
 
 Four concepts: **Tag**, **Taxonomy**, **Schema**, **Namespace**.
 
 ```yaml
-name: "@copf/classification"
+name: "@clef/classification"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, Property]
 concepts:
   - Tag
@@ -477,7 +477,7 @@ In Roam, tags ARE page references (`#tag` = `[[tag]]`). In Obsidian, tags are a 
 
 #### Taxonomy
 
-*Source: Drupal — cleanest COPF concept candidate*
+*Source: Drupal — cleanest Clef concept candidate*
 
 **Purpose:** Hierarchical classification vocabularies with parent-child term relationships.
 
@@ -547,19 +547,19 @@ A plugin type like EmailChannel is modeled as:
 
 ---
 
-### Kit 5: Query & Retrieval (`@copf/query-retrieval`)
+### Kit 5: Query & Retrieval (`@clef/query-retrieval`)
 
 ```yaml
-name: "@copf/query-retrieval"
+name: "@clef/query-retrieval"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, ContentStorage, ContentParser, Property]
-  "@copf/classification":
+  "@clef/classification":
     concepts: [Tag, Schema]
-  "@copf/linking":
+  "@clef/linking":
     concepts: [Reference, Backlink]
-  "@copf/computation":
+  "@clef/computation":
     concepts: [ExpressionLanguage]
 concepts:
   - Query
@@ -603,17 +603,17 @@ Uses ContentParser internally to get plain text from content for tokenization. P
 
 ---
 
-### Kit 6: Presentation (`@copf/presentation`)
+### Kit 6: Presentation (`@clef/presentation`)
 
 ```yaml
-name: "@copf/presentation"
+name: "@clef/presentation"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, ContentParser, Property]
-  "@copf/query-retrieval":
+  "@clef/query-retrieval":
     concepts: [Query]
-  "@copf/infrastructure":
+  "@clef/infrastructure":
     concepts: [Cache]
 concepts:
   - View
@@ -672,17 +672,17 @@ Uses ContentParser to convert ContentNode.content into renderable ASTs. Uses Cac
 
 ---
 
-### Kit 7: Data Organization (`@copf/data-organization`)
+### Kit 7: Data Organization (`@clef/data-organization`)
 
 ```yaml
-name: "@copf/data-organization"
+name: "@clef/data-organization"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode]
-  "@copf/classification":
+  "@clef/classification":
     concepts: [Schema, Tag]
-  "@copf/linking":
+  "@clef/linking":
     concepts: [Backlink]
 concepts:
   - Collection
@@ -713,15 +713,15 @@ Graph is a **read-only derived view** — it never modifies content, only visual
 
 ---
 
-### Kit 8: Content (`@copf/content`)
+### Kit 8: Content (`@clef/content`)
 
 ```yaml
-name: "@copf/content"
+name: "@clef/content"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, Outline, Property]
-  "@copf/linking":
+  "@clef/linking":
     concepts: [Reference]
 concepts:
   - DailyNote
@@ -802,17 +802,17 @@ Obsidian's JSON Canvas (open format, MIT license). In Logseq, canvas shapes ARE 
 
 ---
 
-### Kit 9: Computation (`@copf/computation`)
+### Kit 9: Computation (`@clef/computation`)
 
 ```yaml
-name: "@copf/computation"
+name: "@clef/computation"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, Property]
-  "@copf/linking":
+  "@clef/linking":
     concepts: [Relation]
-  "@copf/infrastructure":
+  "@clef/infrastructure":
     concepts: [PluginRegistry]
 concepts:
   - Formula
@@ -870,19 +870,19 @@ Three paradigms: Notion's per-row mathematical formulas, Coda's cross-table list
 
 ---
 
-### Kit 10: Automation (`@copf/automation`)
+### Kit 10: Automation (`@clef/automation`)
 
 ```yaml
-name: "@copf/automation"
+name: "@clef/automation"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode, Property]
-  "@copf/classification":
+  "@clef/classification":
     concepts: [Schema]
-  "@copf/computation":
+  "@clef/computation":
     concepts: [ExpressionLanguage]
-  "@copf/infrastructure":
+  "@clef/infrastructure":
     concepts: [EventBus]
 concepts:
   - Workflow
@@ -913,7 +913,7 @@ concepts:
 - **Actions:** `define(trigger, conditions, actions)`, `enable(ruleId)`, `disable(ruleId)`, `evaluate(event)`, `execute(ruleId, event)`
 - **Op principle:** "After defining a rule 'when tag applied, if tag is #urgent, send notification,' applying the #urgent tag fires the notification."
 
-**How EventBus + ExpressionLanguage make this work:** `AutomationRule.define(trigger, conditions, actions)` registers `EventBus.subscribe(trigger.eventType, listener)`. When the event fires, conditions are evaluated via `ExpressionLanguage.evaluate("condition-expr", conditionAST, eventContext)`. This IS COPF's sync engine made user-configurable — Drupal's ECA (500 actions, 70 conditions, 200 events) and Coda's automations implement exactly this pattern.
+**How EventBus + ExpressionLanguage make this work:** `AutomationRule.define(trigger, conditions, actions)` registers `EventBus.subscribe(trigger.eventType, listener)`. When the event fires, conditions are evaluated via `ExpressionLanguage.evaluate("condition-expr", conditionAST, eventContext)`. This IS Clef's sync engine made user-configurable — Drupal's ECA (500 actions, 70 conditions, 200 events) and Coda's automations implement exactly this pattern.
 
 #### Queue
 
@@ -941,13 +941,13 @@ This is the Coda pattern: buttons that trigger automations, sliders that filter 
 
 ---
 
-### Kit 11: Layout (`@copf/layout`)
+### Kit 11: Layout (`@clef/layout`)
 
 ```yaml
-name: "@copf/layout"
+name: "@clef/layout"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode]
 concepts:
   - Component
@@ -967,10 +967,10 @@ Combines two patterns: components as plugins (discoverable via PluginRegistry) a
 
 ---
 
-### Kit 12: Infrastructure (`@copf/infrastructure`)
+### Kit 12: Infrastructure (`@clef/infrastructure`)
 
 ```yaml
-name: "@copf/infrastructure"
+name: "@clef/infrastructure"
 version: 1.0.0
 concepts:
   - Cache
@@ -1025,19 +1025,19 @@ Uses Token.replace for pattern resolution. Uses ExpressionLanguage indirectly th
 - **Actions:** `discover(typeId)`, `createInstance(typeId, pluginId, config)`, `getDefinitions(typeId)`, `alterDefinitions(typeId, alterCallback)`, `derivePlugins(typeId, basePlugin)`
 - **Op principle:** "After placing a plugin class in the correct namespace with the correct attribute, the system discovers and makes it available without manual registration."
 
-Three discovery innovations from Drupal: attribute-based discovery, Plugin Derivatives (one class → many instances), and alter hooks (cross-cutting modification). In COPF, PluginRegistry makes extensible: Property types, View layouts, SearchIndex backends, Component types, FormBuilder widgets, ContentParser formats, ExpressionLanguage functions, and Notification channels.
+Three discovery innovations from Drupal: attribute-based discovery, Plugin Derivatives (one class → many instances), and alter hooks (cross-cutting modification). In Clef, PluginRegistry makes extensible: Property types, View layouts, SearchIndex backends, Component types, FormBuilder widgets, ContentParser formats, ExpressionLanguage functions, and Notification channels.
 
 #### EventBus
 
 *Source: Infrastructure audit — the sync engine's runtime*
 
-**Purpose:** Provide event registration, dispatch, and subscription infrastructure that makes COPF's declarative syncs actually execute.
+**Purpose:** Provide event registration, dispatch, and subscription infrastructure that makes Clef's declarative syncs actually execute.
 
 - **State:** `eventTypes: Map<EventTypeID, EventTypeDef{name, payloadSchema, sourceConcept}>`, `listeners: Map<EventTypeID, PriorityQueue<Listener>>`, `history: RingBuffer<DispatchedEvent>`, `deadLetterQueue: List<FailedDelivery>`
 - **Actions:** `registerEventType(eventTypeId, payloadSchema)`, `subscribe(eventTypeId, listener, priority)`, `unsubscribe(eventTypeId, listenerId)`, `dispatch(eventTypeId, payload) → List<ListenerResult>`, `dispatchAsync(eventTypeId, payload)`, `stopPropagation()`, `getHistory(eventTypeId, since)`
 - **Op principle:** "After subscribing to an event type, every dispatch of that event triggers the listener; listeners execute in priority order; a failed listener does not prevent subsequent listeners from firing."
 
-**Why this was missing:** Every COPF sync is declarative: `sync ContentNode.save → Cache.invalidate`. But something must dispatch `content_node.saved` at runtime and route it to registered listeners. EventBus is that something. Every `sync A.x → B.y` compiles to `EventBus.subscribe("a.x_completed", (e) => B.y(e.context))`.
+**Why this was missing:** Every Clef sync is declarative: `sync ContentNode.save → Cache.invalidate`. But something must dispatch `content_node.saved` at runtime and route it to registered listeners. EventBus is that something. Every `sync A.x → B.y` compiles to `EventBus.subscribe("a.x_completed", (e) => B.y(e.context))`.
 
 The Drupal report describes three event mechanisms that are all EventBus implementations: hooks (procedural callbacks), Symfony events (object-oriented pub/sub), and entity lifecycle callbacks (preSave/postSave).
 
@@ -1076,13 +1076,13 @@ EventBus delivers to listener registered by: Pathauto sync → Pathauto.generate
 
 ---
 
-### Kit 13: Media (`@copf/media`)
+### Kit 13: Media (`@clef/media`)
 
 ```yaml
-name: "@copf/media"
+name: "@clef/media"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode]
 concepts:
   - FileManagement
@@ -1111,15 +1111,15 @@ concepts:
 
 ---
 
-### Kit 14: Collaboration (`@copf/collaboration`)
+### Kit 14: Collaboration (`@clef/collaboration`)
 
 ```yaml
-name: "@copf/collaboration"
+name: "@clef/collaboration"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode]
-  "@copf/identity":
+  "@clef/identity":
     concepts: [Authorization]
 concepts:
   - Flag
@@ -1148,21 +1148,21 @@ concepts:
 
 ---
 
-### Kit 15: Notification (`@copf/notification`)
+### Kit 15: Notification (`@clef/notification`)
 
 ```yaml
-name: "@copf/notification"
+name: "@clef/notification"
 version: 1.0.0
 uses:
-  "@copf/foundation":
+  "@clef/foundation":
     concepts: [ContentNode]
-  "@copf/identity":
+  "@clef/identity":
     concepts: [Session]
-  "@copf/computation":
+  "@clef/computation":
     concepts: [Token]
-  "@copf/automation":
+  "@clef/automation":
     concepts: [Queue]
-  "@copf/infrastructure":
+  "@clef/infrastructure":
     concepts: [EventBus, PluginRegistry]
 concepts:
   - Notification
@@ -1340,7 +1340,7 @@ Intent.verify("Meeting")
 
 ## 6. Completeness Check
 
-### Source reports → COPF mapping
+### Source reports → Clef mapping
 
 **Drupal (27 concepts):** All mapped. Entity API → 6 (ContentNode, ContentStorage, TypeSystem, Property, FormBuilder, DisplayMode). Views → 4 (Query, ExposedFilter, View, Renderer). Remaining 17 map directly.
 
@@ -1404,4 +1404,4 @@ Not a sequence — a menu. An app enters at any point, uses any subset.
 
 The "Define" step is new in v0.4: once a user has built up a concept through the earlier steps (Schema with fields, Views, Workflows, Automations, Intent), they can export it as a single bundle and share it with other workspaces. This is how Drupal's content type exports, Tana's supertag sharing, and Notion's database templates work — now modeled explicitly in the framework.
 
-**Total: 54 concepts, 15 kits.**
+**Total: 54 concepts, 15 suites.**

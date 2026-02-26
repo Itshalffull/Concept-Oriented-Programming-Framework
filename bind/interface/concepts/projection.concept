@@ -39,7 +39,7 @@ concept Projection [P] {
         Parse interface annotations. Merge with ConceptManifest.
         Compute resource mappings from state relations and action
         signatures. Bind traits to actions. Resolve cross-concept
-        type references within the kit. Enrichment data from
+        type references within the suite. Enrichment data from
         workflows, annotations, and target configs is serialized
         as opaque JSON into the content field.
       }

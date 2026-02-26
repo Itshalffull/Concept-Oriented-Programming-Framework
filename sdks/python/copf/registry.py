@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from copf.storage import InMemoryStorage
+from clef.storage import InMemoryStorage
 
 
 # Global registry: concept_uri → (handler_instance, storage_instance)

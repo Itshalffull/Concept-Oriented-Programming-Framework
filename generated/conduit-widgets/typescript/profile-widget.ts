@@ -19,12 +19,12 @@ export const profileWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Profile',
+      concept: 'urn:clef/Profile',
       actions: ['update'],
       queries: ['get'],
     },
     {
-      concept: 'urn:copf/Follow',
+      concept: 'urn:clef/Follow',
       actions: ['follow', 'unfollow'],
       queries: ['isFollowing'],
     },

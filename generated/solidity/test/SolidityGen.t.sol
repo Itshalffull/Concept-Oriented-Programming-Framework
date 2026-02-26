@@ -19,8 +19,8 @@ contract SolidityGenTest is Test {
         bytes32 e = keccak256(abi.encodePacked("u-test-invariant-002"));
 
         // --- Setup ---
-        // generate(spec: "s1", manifest: { name: "Ping", uri: "urn:copf/Ping", typeParams: [], relations: [], actions: [{ name: "ping", params: [], variants: [{ tag: "ok", fields: [], prose: "Pong." }] }], invariants: [], graphqlSchema: "", jsonSchemas: { invocations: {  }, completions: {  } }, capabilities: [], purpose: "A test." }) -> ok
-        // target.generate("s1", /* struct { name: "Ping", uri: "urn:copf/Ping", typeParams: /* [] */, relations: /* [] */, actions: /* [/* struct { name: "ping", params: /* [] */, variants: /* [/* struct { tag: "ok", fields: /* [] */, prose: "Pong." } */] */ } */] */, invariants: /* [] */, graphqlSchema: "", jsonSchemas: /* struct { invocations: /* struct {  } */, completions: /* struct {  } */ } */, capabilities: /* [] */, purpose: "A test." } */);
+        // generate(spec: "s1", manifest: { name: "Ping", uri: "urn:clef/Ping", typeParams: [], relations: [], actions: [{ name: "ping", params: [], variants: [{ tag: "ok", fields: [], prose: "Pong." }] }], invariants: [], graphqlSchema: "", jsonSchemas: { invocations: {  }, completions: {  } }, capabilities: [], purpose: "A test." }) -> ok
+        // target.generate("s1", /* struct { name: "Ping", uri: "urn:clef/Ping", typeParams: /* [] */, relations: /* [] */, actions: /* [/* struct { name: "ping", params: /* [] */, variants: /* [/* struct { tag: "ok", fields: /* [] */, prose: "Pong." } */] */ } */] */, invariants: /* [] */, graphqlSchema: "", jsonSchemas: /* struct { invocations: /* struct {  } */, completions: /* struct {  } */ } */, capabilities: /* [] */, purpose: "A test." } */);
         // TODO: Assert ok variant
 
         // --- Assertions ---

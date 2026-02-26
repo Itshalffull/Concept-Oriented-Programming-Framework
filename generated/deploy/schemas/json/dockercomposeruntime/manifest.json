@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/DockerComposeRuntime",
+  "uri": "urn:clef/DockerComposeRuntime",
   "name": "DockerComposeRuntime",
   "typeParams": [
     {
@@ -446,11 +446,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/DockerComposeRuntime/provision/invocation",
+        "$id": "urn:clef/DockerComposeRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeRuntime"
+            "const": "urn:clef/DockerComposeRuntime"
           },
           "action": {
             "const": "provision"
@@ -480,11 +480,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/DockerComposeRuntime/deploy/invocation",
+        "$id": "urn:clef/DockerComposeRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeRuntime"
+            "const": "urn:clef/DockerComposeRuntime"
           },
           "action": {
             "const": "deploy"
@@ -507,11 +507,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/DockerComposeRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/DockerComposeRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeRuntime"
+            "const": "urn:clef/DockerComposeRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -534,11 +534,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/DockerComposeRuntime/rollback/invocation",
+        "$id": "urn:clef/DockerComposeRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeRuntime"
+            "const": "urn:clef/DockerComposeRuntime"
           },
           "action": {
             "const": "rollback"
@@ -561,11 +561,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/DockerComposeRuntime/destroy/invocation",
+        "$id": "urn:clef/DockerComposeRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DockerComposeRuntime"
+            "const": "urn:clef/DockerComposeRuntime"
           },
           "action": {
             "const": "destroy"
@@ -587,11 +587,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/DockerComposeRuntime/provision/completion/ok",
+          "$id": "urn:clef/DockerComposeRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeRuntime"
+              "const": "urn:clef/DockerComposeRuntime"
             },
             "action": {
               "const": "provision"
@@ -621,11 +621,11 @@
           }
         },
         "portConflict": {
-          "$id": "urn:copf/DockerComposeRuntime/provision/completion/portConflict",
+          "$id": "urn:clef/DockerComposeRuntime/provision/completion/portConflict",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeRuntime"
+              "const": "urn:clef/DockerComposeRuntime"
             },
             "action": {
               "const": "provision"
@@ -653,11 +653,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/DockerComposeRuntime/deploy/completion/ok",
+          "$id": "urn:clef/DockerComposeRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeRuntime"
+              "const": "urn:clef/DockerComposeRuntime"
             },
             "action": {
               "const": "deploy"
@@ -685,11 +685,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/DockerComposeRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/DockerComposeRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeRuntime"
+              "const": "urn:clef/DockerComposeRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -713,11 +713,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/DockerComposeRuntime/rollback/completion/ok",
+          "$id": "urn:clef/DockerComposeRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeRuntime"
+              "const": "urn:clef/DockerComposeRuntime"
             },
             "action": {
               "const": "rollback"
@@ -745,11 +745,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/DockerComposeRuntime/destroy/completion/ok",
+          "$id": "urn:clef/DockerComposeRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DockerComposeRuntime"
+              "const": "urn:clef/DockerComposeRuntime"
             },
             "action": {
               "const": "destroy"

@@ -1,17 +1,17 @@
 ---
 name: create-sync
-description: Write a COPF synchronization rule that connects two or more concepts through pattern matching on completions, variable bindings, where-clause queries, and action invocations. Use when you need to wire concepts together in a flow.
+description: Write a Clef synchronization rule that connects two or more concepts through pattern matching on completions, variable bindings, where-clause queries, and action invocations. Use when you need to wire concepts together in a flow.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<sync-name>"
 ---
 
-# Create a COPF Synchronization
+# Create a Clef Synchronization
 
 Write a sync rule named **$ARGUMENTS** that connects concepts through completion chaining.
 
 ## What is a Sync?
 
-A **synchronization** (sync) is the only coordination mechanism between concepts in COPF. Syncs observe completions from concept actions (`when`), optionally query concept state or generate values (`where`), and invoke actions on other concepts (`then`). Concepts never reference each other directly — syncs are the glue.
+A **synchronization** (sync) is the only coordination mechanism between concepts in Clef. Syncs observe completions from concept actions (`when`), optionally query concept state or generate values (`where`), and invoke actions on other concepts (`then`). Concepts never reference each other directly — syncs are the glue.
 
 ```
 sync SyncName [eager]
@@ -162,7 +162,7 @@ sync SyncName [idempotent]  // Safe to re-execute (engine may retry)
 
 Multiple annotations allowed: `sync MySync [eager] [idempotent]`
 
-For kit syncs, also add tier annotations: `[required]` or `[recommended]`. See the `create-concept-kit` skill.
+For suite syncs, also add tier annotations: `[required]` or `[recommended]`. See the `create-concept-kit` skill.
 
 ### Step 7: Write Descriptions (Mandatory)
 
@@ -218,8 +218,8 @@ syncs/
 # Parse and validate all sync files against concept specs
 npx tsx cli/src/index.ts compile-syncs
 
-# For kit syncs
-npx tsx cli/src/index.ts kit validate kits/<kit-name>
+# For suite syncs
+npx tsx cli/src/index.ts suite validate kits/<kit-name>
 ```
 
 The compiler checks:
@@ -268,6 +268,6 @@ See [templates/sync-scaffold.md](templates/sync-scaffold.md) for copy-paste temp
 | Skill | When to Use |
 |-------|------------|
 | `/create-concept` | Design the concepts that syncs connect |
-| `/create-concept-kit` | Bundle concepts and their syncs into a reusable kit |
+| `/create-concept-kit` | Bundle concepts and their syncs into a reusable suite |
 | `/create-implementation` | Write the implementation that handles actions syncs invoke |
 | `/configure-deployment` | Assign syncs to engines in deployment manifests |

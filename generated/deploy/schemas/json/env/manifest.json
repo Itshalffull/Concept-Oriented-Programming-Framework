@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Env",
+  "uri": "urn:clef/Env",
   "name": "Env",
   "typeParams": [
     {
@@ -296,7 +296,7 @@
               }
             }
           ],
-          "prose": "Source environment has not passed health checks \n for this kit version"
+          "prose": "Source environment has not passed health checks \n for this suite version"
         },
         {
           "tag": "versionMismatch",
@@ -464,11 +464,11 @@
   "jsonSchemas": {
     "invocations": {
       "resolve": {
-        "$id": "urn:copf/Env/resolve/invocation",
+        "$id": "urn:clef/Env/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Env"
+            "const": "urn:clef/Env"
           },
           "action": {
             "const": "resolve"
@@ -487,11 +487,11 @@
         }
       },
       "promote": {
-        "$id": "urn:copf/Env/promote/invocation",
+        "$id": "urn:clef/Env/promote/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Env"
+            "const": "urn:clef/Env"
           },
           "action": {
             "const": "promote"
@@ -518,11 +518,11 @@
         }
       },
       "diff": {
-        "$id": "urn:copf/Env/diff/invocation",
+        "$id": "urn:clef/Env/diff/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Env"
+            "const": "urn:clef/Env"
           },
           "action": {
             "const": "diff"
@@ -548,11 +548,11 @@
     "completions": {
       "resolve": {
         "ok": {
-          "$id": "urn:copf/Env/resolve/completion/ok",
+          "$id": "urn:clef/Env/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "resolve"
@@ -578,11 +578,11 @@
           }
         },
         "missingBase": {
-          "$id": "urn:copf/Env/resolve/completion/missingBase",
+          "$id": "urn:clef/Env/resolve/completion/missingBase",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "resolve"
@@ -604,11 +604,11 @@
           }
         },
         "conflictingOverrides": {
-          "$id": "urn:copf/Env/resolve/completion/conflictingOverrides",
+          "$id": "urn:clef/Env/resolve/completion/conflictingOverrides",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "resolve"
@@ -639,11 +639,11 @@
       },
       "promote": {
         "ok": {
-          "$id": "urn:copf/Env/promote/completion/ok",
+          "$id": "urn:clef/Env/promote/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "promote"
@@ -669,11 +669,11 @@
           }
         },
         "notValidated": {
-          "$id": "urn:copf/Env/promote/completion/notValidated",
+          "$id": "urn:clef/Env/promote/completion/notValidated",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "promote"
@@ -699,11 +699,11 @@
           }
         },
         "versionMismatch": {
-          "$id": "urn:copf/Env/promote/completion/versionMismatch",
+          "$id": "urn:clef/Env/promote/completion/versionMismatch",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "promote"
@@ -735,11 +735,11 @@
       },
       "diff": {
         "ok": {
-          "$id": "urn:copf/Env/diff/completion/ok",
+          "$id": "urn:clef/Env/diff/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Env"
+              "const": "urn:clef/Env"
             },
             "action": {
               "const": "diff"

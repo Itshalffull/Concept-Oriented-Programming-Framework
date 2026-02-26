@@ -4,7 +4,7 @@
 // Generates proto3 service definitions from concept projections.
 // Each concept produces a single .proto file containing the
 // service definition and all request/response messages.
-// Architecture doc: Interface Kit
+// Architecture doc: Clef Bind
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';

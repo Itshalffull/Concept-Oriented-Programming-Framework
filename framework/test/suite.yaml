@@ -1,9 +1,9 @@
-# kits/test/kit.yaml
-kit:
+# kits/test/suite.yaml
+suite:
   name: test
   version: 0.1.0
   description: >
-    Cross-layer testing coordination for COPF. Five concepts that span
+    Cross-layer testing coordination for Clef. Five concepts that span
     generation, build, and deploy: snapshot testing for generated output
     stability, conformance testing for spec fidelity, test selection for
     change-aware test optimization, cross-target contract testing for
@@ -82,16 +82,16 @@ syncs:
       description: "DeployPlan/execute → Conformance/matrix"
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
       - name: Resource
 
-  - kit: deploy
+  - suite: deploy
     concepts:
       - name: Builder
       - name: Artifact

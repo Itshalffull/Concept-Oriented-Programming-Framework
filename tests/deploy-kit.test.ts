@@ -904,10 +904,10 @@ describe('Bulk Sync Validation', () => {
 describe('Kit YAML', () => {
 
   it('suite.yaml exists and references valid files', () => {
-    const kitPath = resolve(DEPLOY_DIR, 'suite.yaml');
-    expect(existsSync(kitPath)).toBe(true);
+    const suitePath = resolve(DEPLOY_DIR, 'suite.yaml');
+    expect(existsSync(suitePath)).toBe(true);
 
-    const content = readFileSync(kitPath, 'utf-8');
+    const content = readFileSync(suitePath, 'utf-8');
     expect(content).toContain('name: deploy');
     expect(content).toContain('version: 0.1.0');
 

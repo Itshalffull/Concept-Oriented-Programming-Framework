@@ -1,7 +1,7 @@
 // EventBusTests.swift — Tests for EventBus concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class EventBusTests: XCTestCase {
 

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/AccessControl",
+  "uri": "urn:clef/AccessControl",
   "name": "AccessControl",
   "typeParams": [
     {
@@ -470,11 +470,11 @@
   "jsonSchemas": {
     "invocations": {
       "check": {
-        "$id": "urn:copf/AccessControl/check/invocation",
+        "$id": "urn:clef/AccessControl/check/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AccessControl"
+            "const": "urn:clef/AccessControl"
           },
           "action": {
             "const": "check"
@@ -501,11 +501,11 @@
         }
       },
       "orIf": {
-        "$id": "urn:copf/AccessControl/orIf/invocation",
+        "$id": "urn:clef/AccessControl/orIf/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AccessControl"
+            "const": "urn:clef/AccessControl"
           },
           "action": {
             "const": "orIf"
@@ -528,11 +528,11 @@
         }
       },
       "andIf": {
-        "$id": "urn:copf/AccessControl/andIf/invocation",
+        "$id": "urn:clef/AccessControl/andIf/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AccessControl"
+            "const": "urn:clef/AccessControl"
           },
           "action": {
             "const": "andIf"
@@ -558,11 +558,11 @@
     "completions": {
       "check": {
         "ok": {
-          "$id": "urn:copf/AccessControl/check/completion/ok",
+          "$id": "urn:clef/AccessControl/check/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AccessControl"
+              "const": "urn:clef/AccessControl"
             },
             "action": {
               "const": "check"
@@ -594,11 +594,11 @@
       },
       "orIf": {
         "ok": {
-          "$id": "urn:copf/AccessControl/orIf/completion/ok",
+          "$id": "urn:clef/AccessControl/orIf/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AccessControl"
+              "const": "urn:clef/AccessControl"
             },
             "action": {
               "const": "orIf"
@@ -622,11 +622,11 @@
       },
       "andIf": {
         "ok": {
-          "$id": "urn:copf/AccessControl/andIf/completion/ok",
+          "$id": "urn:clef/AccessControl/andIf/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AccessControl"
+              "const": "urn:clef/AccessControl"
             },
             "action": {
               "const": "andIf"

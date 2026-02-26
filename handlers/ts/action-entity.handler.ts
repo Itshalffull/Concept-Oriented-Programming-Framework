@@ -28,7 +28,7 @@ export const actionEntityHandler: ConceptHandler = {
     }
 
     const id = nextId();
-    const symbol = `copf/action/${concept}/${name}`;
+    const symbol = `clef/action/${concept}/${name}`;
     let variantCount = 0;
     try {
       const parsed = JSON.parse(variantRefs);

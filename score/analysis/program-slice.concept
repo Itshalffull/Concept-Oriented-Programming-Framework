@@ -60,7 +60,7 @@ concept ProgramSlice [Z] {
   }
 
   invariant {
-    after compute(criterion: "copf/state-field/Article/title", direction: "forward") -> ok(slice: z)
-    then get(slice: z) -> ok(slice: z, criterionSymbol: "copf/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
+    after compute(criterion: "clef/state-field/Article/title", direction: "forward") -> ok(slice: z)
+    then get(slice: z) -> ok(slice: z, criterionSymbol: "clef/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
   }
 }

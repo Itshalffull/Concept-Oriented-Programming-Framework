@@ -1,5 +1,5 @@
 // ============================================================
-// TypographyText — Renders text styled by a named COIF text
+// TypographyText — Renders text styled by a named Clef Surface text
 // style (heading-1, body, caption, label, code, etc.).
 //
 // Resolves the TextStyle against a TypeScale and FontStack set
@@ -12,7 +12,7 @@
 import React, { useMemo, type ReactNode, type CSSProperties } from 'react';
 
 import type { TextStyle, TypeScale, FontStack } from '../../shared/types.js';
-import { textStyleToCSS } from '../../shared/coif-bridge.js';
+import { textStyleToCSS } from '../../shared/surface-bridge.js';
 
 // --------------- Props ---------------
 
@@ -119,8 +119,8 @@ export const TypographyText: React.FC<TypographyTextProps> = ({
       <Tag
         className={className}
         style={propStyle}
-        data-coif-typography=""
-        data-coif-style-missing={styleName}
+        data-surface-typography=""
+        data-surface-style-missing={styleName}
       >
         {children}
       </Tag>
@@ -131,8 +131,8 @@ export const TypographyText: React.FC<TypographyTextProps> = ({
     <Tag
       className={className}
       style={mergedStyle}
-      data-coif-typography=""
-      data-coif-style={styleName}
+      data-surface-typography=""
+      data-surface-style={styleName}
     >
       {children}
     </Tag>

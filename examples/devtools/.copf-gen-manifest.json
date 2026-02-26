@@ -578,50 +578,50 @@
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-component-scaffold-gen\\coif-component-scaffold-gen.commands.ts",
-      "relativePath": "claude-skills/coif-component-scaffold-gen/coif-component-scaffold-gen.commands.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-component-scaffold-gen\\surface-component-scaffold-gen.commands.ts",
+      "relativePath": "claude-skills/surface-component-scaffold-gen/surface-component-scaffold-gen.commands.ts",
       "hash": "708f1b98c4ed6c332c62b1b92a6fb23e8d5f91f3501ca7078b3b1206a4943e04",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-component-scaffold-gen\\SKILL.md",
-      "relativePath": "claude-skills/coif-component-scaffold-gen/SKILL.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-component-scaffold-gen\\SKILL.md",
+      "relativePath": "claude-skills/surface-component-scaffold-gen/SKILL.md",
       "hash": "156286e6e1b09708cec9434f298cb808a1091968fb26eeaa227f5dd831797663",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-component-scaffold-gen\\examples\\scaffold-coif-component.md",
-      "relativePath": "claude-skills/coif-component-scaffold-gen/examples/scaffold-coif-component.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-component-scaffold-gen\\examples\\scaffold-surface-component.md",
+      "relativePath": "claude-skills/surface-component-scaffold-gen/examples/scaffold-surface-component.md",
       "hash": "f0863dde93cf51435926780f8a9ffd370cf90150172b15038b8f47bfb3979adb",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-component-scaffold-gen\\references\\coif-component-guide.md",
-      "relativePath": "claude-skills/coif-component-scaffold-gen/references/coif-component-guide.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-component-scaffold-gen\\references\\surface-component-guide.md",
+      "relativePath": "claude-skills/surface-component-scaffold-gen/references/surface-component-guide.md",
       "hash": "eee53050ce950eb48482b9c79704bc18873418906bde72d2162c3d560655191b",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-theme-scaffold-gen\\coif-theme-scaffold-gen.commands.ts",
-      "relativePath": "claude-skills/coif-theme-scaffold-gen/coif-theme-scaffold-gen.commands.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-theme-scaffold-gen\\surface-theme-scaffold-gen.commands.ts",
+      "relativePath": "claude-skills/surface-theme-scaffold-gen/surface-theme-scaffold-gen.commands.ts",
       "hash": "15a47cb6b5b2de5c3c63a52db73b4475aecbd9ff9c366ad534dae98c90047d24",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-theme-scaffold-gen\\SKILL.md",
-      "relativePath": "claude-skills/coif-theme-scaffold-gen/SKILL.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-theme-scaffold-gen\\SKILL.md",
+      "relativePath": "claude-skills/surface-theme-scaffold-gen/SKILL.md",
       "hash": "976e89aca9f970948a53abf274d4479d81015189d53e0522776f8c0dd25d807c",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-theme-scaffold-gen\\examples\\scaffold-coif-theme.md",
-      "relativePath": "claude-skills/coif-theme-scaffold-gen/examples/scaffold-coif-theme.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-theme-scaffold-gen\\examples\\scaffold-surface-theme.md",
+      "relativePath": "claude-skills/surface-theme-scaffold-gen/examples/scaffold-surface-theme.md",
       "hash": "bcc62521ac986a8773be8485bfb018531539264c7a5e7e94297453eb209f1b02",
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\coif-theme-scaffold-gen\\references\\coif-theme-guide.md",
-      "relativePath": "claude-skills/coif-theme-scaffold-gen/references/coif-theme-guide.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-theme-scaffold-gen\\references\\surface-theme-guide.md",
+      "relativePath": "claude-skills/surface-theme-scaffold-gen/references/surface-theme-guide.md",
       "hash": "ba0c07aa2a85ff36b9acc6f3c0254e047ce9a7cb0c1871b9c49ca19aadc94281",
       "target": "claude-skills"
     },
@@ -722,361 +722,361 @@
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\spec-parser\\spec-parser.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\spec-parser\\spec-parser.command.ts",
       "relativePath": "cli/spec-parser/spec-parser.command.ts",
       "hash": "a96514e094bc256f13d57892843878836cd1fd1c6ae3d13bac39cb43eb6a5426",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\spec-parser\\spec-parser.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\spec-parser\\spec-parser.help.md",
       "relativePath": "cli/spec-parser/spec-parser.help.md",
       "hash": "072bdb92cbe5d647d43c8518cf460effa345a5321b21381f223aac3aca35c4bd",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\schema-gen\\schema-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\schema-gen\\schema-gen.command.ts",
       "relativePath": "cli/schema-gen/schema-gen.command.ts",
       "hash": "3e04be0b54e5da7fcfd6c256efed323ddfbe4a0c6c37ae0fe4b6d3d6b2cb40fa",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\schema-gen\\schema-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\schema-gen\\schema-gen.help.md",
       "relativePath": "cli/schema-gen/schema-gen.help.md",
       "hash": "8debfdade72cf4a0106dfd0645cce63b1d55dc614de351e89a6384b700ed753d",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\sync-parser\\sync-parser.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\sync-parser\\sync-parser.command.ts",
       "relativePath": "cli/sync-parser/sync-parser.command.ts",
       "hash": "e6e300ac7cee80766ff77d3cc5e55d4614ebae7d9a3c5b90aa5bdb169bd09f65",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\sync-parser\\sync-parser.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\sync-parser\\sync-parser.help.md",
       "relativePath": "cli/sync-parser/sync-parser.help.md",
       "hash": "5bc3706875d1e152a5ff1ecbe3c610a2c7d0f2195ee8bafc18ae4f93630bb1db",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\sync-compiler\\sync-compiler.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\sync-compiler\\sync-compiler.command.ts",
       "relativePath": "cli/sync-compiler/sync-compiler.command.ts",
       "hash": "a5e345bd3b9f95d4fa81a602cdafe24826eacdae9a772cad540bfec4451230e6",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\sync-compiler\\sync-compiler.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\sync-compiler\\sync-compiler.help.md",
       "relativePath": "cli/sync-compiler/sync-compiler.help.md",
       "hash": "fe4bbe3632745c3aa2774a61edeeb539ae68e352448b313ea810ae347d97491b",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\flow-trace\\flow-trace.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\flow-trace\\flow-trace.command.ts",
       "relativePath": "cli/flow-trace/flow-trace.command.ts",
       "hash": "24a2ef3f1e092bd936c5a1002e53a3207726466c98e1f8227b015cc4649fbc1b",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\flow-trace\\flow-trace.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\flow-trace\\flow-trace.help.md",
       "relativePath": "cli/flow-trace/flow-trace.help.md",
       "hash": "2861bf34ae7d8e184980dd5ddcc716614be61a4938cf5649b4ea0b955d58b96b",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\deployment-validator\\deployment-validator.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\deployment-validator\\deployment-validator.command.ts",
       "relativePath": "cli/deployment-validator/deployment-validator.command.ts",
       "hash": "87c9b550d07c1505cca095640a7dac61f000a3197467023bef56f56cb500934f",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\deployment-validator\\deployment-validator.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\deployment-validator\\deployment-validator.help.md",
       "relativePath": "cli/deployment-validator/deployment-validator.help.md",
       "hash": "195736b265e3068bc6b379e31cb8062b74134d7467a88f5deeac1afb825077e1",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\project-scaffold\\project-scaffold.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\project-scaffold\\project-scaffold.command.ts",
       "relativePath": "cli/project-scaffold/project-scaffold.command.ts",
       "hash": "521de346c2b4bb5b393454f44d37ee08fcdb06c79b3301e1bd85f957671d2a96",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\project-scaffold\\project-scaffold.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\project-scaffold\\project-scaffold.help.md",
       "relativePath": "cli/project-scaffold/project-scaffold.help.md",
       "hash": "f6b1adeee96aca98270723124ed7c546fae207417a3365280c8ec8bc23ac68ff",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\dev-server\\dev-server.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\dev-server\\dev-server.command.ts",
       "relativePath": "cli/dev-server/dev-server.command.ts",
       "hash": "d935d532d02adb38624c3e73762604ec7d4a0aae8b6a91ab284b887dc0b87760",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\dev-server\\dev-server.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\dev-server\\dev-server.help.md",
       "relativePath": "cli/dev-server/dev-server.help.md",
       "hash": "e1c7f18b9da436f0da0c019ac1b7958c3e26ae73fee95c92ed598eabfbb191a6",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\kit-manager\\kit-manager.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\kit-manager\\kit-manager.command.ts",
       "relativePath": "cli/kit-manager/kit-manager.command.ts",
       "hash": "bc9de1a0666e1b575f4d34febbbc8e3073af1a9767009e4b121e08de67a56247",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\kit-manager\\kit-manager.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\kit-manager\\kit-manager.help.md",
       "relativePath": "cli/kit-manager/kit-manager.help.md",
       "hash": "f7e909a70550751e6c0c644018464019bee2e82348c634a6121639da5d1359ec",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\emitter\\emitter.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\emitter\\emitter.command.ts",
       "relativePath": "cli/emitter/emitter.command.ts",
       "hash": "ddfe9e43c98e1e58056ccd4139f9601caa0919fcd6726a26b4dd56f2764c7c3a",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\emitter\\emitter.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\emitter\\emitter.help.md",
       "relativePath": "cli/emitter/emitter.help.md",
       "hash": "114ed8467b09f849266045a96fa64401ca74da7e8abe3eb67a008cf23d48ce38",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\build-cache\\build-cache.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\build-cache\\build-cache.command.ts",
       "relativePath": "cli/build-cache/build-cache.command.ts",
       "hash": "dd56662079230cdc5db40f78b474e4cf103313d6b45880a2de26b581594f9fa1",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\build-cache\\build-cache.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\build-cache\\build-cache.help.md",
       "relativePath": "cli/build-cache/build-cache.help.md",
       "hash": "2d195f10df718fb37a19977535a90a3eea9e53221af3a3e2dbfbada8c00aad67",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\resource\\resource.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\resource\\resource.command.ts",
       "relativePath": "cli/resource/resource.command.ts",
       "hash": "fd90d0b05ce5c804c938e4ad073cce0bd70bef7dd1770b7e7c956a0a97a7742e",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\resource\\resource.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\resource\\resource.help.md",
       "relativePath": "cli/resource/resource.help.md",
       "hash": "b297c7c865bdb4c6f163159161b8af112088f171e63c0c60c68d4711debe5351",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\kind-system\\kind-system.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\kind-system\\kind-system.command.ts",
       "relativePath": "cli/kind-system/kind-system.command.ts",
       "hash": "cee8a2210d3f6628a5c5a82b54d1edf3967c63ce946e282579ead2c6e3fec12e",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\kind-system\\kind-system.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\kind-system\\kind-system.help.md",
       "relativePath": "cli/kind-system/kind-system.help.md",
       "hash": "7d61e899cee62ecf5b2e7723d8bf102a99cba079da4bf235eeec0eb290ddfab4",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\generation-plan\\generation-plan.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\generation-plan\\generation-plan.command.ts",
       "relativePath": "cli/generation-plan/generation-plan.command.ts",
       "hash": "4027784b174c072b06e06c5c46adb83e317e44cdf5372baed2f47496b00c3936",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\generation-plan\\generation-plan.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\generation-plan\\generation-plan.help.md",
       "relativePath": "cli/generation-plan/generation-plan.help.md",
       "hash": "219a4f956872c25e0fa3bb5554fecc68e3392b2dbb76e9e4e6c17247fb68accd",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\builder\\builder.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\builder\\builder.command.ts",
       "relativePath": "cli/builder/builder.command.ts",
       "hash": "4d7010636d0144255832945af4f8aa6e8076a35f4e8c10a479fc4fdef8eeb8fc",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\builder\\builder.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\builder\\builder.help.md",
       "relativePath": "cli/builder/builder.help.md",
       "hash": "42ace1333c6a689912c00a5aa8b10ce5cdd27e0a347edaaaaa20f20b2e42ca65",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\toolchain\\toolchain.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\toolchain\\toolchain.command.ts",
       "relativePath": "cli/toolchain/toolchain.command.ts",
       "hash": "9aeb93b64d40cd5c72b5bb540ba2a265db52ef1879345447b008c8100d6fdbed",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\toolchain\\toolchain.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\toolchain\\toolchain.help.md",
       "relativePath": "cli/toolchain/toolchain.help.md",
       "hash": "d8dde26fee300e771a60e1a2985ae853d9ba327d5021775e9a2b30566edc8586",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\kit-scaffold-gen\\kit-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\kit-scaffold-gen\\kit-scaffold-gen.command.ts",
       "relativePath": "cli/kit-scaffold-gen/kit-scaffold-gen.command.ts",
       "hash": "0416b3a33a9dfb73358661f1ee65500a1834a6301089c05c9657b205372bf854",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\kit-scaffold-gen\\kit-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\kit-scaffold-gen\\kit-scaffold-gen.help.md",
       "relativePath": "cli/kit-scaffold-gen/kit-scaffold-gen.help.md",
       "hash": "5ef093b9c3527d3da878e410ea7c45bb6aa4fcfe4f6d880be831fc16cb9fac58",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\deploy-scaffold-gen\\deploy-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\deploy-scaffold-gen\\deploy-scaffold-gen.command.ts",
       "relativePath": "cli/deploy-scaffold-gen/deploy-scaffold-gen.command.ts",
       "hash": "a051782c8d42d480d349836a615d873ac3562b00fffe881f132ca979d03da5a4",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\deploy-scaffold-gen\\deploy-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\deploy-scaffold-gen\\deploy-scaffold-gen.help.md",
       "relativePath": "cli/deploy-scaffold-gen/deploy-scaffold-gen.help.md",
       "hash": "4bae11cf800eaf54300be8297a32f91f9db07707dfeab38d78c7c8eff1ca8aea",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\interface-scaffold-gen\\interface-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\interface-scaffold-gen\\interface-scaffold-gen.command.ts",
       "relativePath": "cli/interface-scaffold-gen/interface-scaffold-gen.command.ts",
       "hash": "7132f13c905125adcfa7edde2ca3ae872bd9af170cf155f8a935402c9cedb30b",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\interface-scaffold-gen\\interface-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\interface-scaffold-gen\\interface-scaffold-gen.help.md",
       "relativePath": "cli/interface-scaffold-gen/interface-scaffold-gen.help.md",
       "hash": "813f8f75f0fa5db1df09c2b676170fd79a0007df4a2107eeb354e4ef976c7d90",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\concept-scaffold-gen\\concept-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\concept-scaffold-gen\\concept-scaffold-gen.command.ts",
       "relativePath": "cli/concept-scaffold-gen/concept-scaffold-gen.command.ts",
       "hash": "7aa4cf385271aa7e2d614b7445d52a6c5b9cd8eb6098090c9720a03e999d80da",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\concept-scaffold-gen\\concept-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\concept-scaffold-gen\\concept-scaffold-gen.help.md",
       "relativePath": "cli/concept-scaffold-gen/concept-scaffold-gen.help.md",
       "hash": "1ec0042129df544bf8f4c64afff06db09f37e1d3e7c3516d8d3cd4d979465fd2",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\sync-scaffold-gen\\sync-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\sync-scaffold-gen\\sync-scaffold-gen.command.ts",
       "relativePath": "cli/sync-scaffold-gen/sync-scaffold-gen.command.ts",
       "hash": "22024e4ad1c15c86929dc1bb7a954245f4d220acd57f4767183255a06c3b5fd0",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\sync-scaffold-gen\\sync-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\sync-scaffold-gen\\sync-scaffold-gen.help.md",
       "relativePath": "cli/sync-scaffold-gen/sync-scaffold-gen.help.md",
       "hash": "bfbf39cdf2b56f098fee8aaae6620a11e31c4d44e5e47ae78fe445c70790e381",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\handler-scaffold-gen\\handler-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\handler-scaffold-gen\\handler-scaffold-gen.command.ts",
       "relativePath": "cli/handler-scaffold-gen/handler-scaffold-gen.command.ts",
       "hash": "aabcde06a83157ceba893c5cd3e9d355328c1ad823318a27ecd3cbeccf586896",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\handler-scaffold-gen\\handler-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\handler-scaffold-gen\\handler-scaffold-gen.help.md",
       "relativePath": "cli/handler-scaffold-gen/handler-scaffold-gen.help.md",
       "hash": "a9d95c5be638783c43932b85102c1e6e4ef05d0f7b44f925fce924d906b59e8f",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\storage-adapter-scaffold-gen\\storage-adapter-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\storage-adapter-scaffold-gen\\storage-adapter-scaffold-gen.command.ts",
       "relativePath": "cli/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.command.ts",
       "hash": "c4f15d7dbe5026a1e0d3c48abc68269a044481e3a3b473c879a0c9c5a864754f",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\storage-adapter-scaffold-gen\\storage-adapter-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\storage-adapter-scaffold-gen\\storage-adapter-scaffold-gen.help.md",
       "relativePath": "cli/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.help.md",
       "hash": "5a62241344a0c2aed15017e0966732e8d8ad48c9afb8598c675228c3149e4da2",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\transport-adapter-scaffold-gen\\transport-adapter-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\transport-adapter-scaffold-gen\\transport-adapter-scaffold-gen.command.ts",
       "relativePath": "cli/transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.command.ts",
       "hash": "0ea0becbdc13276b652f2435ebe9bf2ba46f1652e59c852ac571234cba148c67",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\transport-adapter-scaffold-gen\\transport-adapter-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\transport-adapter-scaffold-gen\\transport-adapter-scaffold-gen.help.md",
       "relativePath": "cli/transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.help.md",
       "hash": "44246d993058078b41a2a9e80a5ce6d8248d8054b78bddfe0f7e2b72e9378bac",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\coif-component-scaffold-gen\\coif-component-scaffold-gen.command.ts",
-      "relativePath": "cli/coif-component-scaffold-gen/coif-component-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\surface-component-scaffold-gen\\surface-component-scaffold-gen.command.ts",
+      "relativePath": "cli/surface-component-scaffold-gen/surface-component-scaffold-gen.command.ts",
       "hash": "bb7464fbd438e29296d2f9da9bd30591993fc919315bceb0123f7aa8f9e3a141",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\coif-component-scaffold-gen\\coif-component-scaffold-gen.help.md",
-      "relativePath": "cli/coif-component-scaffold-gen/coif-component-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\surface-component-scaffold-gen\\surface-component-scaffold-gen.help.md",
+      "relativePath": "cli/surface-component-scaffold-gen/surface-component-scaffold-gen.help.md",
       "hash": "b334ba519cd622bc902ff77ceafcea97469be3af00f9ed174d3220b71e535345",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\coif-theme-scaffold-gen\\coif-theme-scaffold-gen.command.ts",
-      "relativePath": "cli/coif-theme-scaffold-gen/coif-theme-scaffold-gen.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\surface-theme-scaffold-gen\\surface-theme-scaffold-gen.command.ts",
+      "relativePath": "cli/surface-theme-scaffold-gen/surface-theme-scaffold-gen.command.ts",
       "hash": "bc9e94f0c671cc6a9f02b60a04095a44d6235896425165ca7216fbbdef19883a",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\coif-theme-scaffold-gen\\coif-theme-scaffold-gen.help.md",
-      "relativePath": "cli/coif-theme-scaffold-gen/coif-theme-scaffold-gen.help.md",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\surface-theme-scaffold-gen\\surface-theme-scaffold-gen.help.md",
+      "relativePath": "cli/surface-theme-scaffold-gen/surface-theme-scaffold-gen.help.md",
       "hash": "37213ab74cad7d67920bf25493e1ebd9a97660e3aa38a61125da56d29d71d36c",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\generator\\generator.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\generator\\generator.command.ts",
       "relativePath": "cli/generator/generator.command.ts",
       "hash": "ee7f29baba3487207b8e279393b721fa72b033cba18bd8e69faae11349eb293a",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\projection\\projection.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\projection\\projection.command.ts",
       "relativePath": "cli/projection/projection.command.ts",
       "hash": "7490f07da96c6bb84dfd9aa49dfc248c0fcb68e18eead8793383ad0850b87ae2",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\api-surface\\api-surface.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\api-surface\\api-surface.command.ts",
       "relativePath": "cli/api-surface/api-surface.command.ts",
       "hash": "b5e4cf6a47a73ef49feb1b8a97862ee10cac5ff5dfc1dda51278f580669336bd",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\conformance\\conformance.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\conformance\\conformance.command.ts",
       "relativePath": "cli/conformance/conformance.command.ts",
       "hash": "c3729a06a86e2b8d5ec5136362710b99a2fde4e148a91b514a80ecfcf410e608",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\test-selection\\test-selection.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\test-selection\\test-selection.command.ts",
       "relativePath": "cli/test-selection/test-selection.command.ts",
       "hash": "06c501668c58d1193480993f7847f4aba7ffe84982f31b60a17cdbed66ec3c16",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\flaky-test\\flaky-test.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\flaky-test\\flaky-test.command.ts",
       "relativePath": "cli/flaky-test/flaky-test.command.ts",
       "hash": "1f35d6c47e3c7942146570b797fc9eb6afb610e45f75f28e9ca513807663f4e2",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\contract-test\\contract-test.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\contract-test\\contract-test.command.ts",
       "relativePath": "cli/contract-test/contract-test.command.ts",
       "hash": "d1281bdcb40903f8d3e8b3add9adf99167147bfe1ae25e3f247f23d16622f575",
       "target": "cli"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\snapshot\\snapshot.command.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\snapshot\\snapshot.command.ts",
       "relativePath": "cli/snapshot/snapshot.command.ts",
       "hash": "26465da785ddbcc5ac0a80a625ba05e059c26372dd0c1bd24f67e6a066977794",
       "target": "cli"
@@ -1088,7 +1088,7 @@
       "target": "claude-skills"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src\\index.ts",
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src\\index.ts",
       "relativePath": "cli/index.ts",
       "hash": "5175b28224db245ce4e7797e8de7ab7205b7dfd080ca20403d8f987f6b26d8e6",
       "target": "cli"
@@ -1096,7 +1096,7 @@
   ],
   "targetDirs": {
     "claude-skills": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills",
-    "cli": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\copf-cli\\src",
+    "cli": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\tools\\clef-cli\\src",
     "_default": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\generated\\devtools"
   }
 }

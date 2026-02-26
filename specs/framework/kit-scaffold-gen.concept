@@ -3,8 +3,8 @@
 concept KitScaffoldGen [K] {
 
   purpose {
-    Generate kit manifest (kit.yaml) scaffolds and directory
-    structures for new COPF kits from provided configuration.
+    Generate suite manifest (suite.yaml) scaffolds and directory
+    structures for new Clef suites from provided configuration.
   }
 
   state {
@@ -15,7 +15,7 @@ concept KitScaffoldGen [K] {
   actions {
     action generate(name: String, description: String, concepts: list String) {
       description {
-        Generate a kit.yaml manifest and directory structure
+        Generate a suite.yaml manifest and directory structure
         including stub concept specs and sync placeholders.
       }
       -> ok(files: list File, filesGenerated: Int) {

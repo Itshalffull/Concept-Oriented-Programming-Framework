@@ -1,7 +1,7 @@
 // FormulaTests.swift — Tests for Formula concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class FormulaTests: XCTestCase {
 

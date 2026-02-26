@@ -1,8 +1,8 @@
 // ============================================================
-// COIF Framework Widgets — Main Entry Point
+// Clef Surface Framework Widgets — Main Entry Point
 //
 // Exports the shared bridge, all framework-specific component
-// sets, and the adapter wiring that connects COIF concept
+// sets, and the adapter wiring that connects Clef Surface concept
 // handlers to their UI renderers.
 //
 // Usage:
@@ -80,7 +80,7 @@ export {
   motionToCSS,
   reducedMotionCSS,
   mapElementToHTML,
-} from './shared/coif-bridge.js';
+} from './shared/surface-bridge.js';
 
 // --- Framework Adapter Factory ---
 
@@ -94,7 +94,7 @@ export interface FrameworkAdapterConfig {
 }
 
 /**
- * Returns metadata about a framework adapter — which COIF concepts
+ * Returns metadata about a framework adapter — which Clef Surface concepts
  * it provides widgets for, and the component registry.
  */
 export function getFrameworkCapabilities(framework: FrameworkName): {

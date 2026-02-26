@@ -1,7 +1,7 @@
 // ViewTests.swift — Tests for View concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ViewTests: XCTestCase {
 

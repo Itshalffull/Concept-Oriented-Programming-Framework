@@ -1,8 +1,8 @@
-# COPF Comprehensive Reference
+# Clef Comprehensive Reference
 
 ## 1. Project Overview
 
-COPF (Concept-Oriented Programming Framework) builds software as compositions of **fully independent, spec-driven services** called **concepts**, coordinated by declarative **synchronizations**. Inspired by Daniel Jackson's *The Essence of Software*, where software is modeled as a collection of independent concepts (each with purpose, state, actions, and operational principles) that compose through syncs.
+Clef builds software as compositions of **fully independent, spec-driven services** called **concepts**, coordinated by declarative **synchronizations**. Inspired by Daniel Jackson's *The Essence of Software*, where software is modeled as a collection of independent concepts (each with purpose, state, actions, and operational principles) that compose through syncs.
 
 **Core Principles:**
 1. **Spec-first** -- Every concept begins as a `.concept` spec. Code is generated from specs, never the reverse.
@@ -144,7 +144,7 @@ then {
 | Favorite | F | Content bookmarking | favorite, unfavorite, count |
 | Echo | M | Simple request-response (test concept) | send |
 
-*Note: Tag and Comment were moved to their respective kits (Classification and Content).*
+*Note: Tag and Comment were moved to their respective suites (Classification and Content).*
 
 ### 5.2 Framework Concepts (`specs/framework/`)
 
@@ -164,15 +164,15 @@ then {
 | FlowTrace | Build debug trace trees from action log provenance |
 | DeploymentValidator | Validate deployment manifests pre-deploy |
 | DevServer | Hot-reloading development server |
-| ProjectScaffold | Generate new COPF project structure |
+| ProjectScaffold | Generate new Clef project structure |
 | KitManager | Kit lifecycle management (install, update, dependency resolution) |
-| *ScaffoldGen (x10) | Scaffold generators for concepts, syncs, kits, handlers, storage/transport adapters, deploy/interface manifests, COIF components/themes |
+| *ScaffoldGen (x10) | Scaffold generators for concepts, syncs, suites, handlers, storage/transport adapters, deploy/interface manifests, Clef Surface components/themes |
 
-*Note: Migration moved to Deploy Kit. Telemetry moved to Deploy Kit. CacheCompiler superseded by BuildCache in Generation Kit.*
+*Note: Migration moved to Deploy Kit. Telemetry moved to Deploy Kit. CacheCompiler superseded by BuildCache in Generation Suite.*
 
-### 5.3 Generation Kit (`kits/generation/`)
+### 5.3 Generation Suite (`kits/generation/`)
 
-Shared generation infrastructure for all COPF generation families. Provides input tracking, pipeline topology, incremental build caching, content-addressed file emission, and unified run reporting.
+Shared generation infrastructure for all Clef generation families. Provides input tracking, pipeline topology, incremental build caching, content-addressed file emission, and unified run reporting.
 
 | Concept | Purpose | Key Actions |
 |---------|---------|-------------|
@@ -205,7 +205,7 @@ Deployment orchestration with progressive delivery, migrations, health checks, a
 | **Builder providers (4):** | TypeScript, Rust, Swift, Solidity |
 | **Toolchain providers (4):** | TypeScript, Rust, Swift, Solidity |
 
-### 5.5 Interface Kit (`kits/interface/`)
+### 5.5 Clef Bind (`kits/interface/`)
 
 Multi-target interface generation. Generates REST APIs, GraphQL schemas, gRPC services, CLIs, MCP servers, SDKs, and spec documents from concept specs and an interface manifest.
 
@@ -224,7 +224,7 @@ Multi-target interface generation. Generates REST APIs, GraphQL schemas, gRPC se
 | **Spec providers (2):** | OpenAPI, AsyncAPI |
 | **SDK providers (6):** | TypeScript, Python, Go, Rust, Java, Swift |
 
-Uses: Generation Kit (Emitter — shared file emission).
+Uses: Generation Suite (Emitter — shared file emission).
 
 ### 5.6 Scaffolding Kit (`kits/scaffolding/`)
 
@@ -234,16 +234,16 @@ Code generation scaffolding for all artifact types. Each scaffold generator crea
 |---------|-----------|
 | ConceptScaffoldGen | `.concept` spec files |
 | SyncScaffoldGen | `.sync` files |
-| KitScaffoldGen | Kit directory with `kit.yaml` |
+| KitScaffoldGen | Kit directory with `suite.yaml` |
 | HandlerScaffoldGen | TypeScript/Rust/Swift handler implementations |
 | StorageAdapterScaffoldGen | Storage adapter implementations |
 | TransportAdapterScaffoldGen | Transport adapter implementations |
 | DeployScaffoldGen | Deployment manifests |
 | InterfaceScaffoldGen | Interface manifests |
-| CoifComponentScaffoldGen | COIF component specs |
-| CoifThemeScaffoldGen | COIF theme definitions |
+| CoifComponentScaffoldGen | Clef Surface component specs |
+| CoifThemeScaffoldGen | Clef Surface theme definitions |
 
-### 5.7 Framework Kit (`kits/framework/`)
+### 5.7 Framework Suite (`kits/framework/`)
 
 Core framework generation. SchemaGen is the coordination concept; language generators are optional providers.
 
@@ -390,7 +390,7 @@ Group collaboration features.
 | Flag | Content flagging for review/moderation |
 | Group | User group management and membership |
 
-*Note: This kit will be significantly expanded by the new Collaboration Kit (Section 6.5) which adds CausalClock, Replica, ConflictResolution, Attribution, Signature, InlineAnnotation, and PessimisticLock.*
+*Note: This suite will be significantly expanded by the new Collaboration Kit (Section 6.5) which adds CausalClock, Replica, ConflictResolution, Attribution, Signature, InlineAnnotation, and PessimisticLock.*
 
 ### 5.19 Linking Kit (`kits/linking/`)
 
@@ -424,7 +424,7 @@ Search and query execution.
 | Query | Query execution against the entity graph |
 | SearchIndex | Coordination point for search — providers register here |
 
-### 5.22 Other Domain Kits
+### 5.22 Other Domain Suites
 
 | Kit | Concepts | Purpose |
 |-----|----------|---------|
@@ -433,39 +433,39 @@ Search and query execution.
 | **Notification** (`kits/notification/`) | Notification | Multi-channel notification delivery |
 | **Web3** (`kits/web3/`) | ChainMonitor (@gate), Content, Wallet | Blockchain finality tracking, IPFS storage, signature verification |
 
-### 5.23 COIF Kits (`concept-interface/kits/`) -- Concept-Oriented Interface Framework (v0.4.0)
+### 5.23 Clef Surface Kits (`concept-interface/kits/`) -- Clef Surface (v0.4.0)
 
-COIF is the interface companion to COPF. Every abstraction is a concept, every coordination is a sync, every bundle is a kit. COIF generates working interfaces from concept specs — zero config gets a functional interface, progressive customization gets a beautiful one. Two-step semantic widget selection: abstract interaction types (Interactor) are classified from field metadata, then matched against widget capability declarations (Affordance) parameterized by runtime context.
+Clef Surface is the interface companion to Clef. Every abstraction is a concept, every coordination is a sync, every bundle is a suite. Clef Surface generates working interfaces from concept specs — zero config gets a functional interface, progressive customization gets a beautiful one. Two-step semantic widget selection: abstract interaction types (Interactor) are classified from field metadata, then matched against widget capability declarations (Affordance) parameterized by runtime context.
 
-**coif-core** — Foundation: design tokens, abstract elements (enriched with interactor classification and widget resolution), UI schemas, concept bindings, reactive signals.
+**surface-core** — Foundation: design tokens, abstract elements (enriched with interactor classification and widget resolution), UI schemas, concept bindings, reactive signals.
 - DesignToken, Element, UISchema, Binding, Signal
 
-**coif-component** — Headless behaviors, semantic interaction classification, and context-aware widget resolution. Widgets are parsed ASTs from `.widget` specs. Interactors classify WHAT the user does, Affordances declare WHEN a widget is suitable, WidgetResolver decides WHICH widget for a given context.
+**surface-component** — Headless behaviors, semantic interaction classification, and context-aware widget resolution. Widgets are parsed ASTs from `.widget` specs. Interactors classify WHAT the user does, Affordances declare WHEN a widget is suitable, WidgetResolver decides WHICH widget for a given context.
 - Widget, Machine, Slot, Interactor, Affordance, WidgetResolver
 
-**coif-render** — Framework adapters that translate headless widget props into platform-specific bindings.
+**surface-render** — Framework adapters that translate headless widget props into platform-specific bindings.
 - FrameworkAdapter, Surface, Layout, Viewport
 - 15 adapters: React, Solid, Vue, Svelte, Ink, Vanilla, SwiftUI, AppKit, Compose, ReactNative, NativeScript, GTK, WinUI, WatchKit, WearCompose
 
-**coif-theme** — Visual design system with WCAG accessibility enforcement. Inputs from ThemeParser output; runtime concepts store resolved values.
+**surface-theme** — Visual design system with WCAG accessibility enforcement. Inputs from ThemeParser output; runtime concepts store resolved values.
 - Theme, Palette, Typography, Motion, Elevation
 
-**coif-app** — Application orchestration: navigation, lifecycle, network transport, platform composition. All specs corrected per COPF independence rule.
+**surface-app** — Application orchestration: navigation, lifecycle, network transport, platform composition. All specs corrected per Clef independence rule.
 - Navigator, Host, Transport, Shell, PlatformAdapter
 - 5 platform adapters: Browser, Desktop, Mobile, Terminal, Watch
 
-**coif-spec** — Build-time parsing and generation for `.widget` and `.theme` spec files. Uses COPF generation kit infrastructure (Resource, KindSystem, BuildCache, Emitter).
+**surface-spec** — Build-time parsing and generation for `.widget` and `.theme` spec files. Uses Clef generation suite infrastructure (Resource, KindSystem, BuildCache, Emitter).
 - WidgetParser, ThemeParser, WidgetGen, ThemeGen
 
-**coif-integration** — Syncs-only kit bridging COPF domain concepts to COIF interface concepts. No new concepts. Includes IntentImprovesClassification and CustomizationOverridesResolver syncs.
+**surface-integration** — Syncs-only kit bridging Clef domain concepts to Clef Surface interface concepts. No new concepts. Includes IntentImprovesClassification and CustomizationOverridesResolver syncs.
 
 ---
 
 ## 6. Concept Relationships
 
-### 6.1 Kit Manifest (`kit.yaml`)
+### 6.1 Suite Manifest (`suite.yaml`)
 
-Kits bundle concepts, syncs, and type parameter mappings. The `uses` section declares cross-kit dependencies (only syncs reference external concepts; concepts remain independent).
+Kits bundle concepts, syncs, and type parameter mappings. The `uses` section declares cross-suite dependencies (only syncs reference external concepts; concepts remain independent).
 
 ```yaml
 kit:
@@ -511,7 +511,7 @@ uses:
 
 ### 6.4 Coordination + Provider Pattern
 
-Many kits use a coordination concept with multiple optional provider plugins. Routing syncs dispatch to the correct provider via PluginRegistry. Examples:
+Many suites use a coordination concept with multiple optional provider plugins. Routing syncs dispatch to the correct provider via PluginRegistry. Examples:
 
 | Coordination Concept | Providers | Selection Basis |
 |---------------------|-----------|-----------------|
@@ -527,7 +527,7 @@ Three major design documents are being implemented on separate worktrees:
 
 #### Code Representation & Semantic Query System (`kits/code-representation-design.md`)
 
-Adds 5 new kits that make every file in a COPF project a queryable node at syntactic, symbolic, and semantic levels:
+Adds 5 new suites that make every file in a Clef project a queryable node at syntactic, symbolic, and semantic levels:
 
 **Parse Kit** (`kits/parse/`) — Universal file parsing via Tree-sitter, structural identity, and pattern matching.
 - SyntaxTree: Lossless CST for any parsed file, wrapping Tree-sitter output
@@ -538,13 +538,13 @@ Adds 5 new kits that make every file in a COPF project a queryable node at synta
 - FileArtifact: Software-engineering metadata for project files (role, provenance, dependencies)
 
 **Symbol Kit** (`kits/symbol/`) — Cross-file identity, occurrence tracking, and scope resolution.
-- Symbol: Globally unique identifiers for named entities (`copf/concept/Article`, `ts/function/...`)
+- Symbol: Globally unique identifiers for named entities (`clef/concept/Article`, `ts/function/...`)
 - SymbolOccurrence: Where symbols appear with exact locations and semantic roles
 - ScopeGraph: Lexical scoping and name resolution model
 - SymbolRelationship: Typed semantic relationships (implements, extends, generates, tests)
 - Providers: TypeScript/Rust/Concept/Sync/Universal extractors; TypeScript/Concept/Sync scope providers
 
-**Semantic Kit** (`kits/semantic/`) — COPF-specific semantic entities as queryable nodes.
+**Semantic Kit** (`kits/semantic/`) — Clef-specific semantic entities as queryable nodes.
 - ConceptEntity: Parsed concept linked to generated artifacts and runtime behavior
 - ActionEntity: Action with full lifecycle tracing (spec → sync → implementation → interface)
 - VariantEntity: Action return variant as a first-class branching point in sync chains
@@ -565,7 +565,7 @@ Reuses 22 existing concepts directly (ContentNode, Graph, Reference, Provenance,
 
 #### Versioning & Collaboration System (`kits/versioning-kit-design.md`)
 
-Adds 2 new kits with 18 new concepts providing version control, change tracking, concurrent editing, and compliance.
+Adds 2 new suites with 18 new concepts providing version control, change tracking, concurrent editing, and compliance.
 
 **Versioning Kit** (`kits/versioning/`) — Immutable storage primitives, change representation, and history.
 - ContentHash: Content-addressed identity via cryptographic digest (deduplication, integrity)
@@ -597,21 +597,21 @@ Adds 2 new kits with 18 new concepts providing version control, change tracking,
 
 **Design principles:** Snapshot-patch duality is a composition. Conflict detection and resolution are always separate concepts. Causality is the universal ordering primitive. Algorithms are providers (Diff, Merge, ConflictResolution). Mutable pointers (Ref, Branch) over immutable data (ContentHash, DAGHistory, Patch).
 
-#### COIF v0.4.0 — Concept-Oriented Interface Framework (`concept-interface/coif-spec-v4.md`)
+#### Clef Surface v0.4.0 — Clef Surface (`concept-interface/surface-spec-v4.md`)
 
-Three-pass architectural revision of the COIF interface system:
+Three-pass architectural revision of the Clef Surface interface system:
 
-1. **Idiom alignment** — All concept specs corrected to follow COPF independence rule; action bodies describe own state only, sync chains live in syncs; JSON blob state replaced with typed relations.
-2. **Spec-first pipeline** — New `.widget` and `.theme` file formats with grammar, parser, and generator concepts in new coif-spec kit; Anatomy absorbed into `.widget` files; Widget stores validated ASTs not JSON blobs; uses COPF generation kit (Resource, KindSystem, BuildCache, Emitter).
+1. **Idiom alignment** — All concept specs corrected to follow Clef independence rule; action bodies describe own state only, sync chains live in syncs; JSON blob state replaced with typed relations.
+2. **Spec-first pipeline** — New `.widget` and `.theme` file formats with grammar, parser, and generator concepts in new surface-spec suite; Anatomy absorbed into `.widget` files; Widget stores validated ASTs not JSON blobs; uses Clef generation suite (Resource, KindSystem, BuildCache, Emitter).
 3. **Semantic widget selection** — New Interactor (abstract interaction taxonomy), Affordance (widget capability declarations), WidgetResolver (context-aware matching engine) replace flat type-mapping table with two-step classify→resolve pipeline.
 
 **Changes:**
-- +1 new kit: coif-spec (WidgetParser, ThemeParser, WidgetGen, ThemeGen)
-- +3 new concepts in coif-component: Interactor, Affordance, WidgetResolver
+- +1 new suite: surface-spec (WidgetParser, ThemeParser, WidgetGen, ThemeGen)
+- +3 new concepts in surface-component: Interactor, Affordance, WidgetResolver
 - -1 absorbed concept: Anatomy (into `.widget` files)
 - Element enriched with interactorType, interactorProps, resolvedWidget state fields
-- All coif-app concepts (Navigator, Host, Transport, Shell, PlatformAdapter) rewritten per independence rule
-- Net: 29 COIF concepts across 7 kits (was 24 across 6 kits)
+- All surface-app concepts (Navigator, Host, Transport, Shell, PlatformAdapter) rewritten per independence rule
+- Net: 29 Clef Surface concepts across 7 suites (was 24 across 6 suites)
 
 ---
 
@@ -649,7 +649,7 @@ Maintains an index from `(concept, action)` pairs to syncs. On completion: find 
 - **SwiftGen** -- Protocol definitions, handler skeletons
 - **SolidityGen** -- Contract interfaces, Foundry tests
 
-### 7.5 CLI (`tools/copf-cli/`)
+### 7.5 CLI (`tools/clef-cli/`)
 
 Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `--pattern async-gate`), `trace` (with `--gates`), `deploy`, `dev`, `test`, `migrate`, `kit`, `interface`, `kinds`, `impact`.
 
@@ -682,7 +682,7 @@ Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `-
 10. Add `capabilities` if the concept requires `persistent-storage`, `crypto`, or `network`.
 11. Place in appropriate kit directory or `specs/` for framework concepts.
 12. Write syncs in separate `.sync` files to wire to other concepts.
-13. Update `kit.yaml` with the concept entry and param mapping.
+13. Update `suite.yaml` with the concept entry and param mapping.
 
 ---
 
@@ -690,7 +690,7 @@ Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `-
 
 ### 10.1 Three-Tier Dispatch Model
 
-COPF has three distinct layers for event/action routing, each at a different abstraction level:
+Clef has three distinct layers for event/action routing, each at a different abstraction level:
 
 | Tier | Concept | Layer | Purpose | Authored by |
 |------|---------|-------|---------|-------------|
@@ -746,8 +746,8 @@ When designing new concepts, check for these common overlap patterns:
 
 ## 11. Kit Summary
 
-**Current:** 23 kits with ~145 concepts across `kits/`, 34 framework/app specs in `specs/`, plus 7 COIF kits with 29 core + ~20 adapter concepts in `concept-interface/`.
+**Current:** 23 suites with ~145 concepts across `kits/`, 34 framework/app specs in `specs/`, plus 7 Clef Surface suites with 29 core + ~20 adapter concepts in `concept-interface/`.
 
 **In-progress (worktrees):**
-- Code Representation: +5 kits, +20 coordination concepts, +~35 providers
-- Versioning & Collaboration: +1 new kit (Versioning), expansion of Collaboration kit, +18 concepts, +~12 providers, −2 superseded concepts (Version, SyncedContent)
+- Code Representation: +5 suites, +20 coordination concepts, +~35 providers
+- Versioning & Collaboration: +1 new suite (Versioning), expansion of Collaboration kit, +18 concepts, +~12 providers, −2 superseded concepts (Version, SyncedContent)

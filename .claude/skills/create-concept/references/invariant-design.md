@@ -2,7 +2,7 @@
 
 ## What Invariants Represent
 
-In Daniel Jackson's methodology, the **operational principle** is a "defining story" — an archetypal scenario proving the concept fulfills its purpose. In COPF, operational principles are expressed as `invariant` blocks.
+In Daniel Jackson's methodology, the **operational principle** is a "defining story" — an archetypal scenario proving the concept fulfills its purpose. In Clef, operational principles are expressed as `invariant` blocks.
 
 An invariant says: "If you perform these setup actions, then these verification actions produce these results."
 
@@ -85,13 +85,13 @@ The first step passes a minimal but **complete** AST with a real action and vari
 invariant {
   after registerSync(sync: {
     name: "TestSync", annotations: ["eager"],
-    when: [{ concept: "urn:copf/Test", action: "act",
+    when: [{ concept: "urn:clef/Test", action: "act",
              inputFields: [], outputFields: [] }],
     where: [],
-    then: [{ concept: "urn:copf/Other", action: "do", fields: [] }]
+    then: [{ concept: "urn:clef/Other", action: "do", fields: [] }]
   }) -> ok()
   then onCompletion(completion: {
-    id: "c1", concept: "urn:copf/Test", action: "act",
+    id: "c1", concept: "urn:clef/Test", action: "act",
     input: {}, variant: "ok", output: {}, flow: "f1",
     timestamp: "2024-01-01T00:00:00Z"
   }) -> ok(invocations: inv)
@@ -296,7 +296,7 @@ Proves: the concept correctly processes valid structured data and rejects invali
 ```
 invariant {
   after generate(spec: "s1", manifest: {
-    name: "Ping", uri: "urn:copf/Ping", typeParams: [], relations: [],
+    name: "Ping", uri: "urn:clef/Ping", typeParams: [], relations: [],
     actions: [{ name: "ping", params: [],
       variants: [{ tag: "ok", fields: [], prose: "Pong." }] }],
     invariants: [], graphqlSchema: "",

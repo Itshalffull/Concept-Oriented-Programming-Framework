@@ -1,7 +1,7 @@
 // SchemaTests.swift — Tests for Schema concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class SchemaTests: XCTestCase {
 

@@ -1,8 +1,8 @@
 // ============================================================
-// COIF Vanilla (Plain DOM) Framework Widgets — Barrel Export
+// Clef Surface Vanilla (Plain DOM) Framework Widgets — Barrel Export
 //
 // Zero framework dependencies. Pure DOM API components for
-// the Concept-Oriented Interchange Format (COIF).
+// the Concept-Oriented Interchange Format (Clef Surface).
 //
 // Each component is a TypeScript class that directly
 // manipulates the DOM via createElement, addEventListener,

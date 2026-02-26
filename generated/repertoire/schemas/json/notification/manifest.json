@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Notification",
+  "uri": "urn:clef/Notification",
   "name": "Notification",
   "typeParams": [
     {
@@ -627,11 +627,11 @@
   "jsonSchemas": {
     "invocations": {
       "registerChannel": {
-        "$id": "urn:copf/Notification/registerChannel/invocation",
+        "$id": "urn:clef/Notification/registerChannel/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "registerChannel"
@@ -654,11 +654,11 @@
         }
       },
       "defineTemplate": {
-        "$id": "urn:copf/Notification/defineTemplate/invocation",
+        "$id": "urn:clef/Notification/defineTemplate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "defineTemplate"
@@ -681,11 +681,11 @@
         }
       },
       "subscribe": {
-        "$id": "urn:copf/Notification/subscribe/invocation",
+        "$id": "urn:clef/Notification/subscribe/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "subscribe"
@@ -712,11 +712,11 @@
         }
       },
       "unsubscribe": {
-        "$id": "urn:copf/Notification/unsubscribe/invocation",
+        "$id": "urn:clef/Notification/unsubscribe/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "unsubscribe"
@@ -743,11 +743,11 @@
         }
       },
       "notify": {
-        "$id": "urn:copf/Notification/notify/invocation",
+        "$id": "urn:clef/Notification/notify/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "notify"
@@ -778,11 +778,11 @@
         }
       },
       "markRead": {
-        "$id": "urn:copf/Notification/markRead/invocation",
+        "$id": "urn:clef/Notification/markRead/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "markRead"
@@ -801,11 +801,11 @@
         }
       },
       "getUnread": {
-        "$id": "urn:copf/Notification/getUnread/invocation",
+        "$id": "urn:clef/Notification/getUnread/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Notification"
+            "const": "urn:clef/Notification"
           },
           "action": {
             "const": "getUnread"
@@ -827,11 +827,11 @@
     "completions": {
       "registerChannel": {
         "ok": {
-          "$id": "urn:copf/Notification/registerChannel/completion/ok",
+          "$id": "urn:clef/Notification/registerChannel/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "registerChannel"
@@ -847,11 +847,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Notification/registerChannel/completion/exists",
+          "$id": "urn:clef/Notification/registerChannel/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "registerChannel"
@@ -875,11 +875,11 @@
       },
       "defineTemplate": {
         "ok": {
-          "$id": "urn:copf/Notification/defineTemplate/completion/ok",
+          "$id": "urn:clef/Notification/defineTemplate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "defineTemplate"
@@ -895,11 +895,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Notification/defineTemplate/completion/exists",
+          "$id": "urn:clef/Notification/defineTemplate/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "defineTemplate"
@@ -923,11 +923,11 @@
       },
       "subscribe": {
         "ok": {
-          "$id": "urn:copf/Notification/subscribe/completion/ok",
+          "$id": "urn:clef/Notification/subscribe/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "subscribe"
@@ -943,11 +943,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Notification/subscribe/completion/exists",
+          "$id": "urn:clef/Notification/subscribe/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "subscribe"
@@ -971,11 +971,11 @@
       },
       "unsubscribe": {
         "ok": {
-          "$id": "urn:copf/Notification/unsubscribe/completion/ok",
+          "$id": "urn:clef/Notification/unsubscribe/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "unsubscribe"
@@ -991,11 +991,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Notification/unsubscribe/completion/notfound",
+          "$id": "urn:clef/Notification/unsubscribe/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "unsubscribe"
@@ -1019,11 +1019,11 @@
       },
       "notify": {
         "ok": {
-          "$id": "urn:copf/Notification/notify/completion/ok",
+          "$id": "urn:clef/Notification/notify/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "notify"
@@ -1039,11 +1039,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/Notification/notify/completion/error",
+          "$id": "urn:clef/Notification/notify/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "notify"
@@ -1067,11 +1067,11 @@
       },
       "markRead": {
         "ok": {
-          "$id": "urn:copf/Notification/markRead/completion/ok",
+          "$id": "urn:clef/Notification/markRead/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "markRead"
@@ -1087,11 +1087,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Notification/markRead/completion/notfound",
+          "$id": "urn:clef/Notification/markRead/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "markRead"
@@ -1115,11 +1115,11 @@
       },
       "getUnread": {
         "ok": {
-          "$id": "urn:copf/Notification/getUnread/completion/ok",
+          "$id": "urn:clef/Notification/getUnread/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Notification"
+              "const": "urn:clef/Notification"
             },
             "action": {
               "const": "getUnread"

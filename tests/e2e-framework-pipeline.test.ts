@@ -1,14 +1,14 @@
 // ============================================================
 // E2E Tests — Full Framework Integration Pipeline
 //
-// End-to-end tests that verify the complete COIF (Concept-
+// End-to-end tests that verify the complete Clef Surface (Concept-
 // Oriented Interface Framework) pipeline: adapter registration →
 // mount/unmount lifecycle → multi-framework coexistence,
 // plus concept file structure verification, generated code
 // validation, and sync pipeline structure for all framework
 // targets (React, Vue, Svelte, Solid, Ink, Vanilla).
 //
-// Note: COIF adapter concept files use a simplified invariant
+// Note: Clef Surface adapter concept files use a simplified invariant
 // syntax not yet handled by the runtime parser. Tests that need
 // to exercise parsing use the standard app/framework concepts
 // which the parser fully supports.
@@ -24,11 +24,11 @@ import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.ha
 import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
-const COIF_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-render');
-const COIF_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-core');
-const COIF_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-theme');
-const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-component');
-const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-integration');
+const Clef Surface_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-render');
+const Clef Surface_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-core');
+const Clef Surface_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-theme');
+const Clef Surface_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-component');
+const Clef Surface_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-integration');
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
@@ -267,7 +267,7 @@ describe('E2E Framework Pipeline — Framework Concepts Through Pipeline', () =>
       const ast = parseResult.ast as ConceptAST;
 
       const manifest = await generateManifest(ast);
-      expect(manifest.uri).toContain('urn:copf/');
+      expect(manifest.uri).toContain('urn:clef/');
 
       const tsStorage = createInMemoryStorage();
       const tsResult = await typescriptGenHandler.generate(
@@ -288,7 +288,7 @@ describe('E2E Framework Pipeline — Framework Concepts Through Pipeline', () =>
 describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
   it('adapter-pipeline.sync has 30 sync declarations (2 per framework × 15 frameworks)', () => {
     const source = readFileSync(
-      resolve(COIF_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
+      resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     const syncDecls = source.match(/^sync \w+/gm) || [];
@@ -297,7 +297,7 @@ describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
 
   it('each framework has Machine and Renderer trigger syncs', () => {
     const source = readFileSync(
-      resolve(COIF_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
+      resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
 
@@ -310,7 +310,7 @@ describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
 
   it('all adapter pipeline syncs invoke the normalize action', () => {
     const source = readFileSync(
-      resolve(COIF_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
+      resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
 
@@ -324,7 +324,7 @@ describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
 });
 
 // ============================================================
-// 6. E2E: COIF Integration Sync Structure
+// 6. E2E: Clef Surface Integration Sync Structure
 // ============================================================
 
 describe('E2E Framework Pipeline — Integration Syncs', () => {
@@ -347,7 +347,7 @@ describe('E2E Framework Pipeline — Integration Syncs', () => {
   it('all 13 integration sync files exist', () => {
     for (const syncName of integrationSyncs) {
       expect(
-        existsSync(resolve(COIF_INTEGRATION_DIR, 'syncs', `${syncName}.sync`)),
+        existsSync(resolve(Clef Surface_INTEGRATION_DIR, 'syncs', `${syncName}.sync`)),
       ).toBe(true);
     }
   });
@@ -355,7 +355,7 @@ describe('E2E Framework Pipeline — Integration Syncs', () => {
   it('all integration syncs have when and then clauses', () => {
     for (const syncName of integrationSyncs) {
       const source = readFileSync(
-        resolve(COIF_INTEGRATION_DIR, 'syncs', `${syncName}.sync`),
+        resolve(Clef Surface_INTEGRATION_DIR, 'syncs', `${syncName}.sync`),
         'utf-8',
       );
       expect(source).toContain('when {');
@@ -378,7 +378,7 @@ describe('E2E Framework Pipeline — Render Kit Syncs', () => {
 
   for (const syncName of renderSyncs) {
     it(`render sync ${syncName} exists and has valid structure`, () => {
-      const path = resolve(COIF_RENDER_DIR, 'syncs', `${syncName}.sync`);
+      const path = resolve(Clef Surface_RENDER_DIR, 'syncs', `${syncName}.sync`);
       expect(existsSync(path)).toBe(true);
 
       const source = readFileSync(path, 'utf-8');
@@ -390,45 +390,45 @@ describe('E2E Framework Pipeline — Render Kit Syncs', () => {
 });
 
 // ============================================================
-// 8. E2E: Complete COIF Concept Count Verification
+// 8. E2E: Complete Clef Surface Concept Count Verification
 // ============================================================
 
-describe('E2E Framework Pipeline — COIF Completeness', () => {
-  it('coif-core has exactly 5 concepts', () => {
+describe('E2E Framework Pipeline — Clef Surface Completeness', () => {
+  it('surface-core has exactly 5 concepts', () => {
     const concepts = ['design-token', 'binding', 'signal', 'ui-schema', 'element'];
     for (const name of concepts) {
-      const source = readFileSync(resolve(COIF_CORE_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(Clef Surface_CORE_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
       expect(source).toContain('actions {');
     }
   });
 
-  it('coif-theme has exactly 5 concepts', () => {
+  it('surface-theme has exactly 5 concepts', () => {
     const concepts = ['typography', 'palette', 'elevation', 'theme', 'motion'];
     for (const name of concepts) {
-      const source = readFileSync(resolve(COIF_THEME_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(Clef Surface_THEME_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
       expect(source).toContain('actions {');
     }
   });
 
-  it('coif-component has exactly 6 concepts', () => {
+  it('surface-component has exactly 6 concepts', () => {
     const concepts = ['machine', 'slot', 'widget', 'affordance', 'interactor', 'widget-resolver'];
     for (const name of concepts) {
-      const source = readFileSync(resolve(COIF_COMPONENT_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(Clef Surface_COMPONENT_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
       expect(source).toContain('actions {');
     }
   });
 
-  it('coif-render has exactly 10 concepts (6 adapters + 4 infrastructure)', () => {
+  it('surface-render has exactly 10 concepts (6 adapters + 4 infrastructure)', () => {
     const concepts = [
       'react-adapter', 'vue-adapter', 'svelte-adapter', 'solid-adapter',
       'vanilla-adapter', 'ink-adapter',
       'framework-adapter', 'surface', 'viewport', 'layout',
     ];
     for (const name of concepts) {
-      const source = readFileSync(resolve(COIF_RENDER_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(Clef Surface_RENDER_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
     }
   });

@@ -1,5 +1,5 @@
 # ============================================================
-# UISchemaToElements — coif-core recommended sync
+# UISchemaToElements — surface-core recommended sync
 #
 # When a UI schema is generated from a concept spec, extract
 # the abstract element tree. Elements are the intermediate

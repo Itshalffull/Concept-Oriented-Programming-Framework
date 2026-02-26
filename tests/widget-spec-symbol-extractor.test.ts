@@ -47,7 +47,7 @@ describe('WidgetSpecSymbolExtractor', () => {
         s.kind === 'concept' && s.role === 'definition'
       );
       expect(widgetDef).toBeDefined();
-      expect(widgetDef.symbolString).toBe('coif/widget/Button');
+      expect(widgetDef.symbolString).toBe('surface/widget/Button');
     });
 
     it('extracts widget declaration using name: key', async () => {
@@ -60,7 +60,7 @@ anatomy {
 
       const symbols = JSON.parse(result.symbols as string);
       const widgetDef = symbols.find((s: Record<string, string>) =>
-        s.symbolString === 'coif/widget/Dropdown'
+        s.symbolString === 'surface/widget/Dropdown'
       );
       expect(widgetDef).toBeDefined();
     });
@@ -82,7 +82,7 @@ anatomy {
         s.symbolString.includes('/part/')
       );
       expect(parts).toHaveLength(3);
-      expect(parts[0].symbolString).toBe('coif/widget/Button/part/root');
+      expect(parts[0].symbolString).toBe('surface/widget/Button/part/root');
       expect(parts[0].kind).toBe('state-field');
     });
 
@@ -175,11 +175,11 @@ compose {
 
       const symbols = JSON.parse(result.symbols as string);
       const composed = symbols.filter((s: Record<string, string>) =>
-        s.role === 'reference' && s.symbolString.startsWith('coif/widget/')
+        s.role === 'reference' && s.symbolString.startsWith('surface/widget/')
       );
       expect(composed).toHaveLength(2);
-      expect(composed[0].symbolString).toBe('coif/widget/Button');
-      expect(composed[1].symbolString).toBe('coif/widget/Icon');
+      expect(composed[0].symbolString).toBe('surface/widget/Button');
+      expect(composed[1].symbolString).toBe('surface/widget/Icon');
     });
 
     it('extracts affordance names', async () => {
@@ -217,7 +217,7 @@ affordances {
         s.role === 'reference' && s.displayName === 'BaseButton'
       );
       expect(extendsRef).toBeDefined();
-      expect(extendsRef.symbolString).toBe('coif/widget/BaseButton');
+      expect(extendsRef.symbolString).toBe('surface/widget/BaseButton');
     });
 
     it('extracts event references in transitions', async () => {

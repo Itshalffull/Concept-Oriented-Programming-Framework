@@ -1,4 +1,4 @@
-# Route Target/generate to McpTarget — Architecture doc: Interface Kit, Sync Section 3.3
+# Route Target/generate to McpTarget — Architecture doc: Clef Bind, Sync Section 3.3
 
 sync RouteToMcp [eager]
 when {

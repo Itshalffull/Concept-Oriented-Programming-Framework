@@ -1,4 +1,4 @@
-# EnsureKindsDefined — generation kit required sync
+# EnsureKindsDefined — generation suite required sync
 sync EnsureKindsDefined [eager]
   purpose { Auto-define kinds referenced by generator registrations. }
 when {

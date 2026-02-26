@@ -1,5 +1,5 @@
 # Breaking change detected — still plan but Generator checks --breaking flag
-# Architecture doc: Interface Kit, Sync Section 3.2
+# Architecture doc: Clef Bind, Sync Section 3.2
 
 sync BlockOnBreaking [eager]
 when {

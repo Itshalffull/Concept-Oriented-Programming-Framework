@@ -1,7 +1,7 @@
 // PasswordTests.swift — Tests for Password concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class PasswordTests: XCTestCase {
 

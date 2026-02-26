@@ -1,7 +1,7 @@
 # ============================================================
-# WorkflowStateToSignal — coif-integration recommended sync
+# WorkflowStateToSignal — surface-integration recommended sync
 #
-# Reflect workflow state transitions in COIF signals for live
+# Reflect workflow state transitions in Clef Surface signals for live
 # status display. When an entity transitions to a new workflow
 # state, update the corresponding UI signal.
 # ============================================================

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/SearchIndex",
+  "uri": "urn:clef/SearchIndex",
   "name": "SearchIndex",
   "typeParams": [
     {
@@ -465,11 +465,11 @@
   "jsonSchemas": {
     "invocations": {
       "createIndex": {
-        "$id": "urn:copf/SearchIndex/createIndex/invocation",
+        "$id": "urn:clef/SearchIndex/createIndex/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SearchIndex"
+            "const": "urn:clef/SearchIndex"
           },
           "action": {
             "const": "createIndex"
@@ -492,11 +492,11 @@
         }
       },
       "indexItem": {
-        "$id": "urn:copf/SearchIndex/indexItem/invocation",
+        "$id": "urn:clef/SearchIndex/indexItem/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SearchIndex"
+            "const": "urn:clef/SearchIndex"
           },
           "action": {
             "const": "indexItem"
@@ -523,11 +523,11 @@
         }
       },
       "removeItem": {
-        "$id": "urn:copf/SearchIndex/removeItem/invocation",
+        "$id": "urn:clef/SearchIndex/removeItem/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SearchIndex"
+            "const": "urn:clef/SearchIndex"
           },
           "action": {
             "const": "removeItem"
@@ -550,11 +550,11 @@
         }
       },
       "search": {
-        "$id": "urn:copf/SearchIndex/search/invocation",
+        "$id": "urn:clef/SearchIndex/search/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SearchIndex"
+            "const": "urn:clef/SearchIndex"
           },
           "action": {
             "const": "search"
@@ -577,11 +577,11 @@
         }
       },
       "addProcessor": {
-        "$id": "urn:copf/SearchIndex/addProcessor/invocation",
+        "$id": "urn:clef/SearchIndex/addProcessor/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SearchIndex"
+            "const": "urn:clef/SearchIndex"
           },
           "action": {
             "const": "addProcessor"
@@ -604,11 +604,11 @@
         }
       },
       "reindex": {
-        "$id": "urn:copf/SearchIndex/reindex/invocation",
+        "$id": "urn:clef/SearchIndex/reindex/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SearchIndex"
+            "const": "urn:clef/SearchIndex"
           },
           "action": {
             "const": "reindex"
@@ -630,11 +630,11 @@
     "completions": {
       "createIndex": {
         "ok": {
-          "$id": "urn:copf/SearchIndex/createIndex/completion/ok",
+          "$id": "urn:clef/SearchIndex/createIndex/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "createIndex"
@@ -656,11 +656,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/SearchIndex/createIndex/completion/exists",
+          "$id": "urn:clef/SearchIndex/createIndex/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "createIndex"
@@ -684,11 +684,11 @@
       },
       "indexItem": {
         "ok": {
-          "$id": "urn:copf/SearchIndex/indexItem/completion/ok",
+          "$id": "urn:clef/SearchIndex/indexItem/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "indexItem"
@@ -710,11 +710,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SearchIndex/indexItem/completion/notfound",
+          "$id": "urn:clef/SearchIndex/indexItem/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "indexItem"
@@ -738,11 +738,11 @@
       },
       "removeItem": {
         "ok": {
-          "$id": "urn:copf/SearchIndex/removeItem/completion/ok",
+          "$id": "urn:clef/SearchIndex/removeItem/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "removeItem"
@@ -764,11 +764,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SearchIndex/removeItem/completion/notfound",
+          "$id": "urn:clef/SearchIndex/removeItem/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "removeItem"
@@ -792,11 +792,11 @@
       },
       "search": {
         "ok": {
-          "$id": "urn:copf/SearchIndex/search/completion/ok",
+          "$id": "urn:clef/SearchIndex/search/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "search"
@@ -818,11 +818,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SearchIndex/search/completion/notfound",
+          "$id": "urn:clef/SearchIndex/search/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "search"
@@ -846,11 +846,11 @@
       },
       "addProcessor": {
         "ok": {
-          "$id": "urn:copf/SearchIndex/addProcessor/completion/ok",
+          "$id": "urn:clef/SearchIndex/addProcessor/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "addProcessor"
@@ -872,11 +872,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SearchIndex/addProcessor/completion/notfound",
+          "$id": "urn:clef/SearchIndex/addProcessor/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "addProcessor"
@@ -900,11 +900,11 @@
       },
       "reindex": {
         "ok": {
-          "$id": "urn:copf/SearchIndex/reindex/completion/ok",
+          "$id": "urn:clef/SearchIndex/reindex/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "reindex"
@@ -926,11 +926,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/SearchIndex/reindex/completion/notfound",
+          "$id": "urn:clef/SearchIndex/reindex/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SearchIndex"
+              "const": "urn:clef/SearchIndex"
             },
             "action": {
               "const": "reindex"

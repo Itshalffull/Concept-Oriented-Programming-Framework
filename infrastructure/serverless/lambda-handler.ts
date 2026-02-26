@@ -1,7 +1,7 @@
 // ============================================================
 // AWS Lambda Concept Function Scaffold
 //
-// Wraps a COPF concept handler as an AWS Lambda function.
+// Wraps a Clef concept handler as an AWS Lambda function.
 // Receives ActionInvocations via API Gateway or direct invoke,
 // executes the concept handler, and returns ActionCompletions.
 //
@@ -76,7 +76,7 @@ export interface LambdaHandlerConfig {
 // --- HTTP Handler (API Gateway) ---
 
 /**
- * Create an API Gateway Lambda handler for a COPF concept.
+ * Create an API Gateway Lambda handler for a Clef concept.
  *
  * Routes:
  *   POST /invoke  — receive an ActionInvocation, return ActionCompletion
@@ -191,7 +191,7 @@ export function createHttpLambdaHandler(config: LambdaHandlerConfig) {
 // --- SQS Handler (Event-Driven) ---
 
 /**
- * Create an SQS Lambda handler for a COPF concept.
+ * Create an SQS Lambda handler for a Clef concept.
  *
  * Processes invocations from an SQS queue and publishes
  * completions back to the engine's completion queue.

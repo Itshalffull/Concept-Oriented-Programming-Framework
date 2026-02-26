@@ -1,7 +1,7 @@
 // TaxonomyTests.swift — Tests for Taxonomy concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class TaxonomyTests: XCTestCase {
 

@@ -1,6 +1,6 @@
 # Transport Interface Reference
 
-Complete type definitions for the COPF transport layer. All adapters implement `ConceptTransport`.
+Complete type definitions for the Clef transport layer. All adapters implement `ConceptTransport`.
 
 ## ConceptTransport
 

@@ -20,7 +20,7 @@ import type {
   FontStack,
 } from '../../shared/types.js';
 
-import { textStyleToCSS } from '../../shared/coif-bridge.js';
+import { textStyleToCSS } from '../../shared/surface-bridge.js';
 
 export const TypographyText = defineComponent({
   name: 'TypographyText',
@@ -87,8 +87,8 @@ export const TypographyText = defineComponent({
         props.tag,
         {
           class: [
-            'coif-typography-text',
-            `coif-typography-text--${props.textStyle.name}`,
+            'surface-typography-text',
+            `surface-typography-text--${props.textStyle.name}`,
           ],
           style: computedStyle.value,
           'data-text-style': props.textStyle.name,

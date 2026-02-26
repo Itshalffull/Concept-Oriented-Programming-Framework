@@ -3,7 +3,7 @@ concept WinUIAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into WinUI 3-specific bindings.
-    Transforms COIF's generic event model into WinUI conventions:
+    Transforms Clef Surface's generic event model into WinUI conventions:
     XAML control properties, x:Bind data binding, PointerPressed/
     Tapped events, StackPanel/Grid layout. Supports Windows 11
     design language (Mica, Acrylic, rounded corners).

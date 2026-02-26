@@ -54,7 +54,7 @@ describe('Eventual Sync Queue', () => {
       },
     };
     registry.register(
-      'urn:copf/Password',
+      'urn:clef/Password',
       createInProcessAdapter(passwordHandler, createInMemoryStorage()),
     );
 
@@ -73,7 +73,7 @@ describe('Eventual Sync Queue', () => {
 
     // Fire completion — should queue since ServerProfile unavailable
     const completion = makeCompletion(
-      'urn:copf/Password', 'set', { user: 'u-1' },
+      'urn:clef/Password', 'set', { user: 'u-1' },
     );
     const invocations = await engine.onCompletion(completion);
 
@@ -94,7 +94,7 @@ describe('Eventual Sync Queue', () => {
 
     // Register Password but not ServerProfile
     registry.register(
-      'urn:copf/Password',
+      'urn:clef/Password',
       createInProcessAdapter(
         { async set(i) { return { variant: 'ok', user: i.user }; } },
         createInMemoryStorage(),
@@ -114,7 +114,7 @@ describe('Eventual Sync Queue', () => {
 
     // Fire completion — queued
     const completion = makeCompletion(
-      'urn:copf/Password', 'set', { user: 'u-1' },
+      'urn:clef/Password', 'set', { user: 'u-1' },
     );
     await engine.onCompletion(completion);
     expect(engine.getPendingQueue()).toHaveLength(1);
@@ -127,18 +127,18 @@ describe('Eventual Sync Queue', () => {
       },
     };
     registry.register(
-      'urn:copf/ServerProfile',
+      'urn:clef/ServerProfile',
       createInProcessAdapter(profileHandler, createInMemoryStorage()),
     );
 
     // Notify availability change
     const invocations = await engine.onAvailabilityChange(
-      'urn:copf/ServerProfile', true,
+      'urn:clef/ServerProfile', true,
     );
 
     // The queued sync should now fire
     expect(invocations.length).toBeGreaterThan(0);
-    expect(invocations[0].concept).toBe('urn:copf/ServerProfile');
+    expect(invocations[0].concept).toBe('urn:clef/ServerProfile');
     expect(invocations[0].action).toBe('replicate');
     expect(invocations[0].input.user).toBe('u-1');
 
@@ -152,14 +152,14 @@ describe('Eventual Sync Queue', () => {
     const engine = new DistributedSyncEngine(log, registry, 'server');
 
     registry.register(
-      'urn:copf/Password',
+      'urn:clef/Password',
       createInProcessAdapter(
         { async set(i) { return { variant: 'ok', user: i.user }; } },
         createInMemoryStorage(),
       ),
     );
     registry.register(
-      'urn:copf/ActionLog',
+      'urn:clef/ActionLog',
       createInProcessAdapter(
         { async append(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -178,13 +178,13 @@ describe('Eventual Sync Queue', () => {
     engine.registerSync(syncs[0]);
 
     const completion = makeCompletion(
-      'urn:copf/Password', 'set', { user: 'u-1' },
+      'urn:clef/Password', 'set', { user: 'u-1' },
     );
     const invocations = await engine.onCompletion(completion);
 
     // Eager sync fires immediately
     expect(invocations).toHaveLength(1);
-    expect(invocations[0].concept).toBe('urn:copf/ActionLog');
+    expect(invocations[0].concept).toBe('urn:clef/ActionLog');
 
     // Nothing queued
     expect(engine.getPendingQueue()).toHaveLength(0);
@@ -196,14 +196,14 @@ describe('Eventual Sync Queue', () => {
     const engine = new DistributedSyncEngine(log, registry, 'ios');
 
     registry.register(
-      'urn:copf/Profile',
+      'urn:clef/Profile',
       createInProcessAdapter(
         { async update(i) { return { variant: 'ok', profile: i.profile }; } },
         createInMemoryStorage(),
       ),
     );
     registry.register(
-      'urn:copf/LocalCache',
+      'urn:clef/LocalCache',
       createInProcessAdapter(
         { async invalidate(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -222,12 +222,12 @@ describe('Eventual Sync Queue', () => {
     engine.registerSync(syncs[0]);
 
     const completion = makeCompletion(
-      'urn:copf/Profile', 'update', { profile: 'p-1' },
+      'urn:clef/Profile', 'update', { profile: 'p-1' },
     );
     const invocations = await engine.onCompletion(completion);
 
     expect(invocations).toHaveLength(1);
-    expect(invocations[0].concept).toBe('urn:copf/LocalCache');
+    expect(invocations[0].concept).toBe('urn:clef/LocalCache');
     expect(invocations[0].action).toBe('invalidate');
   });
 
@@ -237,14 +237,14 @@ describe('Eventual Sync Queue', () => {
     const engine = new DistributedSyncEngine(log, registry, 'server');
 
     registry.register(
-      'urn:copf/Password',
+      'urn:clef/Password',
       createInProcessAdapter(
         { async set(i) { return { variant: 'ok', user: i.user }; } },
         createInMemoryStorage(),
       ),
     );
     registry.register(
-      'urn:copf/ActionLog',
+      'urn:clef/ActionLog',
       createInProcessAdapter(
         { async append(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -263,7 +263,7 @@ describe('Eventual Sync Queue', () => {
     engine.registerSync(syncs[0]);
 
     const completion = makeCompletion(
-      'urn:copf/Password', 'set', { user: 'u-1' },
+      'urn:clef/Password', 'set', { user: 'u-1' },
     );
 
     // First evaluation
@@ -303,7 +303,7 @@ describe('Engine Hierarchy', () => {
 
     // Register concepts on ios runtime
     iosRegistry.register(
-      'urn:copf/Profile',
+      'urn:clef/Profile',
       createInProcessAdapter(
         { async update(i) { return { variant: 'ok', profile: i.profile }; } },
         createInMemoryStorage(),
@@ -325,7 +325,7 @@ describe('Engine Hierarchy', () => {
     // Fire a completion on ios
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Profile',
+      concept: 'urn:clef/Profile',
       action: 'update',
       input: { profile: 'p-1' },
       variant: 'ok',
@@ -338,7 +338,7 @@ describe('Engine Hierarchy', () => {
 
     // Completion was forwarded to server
     expect(forwardedCompletions).toHaveLength(1);
-    expect(forwardedCompletions[0].concept).toBe('urn:copf/Profile');
+    expect(forwardedCompletions[0].concept).toBe('urn:clef/Profile');
     expect(forwardedCompletions[0].output.profile).toBe('p-1');
   });
 
@@ -348,14 +348,14 @@ describe('Engine Hierarchy', () => {
     const iosEngine = new DistributedSyncEngine(iosLog, iosRegistry, 'ios');
 
     iosRegistry.register(
-      'urn:copf/Profile',
+      'urn:clef/Profile',
       createInProcessAdapter(
         { async update(i) { return { variant: 'ok', profile: i.profile }; } },
         createInMemoryStorage(),
       ),
     );
     iosRegistry.register(
-      'urn:copf/LocalCache',
+      'urn:clef/LocalCache',
       createInProcessAdapter(
         { async invalidate(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -377,7 +377,7 @@ describe('Engine Hierarchy', () => {
 
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Profile',
+      concept: 'urn:clef/Profile',
       action: 'update',
       input: {},
       variant: 'ok',
@@ -390,7 +390,7 @@ describe('Engine Hierarchy', () => {
 
     // Local sync fires even without upstream
     expect(invocations).toHaveLength(1);
-    expect(invocations[0].concept).toBe('urn:copf/LocalCache');
+    expect(invocations[0].concept).toBe('urn:clef/LocalCache');
   });
 
   it('downstream queues eventual syncs when upstream unavailable', async () => {
@@ -399,7 +399,7 @@ describe('Engine Hierarchy', () => {
     const iosEngine = new DistributedSyncEngine(iosLog, iosRegistry, 'ios');
 
     iosRegistry.register(
-      'urn:copf/Profile',
+      'urn:clef/Profile',
       createInProcessAdapter(
         { async update(i) { return { variant: 'ok', profile: i.profile }; } },
         createInMemoryStorage(),
@@ -420,7 +420,7 @@ describe('Engine Hierarchy', () => {
 
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Profile',
+      concept: 'urn:clef/Profile',
       action: 'update',
       input: {},
       variant: 'ok',
@@ -437,7 +437,7 @@ describe('Engine Hierarchy', () => {
 
     // Simulate coming back online
     iosRegistry.register(
-      'urn:copf/ServerProfile',
+      'urn:clef/ServerProfile',
       createInProcessAdapter(
         { async replicate(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -445,7 +445,7 @@ describe('Engine Hierarchy', () => {
     );
 
     const retried = await iosEngine.onAvailabilityChange(
-      'urn:copf/ServerProfile', true,
+      'urn:clef/ServerProfile', true,
     );
 
     expect(retried.length).toBeGreaterThan(0);
@@ -478,14 +478,14 @@ describe('Offline Convergence', () => {
       },
     };
     iosRegistry.register(
-      'urn:copf/Profile',
+      'urn:clef/Profile',
       createInProcessAdapter(profileHandler, profileStorage),
     );
 
     // Local cache concept (always available on ios)
     const cacheStorage = createInMemoryStorage();
     iosRegistry.register(
-      'urn:copf/LocalCache',
+      'urn:clef/LocalCache',
       createInProcessAdapter(
         {
           async refresh(input, storage) {
@@ -526,7 +526,7 @@ describe('Offline Convergence', () => {
     // User updates profile while offline
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Profile',
+      concept: 'urn:clef/Profile',
       action: 'update',
       input: { profile: 'p-1', name: 'Alice Updated' },
       variant: 'ok',
@@ -539,7 +539,7 @@ describe('Offline Convergence', () => {
 
     // Local sync fires (cache refresh)
     const localInvocations = invocations.filter(
-      i => i.concept === 'urn:copf/LocalCache',
+      i => i.concept === 'urn:clef/LocalCache',
     );
     expect(localInvocations).toHaveLength(1);
 
@@ -552,7 +552,7 @@ describe('Offline Convergence', () => {
     // Server comes back online
     const serverProfileStorage = createInMemoryStorage();
     iosRegistry.register(
-      'urn:copf/ServerProfile',
+      'urn:clef/ServerProfile',
       createInProcessAdapter(
         {
           async replicate(input, storage) {
@@ -567,12 +567,12 @@ describe('Offline Convergence', () => {
     );
 
     const retriedInvocations = await iosEngine.onAvailabilityChange(
-      'urn:copf/ServerProfile', true,
+      'urn:clef/ServerProfile', true,
     );
 
     // Eventual sync fires
     expect(retriedInvocations.length).toBeGreaterThan(0);
-    expect(retriedInvocations[0].concept).toBe('urn:copf/ServerProfile');
+    expect(retriedInvocations[0].concept).toBe('urn:clef/ServerProfile');
     expect(retriedInvocations[0].action).toBe('replicate');
 
     // Queue is empty
@@ -585,7 +585,7 @@ describe('Offline Convergence', () => {
     const iosEngine = new DistributedSyncEngine(iosLog, iosRegistry, 'ios');
 
     iosRegistry.register(
-      'urn:copf/Profile',
+      'urn:clef/Profile',
       createInProcessAdapter(
         { async update(i) { return { variant: 'ok', profile: i.profile }; } },
         createInMemoryStorage(),
@@ -607,7 +607,7 @@ describe('Offline Convergence', () => {
     for (let i = 1; i <= 3; i++) {
       const completion: ActionCompletion = {
         id: generateId(),
-        concept: 'urn:copf/Profile',
+        concept: 'urn:clef/Profile',
         action: 'update',
         input: {},
         variant: 'ok',
@@ -622,7 +622,7 @@ describe('Offline Convergence', () => {
 
     // Come online
     iosRegistry.register(
-      'urn:copf/ServerProfile',
+      'urn:clef/ServerProfile',
       createInProcessAdapter(
         { async replicate(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -630,7 +630,7 @@ describe('Offline Convergence', () => {
     );
 
     const invocations = await iosEngine.onAvailabilityChange(
-      'urn:copf/ServerProfile', true,
+      'urn:clef/ServerProfile', true,
     );
 
     // All three pending syncs fire
@@ -653,12 +653,12 @@ describe('Offline Convergence', () => {
       notifications.push({ uri, available });
     });
 
-    await engine.onAvailabilityChange('urn:copf/Profile', true);
-    await engine.onAvailabilityChange('urn:copf/Profile', false);
+    await engine.onAvailabilityChange('urn:clef/Profile', true);
+    await engine.onAvailabilityChange('urn:clef/Profile', false);
 
     expect(notifications).toHaveLength(2);
-    expect(notifications[0]).toEqual({ uri: 'urn:copf/Profile', available: true });
-    expect(notifications[1]).toEqual({ uri: 'urn:copf/Profile', available: false });
+    expect(notifications[0]).toEqual({ uri: 'urn:clef/Profile', available: true });
+    expect(notifications[1]).toEqual({ uri: 'urn:clef/Profile', available: false });
   });
 });
 
@@ -707,7 +707,7 @@ describe('Sync Annotations', () => {
 
     // Register source concept only, not target
     registry.register(
-      'urn:copf/Source',
+      'urn:clef/Source',
       createInProcessAdapter(
         { async act(i) { return { variant: 'ok', id: i.id }; } },
         createInMemoryStorage(),
@@ -736,7 +736,7 @@ describe('Sync Annotations', () => {
 
     // Register local target
     registry.register(
-      'urn:copf/LocalTarget',
+      'urn:clef/LocalTarget',
       createInProcessAdapter(
         { async process(i) { return { variant: 'ok' }; } },
         createInMemoryStorage(),
@@ -746,7 +746,7 @@ describe('Sync Annotations', () => {
 
     const completion: ActionCompletion = {
       id: generateId(),
-      concept: 'urn:copf/Source',
+      concept: 'urn:clef/Source',
       action: 'act',
       input: {},
       variant: 'ok',
@@ -763,7 +763,7 @@ describe('Sync Annotations', () => {
     // Local sync fires
 
     const localInvocations = invocations.filter(
-      i => i.concept === 'urn:copf/LocalTarget',
+      i => i.concept === 'urn:clef/LocalTarget',
     );
     expect(localInvocations).toHaveLength(1);
 

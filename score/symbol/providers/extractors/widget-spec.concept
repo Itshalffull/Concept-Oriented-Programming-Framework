@@ -6,7 +6,7 @@ concept WidgetSpecSymbolExtractor [I] {
     widget name, anatomy part names, state names, transition
     events, prop names, slot names, composed widget references,
     and affordance interactor bindings as symbols in the
-    coif/* namespace.
+    surface/* namespace.
   }
 
   state {

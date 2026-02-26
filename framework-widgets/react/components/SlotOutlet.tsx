@@ -1,5 +1,5 @@
 // ============================================================
-// SlotOutlet — Named slot insertion point for COIF component
+// SlotOutlet — Named slot insertion point for Clef Surface component
 // composition.
 //
 // Renders default content if no "fill" is provided from the
@@ -146,7 +146,7 @@ export const SlotOutlet: React.FC<SlotOutletProps> = ({
       <Tag
         className={className}
         style={style}
-        data-coif-slot=""
+        data-surface-slot=""
         data-slot-name={name}
         data-slot-filled={fill !== undefined ? '' : undefined}
       >

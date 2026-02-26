@@ -14,13 +14,13 @@ import type {
 
 import {
   textStyleToCSS,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -122,7 +122,7 @@ export function TypographyText(props: TypographyTextProps): TypographyTextResult
   // Create the DOM element with the specified tag
   const tag = props.tag ?? 'span';
   const el = document.createElement(tag);
-  el.setAttribute('data-coif-widget', 'typography-text');
+  el.setAttribute('data-surface-widget', 'typography-text');
   el.setAttribute('data-style-name', props.textStyle.name);
 
   if (props.class) {

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Component
 /// @notice Concept-oriented component registry with placement and visibility management
-/// @dev Implements the Component concept from COPF specification.
+/// @dev Implements the Component concept from Clef specification.
 ///      Supports registering components, placing them in regions with weights,
 ///      and setting visibility conditions.
 

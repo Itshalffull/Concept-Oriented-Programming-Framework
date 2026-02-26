@@ -1,5 +1,5 @@
 // Conduit Example App — Standalone HTTP Server
-// Boots the COPF kernel with all 10 concepts and 7 syncs,
+// Boots the Clef kernel with all 10 concepts and 7 syncs,
 // then serves a REST API on the configured port.
 
 import { createServer } from 'http';
@@ -40,16 +40,16 @@ export function createConduitKernel() {
   const kernel = createKernel();
 
   // Register all 10 app concepts
-  kernel.registerConcept('urn:copf/User', userHandler);
-  kernel.registerConcept('urn:copf/Password', passwordHandler);
-  kernel.registerConcept('urn:copf/JWT', jwtHandler);
-  kernel.registerConcept('urn:copf/Profile', profileHandler);
-  kernel.registerConcept('urn:copf/Article', articleHandler);
-  kernel.registerConcept('urn:copf/Comment', commentHandler);
-  kernel.registerConcept('urn:copf/Tag', tagHandler);
-  kernel.registerConcept('urn:copf/Favorite', favoriteHandler);
-  kernel.registerConcept('urn:copf/Follow', followHandler);
-  kernel.registerConcept('urn:copf/Echo', echoHandler);
+  kernel.registerConcept('urn:clef/User', userHandler);
+  kernel.registerConcept('urn:clef/Password', passwordHandler);
+  kernel.registerConcept('urn:clef/JWT', jwtHandler);
+  kernel.registerConcept('urn:clef/Profile', profileHandler);
+  kernel.registerConcept('urn:clef/Article', articleHandler);
+  kernel.registerConcept('urn:clef/Comment', commentHandler);
+  kernel.registerConcept('urn:clef/Tag', tagHandler);
+  kernel.registerConcept('urn:clef/Favorite', favoriteHandler);
+  kernel.registerConcept('urn:clef/Follow', followHandler);
+  kernel.registerConcept('urn:clef/Echo', echoHandler);
 
   // Load and register all 8 sync files
   for (const file of SYNC_FILES) {
@@ -72,7 +72,7 @@ export function startServer(port?: number) {
   const server = createServer(router);
 
   server.listen(effectivePort, () => {
-    console.log(`Conduit COPF server running on http://localhost:${effectivePort}`);
+    console.log(`Conduit Clef server running on http://localhost:${effectivePort}`);
     console.log(`  Concepts: 10 (User, Password, JWT, Profile, Article, Comment, Tag, Favorite, Follow, Echo)`);
     console.log(`  Syncs:    8 (echo, registration, login, profile, articles, comments, social, reads)`);
     console.log(`  Storage:  ${config.storageBackend}`);

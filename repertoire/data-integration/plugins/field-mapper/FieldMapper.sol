@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // Field Mapper Plugin — on-chain field mapping registry and provider implementations
-// for the FieldMapping concept in the COPF Data Integration Kit.
+// for the FieldMapping concept in the Clef Data Integration Kit.
 //
 // On-chain field mappers handle path resolution for data stored in contract storage
 // and mapping-table lookups. Full JSONPath/XPath processing happens off-chain; the

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Comment",
+  "uri": "urn:clef/Comment",
   "name": "Comment",
   "typeParams": [
     {
@@ -384,11 +384,11 @@
   "jsonSchemas": {
     "invocations": {
       "addComment": {
-        "$id": "urn:copf/Comment/addComment/invocation",
+        "$id": "urn:clef/Comment/addComment/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Comment"
+            "const": "urn:clef/Comment"
           },
           "action": {
             "const": "addComment"
@@ -419,11 +419,11 @@
         }
       },
       "reply": {
-        "$id": "urn:copf/Comment/reply/invocation",
+        "$id": "urn:clef/Comment/reply/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Comment"
+            "const": "urn:clef/Comment"
           },
           "action": {
             "const": "reply"
@@ -454,11 +454,11 @@
         }
       },
       "publish": {
-        "$id": "urn:copf/Comment/publish/invocation",
+        "$id": "urn:clef/Comment/publish/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Comment"
+            "const": "urn:clef/Comment"
           },
           "action": {
             "const": "publish"
@@ -477,11 +477,11 @@
         }
       },
       "unpublish": {
-        "$id": "urn:copf/Comment/unpublish/invocation",
+        "$id": "urn:clef/Comment/unpublish/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Comment"
+            "const": "urn:clef/Comment"
           },
           "action": {
             "const": "unpublish"
@@ -500,11 +500,11 @@
         }
       },
       "delete": {
-        "$id": "urn:copf/Comment/delete/invocation",
+        "$id": "urn:clef/Comment/delete/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Comment"
+            "const": "urn:clef/Comment"
           },
           "action": {
             "const": "delete"
@@ -526,11 +526,11 @@
     "completions": {
       "addComment": {
         "ok": {
-          "$id": "urn:copf/Comment/addComment/completion/ok",
+          "$id": "urn:clef/Comment/addComment/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "addComment"
@@ -554,11 +554,11 @@
       },
       "reply": {
         "ok": {
-          "$id": "urn:copf/Comment/reply/completion/ok",
+          "$id": "urn:clef/Comment/reply/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "reply"
@@ -582,11 +582,11 @@
       },
       "publish": {
         "ok": {
-          "$id": "urn:copf/Comment/publish/completion/ok",
+          "$id": "urn:clef/Comment/publish/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "publish"
@@ -602,11 +602,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Comment/publish/completion/notfound",
+          "$id": "urn:clef/Comment/publish/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "publish"
@@ -630,11 +630,11 @@
       },
       "unpublish": {
         "ok": {
-          "$id": "urn:copf/Comment/unpublish/completion/ok",
+          "$id": "urn:clef/Comment/unpublish/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "unpublish"
@@ -650,11 +650,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Comment/unpublish/completion/notfound",
+          "$id": "urn:clef/Comment/unpublish/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "unpublish"
@@ -678,11 +678,11 @@
       },
       "delete": {
         "ok": {
-          "$id": "urn:copf/Comment/delete/completion/ok",
+          "$id": "urn:clef/Comment/delete/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "delete"
@@ -698,11 +698,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Comment/delete/completion/notfound",
+          "$id": "urn:clef/Comment/delete/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Comment"
+              "const": "urn:clef/Comment"
             },
             "action": {
               "const": "delete"

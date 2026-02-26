@@ -2,7 +2,7 @@
 concept TerraformProvider [T] {
 
   purpose {
-    Generate and apply Terraform HCL modules from COPF deploy
+    Generate and apply Terraform HCL modules from Clef deploy
     plans. Owns Terraform state file management, lock handling,
     and workspace configuration.
   }

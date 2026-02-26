@@ -1,7 +1,7 @@
 // ComputationTokenTests.swift — Tests for ComputationToken concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ComputationTokenTests: XCTestCase {
 

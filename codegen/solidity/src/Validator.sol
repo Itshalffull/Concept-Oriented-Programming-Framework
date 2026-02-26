@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Validator
 /// @notice Concept-oriented validation framework with constraints and per-field rules
-/// @dev Implements the Validator concept from COPF specification.
+/// @dev Implements the Validator concept from Clef specification.
 ///      Supports registering reusable constraints and applying validation rules
 ///      to schema fields.
 

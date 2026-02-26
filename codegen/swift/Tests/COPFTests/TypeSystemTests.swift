@@ -1,7 +1,7 @@
 // TypeSystemTests.swift — Tests for TypeSystem concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class TypeSystemTests: XCTestCase {
 

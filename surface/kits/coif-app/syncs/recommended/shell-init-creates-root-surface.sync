@@ -1,5 +1,5 @@
 # ============================================================
-# ShellInitCreatesRootSurface — coif-app recommended sync
+# ShellInitCreatesRootSurface — surface-app recommended sync
 #
 # When Shell/initialize completes, create the root Surface
 # and Layout.

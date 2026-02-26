@@ -1,6 +1,6 @@
 // ============================================================
 // LayoutContainer — Renders children inside a flexbox/grid
-// layout driven by a COIF LayoutConfig.
+// layout driven by a Clef Surface LayoutConfig.
 //
 // Uses layoutToCSS from the bridge to convert the abstract
 // layout kind (stack, grid, split, overlay, flow, sidebar,
@@ -18,13 +18,13 @@ import React, {
 } from 'react';
 
 import type { LayoutConfig, Breakpoint } from '../../shared/types.js';
-import { layoutToCSS } from '../../shared/coif-bridge.js';
+import { layoutToCSS } from '../../shared/surface-bridge.js';
 import { ViewportContext, useViewport } from './ViewportProvider.js';
 
 // --------------- Props ---------------
 
 export interface LayoutContainerProps extends HTMLAttributes<HTMLDivElement> {
-  /** The COIF layout configuration. */
+  /** The Clef Surface layout configuration. */
   layout: LayoutConfig;
   /** Render nested LayoutConfig children recursively. @default false */
   recursive?: boolean;
@@ -138,7 +138,7 @@ export const LayoutContainer: React.FC<LayoutContainerProps> = ({
       {...rest}
       className={className}
       style={mergedStyle}
-      data-coif-layout=""
+      data-surface-layout=""
       data-layout-kind={resolvedConfig.kind}
       data-layout-name={resolvedConfig.name || undefined}
     >

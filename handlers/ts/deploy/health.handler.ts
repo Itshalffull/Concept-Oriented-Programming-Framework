@@ -1,5 +1,5 @@
 // Health Concept Implementation
-// Health verification for concepts, syncs, kits, and invariants.
+// Health verification for concepts, syncs, suites, and invariants.
 // Checks connectivity, latency, and behavioral correctness.
 import type { ConceptHandler } from '../../../kernel/src/types.js';
 

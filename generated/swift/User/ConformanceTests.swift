@@ -1,7 +1,7 @@
 // generated: User/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class UserConformanceTests: XCTestCase {
 

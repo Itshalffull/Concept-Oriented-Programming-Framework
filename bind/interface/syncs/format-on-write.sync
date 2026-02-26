@@ -1,5 +1,5 @@
 # File written (new content) triggers formatting
-# Architecture doc: Interface Kit, Sync Section 3.7
+# Architecture doc: Clef Bind, Sync Section 3.7
 
 sync FormatOnWrite [eager]
 when {

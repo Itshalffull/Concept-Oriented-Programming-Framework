@@ -1,4 +1,4 @@
-// Middleware Concept Implementation (Interface Kit)
+// Middleware Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 /** Numeric ordering for middleware positions. Lower values run first. */

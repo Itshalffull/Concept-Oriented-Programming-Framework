@@ -12,7 +12,7 @@
 //   - Checklist, code block, and reference formatting
 //   - Supporting material structure (examples/, references/)
 //
-// See Architecture doc: Interface Kit, Section 2.4
+// See Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
 import { describe, it, expect, beforeAll } from 'vitest';

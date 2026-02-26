@@ -63,7 +63,7 @@ concept KindSystem [K] {
       -> ok(path: list { kind: K, relation: String, transform: option String }) {
         Compute shortest valid transform chain from `from` to `to`.
         Used by GenerationPlan for planning display and by
-        `copf kinds path` CLI command.
+        `clef kinds path` CLI command.
       }
       -> unreachable(message: String) {
         No valid path exists between these kinds.
@@ -73,7 +73,7 @@ concept KindSystem [K] {
     action validate(from: K, to: K) {
       -> ok() {
         Confirm that a direct edge exists from `from` to `to`.
-        Used by `copf check` to validate that sync chains form
+        Used by `clef check` to validate that sync chains form
         valid pipelines.
       }
       -> invalid(message: String) {
@@ -107,7 +107,7 @@ concept KindSystem [K] {
     action graph() {
       -> ok(kinds: list { name: String, category: String }, edges: list { from: String, to: String, relation: String, transform: option String }) {
         Return the full topology graph. Used by
-        `copf generate --plan` for dependency visualization.
+        `clef generate --plan` for dependency visualization.
       }
     }
   }

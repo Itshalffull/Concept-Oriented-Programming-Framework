@@ -60,7 +60,7 @@ concept Middleware [M] {
     action register(trait: String, target: String, implementation: String, position: String) {
       -> ok(middleware: M) {
         Register a new trait-to-target implementation.
-        Used by custom kits to extend middleware for their domains.
+        Used by custom suites to extend middleware for their domains.
       }
       -> duplicateRegistration(trait: String, target: String) {
         Implementation already registered. Use replace instead.

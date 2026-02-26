@@ -1,5 +1,5 @@
 # Generator dispatches to Spec for each configured format
-# Architecture doc: Interface Kit, Sync Section 3.5
+# Architecture doc: Clef Bind, Sync Section 3.5
 
 sync DispatchToSpec [eager]
 when {

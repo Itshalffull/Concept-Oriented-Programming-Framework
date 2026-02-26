@@ -43,7 +43,7 @@ describe('Echo Flow', () => {
       name: 'HandleEcho',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'echo' } },
             { name: 'text', match: { type: 'variable', name: 'text' } },
@@ -69,7 +69,7 @@ describe('Echo Flow', () => {
       name: 'EchoResponse',
       when: [
         {
-          concept: 'urn:copf/Web', action: 'request',
+          concept: 'urn:clef/Web', action: 'request',
           inputFields: [
             { name: 'method', match: { type: 'literal', value: 'echo' } },
           ],
@@ -88,7 +88,7 @@ describe('Echo Flow', () => {
       where: [],
       then: [
         {
-          concept: 'urn:copf/Web', action: 'respond',
+          concept: 'urn:clef/Web', action: 'respond',
           fields: [
             { name: 'request', value: { type: 'variable', name: 'request' } },
             { name: 'body', value: { type: 'variable', name: 'echo' } },
@@ -112,16 +112,16 @@ describe('Echo Flow', () => {
 
     // Should contain Web/request, Echo/send invocation, Echo/send completion, Web/respond
     const conceptActions = flow.map(r => `${r.concept}/${r.action}`);
-    expect(conceptActions).toContain('urn:copf/Web/request');
+    expect(conceptActions).toContain('urn:clef/Web/request');
     expect(conceptActions).toContain('urn:test/Echo/send');
-    expect(conceptActions).toContain('urn:copf/Web/respond');
+    expect(conceptActions).toContain('urn:clef/Web/respond');
   });
 
   it('processes echo flow with parsed syncs from .sync file', async () => {
     const kernel = createKernel();
 
-    // Register the Echo concept with urn:copf/Echo to match sync file URIs
-    kernel.registerConcept('urn:copf/Echo', echoHandler);
+    // Register the Echo concept with urn:clef/Echo to match sync file URIs
+    kernel.registerConcept('urn:clef/Echo', echoHandler);
 
     // Load syncs from file
     await kernel.loadSyncs(resolve(SYNCS_DIR, 'echo.sync'));
@@ -141,17 +141,17 @@ describe('Echo Flow', () => {
 
     const completions = flow.filter(r => r.type === 'completion');
     const conceptActions = completions.map(r => `${r.concept}/${r.action}`);
-    expect(conceptActions).toContain('urn:copf/Web/request');
-    expect(conceptActions).toContain('urn:copf/Echo/send');
-    expect(conceptActions).toContain('urn:copf/Web/respond');
+    expect(conceptActions).toContain('urn:clef/Web/request');
+    expect(conceptActions).toContain('urn:clef/Echo/send');
+    expect(conceptActions).toContain('urn:clef/Web/respond');
   });
 
   it('echo concept stores message in storage', async () => {
     const kernel = createKernel();
-    kernel.registerConcept('urn:copf/Echo', echoHandler);
+    kernel.registerConcept('urn:clef/Echo', echoHandler);
 
     // Directly invoke the concept
-    const result = await kernel.invokeConcept('urn:copf/Echo', 'send', {
+    const result = await kernel.invokeConcept('urn:clef/Echo', 'send', {
       id: 'msg-1',
       text: 'stored message',
     });

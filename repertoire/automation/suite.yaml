@@ -1,4 +1,4 @@
-# Automation Kit Manifest
+# Automation Suite Manifest
 name: automation
 version: 0.1.0
 description: "Automated workflows — rules, state transitions, queued actions, and UI controls for event-driven automation."

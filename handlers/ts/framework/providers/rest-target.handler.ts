@@ -1,10 +1,10 @@
 // ============================================================
-// REST Target Provider — Interface Kit
+// REST Target Provider — Clef Bind
 //
 // Generates Hono route files from ConceptManifest data. Each
 // concept produces a single {kebab-name}/routes.ts file with
 // typed route handlers that delegate to the kernel.
-// Architecture doc: Interface Kit
+// Architecture doc: Clef Bind
 // ============================================================
 
 import type {

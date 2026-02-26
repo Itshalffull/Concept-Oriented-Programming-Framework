@@ -1,5 +1,5 @@
 // ============================================================
-// COIF Bridge — Runtime connection between COIF concepts and
+// Clef Surface Bridge — Runtime connection between Clef Surface concepts and
 // framework widgets.
 //
 // Provides:

@@ -86,7 +86,7 @@ function buildSyncScopes(source: string, file: string): {
 
       declarations.push({
         name: syncName,
-        symbolString: `copf/sync/${syncName}`,
+        symbolString: `clef/sync/${syncName}`,
         scopeId: globalScope.id,
         kind: 'sync',
       });
@@ -167,7 +167,7 @@ function buildSyncScopes(source: string, file: string): {
       // from when, where, and then clauses
       declarations.push({
         name: varName,
-        symbolString: `copf/sync/${syncName}/var/${varName}`,
+        symbolString: `clef/sync/${syncName}/var/${varName}`,
         scopeId: syncScope.id,
         kind: 'variable',
       });

@@ -1,5 +1,5 @@
 // ============================================================
-// WidgetMachine — Svelte-compatible COIF component
+// WidgetMachine — Svelte-compatible Clef Surface component
 //
 // Headless state machine with Svelte rune-based reactivity
 // ($state, $derived pattern). Uses on:event directive format
@@ -18,7 +18,7 @@ import type {
 import {
   createMachine,
   createComputed,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Component types ---
 
@@ -84,7 +84,7 @@ export function createWidgetMachine(
   let container: HTMLElement | null = null;
   if (options.target) {
     container = document.createElement('div');
-    container.setAttribute('data-coif-widget-machine', '');
+    container.setAttribute('data-surface-widget-machine', '');
     container.setAttribute('data-widget-name', spec.name);
     container.setAttribute('data-state', machine.state.get().current);
     options.target.appendChild(container);

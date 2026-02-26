@@ -12,7 +12,7 @@
 //   table-list, companion-link-list
 //
 // Template configs use {{field}} interpolation.
-// Architecture doc: Interface Kit, Section 1.8
+// Architecture doc: Clef Bind, Section 1.8
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';

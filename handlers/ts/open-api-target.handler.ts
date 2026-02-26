@@ -2,7 +2,7 @@
 // OpenApiTarget Handler
 //
 // Generate OpenAPI 3.1 specification documents from concept
-// projections. Produces a single document per kit covering all
+// projections. Produces a single document per suite covering all
 // concepts. Includes paths, schemas, security schemes, and
 // examples derived from concept invariants. When @hierarchical
 // trait is present, generates nested path items with children/

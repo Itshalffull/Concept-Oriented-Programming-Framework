@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title ArticleEditorWidget
-/// @notice Self-describing COIF widget for creating and editing articles on Conduit.
+/// @notice Self-describing Clef Surface widget for creating and editing articles on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -115,7 +115,7 @@ contract ArticleEditorWidget {
         articleActions[0] = "create";
         articleActions[1] = "update";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Article",
+            concept: "urn:clef/Article",
             actions: articleActions
         });
 
@@ -123,7 +123,7 @@ contract ArticleEditorWidget {
         tagActions[0] = "add";
         tagActions[1] = "remove";
         bindings[1] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Tag",
+            concept: "urn:clef/Tag",
             actions: tagActions
         });
 

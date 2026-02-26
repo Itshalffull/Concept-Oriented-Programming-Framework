@@ -6,7 +6,7 @@
 # Always-on engine with low-latency HTTP transport.
 #
 # Usage:
-#   copf deploy --manifest deploy/aws-ecs.deploy.yaml
+#   clef deploy --manifest deploy/aws-ecs.deploy.yaml
 
 app:
   name: conduit

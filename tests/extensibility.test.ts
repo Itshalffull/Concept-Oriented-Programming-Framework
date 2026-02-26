@@ -114,8 +114,8 @@ describe('Extensibility', () => {
 
     // Verify structure matches the GenerateTypeScript sync pattern
     const compiled = result.compiled as any;
-    expect(compiled.when[0].concept).toBe('urn:copf/SchemaGen');
-    expect(compiled.then[0].concept).toBe('urn:copf/RustGen');
+    expect(compiled.when[0].concept).toBe('urn:clef/SchemaGen');
+    expect(compiled.then[0].concept).toBe('urn:clef/RustGen');
   });
 
   it('manifest ResolvedType tree is sufficient for any language mapping', async () => {
@@ -175,7 +175,7 @@ describe('Extensibility Validation', () => {
     const manifest = await generateManifest(ast);
 
     // Same fields as before
-    expect(manifest.uri).toBe('urn:copf/Password');
+    expect(manifest.uri).toBe('urn:clef/Password');
     expect(manifest.name).toBe('Password');
     expect(manifest.typeParams).toHaveLength(1);
     expect(manifest.relations).toHaveLength(1);

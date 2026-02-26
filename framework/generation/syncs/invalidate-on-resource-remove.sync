@@ -1,4 +1,4 @@
-# InvalidateOnResourceRemove — generation kit recommended sync
+# InvalidateOnResourceRemove — generation suite recommended sync
 sync InvalidateOnResourceRemove [eager]
   purpose { When a source file is deleted, invalidate its cache entries. }
 when {

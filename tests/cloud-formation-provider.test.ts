@@ -1,7 +1,7 @@
 // ============================================================
 // CloudFormationProvider Handler Tests
 //
-// Generate and apply AWS CloudFormation templates from COPF
+// Generate and apply AWS CloudFormation templates from Clef
 // deploy plans.
 // ============================================================
 
@@ -28,7 +28,7 @@ describe('CloudFormationProvider', () => {
       );
       expect(result.variant).toBe('ok');
       expect(result.stack).toBe('cloud-formation-provider-1');
-      expect(result.files).toContain('copf-myapp-template.yaml');
+      expect(result.files).toContain('clef-myapp-template.yaml');
     });
 
     it('stores stack metadata in storage', async () => {
@@ -38,7 +38,7 @@ describe('CloudFormationProvider', () => {
       );
       const stored = await storage.get('cloud-formation-provider', 'cloud-formation-provider-1');
       expect(stored).not.toBeNull();
-      expect(stored!.stackName).toBe('copf-staging');
+      expect(stored!.stackName).toBe('clef-staging');
       expect(stored!.stackStatus).toBe('NOT_CREATED');
       expect(stored!.region).toBe('us-east-1');
     });

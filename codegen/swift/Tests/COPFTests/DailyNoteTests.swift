@@ -1,7 +1,7 @@
 // DailyNoteTests.swift — Tests for DailyNote concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class DailyNoteTests: XCTestCase {
 

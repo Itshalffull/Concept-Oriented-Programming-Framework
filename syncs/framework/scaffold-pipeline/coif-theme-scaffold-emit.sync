@@ -1,7 +1,7 @@
 # Route CoifThemeScaffoldGen file output through Emitter
 
 sync EmitCoifThemeScaffoldFiles [eager]
-  purpose { Write generated COIF theme scaffold through Emitter. }
+  purpose { Write generated Clef Surface theme scaffold through Emitter. }
 when {
   CoifThemeScaffoldGen/generate: [ name: ?name ]
     => [ files: ?files ]

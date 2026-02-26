@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Property",
+  "uri": "urn:clef/Property",
   "name": "Property",
   "typeParams": [
     {
@@ -468,11 +468,11 @@
   "jsonSchemas": {
     "invocations": {
       "set": {
-        "$id": "urn:copf/Property/set/invocation",
+        "$id": "urn:clef/Property/set/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Property"
+            "const": "urn:clef/Property"
           },
           "action": {
             "const": "set"
@@ -499,11 +499,11 @@
         }
       },
       "get": {
-        "$id": "urn:copf/Property/get/invocation",
+        "$id": "urn:clef/Property/get/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Property"
+            "const": "urn:clef/Property"
           },
           "action": {
             "const": "get"
@@ -526,11 +526,11 @@
         }
       },
       "delete": {
-        "$id": "urn:copf/Property/delete/invocation",
+        "$id": "urn:clef/Property/delete/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Property"
+            "const": "urn:clef/Property"
           },
           "action": {
             "const": "delete"
@@ -553,11 +553,11 @@
         }
       },
       "defineType": {
-        "$id": "urn:copf/Property/defineType/invocation",
+        "$id": "urn:clef/Property/defineType/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Property"
+            "const": "urn:clef/Property"
           },
           "action": {
             "const": "defineType"
@@ -580,11 +580,11 @@
         }
       },
       "listAll": {
-        "$id": "urn:copf/Property/listAll/invocation",
+        "$id": "urn:clef/Property/listAll/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Property"
+            "const": "urn:clef/Property"
           },
           "action": {
             "const": "listAll"
@@ -606,11 +606,11 @@
     "completions": {
       "set": {
         "ok": {
-          "$id": "urn:copf/Property/set/completion/ok",
+          "$id": "urn:clef/Property/set/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "set"
@@ -632,11 +632,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Property/set/completion/invalid",
+          "$id": "urn:clef/Property/set/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "set"
@@ -660,11 +660,11 @@
       },
       "get": {
         "ok": {
-          "$id": "urn:copf/Property/get/completion/ok",
+          "$id": "urn:clef/Property/get/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "get"
@@ -686,11 +686,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Property/get/completion/notfound",
+          "$id": "urn:clef/Property/get/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "get"
@@ -714,11 +714,11 @@
       },
       "delete": {
         "ok": {
-          "$id": "urn:copf/Property/delete/completion/ok",
+          "$id": "urn:clef/Property/delete/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "delete"
@@ -740,11 +740,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Property/delete/completion/notfound",
+          "$id": "urn:clef/Property/delete/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "delete"
@@ -768,11 +768,11 @@
       },
       "defineType": {
         "ok": {
-          "$id": "urn:copf/Property/defineType/completion/ok",
+          "$id": "urn:clef/Property/defineType/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "defineType"
@@ -794,11 +794,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Property/defineType/completion/exists",
+          "$id": "urn:clef/Property/defineType/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "defineType"
@@ -822,11 +822,11 @@
       },
       "listAll": {
         "ok": {
-          "$id": "urn:copf/Property/listAll/completion/ok",
+          "$id": "urn:clef/Property/listAll/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Property"
+              "const": "urn:clef/Property"
             },
             "action": {
               "const": "listAll"

@@ -18,12 +18,12 @@ export const registrationWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/User',
+      concept: 'urn:clef/User',
       actions: ['register'],
       queries: [],
     },
     {
-      concept: 'urn:copf/Password',
+      concept: 'urn:clef/Password',
       actions: ['validate', 'set'],
       queries: [],
     },

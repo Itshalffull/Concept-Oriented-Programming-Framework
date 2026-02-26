@@ -41,7 +41,7 @@ describe('WidgetPropEntity Handler', () => {
       );
       const record = await storage.get('widget-prop-entity', 'widget-prop-entity-1');
       expect(record).not.toBeNull();
-      expect(record!.symbol).toBe('copf/prop/Button/disabled');
+      expect(record!.symbol).toBe('clef/prop/Button/disabled');
       expect(record!.typeExpr).toBe('boolean');
       expect(record!.defaultValue).toBe('false');
       expect(record!.connectedParts).toBe('[]');
@@ -140,14 +140,14 @@ describe('WidgetPropEntity Handler', () => {
 
       await storage.put('binding', 'bind-1', {
         id: 'bind-1',
-        propSymbol: 'copf/prop/TodoItem/title',
-        fieldSymbol: 'copf/field/Todo/title',
+        propSymbol: 'clef/prop/TodoItem/title',
+        fieldSymbol: 'clef/field/Todo/title',
         concept: 'Todo',
       });
 
       const result = await widgetPropEntityHandler.traceToField({ prop: reg.prop }, storage);
       expect(result.variant).toBe('ok');
-      expect(result.field).toBe('copf/field/Todo/title');
+      expect(result.field).toBe('clef/field/Todo/title');
       expect(result.concept).toBe('Todo');
     });
 

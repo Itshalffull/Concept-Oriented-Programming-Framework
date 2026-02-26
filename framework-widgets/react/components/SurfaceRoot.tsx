@@ -1,10 +1,10 @@
 // ============================================================
-// SurfaceRoot — Root mounting component that manages the COIF
+// SurfaceRoot — Root mounting component that manages the Clef Surface
 // surface lifecycle: create, attach, resize, destroy.
 //
 // Wraps children in a container element that is the mount point
-// for the COIF rendering surface.  Observes resize events via
-// ResizeObserver and reports them to the COIF viewport system.
+// for the Clef Surface rendering surface.  Observes resize events via
+// ResizeObserver and reports them to the Clef Surface viewport system.
 // ============================================================
 
 import React, {
@@ -27,7 +27,7 @@ import {
   createViewportSignal,
   getBreakpoint,
   getOrientation,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --------------- Types ---------------
 
@@ -151,7 +151,7 @@ export const SurfaceRoot: React.FC<SurfaceRootProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<SurfaceStatus>('idle');
   const surfaceIdRef = useRef<string>(
-    mountPoint ?? `coif-surface-${++surfaceIdCounter}`
+    mountPoint ?? `surface-surface-${++surfaceIdCounter}`
   );
 
   const [surfaceState, setSurfaceState] = useState<SurfaceState>(() => ({
@@ -264,7 +264,7 @@ export const SurfaceRoot: React.FC<SurfaceRootProps> = ({
       id={surfaceIdRef.current}
       className={className}
       style={mergedStyle}
-      data-coif-surface=""
+      data-surface-surface=""
       data-surface-kind={kind}
       data-surface-status={surfaceState.status}
     >

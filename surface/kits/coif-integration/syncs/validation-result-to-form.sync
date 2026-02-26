@@ -1,5 +1,5 @@
 # ============================================================
-# ValidationResultToForm — coif-integration recommended sync
+# ValidationResultToForm — surface-integration recommended sync
 #
 # Route validation results from the library Validator back to
 # the form machine so it can transition to valid/invalid state

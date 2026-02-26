@@ -20,7 +20,7 @@ export const argoCDProviderHandler: ConceptHandler = {
     const path = input.path as string;
 
     // Derive app name from plan identifier
-    const appName = `copf-${plan}`;
+    const appName = `clef-${plan}`;
     const namespace = 'default';
     const project = 'default';
 

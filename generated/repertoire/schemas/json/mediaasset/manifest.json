@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/MediaAsset",
+  "uri": "urn:clef/MediaAsset",
   "name": "MediaAsset",
   "typeParams": [
     {
@@ -384,11 +384,11 @@
   "jsonSchemas": {
     "invocations": {
       "createMedia": {
-        "$id": "urn:copf/MediaAsset/createMedia/invocation",
+        "$id": "urn:clef/MediaAsset/createMedia/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/MediaAsset"
+            "const": "urn:clef/MediaAsset"
           },
           "action": {
             "const": "createMedia"
@@ -415,11 +415,11 @@
         }
       },
       "extractMetadata": {
-        "$id": "urn:copf/MediaAsset/extractMetadata/invocation",
+        "$id": "urn:clef/MediaAsset/extractMetadata/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/MediaAsset"
+            "const": "urn:clef/MediaAsset"
           },
           "action": {
             "const": "extractMetadata"
@@ -438,11 +438,11 @@
         }
       },
       "generateThumbnail": {
-        "$id": "urn:copf/MediaAsset/generateThumbnail/invocation",
+        "$id": "urn:clef/MediaAsset/generateThumbnail/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/MediaAsset"
+            "const": "urn:clef/MediaAsset"
           },
           "action": {
             "const": "generateThumbnail"
@@ -461,11 +461,11 @@
         }
       },
       "getMedia": {
-        "$id": "urn:copf/MediaAsset/getMedia/invocation",
+        "$id": "urn:clef/MediaAsset/getMedia/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/MediaAsset"
+            "const": "urn:clef/MediaAsset"
           },
           "action": {
             "const": "getMedia"
@@ -487,11 +487,11 @@
     "completions": {
       "createMedia": {
         "ok": {
-          "$id": "urn:copf/MediaAsset/createMedia/completion/ok",
+          "$id": "urn:clef/MediaAsset/createMedia/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "createMedia"
@@ -513,11 +513,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/MediaAsset/createMedia/completion/error",
+          "$id": "urn:clef/MediaAsset/createMedia/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "createMedia"
@@ -541,11 +541,11 @@
       },
       "extractMetadata": {
         "ok": {
-          "$id": "urn:copf/MediaAsset/extractMetadata/completion/ok",
+          "$id": "urn:clef/MediaAsset/extractMetadata/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "extractMetadata"
@@ -567,11 +567,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/MediaAsset/extractMetadata/completion/notfound",
+          "$id": "urn:clef/MediaAsset/extractMetadata/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "extractMetadata"
@@ -595,11 +595,11 @@
       },
       "generateThumbnail": {
         "ok": {
-          "$id": "urn:copf/MediaAsset/generateThumbnail/completion/ok",
+          "$id": "urn:clef/MediaAsset/generateThumbnail/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "generateThumbnail"
@@ -621,11 +621,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/MediaAsset/generateThumbnail/completion/notfound",
+          "$id": "urn:clef/MediaAsset/generateThumbnail/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "generateThumbnail"
@@ -649,11 +649,11 @@
       },
       "getMedia": {
         "ok": {
-          "$id": "urn:copf/MediaAsset/getMedia/completion/ok",
+          "$id": "urn:clef/MediaAsset/getMedia/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "getMedia"
@@ -683,11 +683,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/MediaAsset/getMedia/completion/notfound",
+          "$id": "urn:clef/MediaAsset/getMedia/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/MediaAsset"
+              "const": "urn:clef/MediaAsset"
             },
             "action": {
               "const": "getMedia"

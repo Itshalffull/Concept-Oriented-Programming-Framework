@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Article
 /// @notice Concept-oriented article CRUD with on-chain slug generation
-/// @dev Implements the Article concept from COPF specification.
+/// @dev Implements the Article concept from Clef specification.
 ///      Supports create, update, delete, and get operations with automatic slugification.
 
 contract Article {

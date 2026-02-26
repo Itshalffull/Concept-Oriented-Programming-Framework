@@ -1,5 +1,5 @@
 # ============================================================
-# CustomizationOverridesResolver — coif-integration recommended sync
+# CustomizationOverridesResolver — surface-integration recommended sync
 #
 # Level 1+ customization bypasses affordance matching.
 # When UISchema overrides are applied, forward them to

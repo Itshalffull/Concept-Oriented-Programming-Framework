@@ -1,5 +1,5 @@
 # ============================================================
-# ResizeTriggersViewport — coif-render recommended sync
+# ResizeTriggersViewport — surface-render recommended sync
 #
 # When a surface reports a resize, trigger viewport breakpoint
 # recalculation. Surface resize → viewport observation →

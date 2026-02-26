@@ -1,5 +1,5 @@
 # ============================================================
-# ThemeTokensToSignals — coif-theme required sync
+# ThemeTokensToSignals — surface-theme required sync
 #
 # When a theme is resolved, batch-update all token signals so
 # the UI reflects the new theme instantly. This is the same

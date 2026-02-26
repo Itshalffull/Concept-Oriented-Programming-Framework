@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Alias",
+  "uri": "urn:clef/Alias",
   "name": "Alias",
   "typeParams": [
     {
@@ -289,11 +289,11 @@
   "jsonSchemas": {
     "invocations": {
       "addAlias": {
-        "$id": "urn:copf/Alias/addAlias/invocation",
+        "$id": "urn:clef/Alias/addAlias/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Alias"
+            "const": "urn:clef/Alias"
           },
           "action": {
             "const": "addAlias"
@@ -316,11 +316,11 @@
         }
       },
       "removeAlias": {
-        "$id": "urn:copf/Alias/removeAlias/invocation",
+        "$id": "urn:clef/Alias/removeAlias/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Alias"
+            "const": "urn:clef/Alias"
           },
           "action": {
             "const": "removeAlias"
@@ -343,11 +343,11 @@
         }
       },
       "resolve": {
-        "$id": "urn:copf/Alias/resolve/invocation",
+        "$id": "urn:clef/Alias/resolve/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Alias"
+            "const": "urn:clef/Alias"
           },
           "action": {
             "const": "resolve"
@@ -369,11 +369,11 @@
     "completions": {
       "addAlias": {
         "ok": {
-          "$id": "urn:copf/Alias/addAlias/completion/ok",
+          "$id": "urn:clef/Alias/addAlias/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Alias"
+              "const": "urn:clef/Alias"
             },
             "action": {
               "const": "addAlias"
@@ -399,11 +399,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Alias/addAlias/completion/exists",
+          "$id": "urn:clef/Alias/addAlias/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Alias"
+              "const": "urn:clef/Alias"
             },
             "action": {
               "const": "addAlias"
@@ -431,11 +431,11 @@
       },
       "removeAlias": {
         "ok": {
-          "$id": "urn:copf/Alias/removeAlias/completion/ok",
+          "$id": "urn:clef/Alias/removeAlias/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Alias"
+              "const": "urn:clef/Alias"
             },
             "action": {
               "const": "removeAlias"
@@ -461,11 +461,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Alias/removeAlias/completion/notfound",
+          "$id": "urn:clef/Alias/removeAlias/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Alias"
+              "const": "urn:clef/Alias"
             },
             "action": {
               "const": "removeAlias"
@@ -493,11 +493,11 @@
       },
       "resolve": {
         "ok": {
-          "$id": "urn:copf/Alias/resolve/completion/ok",
+          "$id": "urn:clef/Alias/resolve/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Alias"
+              "const": "urn:clef/Alias"
             },
             "action": {
               "const": "resolve"
@@ -519,11 +519,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Alias/resolve/completion/notfound",
+          "$id": "urn:clef/Alias/resolve/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Alias"
+              "const": "urn:clef/Alias"
             },
             "action": {
               "const": "resolve"

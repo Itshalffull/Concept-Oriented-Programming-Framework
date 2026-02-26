@@ -1,4 +1,4 @@
-package copf
+package clef
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// ActionInvocation matches the COPF wire format for an incoming action.
+// ActionInvocation matches the Clef wire format for an incoming action.
 type ActionInvocation struct {
 	ID      string         `json:"id"`
 	Concept string         `json:"concept"`
@@ -19,7 +19,7 @@ type ActionInvocation struct {
 	Flow    string         `json:"flow"`
 }
 
-// ActionCompletion matches the COPF wire format for an action result.
+// ActionCompletion matches the Clef wire format for an action result.
 type ActionCompletion struct {
 	ID        string         `json:"id"`
 	Concept   string         `json:"concept"`
@@ -31,7 +31,7 @@ type ActionCompletion struct {
 	Timestamp string         `json:"timestamp"`
 }
 
-// ConceptQuery matches the COPF wire format for a state query.
+// ConceptQuery matches the Clef wire format for a state query.
 type ConceptQuery struct {
 	Concept  string         `json:"concept"`
 	Relation string         `json:"relation"`
@@ -138,7 +138,7 @@ func Serve(addr string) {
 	mux.HandleFunc("/query", handleQuery)
 	mux.HandleFunc("/health", handleHealth)
 
-	fmt.Printf("COPF Go SDK v0.1.0\n")
+	fmt.Printf("Clef Go SDK v0.1.0\n")
 	fmt.Printf("Serving %d concept(s) on %s\n", len(registry), addr)
 	for uri := range registry {
 		fmt.Printf("  - %s\n", uri)

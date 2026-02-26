@@ -1,10 +1,10 @@
 // ============================================================
 // SurfaceRoot — Vue 3 Component
 //
-// Root component that manages the COIF surface lifecycle.
+// Root component that manages the Clef Surface surface lifecycle.
 // Orchestrates the initialization of design tokens, viewport
 // observation, and surface-specific setup. Provides a unified
-// injection point for all COIF subsystems.
+// injection point for all Clef Surface subsystems.
 // ============================================================
 
 import {
@@ -34,7 +34,7 @@ import {
   resolveTheme,
   getBreakpoint,
   getOrientation,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Surface state ---
 
@@ -53,7 +53,7 @@ export interface SurfaceState {
   error: Error | null;
 }
 
-export const SURFACE_KEY: InjectionKey<SurfaceState> = Symbol('coif-surface');
+export const SURFACE_KEY: InjectionKey<SurfaceState> = Symbol('surface-surface');
 
 // --- Component ---
 
@@ -243,14 +243,14 @@ export const SurfaceRoot = defineComponent({
         return h(
           props.tag,
           {
-            class: 'coif-surface-root coif-surface-root--error',
+            class: 'surface-surface-root surface-surface-root--error',
             'data-surface': props.kind,
             'data-lifecycle': 'error',
           },
           slots.error?.({ error: surfaceState.error }) ?? [
             h(
               'div',
-              { class: 'coif-surface-root__error', role: 'alert' },
+              { class: 'surface-surface-root__error', role: 'alert' },
               `Surface error: ${surfaceState.error.message}`,
             ),
           ],
@@ -262,12 +262,12 @@ export const SurfaceRoot = defineComponent({
         return h(
           props.tag,
           {
-            class: 'coif-surface-root coif-surface-root--loading',
+            class: 'surface-surface-root surface-surface-root--loading',
             'data-surface': props.kind,
             'data-lifecycle': surfaceState.lifecycle,
           },
           slots.loading?.() ?? [
-            h('div', { class: 'coif-surface-root__loading' }, 'Initializing surface...'),
+            h('div', { class: 'surface-surface-root__loading' }, 'Initializing surface...'),
           ],
         );
       }
@@ -277,9 +277,9 @@ export const SurfaceRoot = defineComponent({
         props.tag,
         {
           class: [
-            'coif-surface-root',
-            'coif-surface-root--ready',
-            `coif-surface-root--${props.kind}`,
+            'surface-surface-root',
+            'surface-surface-root--ready',
+            `surface-surface-root--${props.kind}`,
           ],
           style: buildCssVars(),
           'data-surface': props.kind,

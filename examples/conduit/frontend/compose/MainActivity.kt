@@ -1,7 +1,7 @@
 // Conduit Example App -- Jetpack Compose Main Activity
 // Compose activity with navigation host for Home, Login, Article, and Profile screens.
 
-package com.copf.conduit
+package com.clef.conduit
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,12 +17,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.copf.conduit.data.ApiClient
-import com.copf.conduit.data.User
-import com.copf.conduit.ui.ArticleScreen
-import com.copf.conduit.ui.HomeScreen
-import com.copf.conduit.ui.LoginScreen
-import com.copf.conduit.ui.ProfileScreen
+import com.clef.conduit.data.ApiClient
+import com.clef.conduit.data.User
+import com.clef.conduit.ui.ArticleScreen
+import com.clef.conduit.ui.HomeScreen
+import com.clef.conduit.ui.LoginScreen
+import com.clef.conduit.ui.ProfileScreen
 
 val ConduitGreen = Color(0xFF5CB85C)
 

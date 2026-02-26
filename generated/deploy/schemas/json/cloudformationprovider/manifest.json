@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/CloudFormationProvider",
+  "uri": "urn:clef/CloudFormationProvider",
   "name": "CloudFormationProvider",
   "typeParams": [
     {
@@ -501,11 +501,11 @@
   "jsonSchemas": {
     "invocations": {
       "generate": {
-        "$id": "urn:copf/CloudFormationProvider/generate/invocation",
+        "$id": "urn:clef/CloudFormationProvider/generate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudFormationProvider"
+            "const": "urn:clef/CloudFormationProvider"
           },
           "action": {
             "const": "generate"
@@ -524,11 +524,11 @@
         }
       },
       "preview": {
-        "$id": "urn:copf/CloudFormationProvider/preview/invocation",
+        "$id": "urn:clef/CloudFormationProvider/preview/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudFormationProvider"
+            "const": "urn:clef/CloudFormationProvider"
           },
           "action": {
             "const": "preview"
@@ -547,11 +547,11 @@
         }
       },
       "apply": {
-        "$id": "urn:copf/CloudFormationProvider/apply/invocation",
+        "$id": "urn:clef/CloudFormationProvider/apply/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudFormationProvider"
+            "const": "urn:clef/CloudFormationProvider"
           },
           "action": {
             "const": "apply"
@@ -570,11 +570,11 @@
         }
       },
       "teardown": {
-        "$id": "urn:copf/CloudFormationProvider/teardown/invocation",
+        "$id": "urn:clef/CloudFormationProvider/teardown/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudFormationProvider"
+            "const": "urn:clef/CloudFormationProvider"
           },
           "action": {
             "const": "teardown"
@@ -596,11 +596,11 @@
     "completions": {
       "generate": {
         "ok": {
-          "$id": "urn:copf/CloudFormationProvider/generate/completion/ok",
+          "$id": "urn:clef/CloudFormationProvider/generate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "generate"
@@ -631,11 +631,11 @@
       },
       "preview": {
         "ok": {
-          "$id": "urn:copf/CloudFormationProvider/preview/completion/ok",
+          "$id": "urn:clef/CloudFormationProvider/preview/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "preview"
@@ -673,11 +673,11 @@
           }
         },
         "changeSetEmpty": {
-          "$id": "urn:copf/CloudFormationProvider/preview/completion/changeSetEmpty",
+          "$id": "urn:clef/CloudFormationProvider/preview/completion/changeSetEmpty",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "preview"
@@ -701,11 +701,11 @@
       },
       "apply": {
         "ok": {
-          "$id": "urn:copf/CloudFormationProvider/apply/completion/ok",
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "apply"
@@ -745,11 +745,11 @@
           }
         },
         "rollbackComplete": {
-          "$id": "urn:copf/CloudFormationProvider/apply/completion/rollbackComplete",
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/rollbackComplete",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "apply"
@@ -775,11 +775,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/CloudFormationProvider/apply/completion/partial",
+          "$id": "urn:clef/CloudFormationProvider/apply/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "apply"
@@ -817,11 +817,11 @@
       },
       "teardown": {
         "ok": {
-          "$id": "urn:copf/CloudFormationProvider/teardown/completion/ok",
+          "$id": "urn:clef/CloudFormationProvider/teardown/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "teardown"
@@ -850,11 +850,11 @@
           }
         },
         "deletionFailed": {
-          "$id": "urn:copf/CloudFormationProvider/teardown/completion/deletionFailed",
+          "$id": "urn:clef/CloudFormationProvider/teardown/completion/deletionFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudFormationProvider"
+              "const": "urn:clef/CloudFormationProvider"
             },
             "action": {
               "const": "teardown"
@@ -887,5 +887,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate and apply AWS CloudFormation templates from COPF \n deploy plans Owns stack IDs , change set management , \n rollback configurations , and stack event tracking"
+  "purpose": "Generate and apply AWS CloudFormation templates from Clef \n deploy plans Owns stack IDs , change set management , \n rollback configurations , and stack event tracking"
 }

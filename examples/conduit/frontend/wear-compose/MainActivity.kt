@@ -1,7 +1,7 @@
 // Conduit Example App -- Wear OS Compose Main Activity
 // Wear OS activity with SwipeDismissableNavHost for article browsing.
 
-package com.copf.conduit.wear
+package com.clef.conduit.wear
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,8 +11,8 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import com.copf.conduit.wear.ui.ArticleDetailScreen
-import com.copf.conduit.wear.ui.ArticleListScreen
+import com.clef.conduit.wear.ui.ArticleDetailScreen
+import com.clef.conduit.wear.ui.ArticleListScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

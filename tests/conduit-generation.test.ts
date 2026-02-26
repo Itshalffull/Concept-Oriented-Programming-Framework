@@ -53,7 +53,7 @@ describe('Conduit Code Generation — All Targets × All Concepts', () => {
     for (const name of CONCEPTS) {
       const m = manifests[name];
       expect(m.name, `${name} should have a name`).toBeTruthy();
-      expect(m.uri, `${name} should have a URI`).toContain('urn:copf/');
+      expect(m.uri, `${name} should have a URI`).toContain('urn:clef/');
       expect(m.actions.length, `${name} should have actions`).toBeGreaterThanOrEqual(1);
       expect(m.jsonSchemas, `${name} should have JSON schemas`).toBeDefined();
       expect(m.graphqlSchema, `${name} should have GraphQL schema`).toBeTruthy();

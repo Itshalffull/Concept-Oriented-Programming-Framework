@@ -1,7 +1,7 @@
 # Route KitScaffoldGen file output through Emitter
 
 sync EmitKitScaffoldFiles [eager]
-  purpose { Write generated kit manifest and stubs through Emitter. }
+  purpose { Write generated suite manifest and stubs through Emitter. }
 when {
   KitScaffoldGen/generate: [ name: ?name ]
     => [ files: ?files ]

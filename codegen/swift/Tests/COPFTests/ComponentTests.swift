@@ -1,7 +1,7 @@
 // ComponentTests.swift — Tests for Component concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ComponentTests: XCTestCase {
 

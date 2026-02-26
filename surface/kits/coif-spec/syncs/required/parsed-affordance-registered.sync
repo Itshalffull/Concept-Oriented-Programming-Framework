@@ -1,5 +1,5 @@
 # ============================================================
-# ParsedAffordanceRegistered — coif-spec required sync
+# ParsedAffordanceRegistered — surface-spec required sync
 #
 # Register affordance declarations extracted from .widget spec
 # affordance sections. Populates the Affordance concept for

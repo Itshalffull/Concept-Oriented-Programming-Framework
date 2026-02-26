@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Favorite
 /// @notice Concept-oriented favoriting system for articles
-/// @dev Implements the Favorite concept from COPF specification.
+/// @dev Implements the Favorite concept from Clef specification.
 ///      Tracks per-user favorites and per-article favorite counts.
 
 contract Favorite {

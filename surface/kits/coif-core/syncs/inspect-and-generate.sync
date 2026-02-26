@@ -1,9 +1,9 @@
 # ============================================================
-# InspectAndGenerate — coif-core required sync
+# InspectAndGenerate — surface-core required sync
 #
 # When a binding is created, auto-generate UI schema from the
 # bound concept's spec. This is the entry point for the entire
-# COIF pipeline: binding → schema → elements → widgets → render.
+# Clef Surface pipeline: binding → schema → elements → widgets → render.
 # ============================================================
 
 sync InspectAndGenerate [eager]

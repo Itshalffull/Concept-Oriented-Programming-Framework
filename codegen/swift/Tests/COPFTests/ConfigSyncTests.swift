@@ -1,7 +1,7 @@
 // ConfigSyncTests.swift — Tests for ConfigSync concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ConfigSyncTests: XCTestCase {
 

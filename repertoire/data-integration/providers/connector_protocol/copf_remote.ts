@@ -1,5 +1,5 @@
 // CopfRemote — connector_protocol provider
-// Connects to another COPF instance API for schema sharing, identity field mapping, and bidirectional sync
+// Connects to another Clef instance API for schema sharing, identity field mapping, and bidirectional sync
 
 export interface ConnectorConfig {
   baseUrl?: string;
@@ -22,7 +22,7 @@ export interface TestResult { connected: boolean; message: string; latencyMs?: n
 export interface StreamDef { name: string; schema: Record<string, unknown>; supportedSyncModes: string[]; }
 export interface DiscoveryResult { streams: StreamDef[]; }
 
-export const PROVIDER_ID = 'copf_remote';
+export const PROVIDER_ID = 'clef_remote';
 export const PLUGIN_TYPE = 'connector_protocol';
 
 interface CopfApiResponse<T> {
@@ -52,14 +52,14 @@ function buildApiUrl(baseUrl: string, path: string): string {
 function buildHeaders(config: ConnectorConfig): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-COPF-Client': 'connector_protocol/copf_remote',
+    'X-Clef-Client': 'connector_protocol/clef_remote',
     ...config.headers,
   };
   if (config.auth) {
     const token = config.auth.token as string | undefined;
     const apiKey = config.auth.apiKey as string | undefined;
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    if (apiKey) headers['X-COPF-API-Key'] = apiKey;
+    if (apiKey) headers['X-Clef-API-Key'] = apiKey;
   }
   return headers;
 }
@@ -152,7 +152,7 @@ export class CopfRemoteConnectorProvider {
 
       const url = buildApiUrl(baseUrl, `/concepts/${conceptName}/records?${params.toString()}`);
       const resp = await fetch(url, { headers });
-      if (!resp.ok) throw new Error(`COPF remote read failed: ${resp.status}`);
+      if (!resp.ok) throw new Error(`Clef remote read failed: ${resp.status}`);
 
       const result: CopfApiResponse<Record<string, unknown>[]> = await resp.json();
       if (!result.success || !result.data) break;
@@ -216,7 +216,7 @@ export class CopfRemoteConnectorProvider {
       const body: CopfApiResponse<{ version: string; instance: string }> = await resp.json();
       return {
         connected: true,
-        message: `Connected to COPF instance: ${body.data?.instance ?? 'unknown'} (v${body.data?.version ?? '?'})`,
+        message: `Connected to Clef instance: ${body.data?.instance ?? 'unknown'} (v${body.data?.version ?? '?'})`,
         latencyMs: Date.now() - start,
       };
     } catch (err) {

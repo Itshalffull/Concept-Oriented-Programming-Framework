@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/AwsSmProvider",
+  "uri": "urn:clef/AwsSmProvider",
   "name": "AwsSmProvider",
   "typeParams": [
     {
@@ -339,11 +339,11 @@
   "jsonSchemas": {
     "invocations": {
       "fetch": {
-        "$id": "urn:copf/AwsSmProvider/fetch/invocation",
+        "$id": "urn:clef/AwsSmProvider/fetch/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AwsSmProvider"
+            "const": "urn:clef/AwsSmProvider"
           },
           "action": {
             "const": "fetch"
@@ -366,11 +366,11 @@
         }
       },
       "rotate": {
-        "$id": "urn:copf/AwsSmProvider/rotate/invocation",
+        "$id": "urn:clef/AwsSmProvider/rotate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AwsSmProvider"
+            "const": "urn:clef/AwsSmProvider"
           },
           "action": {
             "const": "rotate"
@@ -392,11 +392,11 @@
     "completions": {
       "fetch": {
         "ok": {
-          "$id": "urn:copf/AwsSmProvider/fetch/completion/ok",
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AwsSmProvider"
+              "const": "urn:clef/AwsSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -426,11 +426,11 @@
           }
         },
         "kmsKeyInaccessible": {
-          "$id": "urn:copf/AwsSmProvider/fetch/completion/kmsKeyInaccessible",
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/kmsKeyInaccessible",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AwsSmProvider"
+              "const": "urn:clef/AwsSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -456,11 +456,11 @@
           }
         },
         "resourceNotFound": {
-          "$id": "urn:copf/AwsSmProvider/fetch/completion/resourceNotFound",
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/resourceNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AwsSmProvider"
+              "const": "urn:clef/AwsSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -482,11 +482,11 @@
           }
         },
         "decryptionFailed": {
-          "$id": "urn:copf/AwsSmProvider/fetch/completion/decryptionFailed",
+          "$id": "urn:clef/AwsSmProvider/fetch/completion/decryptionFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AwsSmProvider"
+              "const": "urn:clef/AwsSmProvider"
             },
             "action": {
               "const": "fetch"
@@ -514,11 +514,11 @@
       },
       "rotate": {
         "ok": {
-          "$id": "urn:copf/AwsSmProvider/rotate/completion/ok",
+          "$id": "urn:clef/AwsSmProvider/rotate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AwsSmProvider"
+              "const": "urn:clef/AwsSmProvider"
             },
             "action": {
               "const": "rotate"
@@ -544,11 +544,11 @@
           }
         },
         "rotationInProgress": {
-          "$id": "urn:copf/AwsSmProvider/rotate/completion/rotationInProgress",
+          "$id": "urn:clef/AwsSmProvider/rotate/completion/rotationInProgress",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AwsSmProvider"
+              "const": "urn:clef/AwsSmProvider"
             },
             "action": {
               "const": "rotate"

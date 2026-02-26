@@ -1,9 +1,9 @@
-# kits/web3/kit.yaml
+# kits/web3/suite.yaml
 suite:
   name: web3
   version: 0.1.0
   description: >
-    Blockchain integration for COPF. Chain monitoring with
+    Blockchain integration for Clef. Chain monitoring with
     finality-aware gating, IPFS content storage with pinning,
     and wallet-based authentication via signature verification.
     All domain logic in concepts + syncs — zero engine extensions.
@@ -49,11 +49,11 @@ syncs:
         pinning manually or using a dedicated pinning cron.
 
 integrations:
-  - kit: auth
+  - suite: auth
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >
-          Wire Wallet/verify into the auth kit's JWT flow.
+          Wire Wallet/verify into the auth suite's JWT flow.
           Wallet signature verification as an auth method.
 
 infrastructure:

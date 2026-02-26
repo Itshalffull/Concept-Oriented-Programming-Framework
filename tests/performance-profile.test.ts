@@ -45,7 +45,7 @@ describe('PerformanceProfile Handler', () => {
 
   describe('aggregate', () => {
     it('aggregates timing data from runtime-coverage entries', async () => {
-      await seedCoverageEntries('copf/action/Todo/create', [
+      await seedCoverageEntries('clef/action/Todo/create', [
         { durationMs: 10 },
         { durationMs: 20 },
         { durationMs: 50 },
@@ -53,7 +53,7 @@ describe('PerformanceProfile Handler', () => {
       ]);
 
       const result = await performanceProfileHandler.aggregate(
-        { symbol: 'copf/action/Todo/create', window: '{}' },
+        { symbol: 'clef/action/Todo/create', window: '{}' },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -71,10 +71,10 @@ describe('PerformanceProfile Handler', () => {
     });
 
     it('returns insufficientData when fewer than 2 entries', async () => {
-      await seedCoverageEntries('copf/action/Todo/create', [{ durationMs: 10 }]);
+      await seedCoverageEntries('clef/action/Todo/create', [{ durationMs: 10 }]);
 
       const result = await performanceProfileHandler.aggregate(
-        { symbol: 'copf/action/Todo/create', window: '{}' },
+        { symbol: 'clef/action/Todo/create', window: '{}' },
         storage,
       );
       expect(result.variant).toBe('insufficientData');
@@ -82,7 +82,7 @@ describe('PerformanceProfile Handler', () => {
     });
 
     it('computes error rate from entries with error status', async () => {
-      await seedCoverageEntries('copf/sync/mySync', [
+      await seedCoverageEntries('clef/sync/mySync', [
         { durationMs: 10, status: 'ok' },
         { durationMs: 20, status: 'error' },
         { durationMs: 30, status: 'ok' },
@@ -90,7 +90,7 @@ describe('PerformanceProfile Handler', () => {
       ]);
 
       const result = await performanceProfileHandler.aggregate(
-        { symbol: 'copf/sync/mySync', window: '{}' },
+        { symbol: 'clef/sync/mySync', window: '{}' },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -101,13 +101,13 @@ describe('PerformanceProfile Handler', () => {
     });
 
     it('identifies entity kind from symbol path', async () => {
-      await seedCoverageEntries('copf/widget/Button', [
+      await seedCoverageEntries('clef/widget/Button', [
         { durationMs: 5 },
         { durationMs: 15 },
       ]);
 
       const result = await performanceProfileHandler.aggregate(
-        { symbol: 'copf/widget/Button', window: '{}' },
+        { symbol: 'clef/widget/Button', window: '{}' },
         storage,
       );
       const record = await storage.get('performance-profile', result.profile as string);
@@ -121,18 +121,18 @@ describe('PerformanceProfile Handler', () => {
 
   describe('get', () => {
     it('returns profile details after aggregation', async () => {
-      await seedCoverageEntries('copf/action/Todo/create', [
+      await seedCoverageEntries('clef/action/Todo/create', [
         { durationMs: 10 },
         { durationMs: 20 },
       ]);
 
       const agg = await performanceProfileHandler.aggregate(
-        { symbol: 'copf/action/Todo/create', window: '{}' },
+        { symbol: 'clef/action/Todo/create', window: '{}' },
         storage,
       );
       const result = await performanceProfileHandler.get({ profile: agg.profile }, storage);
       expect(result.variant).toBe('ok');
-      expect(result.entitySymbol).toBe('copf/action/Todo/create');
+      expect(result.entitySymbol).toBe('clef/action/Todo/create');
       expect(result.entityKind).toBe('action');
       expect(result.invocationCount).toBe(2);
     });
@@ -152,14 +152,14 @@ describe('PerformanceProfile Handler', () => {
       // Seed two profiles manually
       await storage.put('performance-profile', 'pp-1', {
         id: 'pp-1',
-        entitySymbol: 'copf/action/Todo/create',
+        entitySymbol: 'clef/action/Todo/create',
         entityKind: 'action',
         timing: JSON.stringify({ p50: 50, p90: 80, p99: 100 }),
         errorRate: '0.1',
       });
       await storage.put('performance-profile', 'pp-2', {
         id: 'pp-2',
-        entitySymbol: 'copf/action/Todo/delete',
+        entitySymbol: 'clef/action/Todo/delete',
         entityKind: 'action',
         timing: JSON.stringify({ p50: 200, p90: 300, p99: 400 }),
         errorRate: '0.05',
@@ -172,21 +172,21 @@ describe('PerformanceProfile Handler', () => {
       expect(result.variant).toBe('ok');
       const hotspots = JSON.parse(result.hotspots as string);
       expect(hotspots).toHaveLength(2);
-      expect(hotspots[0].symbol).toBe('copf/action/Todo/delete');
+      expect(hotspots[0].symbol).toBe('clef/action/Todo/delete');
       expect(hotspots[0].value).toBe(300);
     });
 
     it('supports errorRate metric', async () => {
       await storage.put('performance-profile', 'pp-1', {
         id: 'pp-1',
-        entitySymbol: 'copf/sync/A',
+        entitySymbol: 'clef/sync/A',
         entityKind: 'sync',
         timing: '{}',
         errorRate: '0.5',
       });
       await storage.put('performance-profile', 'pp-2', {
         id: 'pp-2',
-        entitySymbol: 'copf/sync/B',
+        entitySymbol: 'clef/sync/B',
         entityKind: 'sync',
         timing: '{}',
         errorRate: '0.1',
@@ -197,21 +197,21 @@ describe('PerformanceProfile Handler', () => {
         storage,
       );
       const hotspots = JSON.parse(result.hotspots as string);
-      expect(hotspots[0].symbol).toBe('copf/sync/A');
+      expect(hotspots[0].symbol).toBe('clef/sync/A');
       expect(hotspots[0].value).toBe(0.5);
     });
 
     it('filters by kind', async () => {
       await storage.put('performance-profile', 'pp-1', {
         id: 'pp-1',
-        entitySymbol: 'copf/action/A',
+        entitySymbol: 'clef/action/A',
         entityKind: 'action',
         timing: JSON.stringify({ p90: 100 }),
         errorRate: '0',
       });
       await storage.put('performance-profile', 'pp-2', {
         id: 'pp-2',
-        entitySymbol: 'copf/widget/B',
+        entitySymbol: 'clef/widget/B',
         entityKind: 'widget',
         timing: JSON.stringify({ p90: 200 }),
         errorRate: '0',
@@ -223,7 +223,7 @@ describe('PerformanceProfile Handler', () => {
       );
       const hotspots = JSON.parse(result.hotspots as string);
       expect(hotspots).toHaveLength(1);
-      expect(hotspots[0].symbol).toBe('copf/widget/B');
+      expect(hotspots[0].symbol).toBe('clef/widget/B');
     });
   });
 
@@ -236,18 +236,18 @@ describe('PerformanceProfile Handler', () => {
       await storage.put('sync-entity', 'sync-1', {
         id: 'sync-1',
         name: 'slowSync',
-        symbol: 'copf/sync/slowSync',
+        symbol: 'clef/sync/slowSync',
         thenActions: JSON.stringify([{ concept: 'Todo', action: 'create' }]),
       });
 
       await storage.put('performance-profile', 'pp-1', {
         id: 'pp-1',
-        entitySymbol: 'copf/sync/slowSync',
+        entitySymbol: 'clef/sync/slowSync',
         timing: JSON.stringify({ p90: 500 }),
       });
       await storage.put('performance-profile', 'pp-2', {
         id: 'pp-2',
-        entitySymbol: 'copf/action/Todo/create',
+        entitySymbol: 'clef/action/Todo/create',
         timing: JSON.stringify({ p90: 300 }),
       });
 
@@ -262,12 +262,12 @@ describe('PerformanceProfile Handler', () => {
       await storage.put('sync-entity', 'sync-1', {
         id: 'sync-1',
         name: 'fastSync',
-        symbol: 'copf/sync/fastSync',
+        symbol: 'clef/sync/fastSync',
         thenActions: '[]',
       });
       await storage.put('performance-profile', 'pp-1', {
         id: 'pp-1',
-        entitySymbol: 'copf/sync/fastSync',
+        entitySymbol: 'clef/sync/fastSync',
         timing: JSON.stringify({ p90: 5 }),
       });
 
@@ -285,20 +285,20 @@ describe('PerformanceProfile Handler', () => {
     it('compares performance between two time windows', async () => {
       await storage.put('performance-profile', 'pp-1', {
         id: 'pp-1',
-        entitySymbol: 'copf/action/Todo/create',
+        entitySymbol: 'clef/action/Todo/create',
         sampleWindow: '{"start":"2024-01-01","end":"2024-01-07"}',
         timing: JSON.stringify({ p50: 50, p99: 100 }),
       });
       await storage.put('performance-profile', 'pp-2', {
         id: 'pp-2',
-        entitySymbol: 'copf/action/Todo/create',
+        entitySymbol: 'clef/action/Todo/create',
         sampleWindow: '{"start":"2024-01-08","end":"2024-01-14"}',
         timing: JSON.stringify({ p50: 70, p99: 150 }),
       });
 
       const result = await performanceProfileHandler.compareWindows(
         {
-          symbol: 'copf/action/Todo/create',
+          symbol: 'clef/action/Todo/create',
           windowA: '{"start":"2024-01-01","end":"2024-01-07"}',
           windowB: '{"start":"2024-01-08","end":"2024-01-14"}',
         },
@@ -313,7 +313,7 @@ describe('PerformanceProfile Handler', () => {
 
     it('returns insufficientData when window A profile not found', async () => {
       const result = await performanceProfileHandler.compareWindows(
-        { symbol: 'copf/action/X', windowA: 'a', windowB: 'b' },
+        { symbol: 'clef/action/X', windowA: 'a', windowB: 'b' },
         storage,
       );
       expect(result.variant).toBe('insufficientData');

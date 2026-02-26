@@ -26,7 +26,7 @@ const RELOCATED_SPECS: Record<string, { dir: string; file: string }> = {
 
 /**
  * Resolve a concept spec path. If the concept was relocated to a repertoire,
- * returns the kit path; otherwise returns the original specs/ path.
+ * returns the suite path; otherwise returns the original specs/ path.
  */
 export function resolveSpecPath(category: string, name: string): string {
   const relocated = RELOCATED_SPECS[name];

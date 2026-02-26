@@ -7,7 +7,7 @@ Copy this template as your starting point for `handlers/ts/framework/<lang>-gen.
 // <Lang>Gen Concept Implementation
 //
 // Generates <Lang> skeleton code from a ConceptManifest.
-// Follows the COPF code generation pattern (Section 10.1).
+// Follows the Clef code generation pattern (Section 10.1).
 //
 // Type mapping table:
 //   String  → <?>       Int    → <?>

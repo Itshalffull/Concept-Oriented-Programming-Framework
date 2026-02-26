@@ -135,7 +135,7 @@ describe('Language Target Integration — SchemaGen Coverage', () => {
       const manifest = await generateManifest(ast);
 
       expect(manifest.name).toBeTruthy();
-      expect(manifest.uri).toContain('urn:copf/');
+      expect(manifest.uri).toContain('urn:clef/');
       expect(manifest.actions.length).toBeGreaterThanOrEqual(1);
       expect(manifest.relations).toBeDefined();
       expect(manifest.jsonSchemas).toBeDefined();
@@ -415,7 +415,7 @@ describe('Language Target Integration — Framework Self-Compilation', () => {
       const manifest = await generateManifest(ast);
 
       expect(manifest.name).toBeTruthy();
-      expect(manifest.uri).toContain('urn:copf/');
+      expect(manifest.uri).toContain('urn:clef/');
       expect(manifest.actions.length).toBeGreaterThanOrEqual(1);
     });
   }

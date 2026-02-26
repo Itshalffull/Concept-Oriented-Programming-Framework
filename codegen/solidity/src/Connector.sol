@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Connector
 /// @notice Uniform read/write interface to external systems via configurable connectors
-/// @dev Implements the Connector concept from COPF specification.
+/// @dev Implements the Connector concept from Clef specification.
 ///      Supports configuring connectors per source and protocol, reading, writing,
 ///      testing connectivity, and discovering available endpoints.
 

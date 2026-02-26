@@ -4,13 +4,13 @@
 // Validates kind taxonomy: define, connect (with cycle
 // detection), route, validate, dependents, producers,
 // consumers, and graph.
-// See copf-generation-kit.md Part 1.2
+// See clef-generation-suite.md Part 1.2
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { kindSystemHandler } from '../../implementations/typescript/kind-system.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('KindSystem conformance', () => {
   let storage: ConceptStorage;

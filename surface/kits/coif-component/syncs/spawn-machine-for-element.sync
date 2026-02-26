@@ -1,5 +1,5 @@
 # ============================================================
-# SpawnMachineForElement — coif-component recommended sync
+# SpawnMachineForElement — surface-component recommended sync
 #
 # When a widget AST is retrieved, spawn a machine instance
 # to execute its behavioral specification.

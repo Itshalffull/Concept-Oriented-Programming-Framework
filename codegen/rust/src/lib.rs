@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Concept Implementations — Rust
+// Clef Concept Implementations — Rust
 //
 // Module declarations for all concept implementations plus storage.
 // ============================================================

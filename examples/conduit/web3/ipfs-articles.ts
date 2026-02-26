@@ -1,5 +1,5 @@
 // Conduit Example App — IPFS Article Storage
-// Store article content on IPFS using the Web3 kit's Content concept
+// Store article content on IPFS using the Web3 suite's Content concept
 // and content-pinning sync.
 
 import { createInMemoryStorage } from '../../../kernel/src/storage.js';

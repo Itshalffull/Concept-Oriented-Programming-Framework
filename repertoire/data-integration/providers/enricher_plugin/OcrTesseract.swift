@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Local OCR via Tesseract enricher provider
+// Clef Data Integration Kit - Local OCR via Tesseract enricher provider
 // Shells out to the tesseract binary, parses HOCR output for word-level bounding boxes.
 
 import Foundation
@@ -65,7 +65,7 @@ public final class OcrTesseractEnricherProvider {
             throw EnricherError.parseError("Failed to decode base64 image content")
         }
 
-        let tmpPath = NSTemporaryDirectory() + "copf_ocr_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).png"
+        let tmpPath = NSTemporaryDirectory() + "clef_ocr_\(item.id)_\(ProcessInfo.processInfo.processIdentifier).png"
         let tmpURL = URL(fileURLWithPath: tmpPath)
 
         try imageData.write(to: tmpURL)

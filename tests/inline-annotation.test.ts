@@ -3,7 +3,7 @@
 //
 // Validates annotate, accept, reject, acceptAll, rejectAll,
 // toggleTracking, and listPending actions for the collaboration
-// kit's inline annotation concept.
+// suite's inline annotation concept.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';

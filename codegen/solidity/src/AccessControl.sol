@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title AccessControl
 /// @notice Concept-oriented access control combinators with three-valued logic (Allowed, Neutral, Forbidden)
-/// @dev Implements the AccessControl concept from COPF specification.
+/// @dev Implements the AccessControl concept from Clef specification.
 ///      Provides pure computation functions for combining access decisions.
 ///      AccessResult values: 0 = Allowed, 1 = Neutral, 2 = Forbidden.
 

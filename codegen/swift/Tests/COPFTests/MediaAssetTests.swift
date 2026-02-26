@@ -1,7 +1,7 @@
 // MediaAssetTests.swift — Tests for MediaAsset concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class MediaAssetTests: XCTestCase {
 

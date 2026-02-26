@@ -4,7 +4,7 @@
 // Symbol extraction provider for .widget spec files. Extracts
 // widget name, anatomy part names, state names, transition events,
 // prop names, slot names, composed widget references, and
-// affordance interactor bindings as symbols in the coif/* namespace.
+// affordance interactor bindings as symbols in the surface/* namespace.
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
@@ -48,7 +48,7 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
       widgetName = widgetMatch[1] || widgetMatch[2];
       if (widgetName) {
         symbols.push({
-          symbolString: `coif/widget/${widgetName}`,
+          symbolString: `surface/widget/${widgetName}`,
           kind: 'concept',
           displayName: widgetName,
           role: 'definition',
@@ -74,7 +74,7 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
       if (['true', 'false', 'null', 'description', 'type', 'value', 'default',
         'required', 'optional'].includes(itemName)) continue;
 
-      const prefix = `coif/widget/${widgetName}`;
+      const prefix = `surface/widget/${widgetName}`;
 
       if (currentSection === 'anatomy') {
         symbols.push({
@@ -124,7 +124,7 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
       } else if (currentSection === 'compose') {
         // Composed widget references
         symbols.push({
-          symbolString: `coif/widget/${itemName}`,
+          symbolString: `surface/widget/${itemName}`,
           kind: 'concept',
           displayName: itemName,
           role: 'reference',
@@ -149,7 +149,7 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
     if (extendsMatch) {
       const refName = extendsMatch[1];
       symbols.push({
-        symbolString: `coif/widget/${refName}`,
+        symbolString: `surface/widget/${refName}`,
         kind: 'concept',
         displayName: refName,
         role: 'reference',
@@ -163,7 +163,7 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
     if (eventMatch && widgetName) {
       const eventName = eventMatch[1];
       symbols.push({
-        symbolString: `coif/widget/${widgetName}/event/${eventName}`,
+        symbolString: `surface/widget/${widgetName}/event/${eventName}`,
         kind: 'action',
         displayName: eventName,
         role: 'reference',

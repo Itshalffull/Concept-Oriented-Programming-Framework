@@ -3,7 +3,7 @@
 //
 // Enriches ConceptManifests with interface generation metadata
 // including resource mappings, trait bindings, and type graphs.
-// Architecture doc: Interface Kit, Section 1.1
+// Architecture doc: Clef Bind, Section 1.1
 // ============================================================
 
 import { createHash, randomUUID } from 'crypto';
@@ -23,7 +23,7 @@ interface Shape {
   resolved: string; // JSON-serialised ResolvedType for downstream generators
 }
 
-/** A cross-concept type reference within the kit. */
+/** A cross-concept type reference within the suite. */
 interface CrossReference {
   from: string;
   to: string;
@@ -54,7 +54,7 @@ interface TargetOverride {
 interface ProjectionRecord {
   id: string;
   conceptName: string;
-  kitName: string;
+  suiteName: string;
   kitVersion: string;
   conceptManifest: string;      // JSON of the original ConceptManifest
   traits: TraitBinding[];
@@ -386,7 +386,7 @@ export const projectionHandler: ConceptHandler = {
     const projection: ProjectionRecord = {
       id: projectionId,
       conceptName,
-      kitName: manifest.uri.split('/')[0] || '',
+      suiteName: manifest.uri.split('/')[0] || '',
       kitVersion: '1.0.0',
       conceptManifest: manifestJson,
       traits,

@@ -1,5 +1,5 @@
 # ============================================================
-# HostRefreshSyncsBinding — coif-app recommended sync
+# HostRefreshSyncsBinding — surface-app recommended sync
 #
 # When a host is refreshed, sync its binding to re-fetch
 # data from the backend.

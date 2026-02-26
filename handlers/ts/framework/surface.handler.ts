@@ -4,7 +4,7 @@
 // Composes per-concept generated interfaces into cohesive,
 // unified API surfaces per target. Merges routes, schemas,
 // commands, and tools across concepts.
-// Architecture doc: Interface Kit, Section 1.7
+// Architecture doc: Clef Bind, Section 1.7
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';

@@ -11,13 +11,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.copf.conduit"
+      "bundleIdentifier": "com.clef.conduit"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#5CB85C"
       },
-      "package": "com.copf.conduit"
+      "package": "com.clef.conduit"
     }
   }
 }

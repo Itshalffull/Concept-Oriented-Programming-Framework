@@ -1,7 +1,7 @@
 // PageAsRecordTests.swift — Tests for PageAsRecord concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class PageAsRecordTests: XCTestCase {
 

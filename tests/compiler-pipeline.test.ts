@@ -54,11 +54,11 @@ describe('Compiler Pipeline (end-to-end)', () => {
     const kernel = createKernel();
 
     // Register the framework concepts
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     // Load the compiler pipeline syncs
     const syncSource = readFileSync(
@@ -73,7 +73,7 @@ describe('Compiler Pipeline (end-to-end)', () => {
     // Feed a concept spec through the pipeline by directly invoking SpecParser
     const passwordSpec = readSpec('app', 'password');
     const parseResult = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: passwordSpec },
     );
@@ -85,8 +85,8 @@ describe('Compiler Pipeline (end-to-end)', () => {
   it('LogRegistration sync fires on concept registration', async () => {
     const kernel = createKernel();
 
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
 
     // Load just the LogRegistration sync
     const syncSource = readFileSync(
@@ -100,7 +100,7 @@ describe('Compiler Pipeline (end-to-end)', () => {
 
     // Register a concept through the Registry concept
     const result = await kernel.invokeConcept(
-      'urn:copf/Registry',
+      'urn:clef/Registry',
       'register',
       { uri: 'urn:app/TestConcept', transport: { type: 'in-process' } },
     );
@@ -119,13 +119,13 @@ describe('Full Pipeline (kernel-driven)', () => {
     const kernel = createKernel();
 
     // Register all framework concepts on the kernel
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/SyncParser', syncParserHandler);
-    kernel.registerConcept('urn:copf/SyncCompiler', syncCompilerHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/SyncParser', syncParserHandler);
+    kernel.registerConcept('urn:clef/SyncCompiler', syncCompilerHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     // Load the compiler pipeline syncs
     const syncSource = readFileSync(
@@ -140,7 +140,7 @@ describe('Full Pipeline (kernel-driven)', () => {
     // Self-compile: parse a framework spec through the pipeline
     const specParserSpec = readSpec('framework', 'spec-parser');
     const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: specParserSpec },
     );
@@ -152,11 +152,11 @@ describe('Full Pipeline (kernel-driven)', () => {
   it('self-compilation pipeline for an app concept with invariants', async () => {
     const kernel = createKernel();
 
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'framework', 'compiler-pipeline.sync'),
@@ -170,7 +170,7 @@ describe('Full Pipeline (kernel-driven)', () => {
     // Parse the Password spec — should trigger the full pipeline
     const passwordSpec = readSpec('app', 'password');
     const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: passwordSpec },
     );
@@ -213,7 +213,7 @@ describe('Pipeline Syncs', () => {
 
     // GenerateTypeScript has only ONE when pattern (simpler than old GenerateCode)
     expect(genTS!.when).toHaveLength(1);
-    expect(genTS!.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(genTS!.when[0].concept).toBe('urn:clef/SchemaGen');
     expect(genTS!.when[0].action).toBe('generate');
   });
 
@@ -258,9 +258,9 @@ describe('Pipeline Integration', () => {
     const genRust = syncs.find(s => s.name === 'GenerateRust');
     expect(genRust).toBeDefined();
     expect(genRust!.when).toHaveLength(1);
-    expect(genRust!.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(genRust!.when[0].concept).toBe('urn:clef/SchemaGen');
     expect(genRust!.when[0].action).toBe('generate');
-    expect(genRust!.then[0].concept).toBe('urn:copf/RustGen');
+    expect(genRust!.then[0].concept).toBe('urn:clef/RustGen');
     expect(genRust!.then[0].action).toBe('generate');
   });
 
@@ -275,8 +275,8 @@ describe('Pipeline Integration', () => {
     const genRust = syncs.find(s => s.name === 'GenerateRust')!;
 
     // Both trigger on SchemaGen/generate
-    expect(genTS.when[0].concept).toBe('urn:copf/SchemaGen');
-    expect(genRust.when[0].concept).toBe('urn:copf/SchemaGen');
+    expect(genTS.when[0].concept).toBe('urn:clef/SchemaGen');
+    expect(genRust.when[0].concept).toBe('urn:clef/SchemaGen');
 
     // Both receive spec and manifest
     const tsOutputVars = genTS.when[0].outputFields.map(f =>

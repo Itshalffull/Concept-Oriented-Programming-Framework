@@ -80,7 +80,7 @@ concept ConceptEntity [E] {
     action checkCompatibility(a: E, b: E) {
       -> compatible(sharedTypeParams: String) {
         The two concepts share type parameters that can be
-        unified in a kit composition.
+        unified in a suite composition.
       }
       -> incompatible(reason: String) {
         The concepts cannot compose due to conflicting

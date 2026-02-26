@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Workflow
 /// @notice Concept-oriented workflow engine with states, transitions, and entity tracking
-/// @dev Implements the Workflow concept from COPF specification.
+/// @dev Implements the Workflow concept from Clef specification.
 ///      Supports defining workflows with states and guarded transitions, and tracking
 ///      per-entity current state within a workflow.
 

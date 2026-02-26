@@ -3,13 +3,13 @@
 //
 // Validates incremental detection: check/record/invalidate
 // cycle, cascading invalidation, staleness tracking.
-// See copf-generation-kit.md Part 1.3
+// See clef-generation-suite.md Part 1.3
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('BuildCache conformance', () => {
   let storage: ConceptStorage;
@@ -37,7 +37,7 @@ describe('BuildCache conformance', () => {
         stepKey: 'framework:TypeScriptGen:password',
         inputHash: 'abc',
         outputHash: 'xyz',
-        outputRef: '.copf-cache/ts/password',
+        outputRef: '.clef-cache/ts/password',
         sourceLocator: './specs/password.concept',
         deterministic: true,
       },
@@ -50,7 +50,7 @@ describe('BuildCache conformance', () => {
     );
     expect(result.variant).toBe('unchanged');
     expect(result.lastRun).toBeDefined();
-    expect(result.outputRef).toBe('.copf-cache/ts/password');
+    expect(result.outputRef).toBe('.clef-cache/ts/password');
   });
 
   it('should return changed when input hash differs', async () => {

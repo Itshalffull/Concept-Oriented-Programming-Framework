@@ -3,7 +3,7 @@ concept ReactAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into React-specific bindings.
-    Transforms COIF's generic event model into React conventions:
+    Transforms Clef Surface's generic event model into React conventions:
     SyntheticEvent handlers, className (not class), JSX-compatible
     prop names. Maps ARIA attributes and data attributes unchanged.
     Implements useSyncExternalStore for signal integration.

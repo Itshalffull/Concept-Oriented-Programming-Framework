@@ -1,5 +1,5 @@
 # ============================================================
-# ResolvedWidgetSpawned — coif-component recommended sync
+# ResolvedWidgetSpawned — surface-component recommended sync
 #
 # Retrieve the widget AST for the widget name selected by
 # the resolver. Bridges resolution to instantiation.

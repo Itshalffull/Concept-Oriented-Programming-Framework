@@ -13,7 +13,7 @@
 #   - REST: standard API for non-LLM consumers
 #
 # Usage (automatic — no manual invocation needed):
-#   copf interface generate --manifest score/auto/score.interface.yaml
+#   clef interface generate --manifest score/auto/score.interface.yaml
 
 interface:
   name: score
@@ -343,7 +343,7 @@ concepts:
           description: >
             List all concepts in the project with purpose, actions,
             and state fields. The primary entry point for understanding
-            a COPF application's architecture.
+            a Clef application's architecture.
         getConcept:
           type: resource
           uriTemplate: "score://concepts/{name}"
@@ -620,7 +620,7 @@ concepts:
         listConcepts:
           description: >
             List all concepts in the project with purpose, actions, and state
-            fields. The primary entry point for understanding a COPF app's
+            fields. The primary entry point for understanding a Clef app's
             architecture.
         getConcept:
           description: >
@@ -722,7 +722,7 @@ workflows:
       - title: Start Broad
         rule: Begin with listFiles or getFileTree to orient, then drill into specifics
       - title: Follow Conventions
-        rule: COPF projects follow a standard layout — specs/, handlers/, syncs/, kernel/
+        rule: Clef projects follow a standard layout — specs/, handlers/, syncs/, kernel/
       - title: Check Roles
         rule: File roles (source, generated, config, test, doc) indicate intent
 

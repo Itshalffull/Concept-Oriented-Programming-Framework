@@ -1,7 +1,7 @@
 // ContentNodeTests.swift — Tests for ContentNode concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ContentNodeTests: XCTestCase {
 

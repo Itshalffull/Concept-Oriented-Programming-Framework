@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Backlink",
+  "uri": "urn:clef/Backlink",
   "name": "Backlink",
   "typeParams": [
     {
@@ -179,11 +179,11 @@
   "jsonSchemas": {
     "invocations": {
       "getBacklinks": {
-        "$id": "urn:copf/Backlink/getBacklinks/invocation",
+        "$id": "urn:clef/Backlink/getBacklinks/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Backlink"
+            "const": "urn:clef/Backlink"
           },
           "action": {
             "const": "getBacklinks"
@@ -202,11 +202,11 @@
         }
       },
       "getUnlinkedMentions": {
-        "$id": "urn:copf/Backlink/getUnlinkedMentions/invocation",
+        "$id": "urn:clef/Backlink/getUnlinkedMentions/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Backlink"
+            "const": "urn:clef/Backlink"
           },
           "action": {
             "const": "getUnlinkedMentions"
@@ -225,11 +225,11 @@
         }
       },
       "reindex": {
-        "$id": "urn:copf/Backlink/reindex/invocation",
+        "$id": "urn:clef/Backlink/reindex/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Backlink"
+            "const": "urn:clef/Backlink"
           },
           "action": {
             "const": "reindex"
@@ -245,11 +245,11 @@
     "completions": {
       "getBacklinks": {
         "ok": {
-          "$id": "urn:copf/Backlink/getBacklinks/completion/ok",
+          "$id": "urn:clef/Backlink/getBacklinks/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Backlink"
+              "const": "urn:clef/Backlink"
             },
             "action": {
               "const": "getBacklinks"
@@ -273,11 +273,11 @@
       },
       "getUnlinkedMentions": {
         "ok": {
-          "$id": "urn:copf/Backlink/getUnlinkedMentions/completion/ok",
+          "$id": "urn:clef/Backlink/getUnlinkedMentions/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Backlink"
+              "const": "urn:clef/Backlink"
             },
             "action": {
               "const": "getUnlinkedMentions"
@@ -301,11 +301,11 @@
       },
       "reindex": {
         "ok": {
-          "$id": "urn:copf/Backlink/reindex/completion/ok",
+          "$id": "urn:clef/Backlink/reindex/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Backlink"
+              "const": "urn:clef/Backlink"
             },
             "action": {
               "const": "reindex"

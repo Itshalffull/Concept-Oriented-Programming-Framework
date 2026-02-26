@@ -2,10 +2,10 @@
 // ViewportProvider — Context provider that observes window
 // resize events and provides ViewportState to the tree.
 //
-// Creates and manages a COIF WritableSignal<ViewportState>
+// Creates and manages a Clef Surface WritableSignal<ViewportState>
 // internally, and exposes the current state via React context.
 // Uses useSyncExternalStore for tear-free reads. The viewport
-// signal is also exposed so sibling COIF systems (e.g.
+// signal is also exposed so sibling Clef Surface systems (e.g.
 // LayoutContainer) can subscribe directly.
 // ============================================================
 
@@ -26,14 +26,14 @@ import {
   observeViewport,
   getBreakpoint,
   getOrientation,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --------------- Context ---------------
 
 export interface ViewportContextValue {
   /** Current viewport state snapshot. */
   viewport: ViewportState;
-  /** The underlying COIF signal — can be shared with other bridge consumers. */
+  /** The underlying Clef Surface signal — can be shared with other bridge consumers. */
   signal: WritableSignal<ViewportState>;
 }
 

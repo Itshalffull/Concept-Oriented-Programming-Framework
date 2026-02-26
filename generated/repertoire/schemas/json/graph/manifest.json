@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Graph",
+  "uri": "urn:clef/Graph",
   "name": "Graph",
   "typeParams": [
     {
@@ -449,11 +449,11 @@
   "jsonSchemas": {
     "invocations": {
       "addNode": {
-        "$id": "urn:copf/Graph/addNode/invocation",
+        "$id": "urn:clef/Graph/addNode/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "addNode"
@@ -476,11 +476,11 @@
         }
       },
       "removeNode": {
-        "$id": "urn:copf/Graph/removeNode/invocation",
+        "$id": "urn:clef/Graph/removeNode/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "removeNode"
@@ -503,11 +503,11 @@
         }
       },
       "addEdge": {
-        "$id": "urn:copf/Graph/addEdge/invocation",
+        "$id": "urn:clef/Graph/addEdge/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "addEdge"
@@ -534,11 +534,11 @@
         }
       },
       "removeEdge": {
-        "$id": "urn:copf/Graph/removeEdge/invocation",
+        "$id": "urn:clef/Graph/removeEdge/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "removeEdge"
@@ -565,11 +565,11 @@
         }
       },
       "computeLayout": {
-        "$id": "urn:copf/Graph/computeLayout/invocation",
+        "$id": "urn:clef/Graph/computeLayout/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "computeLayout"
@@ -588,11 +588,11 @@
         }
       },
       "getNeighbors": {
-        "$id": "urn:copf/Graph/getNeighbors/invocation",
+        "$id": "urn:clef/Graph/getNeighbors/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "getNeighbors"
@@ -619,11 +619,11 @@
         }
       },
       "filterNodes": {
-        "$id": "urn:copf/Graph/filterNodes/invocation",
+        "$id": "urn:clef/Graph/filterNodes/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Graph"
+            "const": "urn:clef/Graph"
           },
           "action": {
             "const": "filterNodes"
@@ -649,11 +649,11 @@
     "completions": {
       "addNode": {
         "ok": {
-          "$id": "urn:copf/Graph/addNode/completion/ok",
+          "$id": "urn:clef/Graph/addNode/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "addNode"
@@ -669,11 +669,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/addNode/completion/notfound",
+          "$id": "urn:clef/Graph/addNode/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "addNode"
@@ -691,11 +691,11 @@
       },
       "removeNode": {
         "ok": {
-          "$id": "urn:copf/Graph/removeNode/completion/ok",
+          "$id": "urn:clef/Graph/removeNode/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "removeNode"
@@ -711,11 +711,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/removeNode/completion/notfound",
+          "$id": "urn:clef/Graph/removeNode/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "removeNode"
@@ -733,11 +733,11 @@
       },
       "addEdge": {
         "ok": {
-          "$id": "urn:copf/Graph/addEdge/completion/ok",
+          "$id": "urn:clef/Graph/addEdge/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "addEdge"
@@ -753,11 +753,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/addEdge/completion/notfound",
+          "$id": "urn:clef/Graph/addEdge/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "addEdge"
@@ -775,11 +775,11 @@
       },
       "removeEdge": {
         "ok": {
-          "$id": "urn:copf/Graph/removeEdge/completion/ok",
+          "$id": "urn:clef/Graph/removeEdge/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "removeEdge"
@@ -795,11 +795,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/removeEdge/completion/notfound",
+          "$id": "urn:clef/Graph/removeEdge/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "removeEdge"
@@ -817,11 +817,11 @@
       },
       "computeLayout": {
         "ok": {
-          "$id": "urn:copf/Graph/computeLayout/completion/ok",
+          "$id": "urn:clef/Graph/computeLayout/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "computeLayout"
@@ -843,11 +843,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/computeLayout/completion/notfound",
+          "$id": "urn:clef/Graph/computeLayout/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "computeLayout"
@@ -865,11 +865,11 @@
       },
       "getNeighbors": {
         "ok": {
-          "$id": "urn:copf/Graph/getNeighbors/completion/ok",
+          "$id": "urn:clef/Graph/getNeighbors/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "getNeighbors"
@@ -891,11 +891,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/getNeighbors/completion/notfound",
+          "$id": "urn:clef/Graph/getNeighbors/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "getNeighbors"
@@ -913,11 +913,11 @@
       },
       "filterNodes": {
         "ok": {
-          "$id": "urn:copf/Graph/filterNodes/completion/ok",
+          "$id": "urn:clef/Graph/filterNodes/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "filterNodes"
@@ -939,11 +939,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Graph/filterNodes/completion/notfound",
+          "$id": "urn:clef/Graph/filterNodes/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Graph"
+              "const": "urn:clef/Graph"
             },
             "action": {
               "const": "filterNodes"

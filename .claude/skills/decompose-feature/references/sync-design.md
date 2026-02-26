@@ -1,6 +1,6 @@
 # Sync Design Reference
 
-Complete guide to designing synchronization rules in COPF. Syncs are the **only** mechanism for composing independent concepts into user-visible flows.
+Complete guide to designing synchronization rules in Clef. Syncs are the **only** mechanism for composing independent concepts into user-visible flows.
 
 ## What Syncs Do
 

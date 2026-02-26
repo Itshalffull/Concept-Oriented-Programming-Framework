@@ -1,5 +1,5 @@
 // ============================================================
-// COIF Ink Widget — ElevationBox
+// Clef Surface Ink Widget — ElevationBox
 //
 // Terminal box with border styling that varies by elevation level.
 // Since terminals cannot render CSS shadows, elevation is

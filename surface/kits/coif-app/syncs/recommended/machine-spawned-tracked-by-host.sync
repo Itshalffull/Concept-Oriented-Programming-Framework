@@ -1,5 +1,5 @@
 # ============================================================
-# MachineSpawnedTrackedByHost — coif-app recommended sync
+# MachineSpawnedTrackedByHost — surface-app recommended sync
 #
 # When a machine is spawned, track it as a subordinate
 # resource on the loading host.

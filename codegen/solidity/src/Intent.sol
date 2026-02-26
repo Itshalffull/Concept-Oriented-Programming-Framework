@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Intent
 /// @notice Concept-oriented intent declarations capturing purpose, principles, and description
-/// @dev Implements the Intent concept from COPF specification.
+/// @dev Implements the Intent concept from Clef specification.
 ///      Supports defining, updating, and querying intent records for any target entity.
 
 contract Intent {

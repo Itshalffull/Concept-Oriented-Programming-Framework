@@ -1,7 +1,7 @@
 // ============================================================
 // TreeSitterConceptSpec Handler Tests
 //
-// Tree-sitter grammar provider for COPF concept spec files.
+// Tree-sitter grammar provider for Clef concept spec files.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';

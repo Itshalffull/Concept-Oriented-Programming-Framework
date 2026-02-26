@@ -171,6 +171,6 @@ syncs:
       description: "SemanticMerge provider self-registers with PluginRegistry"
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

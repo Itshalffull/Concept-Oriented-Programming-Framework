@@ -1,7 +1,7 @@
 // RelationTests.swift — Tests for Relation concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class RelationTests: XCTestCase {
 

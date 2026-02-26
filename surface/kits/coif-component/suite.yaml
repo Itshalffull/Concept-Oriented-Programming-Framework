@@ -1,5 +1,5 @@
 suite:
-  name: coif-component
+  name: surface-component
   version: 0.4.0
   description: >
     Headless component behaviors, semantic interaction classification,
@@ -87,4 +87,4 @@ syncs:
         active framework adapter for rendering.
 
 dependencies:
-  - coif-core: ">=0.4.0"
+  - surface-core: ">=0.4.0"

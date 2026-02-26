@@ -18,7 +18,7 @@ import React, {
 } from 'react';
 
 import type { Signal, ResolvedTheme } from '../../shared/types.js';
-import { createSignal, resolveTheme, themeToCssVariables } from '../../shared/coif-bridge.js';
+import { createSignal, resolveTheme, themeToCssVariables } from '../../shared/surface-bridge.js';
 
 // --------------- Context ---------------
 
@@ -48,7 +48,7 @@ export function useDesignTokens(): DesignTokenContextValue {
 // --------------- Props ---------------
 
 export interface DesignTokenProviderProps {
-  /** A COIF signal that emits resolved theme snapshots. */
+  /** A Clef Surface signal that emits resolved theme snapshots. */
   themeSignal: Signal<ResolvedTheme>;
   /** Optional additional class name for the wrapper div. */
   className?: string;
@@ -96,7 +96,7 @@ export const DesignTokenProvider: React.FC<DesignTokenProviderProps> = ({
   style,
   children,
 }) => {
-  // --- Subscribe to the COIF signal using React 18's
+  // --- Subscribe to the Clef Surface signal using React 18's
   //     useSyncExternalStore for tear-free reads. ---
 
   const subscribe = useCallback(
@@ -136,7 +136,7 @@ export const DesignTokenProvider: React.FC<DesignTokenProviderProps> = ({
       <div
         className={className}
         style={mergedStyle}
-        data-coif-token-root=""
+        data-surface-token-root=""
       >
         {children}
       </div>

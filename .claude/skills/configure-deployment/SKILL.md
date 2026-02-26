@@ -1,11 +1,11 @@
 ---
 name: configure-deployment
-description: Configure a COPF deployment manifest that maps concepts to runtimes, assigns syncs to engines, sets up transport adapters, and validates capability requirements. Use when deploying concepts across one or more runtimes.
+description: Configure a Clef deployment manifest that maps concepts to runtimes, assigns syncs to engines, sets up transport adapters, and validates capability requirements. Use when deploying concepts across one or more runtimes.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<app-name>"
 ---
 
-# Configure a COPF Deployment
+# Configure a Clef Deployment
 
 Write a deployment manifest for **$ARGUMENTS** that maps concepts to runtimes, assigns syncs to engines, and configures transport, storage, and observability.
 
@@ -285,5 +285,5 @@ See [templates/deployment-scaffold.md](templates/deployment-scaffold.md) for cop
 |-------|------------|
 | `/create-transport-adapter` | Write custom transport adapters referenced in the manifest |
 | `/create-storage-adapter` | Write custom storage backends referenced in the manifest |
-| `/create-concept-kit` | Create kits whose deploy templates this manifest can use |
+| `/create-concept-kit` | Create suites whose deploy templates this manifest can use |
 | `/create-implementation` | Write implementations assigned to runtimes in the manifest |

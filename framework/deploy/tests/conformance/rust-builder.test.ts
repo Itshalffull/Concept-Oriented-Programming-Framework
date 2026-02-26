@@ -8,9 +8,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { rustBuilderHandler } from '../../../../implementations/typescript/deploy/rust-builder.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('RustBuilder conformance', () => {
   let storage: ConceptStorage;

@@ -1,4 +1,4 @@
-# FileModified — generation kit required sync
+# FileModified — generation suite required sync
 sync FileModified [eager]
   purpose { Translate file modification into Resource upsert. }
 when {

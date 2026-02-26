@@ -89,7 +89,7 @@ function buildConceptScopes(source: string, file: string): {
       // Declare the concept itself in the global scope
       declarations.push({
         name: conceptName,
-        symbolString: `copf/concept/${conceptName}`,
+        symbolString: `clef/concept/${conceptName}`,
         scopeId: globalScope.id,
         kind: 'concept',
       });
@@ -98,7 +98,7 @@ function buildConceptScopes(source: string, file: string): {
       if (typeParam) {
         declarations.push({
           name: typeParam,
-          symbolString: `copf/concept/${conceptName}/type/${typeParam}`,
+          symbolString: `clef/concept/${conceptName}/type/${typeParam}`,
           scopeId: conceptScope.id,
           kind: 'type',
         });
@@ -114,7 +114,7 @@ function buildConceptScopes(source: string, file: string): {
         if (!['purpose', 'state', 'actions', 'capabilities', 'invariant'].includes(fieldName)) {
           declarations.push({
             name: fieldName,
-            symbolString: `copf/concept/${conceptName}/state/${fieldName}`,
+            symbolString: `clef/concept/${conceptName}/state/${fieldName}`,
             scopeId: conceptScope.id,
             kind: 'state-field',
           });
@@ -152,7 +152,7 @@ function buildConceptScopes(source: string, file: string): {
 
         declarations.push({
           name: actionName,
-          symbolString: `copf/concept/${conceptName}/action/${actionName}`,
+          symbolString: `clef/concept/${conceptName}/action/${actionName}`,
           scopeId: conceptScope.id,
           kind: 'action',
         });
@@ -166,7 +166,7 @@ function buildConceptScopes(source: string, file: string): {
             if (paramParts) {
               declarations.push({
                 name: paramParts[1],
-                symbolString: `copf/concept/${conceptName}/action/${actionName}/param/${paramParts[1]}`,
+                symbolString: `clef/concept/${conceptName}/action/${actionName}/param/${paramParts[1]}`,
                 scopeId: actionScope.id,
                 kind: 'variable',
               });
@@ -181,7 +181,7 @@ function buildConceptScopes(source: string, file: string): {
         const variantName = variantMatch[1];
         declarations.push({
           name: variantName,
-          symbolString: `copf/concept/${conceptName}/variant/${variantName}`,
+          symbolString: `clef/concept/${conceptName}/variant/${variantName}`,
           scopeId: actionScope.id,
           kind: 'variant',
         });

@@ -1,7 +1,7 @@
 // AutomationRuleTests.swift — Tests for AutomationRule concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class AutomationRuleTests: XCTestCase {
 

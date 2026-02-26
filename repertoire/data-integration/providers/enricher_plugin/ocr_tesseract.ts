@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Local OCR via Tesseract enricher provider
+// Clef Data Integration Kit - Local OCR via Tesseract enricher provider
 // Shells out to the tesseract binary, parses HOCR output for word-level bounding boxes.
 
 import { execFile } from 'child_process';
@@ -93,7 +93,7 @@ export class OcrTesseractEnricherProvider {
     const dpi = (config.options?.dpi as number) ?? 300;
 
     // Write image content (base64-encoded) to a temp file
-    const tmpPath = join(tmpdir(), `copf_ocr_${item.id}_${Date.now()}.png`);
+    const tmpPath = join(tmpdir(), `clef_ocr_${item.id}_${Date.now()}.png`);
     const imageBuffer = Buffer.from(item.content, 'base64');
     writeFileSync(tmpPath, imageBuffer);
 

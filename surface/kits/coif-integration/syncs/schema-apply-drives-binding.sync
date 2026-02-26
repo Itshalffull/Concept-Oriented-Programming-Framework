@@ -1,8 +1,8 @@
 # ============================================================
-# SchemaApplyDrivesBinding — coif-integration required sync
+# SchemaApplyDrivesBinding — surface-integration required sync
 #
 # Create a data binding when a library Schema is applied to a
-# node. This wires the node's data to COIF's reactive signals
+# node. This wires the node's data to Clef Surface's reactive signals
 # for live editing.
 # ============================================================
 

@@ -1,8 +1,8 @@
 # ============================================================
-# ViewDrivesLayout — coif-integration recommended sync
+# ViewDrivesLayout — surface-integration recommended sync
 #
-# Map library View layout type to COIF spatial arrangement.
-# View is the configuration/intent layer; COIF implements
+# Map library View layout type to Clef Surface spatial arrangement.
+# View is the configuration/intent layer; Clef Surface implements
 # the rendering.
 # ============================================================
 

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/AutomationRule",
+  "uri": "urn:clef/AutomationRule",
   "name": "AutomationRule",
   "typeParams": [
     {
@@ -379,11 +379,11 @@
   "jsonSchemas": {
     "invocations": {
       "define": {
-        "$id": "urn:copf/AutomationRule/define/invocation",
+        "$id": "urn:clef/AutomationRule/define/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AutomationRule"
+            "const": "urn:clef/AutomationRule"
           },
           "action": {
             "const": "define"
@@ -414,11 +414,11 @@
         }
       },
       "enable": {
-        "$id": "urn:copf/AutomationRule/enable/invocation",
+        "$id": "urn:clef/AutomationRule/enable/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AutomationRule"
+            "const": "urn:clef/AutomationRule"
           },
           "action": {
             "const": "enable"
@@ -437,11 +437,11 @@
         }
       },
       "disable": {
-        "$id": "urn:copf/AutomationRule/disable/invocation",
+        "$id": "urn:clef/AutomationRule/disable/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AutomationRule"
+            "const": "urn:clef/AutomationRule"
           },
           "action": {
             "const": "disable"
@@ -460,11 +460,11 @@
         }
       },
       "evaluate": {
-        "$id": "urn:copf/AutomationRule/evaluate/invocation",
+        "$id": "urn:clef/AutomationRule/evaluate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AutomationRule"
+            "const": "urn:clef/AutomationRule"
           },
           "action": {
             "const": "evaluate"
@@ -487,11 +487,11 @@
         }
       },
       "execute": {
-        "$id": "urn:copf/AutomationRule/execute/invocation",
+        "$id": "urn:clef/AutomationRule/execute/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/AutomationRule"
+            "const": "urn:clef/AutomationRule"
           },
           "action": {
             "const": "execute"
@@ -517,11 +517,11 @@
     "completions": {
       "define": {
         "ok": {
-          "$id": "urn:copf/AutomationRule/define/completion/ok",
+          "$id": "urn:clef/AutomationRule/define/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "define"
@@ -537,11 +537,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/AutomationRule/define/completion/exists",
+          "$id": "urn:clef/AutomationRule/define/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "define"
@@ -565,11 +565,11 @@
       },
       "enable": {
         "ok": {
-          "$id": "urn:copf/AutomationRule/enable/completion/ok",
+          "$id": "urn:clef/AutomationRule/enable/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "enable"
@@ -585,11 +585,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/AutomationRule/enable/completion/notfound",
+          "$id": "urn:clef/AutomationRule/enable/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "enable"
@@ -613,11 +613,11 @@
       },
       "disable": {
         "ok": {
-          "$id": "urn:copf/AutomationRule/disable/completion/ok",
+          "$id": "urn:clef/AutomationRule/disable/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "disable"
@@ -633,11 +633,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/AutomationRule/disable/completion/notfound",
+          "$id": "urn:clef/AutomationRule/disable/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "disable"
@@ -661,11 +661,11 @@
       },
       "evaluate": {
         "ok": {
-          "$id": "urn:copf/AutomationRule/evaluate/completion/ok",
+          "$id": "urn:clef/AutomationRule/evaluate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "evaluate"
@@ -687,11 +687,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/AutomationRule/evaluate/completion/notfound",
+          "$id": "urn:clef/AutomationRule/evaluate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "evaluate"
@@ -715,11 +715,11 @@
       },
       "execute": {
         "ok": {
-          "$id": "urn:copf/AutomationRule/execute/completion/ok",
+          "$id": "urn:clef/AutomationRule/execute/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "execute"
@@ -741,11 +741,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/AutomationRule/execute/completion/notfound",
+          "$id": "urn:clef/AutomationRule/execute/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/AutomationRule"
+              "const": "urn:clef/AutomationRule"
             },
             "action": {
               "const": "execute"

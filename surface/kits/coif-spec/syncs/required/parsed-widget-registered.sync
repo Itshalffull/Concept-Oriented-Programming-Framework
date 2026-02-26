@@ -1,5 +1,5 @@
 # ============================================================
-# ParsedWidgetRegistered — coif-spec required sync
+# ParsedWidgetRegistered — surface-spec required sync
 #
 # Register parsed widget ASTs in the Widget catalog so they
 # are available for runtime instantiation.

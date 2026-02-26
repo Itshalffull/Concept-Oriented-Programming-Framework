@@ -141,7 +141,7 @@ describe('Conduit Server — Kernel Direct Access', () => {
   it('echo concept works directly through kernel', async () => {
     const kernel = createConduitKernel();
     const result = await kernel.invokeConcept(
-      'urn:copf/Echo', 'send',
+      'urn:clef/Echo', 'send',
       { id: 'test-1', text: 'Hello from test!' },
     );
     expect(result.variant).toBe('ok');

@@ -26,7 +26,7 @@ describe('SymbolOccurrence', () => {
   describe('record', () => {
     it('records an occurrence and returns ok with an id', async () => {
       const result = await symbolOccurrenceHandler.record({
-        symbol: 'copf/concept/Article',
+        symbol: 'clef/concept/Article',
         file: 'article.concept',
         startRow: 1, startCol: 9, endRow: 1, endCol: 16,
         startByte: 8, endByte: 15,
@@ -59,17 +59,17 @@ describe('SymbolOccurrence', () => {
   describe('findDefinitions', () => {
     beforeEach(async () => {
       await symbolOccurrenceHandler.record({
-        symbol: 'copf/concept/Article', file: 'article.concept',
+        symbol: 'clef/concept/Article', file: 'article.concept',
         startRow: 1, startCol: 9, endRow: 1, endCol: 16,
         startByte: 8, endByte: 15, role: 'definition',
       }, storage);
       await symbolOccurrenceHandler.record({
-        symbol: 'copf/concept/Article', file: 'sync.sync',
+        symbol: 'clef/concept/Article', file: 'sync.sync',
         startRow: 3, startCol: 5, endRow: 3, endCol: 12,
         startByte: 30, endByte: 37, role: 'reference',
       }, storage);
       await symbolOccurrenceHandler.record({
-        symbol: 'copf/concept/Article', file: 'handler.ts',
+        symbol: 'clef/concept/Article', file: 'handler.ts',
         startRow: 10, startCol: 1, endRow: 10, endCol: 8,
         startByte: 100, endByte: 107, role: 'definition,export',
       }, storage);
@@ -77,7 +77,7 @@ describe('SymbolOccurrence', () => {
 
     it('returns only definition occurrences', async () => {
       const result = await symbolOccurrenceHandler.findDefinitions({
-        symbol: 'copf/concept/Article',
+        symbol: 'clef/concept/Article',
       }, storage);
 
       expect(result.variant).toBe('ok');
@@ -90,7 +90,7 @@ describe('SymbolOccurrence', () => {
 
     it('returns noDefinitions when none exist', async () => {
       const result = await symbolOccurrenceHandler.findDefinitions({
-        symbol: 'copf/concept/NonExistent',
+        symbol: 'clef/concept/NonExistent',
       }, storage);
 
       expect(result.variant).toBe('noDefinitions');

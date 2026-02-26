@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ExpressionLanguage",
+  "uri": "urn:clef/ExpressionLanguage",
   "name": "ExpressionLanguage",
   "typeParams": [
     {
@@ -448,11 +448,11 @@
   "jsonSchemas": {
     "invocations": {
       "registerLanguage": {
-        "$id": "urn:copf/ExpressionLanguage/registerLanguage/invocation",
+        "$id": "urn:clef/ExpressionLanguage/registerLanguage/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "registerLanguage"
@@ -475,11 +475,11 @@
         }
       },
       "registerFunction": {
-        "$id": "urn:copf/ExpressionLanguage/registerFunction/invocation",
+        "$id": "urn:clef/ExpressionLanguage/registerFunction/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "registerFunction"
@@ -502,11 +502,11 @@
         }
       },
       "registerOperator": {
-        "$id": "urn:copf/ExpressionLanguage/registerOperator/invocation",
+        "$id": "urn:clef/ExpressionLanguage/registerOperator/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "registerOperator"
@@ -529,11 +529,11 @@
         }
       },
       "parse": {
-        "$id": "urn:copf/ExpressionLanguage/parse/invocation",
+        "$id": "urn:clef/ExpressionLanguage/parse/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "parse"
@@ -560,11 +560,11 @@
         }
       },
       "evaluate": {
-        "$id": "urn:copf/ExpressionLanguage/evaluate/invocation",
+        "$id": "urn:clef/ExpressionLanguage/evaluate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "evaluate"
@@ -583,11 +583,11 @@
         }
       },
       "typeCheck": {
-        "$id": "urn:copf/ExpressionLanguage/typeCheck/invocation",
+        "$id": "urn:clef/ExpressionLanguage/typeCheck/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "typeCheck"
@@ -606,11 +606,11 @@
         }
       },
       "getCompletions": {
-        "$id": "urn:copf/ExpressionLanguage/getCompletions/invocation",
+        "$id": "urn:clef/ExpressionLanguage/getCompletions/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExpressionLanguage"
+            "const": "urn:clef/ExpressionLanguage"
           },
           "action": {
             "const": "getCompletions"
@@ -636,11 +636,11 @@
     "completions": {
       "registerLanguage": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/registerLanguage/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/registerLanguage/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "registerLanguage"
@@ -656,11 +656,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ExpressionLanguage/registerLanguage/completion/exists",
+          "$id": "urn:clef/ExpressionLanguage/registerLanguage/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "registerLanguage"
@@ -678,11 +678,11 @@
       },
       "registerFunction": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/registerFunction/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/registerFunction/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "registerFunction"
@@ -698,11 +698,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ExpressionLanguage/registerFunction/completion/exists",
+          "$id": "urn:clef/ExpressionLanguage/registerFunction/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "registerFunction"
@@ -720,11 +720,11 @@
       },
       "registerOperator": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/registerOperator/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/registerOperator/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "registerOperator"
@@ -740,11 +740,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ExpressionLanguage/registerOperator/completion/exists",
+          "$id": "urn:clef/ExpressionLanguage/registerOperator/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "registerOperator"
@@ -762,11 +762,11 @@
       },
       "parse": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/parse/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/parse/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "parse"
@@ -788,11 +788,11 @@
           }
         },
         "error": {
-          "$id": "urn:copf/ExpressionLanguage/parse/completion/error",
+          "$id": "urn:clef/ExpressionLanguage/parse/completion/error",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "parse"
@@ -810,11 +810,11 @@
       },
       "evaluate": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/evaluate/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/evaluate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "evaluate"
@@ -836,11 +836,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ExpressionLanguage/evaluate/completion/notfound",
+          "$id": "urn:clef/ExpressionLanguage/evaluate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "evaluate"
@@ -858,11 +858,11 @@
       },
       "typeCheck": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/typeCheck/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/typeCheck/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "typeCheck"
@@ -888,11 +888,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ExpressionLanguage/typeCheck/completion/notfound",
+          "$id": "urn:clef/ExpressionLanguage/typeCheck/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "typeCheck"
@@ -910,11 +910,11 @@
       },
       "getCompletions": {
         "ok": {
-          "$id": "urn:copf/ExpressionLanguage/getCompletions/completion/ok",
+          "$id": "urn:clef/ExpressionLanguage/getCompletions/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "getCompletions"
@@ -936,11 +936,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ExpressionLanguage/getCompletions/completion/notfound",
+          "$id": "urn:clef/ExpressionLanguage/getCompletions/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExpressionLanguage"
+              "const": "urn:clef/ExpressionLanguage"
             },
             "action": {
               "const": "getCompletions"

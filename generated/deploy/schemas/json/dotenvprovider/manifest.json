@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/DotenvProvider",
+  "uri": "urn:clef/DotenvProvider",
   "name": "DotenvProvider",
   "typeParams": [
     {
@@ -251,11 +251,11 @@
   "jsonSchemas": {
     "invocations": {
       "fetch": {
-        "$id": "urn:copf/DotenvProvider/fetch/invocation",
+        "$id": "urn:clef/DotenvProvider/fetch/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/DotenvProvider"
+            "const": "urn:clef/DotenvProvider"
           },
           "action": {
             "const": "fetch"
@@ -281,11 +281,11 @@
     "completions": {
       "fetch": {
         "ok": {
-          "$id": "urn:copf/DotenvProvider/fetch/completion/ok",
+          "$id": "urn:clef/DotenvProvider/fetch/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DotenvProvider"
+              "const": "urn:clef/DotenvProvider"
             },
             "action": {
               "const": "fetch"
@@ -307,11 +307,11 @@
           }
         },
         "fileNotFound": {
-          "$id": "urn:copf/DotenvProvider/fetch/completion/fileNotFound",
+          "$id": "urn:clef/DotenvProvider/fetch/completion/fileNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DotenvProvider"
+              "const": "urn:clef/DotenvProvider"
             },
             "action": {
               "const": "fetch"
@@ -333,11 +333,11 @@
           }
         },
         "parseError": {
-          "$id": "urn:copf/DotenvProvider/fetch/completion/parseError",
+          "$id": "urn:clef/DotenvProvider/fetch/completion/parseError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DotenvProvider"
+              "const": "urn:clef/DotenvProvider"
             },
             "action": {
               "const": "fetch"
@@ -367,11 +367,11 @@
           }
         },
         "variableNotSet": {
-          "$id": "urn:copf/DotenvProvider/fetch/completion/variableNotSet",
+          "$id": "urn:clef/DotenvProvider/fetch/completion/variableNotSet",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/DotenvProvider"
+              "const": "urn:clef/DotenvProvider"
             },
             "action": {
               "const": "fetch"

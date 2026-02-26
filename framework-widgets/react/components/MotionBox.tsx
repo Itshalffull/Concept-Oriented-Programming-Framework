@@ -1,6 +1,6 @@
 // ============================================================
 // MotionBox — A <div> that applies CSS transitions derived from
-// a COIF MotionTransition configuration.
+// a Clef Surface MotionTransition configuration.
 //
 // Supports the prefers-reduced-motion user preference via a
 // data attribute so that ancestor CSS can zero out durations.
@@ -22,12 +22,12 @@ import type {
   MotionDuration,
   MotionEasing,
 } from '../../shared/types.js';
-import { motionToCSS } from '../../shared/coif-bridge.js';
+import { motionToCSS } from '../../shared/surface-bridge.js';
 
 // --------------- Props ---------------
 
 export interface MotionBoxProps extends HTMLAttributes<HTMLDivElement> {
-  /** One or more COIF transition configs to apply. */
+  /** One or more Clef Surface transition configs to apply. */
   transitions: MotionTransition[];
   /** Available named durations for resolution. */
   durations: MotionDuration[];
@@ -113,7 +113,7 @@ export const MotionBox: React.FC<MotionBoxProps> = ({
       {...rest}
       className={className}
       style={mergedStyle}
-      data-coif-motion=""
+      data-surface-motion=""
       data-reduced-motion={isReduced ? '' : undefined}
     >
       {children}

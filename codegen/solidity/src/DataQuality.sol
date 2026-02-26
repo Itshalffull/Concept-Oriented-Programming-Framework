@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title DataQuality
 /// @notice Validation gating and quarantine for data quality enforcement
-/// @dev Implements the DataQuality concept from COPF specification.
+/// @dev Implements the DataQuality concept from Clef specification.
 ///      Supports creating rulesets, validating items against rulesets with scoring,
 ///      quarantining items that fail validation, and releasing them after remediation.
 

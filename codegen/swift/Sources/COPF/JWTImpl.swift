@@ -116,7 +116,7 @@ public struct JWTHandlerImpl: JWTHandler {
     /// The secret key used for HMAC-SHA256 signing
     private let secret: String
 
-    public init(secret: String = "copf-default-secret-key-change-in-production") {
+    public init(secret: String = "clef-default-secret-key-change-in-production") {
         self.secret = secret
     }
 

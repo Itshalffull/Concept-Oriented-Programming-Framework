@@ -1,9 +1,9 @@
 // ============================================================
 // ThemeSpecSymbolExtractor Handler
 //
-// Symbol extraction provider for COIF theme spec files. Extracts
+// Symbol extraction provider for Clef Surface theme spec files. Extracts
 // token names, scale values, semantic aliases, and mode variants
-// as symbols in the coif/* namespace.
+// as symbols in the surface/* namespace.
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
@@ -49,7 +49,7 @@ function extractFromThemeSpec(source: string, file: string): Array<{
       themeName = themeMatch[1] || themeMatch[2];
       if (themeName) {
         symbols.push({
-          symbolString: `coif/theme/${themeName}`,
+          symbolString: `surface/theme/${themeName}`,
           kind: 'concept',
           displayName: themeName,
           role: 'definition',
@@ -74,7 +74,7 @@ function extractFromThemeSpec(source: string, file: string): Array<{
       // Skip common YAML/JSON structure keywords
       if (['true', 'false', 'null', 'description', 'type', 'value', 'default'].includes(tokenName)) continue;
 
-      const prefix = themeName ? `coif/theme/${themeName}` : 'coif/theme';
+      const prefix = themeName ? `surface/theme/${themeName}` : 'surface/theme';
 
       if (currentSection === 'tokens' || currentSection === 'colors' || currentSection === 'spacing' || currentSection === 'typography') {
         symbols.push({
@@ -121,7 +121,7 @@ function extractFromThemeSpec(source: string, file: string): Array<{
     while ((tokenRefMatch = tokenRefRegex.exec(line)) !== null) {
       const refPath = tokenRefMatch[1];
       symbols.push({
-        symbolString: `coif/theme-ref/${refPath}`,
+        symbolString: `surface/theme-ref/${refPath}`,
         kind: 'config-key',
         displayName: refPath,
         role: 'reference',

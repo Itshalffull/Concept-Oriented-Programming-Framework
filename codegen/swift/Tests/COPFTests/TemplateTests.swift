@@ -1,7 +1,7 @@
 // TemplateTests.swift — Tests for Template concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class TemplateTests: XCTestCase {
 

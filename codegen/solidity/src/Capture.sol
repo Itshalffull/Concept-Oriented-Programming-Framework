@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Capture
 /// @notice Data ingestion from any source with subscription and change-detection support
-/// @dev Implements the Capture concept from COPF specification.
+/// @dev Implements the Capture concept from Clef specification.
 ///      Supports clipping URLs, importing files, subscribing to sources,
 ///      detecting changes, and marking items as ready for processing.
 

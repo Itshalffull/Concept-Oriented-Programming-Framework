@@ -3,7 +3,7 @@ concept GTKAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into GTK 4-specific bindings.
-    Transforms COIF's generic event model into GTK conventions:
+    Transforms Clef Surface's generic event model into GTK conventions:
     GtkWidget subclasses, GSignal handlers, GtkBox/GtkGrid layout,
     CSS-based styling via GtkCssProvider. Supports GNOME HIG
     (Human Interface Guidelines) defaults.

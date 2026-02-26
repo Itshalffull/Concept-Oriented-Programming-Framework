@@ -1,5 +1,5 @@
 # ============================================================
-# AttachAdapterToSurface — coif-render required sync
+# AttachAdapterToSurface — surface-render required sync
 #
 # When a framework adapter registers, automatically attach it
 # to any ready surface. This wires the rendering pipeline:

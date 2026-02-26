@@ -1,4 +1,4 @@
-# CleanOrphansAfterRun — generation kit recommended sync
+# CleanOrphansAfterRun — generation suite recommended sync
 sync CleanOrphansAfterRun [eager]
   purpose { Remove orphaned files after a complete generation run. }
 when {

@@ -1,9 +1,9 @@
 // ============================================================
-// KitManager Handler
+// SuiteManager Handler
 //
-// Manage concept kits -- scaffold new kits, validate kit
-// manifests and cross-kit references, run kit tests, list
-// active kits, and check app overrides.
+// Manage suites -- scaffold new suites, validate kit
+// manifests and cross-suite references, run suite tests, list
+// active suites, and check app overrides.
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
@@ -13,11 +13,11 @@ function nextId(): string {
   return `kit-manager-${++idCounter}`;
 }
 
-export const kitManagerHandler: ConceptHandler = {
+export const suiteManagerHandler: ConceptHandler = {
   async init(input: Record<string, unknown>, storage: ConceptStorage) {
     const name = input.name as string;
 
-    // Check if a kit with this name already exists
+    // Check if a suite with this name already exists
     const existing = await storage.find('kit-manager', { name });
     if (existing.length > 0) {
       return { variant: 'alreadyExists', name };
@@ -41,7 +41,7 @@ export const kitManagerHandler: ConceptHandler = {
   async validate(input: Record<string, unknown>, storage: ConceptStorage) {
     const path = input.path as string;
 
-    // Find the kit by path
+    // Find the suite by path
     const existing = await storage.find('kit-manager', { path });
     let kitId: string;
 
@@ -50,10 +50,10 @@ export const kitManagerHandler: ConceptHandler = {
     } else {
       // Create a temporary kit entry for the validation result
       kitId = nextId();
-      const kitName = path.replace(/^\.\/kits\//, '').replace(/\/$/, '');
+      const suiteName = path.replace(/^\.\/kits\//, '').replace(/\/$/, '');
       await storage.put('kit-manager', kitId, {
         id: kitId,
-        name: kitName,
+        name: suiteName,
         path,
         status: 'validated',
         createdAt: new Date().toISOString(),
@@ -61,8 +61,8 @@ export const kitManagerHandler: ConceptHandler = {
     }
 
     // Validation: in a real implementation, this would parse
-    // kit.yaml, walk concept specs, and check sync definitions.
-    // For now, report the kit as valid with zero concepts and syncs
+    // suite.yaml, walk concept specs, and check sync definitions.
+    // For now, report the suite as valid with zero concepts and syncs
     // if it was just initialized, or derive counts from stored data.
     const record = await storage.get('kit-manager', kitId);
     const concepts = (record && typeof record.conceptCount === 'number') ? record.conceptCount : 0;
@@ -79,7 +79,7 @@ export const kitManagerHandler: ConceptHandler = {
   async test(input: Record<string, unknown>, storage: ConceptStorage) {
     const path = input.path as string;
 
-    // Find the kit by path
+    // Find the suite by path
     const existing = await storage.find('kit-manager', { path });
     let kitId: string;
 
@@ -87,10 +87,10 @@ export const kitManagerHandler: ConceptHandler = {
       kitId = existing[0].id as string;
     } else {
       kitId = nextId();
-      const kitName = path.replace(/^\.\/kits\//, '').replace(/\/$/, '');
+      const suiteName = path.replace(/^\.\/kits\//, '').replace(/\/$/, '');
       await storage.put('kit-manager', kitId, {
         id: kitId,
-        name: kitName,
+        name: suiteName,
         path,
         status: 'tested',
         createdAt: new Date().toISOString(),
@@ -105,27 +105,27 @@ export const kitManagerHandler: ConceptHandler = {
 
   async list(_input: Record<string, unknown>, storage: ConceptStorage) {
     const results = await storage.find('kit-manager');
-    const kits = results.map(r => r.name as string);
-    return { variant: 'ok', kits };
+    const suites = results.map(r => r.name as string);
+    return { variant: 'ok', suites };
   },
 
   async checkOverrides(input: Record<string, unknown>, storage: ConceptStorage) {
     const path = input.path as string;
 
-    // Find the kit by path
+    // Find the suite by path
     const existing = await storage.find('kit-manager', { path });
     if (existing.length === 0) {
-      return { variant: 'invalidOverride', override: path, reason: `Kit not found at path: ${path}` };
+      return { variant: 'invalidOverride', override: path, reason: `Suite not found at path: ${path}` };
     }
 
     // In a real implementation, this would walk the app's sync
-    // override directory and cross-reference with kit sync names.
+    // override directory and cross-reference with suite sync names.
     // For now, report all overrides as valid with zero warnings.
     return { variant: 'ok', valid: 0, warnings: [] };
   },
 };
 
 /** Reset the ID counter. Useful for testing. */
-export function resetKitManagerCounter(): void {
+export function resetSuiteManagerCounter(): void {
   idCounter = 0;
 }

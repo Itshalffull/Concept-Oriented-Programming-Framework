@@ -1,12 +1,12 @@
 // CopfRemote — connector_protocol provider
-// Connects to another COPF instance API for schema sharing, identity field mapping, and bidirectional sync
+// Connects to another Clef instance API for schema sharing, identity field mapping, and bidirectional sync
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::time::Instant;
 
-pub const PROVIDER_ID: &str = "copf_remote";
+pub const PROVIDER_ID: &str = "clef_remote";
 pub const PLUGIN_TYPE: &str = "connector_protocol";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,7 +90,7 @@ fn build_api_url(base_url: &str, path: &str) -> String {
 fn build_headers(config: &ConnectorConfig) -> HashMap<String, String> {
     let mut headers = HashMap::new();
     headers.insert("Content-Type".into(), "application/json".into());
-    headers.insert("X-COPF-Client".into(), "connector_protocol/copf_remote".into());
+    headers.insert("X-Clef-Client".into(), "connector_protocol/clef_remote".into());
     if let Some(cfg_h) = &config.headers {
         headers.extend(cfg_h.clone());
     }
@@ -99,7 +99,7 @@ fn build_headers(config: &ConnectorConfig) -> HashMap<String, String> {
             headers.insert("Authorization".into(), format!("Bearer {}", token));
         }
         if let Some(api_key) = auth.get("apiKey") {
-            headers.insert("X-COPF-API-Key".into(), api_key.clone());
+            headers.insert("X-Clef-API-Key".into(), api_key.clone());
         }
     }
     headers
@@ -241,7 +241,7 @@ impl CopfRemoteConnectorProvider {
                 let version = body.data.as_ref().and_then(|d| d.get("version")).and_then(|v| v.as_str()).unwrap_or("?");
                 Ok(TestResult {
                     connected: true,
-                    message: format!("Connected to COPF instance: {} (v{})", instance, version),
+                    message: format!("Connected to Clef instance: {} (v{})", instance, version),
                     latency_ms: Some(start.elapsed().as_millis() as u64),
                 })
             }

@@ -10,13 +10,13 @@ import type {
   ThemeConfig,
 } from '../../shared/types.js';
 
-import { createSignal as coifCreateSignal } from '../../shared/coif-bridge.js';
+import { createSignal as surfaceCreateSignal } from '../../shared/surface-bridge.js';
 import { getTokenContext } from './DesignTokenProvider.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -70,18 +70,18 @@ export function ThemeSwitch(props: ThemeSwitchProps): ThemeSwitchResult {
   const button = document.createElement('button');
   button.setAttribute('type', 'button');
   button.setAttribute('role', 'switch');
-  button.setAttribute('data-coif-widget', 'theme-switch');
+  button.setAttribute('data-surface-widget', 'theme-switch');
   if (props.class) {
     button.setAttribute('class', props.class);
   }
 
   // Label span
   const labelSpan = document.createElement('span');
-  labelSpan.setAttribute('class', 'coif-theme-switch__label');
+  labelSpan.setAttribute('class', 'surface-theme-switch__label');
 
   // Indicator span
   const indicatorSpan = document.createElement('span');
-  indicatorSpan.setAttribute('class', 'coif-theme-switch__indicator');
+  indicatorSpan.setAttribute('class', 'surface-theme-switch__indicator');
   indicatorSpan.setAttribute('aria-hidden', 'true');
 
   button.appendChild(labelSpan);
@@ -109,7 +109,7 @@ export function ThemeSwitch(props: ThemeSwitchProps): ThemeSwitchResult {
 
     // Dispatch native DOM event
     button.dispatchEvent(
-      new CustomEvent('coif:theme-switch', {
+      new CustomEvent('surface:theme-switch', {
         bubbles: true,
         detail: { theme: currentTheme().name, index: nextIndex },
       })

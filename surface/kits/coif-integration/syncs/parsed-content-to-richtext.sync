@@ -1,8 +1,8 @@
 # ============================================================
-# ParsedContentToRichText — coif-integration recommended sync
+# ParsedContentToRichText — surface-integration recommended sync
 #
 # Feed parsed content AST from the library ContentParser to
-# COIF's rich-text widget via signals for interactive rendering
+# Clef Surface's rich-text widget via signals for interactive rendering
 # with inline elements.
 # ============================================================
 

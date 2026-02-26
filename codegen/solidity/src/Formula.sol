@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Formula
 /// @notice Concept-oriented formula management with expression caching and invalidation
-/// @dev Implements the Formula concept from COPF specification.
+/// @dev Implements the Formula concept from Clef specification.
 ///      Supports setting expressions with dependencies, caching results, and invalidation.
 
 contract Formula {

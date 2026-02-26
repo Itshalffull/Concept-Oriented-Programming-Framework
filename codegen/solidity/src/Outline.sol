@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Outline
 /// @notice Concept-oriented hierarchical outline structure with parent-child relationships
-/// @dev Implements the Outline concept from COPF specification.
+/// @dev Implements the Outline concept from Clef specification.
 ///      Supports registration, reparenting, collapse/expand, and tree traversal.
 
 contract Outline {

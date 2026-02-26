@@ -1,8 +1,8 @@
 # EnsureDeployKindsDefined — deploy kit registration sync
 #
 # Auto-define artifact kinds referenced by deploy provider registrations.
-# Mirrors the generation kit's EnsureKindsDefined sync.
-# See generation kit syncs: ensure-kinds-defined.sync
+# Mirrors the generation suite's EnsureKindsDefined sync.
+# See generation suite syncs: ensure-kinds-defined.sync
 
 sync EnsureDeployKindsDefined [eager]
   purpose { Auto-define kinds referenced by deploy provider registrations. }

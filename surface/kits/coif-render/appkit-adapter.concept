@@ -3,7 +3,7 @@ concept AppKitAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into AppKit-specific bindings.
-    Transforms COIF's generic event model into AppKit conventions:
+    Transforms Clef Surface's generic event model into AppKit conventions:
     NSView subclasses, target-action pattern, Auto Layout constraints,
     NSStackView layout. For macOS apps that need AppKit (not SwiftUI).
     Implementation in Swift, runs natively on macOS.

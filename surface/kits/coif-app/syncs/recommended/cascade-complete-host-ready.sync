@@ -1,5 +1,5 @@
 # ============================================================
-# CascadeCompleteHostReady — coif-app recommended sync
+# CascadeCompleteHostReady — surface-app recommended sync
 #
 # When FrameworkAdapter/render completes, the mounting cascade
 # is done — transition the host to "interactive".

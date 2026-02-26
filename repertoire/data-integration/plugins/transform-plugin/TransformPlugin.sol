@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // Transform Plugin — on-chain transform registry and provider implementations
-// for the Transform concept in the COPF Data Integration Kit.
+// for the Transform concept in the Clef Data Integration Kit.
 //
 // On-chain transforms are limited to operations feasible within EVM constraints:
 // string manipulation, type casting, lookup table resolution, and truncation.

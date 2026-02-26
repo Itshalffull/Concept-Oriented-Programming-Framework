@@ -45,7 +45,7 @@ describe('ConceptSpecSymbolExtractor', () => {
       const symbols = JSON.parse(result.symbols as string);
       const concept = symbols.find((s: Record<string, string>) => s.kind === 'concept');
       expect(concept).toBeDefined();
-      expect(concept.symbolString).toBe('copf/concept/Article');
+      expect(concept.symbolString).toBe('clef/concept/Article');
       expect(concept.displayName).toBe('Article');
       expect(concept.role).toBe('definition');
       expect(concept.line).toBe(1);
@@ -62,7 +62,7 @@ describe('ConceptSpecSymbolExtractor', () => {
       expect(result.variant).toBe('ok');
       const symbols = JSON.parse(result.symbols as string);
       const concept = symbols.find((s: Record<string, string>) => s.kind === 'concept');
-      expect(concept.symbolString).toBe('copf/concept/Collection');
+      expect(concept.symbolString).toBe('clef/concept/Collection');
     });
 
     it('extracts state fields', async () => {
@@ -110,8 +110,8 @@ describe('ConceptSpecSymbolExtractor', () => {
       const symbols = JSON.parse(result.symbols as string);
       const actions = symbols.filter((s: Record<string, string>) => s.kind === 'action');
       expect(actions).toHaveLength(2);
-      expect(actions[0].symbolString).toBe('copf/concept/Article/action/create');
-      expect(actions[1].symbolString).toBe('copf/concept/Article/action/publish');
+      expect(actions[0].symbolString).toBe('clef/concept/Article/action/create');
+      expect(actions[1].symbolString).toBe('clef/concept/Article/action/publish');
     });
 
     it('extracts variant declarations', async () => {
@@ -127,8 +127,8 @@ describe('ConceptSpecSymbolExtractor', () => {
       const symbols = JSON.parse(result.symbols as string);
       const variants = symbols.filter((s: Record<string, string>) => s.kind === 'variant');
       expect(variants).toHaveLength(2);
-      expect(variants[0].symbolString).toBe('copf/concept/Article/variant/ok');
-      expect(variants[1].symbolString).toBe('copf/concept/Article/variant/invalidTitle');
+      expect(variants[0].symbolString).toBe('clef/concept/Article/variant/ok');
+      expect(variants[1].symbolString).toBe('clef/concept/Article/variant/invalidTitle');
     });
 
     it('returns empty symbols for empty source', async () => {

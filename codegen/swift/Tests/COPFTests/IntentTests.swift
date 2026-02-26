@@ -1,7 +1,7 @@
 // IntentTests.swift — Tests for Intent concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class IntentTests: XCTestCase {
 

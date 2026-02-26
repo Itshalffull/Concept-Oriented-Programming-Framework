@@ -1,9 +1,9 @@
-# kits/deploy/kit.yaml
-kit:
+# kits/deploy/suite.yaml
+suite:
   name: deploy
   version: 0.1.0
   description: >
-    Deployment orchestration for COPF applications. Provides
+    Deployment orchestration for Clef applications. Provides
     deploy planning, progressive delivery, schema migrations,
     health verification, environment management, observability
     injection, immutable artifact management, and multi-language
@@ -165,7 +165,7 @@ concepts:
       D: { as: dotenv-file-ref, description: "Reference to a .env file entry" }
     optional: true
 
-  # --- IaC Provider Plugins (file-generating; synced with generation kit) ---
+  # --- IaC Provider Plugins (file-generating; synced with generation suite) ---
   PulumiProvider:
     spec: ./concepts/providers/pulumi-provider.concept
     params:
@@ -190,7 +190,7 @@ concepts:
       I: { as: compose-iac-ref, description: "Reference to a Docker Compose IaC file" }
     optional: true
 
-  # --- GitOps Provider Plugins (file-generating; synced with generation kit) ---
+  # --- GitOps Provider Plugins (file-generating; synced with generation suite) ---
   ArgoCDProvider:
     spec: ./concepts/providers/argocd-provider.concept
     params:
@@ -581,7 +581,7 @@ syncs:
       name: RegisterSolidityToolchain
 
 uses:
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
       - name: BuildCache

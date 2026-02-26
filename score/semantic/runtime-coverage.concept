@@ -109,7 +109,7 @@ concept RuntimeCoverage [C] {
   }
 
   invariant {
-    after record(symbol: "copf/action/Article/create", kind: "action", flowId: "f-123") -> ok(entry: c)
+    after record(symbol: "clef/action/Article/create", kind: "action", flowId: "f-123") -> ok(entry: c)
     then coverageReport(kind: "action", since: "") -> ok(report: _)
   }
 }

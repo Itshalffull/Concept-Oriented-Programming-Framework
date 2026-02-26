@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title PluginRegistry
 /// @notice Concept-oriented plugin type and instance registry
-/// @dev Implements the PluginRegistry concept from COPF specification.
+/// @dev Implements the PluginRegistry concept from Clef specification.
 ///      Supports registering plugin types with definitions, and individual plugins within types.
 
 contract PluginRegistry {

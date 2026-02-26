@@ -1,7 +1,7 @@
 // FavoriteTests.swift — Tests for Favorite concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class FavoriteTests: XCTestCase {
 

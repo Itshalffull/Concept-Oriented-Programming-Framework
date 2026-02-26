@@ -1,7 +1,7 @@
 // WorkflowTests.swift — Tests for Workflow concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class WorkflowTests: XCTestCase {
 

@@ -1,5 +1,5 @@
 # ============================================================
-# PaletteToTokens — coif-theme recommended sync
+# PaletteToTokens — surface-theme recommended sync
 #
 # When a palette generates a color scale, register each shade
 # as a primitive design token. This bridges the color system

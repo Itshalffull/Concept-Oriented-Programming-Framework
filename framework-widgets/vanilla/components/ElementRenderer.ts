@@ -4,7 +4,7 @@
 // Creates the correct DOM element for each ElementKind
 // (input, select, button, etc.) with proper attributes and
 // ARIA roles. Handles nested groups/containers recursively.
-// Uses the COIF bridge's mapElementToHTML for tag resolution.
+// Uses the Clef Surface bridge's mapElementToHTML for tag resolution.
 // ============================================================
 
 import type {
@@ -12,12 +12,12 @@ import type {
   ElementKind,
 } from '../../shared/types.js';
 
-import { mapElementToHTML } from '../../shared/coif-bridge.js';
+import { mapElementToHTML } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
 export interface ElementRendererProps {
-  /** Element configuration from COIF Element concept */
+  /** Element configuration from Clef Surface Element concept */
   config: ElementConfig;
   /** Callback when a value changes */
   onValueChange?: (id: string, value: unknown) => void;
@@ -108,7 +108,7 @@ export class ElementRenderer {
     const hint = mapElementToHTML(config.kind);
 
     const el = document.createElement(hint.tag);
-    el.setAttribute('data-coif-element', config.kind);
+    el.setAttribute('data-surface-element', config.kind);
     el.setAttribute('data-element-id', config.id);
 
     // Apply input type if applicable

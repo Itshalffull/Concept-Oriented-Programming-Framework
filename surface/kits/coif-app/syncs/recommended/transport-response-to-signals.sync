@@ -1,5 +1,5 @@
 # ============================================================
-# TransportResponseToSignals — coif-app recommended sync
+# TransportResponseToSignals — surface-app recommended sync
 #
 # When Transport/fetch returns data, batch-update the
 # corresponding signals.

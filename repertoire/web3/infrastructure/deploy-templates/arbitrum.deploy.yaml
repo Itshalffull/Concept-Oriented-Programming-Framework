@@ -11,7 +11,7 @@ deploy:
     cross-chain bridges.
 
   runtime:
-    engine: copf-sync-engine
+    engine: clef-sync-engine
     transport: http
 
   concepts:

@@ -1,5 +1,5 @@
 # ============================================================
-# NavigatorToPlatform — coif-app recommended sync
+# NavigatorToPlatform — surface-app recommended sync
 #
 # When Navigator/go succeeds, translate the navigation
 # transition to a platform-specific action.

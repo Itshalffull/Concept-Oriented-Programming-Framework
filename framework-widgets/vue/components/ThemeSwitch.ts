@@ -85,8 +85,8 @@ export const ThemeSwitch = defineComponent({
             key: theme.name,
             type: 'button',
             class: [
-              'coif-theme-switch__button',
-              { 'coif-theme-switch__button--active': activeTheme.value === theme.name },
+              'surface-theme-switch__button',
+              { 'surface-theme-switch__button--active': activeTheme.value === theme.name },
             ],
             'aria-pressed': String(activeTheme.value === theme.name),
             onClick: () => selectTheme(theme.name),
@@ -101,7 +101,7 @@ export const ThemeSwitch = defineComponent({
       return h(
         'select',
         {
-          class: 'coif-theme-switch__select',
+          class: 'surface-theme-switch__select',
           value: activeTheme.value,
           'aria-label': props.ariaLabel,
           onChange: (e: Event) => {
@@ -131,21 +131,21 @@ export const ThemeSwitch = defineComponent({
         'button',
         {
           type: 'button',
-          class: 'coif-theme-switch__toggle',
+          class: 'surface-theme-switch__toggle',
           role: 'switch',
           'aria-checked': String(isSecond),
           'aria-label': props.ariaLabel,
           onClick: () => selectTheme(isSecond ? a.name : (b?.name ?? a.name)),
         },
         [
-          h('span', { class: 'coif-theme-switch__toggle-label' }, a?.name ?? ''),
+          h('span', { class: 'surface-theme-switch__toggle-label' }, a?.name ?? ''),
           h('span', {
             class: [
-              'coif-theme-switch__toggle-thumb',
-              { 'coif-theme-switch__toggle-thumb--on': isSecond },
+              'surface-theme-switch__toggle-thumb',
+              { 'surface-theme-switch__toggle-thumb--on': isSecond },
             ],
           }),
-          h('span', { class: 'coif-theme-switch__toggle-label' }, b?.name ?? ''),
+          h('span', { class: 'surface-theme-switch__toggle-label' }, b?.name ?? ''),
         ],
       );
     }
@@ -154,7 +154,7 @@ export const ThemeSwitch = defineComponent({
       h(
         'div',
         {
-          class: 'coif-theme-switch',
+          class: 'surface-theme-switch',
           role: 'group',
           'aria-label': props.ariaLabel,
           'data-variant': props.variant,

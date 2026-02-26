@@ -1,5 +1,5 @@
 // Conduit Read Operations — Full Architecture Flow Tests
-// Validates that all read/list operations flow through the complete COPF
+// Validates that all read/list operations flow through the complete Clef
 // architecture: Web/request → syncs → concept actions → Web/respond.
 // No reads bypass the kernel.
 
@@ -37,16 +37,16 @@ const SYNC_FILES = [
 function createConduitKernel() {
   const kernel = createKernel();
 
-  kernel.registerConcept('urn:copf/User', userHandler);
-  kernel.registerConcept('urn:copf/Password', passwordHandler);
-  kernel.registerConcept('urn:copf/JWT', jwtHandler);
-  kernel.registerConcept('urn:copf/Profile', profileHandler);
-  kernel.registerConcept('urn:copf/Article', articleHandler);
-  kernel.registerConcept('urn:copf/Comment', commentHandler);
-  kernel.registerConcept('urn:copf/Tag', tagHandler);
-  kernel.registerConcept('urn:copf/Favorite', favoriteHandler);
-  kernel.registerConcept('urn:copf/Follow', followHandler);
-  kernel.registerConcept('urn:copf/Echo', echoHandler);
+  kernel.registerConcept('urn:clef/User', userHandler);
+  kernel.registerConcept('urn:clef/Password', passwordHandler);
+  kernel.registerConcept('urn:clef/JWT', jwtHandler);
+  kernel.registerConcept('urn:clef/Profile', profileHandler);
+  kernel.registerConcept('urn:clef/Article', articleHandler);
+  kernel.registerConcept('urn:clef/Comment', commentHandler);
+  kernel.registerConcept('urn:clef/Tag', tagHandler);
+  kernel.registerConcept('urn:clef/Favorite', favoriteHandler);
+  kernel.registerConcept('urn:clef/Follow', followHandler);
+  kernel.registerConcept('urn:clef/Echo', echoHandler);
 
   for (const file of SYNC_FILES) {
     const source = readFileSync(resolve(SYNCS_DIR, file), 'utf-8');
@@ -122,14 +122,14 @@ describe('Conduit Read Operations — Full Architecture Flow', () => {
 
     it('returns created tags', async () => {
       const kernel = createConduitKernel();
-      await kernel.invokeConcept('urn:copf/Tag', 'add', { tag: 'javascript', article: 'a1' });
-      await kernel.invokeConcept('urn:copf/Tag', 'add', { tag: 'copf', article: 'a2' });
+      await kernel.invokeConcept('urn:clef/Tag', 'add', { tag: 'javascript', article: 'a1' });
+      await kernel.invokeConcept('urn:clef/Tag', 'add', { tag: 'clef', article: 'a2' });
 
       const result = await kernel.handleRequest({ method: 'list_tags' });
       expect(result.error).toBeUndefined();
       const tags = JSON.parse(result.body!.tags as string);
       expect(tags).toContain('javascript');
-      expect(tags).toContain('copf');
+      expect(tags).toContain('clef');
     });
   });
 
@@ -186,7 +186,7 @@ describe('Conduit Read Operations — Full Architecture Flow', () => {
       const flowLog = kernel.getFlowLog(artResult.flowId);
       const artCompletion = flowLog.find(
         (r: { concept: string; action: string; type: string }) =>
-          r.concept === 'urn:copf/Article' && r.action === 'create' && r.type === 'completion',
+          r.concept === 'urn:clef/Article' && r.action === 'create' && r.type === 'completion',
       );
       const articleId = (artCompletion as { output: { article: string } }).output.article;
 
@@ -245,7 +245,7 @@ describe('Conduit Read Operations — Full Architecture Flow', () => {
   describe('Flow Trace Verification', () => {
     it('reads flow through Web/request → concept action → Web/respond', async () => {
       const kernel = createConduitKernel();
-      await kernel.invokeConcept('urn:copf/Tag', 'add', { tag: 'traced', article: 'a1' });
+      await kernel.invokeConcept('urn:clef/Tag', 'add', { tag: 'traced', article: 'a1' });
 
       const result = await kernel.handleRequest({ method: 'list_tags' });
       const flowLog = kernel.getFlowLog(result.flowId);
@@ -253,15 +253,15 @@ describe('Conduit Read Operations — Full Architecture Flow', () => {
       // Verify full architecture path was taken
       const webRequest = flowLog.find(
         (r: { concept: string; action: string }) =>
-          r.concept === 'urn:copf/Web' && r.action === 'request',
+          r.concept === 'urn:clef/Web' && r.action === 'request',
       );
       const tagList = flowLog.find(
         (r: { concept: string; action: string }) =>
-          r.concept === 'urn:copf/Tag' && r.action === 'list',
+          r.concept === 'urn:clef/Tag' && r.action === 'list',
       );
       const webRespond = flowLog.find(
         (r: { concept: string; action: string }) =>
-          r.concept === 'urn:copf/Web' && r.action === 'respond',
+          r.concept === 'urn:clef/Web' && r.action === 'respond',
       );
 
       expect(webRequest).toBeDefined();
@@ -276,7 +276,7 @@ describe('Conduit Read Operations — Full Architecture Flow', () => {
 
       const articleList = flowLog.find(
         (r: { concept: string; action: string }) =>
-          r.concept === 'urn:copf/Article' && r.action === 'list',
+          r.concept === 'urn:clef/Article' && r.action === 'list',
       );
       expect(articleList).toBeDefined();
     });

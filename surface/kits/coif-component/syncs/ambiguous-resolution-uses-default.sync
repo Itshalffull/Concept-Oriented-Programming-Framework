@@ -1,5 +1,5 @@
 # ============================================================
-# AmbiguousResolutionUsesDefault — coif-component recommended sync
+# AmbiguousResolutionUsesDefault — surface-component recommended sync
 #
 # When widget resolution returns ambiguous (multiple equal
 # candidates), use the first candidate as default.

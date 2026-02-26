@@ -6,7 +6,7 @@ import {WidgetTypes} from "./WidgetSpec.sol";
 /// @title ConduitWidgetRegistry
 /// @notice On-chain registry that stores all Conduit widget definitions.
 /// @dev Renderers query this registry to discover widgets and retrieve their
-///      full COIF specification (elements, anatomy, concept bindings, a11y,
+///      full Clef Surface specification (elements, anatomy, concept bindings, a11y,
 ///      and state machine). Only the deployer may register new widgets.
 
 contract ConduitWidgetRegistry {

@@ -1,34 +1,34 @@
-# Concept-Oriented Interface Framework (COIF)
+# Clef Surface
 
 ## Architecture & Implementation Specification
 
 **Version:** 0.4.0
 **Date:** 2026-02-25
-**Companion to:** COPF v0.18.0
-**Concept Library:** v0.4.0 (54 concepts, 15 kits)
+**Companion to:** Clef v0.18.0
+**Concept Library:** v0.4.0 (54 concepts, 15 suites)
 
 ### Changelog
 
 | Version | Date | Summary |
 |---------|------|---------|
-| 0.1.0 | 2026-02-19 | Initial specification. 18 concepts across 4 kits. |
+| 0.1.0 | 2026-02-19 | Initial specification. 18 concepts across 4 suites. |
 | 0.2.0 | 2026-02-19 | Concept Library integration. 4 renames. 16 cross-system syncs. |
-| 0.3.0 | 2026-02-19 | Infrastructure audit + cross-platform rework. New coif-app kit (5 concepts). 23 concepts across 5 kits. |
-| 0.4.0 | 2026-02-25 | Three-pass architectural revision: (1) **Idiom alignment** — all concept specs corrected to follow COPF independence rule; action bodies describe own state only, sync chains live in syncs; JSON blob state replaced with typed relations. (2) **Spec-first pipeline** — new `.widget` and `.theme` file formats with grammar, parser, and generator concepts in new coif-spec kit; Anatomy absorbed into `.widget` files; Widget stores validated ASTs not JSON blobs; uses COPF generation kit (Resource, KindSystem, BuildCache, Emitter). (3) **Semantic widget selection** — new Interactor (abstract interaction taxonomy), Affordance (widget capability declarations), WidgetResolver (context-aware matching engine) replace flat type-mapping table with two-step classify→resolve pipeline informed by research into CAMELEON/MARIA, TRIDENT, XForms, Zag.js, Material Design 3. 29 concepts across 7 kits. |
+| 0.3.0 | 2026-02-19 | Infrastructure audit + cross-platform rework. New surface-app suite (5 concepts). 23 concepts across 5 suites. |
+| 0.4.0 | 2026-02-25 | Three-pass architectural revision: (1) **Idiom alignment** — all concept specs corrected to follow Clef independence rule; action bodies describe own state only, sync chains live in syncs; JSON blob state replaced with typed relations. (2) **Spec-first pipeline** — new `.widget` and `.theme` file formats with grammar, parser, and generator concepts in new surface-spec suite; Anatomy absorbed into `.widget` files; Widget stores validated ASTs not JSON blobs; uses Clef generation suite (Resource, KindSystem, BuildCache, Emitter). (3) **Semantic widget selection** — new Interactor (abstract interaction taxonomy), Affordance (widget capability declarations), WidgetResolver (context-aware matching engine) replace flat type-mapping table with two-step classify→resolve pipeline informed by research into CAMELEON/MARIA, TRIDENT, XForms, Zag.js, Material Design 3. 29 concepts across 7 suites. |
 
 ---
 
 ## 1. Overview
 
-COIF is the interface companion to COPF. Where COPF defines **what software does** — concepts with state, actions, and declarative synchronizations — COIF defines **how users interact with it**. COIF is built *on* COPF: every abstraction is a concept, every coordination is a sync, every bundle is a kit. But COIF can also function standalone with any backend that exposes typed operations.
+Clef Surface is the interface companion to Clef. Where Clef defines **what software does** — concepts with state, actions, and declarative synchronizations — Clef Surface defines **how users interact with it**. Clef Surface is built *on* Clef: every abstraction is a concept, every coordination is a sync, every bundle is a suite. But Clef Surface can also function standalone with any backend that exposes typed operations.
 
-COIF generates working interfaces from concept specs the way Django admin generates UIs from models — zero config gets you a functional interface, progressive customization gets you a beautiful one.
+Clef Surface generates working interfaces from concept specs the way Django admin generates UIs from models — zero config gets you a functional interface, progressive customization gets you a beautiful one.
 
 ### 1.1 Design Principles
 
-1. **Spec-derived.** Every COPF concept spec contains enough information to generate a default interface — field types map to interaction types, interaction types map to widgets through affordance matching, actions map to controls, state maps to displays.
+1. **Spec-derived.** Every Clef concept spec contains enough information to generate a default interface — field types map to interaction types, interaction types map to widgets through affordance matching, actions map to controls, state maps to displays.
 
-2. **Headless core.** All component behavior — state machines, accessibility, keyboard navigation, ARIA patterns — lives in `.widget` spec files that compile to framework-agnostic code. Rendering is a thin adapter layer. A COIF component works in React, Vue, Solid, Svelte, or a terminal without changing its behavioral core.
+2. **Headless core.** All component behavior — state machines, accessibility, keyboard navigation, ARIA patterns — lives in `.widget` spec files that compile to framework-agnostic code. Rendering is a thin adapter layer. A Clef Surface component works in React, Vue, Solid, Svelte, or a terminal without changing its behavioral core.
 
 3. **Signals-native.** Each concept is an independent reactive unit using signals (aligned with TC39 proposal). When one concept's state changes, only UI bound to that concept re-renders. No global store, no cascading updates across unrelated concepts.
 
@@ -36,11 +36,11 @@ COIF generates working interfaces from concept specs the way Django admin genera
 
 5. **Beautiful by default.** Design tokens encoded in `.theme` spec files produce polished interfaces without custom CSS. The token system follows the W3C Design Tokens Community Group spec with a three-tier hierarchy (primitive → semantic → component).
 
-6. **Concept-composed.** Interfaces compose via synchronizations, not rigid hierarchies. An auth concept's login form and a profile concept's avatar compose through syncs — the same mechanism COPF uses for backend coordination.
+6. **Concept-composed.** Interfaces compose via synchronizations, not rigid hierarchies. An auth concept's login form and a profile concept's avatar compose through syncs — the same mechanism Clef uses for backend coordination.
 
 7. **Deploy-anywhere.** The same concept interfaces work as a CDN-loaded script tag, a bundled npm package, a React Native component, a terminal UI via Ink, or an edge-rendered page. The deployment target is a configuration choice, not an architectural constraint.
 
-8. **Spec-first pipeline.** Following COPF's own architecture: `.widget` and `.theme` files are semantic specs with grammars, parsed into typed ASTs, compiled to framework-specific output by generator concepts. JSON blobs are never stored in concept state. The same generation kit infrastructure (Resource, KindSystem, BuildCache, Emitter) powers both COPF and COIF pipelines.
+8. **Spec-first pipeline.** Following Clef's own architecture: `.widget` and `.theme` files are semantic specs with grammars, parsed into typed ASTs, compiled to framework-specific output by generator concepts. JSON blobs are never stored in concept state. The same generation suite infrastructure (Resource, KindSystem, BuildCache, Emitter) powers both Clef and Clef Surface pipelines.
 
 9. **Context-aware selection.** Widget selection is not a flat lookup table. Abstract interaction types (Interactor) are classified from field metadata, then matched against widget capability declarations (Affordance) parameterized by runtime context (viewport, platform, density, accessibility). The same `set String` field renders as checkboxes (3 options, desktop), a multi-select (30 options, desktop), or a scrolling list (any count, watch).
 
@@ -89,9 +89,9 @@ COIF generates working interfaces from concept specs the way Django admin genera
 
 **Full runtime path:** `Shell/initialize` → `Navigator/go` → `Host/mount` → `Binding/bind` → `Transport/fetch` → `UISchema/inspect` → `Interactor/classify` → `WidgetResolver/resolve` → `Widget/get` → `Machine/spawn` → `Machine/connect` → `FrameworkAdapter/render` → `Surface/mount` → pixels.
 
-### 1.3 Key Distinctions from COPF
+### 1.3 Key Distinctions from Clef
 
-| Aspect | COPF | COIF |
+| Aspect | Clef | Clef Surface |
 |--------|------|------|
 | Primary unit | Concept (state + actions) | Widget (behavior + presentation) |
 | Spec format | `.concept` files | `.widget`, `.theme` files |
@@ -102,13 +102,13 @@ COIF generates working interfaces from concept specs the way Django admin genera
 | Composition | Via syncs only | Via syncs + slots (named insertion points) |
 | Storage | Sovereign per-concept | Signals (reactive state per-concept) |
 | Wire protocol | Action messages (JSON) | Props API (connect() output) |
-| Build infra | Resource, KindSystem, BuildCache, Emitter | Same — reused from generation kit |
+| Build infra | Resource, KindSystem, BuildCache, Emitter | Same — reused from generation suite |
 
 ### 1.4 Standalone vs. Coupled Mode
 
-**Standalone mode:** COIF manages its own state using signals. Transport handles REST/GraphQL communication to any backend. No COPF engine required.
+**Standalone mode:** Clef Surface manages its own state using signals. Transport handles REST/GraphQL communication to any backend. No Clef engine required.
 
-**Coupled mode:** COIF binds directly to COPF concepts via Binding in `"coupled"` mode. Concept state feeds signals automatically. Transport is bypassed — Binding communicates directly with the COPF engine.
+**Coupled mode:** Clef Surface binds directly to Clef concepts via Binding in `"coupled"` mode. Concept state feeds signals automatically. Transport is bypassed — Binding communicates directly with the Clef engine.
 
 The switch is a single Binding mode flag. Widget code, Navigator destinations, Shell zones, and PlatformAdapter mappings don't change.
 
@@ -116,7 +116,7 @@ The switch is a single Binding mode flag. Widget code, Navigator destinations, S
 
 ## 2. The Specification Language Extensions
 
-COIF extends COPF's `.concept` grammar with an optional `interface` section that declares how a concept's state and actions surface to users. This section is ignored by the COPF backend compiler — it's metadata consumed only by COIF's UISchema concept.
+Clef Surface extends Clef's `.concept` grammar with an optional `interface` section that declares how a concept's state and actions surface to users. This section is ignored by the Clef backend compiler — it's metadata consumed only by Clef Surface's UISchema concept.
 
 ```
 InterfaceSection = "interface" "{" InterfaceEntry* "}"
@@ -191,7 +191,7 @@ Fields not mentioned in the `interface` section get auto-generated defaults base
 
 ## 3. File Formats
 
-COIF introduces two new spec file formats parallel to COPF's `.concept` files. Like `.concept` files, these are semantic specifications with grammars, parsed into typed ASTs, compiled to multiple targets.
+Clef Surface introduces two new spec file formats parallel to Clef's `.concept` files. Like `.concept` files, these are semantic specifications with grammars, parsed into typed ASTs, compiled to multiple targets.
 
 ### 3.1 `.widget` — Widget Specification
 
@@ -473,16 +473,16 @@ theme dark extends light {
 
 ### 3.4 The Parallel Pipelines
 
-COPF and COIF share the same architectural pattern:
+Clef and Clef Surface share the same architectural pattern:
 
-| Layer | COPF | COIF |
+| Layer | Clef | Clef Surface |
 |---|---|---|
 | **Spec format** | `.concept` | `.widget`, `.theme` |
 | **Semantic content** | purpose, typed state, actions, invariants | purpose, anatomy, states, a11y, props, connect, affordance, invariants |
 | **Parser** | SpecParser → ConceptAST | WidgetParser → WidgetAST, ThemeParser → ThemeAST |
 | **IR** | SchemaGen → ConceptManifest | WidgetAST/ThemeAST serve as IR directly |
 | **Generators** | TypeScriptGen, RustGen, SwiftGen, SolidityGen | WidgetGen (React, Solid, Vue, Ink), ThemeGen (CSS, RN, terminal, W3C DTCG) |
-| **Infrastructure** | Resource, KindSystem, BuildCache, Emitter | Same — reused from generation kit |
+| **Infrastructure** | Resource, KindSystem, BuildCache, Emitter | Same — reused from generation suite |
 | **Runtime catalog** | Registry | Widget (parsed ASTs), Theme (activation) |
 | **Runtime execution** | SyncEngine | Machine (state machines), Signal (reactivity) |
 
@@ -490,11 +490,11 @@ COPF and COIF share the same architectural pattern:
 
 ## 4. Core Concepts
 
-COIF is implemented as 29 concepts organized into 7 kits. Every concept follows COPF's spec format — sovereign storage, typed actions with return variants, no inter-concept references. All concept specs have been corrected per the COPF independence rule: action bodies describe own state only, sync chains live in `.sync` files, no concept references another by name.
+Clef Surface is implemented as 29 concepts organized into 7 suites. Every concept follows Clef's spec format — sovereign storage, typed actions with return variants, no inter-concept references. All concept specs have been corrected per the Clef independence rule: action bodies describe own state only, sync chains live in `.sync` files, no concept references another by name.
 
 ### Concept Overview
 
-**coif-core kit** (foundation — always loaded):
+**surface-core suite** (foundation — always loaded):
 
 | Concept | Purpose |
 |---------|---------|
@@ -504,7 +504,7 @@ COIF is implemented as 29 concepts organized into 7 kits. Every concept follows 
 | Binding | Map backend state/actions to frontend signals |
 | Signal | Reactive state container (TC39-aligned) |
 
-**coif-component kit** (headless behaviors):
+**surface-component suite** (headless behaviors):
 
 | Concept | Purpose |
 |---------|---------|
@@ -515,7 +515,7 @@ COIF is implemented as 29 concepts organized into 7 kits. Every concept follows 
 | Affordance | Widget capability declarations (WHEN a widget is suitable) |
 | WidgetResolver | Context-aware matching engine (WHICH widget for this context) |
 
-**coif-render kit** (framework adapters):
+**surface-render suite** (framework adapters):
 
 | Concept | Purpose |
 |---------|---------|
@@ -524,7 +524,7 @@ COIF is implemented as 29 concepts organized into 7 kits. Every concept follows 
 | Layout | Spatial arrangement of components on a surface |
 | Viewport | Responsive breakpoint and adaptation logic |
 
-**coif-theme kit** (visual design):
+**surface-theme suite** (visual design):
 
 | Concept | Purpose |
 |---------|---------|
@@ -534,7 +534,7 @@ COIF is implemented as 29 concepts organized into 7 kits. Every concept follows 
 | Motion | Animation timing, easing, and transition definitions |
 | Elevation | Shadow and depth system |
 
-**coif-app kit** (application orchestration):
+**surface-app suite** (application orchestration):
 
 | Concept | Purpose |
 |---------|---------|
@@ -544,7 +544,7 @@ COIF is implemented as 29 concepts organized into 7 kits. Every concept follows 
 | Shell | Root app composition with semantic zone roles |
 | PlatformAdapter | Thin platform-specific mapping |
 
-**coif-spec kit** (build-time parsing and generation):
+**surface-spec suite** (build-time parsing and generation):
 
 | Concept | Purpose |
 |---------|---------|
@@ -1930,9 +1930,9 @@ concept ThemeGen [G] {
 
 ## 5. Core Synchronizations
 
-All syncs use COPF's when/where/then mechanism. Concepts never orchestrate each other — syncs declare all inter-concept coordination.
+All syncs use Clef's when/where/then mechanism. Concepts never orchestrate each other — syncs declare all inter-concept coordination.
 
-### 5.1 Spec Pipeline Syncs (coif-spec)
+### 5.1 Spec Pipeline Syncs (surface-spec)
 
 ```
 sync WidgetSpecParsed [eager]
@@ -2015,7 +2015,7 @@ then {
 }
 ```
 
-### 5.2 Core Runtime Syncs (coif-core)
+### 5.2 Core Runtime Syncs (surface-core)
 
 ```
 sync InspectAndGenerate [eager]
@@ -2062,7 +2062,7 @@ then {
 }
 ```
 
-### 5.3 Semantic Selection Syncs (coif-component — replaces ElementToMachine)
+### 5.3 Semantic Selection Syncs (surface-component — replaces ElementToMachine)
 
 ```
 sync ElementsClassified [eager]
@@ -2164,7 +2164,7 @@ then {
 }
 ```
 
-### 5.5 App Orchestration Syncs (coif-app)
+### 5.5 App Orchestration Syncs (surface-app)
 
 ```
 sync NavigatorGoMountsHost [eager]
@@ -2315,7 +2315,7 @@ then {
 }
 ```
 
-### 5.6 Intent Integration Syncs (coif-integration)
+### 5.6 Intent Integration Syncs (surface-integration)
 
 ```
 sync IntentImprovesClassification [eager]
@@ -2473,17 +2473,17 @@ Affordance/declare(
 
 ## 7. Kit Declarations
 
-### 7.1 coif-spec kit
+### 7.1 surface-spec suite
 
 ```yaml
 kit:
-  name: coif-spec
+  name: surface-spec
   version: 0.1.0
   description: >
-    Spec file parsing and generation for COIF. Defines .widget
+    Spec file parsing and generation for Clef Surface. Defines .widget
     and .theme file formats with parsers and generators.
   dependencies:
-    - "@copf/generation": ">=0.1.0"
+    - "@clef/generation": ">=0.1.0"
 
 concepts:
   WidgetParser:
@@ -2507,11 +2507,11 @@ syncs:
     - path: ./syncs/theme-generated.sync
 
 uses:
-  - kit: "@copf/generation"
+  - kit: "@clef/generation"
     concepts: [ Resource, KindSystem, BuildCache, Emitter ]
-  - kit: coif-core
+  - kit: surface-core
     concepts: [ DesignToken, Widget ]
-  - kit: coif-render
+  - kit: surface-render
     concepts: [ FrameworkAdapter, Surface ]
 ```
 
@@ -2521,21 +2521,21 @@ Generation kit integration: Resource tracks `.widget`/`.theme` files with conten
 
 ## 8. Implementation Plan
 
-Building from the current COPF implementation (v0.18.0 with TypeScript framework, sync engine, parser, generators). COIF requires a working COPF engine (Stage 3+) as a prerequisite. Each stage deploys concepts and syncs to the COPF engine.
+Building from the current Clef implementation (v0.18.0 with TypeScript framework, sync engine, parser, generators). Clef Surface requires a working Clef engine (Stage 3+) as a prerequisite. Each stage deploys concepts and syncs to the Clef engine.
 
-### Stage 0: Foundation (coif-core)
+### Stage 0: Foundation (surface-core)
 
 Deploy 5 concepts: DesignToken, Element, UISchema, Binding, Signal. Deploy 4 syncs: InspectAndGenerate, UISchemaToElements, BindingStateSync, ConceptStateToSignal.
 
 **Acceptance:** Binding/bind → UISchema/inspect → element tree extracted. Signal write → Binding sync → backend update. Token alias chains resolve.
 
-### Stage 1: Spec Pipeline (coif-spec)
+### Stage 1: Spec Pipeline (surface-spec)
 
 Deploy 4 concepts: WidgetParser, ThemeParser, WidgetGen, ThemeGen. Deploy 7 syncs (spec pipeline). Register `.widget` and `.theme` as Resource kinds in KindSystem. Build the `.widget` grammar parser (recursive descent, mirrors SpecParser pattern). Build the `.theme` grammar parser.
 
 **Acceptance:** `.widget` file tracked → parsed → WidgetAST produced → Widget/register. `.theme` file tracked → parsed → tokens registered. WidgetGen produces React component from WidgetAST.
 
-### Stage 2: Widget Kit (coif-component)
+### Stage 2: Widget Kit (surface-component)
 
 Deploy 6 concepts: Widget (revised), Machine, Slot, Interactor, Affordance, WidgetResolver. Deploy semantic selection syncs (ElementsClassified, ClassifiedElementsResolved, ResolvedWidgetSpawned, etc.). Register standard interactor types. Register standard affordance declarations. Build initial 10 `.widget` specs (button, input, textarea, select, checkbox, toggle, dialog, tabs, form, toast).
 
@@ -2545,9 +2545,9 @@ Deploy 6 concepts: Widget (revised), Machine, Slot, Interactor, Affordance, Widg
 
 Deploy 4 concepts: FrameworkAdapter, Surface, Layout, Viewport. Deploy render syncs. Build React adapter (~200 LOC). Build hooks API (useBinding, useMachine, useSignal). Viewport feeds context to WidgetResolver.
 
-**Acceptance:** `coif.auto('urn:app/Article')` produces working CRUD. Viewport change → WidgetResolver re-resolves → different widgets on mobile breakpoint.
+**Acceptance:** `surface.auto('urn:app/Article')` produces working CRUD. Viewport change → WidgetResolver re-resolves → different widgets on mobile breakpoint.
 
-### Stage 4: App Kit
+### Stage 4: App Suite
 
 Deploy 5 concepts: Navigator, Host, Transport, Shell, PlatformAdapter. Deploy ~15 app orchestration syncs. Build browser PlatformAdapter (~150 LOC).
 
@@ -2571,16 +2571,16 @@ Build additional FrameworkAdapters: Solid, Vue, Svelte, Ink (~200 LOC each). Bui
 
 ```
 my-app/
-├── concepts/              # COPF .concept specs (backend)
+├── concepts/              # Clef .concept specs (backend)
 │   ├── article.concept
 │   ├── user.concept
 │   └── comment.concept
-├── widgets/               # COIF .widget specs (frontend behavior)
+├── widgets/               # Clef Surface .widget specs (frontend behavior)
 │   ├── dialog.widget
 │   ├── form.widget
 │   ├── article-card.widget
 │   └── comment-thread.widget
-├── themes/                # COIF .theme specs (visual design)
+├── themes/                # Clef Surface .theme specs (visual design)
 │   ├── light.theme
 │   ├── dark.theme
 │   └── high-contrast.theme
@@ -2606,12 +2606,12 @@ my-app/
 | How does widget selection work? | Two-step: Interactor/classify (type → semantic) + WidgetResolver/resolve (semantic + context → widget via Affordance). |
 | What replaces the flat type-mapping table? | Interactor classification rules + standard affordance declarations. Both extensible. |
 | Can apps add custom widget-selection rules? | Yes — Affordance/declare with higher specificity wins over defaults. |
-| How do concepts compose in UI? | Via syncs (same as COPF) + slots (named insertion points) + `.widget` compose sections. |
+| How do concepts compose in UI? | Via syncs (same as Clef) + slots (named insertion points) + `.widget` compose sections. |
 | Does Host orchestrate the cascade? | No. Host tracks lifecycle state. Syncs declare the cascade. Same result, declarative wiring. |
 | Do concept specs reference each other? | Never. All inter-concept coordination is in syncs. Action bodies describe own state only. |
-| Where does COPF's PluginRegistry fit? | FrameworkAdapter and PlatformAdapter use the provider pattern — register implementations, syncs dispatch to active one. WidgetGen/ThemeGen targets could be providers if extended via PluginRegistry. |
-| How does the generation kit integrate? | COIF's parsers and generators are new "kinds" in KindSystem. Resource tracks `.widget`/`.theme` files. BuildCache handles incremental builds. Emitter writes output. No new infrastructure concepts needed. |
-| Spec-time vs runtime? | Clean separation. coif-spec concepts (parsers, generators) run at build time. coif-core/component/render/theme/app concepts run at runtime. Same split as COPF's SpecParser vs SyncEngine. |
+| Where does Clef's PluginRegistry fit? | FrameworkAdapter and PlatformAdapter use the provider pattern — register implementations, syncs dispatch to active one. WidgetGen/ThemeGen targets could be providers if extended via PluginRegistry. |
+| How does the generation suite integrate? | Clef Surface's parsers and generators are new "kinds" in KindSystem. Resource tracks `.widget`/`.theme` files. BuildCache handles incremental builds. Emitter writes output. No new infrastructure concepts needed. |
+| Spec-time vs runtime? | Clean separation. surface-spec concepts (parsers, generators) run at build time. surface-core/component/render/theme/app concepts run at runtime. Same split as Clef's SpecParser vs SyncEngine. |
 
 ---
 
@@ -2619,13 +2619,13 @@ my-app/
 
 | Kit | Concepts | New in v0.4.0 |
 |-----|----------|---------------|
-| coif-core | 5 | Element enriched (interactorType, resolvedWidget) |
-| coif-component | 6 | +Interactor, +Affordance, +WidgetResolver; Anatomy absorbed into .widget |
-| coif-render | 4 | — |
-| coif-theme | 5 | Inputs from ThemeParser, not imperative JSON |
-| coif-app | 5 | All specs corrected per independence rule |
-| coif-spec | 4 | NEW: WidgetParser, ThemeParser, WidgetGen, ThemeGen |
-| coif-integration | (syncs only) | +IntentImprovesClassification, +CustomizationOverridesResolver |
+| surface-core | 5 | Element enriched (interactorType, resolvedWidget) |
+| surface-component | 6 | +Interactor, +Affordance, +WidgetResolver; Anatomy absorbed into .widget |
+| surface-render | 4 | — |
+| surface-theme | 5 | Inputs from ThemeParser, not imperative JSON |
+| surface-app | 5 | All specs corrected per independence rule |
+| surface-spec | 4 | NEW: WidgetParser, ThemeParser, WidgetGen, ThemeGen |
+| surface-integration | (syncs only) | +IntentImprovesClassification, +CustomizationOverridesResolver |
 | **Total** | **29** | +6 new, -1 absorbed (Anatomy) |
 
-Combined with COPF concept library: 54 library + 29 COIF = 83 concepts across 22 kits.
+Combined with Clef concept library: 54 library + 29 Clef Surface = 83 concepts across 22 suites.

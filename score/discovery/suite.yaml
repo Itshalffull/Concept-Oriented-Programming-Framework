@@ -47,18 +47,18 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: DefinitionUnit
       - name: ContentDigest
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
-  - kit: query-retrieval
+  - suite: query-retrieval
     concepts:
       - name: SearchIndex
       - name: Query
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 

@@ -1,7 +1,7 @@
 [project]
-name = "copf"
+name = "clef"
 version = "0.1.0"
-description = "COPF Python SDK — write concept handlers in Python"
+description = "Clef Python SDK — write concept handlers in Python"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 

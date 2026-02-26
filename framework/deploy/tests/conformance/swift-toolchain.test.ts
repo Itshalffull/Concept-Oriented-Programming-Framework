@@ -8,9 +8,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { swiftToolchainHandler } from '../../../../implementations/typescript/deploy/swift-toolchain.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('SwiftToolchain conformance', () => {
   let storage: ConceptStorage;

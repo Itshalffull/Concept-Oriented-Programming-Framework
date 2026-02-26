@@ -1,7 +1,7 @@
 # ============================================================
-# NotificationToToast — coif-integration recommended sync
+# NotificationToToast — surface-integration recommended sync
 #
-# Display library Notifications as COIF toast widgets. Each
+# Display library Notifications as Clef Surface toast widgets. Each
 # notification spawns a toast machine instance with the message
 # and appropriate variant.
 # ============================================================

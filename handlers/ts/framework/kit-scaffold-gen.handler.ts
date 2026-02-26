@@ -1,5 +1,5 @@
 // ============================================================
-// KitScaffoldGen — Kit manifest (suite.yaml) scaffold generator
+// SuiteScaffoldGen — Suite manifest (suite.yaml) scaffold generator
 //
 // Generates a suite.yaml manifest and directory structure for a
 // new Clef kit from provided inputs: name, description, concept
@@ -89,7 +89,7 @@ function buildKitYaml(input: Record<string, unknown>): string {
     lines.push('dependencies: []');
   }
 
-  // Infrastructure section for domain kits
+  // Infrastructure section for domain suites
   if (isDomain) {
     lines.push('');
     lines.push('infrastructure:');
@@ -102,13 +102,13 @@ function buildKitYaml(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const kitScaffoldGenHandler: ConceptHandler = {
+export const suiteScaffoldGenHandler: ConceptHandler = {
   async register() {
     return {
       variant: 'ok',
-      name: 'KitScaffoldGen',
+      name: 'SuiteScaffoldGen',
       inputKind: 'KitConfig',
-      outputKind: 'KitManifest',
+      outputKind: 'SuiteManifest',
       capabilities: JSON.stringify(['kit-yaml', 'directory-structure']),
     };
   },
@@ -167,7 +167,7 @@ export const kitScaffoldGenHandler: ConceptHandler = {
   },
 
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await kitScaffoldGenHandler.generate!(input, storage);
+    const result = await suiteScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
     return {

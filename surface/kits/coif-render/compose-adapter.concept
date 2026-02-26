@@ -3,7 +3,7 @@ concept ComposeAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into Jetpack Compose-specific
-    bindings. Transforms COIF's generic event model into Compose
+    bindings. Transforms Clef Surface's generic event model into Compose
     conventions: @Composable functions, Modifier chains, remember/
     mutableStateOf state, Column/Row/Box layout. Implementation
     in Kotlin, runs natively on Android/Desktop JVM.

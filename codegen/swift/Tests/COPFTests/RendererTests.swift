@@ -1,7 +1,7 @@
 // RendererTests.swift — Tests for Renderer concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class RendererTests: XCTestCase {
 

@@ -1,4 +1,4 @@
-# Infrastructure Kit Manifest
+# Infrastructure Suite Manifest
 name: infrastructure
 version: 0.1.0
 description: "System infrastructure — caching, configuration sync, path aliases, plugin discovery, event dispatching, and validation."

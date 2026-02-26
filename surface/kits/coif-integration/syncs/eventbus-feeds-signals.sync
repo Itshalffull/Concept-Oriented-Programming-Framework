@@ -1,7 +1,7 @@
 # ============================================================
-# EventBusFeedsSignals — coif-integration recommended sync
+# EventBusFeedsSignals — surface-integration recommended sync
 #
-# Route domain events from the library EventBus to COIF signals
+# Route domain events from the library EventBus to Clef Surface signals
 # subscribed to those event types. Enables real-time UI updates
 # from domain events.
 # ============================================================

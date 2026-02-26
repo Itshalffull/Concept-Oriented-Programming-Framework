@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/SwiftBuilder",
+  "uri": "urn:clef/SwiftBuilder",
   "name": "SwiftBuilder",
   "typeParams": [
     {
@@ -190,7 +190,7 @@
               }
             }
           ],
-          "prose": "Run swift build with the resolved toolchain \n Configuration maps from COPF modes : \n debug -> swift build ( default ) \n release -> swift build c release \n Executor strategy ( from deploy manifest ) : \n local -> invoke swiftc directly on host \n remote -> send source to remote build endpoint \n container -> run swift build in Docker container \n For cross compilation , passes triple to swiftc \n Packages result as framework or xcframework"
+          "prose": "Run swift build with the resolved toolchain \n Configuration maps from Clef modes : \n debug -> swift build ( default ) \n release -> swift build c release \n Executor strategy ( from deploy manifest ) : \n local -> invoke swiftc directly on host \n remote -> send source to remote build endpoint \n container -> run swift build in Docker container \n For cross compilation , passes triple to swiftc \n Packages result as framework or xcframework"
         },
         {
           "tag": "compilationError",
@@ -498,7 +498,7 @@
               "name": "artifactPath",
               "value": {
                 "kind": "literal",
-                "value": ".copf-artifacts/swift/password"
+                "value": ".clef-artifacts/swift/password"
               }
             },
             {
@@ -575,11 +575,11 @@
   "jsonSchemas": {
     "invocations": {
       "build": {
-        "$id": "urn:copf/SwiftBuilder/build/invocation",
+        "$id": "urn:clef/SwiftBuilder/build/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SwiftBuilder"
+            "const": "urn:clef/SwiftBuilder"
           },
           "action": {
             "const": "build"
@@ -632,11 +632,11 @@
         }
       },
       "test": {
-        "$id": "urn:copf/SwiftBuilder/test/invocation",
+        "$id": "urn:clef/SwiftBuilder/test/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SwiftBuilder"
+            "const": "urn:clef/SwiftBuilder"
           },
           "action": {
             "const": "test"
@@ -659,11 +659,11 @@
         }
       },
       "package": {
-        "$id": "urn:copf/SwiftBuilder/package/invocation",
+        "$id": "urn:clef/SwiftBuilder/package/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SwiftBuilder"
+            "const": "urn:clef/SwiftBuilder"
           },
           "action": {
             "const": "package"
@@ -686,11 +686,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/SwiftBuilder/register/invocation",
+        "$id": "urn:clef/SwiftBuilder/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/SwiftBuilder"
+            "const": "urn:clef/SwiftBuilder"
           },
           "action": {
             "const": "register"
@@ -706,11 +706,11 @@
     "completions": {
       "build": {
         "ok": {
-          "$id": "urn:copf/SwiftBuilder/build/completion/ok",
+          "$id": "urn:clef/SwiftBuilder/build/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "build"
@@ -740,11 +740,11 @@
           }
         },
         "compilationError": {
-          "$id": "urn:copf/SwiftBuilder/build/completion/compilationError",
+          "$id": "urn:clef/SwiftBuilder/build/completion/compilationError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "build"
@@ -785,11 +785,11 @@
           }
         },
         "linkerError": {
-          "$id": "urn:copf/SwiftBuilder/build/completion/linkerError",
+          "$id": "urn:clef/SwiftBuilder/build/completion/linkerError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "build"
@@ -813,11 +813,11 @@
       },
       "test": {
         "ok": {
-          "$id": "urn:copf/SwiftBuilder/test/completion/ok",
+          "$id": "urn:clef/SwiftBuilder/test/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "test"
@@ -851,11 +851,11 @@
           }
         },
         "testFailure": {
-          "$id": "urn:copf/SwiftBuilder/test/completion/testFailure",
+          "$id": "urn:clef/SwiftBuilder/test/completion/testFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "test"
@@ -902,11 +902,11 @@
       },
       "package": {
         "ok": {
-          "$id": "urn:copf/SwiftBuilder/package/completion/ok",
+          "$id": "urn:clef/SwiftBuilder/package/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "package"
@@ -932,11 +932,11 @@
           }
         },
         "formatUnsupported": {
-          "$id": "urn:copf/SwiftBuilder/package/completion/formatUnsupported",
+          "$id": "urn:clef/SwiftBuilder/package/completion/formatUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "package"
@@ -960,11 +960,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/SwiftBuilder/register/completion/ok",
+          "$id": "urn:clef/SwiftBuilder/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/SwiftBuilder"
+              "const": "urn:clef/SwiftBuilder"
             },
             "action": {
               "const": "register"

@@ -1,7 +1,7 @@
 // generated: DailyNote/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class DailyNoteConformanceTests: XCTestCase {
 

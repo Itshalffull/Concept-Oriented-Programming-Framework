@@ -1,7 +1,7 @@
 // ControlTests.swift — Tests for Control concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ControlTests: XCTestCase {
 

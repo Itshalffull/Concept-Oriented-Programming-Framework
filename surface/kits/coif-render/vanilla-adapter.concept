@@ -3,7 +3,7 @@ concept VanillaAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into vanilla DOM API bindings.
-    Transforms COIF's generic event model into raw browser APIs:
+    Transforms Clef Surface's generic event model into raw browser APIs:
     addEventListener, setAttribute, classList, style property
     assignments. No framework dependency — direct DOM manipulation.
   }

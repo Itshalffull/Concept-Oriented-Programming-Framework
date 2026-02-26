@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/IaC",
+  "uri": "urn:clef/IaC",
   "name": "IaC",
   "typeParams": [
     {
@@ -568,11 +568,11 @@
   "jsonSchemas": {
     "invocations": {
       "emit": {
-        "$id": "urn:copf/IaC/emit/invocation",
+        "$id": "urn:clef/IaC/emit/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/IaC"
+            "const": "urn:clef/IaC"
           },
           "action": {
             "const": "emit"
@@ -595,11 +595,11 @@
         }
       },
       "preview": {
-        "$id": "urn:copf/IaC/preview/invocation",
+        "$id": "urn:clef/IaC/preview/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/IaC"
+            "const": "urn:clef/IaC"
           },
           "action": {
             "const": "preview"
@@ -622,11 +622,11 @@
         }
       },
       "apply": {
-        "$id": "urn:copf/IaC/apply/invocation",
+        "$id": "urn:clef/IaC/apply/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/IaC"
+            "const": "urn:clef/IaC"
           },
           "action": {
             "const": "apply"
@@ -649,11 +649,11 @@
         }
       },
       "detectDrift": {
-        "$id": "urn:copf/IaC/detectDrift/invocation",
+        "$id": "urn:clef/IaC/detectDrift/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/IaC"
+            "const": "urn:clef/IaC"
           },
           "action": {
             "const": "detectDrift"
@@ -672,11 +672,11 @@
         }
       },
       "teardown": {
-        "$id": "urn:copf/IaC/teardown/invocation",
+        "$id": "urn:clef/IaC/teardown/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/IaC"
+            "const": "urn:clef/IaC"
           },
           "action": {
             "const": "teardown"
@@ -702,11 +702,11 @@
     "completions": {
       "emit": {
         "ok": {
-          "$id": "urn:copf/IaC/emit/completion/ok",
+          "$id": "urn:clef/IaC/emit/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "emit"
@@ -732,11 +732,11 @@
           }
         },
         "unsupportedResource": {
-          "$id": "urn:copf/IaC/emit/completion/unsupportedResource",
+          "$id": "urn:clef/IaC/emit/completion/unsupportedResource",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "emit"
@@ -764,11 +764,11 @@
       },
       "preview": {
         "ok": {
-          "$id": "urn:copf/IaC/preview/completion/ok",
+          "$id": "urn:clef/IaC/preview/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "preview"
@@ -811,11 +811,11 @@
           }
         },
         "stateCorrupted": {
-          "$id": "urn:copf/IaC/preview/completion/stateCorrupted",
+          "$id": "urn:clef/IaC/preview/completion/stateCorrupted",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "preview"
@@ -843,11 +843,11 @@
       },
       "apply": {
         "ok": {
-          "$id": "urn:copf/IaC/apply/completion/ok",
+          "$id": "urn:clef/IaC/apply/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "apply"
@@ -886,11 +886,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/IaC/apply/completion/partial",
+          "$id": "urn:clef/IaC/apply/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "apply"
@@ -926,11 +926,11 @@
           }
         },
         "applyFailed": {
-          "$id": "urn:copf/IaC/apply/completion/applyFailed",
+          "$id": "urn:clef/IaC/apply/completion/applyFailed",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "apply"
@@ -954,11 +954,11 @@
       },
       "detectDrift": {
         "ok": {
-          "$id": "urn:copf/IaC/detectDrift/completion/ok",
+          "$id": "urn:clef/IaC/detectDrift/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "detectDrift"
@@ -990,11 +990,11 @@
           }
         },
         "noDrift": {
-          "$id": "urn:copf/IaC/detectDrift/completion/noDrift",
+          "$id": "urn:clef/IaC/detectDrift/completion/noDrift",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "detectDrift"
@@ -1012,11 +1012,11 @@
       },
       "teardown": {
         "ok": {
-          "$id": "urn:copf/IaC/teardown/completion/ok",
+          "$id": "urn:clef/IaC/teardown/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "teardown"
@@ -1041,11 +1041,11 @@
           }
         },
         "partial": {
-          "$id": "urn:copf/IaC/teardown/completion/partial",
+          "$id": "urn:clef/IaC/teardown/completion/partial",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/IaC"
+              "const": "urn:clef/IaC"
             },
             "action": {
               "const": "teardown"

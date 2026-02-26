@@ -10,9 +10,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createInMemoryStorage } from '@clef/kernel';
 import { flakyTestHandler } from '../../implementations/typescript/flaky-test.impl.js';
-import type { ConceptStorage } from '@copf/kernel';
+import type { ConceptStorage } from '@clef/kernel';
 
 describe('FlakyTest conformance', () => {
   let storage: ConceptStorage;

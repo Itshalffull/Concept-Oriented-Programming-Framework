@@ -10,7 +10,7 @@
 //
 // Flow:
 //   1. Receive completion from queue (SQS or Pub/Sub)
-//   2. Load compiled syncs from bundled .copf-cache/
+//   2. Load compiled syncs from bundled .clef-cache/
 //   3. Build sync index (cached across warm invocations)
 //   4. Load relevant flow from durable action log
 //   5. Run matching algorithm

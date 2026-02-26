@@ -62,7 +62,7 @@ describe('SyncScopeProvider', () => {
       expect(syncDecl).toBeDefined();
       expect(syncDecl.scopeId).toBe(scopes[0].id);
       expect(syncDecl.kind).toBe('sync');
-      expect(syncDecl.symbolString).toBe('copf/sync/ArticleLabel');
+      expect(syncDecl.symbolString).toBe('clef/sync/ArticleLabel');
     });
 
     it('creates when clause scope as child of sync scope', async () => {
@@ -201,7 +201,7 @@ describe('SyncScopeProvider', () => {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/sync/ArticleLabel/var/myTitle');
+      expect(result.symbolString).toBe('clef/sync/ArticleLabel/var/myTitle');
     });
 
     it('resolves sync name from global scope', async () => {
@@ -223,7 +223,7 @@ describe('SyncScopeProvider', () => {
       }, storage);
 
       expect(result.variant).toBe('ok');
-      expect(result.symbolString).toBe('copf/sync/ArticleLabel');
+      expect(result.symbolString).toBe('clef/sync/ArticleLabel');
     });
 
     it('returns unresolved for unknown name', async () => {

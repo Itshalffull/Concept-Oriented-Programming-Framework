@@ -166,7 +166,7 @@ export const performanceProfileHandler: ConceptHandler = {
       try {
         const thenActions = JSON.parse(sync.thenActions as string || '[]');
         for (const action of thenActions) {
-          const actionSymbol = `copf/action/${(action as Record<string, unknown>).concept}/${(action as Record<string, unknown>).action}`;
+          const actionSymbol = `clef/action/${(action as Record<string, unknown>).concept}/${(action as Record<string, unknown>).action}`;
           const actionP90 = profileMap.get(actionSymbol) || 0;
           totalP90 += actionP90;
           if (actionP90 > maxP90) {

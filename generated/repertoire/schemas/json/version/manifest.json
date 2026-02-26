@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Version",
+  "uri": "urn:clef/Version",
   "name": "Version",
   "typeParams": [
     {
@@ -339,11 +339,11 @@
   "jsonSchemas": {
     "invocations": {
       "snapshot": {
-        "$id": "urn:copf/Version/snapshot/invocation",
+        "$id": "urn:clef/Version/snapshot/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Version"
+            "const": "urn:clef/Version"
           },
           "action": {
             "const": "snapshot"
@@ -374,11 +374,11 @@
         }
       },
       "listVersions": {
-        "$id": "urn:copf/Version/listVersions/invocation",
+        "$id": "urn:clef/Version/listVersions/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Version"
+            "const": "urn:clef/Version"
           },
           "action": {
             "const": "listVersions"
@@ -397,11 +397,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/Version/rollback/invocation",
+        "$id": "urn:clef/Version/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Version"
+            "const": "urn:clef/Version"
           },
           "action": {
             "const": "rollback"
@@ -420,11 +420,11 @@
         }
       },
       "diff": {
-        "$id": "urn:copf/Version/diff/invocation",
+        "$id": "urn:clef/Version/diff/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Version"
+            "const": "urn:clef/Version"
           },
           "action": {
             "const": "diff"
@@ -450,11 +450,11 @@
     "completions": {
       "snapshot": {
         "ok": {
-          "$id": "urn:copf/Version/snapshot/completion/ok",
+          "$id": "urn:clef/Version/snapshot/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Version"
+              "const": "urn:clef/Version"
             },
             "action": {
               "const": "snapshot"
@@ -478,11 +478,11 @@
       },
       "listVersions": {
         "ok": {
-          "$id": "urn:copf/Version/listVersions/completion/ok",
+          "$id": "urn:clef/Version/listVersions/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Version"
+              "const": "urn:clef/Version"
             },
             "action": {
               "const": "listVersions"
@@ -506,11 +506,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/Version/rollback/completion/ok",
+          "$id": "urn:clef/Version/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Version"
+              "const": "urn:clef/Version"
             },
             "action": {
               "const": "rollback"
@@ -532,11 +532,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Version/rollback/completion/notfound",
+          "$id": "urn:clef/Version/rollback/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Version"
+              "const": "urn:clef/Version"
             },
             "action": {
               "const": "rollback"
@@ -560,11 +560,11 @@
       },
       "diff": {
         "ok": {
-          "$id": "urn:copf/Version/diff/completion/ok",
+          "$id": "urn:clef/Version/diff/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Version"
+              "const": "urn:clef/Version"
             },
             "action": {
               "const": "diff"
@@ -586,11 +586,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Version/diff/completion/notfound",
+          "$id": "urn:clef/Version/diff/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Version"
+              "const": "urn:clef/Version"
             },
             "action": {
               "const": "diff"

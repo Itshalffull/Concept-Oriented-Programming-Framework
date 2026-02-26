@@ -1,6 +1,6 @@
-# Generation Kit — Full Implementation Plan
+# Generation Suite — Full Implementation Plan
 
-This plan implements the generation kit as described in `copf-generation-kit.md`. It is organized into six sequential work streams, each producing a testable, independently valuable deliverable. Within each work stream, tasks are ordered by dependency.
+This plan implements the generation suite as described in `clef-generation-suite.md`. It is organized into six sequential work streams, each producing a testable, independently valuable deliverable. Within each work stream, tasks are ordered by dependency.
 
 ## Codebase Baseline (Current State)
 
@@ -8,17 +8,17 @@ Before implementing, note what already exists:
 
 | Asset | Location | Status |
 |---|---|---|
-| **Emitter concept spec** | `kits/interface/concepts/emitter.concept` | Exists (interface kit version — simpler than generation kit spec) |
+| **Emitter concept spec** | `kits/interface/concepts/emitter.concept` | Exists (Clef Bind version — simpler than generation suite spec) |
 | **Emitter implementation** | `implementations/typescript/framework/emitter.impl.ts` | Exists (write, format, clean, manifest — missing writeBatch, trace, affected, audit, sourceMap) |
 | **PluginRegistry concept spec** | `kits/infrastructure/plugin-registry.concept` | Exists (missing `register` action — only has discover, createInstance, getDefinitions, alterDefinitions, derivePlugins) |
 | **PluginRegistry implementation** | `implementations/typescript/app/plugin-registry.impl.ts` | Exists (implements current spec — needs `register` action added) |
-| **Cache infrastructure** | `kernel/src/cache.ts` | Exists (filesystem-level .copf-cache — hash computation, manifest read/write, compiled artifact caching) |
+| **Cache infrastructure** | `kernel/src/cache.ts` | Exists (filesystem-level .clef-cache — hash computation, manifest read/write, compiled artifact caching) |
 | **TypeScriptGen** | `implementations/typescript/framework/typescript-gen.impl.ts` | Exists (already returns `{ files }` array from generate action) |
 | **RustGen, SwiftGen, SolidityGen** | `implementations/typescript/framework/*.impl.ts` | Exist |
 | **SchemaGen** | `implementations/typescript/framework/schema-gen.impl.ts` | Exists (produces ConceptManifest) |
 | **SpecParser** | `implementations/typescript/framework/spec-parser.impl.ts` | Exists |
-| **Interface kit** | `kits/interface/` | Exists (26 concepts, 40+ syncs, full kit.yaml) |
-| **Deploy kit** | `kits/deploy/` | Exists (30+ concepts, 30+ syncs, full kit.yaml) |
+| **Interface kit** | `kits/interface/` | Exists (26 concepts, 40+ syncs, full suite.yaml) |
+| **Deploy kit** | `kits/deploy/` | Exists (30+ concepts, 30+ syncs, full suite.yaml) |
 | **Generation kit** | `kits/generation/` | Does NOT exist yet |
 | **ConceptHandler pattern** | `kernel/src/types.ts` | Established (async methods returning `{ variant, ...fields }`) |
 | **ConceptStorage pattern** | `kernel/src/types.ts` | Established (put/get/find/del/delMany with relations) |
@@ -28,14 +28,14 @@ Before implementing, note what already exists:
 
 1. **TypeScriptGen already returns `{ files }`** — it does NOT write to disk directly. This means the Emitter integration for framework generators is already partially compatible.
 2. **PluginRegistry has a `register` action** — added during implementation. Stores generator metadata (name, type, metadata JSON).
-3. **Emitter exists but needs promotion and expansion** — the current interface kit Emitter handles write/format/clean/manifest. The generation kit version adds writeBatch, sourceMap, trace, affected, and audit.
+3. **Emitter exists but needs promotion and expansion** — the current Clef Bind Emitter handles write/format/clean/manifest. The generation suite version adds writeBatch, sourceMap, trace, affected, and audit.
 4. **Generation kit directory now exists** — scaffolded with 5 concepts, 14 syncs, 5 conformance tests + 1 integration test.
 
 ### Cross-Concept Contamination Lesson (Caught During Implementation)
 
-Two violations of COPF Design Principle 2 (concept independence) were introduced and corrected:
+Two violations of Clef Design Principle 2 (concept independence) were introduced and corrected:
 
-1. **Generator `register` actions (REVERTED).** TypeScriptGen, RustGen, SwiftGen, and SolidityGen were given `register` actions returning metadata. This baked plugin-system awareness into generators. **Fix:** Removed all `register` actions from generators. Generator metadata (name, family, inputKind, outputKind, deterministic, pure) lives statically in `kit.yaml` and syncs propagate it to PluginRegistry. Generators never interact with PluginRegistry.
+1. **Generator `register` actions (REVERTED).** TypeScriptGen, RustGen, SwiftGen, and SolidityGen were given `register` actions returning metadata. This baked plugin-system awareness into generators. **Fix:** Removed all `register` actions from generators. Generator metadata (name, family, inputKind, outputKind, deterministic, pure) lives statically in `suite.yaml` and syncs propagate it to PluginRegistry. Generators never interact with PluginRegistry.
 
 2. **GenerationPlan `plan` action (REMOVED).** Accepted `generators`, `staleSteps`, and `topology` as typed inputs — typed references to data owned by PluginRegistry, BuildCache, and KindSystem. **Fix:** Removed the `plan` action entirely. GenerationPlan is now purely passive (begin/recordStep/complete/status/summary/history). Planning queries are composed in the CLI layer, which queries each concept independently.
 
@@ -45,15 +45,15 @@ Two violations of COPF Design Principle 2 (concept independence) were introduced
 
 ## Work Stream 1: Emitter Promotion & Expansion
 
-**Goal:** Promote Emitter from interface kit to generation kit as shared infrastructure. Expand it with writeBatch, sourceMap, trace, affected, and audit capabilities.
+**Goal:** Promote Emitter from Clef Bind to generation suite as shared infrastructure. Expand it with writeBatch, sourceMap, trace, affected, and audit capabilities.
 
-### 1.1 Create generation kit directory structure
+### 1.1 Create generation suite directory structure
 
 Create the full directory skeleton:
 
 ```
 kits/generation/
-├── kit.yaml
+├── suite.yaml
 ├── resource.concept
 ├── kind-system.concept
 ├── build-cache.concept
@@ -68,12 +68,12 @@ kits/generation/
 ```
 
 **Files to create:**
-- `kits/generation/kit.yaml` — initial version with just Emitter concept
+- `kits/generation/suite.yaml` — initial version with just Emitter concept
 - Directory scaffolds for syncs/, implementations/typescript/, tests/conformance/, tests/integration/
 
 ### 1.2 Create expanded Emitter concept spec
 
-Create `kits/generation/emitter.concept` with the full spec from `copf-generation-kit.md` Part 1.5:
+Create `kits/generation/emitter.concept` with the full spec from `clef-generation-suite.md` Part 1.5:
 - write (with sources parameter for traceability)
 - writeBatch (atomic multi-file write)
 - format (per-file formatting)
@@ -98,17 +98,17 @@ Extend `implementations/typescript/framework/emitter.impl.ts` to implement the e
 - Modify `format` to work with path + extension-based formatter selection
 
 **Decisions:**
-- The existing `write` action signature differs from the generation kit spec (current: `path, content, target, concept`; spec: `path, content, formatHint, sources`). The expanded version should support both — keep `target` and `concept` as optional fields for backward compat with existing interface kit syncs, add `formatHint` and `sources`.
+- The existing `write` action signature differs from the generation suite spec (current: `path, content, target, concept`; spec: `path, content, formatHint, sources`). The expanded version should support both — keep `target` and `concept` as optional fields for backward compat with existing Clef Bind syncs, add `formatHint` and `sources`.
 - `writeBatch` should reuse the internal write logic in a loop, but commit all storage updates atomically (single manifest update at the end).
 
-### 1.4 Update interface kit to import Emitter from generation kit
+### 1.4 Update Clef Bind to import Emitter from generation suite
 
-Modify `kits/interface/kit.yaml`:
+Modify `kits/interface/suite.yaml`:
 - Remove Emitter from `concepts:` section
 - Add to `uses:` section: `kit: generation, concepts: [Emitter]`
 - Keep `kits/interface/concepts/emitter.concept` as a historical reference but mark deprecated, or remove it
 
-**Risk:** Existing interface kit syncs reference `Emitter/write` and `Emitter/format`. These signatures must remain compatible. The expanded Emitter adds parameters but should not break existing callers (new params are `option` types).
+**Risk:** Existing Clef Bind syncs reference `Emitter/write` and `Emitter/format`. These signatures must remain compatible. The expanded Emitter adds parameters but should not break existing callers (new params are `option` types).
 
 ### 1.5 Write Emitter conformance tests
 
@@ -126,11 +126,11 @@ Create `kits/generation/tests/conformance/emitter.test.ts`:
 Create `kits/generation/syncs/format-after-write.sync` — required sync that applies formatting after each successful write.
 
 **Acceptance criteria:**
-- `copf generate` produces identical output to before (no regression)
+- `clef generate` produces identical output to before (no regression)
 - Second run with no source changes: all files return `written: false`
 - `emitterHandler.trace()` returns source provenance for files written with `sources` parameter
 - `emitterHandler.audit()` detects drifted, missing, and orphaned files
-- All existing interface kit tests pass without modification
+- All existing Clef Bind tests pass without modification
 
 ---
 
@@ -140,7 +140,7 @@ Create `kits/generation/syncs/format-after-write.sync` — required sync that ap
 
 ### 2.1 Create BuildCache concept spec
 
-Create `kits/generation/build-cache.concept` from `copf-generation-kit.md` Part 1.3:
+Create `kits/generation/build-cache.concept` from `clef-generation-suite.md` Part 1.3:
 - check (compare input hash, return changed/unchanged)
 - record (store successful generation result)
 - invalidate (force single step to re-run)
@@ -167,7 +167,7 @@ Create `kits/generation/implementations/typescript/build-cache.impl.ts`:
 - Nondeterministic transforms (deterministic: false) always return `changed` — never cache-hit
 
 **Relationship to existing cache.ts:**
-- `kernel/src/cache.ts` handles filesystem-level `.copf-cache/` for compiled artifacts (ASTs, manifests, syncs)
+- `kernel/src/cache.ts` handles filesystem-level `.clef-cache/` for compiled artifacts (ASTs, manifests, syncs)
 - BuildCache is a concept-level cache for generation step results (input/output hashes)
 - They are complementary, not overlapping. kernel/cache.ts handles boot-time optimization; BuildCache handles generation-time optimization.
 
@@ -210,8 +210,8 @@ Create `kits/generation/tests/integration/incremental-rebuild.test.ts`:
 - Third run with changed input: TypeScriptGen re-runs (cache miss)
 
 **Acceptance criteria:**
-- `copf generate` with no changes: all generators skipped via cache (BuildCache/check → unchanged for each)
-- `copf generate --force`: calls invalidateAll first, then all generators re-run
+- `clef generate` with no changes: all generators skipped via cache (BuildCache/check → unchanged for each)
+- `clef generate --force`: calls invalidateAll first, then all generators re-run
 - Cache entries persist across runs (stored in ConceptStorage)
 
 ---
@@ -222,7 +222,7 @@ Create `kits/generation/tests/integration/incremental-rebuild.test.ts`:
 
 ### 3.1 Create Resource concept spec
 
-Create `kits/generation/resource.concept` from `copf-generation-kit.md` Part 1.1:
+Create `kits/generation/resource.concept` from `clef-generation-suite.md` Part 1.1:
 - upsert (created/changed/unchanged variants based on digest comparison)
 - get (lookup by locator)
 - list (optionally filtered by kind)
@@ -242,7 +242,7 @@ Create `kits/generation/implementations/typescript/resource.impl.ts`:
 
 ### 3.3 Write input tracking syncs
 
-Create syncs from `copf-generation-kit.md` Part 2.1:
+Create syncs from `clef-generation-suite.md` Part 2.1:
 1. `kits/generation/syncs/file-changed.sync` — FileWatcher/detected(event: "create") → Resource/upsert
 2. `kits/generation/syncs/file-modified.sync` — FileWatcher/detected(event: "modify") → Resource/upsert
 3. `kits/generation/syncs/file-removed.sync` — FileWatcher/detected(event: "delete") → Resource/remove
@@ -251,7 +251,7 @@ Create syncs from `copf-generation-kit.md` Part 2.1:
 
 ### 3.4 Write change propagation syncs
 
-Create syncs from `copf-generation-kit.md` Part 2.3:
+Create syncs from `clef-generation-suite.md` Part 2.3:
 1. `kits/generation/syncs/invalidate-on-resource-change.sync` — Resource/upsert → changed → BuildCache/invalidateBySource
 2. `kits/generation/syncs/invalidate-on-resource-remove.sync` — Resource/remove → ok → BuildCache/invalidateBySource
 
@@ -281,7 +281,7 @@ Create `kits/generation/tests/conformance/resource.test.ts`:
 
 ### 4.1 Create KindSystem concept spec
 
-Create `kits/generation/kind-system.concept` from `copf-generation-kit.md` Part 1.2:
+Create `kits/generation/kind-system.concept` from `clef-generation-suite.md` Part 1.2:
 - define (register a kind with name and category)
 - connect (declare transform edge between kinds)
 - route (shortest path between two kinds)
@@ -308,13 +308,13 @@ Create `kits/generation/implementations/typescript/kind-system.impl.ts`:
 
 ### 4.3 Write PluginRegistry → KindSystem syncs
 
-Create syncs from `copf-generation-kit.md` Part 2.2:
+Create syncs from `clef-generation-suite.md` Part 2.2:
 1. `kits/generation/syncs/register-generator-kinds.sync` — PluginRegistry/register(type: "generator") → ok → KindSystem/connect
 2. `kits/generation/syncs/ensure-kinds-defined.sync` — PluginRegistry/register(type: "generator") → ok → KindSystem/define for output kind
 
 ### 4.4 Write cascading invalidation syncs
 
-Create syncs from `copf-generation-kit.md` Part 2.3:
+Create syncs from `clef-generation-suite.md` Part 2.3:
 1. `kits/generation/syncs/cascade-invalidation.sync` — BuildCache/invalidateBySource → ok → KindSystem/dependents
 2. `kits/generation/syncs/invalidate-dependent-kinds.sync` — KindSystem/dependents → ok(downstream) → BuildCache/invalidateByKind for each
 
@@ -334,13 +334,13 @@ Create syncs from `copf-generation-kit.md` Part 2.3:
    - Store plugin definition with id=name, type, metadata (parsed JSON)
    - Return existing if name already registered (idempotent)
 
-### 4.6 Generator metadata in kit.yaml (NOT in concept actions)
+### 4.6 Generator metadata in suite.yaml (NOT in concept actions)
 
 ~~Update each generator concept spec and implementation to add a `register` action.~~
 
-**CORRECTED:** Generator metadata lives in `kit.yaml` statically, NOT as concept actions. Adding `register` to generators violates concept independence (see "Cross-Concept Contamination Lesson" above). Syncs read kit.yaml metadata at bootstrap and wire it to PluginRegistry.
+**CORRECTED:** Generator metadata lives in `suite.yaml` statically, NOT as concept actions. Adding `register` to generators violates concept independence (see "Cross-Concept Contamination Lesson" above). Syncs read suite.yaml metadata at bootstrap and wire it to PluginRegistry.
 
-Generator metadata declared in kit.yaml:
+Generator metadata declared in suite.yaml:
 - TypeScriptGen: family=framework, inputKind=ConceptManifest, outputKind=TypeScriptFiles, deterministic=true, pure=true
 - RustGen: family=framework, inputKind=ConceptManifest, outputKind=RustFiles, deterministic=true, pure=true
 - SwiftGen: family=framework, inputKind=ConceptManifest, outputKind=SwiftFiles, deterministic=true, pure=true
@@ -348,7 +348,7 @@ Generator metadata declared in kit.yaml:
 
 ### 4.7 Bootstrap registration syncs
 
-Kit bootstrap syncs read kit.yaml and call PluginRegistry/register for each generator declared in the manifest. No per-generator sync needed — a single bootstrap sync iterates all generator entries.
+Kit bootstrap syncs read suite.yaml and call PluginRegistry/register for each generator declared in the manifest. No per-generator sync needed — a single bootstrap sync iterates all generator entries.
 
 ### 4.8 Register standard kind taxonomy at kit load time
 
@@ -384,10 +384,10 @@ Create `kits/generation/tests/integration/cascade-invalidation.test.ts`:
 - Verify via BuildCache/staleSteps
 
 **Acceptance criteria:**
-- `copf kinds list` shows all registered kinds
-- `copf kinds path ConceptDSL OpenApiDoc` returns valid path through the taxonomy
+- `clef kinds list` shows all registered kinds
+- `clef kinds path ConceptDSL OpenApiDoc` returns valid path through the taxonomy
 - Cascading invalidation: changing a source file invalidates all downstream generators transitively
-- `copf check` validates that sync chains form valid pipelines (edges exist in KindSystem)
+- `clef check` validates that sync chains form valid pipelines (edges exist in KindSystem)
 
 ---
 
@@ -397,7 +397,7 @@ Create `kits/generation/tests/integration/cascade-invalidation.test.ts`:
 
 ### 5.1 Create GenerationPlan concept spec
 
-Create `kits/generation/generation-plan.concept` from `copf-generation-kit.md` Part 1.4:
+Create `kits/generation/generation-plan.concept` from `clef-generation-suite.md` Part 1.4:
 - plan (read-only analysis: what would run, what's cached, why)
 - begin (mark new run started)
 - recordStep (record step outcome — called by observer syncs)
@@ -435,7 +435,7 @@ Create `kits/generation/implementations/typescript/generation-plan.impl.ts`:
 
 ### 5.3 Write observer syncs
 
-Create syncs from `copf-generation-kit.md` Part 2.7:
+Create syncs from `clef-generation-suite.md` Part 2.7:
 1. `kits/generation/syncs/observe-run-begin.sync` — CLI generate trigger → GenerationPlan/begin
 2. `kits/generation/syncs/observe-cache-hit.sync` — BuildCache/check → unchanged → GenerationPlan/recordStep(cached)
 3. `kits/generation/syncs/observe-run-complete.sync` — SyncEngine/quiesced → GenerationPlan/complete
@@ -470,17 +470,17 @@ Create `kits/generation/tests/integration/multi-family-generation.test.ts`:
 - Verify summary reports correct totals
 
 **Acceptance criteria:**
-- `copf generate --plan` shows full dependency graph with cache status per step
-- `copf generate --status` shows live progress during generation
-- `copf generate --summary` shows post-run statistics (total, executed, cached, failed, duration, files)
-- `copf generate --history` shows recent generation runs
+- `clef generate --plan` shows full dependency graph with cache status per step
+- `clef generate --status` shows live progress during generation
+- `clef generate --summary` shows post-run statistics (total, executed, cached, failed, duration, files)
+- `clef generate --history` shows recent generation runs
 - GenerationPlan is passive — disabling it does not affect generation execution
 
 ---
 
 ## Work Stream 6: CLI Integration, Traceability & Audit
 
-**Goal:** Full CLI support for all generation kit features, plus source-to-output tracing and drift detection.
+**Goal:** Full CLI support for all generation suite features, plus source-to-output tracing and drift detection.
 
 ### 6.1 Add generator metadata to existing generators
 
@@ -491,32 +491,32 @@ Update each generator implementation to pass source provenance in the `sources` 
 
 ### 6.2 Implement CLI commands
 
-Add to the CLI (`tools/copf-cli/`):
+Add to the CLI (`tools/clef-cli/`):
 
 | Command | GenerationPlan action | Description |
 |---|---|---|
-| `copf generate` | triggers pipeline entry point | Run full generation |
-| `copf generate --plan` | GenerationPlan/plan | Show what would run (read-only) |
-| `copf generate --dry-run` | GenerationPlan/diff | Show file changes without writing |
-| `copf generate --force` | BuildCache/invalidateAll + generate | Force full rebuild |
-| `copf generate --status` | GenerationPlan/status | Show live progress |
-| `copf generate --summary` | GenerationPlan/summary | Post-run statistics |
-| `copf generate --history` | GenerationPlan/history | Recent generation runs |
-| `copf generate --audit` | Emitter/audit | Drift detection |
-| `copf generate --clean` | Emitter/clean | Remove orphaned files |
-| `copf generate --family <name>` | GenerationPlan/plan(families: [name]) | Filter by family |
-| `copf generate --target <name>` | GenerationPlan/plan(targets: [name]) | Filter by target |
-| `copf generate --generator-syncs` | meta-generator | Auto-generate per-generator syncs |
-| `copf trace <path>` | Emitter/trace | Source → output tracing |
-| `copf impact <path>` | Emitter/affected | Output → source reverse lookup |
-| `copf kinds list` | KindSystem/graph | List all registered kinds |
-| `copf kinds path <from> <to>` | KindSystem/route | Find shortest transform path |
-| `copf kinds consumers <kind>` | KindSystem/consumers | What consumes this kind |
-| `copf kinds producers <kind>` | KindSystem/producers | What produces this kind |
+| `clef generate` | triggers pipeline entry point | Run full generation |
+| `clef generate --plan` | GenerationPlan/plan | Show what would run (read-only) |
+| `clef generate --dry-run` | GenerationPlan/diff | Show file changes without writing |
+| `clef generate --force` | BuildCache/invalidateAll + generate | Force full rebuild |
+| `clef generate --status` | GenerationPlan/status | Show live progress |
+| `clef generate --summary` | GenerationPlan/summary | Post-run statistics |
+| `clef generate --history` | GenerationPlan/history | Recent generation runs |
+| `clef generate --audit` | Emitter/audit | Drift detection |
+| `clef generate --clean` | Emitter/clean | Remove orphaned files |
+| `clef generate --family <name>` | GenerationPlan/plan(families: [name]) | Filter by family |
+| `clef generate --target <name>` | GenerationPlan/plan(targets: [name]) | Filter by target |
+| `clef generate --generator-syncs` | meta-generator | Auto-generate per-generator syncs |
+| `clef trace <path>` | Emitter/trace | Source → output tracing |
+| `clef impact <path>` | Emitter/affected | Output → source reverse lookup |
+| `clef kinds list` | KindSystem/graph | List all registered kinds |
+| `clef kinds path <from> <to>` | KindSystem/route | Find shortest transform path |
+| `clef kinds consumers <kind>` | KindSystem/consumers | What consumes this kind |
+| `clef kinds producers <kind>` | KindSystem/producers | What produces this kind |
 
 ### 6.3 Implement sync auto-generation
 
-Implement `copf generate --generator-syncs`:
+Implement `clef generate --generator-syncs`:
 - Read PluginRegistry for all registered generators
 - For each generator, emit 6 sync files:
   1. `register-{name}.sync`
@@ -526,7 +526,7 @@ Implement `copf generate --generator-syncs`:
   5. `record-cache-{name}.sync`
   6. `observe-{name}.sync`
 - Output to `generated/syncs/` directory
-- Each sync follows the exact template patterns from `copf-generation-kit.md` Parts 2.4, 2.5, 2.6, 2.7
+- Each sync follows the exact template patterns from `clef-generation-suite.md` Parts 2.4, 2.5, 2.6, 2.7
 
 ### 6.4 Write orphan cleanup integration test
 
@@ -539,41 +539,41 @@ Create `kits/generation/tests/integration/orphan-cleanup.test.ts`:
 
 Create `kits/generation/tests/integration/traceability.test.ts`:
 - Generate files with source provenance
-- `copf trace src/password.ts` → shows source concept spec
-- `copf impact ./specs/password.concept` → shows all generated outputs
+- `clef trace src/password.ts` → shows source concept spec
+- `clef impact ./specs/password.concept` → shows all generated outputs
 
-### 6.6 Finalize kit.yaml
+### 6.6 Finalize suite.yaml
 
-Complete `kits/generation/kit.yaml` with all 5 concepts, all syncs (required and recommended), uses declaration for infrastructure kit (PluginRegistry).
+Complete `kits/generation/suite.yaml` with all 5 concepts, all syncs (required and recommended), uses declaration for infrastructure kit (PluginRegistry).
 
 **Acceptance criteria:**
 - All CLI commands listed above work
-- `copf trace` and `copf impact` return correct provenance data
-- `copf generate --audit` detects hand-edited generated files
-- `copf generate --generator-syncs` produces valid sync files for every registered generator
-- Adding a new generator requires only: concept spec + implementation + `copf generate --generator-syncs`
+- `clef trace` and `clef impact` return correct provenance data
+- `clef generate --audit` detects hand-edited generated files
+- `clef generate --generator-syncs` produces valid sync files for every registered generator
+- Adding a new generator requires only: concept spec + implementation + `clef generate --generator-syncs`
 
 ---
 
 ## Per-Family Integration Work (Parallel with Work Streams 2-6)
 
-These changes apply the generation kit infrastructure to each family. They can proceed in parallel with the work streams above once the relevant concepts are implemented.
+These changes apply the generation suite infrastructure to each family. They can proceed in parallel with the work streams above once the relevant concepts are implemented.
 
 ### Framework Family
 
 **Changes to existing files:**
-1. ~~Add `register` action to generators~~ **REVERTED** — generator metadata is in kit.yaml, not in concept actions (see "Cross-Concept Contamination Lesson")
+1. ~~Add `register` action to generators~~ **REVERTED** — generator metadata is in suite.yaml, not in concept actions (see "Cross-Concept Contamination Lesson")
 2. TypeScriptGen already returns `{ files }` — no change needed for Emitter compatibility
 3. Verify RustGen, SwiftGen, SolidityGen also return `{ files }` — update if they write directly
 
 **New sync files (5 per generator × 4 generators = 20 syncs):**
 - Cache-check pair, emit, cache-record, observer for each (no per-generator registration sync needed — bootstrap sync handles all)
-- All mechanical, follow identical pattern — auto-generatable via `copf generate --generator-syncs`
+- All mechanical, follow identical pattern — auto-generatable via `clef generate --generator-syncs`
 
 ### Interface Family
 
 **Changes to existing files:**
-1. Update `kits/interface/kit.yaml` — import Emitter from generation kit instead of defining locally
+1. Update `kits/interface/suite.yaml` — import Emitter from generation suite instead of defining locally
 2. Add `register` action to each target provider (RestTarget, GraphqlTarget, GrpcTarget, CliTarget, McpTarget, ClaudeSkillsTarget, OpenApiTarget, AsyncApiTarget, TsSdkTarget, PySdkTarget, GoSdkTarget, RustSdkTarget, JavaSdkTarget, SwiftSdkTarget)
 3. Internal sync chains stay exactly as designed — BuildCache wraps each via cache-check syncs
 
@@ -583,7 +583,7 @@ These changes apply the generation kit infrastructure to each family. They can p
 ### Deploy Family
 
 **Changes to existing files:**
-1. Update `kits/deploy/kit.yaml` — import Emitter, BuildCache, GenerationPlan from generation kit
+1. Update `kits/deploy/suite.yaml` — import Emitter, BuildCache, GenerationPlan from generation suite
 2. Add `register` action to IaC and GitOps providers that produce file output
 
 **New sync files:**
@@ -603,7 +603,7 @@ These changes apply the generation kit infrastructure to each family. They can p
 | Recommended syncs | 8 | `kits/generation/syncs/` |
 | Conformance tests | 5 | `kits/generation/tests/conformance/*.test.ts` |
 | Integration tests | 4 | `kits/generation/tests/integration/*.test.ts` |
-| Kit manifest | 1 | `kits/generation/kit.yaml` |
+| Kit manifest | 1 | `kits/generation/suite.yaml` |
 | **Total new files** | **34** | |
 
 ### Existing files to modify
@@ -617,10 +617,10 @@ These changes apply the generation kit infrastructure to each family. They can p
 | ~~`implementations/typescript/framework/rust-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | ~~`implementations/typescript/framework/swift-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
 | ~~`implementations/typescript/framework/solidity-gen.impl.ts`~~ | ~~Add `register` method~~ | **REVERTED** — violates concept independence |
-| `kits/interface/kit.yaml` | Import Emitter from generation kit | Done |
-| `kits/deploy/kit.yaml` | Import generation kit concepts | Done |
-| `tools/copf-cli/src/commands/generate.ts` | Add --plan, --force, --audit, --history, --summary, --status flags; expand --generator-syncs for interface providers | Done |
-| `tools/copf-cli/src/index.ts` | Add `impact`, `kinds` commands | Done |
+| `kits/interface/suite.yaml` | Import Emitter from generation suite | Done |
+| `kits/deploy/suite.yaml` | Import generation suite concepts | Done |
+| `tools/clef-cli/src/commands/generate.ts` | Add --plan, --force, --audit, --history, --summary, --status flags; expand --generator-syncs for interface providers | Done |
+| `tools/clef-cli/src/index.ts` | Add `impact`, `kinds` commands | Done |
 | `implementations/typescript/framework/typescript-gen.impl.ts` | Remove redundant `storage.put('outputs')` — BuildCache handles caching | Done |
 | `implementations/typescript/framework/rust-gen.impl.ts` | Remove redundant `storage.put('outputs')` | Done |
 | `implementations/typescript/framework/swift-gen.impl.ts` | Remove redundant `storage.put('outputs')` | Done |
@@ -657,9 +657,9 @@ Each work stream produces a testable increment. Work streams 1-2 deliver the mos
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Emitter signature changes break interface kit syncs | High | Keep existing parameters, add new ones as optional |
+| Emitter signature changes break Clef Bind syncs | High | Keep existing parameters, add new ones as optional |
 | PluginRegistry `register` action conflicts with existing usage | Medium | New action name is distinct from existing discover/createInstance/etc. |
 | BuildCache storage grows unbounded | Low | Add TTL or LRU eviction in future; staleSteps + invalidateAll provide manual control |
 | KindSystem cycle detection performance | Low | Kind graph is small (dozens of nodes); simple DFS is sufficient |
 | GenerationPlan cross-concept queries | Medium | Pass pre-fetched data as input parameters instead of direct queries |
-| Per-generator sync proliferation (6 × N generators) | Medium | Auto-generation via `copf generate --generator-syncs` eliminates manual maintenance |
+| Per-generator sync proliferation (6 × N generators) | Medium | Auto-generation via `clef generate --generator-syncs` eliminates manual maintenance |

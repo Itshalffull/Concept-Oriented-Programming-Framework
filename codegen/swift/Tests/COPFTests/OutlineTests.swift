@@ -1,7 +1,7 @@
 // OutlineTests.swift — Tests for Outline concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class OutlineTests: XCTestCase {
 

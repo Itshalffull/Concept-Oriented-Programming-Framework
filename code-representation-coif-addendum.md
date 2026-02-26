@@ -1,14 +1,14 @@
-# COPF Code Representation — COIF Addendum
+# Clef Code Representation — Clef Surface Addendum
 
 ## Addendum to: Code Representation & Semantic Query System v0.1.0
 
-**Purpose:** Extend the representation system to cover all COIF frontend artifacts — `.widget` specs, `.theme` specs, generated framework components, the runtime selection pipeline, and cross-system traversal from concept state fields to rendered widgets.
+**Purpose:** Extend the representation system to cover all Clef Surface frontend artifacts — `.widget` specs, `.theme` specs, generated framework components, the runtime selection pipeline, and cross-system traversal from concept state fields to rendered widgets.
 
 ---
 
 ## 1. The Problem
 
-The base design doc treats COPF's backend artifacts (`.concept`, `.sync`, configs, generated handlers) but ignores the other half of the system. A COIF application adds:
+The base design doc treats Clef's backend artifacts (`.concept`, `.sync`, configs, generated handlers) but ignores the other half of the system. A Clef Surface application adds:
 
 - `.widget` spec files with anatomy, state machines, props, accessibility contracts, connect mappings, affordance declarations, composition, and invariants
 - `.theme` spec files with palettes, typography scales, motion curves, elevation, and radius systems
@@ -36,7 +36,7 @@ Without representing these, you can't answer questions like:
 
 ### 2.1 New LanguageGrammar Providers
 
-Two new Tree-sitter grammars for COIF's spec formats, plus grammars for generated frontend code:
+Two new Tree-sitter grammars for Clef Surface's spec formats, plus grammars for generated frontend code:
 
 | Provider | Extensions | Notes |
 |----------|-----------|-------|
@@ -52,7 +52,7 @@ The `.widget` grammar is structurally similar to `.concept` — both are section
 
 ### 2.2 FileArtifact Role Extensions
 
-New role values for COIF files:
+New role values for Clef Surface files:
 
 | Role | Files |
 |------|-------|
@@ -65,7 +65,7 @@ New role values for COIF files:
 
 These integrate with the existing FileArtifact concept — no new concept needed, just new role vocabulary registered via Tag.
 
-### 2.3 DefinitionUnit Kinds for COIF
+### 2.3 DefinitionUnit Kinds for Clef Surface
 
 New `kind` values for DefinitionUnit extraction from `.widget` and `.theme` files:
 
@@ -102,58 +102,58 @@ This enables queries like "find all anatomy parts across all widgets that have r
 | ReactComponentSymbolExtractor | `.jsx`/`.tsx` generated components | Component name, hook names, prop type names — linked back to source widget via Provenance |
 | CssTokenSymbolExtractor | `.css` generated tokens | CSS custom property names — linked back to source theme tokens |
 
-### 3.2 COIF Symbol Namespace Scheme
+### 3.2 Clef Surface Symbol Namespace Scheme
 
 Extending the Symbol namespace scheme from the base doc:
 
 ```
-copf/concept/Article                    # COPF concept
-copf/action/Article/create              # COPF action
-copf/variant/Article/create/ok          # COPF variant
-copf/state-field/Article/tags           # COPF state field
-copf/sync/article-crud                  # COPF sync
+clef/concept/Article                    # Clef concept
+clef/action/Article/create              # Clef action
+clef/variant/Article/create/ok          # Clef variant
+clef/state-field/Article/tags           # Clef state field
+clef/sync/article-crud                  # Clef sync
 
-coif/widget/dialog                      # COIF widget
-coif/anatomy/dialog/root                # Anatomy part
-coif/anatomy/dialog/closeTrigger        # Anatomy part
-coif/state/dialog/open                  # FSM state
-coif/state/dialog/closed                # FSM state
-coif/transition/dialog/open/CLOSE       # Transition
-coif/prop/dialog/closeOnEscape          # Widget prop
-coif/slot/dialog/header                 # Slot
-coif/slot/dialog/body                   # Slot
-coif/affordance/dialog/overlay          # Affordance declaration
-coif/compose/article-card/avatar        # Composition reference
+surface/widget/dialog                      # Clef Surface widget
+surface/anatomy/dialog/root                # Anatomy part
+surface/anatomy/dialog/closeTrigger        # Anatomy part
+surface/state/dialog/open                  # FSM state
+surface/state/dialog/closed                # FSM state
+surface/transition/dialog/open/CLOSE       # Transition
+surface/prop/dialog/closeOnEscape          # Widget prop
+surface/slot/dialog/header                 # Slot
+surface/slot/dialog/body                   # Slot
+surface/affordance/dialog/overlay          # Affordance declaration
+surface/compose/article-card/avatar        # Composition reference
 
-coif/theme/light                        # Theme
-coif/palette/light/primary              # Palette color
-coif/color-role/light/on-primary        # Semantic color role
-coif/typography/light/heading1          # Typography style
-coif/motion/light/ease-out              # Motion curve
-coif/elevation/light/md                 # Elevation level
+surface/theme/light                        # Theme
+surface/palette/light/primary              # Palette color
+surface/color-role/light/on-primary        # Semantic color role
+surface/typography/light/heading1          # Typography style
+surface/motion/light/ease-out              # Motion curve
+surface/elevation/light/md                 # Elevation level
 
-coif/interactor/single-choice           # Interactor type
-coif/interactor/text-short              # Interactor type
+surface/interactor/single-choice           # Interactor type
+surface/interactor/text-short              # Interactor type
 ```
 
 ### 3.3 Cross-System SymbolRelationship Types
 
-New relationship kinds connecting COPF and COIF symbols:
+New relationship kinds connecting Clef and Clef Surface symbols:
 
 | Kind | Source | Target | Meaning |
 |------|--------|--------|---------|
-| `renders` | coif/widget/* | copf/concept/* | This widget can render this concept |
-| `binds-to` | coif/prop/* | copf/state-field/* | This widget prop is bound to this state field |
-| `presents` | coif/anatomy/* | copf/state-field/* | This anatomy part displays this field's value |
-| `triggers` | coif/anatomy/* | copf/action/* | This anatomy part triggers this action (via connect → Machine/send → Binding/invoke) |
-| `classifies-as` | copf/state-field/* | coif/interactor/* | This field classifies as this interactor type |
-| `resolves-to` | coif/interactor/* | coif/widget/* | This interactor resolves to this widget (via affordance matching) |
-| `styles` | coif/theme/* | coif/widget/* | This theme provides tokens consumed by this widget |
-| `extends-theme` | coif/theme/* | coif/theme/* | Theme inheritance (e.g., dark extends light) |
-| `composes` | coif/widget/* | coif/widget/* | This widget composes that widget (via compose section) |
-| `satisfies` | coif/widget/* | coif/affordance/* | This widget satisfies this affordance declaration |
-| `generates-component` | coif/widget/* | ts/component/* | WidgetGen produced this framework component from this spec |
-| `generates-token` | coif/palette/* | css/custom-property/* | ThemeGen produced this CSS variable from this token |
+| `renders` | surface/widget/* | clef/concept/* | This widget can render this concept |
+| `binds-to` | surface/prop/* | clef/state-field/* | This widget prop is bound to this state field |
+| `presents` | surface/anatomy/* | clef/state-field/* | This anatomy part displays this field's value |
+| `triggers` | surface/anatomy/* | clef/action/* | This anatomy part triggers this action (via connect → Machine/send → Binding/invoke) |
+| `classifies-as` | clef/state-field/* | surface/interactor/* | This field classifies as this interactor type |
+| `resolves-to` | surface/interactor/* | surface/widget/* | This interactor resolves to this widget (via affordance matching) |
+| `styles` | surface/theme/* | surface/widget/* | This theme provides tokens consumed by this widget |
+| `extends-theme` | surface/theme/* | surface/theme/* | Theme inheritance (e.g., dark extends light) |
+| `composes` | surface/widget/* | surface/widget/* | This widget composes that widget (via compose section) |
+| `satisfies` | surface/widget/* | surface/affordance/* | This widget satisfies this affordance declaration |
+| `generates-component` | surface/widget/* | ts/component/* | WidgetGen produced this framework component from this spec |
+| `generates-token` | surface/palette/* | css/custom-property/* | ThemeGen produced this CSS variable from this token |
 
 ---
 
@@ -161,12 +161,12 @@ New relationship kinds connecting COPF and COIF symbols:
 
 ### 4.1 New Semantic Entities
 
-The COPF semantic layer has ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity. The COIF semantic layer needs parallel entities for its domain-specific structures.
+The Clef semantic layer has ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity. The Clef Surface semantic layer needs parallel entities for its domain-specific structures.
 
 #### WidgetEntity [W]
 
 ```
-purpose: Queryable representation of a parsed widget spec — the COIF counterpart to ConceptEntity.
+purpose: Queryable representation of a parsed widget spec — the Clef Surface counterpart to ConceptEntity.
 
 state:
   widgets: set W
@@ -231,8 +231,8 @@ state:
   description: A -> option String
   connect_props: A -> option String  // the connect {} mapping for this part
   aria_attrs: A -> list { attr: String, value: String }
-  bound_field: A -> option Symbol-ref  // COPF state field this part presents (via connect)
-  bound_action: A -> option Symbol-ref // COPF action this part triggers (via connect → send)
+  bound_field: A -> option Symbol-ref  // Clef state field this part presents (via connect)
+  bound_action: A -> option Symbol-ref // Clef action this part triggers (via connect → send)
 
 actions:
   register(widget: WidgetEntity-ref, name: String, role: String, required: Bool)
@@ -385,11 +385,11 @@ actions:
     -> ok(report: list { interactor: String, widget_count: Int, uncovered_contexts: list String })
 ```
 
-### 4.2 Relationship to Existing COIF Concepts
+### 4.2 Relationship to Existing Clef Surface Concepts
 
-The new semantic entities don't replace the existing COIF runtime concepts — they exist alongside them for different purposes:
+The new semantic entities don't replace the existing Clef Surface runtime concepts — they exist alongside them for different purposes:
 
-| Runtime concept (COIF) | Semantic entity (new) | Distinction |
+| Runtime concept (Clef Surface) | Semantic entity (new) | Distinction |
 |------------------------|----------------------|-------------|
 | Widget (stores parsed ASTs for instantiation) | WidgetEntity (queryable metadata for analysis) | Widget is the runtime catalog; WidgetEntity is the design-time knowledge graph node |
 | Machine (FSM runtime execution) | WidgetStateEntity (static state machine structure) | Machine runs a live instance; WidgetStateEntity answers "what states exist?" without running |
@@ -398,7 +398,7 @@ The new semantic entities don't replace the existing COIF runtime concepts — t
 | Theme (runtime activation) | ThemeEntity (queryable token structure) | Theme activates tokens; ThemeEntity traces token resolution chains |
 | Slot (runtime content injection) | Stored on WidgetEntity.slots | No separate entity needed — slot names are metadata on WidgetEntity |
 
-The semantic entities are populated **from** the runtime concepts' data via Transform + Enricher syncs (same pattern as COPF semantic entities).
+The semantic entities are populated **from** the runtime concepts' data via Transform + Enricher syncs (same pattern as Clef semantic entities).
 
 ---
 
@@ -409,15 +409,15 @@ The most valuable capability is end-to-end traversal from concept state fields t
 ### 5.1 Forward: Concept Field → Pixels
 
 ```
-StateField (copf/state-field/Article/tags)
+StateField (clef/state-field/Article/tags)
     ↓ classifies-as (via Interactor/classify rules)
-InteractorEntity (coif/interactor/multi-choice, optionCount: 3)
+InteractorEntity (surface/interactor/multi-choice, optionCount: 3)
     ↓ resolves-to (via WidgetResolver/resolve + Affordance matching)
-WidgetEntity (coif/widget/checkbox-group)
+WidgetEntity (surface/widget/checkbox-group)
     ↓ anatomy
-AnatomyPartEntity (coif/anatomy/checkbox-group/option)
+AnatomyPartEntity (surface/anatomy/checkbox-group/option)
     ↓ connect mapping
-WidgetPropEntity (coif/prop/checkbox-group/options)
+WidgetPropEntity (surface/prop/checkbox-group/options)
     ↓ generates-component (via WidgetGen)
 FileArtifact (generated/react/CheckboxGroup.tsx)
     ↓ renders via
@@ -431,7 +431,7 @@ This traversal answers: "How does `Article.tags` get rendered?" The answer trace
 ```
 Symbol (css/custom-property/--color-primary)
     ↓ generates-token (reverse of ThemeGen output)
-ThemeEntity/palette_colors (coif/palette/light/primary)
+ThemeEntity/palette_colors (surface/palette/light/primary)
     ↓ source_file
 FileArtifact (themes/light.theme, line 5)
 ```
@@ -448,7 +448,7 @@ WidgetEntity (now: repeating-list instead of checkbox-group)
 FileArtifact (different generated output)
 ```
 
-This traversal powers `copf impact Article/tags` for frontend changes.
+This traversal powers `clef impact Article/tags` for frontend changes.
 
 ### 5.4 Impact: Theme Token Change → Affected Components
 
@@ -549,7 +549,7 @@ then {
 
 ### 6.4 Connect Section Analysis
 
-The `connect {}` section in `.widget` files is where COIF widgets bind to props. When combined with Binding (which maps concept fields to widget props), the connect section creates the traceable link from concept state to rendered UI:
+The `connect {}` section in `.widget` files is where Clef Surface widgets bind to props. When combined with Binding (which maps concept fields to widget props), the connect section creates the traceable link from concept state to rendered UI:
 
 ```
 sync ConnectMappingAnalysisSync [recommended]
@@ -573,7 +573,7 @@ then {
 
 ## 7. Analysis Layer Extensions
 
-### 7.1 DependenceGraph Provider for COIF
+### 7.1 DependenceGraph Provider for Clef Surface
 
 New providers for the DependenceGraph coordination concept:
 
@@ -584,7 +584,7 @@ New providers for the DependenceGraph coordination concept:
 | SelectionPipelineDependenceProvider | cross-system | field → interactor → affordance → widget (the full selection chain) |
 | BindingDependenceProvider | runtime bindings | concept field → signal → widget prop (the full data binding chain) |
 
-### 7.2 New AnalysisRule Built-ins for COIF
+### 7.2 New AnalysisRule Built-ins for Clef Surface
 
 | Rule | Category | What it checks |
 |------|----------|---------------|
@@ -601,17 +601,17 @@ New providers for the DependenceGraph coordination concept:
 | `circular-composition` | architecture | Widget A composes B which composes A |
 | `token-orphans` | dead-code | Theme tokens defined but never referenced by any widget or role |
 
-### 7.3 COIF-Specific ProgramSlice Capabilities
+### 7.3 Clef Surface-Specific ProgramSlice Capabilities
 
 Forward slicing from a theme token:
 ```
-copf analyze slice coif/palette/light/primary --direction forward
+clef analyze slice surface/palette/light/primary --direction forward
 ```
 Returns: all color roles referencing primary → all widgets using those roles → all generated CSS files containing those custom properties.
 
 Backward slicing from a generated component:
 ```
-copf analyze slice generated/react/CheckboxGroup.tsx --direction backward
+clef analyze slice generated/react/CheckboxGroup.tsx --direction backward
 ```
 Returns: CheckboxGroup.tsx ← WidgetGen ← checkbox-group.widget ← affordance match ← multi-choice interactor ← Article.tags state field ← Article.concept.
 
@@ -622,15 +622,15 @@ Returns: CheckboxGroup.tsx ← WidgetGen ← checkbox-group.widget ← affordanc
 ### 8.1 New Inspect Commands
 
 ```
-copf inspect widget <name>
+clef inspect widget <name>
   # Full semantic breakdown: anatomy, states, props, a11y, affordances, composition
   # Shows which concept fields resolve to this widget and via what affordance
 
-copf inspect theme <name>
+clef inspect theme <name>
   # Full token hierarchy, palette with contrast ratios, typography scale
   # Shows which widgets reference which tokens
 
-copf inspect selection <concept/field>
+clef inspect selection <concept/field>
   # Traces the full selection pipeline:
   # field type → interactor classification → affordance matching → resolved widget
   # Shows context-dependent variations (desktop vs mobile vs watch)
@@ -639,19 +639,19 @@ copf inspect selection <concept/field>
 ### 8.2 New Query Commands
 
 ```
-copf query widget-for-field <concept/field> [--context <json>]
+clef query widget-for-field <concept/field> [--context <json>]
   # "What widget renders Article/tags on mobile?"
   # Runs the selection pipeline with given context
 
-copf query fields-for-widget <widget-name>
+clef query fields-for-widget <widget-name>
   # "What concept fields does checkbox-group render?"
   # Reverse traversal from widget to bound fields
 
-copf query theme-impact <theme/token>
+clef query theme-impact <theme/token>
   # "If I change primary color, what's affected?"
   # Forward slice through token resolution → widgets → generated files
 
-copf query a11y-audit [--widget <name>] [--all]
+clef query a11y-audit [--widget <name>] [--all]
   # Accessibility completeness audit across all widgets
   # Checks roles, keyboard, focus, ARIA, contrast
 ```
@@ -659,7 +659,7 @@ copf query a11y-audit [--widget <name>] [--all]
 ### 8.3 New Check Patterns
 
 ```
-copf check
+clef check
   --pattern dead-widget-states
   --pattern missing-a11y-role
   --pattern missing-keyboard-binding
@@ -674,38 +674,38 @@ copf check
 
 ---
 
-## 9. Interface Kit Updates
+## 9. Clef Bind Updates
 
 ### 9.1 MCP Tools Additions
 
 ```
 tools:
-  - copf_inspect_widget: Full widget semantic breakdown
-  - copf_inspect_theme: Theme token hierarchy with contrast
-  - copf_inspect_selection: Selection pipeline trace for a field
-  - copf_query_widget_for_field: What widget renders this field
-  - copf_query_fields_for_widget: What fields does this widget render
-  - copf_query_theme_impact: Token change impact analysis
-  - copf_query_a11y_audit: Accessibility audit
+  - clef_inspect_widget: Full widget semantic breakdown
+  - clef_inspect_theme: Theme token hierarchy with contrast
+  - clef_inspect_selection: Selection pipeline trace for a field
+  - clef_query_widget_for_field: What widget renders this field
+  - clef_query_fields_for_widget: What fields does this widget render
+  - clef_query_theme_impact: Token change impact analysis
+  - clef_query_a11y_audit: Accessibility audit
 ```
 
 ### 9.2 Claude Skills Additions
 
 ```
 skills:
-  - copf-widget-designer:
-      description: "Design and validate COIF widget specs"
+  - clef-widget-designer:
+      description: "Design and validate Clef Surface widget specs"
       tools: [inspect_widget, query_a11y_audit, check_dead_widget_states, check_missing_a11y]
 
-  - copf-theme-designer:
-      description: "Design and validate COIF theme specs with accessibility"
+  - clef-theme-designer:
+      description: "Design and validate Clef Surface theme specs with accessibility"
       tools: [inspect_theme, query_theme_impact, check_contrast_violations, check_missing_reduced_motion]
 
-  - copf-selection-debugger:
+  - clef-selection-debugger:
       description: "Debug and tune the widget selection pipeline"
       tools: [inspect_selection, query_widget_for_field, query_fields_for_widget, check_affordance_gaps]
 
-  - copf-full-stack-impact:
+  - clef-full-stack-impact:
       description: "Trace impact of changes across backend and frontend"
       tools: [query_impact, query_widget_for_field, query_theme_impact, analyze_slice]
 ```
@@ -744,21 +744,21 @@ skills:
 ### 10.3 Revised Totals
 
 From base design doc:
-- 20 coordination concepts + ~35 providers + 5 kits
+- 20 coordination concepts + ~35 providers + 5 suites
 
 This addendum adds:
 - 6 semantic entities (WidgetEntity, AnatomyPartEntity, WidgetStateEntity, WidgetPropEntity, ThemeEntity, InteractorEntity)
 - ~11 providers
-- 0 new kits (entities go in Semantic Kit; providers go in existing Parse/Symbol/Analysis kits)
+- 0 new suites (entities go in Semantic Kit; providers go in existing Parse/Symbol/Analysis suites)
 - ~7 new syncs
 - 12 new AnalysisRule built-ins
 
 **Updated totals:**
-- Base COPF library: 54 concepts, 15 kits
-- Code Representation system: 26 coordination concepts + ~46 providers, 5 new kits
-- COIF: 29 concepts, 7 kits
+- Base Clef library: 54 concepts, 15 suites
+- Code Representation system: 26 coordination concepts + ~46 providers, 5 new suites
+- Clef Surface: 29 concepts, 7 suites
 
-Combined: **~109 coordination concepts + ~46 providers across 27 kits**
+Combined: **~109 coordination concepts + ~46 providers across 27 suites**
 
 Concept library version: **v0.5.0** (encompasses both base doc and this addendum)
 
@@ -766,15 +766,15 @@ Concept library version: **v0.5.0** (encompasses both base doc and this addendum
 
 ## 11. Implementation Phase Updates
 
-The COIF additions integrate into the existing phase plan from the base doc:
+The Clef Surface additions integrate into the existing phase plan from the base doc:
 
 ### Phase 1 (Parse Foundation) — add:
 - TreeSitterWidgetSpec and TreeSitterThemeSpec grammar providers
-- FileArtifact roles for COIF files
+- FileArtifact roles for Clef Surface files
 
 ### Phase 2 (Symbol Identity) — add:
 - WidgetSpecSymbolExtractor and ThemeSpecSymbolExtractor providers
-- COIF namespace scheme registration
+- Clef Surface namespace scheme registration
 
 ### Phase 3 (Semantic Entities) — add:
 - WidgetEntity, AnatomyPartEntity, WidgetStateEntity, WidgetPropEntity, ThemeEntity, InteractorEntity
@@ -783,11 +783,11 @@ The COIF additions integrate into the existing phase plan from the base doc:
 
 ### Phase 5 (Analysis Overlays) — add:
 - WidgetDependenceProvider, ThemeDependenceProvider, SelectionPipelineDependenceProvider
-- All COIF AnalysisRule built-ins
+- All Clef Surface AnalysisRule built-ins
 - Cross-system traversal queries
 
 ### Phase 6 (Search & Discovery) — add:
-- COIF-specific MCP tools and Claude Skills
+- Clef Surface-specific MCP tools and Claude Skills
 
 ### Phase 7 (Interface Exposure & DevServer) — add:
 - DevServer hot-reload for `.widget` and `.theme` files → reparse → update semantic entities → re-run analysis

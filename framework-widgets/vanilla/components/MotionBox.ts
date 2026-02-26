@@ -2,7 +2,7 @@
 // MotionBox — Vanilla DOM Component
 //
 // Creates a <div> with CSS transition styles derived from
-// COIF Motion concepts (duration, easing, transition specs).
+// Clef Surface Motion concepts (duration, easing, transition specs).
 // Checks matchMedia('prefers-reduced-motion') to respect
 // user accessibility preferences.
 // ============================================================
@@ -15,7 +15,7 @@ import type {
 
 import {
   motionToCSS,
-} from '../../shared/coif-bridge.js';
+} from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
@@ -55,7 +55,7 @@ export class MotionBox {
     this.props = props;
 
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-motion', '');
+    this.el.setAttribute('data-surface-motion', '');
 
     if (props.className) {
       this.el.classList.add(props.className);
@@ -121,7 +121,7 @@ export class MotionBox {
   toggle(): void {
     this.props.active = !this.props.active;
     this.el.setAttribute('data-active', this.props.active ? 'true' : 'false');
-    this.el.classList.toggle('coif-motion--active', this.props.active);
+    this.el.classList.toggle('surface-motion--active', this.props.active);
   }
 
   destroy(): void {
@@ -168,7 +168,7 @@ export class MotionBox {
     // Set active state
     if (this.props.active !== undefined) {
       this.el.setAttribute('data-active', this.props.active ? 'true' : 'false');
-      this.el.classList.toggle('coif-motion--active', this.props.active);
+      this.el.classList.toggle('surface-motion--active', this.props.active);
     }
   }
 }

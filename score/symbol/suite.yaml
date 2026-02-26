@@ -42,7 +42,7 @@ concepts:
     spec: ./providers/extractors/universal.concept
     optional: true
 
-  # COIF symbol extractor providers
+  # Clef Surface symbol extractor providers
   WidgetSpecSymbolExtractor:
     spec: ./providers/extractors/widget-spec.concept
     optional: true
@@ -97,20 +97,20 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: LanguageGrammar
       - name: FileArtifact
-  - kit: linking
+  - suite: linking
     concepts:
       - name: Reference
       - name: Relation
       - name: Backlink
-  - kit: classification
+  - suite: classification
     concepts:
       - name: Namespace
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 

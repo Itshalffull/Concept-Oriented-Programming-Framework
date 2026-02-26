@@ -1,7 +1,7 @@
 // generated: ActionLog/ConformanceTests.swift
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ActionLogConformanceTests: XCTestCase {
 

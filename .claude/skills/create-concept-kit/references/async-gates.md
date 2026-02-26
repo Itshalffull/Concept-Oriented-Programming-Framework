@@ -66,12 +66,12 @@ The `@gate` annotation is metadata — the engine ignores it entirely. It enable
 
 ## CLI Validation
 
-**`copf check --pattern async-gate <concept>`**
+**`clef check --pattern async-gate <concept>`**
 
 Validates that a concept follows the async gate convention:
 
 ```
-$ copf check --pattern async-gate chain-monitor.concept
+$ clef check --pattern async-gate chain-monitor.concept
 
 chain-monitor.concept: async-gate pattern validation
   OK Has @gate annotation
@@ -266,4 +266,4 @@ Everything else is a **domain concern** that belongs in concepts:
 
 7. **Annotate with `@gate`** — Add the annotation to the concept spec so tooling can recognize it.
 
-8. **Validate** — Run `copf check --pattern async-gate` to verify convention conformance.
+8. **Validate** — Run `clef check --pattern async-gate` to verify convention conformance.

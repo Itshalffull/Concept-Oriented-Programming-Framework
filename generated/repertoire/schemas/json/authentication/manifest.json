@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Authentication",
+  "uri": "urn:clef/Authentication",
   "name": "Authentication",
   "typeParams": [
     {
@@ -693,11 +693,11 @@
   "jsonSchemas": {
     "invocations": {
       "register": {
-        "$id": "urn:copf/Authentication/register/invocation",
+        "$id": "urn:clef/Authentication/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authentication"
+            "const": "urn:clef/Authentication"
           },
           "action": {
             "const": "register"
@@ -724,11 +724,11 @@
         }
       },
       "login": {
-        "$id": "urn:copf/Authentication/login/invocation",
+        "$id": "urn:clef/Authentication/login/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authentication"
+            "const": "urn:clef/Authentication"
           },
           "action": {
             "const": "login"
@@ -751,11 +751,11 @@
         }
       },
       "logout": {
-        "$id": "urn:copf/Authentication/logout/invocation",
+        "$id": "urn:clef/Authentication/logout/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authentication"
+            "const": "urn:clef/Authentication"
           },
           "action": {
             "const": "logout"
@@ -774,11 +774,11 @@
         }
       },
       "authenticate": {
-        "$id": "urn:copf/Authentication/authenticate/invocation",
+        "$id": "urn:clef/Authentication/authenticate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authentication"
+            "const": "urn:clef/Authentication"
           },
           "action": {
             "const": "authenticate"
@@ -797,11 +797,11 @@
         }
       },
       "resetPassword": {
-        "$id": "urn:copf/Authentication/resetPassword/invocation",
+        "$id": "urn:clef/Authentication/resetPassword/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Authentication"
+            "const": "urn:clef/Authentication"
           },
           "action": {
             "const": "resetPassword"
@@ -827,11 +827,11 @@
     "completions": {
       "register": {
         "ok": {
-          "$id": "urn:copf/Authentication/register/completion/ok",
+          "$id": "urn:clef/Authentication/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "register"
@@ -853,11 +853,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Authentication/register/completion/exists",
+          "$id": "urn:clef/Authentication/register/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "register"
@@ -881,11 +881,11 @@
       },
       "login": {
         "ok": {
-          "$id": "urn:copf/Authentication/login/completion/ok",
+          "$id": "urn:clef/Authentication/login/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "login"
@@ -907,11 +907,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Authentication/login/completion/invalid",
+          "$id": "urn:clef/Authentication/login/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "login"
@@ -935,11 +935,11 @@
       },
       "logout": {
         "ok": {
-          "$id": "urn:copf/Authentication/logout/completion/ok",
+          "$id": "urn:clef/Authentication/logout/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "logout"
@@ -961,11 +961,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Authentication/logout/completion/notfound",
+          "$id": "urn:clef/Authentication/logout/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "logout"
@@ -989,11 +989,11 @@
       },
       "authenticate": {
         "ok": {
-          "$id": "urn:copf/Authentication/authenticate/completion/ok",
+          "$id": "urn:clef/Authentication/authenticate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "authenticate"
@@ -1015,11 +1015,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/Authentication/authenticate/completion/invalid",
+          "$id": "urn:clef/Authentication/authenticate/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "authenticate"
@@ -1043,11 +1043,11 @@
       },
       "resetPassword": {
         "ok": {
-          "$id": "urn:copf/Authentication/resetPassword/completion/ok",
+          "$id": "urn:clef/Authentication/resetPassword/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "resetPassword"
@@ -1069,11 +1069,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Authentication/resetPassword/completion/notfound",
+          "$id": "urn:clef/Authentication/resetPassword/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Authentication"
+              "const": "urn:clef/Authentication"
             },
             "action": {
               "const": "resetPassword"

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title Profile
 /// @notice Concept-oriented user profile management
-/// @dev Implements the Profile concept from COPF specification.
+/// @dev Implements the Profile concept from Clef specification.
 ///      Stores bio and image URL for each user.
 
 contract Profile {

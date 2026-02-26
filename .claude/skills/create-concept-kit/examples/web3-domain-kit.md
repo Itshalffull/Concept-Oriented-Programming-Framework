@@ -1,31 +1,31 @@
-# Worked Example: Web3 Domain Kit
+# Worked Example: Web3 Domain Suite
 
-A complete walkthrough of the web3 domain kit (ChainMonitor, Contract, Content, Wallet) — a domain kit that bundles infrastructure alongside concepts.
+A complete walkthrough of the web3 domain suite (ChainMonitor, Contract, Content, Wallet) — a domain suite that bundles infrastructure alongside concepts.
 
 ## Kit Purpose
 
-> Blockchain integration for COPF. Chain monitoring with finality-aware gating, IPFS content storage with pinning, and wallet-based authentication via signature verification.
+> Blockchain integration for Clef. Chain monitoring with finality-aware gating, IPFS content storage with pinning, and wallet-based authentication via signature verification.
 
-This kit enables any COPF app to interact with EVM-compatible blockchains and IPFS without reinventing chain monitoring, finality handling, or wallet authentication. Unlike framework kits (auth, content-management), this kit introduces new deployment targets (blockchain networks, IPFS) that require custom transport adapters and storage backends.
+This suite enables any Clef app to interact with EVM-compatible blockchains and IPFS without reinventing chain monitoring, finality handling, or wallet authentication. Unlike framework suites (auth, content-management), this suite introduces new deployment targets (blockchain networks, IPFS) that require custom transport adapters and storage backends.
 
-## Why This is a Domain Kit
+## Why This is a Domain Suite
 
-The web3 kit needs:
+The web3 suite needs:
 - **Transport adapters**: EVM JSON-RPC and StarkNet adapters to communicate with blockchain networks
 - **Storage adapters**: IPFS content-addressed storage adapter for decentralized content
 - **Deploy templates**: Pre-configured deployment manifests for Ethereum mainnet, Arbitrum, multi-chain setups
 
-None of this infrastructure exists in the framework kernel — it's domain-specific. Without it, the kit's concepts can't function. That makes this a **domain kit**.
+None of this infrastructure exists in the framework kernel — it's domain-specific. Without it, the suite's concepts can't function. That makes this a **domain suite**.
 
 ## Step 1: Identify the Kit Boundary
 
 Four concepts belong together:
 
-| Concept | Purpose | Why it's in the kit |
+| Concept | Purpose | Why it's in the suite |
 |---------|---------|-------------------|
-| **ChainMonitor** | Track block confirmations, detect reorgs, gate on finality | Foundation — finality gating is the kit's core value |
+| **ChainMonitor** | Track block confirmations, detect reorgs, gate on finality | Foundation — finality gating is the suite's core value |
 | **Contract** | Wrap on-chain contract interactions as concept actions | Needs ChainMonitor for finality before downstream actions |
-| **Content** | IPFS content storage with CID tracking and pinning | Needs IPFS transport/storage from the kit's infrastructure |
+| **Content** | IPFS content storage with CID tracking and pinning | Needs IPFS transport/storage from the suite's infrastructure |
 | **Wallet** | Signature verification and address management | Provides auth for chain interactions |
 
 **The boundary test**: Remove any one concept — do the others lose significant value?
@@ -36,15 +36,15 @@ Four concepts belong together:
 
 ## Step 2: Determine Kit Type
 
-Does this kit introduce a new deployment target? **Yes** — blockchain networks and IPFS are deployment targets that the framework kernel knows nothing about.
+Does this suite introduce a new deployment target? **Yes** — blockchain networks and IPFS are deployment targets that the framework kernel knows nothing about.
 
-Does the kit need custom transports? **Yes** — EVM JSON-RPC, StarkNet.
+Does the suite need custom transports? **Yes** — EVM JSON-RPC, StarkNet.
 
-Does the kit need custom storage? **Yes** — IPFS content-addressed storage.
+Does the suite need custom storage? **Yes** — IPFS content-addressed storage.
 
-Does the kit bundle deploy templates? **Yes** — Ethereum mainnet, Arbitrum, multi-chain.
+Does the suite bundle deploy templates? **Yes** — Ethereum mainnet, Arbitrum, multi-chain.
 
-**Decision: Domain kit.**
+**Decision: Domain suite.**
 
 ## Step 3: Type Parameter Alignment
 
@@ -73,8 +73,8 @@ concepts:
 
 **Key alignment decisions:**
 - Each concept has its own distinct ref type — a block reference is not a transaction reference is not a content CID
-- No secondary parameters needed within this kit — the concepts connect through sync variable flow, not shared type parameters
-- Cross-kit alignment: Wallet's `W` could align with the auth kit's `user-ref` via integration syncs, but within this kit it stays `wallet-ref` (a wallet address is not a user ID)
+- No secondary parameters needed within this suite — the concepts connect through sync variable flow, not shared type parameters
+- Cross-suite alignment: Wallet's `W` could align with the auth suite's `user-ref` via integration syncs, but within this suite it stays `wallet-ref` (a wallet address is not a user ID)
 
 ## Step 4: Sync Design with Tiers
 
@@ -136,9 +136,9 @@ then {
 
 ### Integration Syncs (1)
 
-**4. Wallet Auth** (activates with auth kit)
+**4. Wallet Auth** (activates with auth suite)
 
-Wire Wallet/verify into the auth kit's JWT flow. Wallet signature verification as an authentication method.
+Wire Wallet/verify into the auth suite's JWT flow. Wallet signature verification as an authentication method.
 
 ```
 sync WalletAuth [eager]
@@ -225,14 +225,14 @@ Three pre-configured deployment manifests:
 - `arbitrum.deploy.yaml` — L2 deployment with sequencer soft-finality and L1-batch hard-finality
 - `multi-chain.deploy.yaml` — Multi-chain deployment with cross-chain bridge syncs
 
-## Step 7: Full Kit Manifest
+## Step 7: Full Suite Manifest
 
 ```yaml
 kit:
   name: web3
   version: 0.1.0
   description: >
-    Blockchain integration for COPF. Chain monitoring with
+    Blockchain integration for Clef. Chain monitoring with
     finality-aware gating, IPFS content storage with pinning,
     and wallet-based authentication via signature verification.
 
@@ -283,7 +283,7 @@ integrations:
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >
-          Wire Wallet/verify into the auth kit's JWT flow.
+          Wire Wallet/verify into the auth suite's JWT flow.
           Wallet signature verification as an auth method.
 
 infrastructure:
@@ -354,9 +354,9 @@ kits:
     path: ./kits/web3
 ```
 
-1 required + 2 recommended syncs load. Infrastructure (evm transport, ipfs storage) available for deployment. Integration syncs ignored (no auth kit).
+1 required + 2 recommended syncs load. Infrastructure (evm transport, ipfs storage) available for deployment. Integration syncs ignored (no auth suite).
 
-### With auth kit integration
+### With auth suite integration
 
 ```yaml
 kits:
@@ -366,7 +366,7 @@ kits:
     path: ./kits/auth
 ```
 
-All 3 kit syncs + 1 integration sync (WalletAuth) load. Users can authenticate via wallet signature.
+All 3 suite syncs + 1 integration sync (WalletAuth) load. Users can authenticate via wallet signature.
 
 ### Multi-chain with custom reorg handling
 
@@ -393,7 +393,7 @@ cp kits/web3/infrastructure/deploy-templates/multi-chain.deploy.yaml deploy.yaml
 
 ```
 kits/web3/
-├── kit.yaml
+├── suite.yaml
 ├── chain-monitor.concept              # @gate — async finality
 ├── contract.concept
 ├── content.concept
@@ -428,8 +428,8 @@ kits/web3/
 
 **Why ChainMonitor is the only required sync**: The finality gate prevents cross-chain state inconsistency from reorgs. ReorgCompensation is recommended because different apps handle reorgs differently (some roll back, some flag, some retry). ContentPinning is recommended because some apps manage pinning externally.
 
-**Why chainConfigs is a top-level field**: Finality rules are per-chain configuration, not concept state. They're read by the ChainMonitor implementation at startup, not modified by actions. Putting them in `kit.yaml` makes them visible and overridable at the deployment level.
+**Why chainConfigs is a top-level field**: Finality rules are per-chain configuration, not concept state. They're read by the ChainMonitor implementation at startup, not modified by actions. Putting them in `suite.yaml` makes them visible and overridable at the deployment level.
 
 **Why infrastructure is separate from implementations**: The EVM transport is pre-conceptual — it speaks JSON-RPC, manages gas and nonces, polls for receipts. That's plumbing, not concept logic. The `contract.handler.ts` implementation uses the transport to execute contract calls, but the transport itself is infrastructure that the kernel manages. Keeping them separate maintains the infrastructure boundary (Section 10.3).
 
-**Framework kit vs. domain kit comparison**: The auth kit (User, Password, JWT) is a framework kit — it works with any transport and storage. The web3 kit is a domain kit — ChainMonitor literally can't function without an EVM transport, and Content can't function without IPFS storage. That's the deciding factor.
+**Framework suite vs. domain suite comparison**: The auth suite (User, Password, JWT) is a framework suite — it works with any transport and storage. The web3 suite is a domain suite — ChainMonitor literally can't function without an EVM transport, and Content can't function without IPFS storage. That's the deciding factor.

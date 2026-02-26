@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/TypeScriptBuilder",
+  "uri": "urn:clef/TypeScriptBuilder",
   "name": "TypeScriptBuilder",
   "typeParams": [
     {
@@ -470,7 +470,7 @@
               "name": "artifactPath",
               "value": {
                 "kind": "literal",
-                "value": ".copf-artifacts/typescript/password"
+                "value": ".clef-artifacts/typescript/password"
               }
             },
             {
@@ -547,11 +547,11 @@
   "jsonSchemas": {
     "invocations": {
       "build": {
-        "$id": "urn:copf/TypeScriptBuilder/build/invocation",
+        "$id": "urn:clef/TypeScriptBuilder/build/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeScriptBuilder"
+            "const": "urn:clef/TypeScriptBuilder"
           },
           "action": {
             "const": "build"
@@ -604,11 +604,11 @@
         }
       },
       "test": {
-        "$id": "urn:copf/TypeScriptBuilder/test/invocation",
+        "$id": "urn:clef/TypeScriptBuilder/test/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeScriptBuilder"
+            "const": "urn:clef/TypeScriptBuilder"
           },
           "action": {
             "const": "test"
@@ -631,11 +631,11 @@
         }
       },
       "package": {
-        "$id": "urn:copf/TypeScriptBuilder/package/invocation",
+        "$id": "urn:clef/TypeScriptBuilder/package/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeScriptBuilder"
+            "const": "urn:clef/TypeScriptBuilder"
           },
           "action": {
             "const": "package"
@@ -658,11 +658,11 @@
         }
       },
       "register": {
-        "$id": "urn:copf/TypeScriptBuilder/register/invocation",
+        "$id": "urn:clef/TypeScriptBuilder/register/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/TypeScriptBuilder"
+            "const": "urn:clef/TypeScriptBuilder"
           },
           "action": {
             "const": "register"
@@ -678,11 +678,11 @@
     "completions": {
       "build": {
         "ok": {
-          "$id": "urn:copf/TypeScriptBuilder/build/completion/ok",
+          "$id": "urn:clef/TypeScriptBuilder/build/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "build"
@@ -712,11 +712,11 @@
           }
         },
         "typeError": {
-          "$id": "urn:copf/TypeScriptBuilder/build/completion/typeError",
+          "$id": "urn:clef/TypeScriptBuilder/build/completion/typeError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "build"
@@ -757,11 +757,11 @@
           }
         },
         "bundleError": {
-          "$id": "urn:copf/TypeScriptBuilder/build/completion/bundleError",
+          "$id": "urn:clef/TypeScriptBuilder/build/completion/bundleError",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "build"
@@ -785,11 +785,11 @@
       },
       "test": {
         "ok": {
-          "$id": "urn:copf/TypeScriptBuilder/test/completion/ok",
+          "$id": "urn:clef/TypeScriptBuilder/test/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "test"
@@ -823,11 +823,11 @@
           }
         },
         "testFailure": {
-          "$id": "urn:copf/TypeScriptBuilder/test/completion/testFailure",
+          "$id": "urn:clef/TypeScriptBuilder/test/completion/testFailure",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "test"
@@ -874,11 +874,11 @@
       },
       "package": {
         "ok": {
-          "$id": "urn:copf/TypeScriptBuilder/package/completion/ok",
+          "$id": "urn:clef/TypeScriptBuilder/package/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "package"
@@ -904,11 +904,11 @@
           }
         },
         "formatUnsupported": {
-          "$id": "urn:copf/TypeScriptBuilder/package/completion/formatUnsupported",
+          "$id": "urn:clef/TypeScriptBuilder/package/completion/formatUnsupported",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "package"
@@ -932,11 +932,11 @@
       },
       "register": {
         "ok": {
-          "$id": "urn:copf/TypeScriptBuilder/register/completion/ok",
+          "$id": "urn:clef/TypeScriptBuilder/register/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/TypeScriptBuilder"
+              "const": "urn:clef/TypeScriptBuilder"
             },
             "action": {
               "const": "register"

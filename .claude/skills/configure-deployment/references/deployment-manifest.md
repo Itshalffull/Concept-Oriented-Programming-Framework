@@ -1,6 +1,6 @@
 # Deployment Manifest Schema Reference
 
-Complete schema for the COPF deployment manifest (`app.deploy.yaml` / `app.deploy.json`).
+Complete schema for the Clef deployment manifest (`app.deploy.yaml` / `app.deploy.json`).
 
 ## Root Structure
 

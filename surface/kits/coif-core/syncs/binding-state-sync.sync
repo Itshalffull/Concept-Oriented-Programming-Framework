@@ -1,8 +1,8 @@
 # ============================================================
-# BindingStateSync — coif-core required sync
+# BindingStateSync — surface-core required sync
 #
 # When a signal is written (user input from the UI), sync the
-# change back to the bound COPF concept. This is the user→backend
+# change back to the bound Clef concept. This is the user→backend
 # direction of the reactive loop.
 # ============================================================
 

@@ -1,5 +1,5 @@
 // ============================================================
-// Interface Kit Handler Tests
+// Clef Bind Handler Tests
 //
 // Tests for the 5 orchestration concept handler implementations:
 // Projection, Generator, Emitter, Surface, Middleware.
@@ -21,7 +21,7 @@ describe('Projection Handler', () => {
   it('projects a valid manifest with annotations', async () => {
     const storage = createInMemoryStorage();
     const manifest = JSON.stringify({
-      uri: 'urn:copf/Todo',
+      uri: 'urn:clef/Todo',
       name: 'Todo',
       actions: [
         { name: 'create', params: [{ name: 'title', type: { kind: 'primitive', primitive: 'String' } }], variants: [{ tag: 'ok', fields: [] }] },
@@ -63,7 +63,7 @@ describe('Projection Handler', () => {
     const storage = createInMemoryStorage();
     // First project to create a projection
     const manifest = JSON.stringify({
-      uri: 'urn:copf/Article',
+      uri: 'urn:clef/Article',
       name: 'Article',
       actions: [
         { name: 'create', params: [], variants: [{ tag: 'ok', fields: [] }] },
@@ -90,7 +90,7 @@ describe('Projection Handler', () => {
   it('validates a projection', async () => {
     const storage = createInMemoryStorage();
     const manifest = JSON.stringify({
-      uri: 'urn:copf/Simple',
+      uri: 'urn:clef/Simple',
       name: 'Simple',
       actions: [{ name: 'do', params: [], variants: [{ tag: 'ok', fields: [] }] }],
       relations: [],
@@ -107,12 +107,12 @@ describe('Projection Handler', () => {
   it('diffs two projections of the same concept', async () => {
     const storage = createInMemoryStorage();
     const manifest1 = JSON.stringify({
-      uri: 'urn:copf/Todo', name: 'Todo',
+      uri: 'urn:clef/Todo', name: 'Todo',
       actions: [{ name: 'create', params: [], variants: [{ tag: 'ok', fields: [] }] }],
       relations: [], typeParams: [], purpose: 'Manage todos',
     });
     const manifest2 = JSON.stringify({
-      uri: 'urn:copf/Todo', name: 'Todo',
+      uri: 'urn:clef/Todo', name: 'Todo',
       actions: [
         { name: 'create', params: [], variants: [{ tag: 'ok', fields: [] }] },
         { name: 'delete', params: [], variants: [{ tag: 'ok', fields: [] }] },

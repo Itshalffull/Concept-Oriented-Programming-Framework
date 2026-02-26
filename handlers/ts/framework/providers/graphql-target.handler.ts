@@ -5,7 +5,7 @@
 // ConceptManifest data. Produces one file per concept containing
 // both the type definitions string and a resolver object that
 // delegates to the Clef kernel.
-// Architecture doc: Interface Kit
+// Architecture doc: Clef Bind
 // ============================================================
 
 import type {

@@ -23,7 +23,7 @@ describe('Conduit Transports — In-Process', () => {
     const transport = createInProcessAdapter(echoHandler, storage);
 
     const completion = await transport.invoke(
-      mkInvocation('urn:copf/Echo', 'send', { id: 'ip-1', text: 'in-process test' }),
+      mkInvocation('urn:clef/Echo', 'send', { id: 'ip-1', text: 'in-process test' }),
     );
 
     expect(completion.variant).toBe('ok');
@@ -35,12 +35,12 @@ describe('Conduit Transports — In-Process', () => {
     const transport = createInProcessAdapter(userHandler, storage);
 
     const first = await transport.invoke(
-      mkInvocation('urn:copf/User', 'register', { user: 'u1', name: 'alice', email: 'alice@test.io' }),
+      mkInvocation('urn:clef/User', 'register', { user: 'u1', name: 'alice', email: 'alice@test.io' }),
     );
     expect(first.variant).toBe('ok');
 
     const dup = await transport.invoke(
-      mkInvocation('urn:copf/User', 'register', { user: 'u2', name: 'alice', email: 'alice2@test.io' }),
+      mkInvocation('urn:clef/User', 'register', { user: 'u2', name: 'alice', email: 'alice2@test.io' }),
     );
     expect(dup.variant).toBe('error');
   });
@@ -65,7 +65,7 @@ describe('Conduit Transports — HTTP', () => {
 
     const adapter = createHttpLiteAdapter('http://mock', mockFetch);
     const completion = await adapter.invoke(
-      mkInvocation('urn:copf/Echo', 'send', { id: 'http-1', text: 'http test' }),
+      mkInvocation('urn:clef/Echo', 'send', { id: 'http-1', text: 'http test' }),
     );
 
     expect(completion.variant).toBe('ok');
@@ -124,7 +124,7 @@ describe('Conduit Transports — WebSocket', () => {
     const adapter = createWebSocketAdapter('ws://mock', 'lite', mockWsFactory);
 
     const completion = await adapter.invoke(
-      mkInvocation('urn:copf/Echo', 'send', { id: 'ws-1', text: 'websocket test' }),
+      mkInvocation('urn:clef/Echo', 'send', { id: 'ws-1', text: 'websocket test' }),
     );
 
     expect(completion.variant).toBe('ok');

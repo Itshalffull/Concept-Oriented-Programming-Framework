@@ -14,7 +14,7 @@ from urllib.error import HTTPError
 
 
 class ConduitClient:
-    """HTTP client for the Conduit COPF REST API."""
+    """HTTP client for the Conduit Clef REST API."""
 
     def __init__(self, base_url: str = None):
         self.base_url = base_url or os.environ.get("CONDUIT_URL", "http://localhost:3000")
@@ -135,10 +135,10 @@ def main():
     print("4. Creating article...")
     try:
         result = client.create_article(
-            title="COPF from Python",
-            description="Using the Python SDK to interact with COPF",
+            title="Clef from Python",
+            description="Using the Python SDK to interact with Clef",
             body="This article was created by the Python SDK client...",
-            tags=["python", "copf", "sdk"],
+            tags=["python", "clef", "sdk"],
         )
         print(f"   Created: {result.get('article', {}).get('title', 'unknown')}\n")
     except Exception as e:

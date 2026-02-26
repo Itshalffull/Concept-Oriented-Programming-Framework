@@ -130,12 +130,12 @@ syncs:
       description: "MultiValueResolution provider self-registers with PluginRegistry"
 
 uses:
-  - kit: versioning
+  - suite: versioning
     concepts:
       - name: ContentHash
       - name: DAGHistory
       - name: ChangeStream
       - name: Merge
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

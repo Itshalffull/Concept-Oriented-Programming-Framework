@@ -1,4 +1,4 @@
-// Projection Concept Implementation (Interface Kit)
+// Projection Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 export const interfaceProjectionHandler: ConceptHandler = {
@@ -27,7 +27,7 @@ export const interfaceProjectionHandler: ConceptHandler = {
     }
 
     const conceptName = (manifestData.name as string) ?? (manifestData.concept as string) ?? 'unknown';
-    const kitName = (manifestData.kit as string) ?? 'default';
+    const suiteName = (manifestData.kit as string) ?? 'default';
     const kitVersion = (manifestData.version as string) ?? '1.0.0';
 
     // Extract traits from annotations
@@ -78,7 +78,7 @@ export const interfaceProjectionHandler: ConceptHandler = {
     await storage.put('projection', projectionId, {
       projectionId,
       concept: conceptName,
-      kitName,
+      suiteName,
       kitVersion,
       conceptManifest: manifest,
       traits: JSON.stringify(traits),

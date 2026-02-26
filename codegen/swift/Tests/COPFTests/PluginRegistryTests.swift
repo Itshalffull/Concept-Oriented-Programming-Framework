@@ -1,7 +1,7 @@
 // PluginRegistryTests.swift — Tests for PluginRegistry concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class PluginRegistryTests: XCTestCase {
 

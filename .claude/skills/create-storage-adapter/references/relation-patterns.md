@@ -1,6 +1,6 @@
 # Relation Patterns Reference
 
-How COPF concept handlers use storage in practice. Patterns observed across all RealWorld concept implementations.
+How Clef concept handlers use storage in practice. Patterns observed across all RealWorld concept implementations.
 
 ## Relation Naming Convention
 

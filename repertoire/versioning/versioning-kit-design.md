@@ -1,14 +1,14 @@
-# COPF Versioning & Collaboration Kit — Design Document
+# Clef Versioning & Collaboration Kit — Design Document
 
 **Version:** 0.1.0 (2026-02-25)
 **Status:** Draft / Proposal
-**Scope:** New kits, concept/provider decompositions, migration plan for superseded concepts
+**Scope:** New suites, concept/provider decompositions, migration plan for superseded concepts
 
 ---
 
 ## 1. Executive Summary
 
-This document proposes adding **two new kits** to COPF — a **Versioning Kit** and a **Collaboration Kit** — containing **18 new concepts** that provide a universal substrate for version control, change tracking, concurrent editing, attribution, provenance, compliance, and document review across all data types. Three concepts use the **coordination + provider pattern** (Diff, Merge, ConflictResolution), where a coordination concept defines the interface and routing syncs dispatch to pluggable provider implementations via PluginRegistry. Ten provider concepts ship across four phases.
+This document proposes adding **two new suites** to Clef — a **Versioning Kit** and a **Collaboration Kit** — containing **18 new concepts** that provide a universal substrate for version control, change tracking, concurrent editing, attribution, provenance, compliance, and document review across all data types. Three concepts use the **coordination + provider pattern** (Diff, Merge, ConflictResolution), where a coordination concept defines the interface and routing syncs dispatch to pluggable provider implementations via PluginRegistry. Ten provider concepts ship across four phases.
 
 Six existing concepts are affected. Two are **superseded** (Version → TemporalVersion, SyncedContent → Replica + ConflictResolution). Two are **narrowed** in scope (Capture → retains CDC role but defers to ChangeStream for streaming; Provenance → retains W3C PROV graph but defers to Attribution for content-region binding). Two are **enhanced** (ActionLog gains CausalClock sync; FlowTrace gains CausalClock sync).
 
@@ -18,7 +18,7 @@ Implementation proceeds in **four phases** over an estimated 4 minor versions (0
 
 ## 2. Design Principles
 
-These principles extend the existing COPF design rules (Section 2 of the reference doc) for the versioning domain:
+These principles extend the existing Clef design rules (Section 2 of the reference doc) for the versioning domain:
 
 **P1. The snapshot-patch duality is a composition, not a choice.** Some concepts store states (ContentHash, TemporalVersion); others store transformations (Patch, ChangeStream). Systems compose both. Neither is "more fundamental" — they are independent concepts that sync together.
 
@@ -38,8 +38,8 @@ These principles extend the existing COPF design rules (Section 2 of the referen
 
 ```
 kits/
-  versioning/              # New kit
-    kit.yaml
+  versioning/              # New suite
+    suite.yaml
     content-hash.concept
     ref.concept
     dag-history.concept
@@ -76,8 +76,8 @@ kits/
         tree-diff-activation.sync
         semantic-merge-activation.sync
 
-  collaboration/           # New kit
-    kit.yaml
+  collaboration/           # New suite
+    suite.yaml
     causal-clock.concept
     replica.concept
     conflict-resolution.concept  # Coordination concept
@@ -651,7 +651,7 @@ then {
 
 2. **Phase 2 (v0.20):** Mark Version as `@deprecated`. Update all Version-dependent syncs in the Content Kit to use TemporalVersion instead. Verify no external kit references Version directly (syncs only go through TemporalVersion).
 
-3. **Phase 3 (v0.21):** Remove Version from the Content Kit. TemporalVersion lives in the Versioning Kit; the Content Kit's `kit.yaml` adds a `uses` dependency on the Versioning Kit.
+3. **Phase 3 (v0.21):** Remove Version from the Content Kit. TemporalVersion lives in the Versioning Kit; the Content Kit's `suite.yaml` adds a `uses` dependency on the Versioning Kit.
 
 **Breaking change:** Yes — this is a MAJOR boundary for any application using Version directly. The compatibility sync provides a migration window. Announce in v0.19 release notes.
 
@@ -675,7 +675,7 @@ then {
 
 ### 5.3 Capture → ChangeStream (partial supersession)
 
-**Current state of Capture (data integration kit):** CDC-focused change capture.
+**Current state of Capture (data integration suite):** CDC-focused change capture.
 
 **What changes:** Capture is **not fully removed** — it retains its role as the *source-specific adapter* that connects to databases, APIs, and filesystems to detect changes. ChangeStream becomes the *downstream consumer interface* that provides offset management, replay, and composability.
 
@@ -698,13 +698,13 @@ then {
 }
 ```
 
-2. **Phase 3 (v0.21):** Update Data Integration Kit's `kit.yaml` to clarify that Capture is the *source adapter* and ChangeStream is the *stream interface*. Consumers that currently subscribe to Capture events migrate to ChangeStream subscriptions.
+2. **Phase 3 (v0.21):** Update Data Integration Kit's `suite.yaml` to clarify that Capture is the *source adapter* and ChangeStream is the *stream interface*. Consumers that currently subscribe to Capture events migrate to ChangeStream subscriptions.
 
-Capture is NOT removed — it is narrowed. Its `kit.yaml` entry gets updated documentation.
+Capture is NOT removed — it is narrowed. Its `suite.yaml` entry gets updated documentation.
 
 ### 5.4 Provenance → Provenance + Attribution (scope narrowing)
 
-**Current state of Provenance (data integration kit):** Tracks data lineage, likely mixing entity-level derivation with content-level attribution.
+**Current state of Provenance (data integration suite):** Tracks data lineage, likely mixing entity-level derivation with content-level attribution.
 
 **What changes:** Provenance retains W3C PROV-style entity → activity → agent chains for *data pipeline lineage*. Attribution (Collaboration Kit) handles *content-region-level authorship tracking* (blame, CODEOWNERS-style ownership).
 
@@ -804,7 +804,7 @@ These are **recommended syncs** — loadable for distributed deployments, skippa
 
 **Ships:** ContentHash, Ref, DAGHistory, Patch, Diff (coordination + MyersDiff provider), Branch
 
-**Rationale:** These concepts have zero dependencies on existing COPF concepts and provide the foundation everything else builds on. ContentHash is the most fundamental — nearly every other concept references content by hash.
+**Rationale:** These concepts have zero dependencies on existing Clef concepts and provide the foundation everything else builds on. ContentHash is the most fundamental — nearly every other concept references content by hash.
 
 **Dependency graph:**
 ```
@@ -873,7 +873,7 @@ uses: []
 **Definition of done:**
 - All concepts have `.concept` specs, generated handler skeletons, and conformance tests
 - Required syncs are implemented and pass integration tests
-- `copf check` validates all specs and syncs
+- `clef check` validates all specs and syncs
 - CLI can scaffold a Git-like VCS from these concepts
 
 ### Phase 2: Change Representation + Collaboration Foundation (v0.20)
@@ -928,7 +928,7 @@ RetentionPolicy ← TemporalVersion (Phase 2), DAGHistory (Phase 1), ChangeStrea
 **Supersession actions this phase:**
 - Add `@deprecated` to Version (content kit)
 - Add `@deprecated` to SyncedContent (content kit)
-- Update Content Kit `kit.yaml` to add `uses: [versioning, collaboration]`
+- Update Content Kit `suite.yaml` to add `uses: [versioning, collaboration]`
 - Update Data Integration Kit to clarify Capture's narrowed scope
 - Migrate all internal syncs that reference Version to reference TemporalVersion
 - Migrate all internal syncs that reference SyncedContent to reference Replica + ConflictResolution
@@ -953,13 +953,13 @@ RetentionPolicy ← TemporalVersion (Phase 2), DAGHistory (Phase 1), ChangeStrea
 **Supersession actions this phase:**
 - Remove Version from Content Kit
 - Remove SyncedContent from Content Kit
-- Final `kit.yaml` cleanup — Content Kit depends on Versioning Kit and Collaboration Kit via `uses`
+- Final `suite.yaml` cleanup — Content Kit depends on Versioning Kit and Collaboration Kit via `uses`
 
 ---
 
 ## 8. Cross-Kit Dependency Map
 
-After all phases complete, the dependency graph between kits is:
+After all phases complete, the dependency graph between suites is:
 
 ```
                     ┌─────────────┐
@@ -983,7 +983,7 @@ After all phases complete, the dependency graph between kits is:
                                          SchemaEvolution)
 ```
 
-**Versioning Kit** has no kit-level dependencies (it uses PluginRegistry from Infrastructure Kit for provider routing, declared in `uses`).
+**Versioning Kit** has no suite-level dependencies (it uses PluginRegistry from Infrastructure Kit for provider routing, declared in `uses`).
 
 **Collaboration Kit** depends on Versioning Kit (Attribution syncs with ContentHash and DAGHistory; ConflictResolution syncs with Merge).
 
@@ -1088,7 +1088,7 @@ Document review workflows (Word track changes, Google Docs suggestions, legal re
 PessimisticLock (Collaboration Kit, Phase 3) is the conflict *avoidance* complement to ConflictResolution's conflict *resolution*. Every multi-user system needs both — merge-based resolution for mergeable content, exclusive locking for non-mergeable content (binary files, legal contracts during negotiation, database schema definitions). RetentionPolicy (Versioning Kit, Phase 3) addresses compliance requirements (21 CFR Part 11, HIPAA, SOX, litigation holds) that govern the lifecycle of versioned data. Its core invariant — a record under legal hold can never be disposed — is a hard regulatory constraint that multiple domains need. Both concepts pass the concept test with clear independent state, meaningful actions, and operational principles.
 
 **D5. Architecture doc version bumps per phase.**
-Phase 1 (v0.19) ships the Versioning Kit foundation → architecture doc bumps to 0.19.0. Phase 2 (v0.20) ships collaboration + temporal → 0.20.0. Phase 3 (v0.21) ships deprecations + new concepts + providers → 0.21.0. Phase 4 (v0.22) ships cleanup + advanced providers → 0.22.0. Concept library version also bumps: current v0.4.0 with 54 concepts across 15 kits → v0.5.0 (Phase 1, +6 concepts, +1 kit), v0.6.0 (Phase 2, +7 concepts, +1 kit), v0.7.0 (Phase 3, +4 concepts, +6 providers, −0), v0.8.0 (Phase 4, +4 providers, −2 concepts).
+Phase 1 (v0.19) ships the Versioning Kit foundation → architecture doc bumps to 0.19.0. Phase 2 (v0.20) ships collaboration + temporal → 0.20.0. Phase 3 (v0.21) ships deprecations + new concepts + providers → 0.21.0. Phase 4 (v0.22) ships cleanup + advanced providers → 0.22.0. Concept library version also bumps: current v0.4.0 with 54 concepts across 15 suites → v0.5.0 (Phase 1, +6 concepts, +1 kit), v0.6.0 (Phase 2, +7 concepts, +1 kit), v0.7.0 (Phase 3, +4 concepts, +6 providers, −0), v0.8.0 (Phase 4, +4 providers, −2 concepts).
 
 ---
 
@@ -1103,14 +1103,14 @@ Phase 1 (v0.19) ships the Versioning Kit foundation → architecture doc bumps t
 | **Narrowed (kept, reduced scope)** | 2 | Capture, Provenance |
 | **Enhanced (kept, new syncs)** | 2 | ActionLog, FlowTrace |
 
-**Net change to concept library:** +28 concepts (18 new + 10 providers), −2 removed = **+26 net** (54 → 80 concepts, 15 → 17 kits)
+**Net change to concept library:** +28 concepts (18 new + 10 providers), −2 removed = **+26 net** (54 → 80 concepts, 15 → 17 suites)
 
 ### Phase-by-phase concept count
 
 | Phase | Version | New Concepts | New Providers | Deprecated | Removed | Running Total |
 |---|---|---|---|---|---|---|
-| Current | 0.18 | — | — | — | — | 54 concepts, 15 kits |
-| Phase 1 | 0.19 | ContentHash, Ref, DAGHistory, Patch, Diff, Branch | MyersDiff | — | — | 61 concepts, 16 kits |
-| Phase 2 | 0.20 | TemporalVersion, ChangeStream, SchemaEvolution, CausalClock, Replica, ConflictResolution, Attribution | LWWResolution, ManualResolution | — | — | 70 concepts, 17 kits |
-| Phase 3 | 0.21 | Signature, InlineAnnotation, PessimisticLock, RetentionPolicy | PatienceDiff, HistogramDiff, ThreeWayMerge, RecursiveMerge, AddWinsResolution, MultiValueResolution | Version, SyncedContent | — | 80 concepts, 17 kits |
-| Phase 4 | 0.22 | — | TreeDiff, SemanticMerge, LatticeMerge | — | Version, SyncedContent | 80 concepts, 17 kits |
+| Current | 0.18 | — | — | — | — | 54 concepts, 15 suites |
+| Phase 1 | 0.19 | ContentHash, Ref, DAGHistory, Patch, Diff, Branch | MyersDiff | — | — | 61 concepts, 16 suites |
+| Phase 2 | 0.20 | TemporalVersion, ChangeStream, SchemaEvolution, CausalClock, Replica, ConflictResolution, Attribution | LWWResolution, ManualResolution | — | — | 70 concepts, 17 suites |
+| Phase 3 | 0.21 | Signature, InlineAnnotation, PessimisticLock, RetentionPolicy | PatienceDiff, HistogramDiff, ThreeWayMerge, RecursiveMerge, AddWinsResolution, MultiValueResolution | Version, SyncedContent | — | 80 concepts, 17 suites |
+| Phase 4 | 0.22 | — | TreeDiff, SemanticMerge, LatticeMerge | — | Version, SyncedContent | 80 concepts, 17 suites |

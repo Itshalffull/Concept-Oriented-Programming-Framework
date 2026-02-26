@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - LLM structured data extraction enricher provider
+// Clef Data Integration Kit - LLM structured data extraction enricher provider
 // Builds prompt with target schema + content, calls LLM API, parses JSON response.
 
 import Foundation

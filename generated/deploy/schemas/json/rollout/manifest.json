@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Rollout",
+  "uri": "urn:clef/Rollout",
   "name": "Rollout",
   "typeParams": [
     {
@@ -553,11 +553,11 @@
   "jsonSchemas": {
     "invocations": {
       "begin": {
-        "$id": "urn:copf/Rollout/begin/invocation",
+        "$id": "urn:clef/Rollout/begin/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Rollout"
+            "const": "urn:clef/Rollout"
           },
           "action": {
             "const": "begin"
@@ -587,11 +587,11 @@
         }
       },
       "advance": {
-        "$id": "urn:copf/Rollout/advance/invocation",
+        "$id": "urn:clef/Rollout/advance/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Rollout"
+            "const": "urn:clef/Rollout"
           },
           "action": {
             "const": "advance"
@@ -610,11 +610,11 @@
         }
       },
       "pause": {
-        "$id": "urn:copf/Rollout/pause/invocation",
+        "$id": "urn:clef/Rollout/pause/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Rollout"
+            "const": "urn:clef/Rollout"
           },
           "action": {
             "const": "pause"
@@ -637,11 +637,11 @@
         }
       },
       "resume": {
-        "$id": "urn:copf/Rollout/resume/invocation",
+        "$id": "urn:clef/Rollout/resume/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Rollout"
+            "const": "urn:clef/Rollout"
           },
           "action": {
             "const": "resume"
@@ -660,11 +660,11 @@
         }
       },
       "abort": {
-        "$id": "urn:copf/Rollout/abort/invocation",
+        "$id": "urn:clef/Rollout/abort/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Rollout"
+            "const": "urn:clef/Rollout"
           },
           "action": {
             "const": "abort"
@@ -683,11 +683,11 @@
         }
       },
       "status": {
-        "$id": "urn:copf/Rollout/status/invocation",
+        "$id": "urn:clef/Rollout/status/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Rollout"
+            "const": "urn:clef/Rollout"
           },
           "action": {
             "const": "status"
@@ -709,11 +709,11 @@
     "completions": {
       "begin": {
         "ok": {
-          "$id": "urn:copf/Rollout/begin/completion/ok",
+          "$id": "urn:clef/Rollout/begin/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "begin"
@@ -735,11 +735,11 @@
           }
         },
         "invalidStrategy": {
-          "$id": "urn:copf/Rollout/begin/completion/invalidStrategy",
+          "$id": "urn:clef/Rollout/begin/completion/invalidStrategy",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "begin"
@@ -763,11 +763,11 @@
       },
       "advance": {
         "ok": {
-          "$id": "urn:copf/Rollout/advance/completion/ok",
+          "$id": "urn:clef/Rollout/advance/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "advance"
@@ -797,11 +797,11 @@
           }
         },
         "complete": {
-          "$id": "urn:copf/Rollout/advance/completion/complete",
+          "$id": "urn:clef/Rollout/advance/completion/complete",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "advance"
@@ -823,11 +823,11 @@
           }
         },
         "paused": {
-          "$id": "urn:copf/Rollout/advance/completion/paused",
+          "$id": "urn:clef/Rollout/advance/completion/paused",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "advance"
@@ -855,11 +855,11 @@
       },
       "pause": {
         "ok": {
-          "$id": "urn:copf/Rollout/pause/completion/ok",
+          "$id": "urn:clef/Rollout/pause/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "pause"
@@ -883,11 +883,11 @@
       },
       "resume": {
         "ok": {
-          "$id": "urn:copf/Rollout/resume/completion/ok",
+          "$id": "urn:clef/Rollout/resume/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "resume"
@@ -915,11 +915,11 @@
       },
       "abort": {
         "ok": {
-          "$id": "urn:copf/Rollout/abort/completion/ok",
+          "$id": "urn:clef/Rollout/abort/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "abort"
@@ -941,11 +941,11 @@
           }
         },
         "alreadyComplete": {
-          "$id": "urn:copf/Rollout/abort/completion/alreadyComplete",
+          "$id": "urn:clef/Rollout/abort/completion/alreadyComplete",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "abort"
@@ -969,11 +969,11 @@
       },
       "status": {
         "ok": {
-          "$id": "urn:copf/Rollout/status/completion/ok",
+          "$id": "urn:clef/Rollout/status/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Rollout"
+              "const": "urn:clef/Rollout"
             },
             "action": {
               "const": "status"

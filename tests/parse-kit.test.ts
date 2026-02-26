@@ -180,7 +180,7 @@ describe('Parse Kit — Sync Definitions', () => {
 });
 
 // ============================================================
-// 5. Kit Manifest
+// 5. Suite Manifest
 // ============================================================
 
 describe('Parse Kit — suite.yaml Manifest', () => {
@@ -226,9 +226,9 @@ describe('Parse Kit — suite.yaml Manifest', () => {
 
   it('declares uses for foundation, generation, infrastructure kits', () => {
     const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    const kitNames = parsed.uses.map((u: { kit: string }) => u.kit);
-    expect(kitNames).toContain('foundation');
-    expect(kitNames).toContain('generation');
-    expect(kitNames).toContain('infrastructure');
+    const suiteNames = parsed.uses.map((u: { kit: string }) => u.kit);
+    expect(suiteNames).toContain('foundation');
+    expect(suiteNames).toContain('generation');
+    expect(suiteNames).toContain('infrastructure');
   });
 });

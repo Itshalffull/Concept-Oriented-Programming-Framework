@@ -1,4 +1,4 @@
-module github.com/copf/go-sdk
+module github.com/clef/go-sdk
 
 go 1.21
 

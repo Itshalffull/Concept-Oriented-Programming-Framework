@@ -1,7 +1,7 @@
 // ============================================================
 // WidgetEntity Handler
 //
-// Queryable representation of a parsed widget spec -- the COIF
+// Queryable representation of a parsed widget spec -- the Clef Surface
 // counterpart to ConceptEntity. Links anatomy, state machines,
 // props, slots, accessibility contracts, affordance declarations,
 // and composition references as a traversable structure.
@@ -27,7 +27,7 @@ export const widgetEntityHandler: ConceptHandler = {
     }
 
     const id = nextId();
-    const symbol = `copf/widget/${name}`;
+    const symbol = `clef/widget/${name}`;
 
     // Extract metadata from AST
     let purposeText = '';

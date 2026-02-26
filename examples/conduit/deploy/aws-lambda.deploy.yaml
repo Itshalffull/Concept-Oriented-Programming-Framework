@@ -6,7 +6,7 @@
 # Zero idle cost, auto-scaling. Higher per-sync latency (~50-200ms per hop).
 #
 # Usage:
-#   copf deploy --manifest deploy/aws-lambda.deploy.yaml
+#   clef deploy --manifest deploy/aws-lambda.deploy.yaml
 
 app:
   name: conduit

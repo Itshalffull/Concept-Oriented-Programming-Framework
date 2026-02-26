@@ -1,17 +1,17 @@
-# COPF Test Kit — Cross-Layer Testing Coordination
+# Clef Test Kit — Cross-Layer Testing Coordination
 
 ## Design Principle
 
-Testing spans all three layers. Snapshot testing triggers on generated output (generation kit). Conformance testing runs against built artifacts (build layer). Contract testing verifies cross-target interoperability (build layer, multiple languages). Test selection determines *what* to test given a change (generation + build). Flaky test management operates across everything (any test from any builder at any point).
+Testing spans all three layers. Snapshot testing triggers on generated output (generation suite). Conformance testing runs against built artifacts (build layer). Contract testing verifies cross-target interoperability (build layer, multiple languages). Test selection determines *what* to test given a change (generation + build). Flaky test management operates across everything (any test from any builder at any point).
 
-This is a **new kit** (`kits/test/`), not an extension of the deploy kit. Unlike Builder and Toolchain which feed directly into the deploy DAG, test coordination concepts have sync points across generation, build, and deploy — they don't belong to any single layer.
+This is a **new suite** (`kits/test/`), not an extension of the deploy kit. Unlike Builder and Toolchain which feed directly into the deploy DAG, test coordination concepts have sync points across generation, build, and deploy — they don't belong to any single layer.
 
 ### Why This Exists
 
 Per-language builders already run language-specific tests. Each `SwiftBuilder/test`, `TypeScriptBuilder/test`, etc. invokes the language's test runner. What builders can't do:
 
 ```
-Generation Kit          Build Layer              Deploy Layer
+Generation Suite          Build Layer              Deploy Layer
 ─────────────          ───────────              ────────────
                                                               
 Emitter writes TS ──?── "Did output change?"     (Snapshot)  
@@ -37,7 +37,7 @@ Five gaps, five concepts. Each has independent purpose, state, and actions per J
 │       │                                                                       │
 │       ▼                                                                       │
 │  ┌─────────────────────────────────┐                                          │
-│  │  Generation Kit                 │                                          │
+│  │  Generation Suite                 │                                          │
 │  │  Resource → KindSystem →        │    ┌───────────────────────────────┐     │
 │  │  GenerationPlan → Emitter       │───▶│  Snapshot (golden files)      │     │
 │  │                                 │    │  Conformance (spec fidelity)  │     │
@@ -156,14 +156,14 @@ concept Snapshot [S] {
       }) {
         Return snapshot status for all tracked paths.
         Statuses: "current", "changed", "new", "rejected".
-        Used by `copf test snapshot --status`.
+        Used by `clef test snapshot --status`.
       }
     }
 
     action diff(path: String) {
       -> ok(diff: String, linesAdded: Int, linesRemoved: Int) {
         Return detailed unified diff between baseline and
-        current output. Used by `copf test snapshot --diff`.
+        current output. Used by `clef test snapshot --diff`.
       }
       -> noBaseline(path: String) {
         No baseline exists for this path.
@@ -191,7 +191,7 @@ concept Snapshot [S] {
 }
 ```
 
-**Baseline storage convention:** `.copf-snapshots/{family}/{concept}/{language}/` alongside generated output. Committed to version control, reviewed in code review.
+**Baseline storage convention:** `.clef-snapshots/{family}/{concept}/{language}/` alongside generated output. Committed to version control, reviewed in code review.
 
 
 ### 1.2 Conformance
@@ -288,7 +288,7 @@ concept Conformance [C] {
       }) {
         Return cross-target conformance matrix.
         Shows which concepts pass conformance for which
-        languages. Used by `copf test conformance --matrix`.
+        languages. Used by `clef test conformance --matrix`.
         conformance values: "full", "partial", "failing", "untested".
       }
     }
@@ -301,7 +301,7 @@ concept Conformance [C] {
       }) {
         Return full traceability: which spec requirements
         are tested by which test vectors in which languages.
-        Used by `copf test conformance --trace`.
+        Used by `clef test conformance --trace`.
       }
     }
   }
@@ -309,7 +309,7 @@ concept Conformance [C] {
   invariant {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(suite: c, testVectors: vs)
-    and  verify(suite: c, language: "typescript", artifactLocation: ".copf-artifacts/ts/password")
+    and  verify(suite: c, language: "typescript", artifactLocation: ".clef-artifacts/ts/password")
       -> ok(passed: 12, total: 12, coveredRequirements: reqs)
     then matrix(concepts: ["password"]) -> ok(matrix: m)
   }
@@ -432,7 +432,7 @@ concept TestSelection [M] {
 
 ### 1.4 ContractTest
 
-Verifies that code generated for different target languages from the same concept specification actually interoperates. When COPF generates a TypeScript client and a Rust server from the same concept, no single builder can verify they work together.
+Verifies that code generated for different target languages from the same concept specification actually interoperates. When Clef generates a TypeScript client and a Rust server from the same concept, no single builder can verify they work together.
 
 **Sync points:** Build layer → Builder (fires after multiple targets build successfully for the same concept). Deploy layer → DeployPlan (contract test pass is a gate before deployment).
 
@@ -512,7 +512,7 @@ concept ContractTest [P] {
       }) {
         Return cross-target verification matrix.
         Shows which language pairs have been verified
-        for which concepts. Used by `copf test contract --matrix`.
+        for which concepts. Used by `clef test contract --matrix`.
       }
     }
 
@@ -533,7 +533,7 @@ concept ContractTest [P] {
   invariant {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(contract: p, definition: d)
-    and  verify(contract: p, producerArtifact: ".copf-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".copf-artifacts/ts/password", consumerLanguage: "typescript")
+    and  verify(contract: p, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript")
       -> ok(contract: p, passed: 8, total: 8)
     then canDeploy(concept: "password", language: "typescript") -> ok(safe: true, verifiedAgainst: ["rust"])
   }
@@ -676,9 +676,9 @@ concept FlakyTest [F] {
 
 ## Part 2: Cross-Layer Syncs
 
-The test kit's value is in how its five concepts wire into the existing generation, build, and deploy pipelines. Each sync point is documented with what triggers it and what it coordinates.
+The test suite's value is in how its five concepts wire into the existing generation, build, and deploy pipelines. Each sync point is documented with what triggers it and what it coordinates.
 
-### 2.1 Generation Kit → Snapshot (output stability)
+### 2.1 Generation Suite → Snapshot (output stability)
 
 After Emitter writes generated files, Snapshot compares them against approved baselines.
 
@@ -710,7 +710,7 @@ then {
 }
 ```
 
-### 2.2 Generation Kit → Conformance (spec-to-test generation)
+### 2.2 Generation Suite → Conformance (spec-to-test generation)
 
 When a concept spec changes, Conformance regenerates test vectors from the spec.
 
@@ -1090,7 +1090,7 @@ environment: production
 test:
   snapshot:
     enabled: true
-    baselineDir: .copf-snapshots/
+    baselineDir: .clef-snapshots/
     autoApprove: false                # require human approval
 
   conformance:
@@ -1192,12 +1192,12 @@ Same pattern for ContractTest, TestSelection, FlakyTest — one registration syn
 ## Part 6: Kit Packaging
 
 ```yaml
-# kits/test/kit.yaml
+# kits/test/suite.yaml
 kit:
   name: test
   version: 0.1.0
   description: >
-    Cross-layer testing coordination for COPF. Five concepts that span
+    Cross-layer testing coordination for Clef. Five concepts that span
     generation, build, and deploy: snapshot testing for generated output
     stability, conformance testing for spec fidelity, test selection for
     change-aware test optimization, cross-target contract testing for
@@ -1296,7 +1296,7 @@ uses:
 
 ```
 kits/test/
-├── kit.yaml
+├── suite.yaml
 ├── snapshot.concept
 ├── conformance.concept
 ├── test-selection.concept
@@ -1338,67 +1338,67 @@ kits/test/
 # ─── Snapshot commands ───
 
 # Show snapshot status for all generated output
-copf test snapshot --status
+clef test snapshot --status
 #   generated/ts/password.ts — current ✅
 #   generated/ts/user.ts — CHANGED (3 lines added, 1 removed)
 #   generated/rust/password.rs — current ✅
 #   generated/swift/password.swift — NEW (no baseline)
 
 # Show diff for a changed snapshot
-copf test snapshot --diff generated/ts/user.ts
+clef test snapshot --diff generated/ts/user.ts
 
 # Approve a specific change
-copf test snapshot --approve generated/ts/user.ts
+clef test snapshot --approve generated/ts/user.ts
 
 # Approve all changes (after reviewing diffs)
-copf test snapshot --approve-all
+clef test snapshot --approve-all
 
 # Reject a change (signals unintentional generator change)
-copf test snapshot --reject generated/ts/user.ts
+clef test snapshot --reject generated/ts/user.ts
 
 # Clean orphaned baselines
-copf test snapshot --clean
+clef test snapshot --clean
 
 
 # ─── Conformance commands ───
 
 # Show conformance matrix
-copf test conformance --matrix
+clef test conformance --matrix
 #   Concept     │ TypeScript │ Rust   │ Swift  │ Solidity
 #   ────────────┼────────────┼────────┼────────┼──────────
 #   password    │ full ✅    │ full ✅│ full ✅│ partial (2 deviations)
 #   user        │ full ✅    │ full ✅│ untested│ untested
 
 # Show traceability for a concept
-copf test conformance --trace password
+clef test conformance --trace password
 
 # Run conformance for a specific language
-copf test conformance --concept password --language swift
+clef test conformance --concept password --language swift
 
 # Register a deviation
-copf test conformance --deviation password solidity optional-return-values "Uses revert"
+clef test conformance --deviation password solidity optional-return-values "Uses revert"
 
 
 # ─── Contract commands ───
 
 # Show contract verification matrix
-copf test contract --matrix
+clef test contract --matrix
 #   Concept    │ rust→ts  │ rust→swift │ ts→rust
 #   ───────────┼──────────┼────────────┼────────
 #   password   │ pass ✅  │ pass ✅   │ pass ✅
 #   user       │ pass ✅  │ unverified │ pass ✅
 
 # Run contract verification for a specific pair
-copf test contract --concept password --producer rust --consumer typescript
+clef test contract --concept password --producer rust --consumer typescript
 
 # Check if safe to deploy
-copf test contract --can-deploy password typescript
+clef test contract --can-deploy password typescript
 
 
 # ─── Test selection commands ───
 
 # Analyze what tests are affected by current changes
-copf test select --analyze
+clef test select --analyze
 #   Changed: ./specs/password.concept
 #   Affected tests (12):
 #     test_password_hash (typescript) — relevance: 1.0, direct coverage
@@ -1409,13 +1409,13 @@ copf test select --analyze
 #   Selection confidence: 98.2%
 
 # Show selection statistics
-copf test select --stats
+clef test select --stats
 
 
 # ─── Flaky test commands ───
 
 # Show flaky test report
-copf test flaky --report
+clef test flaky --report
 #   Currently flaky: 3
 #   Quarantined: 2
 #   Candidates for release: 1
@@ -1426,19 +1426,19 @@ copf test flaky --report
 #     test_concurrent_hash (swift) — 3 flips in 7d, not quarantined
 
 # Manually quarantine a test
-copf test flaky --quarantine test_timing --reason "Timing-dependent" --owner "alice"
+clef test flaky --quarantine test_timing --reason "Timing-dependent" --owner "alice"
 
 # Release a test from quarantine
-copf test flaky --release test_timing
+clef test flaky --release test_timing
 
 # Update policy
-copf test flaky --policy flipThreshold=5 autoQuarantine=true
+clef test flaky --policy flipThreshold=5 autoQuarantine=true
 
 
 # ─── Unified test command ───
 
 # Run all test types
-copf test
+clef test
 #   Snapshots: 12 current, 2 changed (approval required)
 #   Conformance: 8/8 passing, 2 deviations documented
 #   Contracts: 3/3 pairs verified
@@ -1448,20 +1448,20 @@ copf test
 #   Result: PASS (with 2 snapshot changes requiring approval)
 
 # Run only specific test types
-copf test --only snapshot,conformance
-copf test --only contracts
-copf test --skip flaky
+clef test --only snapshot,conformance
+clef test --only contracts
+clef test --skip flaky
 ```
 
 ---
 
 ## Part 8: Design Decisions
 
-### Why a new kit instead of extending deploy
+### Why a new suite instead of extending deploy
 
 Builder and Toolchain extend the deploy kit because their artifacts feed directly into Runtime/deploy. Testing concepts have sync points across all three layers:
 
-| Concept | Generation Kit | Build Layer | Deploy Layer |
+| Concept | Generation Suite | Build Layer | Deploy Layer |
 |---|---|---|---|
 | Snapshot | Emitter output | — | — |
 | Conformance | Resource (spec changes) | Builder output | Deploy gate |
@@ -1511,7 +1511,7 @@ Unit test execution stays exactly where it is — in `SwiftBuilder/test`, `TypeS
 
 **Coverage aggregation** — merging coverage data from TypeScript (istanbul), Rust (tarpaulin), and Swift (xcov). No independent purpose beyond reporting. TestSelection already uses coverage data internally for selection accuracy — it doesn't need to expose aggregated coverage as a separate concept.
 
-**Test environment provisioning** — creating isolated environments for integration tests. Uses the same mechanisms as deployment (Docker, cloud resources). The deploy kit's Runtime/Env concepts handle this. Test-specific aspects (ephemeral, auto-teardown) are configuration, not a new concept.
+**Test environment provisioning** — creating isolated environments for integration tests. Uses the same mechanisms as deployment (Docker, cloud resources). The deploy suite's Runtime/Env concepts handle this. Test-specific aspects (ephemeral, auto-teardown) are configuration, not a new concept.
 
 ---
 
@@ -1544,11 +1544,11 @@ No providers. No changes to existing concepts beyond Builder gaining an optional
 
 1. Implement Snapshot concept (compare, approve, reject, status, diff, clean)
 2. Wire Emitter/writeBatch → Snapshot/compare sync
-3. Implement `.copf-snapshots/` baseline storage
-4. Implement `copf test snapshot` CLI
+3. Implement `.clef-snapshots/` baseline storage
+4. Implement `clef test snapshot` CLI
 5. Validate: change a generator template → snapshot shows diff → approve → next generation matches
 
-**Acceptance:** `copf test snapshot --status` shows per-file status. Changed snapshots require explicit `--approve`.
+**Acceptance:** `clef test snapshot --status` shows per-file status. Changed snapshots require explicit `--approve`.
 
 ### Phase 2: FlakyTest (most persistent pain across any test suite)
 
@@ -1557,10 +1557,10 @@ No providers. No changes to existing concepts beyond Builder gaining an optional
 1. Implement FlakyTest concept (record, quarantine, release, isQuarantined, report, setPolicy)
 2. Wire Builder/test → FlakyTest/record for all builders
 3. Wire FlakyTest/isQuarantined → downgrade failures
-4. Implement `copf test flaky` CLI
+4. Implement `clef test flaky` CLI
 5. Validate: run flaky test 5 times → auto-detected → auto-quarantined → doesn't block build
 
-**Acceptance:** `copf test flaky --report` shows dashboard. Quarantined test failures produce warnings, not errors.
+**Acceptance:** `clef test flaky --report` shows dashboard. Quarantined test failures produce warnings, not errors.
 
 ### Phase 3: Conformance (spec fidelity critical for multi-target)
 
@@ -1571,9 +1571,9 @@ No providers. No changes to existing concepts beyond Builder gaining an optional
 3. Wire Resource/changed → Conformance/generate
 4. Wire Builder/build → Conformance/verify
 5. Implement deviation registry
-6. Implement `copf test conformance` CLI
+6. Implement `clef test conformance` CLI
 
-**Acceptance:** `copf test conformance --matrix` shows per-language conformance. `copf test conformance --trace password` shows requirement-to-test mapping.
+**Acceptance:** `clef test conformance --matrix` shows per-language conformance. `clef test conformance --trace password` shows requirement-to-test mapping.
 
 ### Phase 4: TestSelection (optimization, not critical path)
 
@@ -1585,7 +1585,7 @@ No providers. No changes to existing concepts beyond Builder gaining an optional
 4. Validate: change one spec → only related tests run
 5. Track selection accuracy over time
 
-**Acceptance:** `copf test select --analyze` shows affected tests. Full suite only runs on `--force`.
+**Acceptance:** `clef test select --analyze` shows affected tests. Full suite only runs on `--force`.
 
 ### Phase 5: ContractTest (critical for multi-target deployments)
 
@@ -1595,9 +1595,9 @@ No providers. No changes to existing concepts beyond Builder gaining an optional
 2. Build contract generator from concept spec
 3. Wire Builder/buildAll → ContractTest/verify for configured pairs
 4. Wire ContractTest/canDeploy as deployment gate
-5. Implement `copf test contract` CLI
+5. Implement `clef test contract` CLI
 
-**Acceptance:** `copf test contract --matrix` shows verification status. `copf deploy` blocked if contracts unverified.
+**Acceptance:** `clef test contract --matrix` shows verification status. `clef deploy` blocked if contracts unverified.
 
 ### Phase 6: Deployment gates (polish)
 
@@ -1606,7 +1606,7 @@ No providers. No changes to existing concepts beyond Builder gaining an optional
 1. Wire Conformance/matrix → DeployPlan/gate
 2. Wire ContractTest/canDeploy → DeployPlan/gate
 3. Wire Snapshot/status → DeployPlan/gate (optionally — advisory vs blocking)
-4. Implement `copf deploy --skip-tests` escape hatch
+4. Implement `clef deploy --skip-tests` escape hatch
 5. Validate: full pipeline from spec change → generation → snapshot → build → test → conformance → contract → deploy
 
-**Acceptance:** `copf deploy` runs full test suite and blocks on failures. `copf deploy --skip-tests` bypasses for emergencies.
+**Acceptance:** `clef deploy` runs full test suite and blocks on failures. `clef deploy --skip-tests` bypasses for emergencies.

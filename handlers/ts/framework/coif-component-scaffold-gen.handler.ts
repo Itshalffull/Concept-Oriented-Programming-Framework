@@ -1,14 +1,14 @@
 // ============================================================
-// CoifComponentScaffoldGen — COIF component scaffold generator
+// SurfaceComponentScaffoldGen — Clef Surface component scaffold generator
 //
 // Generates headless component scaffolds including widget spec,
 // anatomy definition, machine behavior, and slot composition.
 // Follows the Zag.js/Ark UI pattern: behavior and rendering
 // agree on part names, nothing else.
 //
-// See COIF architecture:
-//   - coif-component kit: Widget, Machine, Anatomy, Slot concepts
-//   - coif-core kit: Signal, Binding, UISchema concepts
+// See Clef Surface architecture:
+//   - surface-component suite: Widget, Machine, Anatomy, Slot concepts
+//   - surface-core suite: Signal, Binding, UISchema concepts
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
@@ -131,7 +131,7 @@ function buildComponentKitYaml(config: ComponentConfig): string {
 
   return [
     'kit:',
-    `  name: coif-${kebab}`,
+    `  name: surface-${kebab}`,
     '  version: 0.1.0',
     '  description: >',
     `    Headless ${name} component — behavioral state machine`,
@@ -153,8 +153,8 @@ function buildComponentKitYaml(config: ComponentConfig): string {
     '  recommended: []',
     '',
     'dependencies:',
-    '  - coif-core: ">=0.1.0"',
-    '  - coif-component: ">=0.1.0"',
+    '  - surface-core: ">=0.1.0"',
+    '  - surface-component: ">=0.1.0"',
     '',
   ].join('\n');
 }
@@ -252,13 +252,13 @@ function buildMachineImpl(config: ComponentConfig): string {
   ].join('\n');
 }
 
-export const coifComponentScaffoldGenHandler: ConceptHandler = {
+export const surfaceComponentScaffoldGenHandler: ConceptHandler = {
   async register() {
     return {
       variant: 'ok',
-      name: 'CoifComponentScaffoldGen',
+      name: 'SurfaceComponentScaffoldGen',
       inputKind: 'ComponentConfig',
-      outputKind: 'CoifComponent',
+      outputKind: 'SurfaceComponent',
       capabilities: JSON.stringify(['widget', 'anatomy', 'machine', 'slots']),
     };
   },
@@ -282,10 +282,10 @@ export const coifComponentScaffoldGenHandler: ConceptHandler = {
       };
 
       const files: { path: string; content: string }[] = [
-        { path: `coif-${kebab}/${kebab}-widget.concept`, content: buildWidgetConcept(config) },
-        { path: `coif-${kebab}/${kebab}-anatomy.concept`, content: buildAnatomyConcept(config) },
-        { path: `coif-${kebab}/suite.yaml`, content: buildComponentKitYaml(config) },
-        { path: `coif-${kebab}/${kebab}-machine.handler.ts`, content: buildMachineImpl(config) },
+        { path: `surface-${kebab}/${kebab}-widget.concept`, content: buildWidgetConcept(config) },
+        { path: `surface-${kebab}/${kebab}-anatomy.concept`, content: buildAnatomyConcept(config) },
+        { path: `surface-${kebab}/suite.yaml`, content: buildComponentKitYaml(config) },
+        { path: `surface-${kebab}/${kebab}-machine.handler.ts`, content: buildMachineImpl(config) },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };
@@ -296,7 +296,7 @@ export const coifComponentScaffoldGenHandler: ConceptHandler = {
   },
 
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await coifComponentScaffoldGenHandler.generate!(input, storage);
+    const result = await surfaceComponentScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
     return {

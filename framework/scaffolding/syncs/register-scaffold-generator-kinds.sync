@@ -1,8 +1,8 @@
 # RegisterScaffoldGeneratorKinds — scaffolding kit registration sync
 #
 # Auto-populate KindSystem edges from scaffold generator registrations.
-# Mirrors the generation kit's RegisterGeneratorKinds sync.
-# See generation kit syncs: register-generator-kinds.sync
+# Mirrors the generation suite's RegisterGeneratorKinds sync.
+# See generation suite syncs: register-generator-kinds.sync
 
 sync RegisterScaffoldGeneratorKinds [eager]
   purpose { Auto-populate KindSystem edges from scaffold generator registrations. }

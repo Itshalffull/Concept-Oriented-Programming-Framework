@@ -6,7 +6,7 @@
 # Auto-scaling with scale-to-zero capability.
 #
 # Usage:
-#   copf deploy --manifest deploy/gcp-cloud-run.deploy.yaml
+#   clef deploy --manifest deploy/gcp-cloud-run.deploy.yaml
 
 app:
   name: conduit

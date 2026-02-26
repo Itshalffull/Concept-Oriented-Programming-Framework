@@ -1,6 +1,6 @@
 # Sync Tiers
 
-How required and recommended sync tiers work in concept kits, including override mechanics, disable mechanics, and enforcement rules.
+How required and recommended sync tiers work in suites, including override mechanics, disable mechanics, and enforcement rules.
 
 ## The Two Tiers
 
@@ -8,10 +8,10 @@ Kit syncs are divided into exactly two tiers:
 
 ### Required Syncs
 
-**Purpose**: Enforce structural invariants that the kit's concepts depend on. If removed, concept state becomes inconsistent — orphaned records, dangling references, unpopulated fields.
+**Purpose**: Enforce structural invariants that the suite's concepts depend on. If removed, concept state becomes inconsistent — orphaned records, dangling references, unpopulated fields.
 
 **Behavior**:
-- Loaded automatically when the kit is used
+- Loaded automatically when the suite is used
 - Apps **cannot** override them (no same-name replacement)
 - Apps **cannot** disable them (compiler emits an error)
 - Should be kept to a minimum
@@ -48,10 +48,10 @@ Examples that are NOT required:
 **Purpose**: Useful defaults that most apps will want, but can be customized.
 
 **Behavior**:
-- Loaded by default when the kit is used
+- Loaded by default when the suite is used
 - Apps **can override** by declaring a sync with the same `name`
 - Apps **can disable** by listing the sync name in their deployment manifest
-- Each recommended sync must have a `name` in the kit manifest (used for override/disable targeting)
+- Each recommended sync must have a `name` in the suite manifest (used for override/disable targeting)
 
 **Annotation in .sync files**: `[recommended]`
 
@@ -87,13 +87,13 @@ kits:
       DefaultTitleField: ./syncs/my-custom-title.sync
 ```
 
-The app's `my-custom-title.sync` completely replaces the kit's `default-title-field.sync`. The replacement sync must be a valid `.sync` file but doesn't need to have the same structure — it's a total replacement.
+The app's `my-custom-title.sync` completely replaces the suite's `default-title-field.sync`. The replacement sync must be a valid `.sync` file but doesn't need to have the same structure — it's a total replacement.
 
 **Override flow**:
-1. Compiler loads kit syncs
+1. Compiler loads suite syncs
 2. Compiler loads app overrides
-3. For each override, the compiler removes the kit sync with the matching name and substitutes the app's sync
-4. If the override references a name that doesn't exist in the kit, the compiler warns
+3. For each override, the compiler removes the suite sync with the matching name and substitutes the app's sync
+4. If the override references a name that doesn't exist in the suite, the compiler warns
 
 ## Disable Mechanics
 
@@ -109,11 +109,11 @@ kits:
 ```
 
 **Disable flow**:
-1. Compiler loads kit syncs
+1. Compiler loads suite syncs
 2. Compiler processes disable list
-3. For each disabled name, the compiler removes the kit sync entirely
+3. For each disabled name, the compiler removes the suite sync entirely
 4. If the name references a required sync, the compiler **errors**
-5. If the name doesn't match any kit sync, the compiler warns
+5. If the name doesn't match any suite sync, the compiler warns
 
 ## Enforcement Summary
 
@@ -129,27 +129,27 @@ kits:
 
 ## Checking Overrides
 
-The `copf kit check-overrides` command validates that app-level sync overrides reference valid kit sync names:
+The `clef suite check-overrides` command validates that app-level sync overrides reference valid suite sync names:
 
 ```bash
-npx tsx cli/src/index.ts kit check-overrides
+npx tsx cli/src/index.ts suite check-overrides
 ```
 
 Output:
 ```
 Checking sync overrides...
 
-App syncs that override kit syncs:
-  DefaultTitleField (overrides kit sync)
+App syncs that override suite syncs:
+  DefaultTitleField (overrides suite sync)
 
-3 kit sync(s), 8 app sync(s), 1 override(s)
+3 suite sync(s), 8 app sync(s), 1 override(s)
 ```
 
-This catches typos in override names and stale references to syncs that have been removed from the kit.
+This catches typos in override names and stale references to syncs that have been removed from the suite.
 
 ## Designing for Tiers
 
-When writing a kit sync, decide its tier by answering these questions:
+When writing a suite sync, decide its tier by answering these questions:
 
 1. **Does removing this sync cause data corruption?** → Required
 2. **Does removing this sync violate a concept invariant?** → Required
@@ -158,4 +158,4 @@ When writing a kit sync, decide its tier by answering these questions:
 5. **Does this sync implement behavior that varies across apps?** → Recommended
 6. **Is this sync a convenience (notifications, logging, defaults)?** → Recommended
 
-**Rule of thumb**: A kit with 5 syncs should have at most 2 required ones. If more than half your syncs are required, the concepts might be too tightly coupled — consider whether they should be merged or restructured.
+**Rule of thumb**: A suite with 5 syncs should have at most 2 required ones. If more than half your syncs are required, the concepts might be too tightly coupled — consider whether they should be merged or restructured.

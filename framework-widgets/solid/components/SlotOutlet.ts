@@ -11,12 +11,12 @@ import type {
   SlotConfig,
 } from '../../shared/types.js';
 
-import { createSignal as coifCreateSignal } from '../../shared/coif-bridge.js';
+import { createSignal as surfaceCreateSignal } from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -75,7 +75,7 @@ export function SlotOutlet(props: SlotOutletProps): SlotOutletResult {
 
   // Create the slot container
   const slot = document.createElement('div');
-  slot.setAttribute('data-coif-widget', 'slot-outlet');
+  slot.setAttribute('data-surface-widget', 'slot-outlet');
   slot.setAttribute('data-slot-name', props.config.name);
   slot.setAttribute('data-slot-component', props.config.component);
   slot.setAttribute('role', 'presentation');
@@ -150,7 +150,7 @@ export function SlotOutlet(props: SlotOutletProps): SlotOutletResult {
 
     // Dispatch slot content change event
     slot.dispatchEvent(
-      new CustomEvent('coif:slot-change', {
+      new CustomEvent('surface:slot-change', {
         bubbles: true,
         detail: {
           slotName: props.config.name,

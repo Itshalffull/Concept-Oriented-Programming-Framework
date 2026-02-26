@@ -1,13 +1,13 @@
 // ============================================================
-// CoifThemeScaffoldGen — COIF theme scaffold generator
+// SurfaceThemeScaffoldGen — Clef Surface theme scaffold generator
 //
 // Generates theme scaffolds including palette config, typography
 // scale, motion definitions, elevation scale, and theme manifest.
 // Follows WCAG accessibility guidelines for contrast ratios.
 //
-// See COIF architecture:
-//   - coif-theme kit: Theme, Palette, Typography, Motion, Elevation
-//   - coif-core kit: DesignToken concept
+// See Clef Surface architecture:
+//   - surface-theme suite: Theme, Palette, Typography, Motion, Elevation
+//   - surface-core suite: DesignToken concept
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
@@ -252,16 +252,16 @@ function buildThemeKitYaml(config: ThemeConfig): string {
     '    motion, and elevation tokens.',
     '',
     'concepts:',
-    '  # Theme tokens are managed by the coif-theme kit concepts.',
-    '  # This kit provides token overrides and configuration.',
+    '  # Theme tokens are managed by the surface-theme suite concepts.',
+    '  # This suite provides token overrides and configuration.',
     '',
     'syncs:',
     '  required: []',
     '  recommended: []',
     '',
     'dependencies:',
-    '  - coif-core: ">=0.1.0"',
-    '  - coif-theme: ">=0.1.0"',
+    '  - surface-core: ">=0.1.0"',
+    '  - surface-theme: ">=0.1.0"',
     '',
     'infrastructure:',
     '  themes:',
@@ -271,13 +271,13 @@ function buildThemeKitYaml(config: ThemeConfig): string {
   ].join('\n');
 }
 
-export const coifThemeScaffoldGenHandler: ConceptHandler = {
+export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
   async register() {
     return {
       variant: 'ok',
-      name: 'CoifThemeScaffoldGen',
+      name: 'SurfaceThemeScaffoldGen',
       inputKind: 'ThemeConfig',
-      outputKind: 'CoifTheme',
+      outputKind: 'SurfaceTheme',
       capabilities: JSON.stringify(['palette', 'typography', 'motion', 'elevation', 'wcag']),
     };
   },
@@ -304,7 +304,7 @@ export const coifThemeScaffoldGenHandler: ConceptHandler = {
 
       const files: { path: string; content: string }[] = [];
 
-      // Kit manifest
+      // Suite manifest
       files.push({
         path: `theme-${kebab}/suite.yaml`,
         content: buildThemeKitYaml(config),
@@ -350,7 +350,7 @@ export const coifThemeScaffoldGenHandler: ConceptHandler = {
   },
 
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await coifThemeScaffoldGenHandler.generate!(input, storage);
+    const result = await surfaceThemeScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
     return {

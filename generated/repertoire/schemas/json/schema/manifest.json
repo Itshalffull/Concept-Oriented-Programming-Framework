@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Schema",
+  "uri": "urn:clef/Schema",
   "name": "Schema",
   "typeParams": [
     {
@@ -420,11 +420,11 @@
   "jsonSchemas": {
     "invocations": {
       "defineSchema": {
-        "$id": "urn:copf/Schema/defineSchema/invocation",
+        "$id": "urn:clef/Schema/defineSchema/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "defineSchema"
@@ -447,11 +447,11 @@
         }
       },
       "addField": {
-        "$id": "urn:copf/Schema/addField/invocation",
+        "$id": "urn:clef/Schema/addField/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "addField"
@@ -474,11 +474,11 @@
         }
       },
       "extendSchema": {
-        "$id": "urn:copf/Schema/extendSchema/invocation",
+        "$id": "urn:clef/Schema/extendSchema/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "extendSchema"
@@ -501,11 +501,11 @@
         }
       },
       "applyTo": {
-        "$id": "urn:copf/Schema/applyTo/invocation",
+        "$id": "urn:clef/Schema/applyTo/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "applyTo"
@@ -528,11 +528,11 @@
         }
       },
       "removeFrom": {
-        "$id": "urn:copf/Schema/removeFrom/invocation",
+        "$id": "urn:clef/Schema/removeFrom/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "removeFrom"
@@ -555,11 +555,11 @@
         }
       },
       "getAssociations": {
-        "$id": "urn:copf/Schema/getAssociations/invocation",
+        "$id": "urn:clef/Schema/getAssociations/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "getAssociations"
@@ -578,11 +578,11 @@
         }
       },
       "export": {
-        "$id": "urn:copf/Schema/export/invocation",
+        "$id": "urn:clef/Schema/export/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Schema"
+            "const": "urn:clef/Schema"
           },
           "action": {
             "const": "export"
@@ -604,11 +604,11 @@
     "completions": {
       "defineSchema": {
         "ok": {
-          "$id": "urn:copf/Schema/defineSchema/completion/ok",
+          "$id": "urn:clef/Schema/defineSchema/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "defineSchema"
@@ -624,11 +624,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Schema/defineSchema/completion/exists",
+          "$id": "urn:clef/Schema/defineSchema/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "defineSchema"
@@ -652,11 +652,11 @@
       },
       "addField": {
         "ok": {
-          "$id": "urn:copf/Schema/addField/completion/ok",
+          "$id": "urn:clef/Schema/addField/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "addField"
@@ -672,11 +672,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Schema/addField/completion/notfound",
+          "$id": "urn:clef/Schema/addField/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "addField"
@@ -700,11 +700,11 @@
       },
       "extendSchema": {
         "ok": {
-          "$id": "urn:copf/Schema/extendSchema/completion/ok",
+          "$id": "urn:clef/Schema/extendSchema/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "extendSchema"
@@ -720,11 +720,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Schema/extendSchema/completion/notfound",
+          "$id": "urn:clef/Schema/extendSchema/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "extendSchema"
@@ -748,11 +748,11 @@
       },
       "applyTo": {
         "ok": {
-          "$id": "urn:copf/Schema/applyTo/completion/ok",
+          "$id": "urn:clef/Schema/applyTo/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "applyTo"
@@ -768,11 +768,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Schema/applyTo/completion/notfound",
+          "$id": "urn:clef/Schema/applyTo/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "applyTo"
@@ -796,11 +796,11 @@
       },
       "removeFrom": {
         "ok": {
-          "$id": "urn:copf/Schema/removeFrom/completion/ok",
+          "$id": "urn:clef/Schema/removeFrom/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "removeFrom"
@@ -816,11 +816,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Schema/removeFrom/completion/notfound",
+          "$id": "urn:clef/Schema/removeFrom/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "removeFrom"
@@ -844,11 +844,11 @@
       },
       "getAssociations": {
         "ok": {
-          "$id": "urn:copf/Schema/getAssociations/completion/ok",
+          "$id": "urn:clef/Schema/getAssociations/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "getAssociations"
@@ -870,11 +870,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Schema/getAssociations/completion/notfound",
+          "$id": "urn:clef/Schema/getAssociations/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "getAssociations"
@@ -898,11 +898,11 @@
       },
       "export": {
         "ok": {
-          "$id": "urn:copf/Schema/export/completion/ok",
+          "$id": "urn:clef/Schema/export/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "export"
@@ -924,11 +924,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Schema/export/completion/notfound",
+          "$id": "urn:clef/Schema/export/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Schema"
+              "const": "urn:clef/Schema"
             },
             "action": {
               "const": "export"

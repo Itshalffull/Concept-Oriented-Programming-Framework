@@ -62,7 +62,7 @@ describe('WidgetStateEntity Handler', () => {
         storage,
       );
       const record = await storage.get('widget-state-entity', 'widget-state-entity-1');
-      expect(record!.symbol).toBe('copf/widget-state/Button/pressed');
+      expect(record!.symbol).toBe('clef/widget-state/Button/pressed');
       expect(record!.transitions).toBe('[]');
       expect(record!.transitionCount).toBe(0);
     });

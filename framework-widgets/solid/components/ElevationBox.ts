@@ -14,13 +14,13 @@ import type {
 import {
   elevationToCSS,
   shadowLayersToCSS,
-  createSignal as coifCreateSignal,
-} from '../../shared/coif-bridge.js';
+  createSignal as surfaceCreateSignal,
+} from '../../shared/surface-bridge.js';
 
 // --- Solid-style reactive primitives ---
 
 function solidCreateSignal<T>(initial: T): [() => T, (v: T) => void] {
-  const sig = coifCreateSignal<T>(initial);
+  const sig = surfaceCreateSignal<T>(initial);
   return [() => sig.get(), (v: T) => sig.set(v)];
 }
 
@@ -109,7 +109,7 @@ export function ElevationBox(props: ElevationBoxProps): ElevationBoxResult {
   // Create the container element
   const tag = props.tag ?? 'div';
   const el = document.createElement(tag);
-  el.setAttribute('data-coif-widget', 'elevation-box');
+  el.setAttribute('data-surface-widget', 'elevation-box');
   el.setAttribute('data-elevation', String(props.level));
 
   if (props.class) {

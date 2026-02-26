@@ -1,7 +1,7 @@
 // DisplayModeTests.swift — Tests for DisplayMode concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class DisplayModeTests: XCTestCase {
 

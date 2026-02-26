@@ -12,7 +12,7 @@ from typing import Any
 
 
 class ConceptHandler:
-    """Base class for COPF concept handlers.
+    """Base class for Clef concept handlers.
 
     Subclasses implement async methods named after concept actions.
     The handler dispatches invocations to the matching method automatically.

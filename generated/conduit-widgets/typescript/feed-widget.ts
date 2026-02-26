@@ -32,17 +32,17 @@ export const feedWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Article',
+      concept: 'urn:clef/Article',
       actions: [],
       queries: ['get'],
     },
     {
-      concept: 'urn:copf/Tag',
+      concept: 'urn:clef/Tag',
       actions: [],
       queries: ['list'],
     },
     {
-      concept: 'urn:copf/Favorite',
+      concept: 'urn:clef/Favorite',
       actions: [],
       queries: ['isFavorited', 'count'],
     },

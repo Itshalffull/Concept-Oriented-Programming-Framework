@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/CloudRunRuntime",
+  "uri": "urn:clef/CloudRunRuntime",
   "name": "CloudRunRuntime",
   "typeParams": [
     {
@@ -499,11 +499,11 @@
   "jsonSchemas": {
     "invocations": {
       "provision": {
-        "$id": "urn:copf/CloudRunRuntime/provision/invocation",
+        "$id": "urn:clef/CloudRunRuntime/provision/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudRunRuntime"
+            "const": "urn:clef/CloudRunRuntime"
           },
           "action": {
             "const": "provision"
@@ -538,11 +538,11 @@
         }
       },
       "deploy": {
-        "$id": "urn:copf/CloudRunRuntime/deploy/invocation",
+        "$id": "urn:clef/CloudRunRuntime/deploy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudRunRuntime"
+            "const": "urn:clef/CloudRunRuntime"
           },
           "action": {
             "const": "deploy"
@@ -565,11 +565,11 @@
         }
       },
       "setTrafficWeight": {
-        "$id": "urn:copf/CloudRunRuntime/setTrafficWeight/invocation",
+        "$id": "urn:clef/CloudRunRuntime/setTrafficWeight/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudRunRuntime"
+            "const": "urn:clef/CloudRunRuntime"
           },
           "action": {
             "const": "setTrafficWeight"
@@ -592,11 +592,11 @@
         }
       },
       "rollback": {
-        "$id": "urn:copf/CloudRunRuntime/rollback/invocation",
+        "$id": "urn:clef/CloudRunRuntime/rollback/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudRunRuntime"
+            "const": "urn:clef/CloudRunRuntime"
           },
           "action": {
             "const": "rollback"
@@ -619,11 +619,11 @@
         }
       },
       "destroy": {
-        "$id": "urn:copf/CloudRunRuntime/destroy/invocation",
+        "$id": "urn:clef/CloudRunRuntime/destroy/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/CloudRunRuntime"
+            "const": "urn:clef/CloudRunRuntime"
           },
           "action": {
             "const": "destroy"
@@ -645,11 +645,11 @@
     "completions": {
       "provision": {
         "ok": {
-          "$id": "urn:copf/CloudRunRuntime/provision/completion/ok",
+          "$id": "urn:clef/CloudRunRuntime/provision/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "provision"
@@ -679,11 +679,11 @@
           }
         },
         "billingDisabled": {
-          "$id": "urn:copf/CloudRunRuntime/provision/completion/billingDisabled",
+          "$id": "urn:clef/CloudRunRuntime/provision/completion/billingDisabled",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "provision"
@@ -705,11 +705,11 @@
           }
         },
         "regionUnavailable": {
-          "$id": "urn:copf/CloudRunRuntime/provision/completion/regionUnavailable",
+          "$id": "urn:clef/CloudRunRuntime/provision/completion/regionUnavailable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "provision"
@@ -733,11 +733,11 @@
       },
       "deploy": {
         "ok": {
-          "$id": "urn:copf/CloudRunRuntime/deploy/completion/ok",
+          "$id": "urn:clef/CloudRunRuntime/deploy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "deploy"
@@ -763,11 +763,11 @@
           }
         },
         "imageNotFound": {
-          "$id": "urn:copf/CloudRunRuntime/deploy/completion/imageNotFound",
+          "$id": "urn:clef/CloudRunRuntime/deploy/completion/imageNotFound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "deploy"
@@ -791,11 +791,11 @@
       },
       "setTrafficWeight": {
         "ok": {
-          "$id": "urn:copf/CloudRunRuntime/setTrafficWeight/completion/ok",
+          "$id": "urn:clef/CloudRunRuntime/setTrafficWeight/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "setTrafficWeight"
@@ -819,11 +819,11 @@
       },
       "rollback": {
         "ok": {
-          "$id": "urn:copf/CloudRunRuntime/rollback/completion/ok",
+          "$id": "urn:clef/CloudRunRuntime/rollback/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "rollback"
@@ -851,11 +851,11 @@
       },
       "destroy": {
         "ok": {
-          "$id": "urn:copf/CloudRunRuntime/destroy/completion/ok",
+          "$id": "urn:clef/CloudRunRuntime/destroy/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/CloudRunRuntime"
+              "const": "urn:clef/CloudRunRuntime"
             },
             "action": {
               "const": "destroy"

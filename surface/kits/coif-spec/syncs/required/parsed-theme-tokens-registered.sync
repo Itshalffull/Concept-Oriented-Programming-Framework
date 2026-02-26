@@ -1,5 +1,5 @@
 # ============================================================
-# ParsedThemeTokensRegistered — coif-spec required sync
+# ParsedThemeTokensRegistered — surface-spec required sync
 #
 # Register resolved tokens from parsed theme ASTs in the
 # DesignToken concept. Tokens become available for resolution

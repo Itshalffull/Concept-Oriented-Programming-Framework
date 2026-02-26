@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/PageAsRecord",
+  "uri": "urn:clef/PageAsRecord",
   "name": "PageAsRecord",
   "typeParams": [
     {
@@ -489,11 +489,11 @@
   "jsonSchemas": {
     "invocations": {
       "create": {
-        "$id": "urn:copf/PageAsRecord/create/invocation",
+        "$id": "urn:clef/PageAsRecord/create/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PageAsRecord"
+            "const": "urn:clef/PageAsRecord"
           },
           "action": {
             "const": "create"
@@ -516,11 +516,11 @@
         }
       },
       "setProperty": {
-        "$id": "urn:copf/PageAsRecord/setProperty/invocation",
+        "$id": "urn:clef/PageAsRecord/setProperty/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PageAsRecord"
+            "const": "urn:clef/PageAsRecord"
           },
           "action": {
             "const": "setProperty"
@@ -547,11 +547,11 @@
         }
       },
       "getProperty": {
-        "$id": "urn:copf/PageAsRecord/getProperty/invocation",
+        "$id": "urn:clef/PageAsRecord/getProperty/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PageAsRecord"
+            "const": "urn:clef/PageAsRecord"
           },
           "action": {
             "const": "getProperty"
@@ -574,11 +574,11 @@
         }
       },
       "appendToBody": {
-        "$id": "urn:copf/PageAsRecord/appendToBody/invocation",
+        "$id": "urn:clef/PageAsRecord/appendToBody/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PageAsRecord"
+            "const": "urn:clef/PageAsRecord"
           },
           "action": {
             "const": "appendToBody"
@@ -601,11 +601,11 @@
         }
       },
       "attachToSchema": {
-        "$id": "urn:copf/PageAsRecord/attachToSchema/invocation",
+        "$id": "urn:clef/PageAsRecord/attachToSchema/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PageAsRecord"
+            "const": "urn:clef/PageAsRecord"
           },
           "action": {
             "const": "attachToSchema"
@@ -628,11 +628,11 @@
         }
       },
       "convertFromFreeform": {
-        "$id": "urn:copf/PageAsRecord/convertFromFreeform/invocation",
+        "$id": "urn:clef/PageAsRecord/convertFromFreeform/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/PageAsRecord"
+            "const": "urn:clef/PageAsRecord"
           },
           "action": {
             "const": "convertFromFreeform"
@@ -658,11 +658,11 @@
     "completions": {
       "create": {
         "ok": {
-          "$id": "urn:copf/PageAsRecord/create/completion/ok",
+          "$id": "urn:clef/PageAsRecord/create/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "create"
@@ -684,11 +684,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/PageAsRecord/create/completion/exists",
+          "$id": "urn:clef/PageAsRecord/create/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "create"
@@ -712,11 +712,11 @@
       },
       "setProperty": {
         "ok": {
-          "$id": "urn:copf/PageAsRecord/setProperty/completion/ok",
+          "$id": "urn:clef/PageAsRecord/setProperty/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "setProperty"
@@ -738,11 +738,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PageAsRecord/setProperty/completion/notfound",
+          "$id": "urn:clef/PageAsRecord/setProperty/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "setProperty"
@@ -764,11 +764,11 @@
           }
         },
         "invalid": {
-          "$id": "urn:copf/PageAsRecord/setProperty/completion/invalid",
+          "$id": "urn:clef/PageAsRecord/setProperty/completion/invalid",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "setProperty"
@@ -792,11 +792,11 @@
       },
       "getProperty": {
         "ok": {
-          "$id": "urn:copf/PageAsRecord/getProperty/completion/ok",
+          "$id": "urn:clef/PageAsRecord/getProperty/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "getProperty"
@@ -818,11 +818,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PageAsRecord/getProperty/completion/notfound",
+          "$id": "urn:clef/PageAsRecord/getProperty/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "getProperty"
@@ -846,11 +846,11 @@
       },
       "appendToBody": {
         "ok": {
-          "$id": "urn:copf/PageAsRecord/appendToBody/completion/ok",
+          "$id": "urn:clef/PageAsRecord/appendToBody/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "appendToBody"
@@ -872,11 +872,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PageAsRecord/appendToBody/completion/notfound",
+          "$id": "urn:clef/PageAsRecord/appendToBody/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "appendToBody"
@@ -900,11 +900,11 @@
       },
       "attachToSchema": {
         "ok": {
-          "$id": "urn:copf/PageAsRecord/attachToSchema/completion/ok",
+          "$id": "urn:clef/PageAsRecord/attachToSchema/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "attachToSchema"
@@ -926,11 +926,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PageAsRecord/attachToSchema/completion/notfound",
+          "$id": "urn:clef/PageAsRecord/attachToSchema/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "attachToSchema"
@@ -954,11 +954,11 @@
       },
       "convertFromFreeform": {
         "ok": {
-          "$id": "urn:copf/PageAsRecord/convertFromFreeform/completion/ok",
+          "$id": "urn:clef/PageAsRecord/convertFromFreeform/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "convertFromFreeform"
@@ -980,11 +980,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/PageAsRecord/convertFromFreeform/completion/notfound",
+          "$id": "urn:clef/PageAsRecord/convertFromFreeform/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/PageAsRecord"
+              "const": "urn:clef/PageAsRecord"
             },
             "action": {
               "const": "convertFromFreeform"

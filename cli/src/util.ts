@@ -1,5 +1,5 @@
 // ============================================================
-// COPF CLI — Shared Utilities
+// Clef CLI — Shared Utilities
 // ============================================================
 
 import { readdirSync, statSync, existsSync, mkdirSync, writeFileSync } from 'fs';

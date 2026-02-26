@@ -1,5 +1,5 @@
 # ============================================================
-# NavigatorGoMountsHost — coif-app required sync
+# NavigatorGoMountsHost — surface-app required sync
 #
 # When Navigator/go succeeds, mount a Host for the target
 # concept and view in the primary zone.

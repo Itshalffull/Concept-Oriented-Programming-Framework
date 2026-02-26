@@ -1,5 +1,5 @@
 # ============================================================
-# NavigatorGoUnmountsPrevious — coif-app required sync
+# NavigatorGoUnmountsPrevious — surface-app required sync
 #
 # When Navigator/go succeeds and there was a previous
 # destination, unmount the previous host.

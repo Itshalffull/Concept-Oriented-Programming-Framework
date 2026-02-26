@@ -3,7 +3,7 @@ concept SolidAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into Solid.js-specific bindings.
-    Transforms COIF's generic event model into Solid conventions:
+    Transforms Clef Surface's generic event model into Solid conventions:
     native DOM events (not synthetic), class (not className),
     on:event delegated handlers. Maps signals to Solid reactive
     primitives via createSignal integration.

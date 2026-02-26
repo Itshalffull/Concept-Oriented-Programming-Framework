@@ -1,5 +1,5 @@
 # ============================================================
-# HostUnmountDestroysMachines — coif-app required sync
+# HostUnmountDestroysMachines — surface-app required sync
 #
 # When a Host is unmounted, destroy all tracked machines
 # and unbind the binding.

@@ -1,7 +1,7 @@
 // AliasTests.swift — Tests for Alias concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class AliasTests: XCTestCase {
 

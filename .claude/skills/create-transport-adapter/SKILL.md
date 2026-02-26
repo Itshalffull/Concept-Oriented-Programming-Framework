@@ -1,11 +1,11 @@
 ---
 name: create-transport-adapter
-description: Write a COPF transport adapter that bridges the sync engine to a concept over a specific communication protocol (in-process, HTTP, WebSocket, worker, or custom). Use when adding a new transport protocol or customizing how concepts communicate.
+description: Write a Clef transport adapter that bridges the sync engine to a concept over a specific communication protocol (in-process, HTTP, WebSocket, worker, or custom). Use when adding a new transport protocol or customizing how concepts communicate.
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 argument-hint: "<transport-name>"
 ---
 
-# Create a COPF Transport Adapter
+# Create a Clef Transport Adapter
 
 Write a transport adapter for **$ARGUMENTS** that implements the `ConceptTransport` interface, bridging the sync engine to concepts over a specific communication protocol.
 
@@ -239,4 +239,4 @@ See [templates/adapter-scaffold.md](templates/adapter-scaffold.md) for copy-past
 | `/create-storage-adapter` | Write the storage backend that persists concept state |
 | `/create-implementation` | Write the concept handler this transport delivers actions to |
 | `/configure-deployment` | Wire this transport into a deployment manifest |
-| `/create-concept-kit` | Bundle this transport into a domain kit's infrastructure |
+| `/create-concept-kit` | Bundle this transport into a domain suite's infrastructure |

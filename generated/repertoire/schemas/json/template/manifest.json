@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Template",
+  "uri": "urn:clef/Template",
   "name": "Template",
   "typeParams": [
     {
@@ -310,11 +310,11 @@
   "jsonSchemas": {
     "invocations": {
       "define": {
-        "$id": "urn:copf/Template/define/invocation",
+        "$id": "urn:clef/Template/define/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Template"
+            "const": "urn:clef/Template"
           },
           "action": {
             "const": "define"
@@ -341,11 +341,11 @@
         }
       },
       "instantiate": {
-        "$id": "urn:copf/Template/instantiate/invocation",
+        "$id": "urn:clef/Template/instantiate/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Template"
+            "const": "urn:clef/Template"
           },
           "action": {
             "const": "instantiate"
@@ -368,11 +368,11 @@
         }
       },
       "registerTrigger": {
-        "$id": "urn:copf/Template/registerTrigger/invocation",
+        "$id": "urn:clef/Template/registerTrigger/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Template"
+            "const": "urn:clef/Template"
           },
           "action": {
             "const": "registerTrigger"
@@ -395,11 +395,11 @@
         }
       },
       "mergeProperties": {
-        "$id": "urn:copf/Template/mergeProperties/invocation",
+        "$id": "urn:clef/Template/mergeProperties/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Template"
+            "const": "urn:clef/Template"
           },
           "action": {
             "const": "mergeProperties"
@@ -425,11 +425,11 @@
     "completions": {
       "define": {
         "ok": {
-          "$id": "urn:copf/Template/define/completion/ok",
+          "$id": "urn:clef/Template/define/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "define"
@@ -445,11 +445,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Template/define/completion/exists",
+          "$id": "urn:clef/Template/define/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "define"
@@ -473,11 +473,11 @@
       },
       "instantiate": {
         "ok": {
-          "$id": "urn:copf/Template/instantiate/completion/ok",
+          "$id": "urn:clef/Template/instantiate/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "instantiate"
@@ -499,11 +499,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Template/instantiate/completion/notfound",
+          "$id": "urn:clef/Template/instantiate/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "instantiate"
@@ -527,11 +527,11 @@
       },
       "registerTrigger": {
         "ok": {
-          "$id": "urn:copf/Template/registerTrigger/completion/ok",
+          "$id": "urn:clef/Template/registerTrigger/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "registerTrigger"
@@ -547,11 +547,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Template/registerTrigger/completion/notfound",
+          "$id": "urn:clef/Template/registerTrigger/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "registerTrigger"
@@ -575,11 +575,11 @@
       },
       "mergeProperties": {
         "ok": {
-          "$id": "urn:copf/Template/mergeProperties/completion/ok",
+          "$id": "urn:clef/Template/mergeProperties/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "mergeProperties"
@@ -595,11 +595,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/Template/mergeProperties/completion/notfound",
+          "$id": "urn:clef/Template/mergeProperties/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Template"
+              "const": "urn:clef/Template"
             },
             "action": {
               "const": "mergeProperties"

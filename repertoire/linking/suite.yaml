@@ -1,4 +1,4 @@
-# Linking Kit Manifest
+# Linking Suite Manifest
 name: linking
 version: 0.1.0
 description: "Content connection patterns — forward references, reverse backlinks, typed relations, and entity aliases."

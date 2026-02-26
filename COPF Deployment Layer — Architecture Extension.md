@@ -1,10 +1,10 @@
-# COPF Deployment Layer — Architecture Extension
+# Clef Deployment Layer — Architecture Extension
 
 ## Design Principle
 
-Apply the same boundary test as the rest of COPF: **the engine owns coordination mechanics, concepts own domain logic.** Deployment is a domain — it has state (what's deployed where), actions with meaningful variants (deploy → ok | migrationRequired | rollbackTriggered), and coordination needs (syncs between health checks and rollout progression). The entire deployment layer is concepts and syncs.
+Apply the same boundary test as the rest of Clef: **the engine owns coordination mechanics, concepts own domain logic.** Deployment is a domain — it has state (what's deployed where), actions with meaningful variants (deploy → ok | migrationRequired | rollbackTriggered), and coordination needs (syncs between health checks and rollout progression). The entire deployment layer is concepts and syncs.
 
-For cross-cutting concerns that span multiple providers (runtimes, secrets, IaC), the architecture uses a **coordination + provider concept pattern**: a coordination concept owns the shared interface and state that the rest of the system talks to, while provider concepts own the provider-specific state, actions, and variants. Integration syncs route from the coordination concept to the active provider. This is the same pattern as the auth kit (JWT/Wallet/OAuth are provider concepts beneath an auth coordination layer) and follows the same principle as ConceptStorage — common contract, multiple backends — but elevated to the concept tier because providers have sovereign state and meaningful domain-specific variants that differ per provider.
+For cross-cutting concerns that span multiple providers (runtimes, secrets, IaC), the architecture uses a **coordination + provider concept pattern**: a coordination concept owns the shared interface and state that the rest of the system talks to, while provider concepts own the provider-specific state, actions, and variants. Integration syncs route from the coordination concept to the active provider. This is the same pattern as the auth suite (JWT/Wallet/OAuth are provider concepts beneath an auth coordination layer) and follows the same principle as ConceptStorage — common contract, multiple backends — but elevated to the concept tier because providers have sovereign state and meaningful domain-specific variants that differ per provider.
 
 ---
 
@@ -12,7 +12,7 @@ For cross-cutting concerns that span multiple providers (runtimes, secrets, IaC)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          COPF Deploy Kit                                │
+│                          Clef Deploy Kit                                │
 │                                                                         │
 │  Orchestration Concepts:                                                │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
@@ -54,14 +54,14 @@ For cross-cutting concerns that span multiple providers (runtimes, secrets, IaC)
 
 ### 1.1 DeployPlan
 
-The central orchestration concept. Owns the deploy graph — the DAG of deployment operations derived from a kit's structure.
+The central orchestration concept. Owns the deploy graph — the DAG of deployment operations derived from a suite's structure.
 
 ```
 @version(1)
 concept DeployPlan [D] {
 
   purpose {
-    Compute, validate, and execute deployment plans for kits.
+    Compute, validate, and execute deployment plans for suites.
     Constructs a dependency graph from concept specs, syncs,
     and the deploy manifest, then executes operations in
     topological order with parallelism on independent branches.
@@ -174,15 +174,15 @@ concept DeployPlan [D] {
 
 #### How the deploy graph is constructed
 
-The `plan` action analyzes the kit manifest and produces a DAG:
+The `plan` action analyzes the suite manifest and produces a DAG:
 
 ```
-For each concept in kit.yaml:
+For each concept in suite.yaml:
   1. Node: provision-storage/{concept} — depends on nothing
   2. Node: deploy-concept/{concept} — depends on provision-storage/{concept}
   3. Node: configure-transport/{concept} — depends on deploy-concept/{concept}
 
-For each sync in kit.yaml:
+For each sync in suite.yaml:
   4. Node: register-sync/{sync} — depends on configure-transport/{C}
      for every concept C referenced in the sync's when/then clauses
 
@@ -383,7 +383,7 @@ Post-deployment verification. Checks concept liveness, sync connectivity, and st
 concept Health [H] {
 
   purpose {
-    Verify deployment health at concept, sync, and kit levels.
+    Verify deployment health at concept, sync, and suite levels.
     Used as a gate in progressive delivery — rollout advances
     only when health checks pass. Also provides ongoing
     monitoring after deployment completes.
@@ -512,7 +512,7 @@ concept Env [E] {
       }
       -> notValidated(fromEnv: E, kitName: String) {
         Source environment hasn't passed health checks
-        for this kit version.
+        for this suite version.
       }
       -> versionMismatch(fromEnv: E, toEnv: E, details: String) {
         Target environment has constraints the source
@@ -664,7 +664,7 @@ concept Artifact [A] {
 
 ## Part 2: Syncs — The Deployment Flow
 
-The deployment flow is a sync chain, just like any other COPF workflow. Each step pattern-matches on the previous step's completion variant.
+The deployment flow is a sync chain, just like any other Clef workflow. Each step pattern-matches on the previous step's completion variant.
 
 ### 2.1 Core Deployment Chain
 
@@ -934,7 +934,7 @@ Three cross-cutting concerns — runtimes, secrets, and infrastructure-as-code �
 │                     │                           │  • task definitions │
 └─────────────────────┘                           └─────────────────────┘
   DeployPlan only                                   Never referenced
-  talks to this                                     outside this kit
+  talks to this                                     outside this suite
 ```
 
 ### 3.1 Runtime (Coordination Concept)
@@ -1528,7 +1528,7 @@ concept PulumiProvider [P] {
 
   purpose {
     Generate and apply Pulumi TypeScript programs from
-    COPF deploy plans. Owns Pulumi stack state, backend
+    Clef deploy plans. Owns Pulumi stack state, backend
     configuration, and plugin versioning.
   }
 
@@ -1600,7 +1600,7 @@ concept PulumiProvider [P] {
 concept TerraformProvider [T] {
 
   purpose {
-    Generate and apply Terraform HCL modules from COPF
+    Generate and apply Terraform HCL modules from Clef
     deploy plans. Owns Terraform state file management,
     lock handling, and workspace configuration.
   }
@@ -2004,15 +2004,15 @@ migrations:
 
 ## Part 5: Kit Packaging — The Deploy Kit
 
-All deployment concepts, syncs, and infrastructure ship as a COPF kit. Apps include it like any other kit.
+All deployment concepts, syncs, and infrastructure ship as a Clef kit. Apps include it like any other kit.
 
 ```yaml
-# kit.yaml for the deploy kit
+# suite.yaml for the deploy kit
 kit:
   name: deploy
   version: 0.1.0
   description: >
-    Deployment orchestration for COPF applications. Provides
+    Deployment orchestration for Clef applications. Provides
     deploy planning, progressive delivery, schema migrations,
     health verification, environment management, observability
     injection, and immutable artifact management.
@@ -2242,55 +2242,55 @@ syncs:
 
 ```bash
 # Planning
-copf deploy plan ./app.deploy.yaml --env production
-copf deploy plan ./app.deploy.yaml --env staging --dry-run
-copf deploy diff staging production
+clef deploy plan ./app.deploy.yaml --env production
+clef deploy plan ./app.deploy.yaml --env staging --dry-run
+clef deploy diff staging production
 
 # Execution
-copf deploy execute <plan-id>
-copf deploy execute <plan-id> --skip-rollout     # immediate, no canary
-copf deploy status <plan-id>
+clef deploy execute <plan-id>
+clef deploy execute <plan-id> --skip-rollout     # immediate, no canary
+clef deploy status <plan-id>
 
 # Progressive delivery
-copf rollout status <rollout-id>
-copf rollout advance <rollout-id>                # manual advance
-copf rollout pause <rollout-id> --reason "investigating"
-copf rollout resume <rollout-id>
-copf rollout abort <rollout-id>
+clef rollout status <rollout-id>
+clef rollout advance <rollout-id>                # manual advance
+clef rollout pause <rollout-id> --reason "investigating"
+clef rollout resume <rollout-id>
+clef rollout abort <rollout-id>
 
 # Rollback
-copf deploy rollback <plan-id>
-copf deploy rollback --to-version 2.0.3 --env production
+clef deploy rollback <plan-id>
+clef deploy rollback --to-version 2.0.3 --env production
 
 # Migrations
-copf migrate plan <concept> --from 2 --to 3
-copf migrate expand <migration-id>
-copf migrate status <migration-id>
-copf migrate contract <migration-id>             # manual contraction
+clef migrate plan <concept> --from 2 --to 3
+clef migrate expand <migration-id>
+clef migrate status <migration-id>
+clef migrate contract <migration-id>             # manual contraction
 
 # Environments
-copf env resolve staging
-copf env promote staging production --kit content-management
-copf env diff staging production
+clef env resolve staging
+clef env promote staging production --kit content-management
+clef env diff staging production
 
 # Health
-copf health check --kit content-management --env production
-copf health check --concept User --env staging
-copf health invariant User articleCreation --env production
+clef health check --kit content-management --env production
+clef health check --concept User --env staging
+clef health invariant User articleCreation --env production
 
 # Artifacts
-copf artifact build ./kits/content-management
-copf artifact list --kit content-management --last 5
-copf artifact gc --older-than 30d --keep 3
+clef artifact build ./kits/content-management
+clef artifact list --kit content-management --last 5
+clef artifact gc --older-than 30d --keep 3
 
 # IaC
-copf iac preview ./app.deploy.yaml --env production --provider pulumi
-copf iac emit ./app.deploy.yaml --env production --provider terraform --output ./tf/
-copf iac apply <plan-id>
+clef iac preview ./app.deploy.yaml --env production --provider pulumi
+clef iac emit ./app.deploy.yaml --env production --provider terraform --output ./tf/
+clef iac apply <plan-id>
 
 # Observability
-copf telemetry configure --concept User --sampling 0.5
-copf telemetry markers --env production --last 10
+clef telemetry configure --concept User --sampling 0.5
+clef telemetry markers --env production --last 10
 ```
 
 ---
@@ -2304,7 +2304,7 @@ copf telemetry markers --env production --last 10
 # ...
 
 # One command to deploy with full safety:
-copf deploy plan ./app.deploy.yaml --env production
+clef deploy plan ./app.deploy.yaml --env production
 
 # Output:
 # Deploy Plan dp-2026-02-20-001
@@ -2327,7 +2327,7 @@ copf deploy plan ./app.deploy.yaml --env production
 #
 # Execute? [y/N]
 
-copf deploy execute dp-2026-02-20-001
+clef deploy execute dp-2026-02-20-001
 ```
 
 ### What happens under the hood

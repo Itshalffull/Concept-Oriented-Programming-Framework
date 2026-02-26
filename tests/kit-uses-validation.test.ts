@@ -53,7 +53,7 @@ dependencies: []
     expect(result[0].concepts[1].params).toBeUndefined();
   });
 
-  it('parses multiple kits', () => {
+  it('parses multiple suites', () => {
     const source = `
 uses:
   - kit: auth

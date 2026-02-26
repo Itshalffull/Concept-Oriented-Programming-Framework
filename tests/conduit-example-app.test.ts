@@ -1,7 +1,7 @@
 // ============================================================
 // Conduit RealWorld Example App — Full-Stack Integration
 //
-// A single comprehensive test that proves the entire COPF stack
+// A single comprehensive test that proves the entire Clef stack
 // works end-to-end: every app concept compiled through every
 // language target, validated against every deployment topology,
 // wired on every cloud handler, exercised through every framework
@@ -197,7 +197,7 @@ describe('Conduit Example App — Compile All Concepts × All Language Targets',
     for (const name of APP_CONCEPTS) {
       const m = manifestCache[name];
       expect(m.name).toBeTruthy();
-      expect(m.uri).toContain('urn:copf/');
+      expect(m.uri).toContain('urn:clef/');
       expect(m.actions.length).toBeGreaterThanOrEqual(1);
       expect(m.jsonSchemas).toBeDefined();
       expect(m.graphqlSchema).toBeTruthy();
@@ -589,7 +589,7 @@ describe('Conduit Example App — All Framework Adapters', () => {
 
   it('adapter pipeline sync file references all 6 frameworks', () => {
     const source = readFileSync(
-      resolve(__dirname, '..', 'surface', 'kits', 'coif-render', 'syncs', 'adapter-pipeline.sync'),
+      resolve(__dirname, '..', 'surface', 'kits', 'surface-render', 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     for (const fw of FRAMEWORKS) {
@@ -609,16 +609,16 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
   function createConduitKernel() {
     const kernel = createKernel();
 
-    kernel.registerConcept('urn:copf/User', userHandler);
-    kernel.registerConcept('urn:copf/Password', passwordHandler);
-    kernel.registerConcept('urn:copf/JWT', jwtHandler);
-    kernel.registerConcept('urn:copf/Profile', profileHandler);
-    kernel.registerConcept('urn:copf/Article', articleHandler);
-    kernel.registerConcept('urn:copf/Comment', commentHandler);
-    kernel.registerConcept('urn:copf/Tag', tagHandler);
-    kernel.registerConcept('urn:copf/Favorite', favoriteHandler);
-    kernel.registerConcept('urn:copf/Follow', followHandler);
-    kernel.registerConcept('urn:copf/Echo', echoHandler);
+    kernel.registerConcept('urn:clef/User', userHandler);
+    kernel.registerConcept('urn:clef/Password', passwordHandler);
+    kernel.registerConcept('urn:clef/JWT', jwtHandler);
+    kernel.registerConcept('urn:clef/Profile', profileHandler);
+    kernel.registerConcept('urn:clef/Article', articleHandler);
+    kernel.registerConcept('urn:clef/Comment', commentHandler);
+    kernel.registerConcept('urn:clef/Tag', tagHandler);
+    kernel.registerConcept('urn:clef/Favorite', favoriteHandler);
+    kernel.registerConcept('urn:clef/Follow', followHandler);
+    kernel.registerConcept('urn:clef/Echo', echoHandler);
 
     for (const file of ['registration.sync', 'login.sync', 'articles.sync',
       'comments.sync', 'social.sync', 'profile.sync', 'echo.sync']) {
@@ -669,7 +669,7 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
     // 4. Create article
     const article = await kernel.handleRequest({
       method: 'create_article',
-      title: 'COPF in Production',
+      title: 'Clef in Production',
       description: 'How we use concept-oriented programming',
       body: 'Concepts are independent, composable units of functionality...',
       token,
@@ -680,7 +680,7 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
     // Extract article ID from flow log
     const articleFlowLog = kernel.getFlowLog(article.flowId);
     const articleCreation = articleFlowLog.find(
-      r => r.concept === 'urn:copf/Article' && r.action === 'create' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Article' && r.action === 'create' && r.type === 'completion',
     );
     expect(articleCreation).toBeDefined();
     const articleId = articleCreation!.output?.article as string;
@@ -785,7 +785,7 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
     });
     const artFlowLog = kernel.getFlowLog(article.flowId);
     const artCreation = artFlowLog.find(
-      r => r.concept === 'urn:copf/Article' && r.action === 'create' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Article' && r.action === 'create' && r.type === 'completion',
     );
     const artId = artCreation!.output?.article as string;
 
@@ -804,7 +804,7 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
 
     const delFlowLog = kernel.getFlowLog(del.flowId);
     const commentDeletions = delFlowLog.filter(
-      r => r.concept === 'urn:copf/Comment' && r.action === 'delete' && r.type === 'completion',
+      r => r.concept === 'urn:clef/Comment' && r.action === 'delete' && r.type === 'completion',
     );
     expect(commentDeletions.length).toBe(2);
   });
@@ -835,7 +835,7 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
     const kernel = createConduitKernel();
 
     const result = await kernel.invokeConcept(
-      'urn:copf/Echo', 'send',
+      'urn:clef/Echo', 'send',
       { id: 'echo-1', text: 'Hello from Conduit!' },
     );
     expect(result.variant).toBe('ok');
@@ -848,7 +848,7 @@ describe('Conduit Example App — Full RealWorld User Journey', () => {
 // ============================================================
 
 describe('Conduit Example App — Coverage Summary', () => {
-  it('exercises the complete COPF target matrix', () => {
+  it('exercises the complete Clef target matrix', () => {
     // This test documents what the suite covers
     const languageTargets = ['TypeScript', 'Rust', 'Solidity', 'Swift', 'Schema'];
     const deploymentTargets = [

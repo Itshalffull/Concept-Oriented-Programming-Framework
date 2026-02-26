@@ -2,7 +2,7 @@
 // SlotOutlet — Vue 3 Component
 //
 // Named slot with default content fallback. Wraps the Vue
-// slot mechanism with COIF slot configuration, providing
+// slot mechanism with Clef Surface slot configuration, providing
 // scoped data to the slot consumer and rendering fallback
 // content when no slot content is provided.
 // ============================================================
@@ -60,14 +60,14 @@ export const SlotOutlet = defineComponent({
     function renderFallback(): VNode | string | null {
       if (props.config.defaultContent != null) {
         if (typeof props.config.defaultContent === 'string') {
-          return h('span', { class: 'coif-slot-outlet__default' }, props.config.defaultContent);
+          return h('span', { class: 'surface-slot-outlet__default' }, props.config.defaultContent);
         }
         // If defaultContent is a VNode-like object, render as-is
         return props.config.defaultContent as VNode;
       }
       return h(
         'span',
-        { class: 'coif-slot-outlet__empty' },
+        { class: 'surface-slot-outlet__empty' },
         `[Slot: ${props.config.name}]`,
       );
     }
@@ -89,9 +89,9 @@ export const SlotOutlet = defineComponent({
         props.tag,
         {
           class: [
-            'coif-slot-outlet',
-            `coif-slot-outlet--${props.config.name}`,
-            { 'coif-slot-outlet--fallback': !hasContent.value },
+            'surface-slot-outlet',
+            `surface-slot-outlet--${props.config.name}`,
+            { 'surface-slot-outlet--fallback': !hasContent.value },
           ],
           'data-slot-name': props.config.name,
           'data-slot-component': props.config.component,

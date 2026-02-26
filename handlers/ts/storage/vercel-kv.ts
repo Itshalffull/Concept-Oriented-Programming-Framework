@@ -44,7 +44,7 @@ interface StoredValue {
 }
 
 function storageKey(relation: string, key: string): string {
-  return `copf:${relation}:${key}`;
+  return `clef:${relation}:${key}`;
 }
 
 /**
@@ -104,7 +104,7 @@ export function createVercelKVStorage(kv: VercelKVClient): ConceptStorage {
     },
 
     async find(relation, criteria?) {
-      const prefix = `copf:${relation}:`;
+      const prefix = `clef:${relation}:`;
       const matchingKeys = await kv.keys(`${prefix}*`);
       const results: Record<string, unknown>[] = [];
 
@@ -126,7 +126,7 @@ export function createVercelKVStorage(kv: VercelKVClient): ConceptStorage {
     },
 
     async delMany(relation, criteria) {
-      const prefix = `copf:${relation}:`;
+      const prefix = `clef:${relation}:`;
       const matchingKeys = await kv.keys(`${prefix}*`);
       let count = 0;
 

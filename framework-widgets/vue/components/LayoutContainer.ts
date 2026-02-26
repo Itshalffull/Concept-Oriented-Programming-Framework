@@ -1,7 +1,7 @@
 // ============================================================
 // LayoutContainer — Vue 3 Component
 //
-// Flex/grid container driven by COIF LayoutConfig. Reactively
+// Flex/grid container driven by Clef Surface LayoutConfig. Reactively
 // adjusts layout styles when the config or viewport breakpoint
 // changes, applying responsive overrides when defined.
 // ============================================================
@@ -17,7 +17,7 @@ import {
 
 import type { LayoutConfig, Breakpoint } from '../../shared/types.js';
 
-import { layoutToCSS } from '../../shared/coif-bridge.js';
+import { layoutToCSS } from '../../shared/surface-bridge.js';
 
 import { VIEWPORT_KEY } from './ViewportProvider.js';
 
@@ -79,8 +79,8 @@ export const LayoutContainer = defineComponent({
         props.tag,
         {
           class: [
-            'coif-layout-container',
-            `coif-layout-container--${effectiveConfig.value.kind}`,
+            'surface-layout-container',
+            `surface-layout-container--${effectiveConfig.value.kind}`,
             props.extraClass,
           ],
           style: layoutStyle.value,

@@ -6,14 +6,14 @@
 // produce correctly structured output files, and handle edge cases.
 //
 // See architecture doc:
-//   - Section 7: Kit manifests
+//   - Section 7: Suite manifests
 //   - Section 10.1: ConceptManifest as language-neutral IR
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
 
-import { kitScaffoldGenHandler } from '../handlers/ts/framework/kit-scaffold-gen.handler.js';
+import { suiteScaffoldGenHandler } from '../handlers/ts/framework/kit-scaffold-gen.handler.js';
 import { deployScaffoldGenHandler } from '../handlers/ts/framework/deploy-scaffold-gen.handler.js';
 import { interfaceScaffoldGenHandler } from '../handlers/ts/framework/interface-scaffold-gen.handler.js';
 import { conceptScaffoldGenHandler } from '../handlers/ts/framework/concept-scaffold-gen.handler.js';
@@ -21,8 +21,8 @@ import { syncScaffoldGenHandler } from '../handlers/ts/framework/sync-scaffold-g
 import { handlerScaffoldGenHandler } from '../handlers/ts/framework/handler-scaffold-gen.handler.js';
 import { storageAdapterScaffoldGenHandler } from '../handlers/ts/framework/storage-adapter-scaffold-gen.handler.js';
 import { transportAdapterScaffoldGenHandler } from '../handlers/ts/framework/transport-adapter-scaffold-gen.handler.js';
-import { coifComponentScaffoldGenHandler } from '../handlers/ts/framework/coif-component-scaffold-gen.handler.js';
-import { coifThemeScaffoldGenHandler } from '../handlers/ts/framework/coif-theme-scaffold-gen.handler.js';
+import { surfaceComponentScaffoldGenHandler } from '../handlers/ts/framework/surface-component-scaffold-gen.handler.js';
+import { surfaceThemeScaffoldGenHandler } from '../handlers/ts/framework/surface-theme-scaffold-gen.handler.js';
 
 const storage = createInMemoryStorage();
 
@@ -30,7 +30,7 @@ const storage = createInMemoryStorage();
 
 describe('Scaffold Generator Registration', () => {
   const generators = [
-    { name: 'KitScaffoldGen', handler: kitScaffoldGenHandler },
+    { name: 'SuiteScaffoldGen', handler: suiteScaffoldGenHandler },
     { name: 'DeployScaffoldGen', handler: deployScaffoldGenHandler },
     { name: 'InterfaceScaffoldGen', handler: interfaceScaffoldGenHandler },
     { name: 'ConceptScaffoldGen', handler: conceptScaffoldGenHandler },
@@ -38,8 +38,8 @@ describe('Scaffold Generator Registration', () => {
     { name: 'HandlerScaffoldGen', handler: handlerScaffoldGenHandler },
     { name: 'StorageAdapterScaffoldGen', handler: storageAdapterScaffoldGenHandler },
     { name: 'TransportAdapterScaffoldGen', handler: transportAdapterScaffoldGenHandler },
-    { name: 'CoifComponentScaffoldGen', handler: coifComponentScaffoldGenHandler },
-    { name: 'CoifThemeScaffoldGen', handler: coifThemeScaffoldGenHandler },
+    { name: 'SurfaceComponentScaffoldGen', handler: surfaceComponentScaffoldGenHandler },
+    { name: 'SurfaceThemeScaffoldGen', handler: surfaceThemeScaffoldGenHandler },
   ];
 
   for (const { name, handler } of generators) {
@@ -88,11 +88,11 @@ describe('Scaffold Generator Registration', () => {
   });
 });
 
-// ── Kit Scaffold Generator ──────────────────────────────────
+// ── Suite Scaffold Generator ──────────────────────────────────
 
-describe('KitScaffoldGen', () => {
+describe('SuiteScaffoldGen', () => {
   it('should generate suite.yaml with basic inputs', async () => {
-    const result = await kitScaffoldGenHandler.generate!(
+    const result = await suiteScaffoldGenHandler.generate!(
       { name: 'auth', description: 'Authentication kit' },
       storage,
     );
@@ -107,7 +107,7 @@ describe('KitScaffoldGen', () => {
   });
 
   it('should generate concept stubs for listed concepts', async () => {
-    const result = await kitScaffoldGenHandler.generate!(
+    const result = await suiteScaffoldGenHandler.generate!(
       { name: 'auth', concepts: ['User', 'Session', 'JWT'] },
       storage,
     );
@@ -123,7 +123,7 @@ describe('KitScaffoldGen', () => {
   });
 
   it('should generate syncs grouped by tier', async () => {
-    const result = await kitScaffoldGenHandler.generate!(
+    const result = await suiteScaffoldGenHandler.generate!(
       {
         name: 'auth',
         syncs: [
@@ -453,11 +453,11 @@ describe('TransportAdapterScaffoldGen', () => {
   }
 });
 
-// ── COIF Component Scaffold Generator ───────────────────────
+// ── Clef Surface Component Scaffold Generator ───────────────────────
 
-describe('CoifComponentScaffoldGen', () => {
+describe('SurfaceComponentScaffoldGen', () => {
   it('should generate component scaffold with defaults', async () => {
-    const result = await coifComponentScaffoldGenHandler.generate!(
+    const result = await surfaceComponentScaffoldGenHandler.generate!(
       { name: 'Dialog' },
       storage,
     );
@@ -475,7 +475,7 @@ describe('CoifComponentScaffoldGen', () => {
 
     const kit = files.find(f => f.path.endsWith('suite.yaml'));
     expect(kit).toBeDefined();
-    expect(kit!.content).toContain('name: coif-dialog');
+    expect(kit!.content).toContain('name: surface-dialog');
 
     const machine = files.find(f => f.path.endsWith('.handler.ts'));
     expect(machine).toBeDefined();
@@ -486,7 +486,7 @@ describe('CoifComponentScaffoldGen', () => {
   });
 
   it('should include custom parts and states', async () => {
-    const result = await coifComponentScaffoldGenHandler.generate!(
+    const result = await surfaceComponentScaffoldGenHandler.generate!(
       {
         name: 'Tabs',
         parts: ['root', 'list', 'trigger', 'content', 'indicator'],
@@ -507,11 +507,11 @@ describe('CoifComponentScaffoldGen', () => {
   });
 });
 
-// ── COIF Theme Scaffold Generator ───────────────────────────
+// ── Clef Surface Theme Scaffold Generator ───────────────────────────
 
-describe('CoifThemeScaffoldGen', () => {
+describe('SurfaceThemeScaffoldGen', () => {
   it('should generate theme scaffold with defaults', async () => {
-    const result = await coifThemeScaffoldGenHandler.generate!(
+    const result = await surfaceThemeScaffoldGenHandler.generate!(
       { name: 'ocean' },
       storage,
     );
@@ -556,7 +556,7 @@ describe('CoifThemeScaffoldGen', () => {
   });
 
   it('should support light-only mode', async () => {
-    const result = await coifThemeScaffoldGenHandler.generate!(
+    const result = await surfaceThemeScaffoldGenHandler.generate!(
       { name: 'bright', mode: 'light' },
       storage,
     );
@@ -566,7 +566,7 @@ describe('CoifThemeScaffoldGen', () => {
   });
 
   it('should accept custom typography settings', async () => {
-    const result = await coifThemeScaffoldGenHandler.generate!(
+    const result = await surfaceThemeScaffoldGenHandler.generate!(
       {
         name: 'custom',
         fontFamily: 'Inter, sans-serif',

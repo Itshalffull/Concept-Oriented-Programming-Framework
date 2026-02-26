@@ -1,4 +1,4 @@
-# Data Integration Kit Manifest
+# Data Integration Suite Manifest
 name: data-integration
 version: 0.2.0
 description: "Data capture, integration, enrichment, and bidirectional sync — 10 concepts for connecting external systems, transforming data, enforcing quality, and tracking provenance."
@@ -55,10 +55,10 @@ syncs:
     tier: recommended
 
 dependencies:
-  - "@copf/foundation"
-  - "@copf/classification"
-  - "@copf/infrastructure"
-  - "@copf/linking"
-  - "@copf/query"
-  - "@copf/automation"
-  - "@copf/media"
+  - "@clef/foundation"
+  - "@clef/classification"
+  - "@clef/infrastructure"
+  - "@clef/linking"
+  - "@clef/query"
+  - "@clef/automation"
+  - "@clef/media"

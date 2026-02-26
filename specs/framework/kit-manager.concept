@@ -3,9 +3,9 @@
 concept KitManager [K] {
 
   purpose {
-    Manage concept kits — scaffold new kits, validate kit
+    Manage suites — scaffold new suites, validate kit
     manifests and cross-kit references, run kit tests, list
-    active kits, and check app overrides.
+    active suites, and check app overrides.
   }
 
   state {
@@ -18,20 +18,20 @@ concept KitManager [K] {
   actions {
     action init(name: String) {
       description {
-        Scaffold a new kit directory with kit.yaml, concept
+        Scaffold a new suite directory with suite.yaml, concept
         and sync subdirectories, and example files.
       }
       -> ok(kit: K, path: String) {
         Kit directory created with standard structure.
       }
       -> alreadyExists(name: String) {
-        A kit with this name already exists.
+        A suite with this name already exists.
       }
     }
 
     action validate(path: String) {
       description {
-        Validate a kit manifest, its concept specs, sync
+        Validate a suite manifest, its concept specs, sync
         definitions, and cross-kit concept references.
       }
       -> ok(kit: K, concepts: Int, syncs: Int) {
@@ -44,7 +44,7 @@ concept KitManager [K] {
 
     action test(path: String) {
       description {
-        Run conformance and integration tests for a kit.
+        Run conformance and integration tests for a suite.
         Tests invariants from concept specs and validates
         sync compilation.
       }
@@ -58,11 +58,11 @@ concept KitManager [K] {
 
     action list() {
       description {
-        List all kits used by the current application,
+        List all suites used by the current application,
         including their versions and concept counts.
       }
-      -> ok(kits: list String) {
-        Active kits listed.
+      -> ok(suites: list String) {
+        Active suites listed.
       }
     }
 

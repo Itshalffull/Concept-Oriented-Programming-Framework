@@ -26,7 +26,7 @@ export const commentWidgetSpec: WidgetSpec = {
 
   concepts: [
     {
-      concept: 'urn:copf/Comment',
+      concept: 'urn:clef/Comment',
       actions: ['create', 'delete'],
       queries: ['list'],
     },

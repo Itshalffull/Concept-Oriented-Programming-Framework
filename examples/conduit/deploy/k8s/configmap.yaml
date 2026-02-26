@@ -1,4 +1,4 @@
-# Conduit COPF App — Kubernetes ConfigMap
+# Conduit Clef App — Kubernetes ConfigMap
 # Non-secret environment variables for the conduit app.
 
 apiVersion: v1
@@ -7,7 +7,7 @@ metadata:
   name: conduit-config
   namespace: conduit
   labels:
-    app: conduit-copf
+    app: conduit-clef
 data:
   NODE_ENV: production
   PORT: "3000"

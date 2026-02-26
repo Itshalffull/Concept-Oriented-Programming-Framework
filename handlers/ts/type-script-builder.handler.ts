@@ -53,7 +53,7 @@ export const typeScriptBuilderHandler: ConceptHandler = {
 
     // Derive artifact path from source
     const sourceName = source.replace(/^\.\//, '').replace(/\//g, '-');
-    const artifactPath = `.copf-artifacts/typescript/${sourceName}`;
+    const artifactPath = `.clef-artifacts/typescript/${sourceName}`;
     const artifactHash = generateHash();
 
     // Determine bundler based on platform

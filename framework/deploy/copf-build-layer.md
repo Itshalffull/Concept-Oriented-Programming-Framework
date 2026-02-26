@@ -1,10 +1,10 @@
-# COPF Build Layer — Deploy Kit Extension
+# Clef Build Layer — Deploy Kit Extension
 
 ## Design Principle
 
 The same coordination + provider pattern used by Runtime, Secret, and IaC. **Builder** is a coordination concept that owns the shared build interface — what gets built, what the result is, what status it's in. **Toolchain** is a coordination concept that owns tool resolution — what compiler version, where it lives, whether it's installed. Provider concepts own the language-specific logic: how to invoke `tsc`, how to invoke `rustc`, what flags each needs. Both register providers through **PluginRegistry**.
 
-This is NOT a new kit. It extends the existing deploy kit with two coordination concepts and their providers, fitting into the same deploy manifest (`app.deploy.yaml`) and the same DeployPlan DAG.
+This is NOT a new suite. It extends the existing deploy kit with two coordination concepts and their providers, fitting into the same deploy manifest (`app.deploy.yaml`) and the same DeployPlan DAG.
 
 ### Why This Exists
 
@@ -13,7 +13,7 @@ The deploy layer has a gap between generated source and deployable artifact:
 ```
 .concept spec
     │
-    ▼ (generation kit — exists)
+    ▼ (generation suite — exists)
 Generated TypeScript / Rust / Swift / Solidity source
     │
     ▼ (??? — this document)
@@ -50,7 +50,7 @@ Builder and Toolchain fill this gap following the exact pattern Runtime establis
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                   COPF Deploy Kit (extended)                            │
+│                   Clef Deploy Kit (extended)                            │
 │                                                                         │
 │  Existing Orchestration Concepts:                                       │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
@@ -172,7 +172,7 @@ concept Toolchain [T] {
     action list(language: option String) {
       -> ok(tools: list { language: String, platform: String, version: String, path: String, status: String }) {
         List all resolved toolchains, optionally filtered by
-        language. Used by `copf toolchain list`.
+        language. Used by `clef toolchain list`.
       }
     }
 
@@ -488,14 +488,14 @@ concept Builder [B] {
     action history(concept: String, language: option String) {
       -> ok(builds: list { language: String, platform: String, artifactHash: String, duration: Int, completedAt: DateTime, testsPassed: Int }) {
         Build history for a concept, optionally filtered by
-        language. Used by `copf build history`.
+        language. Used by `clef build history`.
       }
     }
   }
 
   invariant {
     after build(concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: { mode: "release" })
-      -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".copf-artifacts/swift/password", duration: 3200)
+      -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".clef-artifacts/swift/password", duration: 3200)
     then status(build: b) -> ok(build: b, status: "done", duration: 3200)
     and  history(concept: "password", language: "swift") -> ok(builds: bs)
   }
@@ -539,7 +539,7 @@ concept SwiftBuilder [S] {
     action build(source: String, toolchainPath: String, platform: String, config: { mode: String, features: option list String }) {
       -> ok(build: S, artifactPath: String, artifactHash: String) {
         Run `swift build` with the resolved toolchain.
-        Configuration maps from COPF modes:
+        Configuration maps from Clef modes:
         "debug" → swift build (default)
         "release" → swift build -c release
 
@@ -823,7 +823,7 @@ Artifact gains a `store` action to separate storage from compilation. Builder pr
 
 ## Part 2: PluginRegistry Integration
 
-Builder and Toolchain providers register through PluginRegistry, just like generators in the generation kit.
+Builder and Toolchain providers register through PluginRegistry, just like generators in the generation suite.
 
 ### 2.1 Builder Provider Registration
 
@@ -1109,25 +1109,25 @@ then {
 
 ---
 
-## Part 5: Standalone Build (`copf build`)
+## Part 5: Standalone Build (`clef build`)
 
-`copf build` executes the build portion of the DeployPlan DAG and stops at `store-artifact`. Same plan, truncated execution.
+`clef build` executes the build portion of the DeployPlan DAG and stops at `store-artifact`. Same plan, truncated execution.
 
 ```bash
 # Build all targets defined in deploy manifest
-copf build ./app.deploy.yaml
+clef build ./app.deploy.yaml
 
 # Build specific language
-copf build ./app.deploy.yaml --language swift
+clef build ./app.deploy.yaml --language swift
 
 # Build specific concept
-copf build ./app.deploy.yaml --concept password
+clef build ./app.deploy.yaml --concept password
 
 # Build with mode override
-copf build ./app.deploy.yaml --mode debug
+clef build ./app.deploy.yaml --mode debug
 
 # Dry run — show what would build
-copf build ./app.deploy.yaml --plan
+clef build ./app.deploy.yaml --plan
 # Output:
 # Build Plan bp-2026-02-24-001
 # ├─ Toolchain: swift 5.10 (linux-arm64) — installed ✅
@@ -1145,16 +1145,16 @@ copf build ./app.deploy.yaml --plan
 # Total: 6 builds, 3 cached, 3 to execute
 
 # Toolchain management
-copf toolchain list
-copf toolchain resolve swift --platform linux-arm64 --version ">=5.10"
-copf toolchain validate
+clef toolchain list
+clef toolchain resolve swift --platform linux-arm64 --version ">=5.10"
+clef toolchain validate
 
 # Build history
-copf build history --concept password
-copf build history --concept password --language swift
+clef build history --concept password
+clef build history --concept password --language swift
 
 # Run tests only (no compile)
-copf build test --concept password --language swift
+clef build test --concept password --language swift
 ```
 
 
@@ -1163,7 +1163,7 @@ copf build test --concept password --language swift
 ## Part 6: Kit Packaging
 
 ```yaml
-# kits/deploy/kit.yaml (extended — additions only)
+# kits/deploy/suite.yaml (extended — additions only)
 
 concepts:
   # EXISTING concepts unchanged...
@@ -1268,7 +1268,7 @@ syncs:
 Toolchain answers "what tools exist." Builder answers "compile this source." They have independent state and independent lifecycles:
 
 - Toolchain state changes when you install/upgrade a compiler. Builder state changes when you build something.
-- You can query toolchains without building (`copf toolchain list`). You can't build without a toolchain.
+- You can query toolchains without building (`clef toolchain list`). You can't build without a toolchain.
 - Toolchain resolution is shared across concepts — resolve `swiftc` once, use it for every concept's Swift build. Builder runs per-concept.
 
 If merged, you'd have one concept trying to own both tool inventory and compilation history. Same reason Runtime and IaC are separate — provisioning compute and provisioning infrastructure are different concerns even though both happen during deployment.
@@ -1293,7 +1293,7 @@ This is the same argument for why LambdaRuntime and EcsRuntime are concepts, not
 
 ### Why these live in the deploy kit, not a new "build kit"
 
-The build step exists to produce deployable artifacts. It reads from the deploy manifest. It feeds into the deploy DAG. Its lifecycle is "prepare for deployment." Putting it in a separate kit would create a cross-kit dependency (deploy kit → build kit → generation kit) with no clear boundary. Keeping it in the deploy kit means one manifest, one DAG, one `copf deploy plan` command that shows the full pipeline from toolchain resolution through build through deployment.
+The build step exists to produce deployable artifacts. It reads from the deploy manifest. It feeds into the deploy DAG. Its lifecycle is "prepare for deployment." Putting it in a separate kit would create a cross-suite dependency (deploy kit → build kit → generation suite) with no clear boundary. Keeping it in the deploy kit means one manifest, one DAG, one `clef deploy plan` command that shows the full pipeline from toolchain resolution through build through deployment.
 
 ### Executor as a provider-internal concern
 
@@ -1327,7 +1327,7 @@ build:
 ```
 
 ```bash
-copf build ./app.deploy.yaml --language swift
+clef build ./app.deploy.yaml --language swift
 ```
 
 What happens:
@@ -1339,7 +1339,7 @@ What happens:
 5. SwiftBuilder's implementation sees `executor.swift.type: remote`, sends compilation to `https://build.internal/swift`
 6. Remote build completes → `Artifact/store(hash, location, concept, "swift", "linux-arm64")`
 7. All concept artifacts stored, build phase complete
-8. If `copf deploy execute` follows, deploy phase picks up the stored artifacts
+8. If `clef deploy execute` follows, deploy phase picks up the stored artifacts
 
 The coordination concepts (Builder, Toolchain) don't know about remote execution. SwiftBuilder's implementation does. The deploy manifest configures it. The sync engine orchestrates it.
 

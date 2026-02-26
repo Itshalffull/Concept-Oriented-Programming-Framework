@@ -1,10 +1,10 @@
 // CopfRemote.swift — connector_protocol provider
-// Connects to another COPF instance API for schema sharing, identity field mapping, and bidirectional sync
+// Connects to another Clef instance API for schema sharing, identity field mapping, and bidirectional sync
 
 import Foundation
 
-public let copfRemoteProviderId = "copf_remote"
-public let copfRemotePluginType = "connector_protocol"
+public let clefRemoteProviderId = "clef_remote"
+public let clefRemotePluginType = "connector_protocol"
 
 public struct CrConnectorConfig: Codable {
     public var baseUrl: String?; public var connectionString: String?
@@ -57,10 +57,10 @@ private func buildApiUrl(_ baseUrl: String, path: String) -> String {
 }
 
 private func buildHeaders(_ config: CrConnectorConfig) -> [String: String] {
-    var headers = ["Content-Type": "application/json", "X-COPF-Client": "connector_protocol/copf_remote"]
+    var headers = ["Content-Type": "application/json", "X-Clef-Client": "connector_protocol/clef_remote"]
     if let cfgH = config.headers { headers.merge(cfgH) { _, new in new } }
     if let token = config.auth?["token"] { headers["Authorization"] = "Bearer \(token)" }
-    if let apiKey = config.auth?["apiKey"] { headers["X-COPF-API-Key"] = apiKey }
+    if let apiKey = config.auth?["apiKey"] { headers["X-Clef-API-Key"] = apiKey }
     return headers
 }
 
@@ -205,7 +205,7 @@ public final class CopfRemoteConnectorProvider {
             let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["data"] as? [String: Any]
             let instance = (json?["instance"] as? String) ?? "unknown"
             let version = (json?["version"] as? String) ?? "?"
-            return CrTestResult(connected: true, message: "Connected to COPF instance: \(instance) (v\(version))", latencyMs: ms)
+            return CrTestResult(connected: true, message: "Connected to Clef instance: \(instance) (v\(version))", latencyMs: ms)
         } catch {
             let ms = Int(Date().timeIntervalSince(start) * 1000)
             return CrTestResult(connected: false, message: error.localizedDescription, latencyMs: ms)

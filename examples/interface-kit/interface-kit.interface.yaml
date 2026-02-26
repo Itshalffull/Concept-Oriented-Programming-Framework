@@ -1,7 +1,7 @@
-# COPF Interface Kit — Interface Generation Manifest
+# Clef Clef Bind — Interface Generation Manifest
 #
 # Self-referential manifest: generates CLI commands, MCP tools,
-# and Claude Skills for the 26 interface kit concepts themselves.
+# and Claude Skills for the 26 Clef Bind concepts themselves.
 # Covers orchestration (Projection, Generator, Emitter, Surface,
 # Middleware, Grouping, Workflow, Annotation, Renderer),
 # coordination (Target, Sdk, Spec), target providers (Rest,
@@ -11,27 +11,27 @@
 # See Architecture doc Sections 1.8, 2.1-2.7.
 #
 # Usage:
-#   copf interface generate --manifest examples/interface-kit/interface-kit.interface.yaml
+#   clef interface generate --manifest examples/bind/bind.interface.yaml
 
 interface:
-  name: copf-interface-kit
+  name: clef-bind
   version: 0.1.0
 
 # ─── GENERATION TARGETS ──────────────────────────────
 targets:
   claude-skills:
-    name: copf-interface-kit
+    name: clef-bind
     progressive: true
   cli:
-    name: copf-interface
+    name: clef-interface
     shell: bash,zsh,fish
   mcp:
-    name: copf-interface-mcp
+    name: clef-interface-mcp
     transport: stdio
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
-  dir: ./generated/interface-kit
+  dir: ./generated/bind
   formatting:
     typescript: prettier
   clean: true
@@ -62,14 +62,14 @@ concepts:
             manifest: { positional: true }
           examples:
             - description: Project a concept from a manifest
-              command: copf-interface projection project app.interface.yaml
+              command: clef-interface projection project app.interface.yaml
         validate:
           command: validate
           args:
             projection: { positional: true }
           examples:
             - description: Validate a projection
-              command: copf-interface projection validate proj-001
+              command: clef-interface projection validate proj-001
         diff:
           command: diff
           args:
@@ -77,14 +77,14 @@ concepts:
             previous: { positional: true }
           examples:
             - description: Diff two projections
-              command: copf-interface projection diff proj-002 proj-001
+              command: clef-interface projection diff proj-002 proj-001
         inferResources:
           command: infer-resources
           args:
             projection: { positional: true }
           examples:
             - description: Infer REST resources from a projection
-              command: copf-interface projection infer-resources proj-001
+              command: clef-interface projection infer-resources proj-001
     mcp:
       actions:
         project:
@@ -106,12 +106,12 @@ concepts:
         plan:
           command: plan
           args:
-            kit: { positional: true }
+            suite: { positional: true }
           flags:
             manifest: { type: string, description: "Path to interface manifest" }
           examples:
-            - description: Plan generation for a kit
-              command: copf-interface generator plan my-kit --manifest app.interface.yaml
+            - description: Plan generation for a suite
+              command: clef-interface generator plan my-kit --manifest app.interface.yaml
         generate:
           command: generate
           args:
@@ -120,14 +120,14 @@ concepts:
             breaking: { type: boolean, description: "Allow breaking changes" }
           examples:
             - description: Run generation from a plan
-              command: copf-interface generator generate plan-001
+              command: clef-interface generator generate plan-001
         status:
           command: status
           args:
             plan: { positional: true }
           examples:
             - description: Check generation status
-              command: copf-interface generator status plan-001
+              command: clef-interface generator status plan-001
         regenerate:
           command: regenerate
           args:
@@ -136,18 +136,18 @@ concepts:
             targets: { type: string, description: "Comma-separated target list" }
           examples:
             - description: Regenerate only REST and CLI targets
-              command: copf-interface generator regenerate plan-001 --targets rest,cli
+              command: clef-interface generator regenerate plan-001 --targets rest,cli
     mcp:
       actions:
         plan:
           type: tool
-          description: "Create a generation plan from a kit and interface manifest"
+          description: "Create a generation plan from a suite and interface manifest"
         generate:
           type: tool
           description: "Execute a generation plan to produce interface code"
         status:
           type: resource-template
-          uriTemplate: "copf-interface://generators/{plan}/status"
+          uriTemplate: "clef-interface://generators/{plan}/status"
         regenerate:
           type: tool
           description: "Regenerate specific targets using cached projections"
@@ -165,7 +165,7 @@ concepts:
             concept: { type: string, description: "Source concept" }
           examples:
             - description: Write a generated file
-              command: copf-interface emitter write ./generated/rest/user.ts --target rest --concept User
+              command: clef-interface emitter write ./generated/rest/user.ts --target rest --concept User
         format:
           command: format
           args:
@@ -174,21 +174,21 @@ concepts:
             formatter: { type: string, description: "Formatter name (prettier, black, gofmt)" }
           examples:
             - description: Format a generated TypeScript file
-              command: copf-interface emitter format ./generated/rest/user.ts --formatter prettier
+              command: clef-interface emitter format ./generated/rest/user.ts --formatter prettier
         clean:
           command: clean
           args:
             dir: { positional: true }
           examples:
             - description: Clean orphaned files from output directory
-              command: copf-interface emitter clean ./generated/rest
+              command: clef-interface emitter clean ./generated/rest
         manifest:
           command: manifest
           args:
             dir: { positional: true }
           examples:
             - description: List all generated files
-              command: copf-interface emitter manifest ./generated --json
+              command: clef-interface emitter manifest ./generated --json
     mcp:
       actions:
         write:
@@ -202,7 +202,7 @@ concepts:
           description: "Remove orphaned files from previous generation runs"
         manifest:
           type: resource-template
-          uriTemplate: "copf-interface://emitter/{dir}/manifest"
+          uriTemplate: "clef-interface://emitter/{dir}/manifest"
 
   Surface:
     cli:
@@ -210,19 +210,19 @@ concepts:
         compose:
           command: compose
           args:
-            kit: { positional: true }
+            suite: { positional: true }
           flags:
             target: { type: string, description: "Target type to compose" }
           examples:
             - description: Compose REST surface from per-concept outputs
-              command: copf-interface api-surface compose my-kit --target rest
+              command: clef-interface api-surface compose my-kit --target rest
         entrypoint:
           command: entrypoint
           args:
             surface: { positional: true }
           examples:
             - description: View composed entrypoint content
-              command: copf-interface api-surface entrypoint surface-001 --json
+              command: clef-interface api-surface entrypoint surface-001 --json
     mcp:
       actions:
         compose:
@@ -230,7 +230,7 @@ concepts:
           description: "Merge per-concept outputs into a unified API surface"
         entrypoint:
           type: resource-template
-          uriTemplate: "copf-interface://api-surfaces/{surface}/entrypoint"
+          uriTemplate: "clef-interface://api-surfaces/{surface}/entrypoint"
 
   Middleware:
     cli:
@@ -244,7 +244,7 @@ concepts:
             position: { type: string, description: "Middleware position (before-auth, auth, validation, etc.)" }
           examples:
             - description: Register auth middleware for REST
-              command: copf-interface middleware register --trait auth --target rest --implementation bearer-check --position auth
+              command: clef-interface middleware register --trait auth --target rest --implementation bearer-check --position auth
         resolve:
           command: resolve
           flags:
@@ -252,7 +252,7 @@ concepts:
             target: { type: string, description: "Target type" }
           examples:
             - description: Resolve middleware chain for REST target
-              command: copf-interface middleware resolve --traits auth,validated --target rest
+              command: clef-interface middleware resolve --traits auth,validated --target rest
         inject:
           command: inject
           args:
@@ -261,7 +261,7 @@ concepts:
             target: { type: string, description: "Target type" }
           examples:
             - description: Inject middleware into generated output
-              command: copf-interface middleware inject ./generated/rest/user.ts --target rest
+              command: clef-interface middleware inject ./generated/rest/user.ts --target rest
     mcp:
       actions:
         register:
@@ -283,14 +283,14 @@ concepts:
             strategy: { type: string, description: "Grouping strategy (per-concept, per-kit, by-crud, by-intent)" }
           examples:
             - description: Group concepts by CRUD role
-              command: copf-interface grouping group --strategy by-crud
+              command: clef-interface grouping group --strategy by-crud
         classify:
           command: classify
           args:
             action: { positional: true }
           examples:
             - description: Classify an action name
-              command: copf-interface grouping classify create --json
+              command: clef-interface grouping classify create --json
     mcp:
       actions:
         group:
@@ -311,7 +311,7 @@ concepts:
             steps: { type: string, description: "Comma-separated ordered action names" }
           examples:
             - description: Define a workflow for SpecParser
-              command: copf-interface action-guide define SpecParser --steps parse
+              command: clef-interface action-guide define SpecParser --steps parse
         render:
           command: render
           args:
@@ -320,7 +320,7 @@ concepts:
             format: { type: string, description: "Output format (skill-md, cli-help, rest-guide)" }
           examples:
             - description: Render workflow as skill markdown
-              command: copf-interface action-guide render wf-001 --format skill-md
+              command: clef-interface action-guide render wf-001 --format skill-md
     mcp:
       actions:
         define:
@@ -343,7 +343,7 @@ concepts:
           examples:
             - description: Annotate a concept with tool permissions
               command: >-
-                copf-interface annotation annotate SpecParser
+                clef-interface annotation annotate SpecParser
                 --scope concept --content '{"tool-permissions":["Read","Bash"]}'
         resolve:
           command: resolve
@@ -351,7 +351,7 @@ concepts:
             concept: { positional: true }
           examples:
             - description: Resolve all annotations for a concept
-              command: copf-interface annotation resolve SpecParser --json
+              command: clef-interface annotation resolve SpecParser --json
     mcp:
       actions:
         annotate:
@@ -374,7 +374,7 @@ concepts:
           examples:
             - description: Register a renderer for design principles
               command: >-
-                copf-interface enrichment-renderer register
+                clef-interface enrichment-renderer register
                 --key design-principles --format skill-md --order 50 --pattern list
         render:
           command: render
@@ -383,19 +383,19 @@ concepts:
             content: { type: string, description: "JSON enrichment content" }
           examples:
             - description: Render enrichment content as skill markdown
-              command: copf-interface enrichment-renderer render --format skill-md --content '{"checklists":{"parse":["Valid?"]}}'
+              command: clef-interface enrichment-renderer render --format skill-md --content '{"checklists":{"parse":["Valid?"]}}'
         listHandlers:
           command: list-handlers
           flags:
             format: { type: string, description: "Format to list handlers for" }
           examples:
             - description: List registered handlers for skill-md format
-              command: copf-interface enrichment-renderer list-handlers --format skill-md
+              command: clef-interface enrichment-renderer list-handlers --format skill-md
         listPatterns:
           command: list-patterns
           examples:
             - description: List all available render patterns
-              command: copf-interface enrichment-renderer list-patterns --json
+              command: clef-interface enrichment-renderer list-patterns --json
     mcp:
       actions:
         register:
@@ -406,10 +406,10 @@ concepts:
           description: "Render enrichment content using registered handlers for a format"
         listHandlers:
           type: resource-template
-          uriTemplate: "copf-interface://enrichment-renderer/handlers/{format}"
+          uriTemplate: "clef-interface://enrichment-renderer/handlers/{format}"
         listPatterns:
           type: resource
-          uriTemplate: "copf-interface://enrichment-renderer/patterns"
+          uriTemplate: "clef-interface://enrichment-renderer/patterns"
 
   # ── Coordination Concepts ──────────────────────────
 
@@ -424,14 +424,14 @@ concepts:
             type: { type: string, description: "Target type (rest, graphql, grpc, cli, mcp, claude-skills)" }
           examples:
             - description: Generate REST target from projection
-              command: copf-interface target generate proj-001 --type rest
+              command: clef-interface target generate proj-001 --type rest
         diff:
           command: diff
           args:
             output: { positional: true }
           examples:
             - description: Diff current vs previous generation
-              command: copf-interface target diff out-001 --json
+              command: clef-interface target diff out-001 --json
     mcp:
       actions:
         generate:
@@ -452,7 +452,7 @@ concepts:
             language: { type: string, description: "SDK language (typescript, python, go, rust, java, swift)" }
           examples:
             - description: Generate TypeScript SDK from projection
-              command: copf-interface sdk generate proj-001 --language typescript
+              command: clef-interface sdk generate proj-001 --language typescript
         publish:
           command: publish
           args:
@@ -461,7 +461,7 @@ concepts:
             registry: { type: string, description: "Package registry (npm, pypi, crates.io, maven, etc.)" }
           examples:
             - description: Publish SDK to npm
-              command: copf-interface sdk publish pkg-001 --registry npm
+              command: clef-interface sdk publish pkg-001 --registry npm
     mcp:
       actions:
         generate:
@@ -480,14 +480,14 @@ concepts:
             format: { type: string, description: "Spec format (openapi, asyncapi)" }
           examples:
             - description: Emit OpenAPI spec from projections
-              command: copf-interface spec emit --format openapi
+              command: clef-interface spec emit --format openapi
         validate:
           command: validate
           args:
             document: { positional: true }
           examples:
             - description: Validate generated OpenAPI spec
-              command: copf-interface spec validate doc-001
+              command: clef-interface spec validate doc-001
     mcp:
       actions:
         emit:
@@ -508,21 +508,21 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate REST routes
-              command: copf-interface rest generate proj-001
+              command: clef-interface rest generate proj-001
         validate:
           command: validate
           args:
             route: { positional: true }
           examples:
             - description: Validate generated REST route
-              command: copf-interface rest validate route-001
+              command: clef-interface rest validate route-001
         listRoutes:
           command: list-routes
           args:
             concept: { positional: true }
           examples:
             - description: List REST routes for a concept
-              command: copf-interface rest list-routes User --json
+              command: clef-interface rest list-routes User --json
     mcp:
       actions:
         generate:
@@ -533,7 +533,7 @@ concepts:
           description: "Validate a generated REST route for path conflicts and type consistency"
         listRoutes:
           type: resource-template
-          uriTemplate: "copf-interface://rest/routes/{concept}"
+          uriTemplate: "clef-interface://rest/routes/{concept}"
 
   GraphqlTarget:
     cli:
@@ -544,21 +544,21 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate GraphQL schema
-              command: copf-interface graphql generate proj-001
+              command: clef-interface graphql generate proj-001
         validate:
           command: validate
           args:
             type: { positional: true }
           examples:
             - description: Validate generated GraphQL type
-              command: copf-interface graphql validate type-001
+              command: clef-interface graphql validate type-001
         listOperations:
           command: list-operations
           args:
             concept: { positional: true }
           examples:
             - description: List GraphQL operations for a concept
-              command: copf-interface graphql list-operations Article --json
+              command: clef-interface graphql list-operations Article --json
     mcp:
       actions:
         generate:
@@ -569,7 +569,7 @@ concepts:
           description: "Validate generated GraphQL schema for cycles and Relay conformance"
         listOperations:
           type: resource-template
-          uriTemplate: "copf-interface://graphql/operations/{concept}"
+          uriTemplate: "clef-interface://graphql/operations/{concept}"
 
   GrpcTarget:
     cli:
@@ -580,21 +580,21 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate gRPC proto definitions
-              command: copf-interface grpc generate proj-001
+              command: clef-interface grpc generate proj-001
         validate:
           command: validate
           args:
             service: { positional: true }
           examples:
             - description: Validate generated gRPC service
-              command: copf-interface grpc validate service-001
+              command: clef-interface grpc validate service-001
         listRpcs:
           command: list-rpcs
           args:
             concept: { positional: true }
           examples:
             - description: List gRPC RPCs for a concept
-              command: copf-interface grpc list-rpcs Payment --json
+              command: clef-interface grpc list-rpcs Payment --json
     mcp:
       actions:
         generate:
@@ -605,7 +605,7 @@ concepts:
           description: "Validate generated proto definitions and field number consistency"
         listRpcs:
           type: resource-template
-          uriTemplate: "copf-interface://grpc/rpcs/{concept}"
+          uriTemplate: "clef-interface://grpc/rpcs/{concept}"
 
   CliTarget:
     cli:
@@ -616,21 +616,21 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate CLI command tree
-              command: copf-interface cli-target generate proj-001
+              command: clef-interface cli-target generate proj-001
         validate:
           command: validate
           args:
             command: { positional: true }
           examples:
             - description: Validate generated CLI command
-              command: copf-interface cli-target validate cmd-001
+              command: clef-interface cli-target validate cmd-001
         listCommands:
           command: list-commands
           args:
             concept: { positional: true }
           examples:
             - description: List CLI commands for a concept
-              command: copf-interface cli-target list-commands Task --json
+              command: clef-interface cli-target list-commands Task --json
     mcp:
       actions:
         generate:
@@ -641,7 +641,7 @@ concepts:
           description: "Validate CLI command tree for flag collisions and arg consistency"
         listCommands:
           type: resource-template
-          uriTemplate: "copf-interface://cli/commands/{concept}"
+          uriTemplate: "clef-interface://cli/commands/{concept}"
 
   McpTarget:
     cli:
@@ -652,21 +652,21 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate MCP server implementation
-              command: copf-interface mcp-target generate proj-001
+              command: clef-interface mcp-target generate proj-001
         validate:
           command: validate
           args:
             tool: { positional: true }
           examples:
             - description: Validate generated MCP tool
-              command: copf-interface mcp-target validate tool-001
+              command: clef-interface mcp-target validate tool-001
         listTools:
           command: list-tools
           args:
             concept: { positional: true }
           examples:
             - description: List MCP tools for a concept
-              command: copf-interface mcp-target list-tools Agent --json
+              command: clef-interface mcp-target list-tools Agent --json
     mcp:
       actions:
         generate:
@@ -677,7 +677,7 @@ concepts:
           description: "Validate MCP tool schemas, descriptions, and transport config"
         listTools:
           type: resource-template
-          uriTemplate: "copf-interface://mcp/tools/{concept}"
+          uriTemplate: "clef-interface://mcp/tools/{concept}"
 
   ClaudeSkillsTarget:
     cli:
@@ -688,21 +688,21 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate Claude Code skill files
-              command: copf-interface claude-skills generate proj-001
+              command: clef-interface claude-skills generate proj-001
         validate:
           command: validate
           args:
             skill: { positional: true }
           examples:
             - description: Validate generated skill
-              command: copf-interface claude-skills validate skill-001
+              command: clef-interface claude-skills validate skill-001
         listSkills:
           command: list-skills
           args:
-            kit: { positional: true }
+            suite: { positional: true }
           examples:
             - description: List generated skills
-              command: copf-interface claude-skills list-skills my-kit --json
+              command: clef-interface claude-skills list-skills my-kit --json
     mcp:
       actions:
         generate:
@@ -713,7 +713,7 @@ concepts:
           description: "Validate skill frontmatter, scaffold refs, and related skill names"
         listSkills:
           type: resource-template
-          uriTemplate: "copf-interface://claude-skills/skills/{kit}"
+          uriTemplate: "clef-interface://claude-skills/skills/{kit}"
 
   OpenApiTarget:
     cli:
@@ -724,7 +724,7 @@ concepts:
             config: { type: string, description: "OpenAPI generation config" }
           examples:
             - description: Generate OpenAPI 3.1 spec
-              command: copf-interface openapi generate --config '{"version":"3.1.0"}'
+              command: clef-interface openapi generate --config '{"version":"3.1.0"}'
     mcp:
       actions:
         generate:
@@ -740,7 +740,7 @@ concepts:
             config: { type: string, description: "AsyncAPI generation config" }
           examples:
             - description: Generate AsyncAPI 3.0 spec
-              command: copf-interface asyncapi generate --config '{"version":"3.0.0"}'
+              command: clef-interface asyncapi generate --config '{"version":"3.0.0"}'
     mcp:
       actions:
         generate:
@@ -758,7 +758,7 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate TypeScript SDK
-              command: copf-interface ts-sdk generate proj-001
+              command: clef-interface ts-sdk generate proj-001
     mcp:
       actions:
         generate:
@@ -774,7 +774,7 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate Python SDK
-              command: copf-interface py-sdk generate proj-001
+              command: clef-interface py-sdk generate proj-001
     mcp:
       actions:
         generate:
@@ -790,7 +790,7 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate Go SDK module
-              command: copf-interface go-sdk generate proj-001
+              command: clef-interface go-sdk generate proj-001
     mcp:
       actions:
         generate:
@@ -806,7 +806,7 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate Rust SDK crate
-              command: copf-interface rust-sdk generate proj-001
+              command: clef-interface rust-sdk generate proj-001
     mcp:
       actions:
         generate:
@@ -822,7 +822,7 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate Java SDK artifact
-              command: copf-interface java-sdk generate proj-001
+              command: clef-interface java-sdk generate proj-001
     mcp:
       actions:
         generate:
@@ -838,7 +838,7 @@ concepts:
             projection: { positional: true }
           examples:
             - description: Generate Swift SDK package
-              command: copf-interface swift-sdk generate proj-001
+              command: clef-interface swift-sdk generate proj-001
     mcp:
       actions:
         generate:
@@ -905,9 +905,9 @@ workflows:
         label: Content-Addressing Strategy
     validation-commands:
       - label: Run generator tests
-        command: copf test Generator
+        command: clef test Generator
       - label: Validate generated output
-        command: copf interface validate --dir ./generated/interface-kit
+        command: clef interface validate --dir ./generated/bind
     quick-reference:
       heading: Quick Reference
       body: |
@@ -982,9 +982,9 @@ workflows:
         label: Resource Inference Algorithm
     validation-commands:
       - label: Run projection tests
-        command: copf test Projection
+        command: clef test Projection
       - label: Validate projection completeness
-        command: copf check --pattern projection-complete Projection
+        command: clef check --pattern projection-complete Projection
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1050,7 +1050,7 @@ workflows:
         label: Emitter File Model
     validation-commands:
       - label: Run emitter tests
-        command: copf test Emitter
+        command: clef test Emitter
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1076,7 +1076,7 @@ workflows:
           surface for a single target. Create shared entrypoint
           (REST router, GraphQL merged schema, CLI command tree root,
           MCP combined tool set, SDK client with namespaced methods).
-          Deduplicate shared types. Apply kit-level middleware.
+          Deduplicate shared types. Apply suite-level middleware.
       - action: entrypoint
         title: Get Entrypoint
         prose: >
@@ -1100,7 +1100,7 @@ workflows:
         label: Surface Composition Patterns
     validation-commands:
       - label: Run surface tests
-        command: copf test Surface
+        command: clef test Surface
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1166,7 +1166,7 @@ workflows:
         label: Enrichment Data Model
     validation-commands:
       - label: Run renderer tests
-        command: copf test Renderer
+        command: clef test Renderer
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1231,7 +1231,7 @@ workflows:
         label: Per-Target Trait Implementations
     validation-commands:
       - label: Run middleware tests
-        command: copf test Middleware
+        command: clef test Middleware
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1279,7 +1279,7 @@ workflows:
         label: Target Routing Syncs
     validation-commands:
       - label: Run target tests
-        command: copf test Target
+        command: clef test Target
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1330,7 +1330,7 @@ workflows:
         label: SDK Generation Patterns
     validation-commands:
       - label: Run SDK tests
-        command: copf test Sdk
+        command: clef test Sdk
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1351,9 +1351,9 @@ workflows:
         title: Emit Spec Document
         prose: >
           Generate a specification document covering all concepts in
-          the kit. Routes to format providers (OpenApiTarget,
+          the suite. Routes to format providers (OpenApiTarget,
           AsyncApiTarget) via integration syncs. Produces a single
-          document per kit per format.
+          document per suite per format.
       - action: validate
         title: Validate Spec
         prose: >
@@ -1378,9 +1378,9 @@ workflows:
         label: Specification Format Reference
     validation-commands:
       - label: Run spec tests
-        command: copf test Spec
+        command: clef test Spec
       - label: Lint OpenAPI output
-        command: copf check --lint openapi
+        command: clef check --lint openapi
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1432,7 +1432,7 @@ workflows:
         label: Workflow Data Model
     validation-commands:
       - label: Run workflow tests
-        command: copf test Workflow
+        command: clef test Workflow
     quick-reference:
       heading: Quick Reference
       body: |
@@ -1476,13 +1476,13 @@ annotations:
         - label: Project a concept from an interface manifest
           language: bash
           code: |
-            copf-interface projection project app.interface.yaml --concept User
+            clef-interface projection project app.interface.yaml --concept User
     validate:
       examples:
         - label: Validate a projection
           language: bash
           code: |
-            copf-interface projection validate proj-001
+            clef-interface projection validate proj-001
 
   Generator:
     concept:
@@ -1506,13 +1506,13 @@ annotations:
         - label: Plan generation from a manifest
           language: bash
           code: |
-            copf-interface generator plan my-kit --manifest app.interface.yaml
+            clef-interface generator plan my-kit --manifest app.interface.yaml
     generate:
       examples:
         - label: Execute a generation plan
           language: bash
           code: |
-            copf-interface generator generate plan-001
+            clef-interface generator generate plan-001
 
   Emitter:
     concept:
@@ -1536,7 +1536,7 @@ annotations:
         - label: Write a generated file
           language: bash
           code: |
-            copf-interface emitter write ./generated/rest/user.ts \
+            clef-interface emitter write ./generated/rest/user.ts \
               --target rest --concept User
 
   Surface:
@@ -1561,7 +1561,7 @@ annotations:
         - label: Compose REST surface
           language: bash
           code: |
-            copf-interface api-surface compose my-kit --target rest
+            clef-interface api-surface compose my-kit --target rest
 
   Middleware:
     concept:
@@ -1584,7 +1584,7 @@ annotations:
         - label: Register auth middleware for REST
           language: bash
           code: |
-            copf-interface middleware register \
+            clef-interface middleware register \
               --trait auth --target rest \
               --implementation bearer-check --position auth
 
@@ -1608,7 +1608,7 @@ annotations:
         - label: Group concepts by CRUD role
           language: bash
           code: |
-            copf-interface grouping group --strategy by-crud
+            clef-interface grouping group --strategy by-crud
 
   Workflow:
     concept:
@@ -1630,7 +1630,7 @@ annotations:
         - label: Define a workflow
           language: bash
           code: |
-            copf-interface action-guide define SpecParser --steps parse
+            clef-interface action-guide define SpecParser --steps parse
 
   Annotation:
     concept:
@@ -1653,7 +1653,7 @@ annotations:
         - label: Annotate a concept with metadata
           language: bash
           code: |
-            copf-interface annotation annotate SpecParser \
+            clef-interface annotation annotate SpecParser \
               --scope concept \
               --content '{"tool-permissions":["Read","Bash"]}'
 
@@ -1679,7 +1679,7 @@ annotations:
         - label: Register a handler for design principles
           language: bash
           code: |
-            copf-interface enrichment-renderer register \
+            clef-interface enrichment-renderer register \
               --key design-principles --format skill-md \
               --order 50 --pattern list
 
@@ -1705,7 +1705,7 @@ annotations:
         - label: Generate REST target
           language: bash
           code: |
-            copf-interface target generate proj-001 --type rest
+            clef-interface target generate proj-001 --type rest
 
   Sdk:
     concept:
@@ -1727,7 +1727,7 @@ annotations:
         - label: Generate TypeScript SDK
           language: bash
           code: |
-            copf-interface sdk generate proj-001 --language typescript
+            clef-interface sdk generate proj-001 --language typescript
 
   Spec:
     concept:
@@ -1749,7 +1749,7 @@ annotations:
         - label: Emit OpenAPI spec
           language: bash
           code: |
-            copf-interface spec emit --format openapi
+            clef-interface spec emit --format openapi
 
   # ── Target Providers ───────────────────────────────
 
@@ -1773,7 +1773,7 @@ annotations:
         - label: Generate REST routes
           language: bash
           code: |
-            copf-interface rest generate proj-001
+            clef-interface rest generate proj-001
 
   GraphqlTarget:
     concept:
@@ -1795,7 +1795,7 @@ annotations:
         - label: Generate GraphQL schema
           language: bash
           code: |
-            copf-interface graphql generate proj-001
+            clef-interface graphql generate proj-001
 
   GrpcTarget:
     concept:
@@ -1817,7 +1817,7 @@ annotations:
         - label: Generate gRPC proto definitions
           language: bash
           code: |
-            copf-interface grpc generate proj-001
+            clef-interface grpc generate proj-001
 
   CliTarget:
     concept:
@@ -1839,7 +1839,7 @@ annotations:
         - label: Generate CLI command tree
           language: bash
           code: |
-            copf-interface cli-target generate proj-001
+            clef-interface cli-target generate proj-001
 
   McpTarget:
     concept:
@@ -1861,7 +1861,7 @@ annotations:
         - label: Generate MCP server
           language: bash
           code: |
-            copf-interface mcp-target generate proj-001
+            clef-interface mcp-target generate proj-001
 
   ClaudeSkillsTarget:
     concept:
@@ -1883,7 +1883,7 @@ annotations:
         - label: Generate Claude Code skills
           language: bash
           code: |
-            copf-interface claude-skills generate proj-001
+            clef-interface claude-skills generate proj-001
 
   OpenApiTarget:
     concept:
@@ -1903,7 +1903,7 @@ annotations:
         - label: Generate OpenAPI spec
           language: bash
           code: |
-            copf-interface openapi generate
+            clef-interface openapi generate
 
   AsyncApiTarget:
     concept:
@@ -1923,7 +1923,7 @@ annotations:
         - label: Generate AsyncAPI spec
           language: bash
           code: |
-            copf-interface asyncapi generate
+            clef-interface asyncapi generate
 
   # ── SDK Providers ──────────────────────────────────
 
@@ -1946,7 +1946,7 @@ annotations:
         - label: Generate TypeScript SDK
           language: bash
           code: |
-            copf-interface ts-sdk generate proj-001
+            clef-interface ts-sdk generate proj-001
 
   PySdkTarget:
     concept:
@@ -1967,7 +1967,7 @@ annotations:
         - label: Generate Python SDK
           language: bash
           code: |
-            copf-interface py-sdk generate proj-001
+            clef-interface py-sdk generate proj-001
 
   GoSdkTarget:
     concept:
@@ -1988,7 +1988,7 @@ annotations:
         - label: Generate Go SDK module
           language: bash
           code: |
-            copf-interface go-sdk generate proj-001
+            clef-interface go-sdk generate proj-001
 
   RustSdkTarget:
     concept:
@@ -2009,7 +2009,7 @@ annotations:
         - label: Generate Rust SDK crate
           language: bash
           code: |
-            copf-interface rust-sdk generate proj-001
+            clef-interface rust-sdk generate proj-001
 
   JavaSdkTarget:
     concept:
@@ -2030,7 +2030,7 @@ annotations:
         - label: Generate Java SDK artifact
           language: bash
           code: |
-            copf-interface java-sdk generate proj-001
+            clef-interface java-sdk generate proj-001
 
   SwiftSdkTarget:
     concept:
@@ -2051,4 +2051,4 @@ annotations:
         - label: Generate Swift SDK package
           language: bash
           code: |
-            copf-interface swift-sdk generate proj-001
+            clef-interface swift-sdk generate proj-001

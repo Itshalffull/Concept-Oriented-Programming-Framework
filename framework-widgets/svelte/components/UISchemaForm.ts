@@ -1,7 +1,7 @@
 // ============================================================
-// UISchemaForm — Svelte-compatible COIF component
+// UISchemaForm — Svelte-compatible Clef Surface component
 //
-// Auto-generates a complete form from a COIF UISchema definition.
+// Auto-generates a complete form from a Clef Surface UISchema definition.
 // Iterates over the schema's fields and renders each via
 // ElementRenderer. Manages form-level state, validation, and
 // submission. Supports multiple views (list, detail, create, edit).
@@ -15,7 +15,7 @@ import type {
   WritableSignal,
 } from '../../shared/types.js';
 
-import { createSignal } from '../../shared/coif-bridge.js';
+import { createSignal } from '../../shared/surface-bridge.js';
 
 import {
   createElementRenderer,
@@ -135,7 +135,7 @@ export function createUISchemaForm(
 
   // Create form element
   const form = document.createElement('form');
-  form.setAttribute('data-coif-ui-schema-form', '');
+  form.setAttribute('data-surface-ui-schema-form', '');
   form.setAttribute('data-concept', schema.concept);
   form.setAttribute('data-view-mode', viewMode);
   form.setAttribute('novalidate', ''); // We handle validation ourselves

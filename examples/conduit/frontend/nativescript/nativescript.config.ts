@@ -3,7 +3,7 @@
 import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
-  id: 'com.copf.conduit.nativescript',
+  id: 'com.clef.conduit.nativescript',
   appPath: '.',
   appResourcesPath: 'App_Resources',
   android: {

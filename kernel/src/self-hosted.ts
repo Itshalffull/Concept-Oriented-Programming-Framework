@@ -31,8 +31,8 @@ import { createInMemoryStorage } from './storage.js';
 import { createInProcessAdapter } from './transport.js';
 import { bootstrapScore, isScoreRegistered } from './score-bootstrap.js';
 
-const WEB_CONCEPT_URI = 'urn:copf/Web';
-const SYNC_ENGINE_URI = 'urn:copf/SyncEngine';
+const WEB_CONCEPT_URI = 'urn:clef/Web';
+const SYNC_ENGINE_URI = 'urn:clef/SyncEngine';
 
 interface WebRequest {
   method: string;

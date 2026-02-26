@@ -25,13 +25,13 @@ concept SyncCompiler [Y] {
   invariant {
     after compile(sync: "s1", ast: {
       name: "TestSync", annotations: [],
-      when: [{ concept: "urn:copf/A", action: "act", inputFields: [], outputFields: [] }],
+      when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }],
       where: [],
-      then: [{ concept: "urn:copf/B", action: "do", fields: [] }]
+      then: [{ concept: "urn:clef/B", action: "do", fields: [] }]
     }) -> ok(compiled: c)
     then compile(sync: "s2", ast: {
       name: "Bad", annotations: [],
-      when: [{ concept: "urn:copf/A", action: "act", inputFields: [], outputFields: [] }],
+      when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }],
       where: [], then: []
     }) -> error(message: e)
   }

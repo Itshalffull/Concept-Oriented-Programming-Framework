@@ -1,7 +1,7 @@
 // FormBuilderTests.swift — Tests for FormBuilder concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class FormBuilderTests: XCTestCase {
 

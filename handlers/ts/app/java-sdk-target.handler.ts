@@ -7,8 +7,8 @@ export const javaSdkTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const groupId = (parsedConfig.groupId as string) || 'com.copf.sdk';
-    const artifactId = (parsedConfig.artifactId as string) || 'copf-java-sdk';
+    const groupId = (parsedConfig.groupId as string) || 'com.clef.sdk';
+    const artifactId = (parsedConfig.artifactId as string) || 'clef-java-sdk';
     const javaVersion = (parsedConfig.javaVersion as string) || '17';
 
     const conceptName = projection.replace(/-projection$/, '').replace(/-/g, '');

@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Token",
+  "uri": "urn:clef/Token",
   "name": "Token",
   "typeParams": [
     {
@@ -243,11 +243,11 @@
   "jsonSchemas": {
     "invocations": {
       "replace": {
-        "$id": "urn:copf/Token/replace/invocation",
+        "$id": "urn:clef/Token/replace/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Token"
+            "const": "urn:clef/Token"
           },
           "action": {
             "const": "replace"
@@ -270,11 +270,11 @@
         }
       },
       "getAvailableTokens": {
-        "$id": "urn:copf/Token/getAvailableTokens/invocation",
+        "$id": "urn:clef/Token/getAvailableTokens/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Token"
+            "const": "urn:clef/Token"
           },
           "action": {
             "const": "getAvailableTokens"
@@ -293,11 +293,11 @@
         }
       },
       "scan": {
-        "$id": "urn:copf/Token/scan/invocation",
+        "$id": "urn:clef/Token/scan/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Token"
+            "const": "urn:clef/Token"
           },
           "action": {
             "const": "scan"
@@ -316,11 +316,11 @@
         }
       },
       "registerProvider": {
-        "$id": "urn:copf/Token/registerProvider/invocation",
+        "$id": "urn:clef/Token/registerProvider/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Token"
+            "const": "urn:clef/Token"
           },
           "action": {
             "const": "registerProvider"
@@ -346,11 +346,11 @@
     "completions": {
       "replace": {
         "ok": {
-          "$id": "urn:copf/Token/replace/completion/ok",
+          "$id": "urn:clef/Token/replace/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Token"
+              "const": "urn:clef/Token"
             },
             "action": {
               "const": "replace"
@@ -374,11 +374,11 @@
       },
       "getAvailableTokens": {
         "ok": {
-          "$id": "urn:copf/Token/getAvailableTokens/completion/ok",
+          "$id": "urn:clef/Token/getAvailableTokens/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Token"
+              "const": "urn:clef/Token"
             },
             "action": {
               "const": "getAvailableTokens"
@@ -402,11 +402,11 @@
       },
       "scan": {
         "ok": {
-          "$id": "urn:copf/Token/scan/completion/ok",
+          "$id": "urn:clef/Token/scan/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Token"
+              "const": "urn:clef/Token"
             },
             "action": {
               "const": "scan"
@@ -430,11 +430,11 @@
       },
       "registerProvider": {
         "ok": {
-          "$id": "urn:copf/Token/registerProvider/completion/ok",
+          "$id": "urn:clef/Token/registerProvider/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Token"
+              "const": "urn:clef/Token"
             },
             "action": {
               "const": "registerProvider"
@@ -450,11 +450,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/Token/registerProvider/completion/exists",
+          "$id": "urn:clef/Token/registerProvider/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Token"
+              "const": "urn:clef/Token"
             },
             "action": {
               "const": "registerProvider"

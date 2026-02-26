@@ -1,5 +1,5 @@
 # ============================================================
-# ClassifiedElementsResolved — coif-component recommended sync
+# ClassifiedElementsResolved — surface-component recommended sync
 #
 # Resolve classified elements to concrete widgets. Combines
 # interactor type with runtime context (viewport, platform)

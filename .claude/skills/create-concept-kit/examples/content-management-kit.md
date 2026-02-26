@@ -1,18 +1,18 @@
 # Worked Example: Content Management Kit
 
-A complete walkthrough of the content management kit (Entity, Field, Relation, Node) — the reference kit in the COPF architecture.
+A complete walkthrough of the content management suite (Entity, Field, Relation, Node) — the reference suite in the Clef architecture.
 
 ## Kit Purpose
 
 > Drupal-style entity/field/relation system for structured content. Provides typed entities with attachable fields and inter-entity relationships, with cascade lifecycle management.
 
-This kit enables any app to manage structured content without reinventing entity CRUD, field attachment, or relationship management. It's analogous to Drupal's entity system or WordPress's post/meta architecture, but expressed as independent concepts.
+This suite enables any app to manage structured content without reinventing entity CRUD, field attachment, or relationship management. It's analogous to Drupal's entity system or WordPress's post/meta architecture, but expressed as independent concepts.
 
 ## Step 1: Identify the Kit Boundary
 
 Four concepts belong together:
 
-| Concept | Purpose | Why it's in the kit |
+| Concept | Purpose | Why it's in the suite |
 |---------|---------|-------------------|
 | **Entity** | Manage typed entities with lifecycle | Foundation — everything else attaches to entities |
 | **Field** | Attach named/typed fields to entities | Meaningless without entities to attach to |
@@ -182,9 +182,9 @@ then {
 
 ### Optional Uses Syncs (1)
 
-**7. Entity Ownership** (activates with auth kit)
+**7. Entity Ownership** (activates with auth suite)
 
-When a user creates an entity, record ownership. This sync only loads if the auth kit is also present. Declared as an optional uses entry.
+When a user creates an entity, record ownership. This sync only loads if the auth suite is also present. Declared as an optional uses entry.
 
 ```
 sync EntityOwnership [eager]
@@ -197,7 +197,7 @@ then {
 }
 ```
 
-## Step 4: Full Kit Manifest
+## Step 4: Full Suite Manifest
 
 ```yaml
 kit:
@@ -272,7 +272,7 @@ uses:
       - path: ./syncs/entity-ownership.sync
         description: >
           When a user creates an entity, record ownership.
-          Only loads if the auth kit is present.
+          Only loads if the auth suite is present.
 
 dependencies: []
 ```
@@ -288,9 +288,9 @@ kits:
     path: ./kits/content-management
 ```
 
-All 3 required + 3 recommended syncs load. Optional uses syncs are skipped (no auth kit present).
+All 3 required + 3 recommended syncs load. Optional uses syncs are skipped (no auth suite present).
 
-### With auth kit
+### With auth suite
 
 ```yaml
 kits:
@@ -300,7 +300,7 @@ kits:
     path: ./kits/auth
 ```
 
-All 6 kit syncs + 1 optional uses sync (EntityOwnership) load.
+All 6 suite syncs + 1 optional uses sync (EntityOwnership) load.
 
 ### With overrides and disables
 
@@ -320,7 +320,7 @@ kits:
 
 ```
 kits/content-management/
-├── kit.yaml
+├── suite.yaml
 ├── entity.concept
 ├── field.concept
 ├── relation.concept
@@ -348,6 +348,6 @@ kits/content-management/
 
 **Why Entity and Node are separate concepts**: Entity handles the generic lifecycle (create, delete, timestamps). Node adds a bundle type and user-facing semantics. An app might use entities without nodes (for system-internal entities), or might add other specializations (Media, Block) that also use entity-ref.
 
-**Why 3 required syncs is the right number**: Each required sync prevents a specific data corruption pattern. cascade-delete-fields prevents orphaned field records. cascade-delete-relations prevents dangling references. entity-lifecycle prevents null timestamps. No other kit sync prevents corruption — the rest are behavioral preferences.
+**Why 3 required syncs is the right number**: Each required sync prevents a specific data corruption pattern. cascade-delete-fields prevents orphaned field records. cascade-delete-relations prevents dangling references. entity-lifecycle prevents null timestamps. No other suite sync prevents corruption — the rest are behavioral preferences.
 
 **Why UpdateTimestamp is recommended, not required**: Unlike entity-lifecycle (which sets timestamps on create — required because other code depends on timestamps being non-null), UpdateTimestamp sets timestamps on field changes. If disabled, timestamps just become stale — no corruption, just inaccuracy. Some apps prefer to manage timestamps differently.

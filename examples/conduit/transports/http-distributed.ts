@@ -37,16 +37,16 @@ interface ConceptService {
 }
 
 const CONCEPT_SERVICES: ConceptService[] = [
-  { uri: 'urn:copf/User', name: 'User', handler: userHandler, port: 4001 },
-  { uri: 'urn:copf/Password', name: 'Password', handler: passwordHandler, port: 4002 },
-  { uri: 'urn:copf/JWT', name: 'JWT', handler: jwtHandler, port: 4003 },
-  { uri: 'urn:copf/Profile', name: 'Profile', handler: profileHandler, port: 4004 },
-  { uri: 'urn:copf/Article', name: 'Article', handler: articleHandler, port: 4005 },
-  { uri: 'urn:copf/Comment', name: 'Comment', handler: commentHandler, port: 4006 },
-  { uri: 'urn:copf/Tag', name: 'Tag', handler: tagHandler, port: 4007 },
-  { uri: 'urn:copf/Favorite', name: 'Favorite', handler: favoriteHandler, port: 4008 },
-  { uri: 'urn:copf/Follow', name: 'Follow', handler: followHandler, port: 4009 },
-  { uri: 'urn:copf/Echo', name: 'Echo', handler: echoHandler, port: 4010 },
+  { uri: 'urn:clef/User', name: 'User', handler: userHandler, port: 4001 },
+  { uri: 'urn:clef/Password', name: 'Password', handler: passwordHandler, port: 4002 },
+  { uri: 'urn:clef/JWT', name: 'JWT', handler: jwtHandler, port: 4003 },
+  { uri: 'urn:clef/Profile', name: 'Profile', handler: profileHandler, port: 4004 },
+  { uri: 'urn:clef/Article', name: 'Article', handler: articleHandler, port: 4005 },
+  { uri: 'urn:clef/Comment', name: 'Comment', handler: commentHandler, port: 4006 },
+  { uri: 'urn:clef/Tag', name: 'Tag', handler: tagHandler, port: 4007 },
+  { uri: 'urn:clef/Favorite', name: 'Favorite', handler: favoriteHandler, port: 4008 },
+  { uri: 'urn:clef/Follow', name: 'Follow', handler: followHandler, port: 4009 },
+  { uri: 'urn:clef/Echo', name: 'Echo', handler: echoHandler, port: 4010 },
 ];
 
 function startConceptServer(service: ConceptService): Promise<ReturnType<typeof createServer>> {

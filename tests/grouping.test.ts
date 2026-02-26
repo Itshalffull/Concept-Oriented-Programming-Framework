@@ -3,7 +3,7 @@
 //
 // Validates action classification and concept grouping strategies
 // from the shared Grouping concept implementation.
-// See Architecture doc: Interface Kit
+// See Architecture doc: Clef Bind
 // ============================================================
 
 import { describe, it, expect } from 'vitest';

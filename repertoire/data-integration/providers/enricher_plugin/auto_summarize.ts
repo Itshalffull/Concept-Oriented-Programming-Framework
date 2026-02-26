@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Auto-summarization enricher provider
+// Clef Data Integration Kit - Auto-summarization enricher provider
 // Implements extractive summarization (TF-IDF sentence scoring) with optional LLM abstractive mode.
 
 import * as https from 'https';

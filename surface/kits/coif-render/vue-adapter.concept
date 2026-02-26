@@ -3,7 +3,7 @@ concept VueAdapter [A] {
 
   purpose {
     Normalize framework-neutral props into Vue 3-specific bindings.
-    Transforms COIF's generic event model into Vue conventions:
+    Transforms Clef Surface's generic event model into Vue conventions:
     v-on event handlers, v-bind prop bindings, Composition API
     reactive refs. Maps class and style as objects for Vue's
     smart merging.

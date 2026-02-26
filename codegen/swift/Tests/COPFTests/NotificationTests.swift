@@ -1,7 +1,7 @@
 // NotificationTests.swift — Tests for Notification concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class NotificationTests: XCTestCase {
 

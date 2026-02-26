@@ -7,7 +7,7 @@ export const mcpTargetHandler: ConceptHandler = {
     const config = input.config as string;
 
     const parsedConfig = JSON.parse(config || '{}');
-    const serverName = (parsedConfig.serverName as string) || 'copf-mcp-server';
+    const serverName = (parsedConfig.serverName as string) || 'clef-mcp-server';
     const transport = (parsedConfig.transport as string) || 'stdio';
     const version = (parsedConfig.version as string) || '1.0.0';
     const toolLimit = (parsedConfig.toolLimit as number) || 50;

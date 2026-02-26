@@ -1,8 +1,8 @@
 # ============================================================
-# LayoutComponentRendersViaWidget — coif-integration recommended sync
+# LayoutComponentRendersViaWidget — surface-integration recommended sync
 #
 # Render library layout components (Drupal Block-style content
-# units) through COIF widget state machines.
+# units) through Clef Surface widget state machines.
 # ============================================================
 
 sync LayoutComponentRendersViaWidget [eager]

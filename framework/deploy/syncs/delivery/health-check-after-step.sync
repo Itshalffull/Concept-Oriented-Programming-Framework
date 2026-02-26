@@ -1,5 +1,5 @@
 # Health check after rollout advance — Architecture doc Section 2.3
-# Each rollout step triggers a kit-level health check.
+# Each rollout step triggers a suite-level health check.
 
 sync HealthCheckAfterStep [eager]
 when {

@@ -1,7 +1,7 @@
 // ============================================================
 // SelectionPipelineDependenceProvider Handler
 //
-// Cross-system dependence analysis provider for the COIF
+// Cross-system dependence analysis provider for the Clef Surface
 // selection pipeline. Computes the full dependency chain:
 // concept state field -> interactor classification -> affordance
 // matching -> widget resolution.

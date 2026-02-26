@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/Telemetry",
+  "uri": "urn:clef/Telemetry",
   "name": "Telemetry",
   "typeParams": [
     {
@@ -421,11 +421,11 @@
   "jsonSchemas": {
     "invocations": {
       "configure": {
-        "$id": "urn:copf/Telemetry/configure/invocation",
+        "$id": "urn:clef/Telemetry/configure/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Telemetry"
+            "const": "urn:clef/Telemetry"
           },
           "action": {
             "const": "configure"
@@ -452,11 +452,11 @@
         }
       },
       "deployMarker": {
-        "$id": "urn:copf/Telemetry/deployMarker/invocation",
+        "$id": "urn:clef/Telemetry/deployMarker/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Telemetry"
+            "const": "urn:clef/Telemetry"
           },
           "action": {
             "const": "deployMarker"
@@ -487,11 +487,11 @@
         }
       },
       "analyze": {
-        "$id": "urn:copf/Telemetry/analyze/invocation",
+        "$id": "urn:clef/Telemetry/analyze/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/Telemetry"
+            "const": "urn:clef/Telemetry"
           },
           "action": {
             "const": "analyze"
@@ -521,11 +521,11 @@
     "completions": {
       "configure": {
         "ok": {
-          "$id": "urn:copf/Telemetry/configure/completion/ok",
+          "$id": "urn:clef/Telemetry/configure/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Telemetry"
+              "const": "urn:clef/Telemetry"
             },
             "action": {
               "const": "configure"
@@ -549,11 +549,11 @@
       },
       "deployMarker": {
         "ok": {
-          "$id": "urn:copf/Telemetry/deployMarker/completion/ok",
+          "$id": "urn:clef/Telemetry/deployMarker/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Telemetry"
+              "const": "urn:clef/Telemetry"
             },
             "action": {
               "const": "deployMarker"
@@ -575,11 +575,11 @@
           }
         },
         "backendUnavailable": {
-          "$id": "urn:copf/Telemetry/deployMarker/completion/backendUnavailable",
+          "$id": "urn:clef/Telemetry/deployMarker/completion/backendUnavailable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Telemetry"
+              "const": "urn:clef/Telemetry"
             },
             "action": {
               "const": "deployMarker"
@@ -603,11 +603,11 @@
       },
       "analyze": {
         "ok": {
-          "$id": "urn:copf/Telemetry/analyze/completion/ok",
+          "$id": "urn:clef/Telemetry/analyze/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Telemetry"
+              "const": "urn:clef/Telemetry"
             },
             "action": {
               "const": "analyze"
@@ -641,11 +641,11 @@
           }
         },
         "insufficientData": {
-          "$id": "urn:copf/Telemetry/analyze/completion/insufficientData",
+          "$id": "urn:clef/Telemetry/analyze/completion/insufficientData",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Telemetry"
+              "const": "urn:clef/Telemetry"
             },
             "action": {
               "const": "analyze"
@@ -675,11 +675,11 @@
           }
         },
         "backendUnavailable": {
-          "$id": "urn:copf/Telemetry/analyze/completion/backendUnavailable",
+          "$id": "urn:clef/Telemetry/analyze/completion/backendUnavailable",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/Telemetry"
+              "const": "urn:clef/Telemetry"
             },
             "action": {
               "const": "analyze"

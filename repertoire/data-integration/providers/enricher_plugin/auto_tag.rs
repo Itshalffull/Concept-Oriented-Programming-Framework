@@ -1,4 +1,4 @@
-// COPF Data Integration Kit - Auto-tagging enricher provider
+// Clef Data Integration Kit - Auto-tagging enricher provider
 // Classifies content into existing taxonomy using TF-IDF similarity.
 
 use std::collections::HashMap;

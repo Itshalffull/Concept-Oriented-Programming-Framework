@@ -5,7 +5,7 @@
 // definitions from concept projections. Each concept produces
 // a single .tools.ts file containing typed tool, resource, and
 // resource-template entries.
-// Architecture doc: Interface Kit
+// Architecture doc: Clef Bind
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../kernel/src/types.js';

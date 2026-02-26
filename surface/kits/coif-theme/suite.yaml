@@ -1,6 +1,6 @@
-# kits/coif-theme/kit.yaml
+# kits/surface-theme/suite.yaml
 suite:
-  name: coif-theme
+  name: surface-theme
   version: 0.4.0
   description: >
     Visual design system: themes, palettes, typography, motion,
@@ -73,4 +73,4 @@ themes:
     path: ./themes/high-contrast.json
 
 dependencies:
-  - coif-core: ">=0.1.0"
+  - surface-core: ">=0.1.0"

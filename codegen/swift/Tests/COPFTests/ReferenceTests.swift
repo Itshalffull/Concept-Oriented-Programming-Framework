@@ -1,7 +1,7 @@
 // ReferenceTests.swift — Tests for Reference concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ReferenceTests: XCTestCase {
 

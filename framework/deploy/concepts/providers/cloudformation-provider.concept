@@ -2,7 +2,7 @@
 concept CloudFormationProvider [C] {
 
   purpose {
-    Generate and apply AWS CloudFormation templates from COPF
+    Generate and apply AWS CloudFormation templates from Clef
     deploy plans. Owns stack IDs, change set management,
     rollback configurations, and stack event tracking.
   }

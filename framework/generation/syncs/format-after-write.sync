@@ -1,4 +1,4 @@
-# FormatAfterWrite — generation kit required sync
+# FormatAfterWrite — generation suite required sync
 sync FormatAfterWrite [eager]
   purpose { Apply language-specific formatting after each file write. }
 when {

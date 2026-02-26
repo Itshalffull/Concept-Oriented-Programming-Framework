@@ -1,7 +1,7 @@
 // ThreadedCommentTests.swift — Tests for ThreadedComment concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ThreadedCommentTests: XCTestCase {
 

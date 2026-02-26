@@ -27,7 +27,7 @@ export const conceptEntityHandler: ConceptHandler = {
     }
 
     const id = nextId();
-    const symbol = `copf/concept/${name}`;
+    const symbol = `clef/concept/${name}`;
 
     // Extract metadata from AST if possible
     let purposeText = '';

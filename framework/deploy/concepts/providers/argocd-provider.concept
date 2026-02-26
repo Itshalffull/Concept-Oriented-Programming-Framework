@@ -2,7 +2,7 @@
 concept ArgoCDProvider [A] {
 
   purpose {
-    Generate ArgoCD Application CRDs from COPF deploy plans.
+    Generate ArgoCD Application CRDs from Clef deploy plans.
     Owns Application resources, sync wave ordering, health
     assessments, and auto-sync configuration.
   }

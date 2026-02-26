@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {WidgetTypes} from "./WidgetSpec.sol";
 
 /// @title ProfileWidget
-/// @notice Self-describing COIF widget for viewing and editing user profiles on Conduit.
+/// @notice Self-describing Clef Surface widget for viewing and editing user profiles on Conduit.
 /// @dev Stores the complete widget specification as on-chain data. Off-chain
 ///      renderers call getSpec(), getElements(), etc. to discover the abstract
 ///      UI schema and generate framework-specific components.
@@ -114,7 +114,7 @@ contract ProfileWidget {
         profileActions[0] = "get";
         profileActions[1] = "update";
         bindings[0] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Profile",
+            concept: "urn:clef/Profile",
             actions: profileActions
         });
 
@@ -122,7 +122,7 @@ contract ProfileWidget {
         followActions[0] = "follow";
         followActions[1] = "unfollow";
         bindings[1] = WidgetTypes.ConceptBinding({
-            concept: "urn:copf/Follow",
+            concept: "urn:clef/Follow",
             actions: followActions
         });
 

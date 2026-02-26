@@ -1,5 +1,5 @@
 # ============================================================
-# WidgetSpecParsed — coif-spec required sync
+# WidgetSpecParsed — surface-spec required sync
 #
 # When a .widget file is loaded as a Resource, parse it into
 # a typed WidgetAST via WidgetParser.

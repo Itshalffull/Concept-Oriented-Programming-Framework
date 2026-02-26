@@ -78,7 +78,7 @@ describe('Self-Hosted Kernel: Echo Flow', () => {
     const kernel = setupSelfHostedKernel();
 
     // Register Echo concept
-    kernel.registerConcept('urn:copf/Echo', echoHandler);
+    kernel.registerConcept('urn:clef/Echo', echoHandler);
 
     // Load echo syncs
     const syncSource = readFileSync(
@@ -105,7 +105,7 @@ describe('Self-Hosted Kernel: Echo Flow', () => {
   it('matches basic kernel echo response exactly', async () => {
     // Run through basic kernel
     const basicKernel = createKernel();
-    basicKernel.registerConcept('urn:copf/Echo', echoHandler);
+    basicKernel.registerConcept('urn:clef/Echo', echoHandler);
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'app', 'echo.sync'),
       'utf-8',
@@ -123,7 +123,7 @@ describe('Self-Hosted Kernel: Echo Flow', () => {
     const registry = createConceptRegistry();
     const { handler, log } = createSyncEngineHandler(registry);
     const selfHosted = createSelfHostedKernel(handler, log, registry);
-    selfHosted.registerConcept('urn:copf/Echo', echoHandler);
+    selfHosted.registerConcept('urn:clef/Echo', echoHandler);
     for (const sync of syncs) {
       selfHosted.registerSync(sync);
     }
@@ -203,9 +203,9 @@ describe('Self-Hosted Kernel: Registration Flow', () => {
     const { handler, log } = createSyncEngineHandler(registry);
     const kernel = createSelfHostedKernel(handler, log, registry);
 
-    kernel.registerConcept('urn:copf/User', userHandler);
-    kernel.registerConcept('urn:copf/Password', passwordHandler);
-    kernel.registerConcept('urn:copf/JWT', jwtHandler);
+    kernel.registerConcept('urn:clef/User', userHandler);
+    kernel.registerConcept('urn:clef/Password', passwordHandler);
+    kernel.registerConcept('urn:clef/JWT', jwtHandler);
 
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'app', 'registration.sync'),
@@ -280,9 +280,9 @@ describe('Self-Hosted Kernel: Registration Flow', () => {
   it('matches basic kernel valid registration response', async () => {
     // Basic kernel
     const basicKernel = createKernel();
-    basicKernel.registerConcept('urn:copf/User', userHandler);
-    basicKernel.registerConcept('urn:copf/Password', passwordHandler);
-    basicKernel.registerConcept('urn:copf/JWT', jwtHandler);
+    basicKernel.registerConcept('urn:clef/User', userHandler);
+    basicKernel.registerConcept('urn:clef/Password', passwordHandler);
+    basicKernel.registerConcept('urn:clef/JWT', jwtHandler);
     const syncSource = readFileSync(
       resolve(SYNCS_DIR, 'app', 'registration.sync'),
       'utf-8',
@@ -329,11 +329,11 @@ describe('Self-Hosted Kernel: Compiler Pipeline', () => {
     const kernel = createSelfHostedKernel(handler, log, registry);
 
     // Register framework concepts
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     // Load compiler pipeline syncs
     const syncSource = readFileSync(
@@ -348,7 +348,7 @@ describe('Self-Hosted Kernel: Compiler Pipeline', () => {
     // Parse a spec through the pipeline
     const passwordSpec = readSpec('app', 'password');
     const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: passwordSpec },
     );
@@ -376,10 +376,10 @@ describe('Self-Hosted Kernel: Direct Invocation', () => {
       },
     };
 
-    kernel.registerConcept('urn:copf/Echo', echoHandler);
+    kernel.registerConcept('urn:clef/Echo', echoHandler);
 
     const result = await kernel.invokeConcept(
-      'urn:copf/Echo',
+      'urn:clef/Echo',
       'send',
       { id: '1', text: 'hello' },
     );
@@ -393,18 +393,18 @@ describe('Self-Hosted Kernel: Direct Invocation', () => {
     const { handler, log } = createSyncEngineHandler(registry);
     const kernel = createSelfHostedKernel(handler, log, registry);
 
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     // Register a concept through the Registry
     await kernel.invokeConcept(
-      'urn:copf/Registry',
+      'urn:clef/Registry',
       'register',
       { uri: 'urn:app/Test', transport: { type: 'in-process' } },
     );
 
     // Query the registry
     const results = await kernel.queryConcept(
-      'urn:copf/Registry',
+      'urn:clef/Registry',
       'concepts',
     );
 
@@ -423,11 +423,11 @@ describe('Self-Hosted Kernel: Refactored Pipeline', () => {
     const kernel = createSelfHostedKernel(handler, log, registry);
 
     // Register framework concepts (with TypeScriptGen replacing CodeGen)
-    kernel.registerConcept('urn:copf/SpecParser', specParserHandler);
-    kernel.registerConcept('urn:copf/SchemaGen', schemaGenHandler);
-    kernel.registerConcept('urn:copf/TypeScriptGen', typescriptGenHandler);
-    kernel.registerConcept('urn:copf/ActionLog', actionLogHandler);
-    kernel.registerConcept('urn:copf/Registry', registryHandler);
+    kernel.registerConcept('urn:clef/SpecParser', specParserHandler);
+    kernel.registerConcept('urn:clef/SchemaGen', schemaGenHandler);
+    kernel.registerConcept('urn:clef/TypeScriptGen', typescriptGenHandler);
+    kernel.registerConcept('urn:clef/ActionLog', actionLogHandler);
+    kernel.registerConcept('urn:clef/Registry', registryHandler);
 
     // Load the refactored compiler pipeline syncs
     const syncSource = readFileSync(
@@ -442,7 +442,7 @@ describe('Self-Hosted Kernel: Refactored Pipeline', () => {
     // Parse a spec through the new pipeline
     const passwordSpec = readSpec('app', 'password');
     const result = await kernel.invokeConcept(
-      'urn:copf/SpecParser',
+      'urn:clef/SpecParser',
       'parse',
       { source: passwordSpec },
     );

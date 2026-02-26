@@ -2,7 +2,7 @@
 // LayoutContainer — Vanilla DOM Component
 //
 // Creates a <div> with flex/grid styles computed from a
-// LayoutConfig via the COIF bridge layout engine. Uses
+// LayoutConfig via the Clef Surface bridge layout engine. Uses
 // ResizeObserver to apply responsive overrides when the
 // container crosses breakpoint thresholds.
 // ============================================================
@@ -11,12 +11,12 @@ import type {
   LayoutConfig,
 } from '../../shared/types.js';
 
-import { layoutToCSS } from '../../shared/coif-bridge.js';
+import { layoutToCSS } from '../../shared/surface-bridge.js';
 
 // --- Public Interface ---
 
 export interface LayoutContainerProps {
-  /** Layout configuration from the COIF Layout concept */
+  /** Layout configuration from the Clef Surface Layout concept */
   layout: LayoutConfig;
   /** Optional CSS class name */
   className?: string;
@@ -52,7 +52,7 @@ export class LayoutContainer {
     this.props = props;
 
     this.el = document.createElement('div');
-    this.el.setAttribute('data-coif-layout', props.layout.kind);
+    this.el.setAttribute('data-surface-layout', props.layout.kind);
     this.el.setAttribute('data-layout-name', props.layout.name);
 
     if (props.className) {
@@ -94,7 +94,7 @@ export class LayoutContainer {
   update(props: Partial<LayoutContainerProps>): void {
     if (props.layout !== undefined) {
       this.props.layout = props.layout;
-      this.el.setAttribute('data-coif-layout', props.layout.kind);
+      this.el.setAttribute('data-surface-layout', props.layout.kind);
       this.el.setAttribute('data-layout-name', props.layout.name);
       this.applyLayout(props.layout);
 

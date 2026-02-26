@@ -2,7 +2,7 @@
 // PessimisticLock Concept Handler Tests
 //
 // Validates checkOut, checkIn, breakLock, renew, queryLocks,
-// and queryQueue actions for the collaboration kit's pessimistic
+// and queryQueue actions for the collaboration suite's pessimistic
 // locking concept. Covers re-acquire by same holder, conflict
 // with different holder, TTL expiry, break lock, and queue
 // management.

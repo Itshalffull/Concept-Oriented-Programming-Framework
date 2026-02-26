@@ -2,7 +2,7 @@
 
 ## Action Anatomy
 
-Every action in a COPF concept follows this structure:
+Every action in a Clef concept follows this structure:
 
 ```
 action <name>(<param>: <Type>, ...) {

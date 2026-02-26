@@ -1,7 +1,7 @@
 // ============================================================
-// copf init <name>
+// clef init <name>
 //
-// Scaffolds a new COPF project directory with the standard
+// Scaffolds a new Clef project directory with the standard
 // layout described in Section 11 of the architecture doc.
 // ============================================================
 
@@ -128,7 +128,7 @@ export async function initCommand(
     process.exit(1);
   }
 
-  console.log(`Initializing COPF project: ${name}`);
+  console.log(`Initializing Clef project: ${name}`);
 
   // Create directory structure (Section 11)
   const dirs = [
@@ -161,7 +161,7 @@ export async function initCommand(
       {
         name,
         version: '0.1.0',
-        description: `${name} — built with COPF`,
+        description: `${name} — built with Clef`,
         private: true,
         type: 'module',
         scripts: {
@@ -210,7 +210,7 @@ export default defineConfig({
   // Empty deployment manifest
   writeFileSync(
     join(projectDir, 'deploy/app.deploy.yaml'),
-    `# COPF Deployment Manifest
+    `# Clef Deployment Manifest
 # See Section 6 of the architecture doc.
 
 runtimes: []

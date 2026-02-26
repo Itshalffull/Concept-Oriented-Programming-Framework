@@ -1,29 +1,29 @@
 // ============================================================
-// KitManager Handler Tests
+// SuiteManager Handler Tests
 //
-// Manage concept kits: scaffold new kits, validate kit
-// manifests, run kit tests, list active kits, and check
+// Manage suites: scaffold new suites, validate kit
+// manifests, run suite tests, list active suites, and check
 // app overrides.
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
-  kitManagerHandler,
-  resetKitManagerCounter,
+  suiteManagerHandler,
+  resetSuiteManagerCounter,
 } from '../handlers/ts/kit-manager.handler.js';
 
-describe('KitManager', () => {
+describe('SuiteManager', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
   beforeEach(() => {
     storage = createInMemoryStorage();
-    resetKitManagerCounter();
+    resetSuiteManagerCounter();
   });
 
   describe('init', () => {
-    it('initializes a new kit and returns ok', async () => {
-      const result = await kitManagerHandler.init!(
+    it('initializes a new suite and returns ok', async () => {
+      const result = await suiteManagerHandler.init!(
         { name: 'my-kit' },
         storage,
       );
@@ -33,7 +33,7 @@ describe('KitManager', () => {
     });
 
     it('stores kit metadata in storage', async () => {
-      await kitManagerHandler.init!(
+      await suiteManagerHandler.init!(
         { name: 'auth-kit' },
         storage,
       );
@@ -45,11 +45,11 @@ describe('KitManager', () => {
     });
 
     it('returns alreadyExists when kit name is taken', async () => {
-      await kitManagerHandler.init!(
+      await suiteManagerHandler.init!(
         { name: 'duplicate-kit' },
         storage,
       );
-      const result = await kitManagerHandler.init!(
+      const result = await suiteManagerHandler.init!(
         { name: 'duplicate-kit' },
         storage,
       );
@@ -58,11 +58,11 @@ describe('KitManager', () => {
     });
 
     it('assigns unique IDs to different kits', async () => {
-      const first = await kitManagerHandler.init!(
+      const first = await suiteManagerHandler.init!(
         { name: 'kit-a' },
         storage,
       );
-      const second = await kitManagerHandler.init!(
+      const second = await suiteManagerHandler.init!(
         { name: 'kit-b' },
         storage,
       );
@@ -73,11 +73,11 @@ describe('KitManager', () => {
 
   describe('validate', () => {
     it('validates an existing kit and returns ok', async () => {
-      await kitManagerHandler.init!(
+      await suiteManagerHandler.init!(
         { name: 'my-kit' },
         storage,
       );
-      const result = await kitManagerHandler.validate!(
+      const result = await suiteManagerHandler.validate!(
         { path: './repertoire/my-kit/' },
         storage,
       );
@@ -88,7 +88,7 @@ describe('KitManager', () => {
     });
 
     it('creates a temporary entry when kit path is not found', async () => {
-      const result = await kitManagerHandler.validate!(
+      const result = await suiteManagerHandler.validate!(
         { path: './repertoire/unknown-kit/' },
         storage,
       );
@@ -100,12 +100,12 @@ describe('KitManager', () => {
       expect(stored!.status).toBe('validated');
     });
 
-    it('updates the kit status to validated', async () => {
-      await kitManagerHandler.init!(
+    it('updates the suite status to validated', async () => {
+      await suiteManagerHandler.init!(
         { name: 'my-kit' },
         storage,
       );
-      await kitManagerHandler.validate!(
+      await suiteManagerHandler.validate!(
         { path: './repertoire/my-kit/' },
         storage,
       );
@@ -116,11 +116,11 @@ describe('KitManager', () => {
 
   describe('test', () => {
     it('tests an existing kit and returns ok', async () => {
-      await kitManagerHandler.init!(
+      await suiteManagerHandler.init!(
         { name: 'my-kit' },
         storage,
       );
-      const result = await kitManagerHandler.test!(
+      const result = await suiteManagerHandler.test!(
         { path: './repertoire/my-kit/' },
         storage,
       );
@@ -131,7 +131,7 @@ describe('KitManager', () => {
     });
 
     it('creates a temporary entry when kit path is not found', async () => {
-      const result = await kitManagerHandler.test!(
+      const result = await suiteManagerHandler.test!(
         { path: './repertoire/new-kit/' },
         storage,
       );
@@ -145,8 +145,8 @@ describe('KitManager', () => {
   });
 
   describe('list', () => {
-    it('returns empty list when no kits exist', async () => {
-      const result = await kitManagerHandler.list!(
+    it('returns empty list when no suites exist', async () => {
+      const result = await suiteManagerHandler.list!(
         {},
         storage,
       );
@@ -155,11 +155,11 @@ describe('KitManager', () => {
     });
 
     it('lists all initialized kits', async () => {
-      await kitManagerHandler.init!({ name: 'kit-a' }, storage);
-      await kitManagerHandler.init!({ name: 'kit-b' }, storage);
-      await kitManagerHandler.init!({ name: 'kit-c' }, storage);
+      await suiteManagerHandler.init!({ name: 'kit-a' }, storage);
+      await suiteManagerHandler.init!({ name: 'kit-b' }, storage);
+      await suiteManagerHandler.init!({ name: 'kit-c' }, storage);
 
-      const result = await kitManagerHandler.list!({}, storage);
+      const result = await suiteManagerHandler.list!({}, storage);
       expect(result.variant).toBe('ok');
       expect((result.kits as string[]).length).toBe(3);
       expect(result.kits).toContain('kit-a');
@@ -170,11 +170,11 @@ describe('KitManager', () => {
 
   describe('checkOverrides', () => {
     it('returns ok for an existing kit path', async () => {
-      await kitManagerHandler.init!(
+      await suiteManagerHandler.init!(
         { name: 'my-kit' },
         storage,
       );
-      const result = await kitManagerHandler.checkOverrides!(
+      const result = await suiteManagerHandler.checkOverrides!(
         { path: './repertoire/my-kit/' },
         storage,
       );
@@ -184,13 +184,13 @@ describe('KitManager', () => {
     });
 
     it('returns invalidOverride for non-existent kit path', async () => {
-      const result = await kitManagerHandler.checkOverrides!(
+      const result = await suiteManagerHandler.checkOverrides!(
         { path: './repertoire/nonexistent/' },
         storage,
       );
       expect(result.variant).toBe('invalidOverride');
       expect(result.override).toBe('./repertoire/nonexistent/');
-      expect(result.reason).toContain('Kit not found');
+      expect(result.reason).toContain('Suite not found');
     });
   });
 });

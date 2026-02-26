@@ -1,7 +1,7 @@
 # Generator triggers action guide definition before rendering target output.
 # ActionGuide organizes actions into ordered, annotated sequences that
 # each target renders in its natural format.
-# Architecture doc: Interface Kit
+# Architecture doc: Clef Bind
 
 sync ActionGuideBeforeRender [eager]
 when {

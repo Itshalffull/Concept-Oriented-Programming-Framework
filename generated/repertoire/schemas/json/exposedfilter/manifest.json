@@ -1,5 +1,5 @@
 {
-  "uri": "urn:copf/ExposedFilter",
+  "uri": "urn:clef/ExposedFilter",
   "name": "ExposedFilter",
   "typeParams": [
     {
@@ -368,11 +368,11 @@
   "jsonSchemas": {
     "invocations": {
       "expose": {
-        "$id": "urn:copf/ExposedFilter/expose/invocation",
+        "$id": "urn:clef/ExposedFilter/expose/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExposedFilter"
+            "const": "urn:clef/ExposedFilter"
           },
           "action": {
             "const": "expose"
@@ -403,11 +403,11 @@
         }
       },
       "collectInput": {
-        "$id": "urn:copf/ExposedFilter/collectInput/invocation",
+        "$id": "urn:clef/ExposedFilter/collectInput/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExposedFilter"
+            "const": "urn:clef/ExposedFilter"
           },
           "action": {
             "const": "collectInput"
@@ -430,11 +430,11 @@
         }
       },
       "applyToQuery": {
-        "$id": "urn:copf/ExposedFilter/applyToQuery/invocation",
+        "$id": "urn:clef/ExposedFilter/applyToQuery/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExposedFilter"
+            "const": "urn:clef/ExposedFilter"
           },
           "action": {
             "const": "applyToQuery"
@@ -453,11 +453,11 @@
         }
       },
       "resetToDefaults": {
-        "$id": "urn:copf/ExposedFilter/resetToDefaults/invocation",
+        "$id": "urn:clef/ExposedFilter/resetToDefaults/invocation",
         "type": "object",
         "properties": {
           "concept": {
-            "const": "urn:copf/ExposedFilter"
+            "const": "urn:clef/ExposedFilter"
           },
           "action": {
             "const": "resetToDefaults"
@@ -479,11 +479,11 @@
     "completions": {
       "expose": {
         "ok": {
-          "$id": "urn:copf/ExposedFilter/expose/completion/ok",
+          "$id": "urn:clef/ExposedFilter/expose/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "expose"
@@ -505,11 +505,11 @@
           }
         },
         "exists": {
-          "$id": "urn:copf/ExposedFilter/expose/completion/exists",
+          "$id": "urn:clef/ExposedFilter/expose/completion/exists",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "expose"
@@ -533,11 +533,11 @@
       },
       "collectInput": {
         "ok": {
-          "$id": "urn:copf/ExposedFilter/collectInput/completion/ok",
+          "$id": "urn:clef/ExposedFilter/collectInput/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "collectInput"
@@ -559,11 +559,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ExposedFilter/collectInput/completion/notfound",
+          "$id": "urn:clef/ExposedFilter/collectInput/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "collectInput"
@@ -587,11 +587,11 @@
       },
       "applyToQuery": {
         "ok": {
-          "$id": "urn:copf/ExposedFilter/applyToQuery/completion/ok",
+          "$id": "urn:clef/ExposedFilter/applyToQuery/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "applyToQuery"
@@ -613,11 +613,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ExposedFilter/applyToQuery/completion/notfound",
+          "$id": "urn:clef/ExposedFilter/applyToQuery/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "applyToQuery"
@@ -641,11 +641,11 @@
       },
       "resetToDefaults": {
         "ok": {
-          "$id": "urn:copf/ExposedFilter/resetToDefaults/completion/ok",
+          "$id": "urn:clef/ExposedFilter/resetToDefaults/completion/ok",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "resetToDefaults"
@@ -667,11 +667,11 @@
           }
         },
         "notfound": {
-          "$id": "urn:copf/ExposedFilter/resetToDefaults/completion/notfound",
+          "$id": "urn:clef/ExposedFilter/resetToDefaults/completion/notfound",
           "type": "object",
           "properties": {
             "concept": {
-              "const": "urn:copf/ExposedFilter"
+              "const": "urn:clef/ExposedFilter"
             },
             "action": {
               "const": "resetToDefaults"

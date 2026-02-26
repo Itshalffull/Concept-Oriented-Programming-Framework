@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title ComputationToken
 /// @notice Concept-oriented computation token provider registry
-/// @dev Implements the ComputationToken concept from COPF specification.
+/// @dev Implements the ComputationToken concept from Clef specification.
 ///      Token replacement is off-chain; on-chain stores the provider registry.
 
 contract ComputationToken {

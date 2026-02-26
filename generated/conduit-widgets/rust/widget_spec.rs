@@ -1,6 +1,6 @@
 // generated: conduit-widgets/rust/widget_spec.rs
 //
-// Shared COIF widget abstraction types for the Conduit application.
+// Shared Clef Surface widget abstraction types for the Conduit application.
 // Each widget is described by a WidgetSpec containing concept bindings,
 // anatomy, abstract element trees, finite state machines, and accessibility metadata.
 
@@ -119,7 +119,7 @@ pub enum WidgetCategory {
     Navigation,
 }
 
-/// The complete specification for a single COIF widget.
+/// The complete specification for a single Clef Surface widget.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WidgetSpec {
     pub name: String,

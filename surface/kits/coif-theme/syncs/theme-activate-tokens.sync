@@ -1,5 +1,5 @@
 # ============================================================
-# ThemeActivateTokens — coif-theme required sync
+# ThemeActivateTokens — surface-theme required sync
 #
 # When a theme is activated, resolve all its tokens to produce
 # the complete token map (base + overrides, aliases resolved).

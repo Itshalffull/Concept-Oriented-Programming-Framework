@@ -4,12 +4,12 @@
 // Validates that all generators and providers implement the
 // provider/PluginRegistry pattern by exposing a register action
 // that returns static metadata compatible with the generation
-// kit's RegisterGeneratorKinds and EnsureKindsDefined syncs.
+// suite's RegisterGeneratorKinds and EnsureKindsDefined syncs.
 //
-// See generation kit syncs: register-generator-kinds.sync,
+// See generation suite syncs: register-generator-kinds.sync,
 // ensure-kinds-defined.sync
-// See interface kit syncs: register-interface-provider-kinds.sync
-// See deploy kit syncs: register-deploy-provider-kinds.sync
+// See Clef Bind syncs: register-interface-provider-kinds.sync
+// See deploy suite syncs: register-deploy-provider-kinds.sync
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
@@ -50,7 +50,7 @@ import { argocdProviderHandler } from '../handlers/ts/app/argocd-provider.handle
 import { fluxProviderHandler } from '../handlers/ts/app/flux-provider.handler.js';
 
 // All generators/providers must return these fields from register() so
-// the kit syncs can bind ?meta.name, ?meta.inputKind, and ?meta.outputKind.
+// the suite syncs can bind ?meta.name, ?meta.inputKind, and ?meta.outputKind.
 interface GeneratorRegistration {
   variant: string;
   name: string;

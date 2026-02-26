@@ -1,7 +1,7 @@
 // CollectionTests.swift — Tests for Collection concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class CollectionTests: XCTestCase {
 

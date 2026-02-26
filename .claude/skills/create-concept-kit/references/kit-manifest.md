@@ -1,16 +1,16 @@
-# Kit Manifest Reference
+# Suite Manifest Reference
 
-Complete specification for `kit.yaml` — the manifest file that declares a concept kit's contents, type alignments, sync tiers, integrations, infrastructure, and external concept references.
+Complete specification for `suite.yaml` — the manifest file that declares a suite's contents, type alignments, sync tiers, integrations, infrastructure, and external concept references.
 
 ## File Location
 
 ```
-kits/<kit-name>/kit.yaml
+kits/<kit-name>/suite.yaml
 ```
 
 ## Full Manifest Structure
 
-### Framework Kit Manifest
+### Framework Suite Manifest
 
 ```yaml
 # Kit metadata
@@ -22,14 +22,14 @@ kit:
     Provides typed entities with attachable fields and inter-entity
     relationships, with cascade lifecycle management.
 
-# Concepts included in this kit
+# Concepts included in this suite
 concepts:
   ConceptName:
     spec: ./concept-name.concept
     params:
       T: { as: shared-type-tag, description: "Human-readable description" }
 
-# Syncs bundled with the kit
+# Syncs bundled with the suite
 syncs:
   required:
     - path: ./syncs/sync-name.sync
@@ -42,7 +42,7 @@ syncs:
       description: >
         What this sync does. How apps can override it.
 
-# External concepts from other kits that this kit's syncs reference.
+# External concepts from other suites that this suite's syncs reference.
 # Required by default; set optional: true for conditional syncs
 # that only load when the named kit is present.
 uses:
@@ -60,20 +60,20 @@ uses:
         description: >
           Only loads if another-kit is present.
 
-# Optional: other kits this kit requires
+# Optional: other suites this suite requires
 dependencies: []
 ```
 
-### Domain Kit Manifest
+### Domain Suite Manifest
 
-Domain kits add an `infrastructure` section and may include domain-specific top-level fields:
+Domain suites add an `infrastructure` section and may include domain-specific top-level fields:
 
 ```yaml
 kit:
   name: web3
   version: 0.1.0
   description: >
-    Blockchain integration for COPF. Chain monitoring with
+    Blockchain integration for Clef. Chain monitoring with
     finality-aware gating, IPFS content storage with pinning,
     and wallet-based authentication via signature verification.
 
@@ -114,9 +114,9 @@ integrations:
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >
-          Wire Wallet/verify into the auth kit's JWT flow.
+          Wire Wallet/verify into the auth suite's JWT flow.
 
-# Domain kit infrastructure — pre-conceptual code (Section 10.3)
+# Domain suite infrastructure — pre-conceptual code (Section 10.3)
 infrastructure:
   transports:
     - name: evm
@@ -240,9 +240,9 @@ syncs:
 
 ### `uses` (optional)
 
-Declares external concepts from other kits that this kit's syncs reference. The `copf kit validate` command checks that all concept references in syncs are either local concepts, declared in `uses`, or built-in (e.g., `Web`).
+Declares external concepts from other suites that this suite's syncs reference. The `clef suite validate` command checks that all concept references in syncs are either local concepts, declared in `uses`, or built-in (e.g., `Web`).
 
-Each entry is **required by default** — the external kit must be present for this kit to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present (what was previously handled by a separate `integrations` section).
+Each entry is **required by default** — the external kit must be present for this suite to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present (what was previously handled by a separate `integrations` section).
 
 **Required uses** (default):
 
@@ -269,7 +269,7 @@ uses:
       - path: ./syncs/entity-ownership.sync
         description: >
           When a user creates an entity, record ownership.
-          Only loads if the auth kit is present.
+          Only loads if the auth suite is present.
 ```
 
 | Field | Type | Required | Description |
@@ -291,7 +291,7 @@ uses:
 | Section | Purpose |
 |---------|---------|
 | `dependencies` | Kit-level version constraint |
-| `uses` | Concept-level declarations — which external concepts this kit's syncs reference |
+| `uses` | Concept-level declarations — which external concepts this suite's syncs reference |
 
 A required `uses` entry implies the external kit must be present. Consider also listing it in `dependencies` for version constraint enforcement.
 
@@ -302,9 +302,9 @@ A required `uses` entry implies the external kit must be present. Consider also 
 - Concepts declared in `uses` but never referenced by any sync produce a **warning**
 - A required `uses` kit not listed in `dependencies` produces a **warning**
 
-### `infrastructure` (optional, domain kits only)
+### `infrastructure` (optional, domain suites only)
 
-Pre-conceptual code that the kit's concepts require to function. Only present in domain kits that introduce new deployment targets.
+Pre-conceptual code that the suite's concepts require to function. Only present in domain suites that introduce new deployment targets.
 
 ```yaml
 infrastructure:
@@ -342,13 +342,13 @@ infrastructure:
 |-------|------|----------|-------------|
 | `path` | string | Yes | Relative path to the `.deploy.yaml` template |
 
-**The infrastructure boundary rule**: The `infrastructure/` directory contains only transport adapters, storage backends, and deploy templates. Never concepts, syncs, or implementations. This code is pre-conceptual (Section 10.3). The kit installer copies infrastructure into the appropriate kernel extension paths; `copf kit validate` verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
+**The infrastructure boundary rule**: The `infrastructure/` directory contains only transport adapters, storage backends, and deploy templates. Never concepts, syncs, or implementations. This code is pre-conceptual (Section 10.3). The suite installer copies infrastructure into the appropriate kernel extension paths; `clef suite validate` verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
 
 ### Domain-specific config (optional)
 
 Kits may define their own top-level configuration fields for domain-specific settings. These are not part of the standard manifest schema — they're kit-specific extensions.
 
-Example: the web3 kit defines `chainConfigs` for per-chain finality settings:
+Example: the web3 suite defines `chainConfigs` for per-chain finality settings:
 
 ```yaml
 chainConfigs:
@@ -369,11 +369,11 @@ chainConfigs:
     transport: starknet
 ```
 
-The framework doesn't validate domain-specific config — the kit's own tooling or implementation reads these values.
+The framework doesn't validate domain-specific config — the suite's own tooling or implementation reads these values.
 
 ### `dependencies` (optional)
 
-Other kits that must be present for this kit to function:
+Other suites that must be present for this suite to function:
 
 ```yaml
 dependencies:
@@ -381,11 +381,11 @@ dependencies:
     version: ">=0.1.0"
 ```
 
-Most kits have no dependencies. Use optional `uses` entries (conditional enhancement) over dependencies (hard requirement) when possible.
+Most suites have no dependencies. Use optional `uses` entries (conditional enhancement) over dependencies (hard requirement) when possible.
 
 ## App-Side Usage
 
-Apps reference kits in their deployment manifest (`deploy.yaml`):
+Apps reference suites in their deployment manifest (`deploy.yaml`):
 
 ```yaml
 kits:
@@ -409,29 +409,29 @@ kits:
 | `overrides` | map | No | Map of sync name -> replacement sync file path |
 | `disable` | list | No | List of recommended sync names to disable |
 
-**Override**: The app provides a different sync with the same name. The app's version replaces the kit's version.
+**Override**: The app provides a different sync with the same name. The app's version replaces the suite's version.
 
 **Disable**: The app removes the sync entirely. Only works for recommended syncs — the compiler errors if you try to disable a required sync.
 
 ## Validation
 
-The `copf kit validate` command checks:
+The `clef suite validate` command checks:
 
-1. `kit.yaml` exists and is parseable
+1. `suite.yaml` exists and is parseable
 2. All referenced `.concept` files exist and parse successfully
 3. All referenced `.sync` files exist and parse successfully
 4. Sync tier annotations match the manifest declarations
 5. Type parameter alignment consistency (advisory warnings)
-6. Infrastructure files exist and implement correct interfaces (domain kits)
-7. Deploy templates are valid YAML (domain kits)
+6. Infrastructure files exist and implement correct interfaces (domain suites)
+7. Deploy templates are valid YAML (domain suites)
 8. Sync concept references — all concepts referenced in syncs must be local, declared in `uses`, or built-in (`Web`)
 9. Optional uses syncs are exempt from strict reference checking (they only load conditionally)
 
 ```bash
-npx tsx cli/src/index.ts kit validate kits/<kit-name>
+npx tsx cli/src/index.ts suite validate kits/<kit-name>
 ```
 
-Output for a framework kit:
+Output for a framework suite:
 ```
 Validating kit: kits/content-management
 
@@ -453,7 +453,7 @@ Validating kit: kits/content-management
 Kit is valid.
 ```
 
-Output for a domain kit:
+Output for a domain suite:
 ```
 Validating kit: kits/web3
 

@@ -1,7 +1,7 @@
 // VersionTests.swift — Tests for Version concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class VersionTests: XCTestCase {
 

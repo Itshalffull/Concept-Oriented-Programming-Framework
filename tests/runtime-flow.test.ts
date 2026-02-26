@@ -317,12 +317,12 @@ describe('RuntimeFlow Handler', () => {
         id: 'ae-1',
         concept: 'Todo',
         name: 'create',
-        symbol: 'copf/action/Todo/create',
+        symbol: 'clef/action/Todo/create',
       });
       await storage.put('source-map', 'sm-1', {
         id: 'sm-1',
-        symbol: 'copf/action/Todo/create',
-        file: 'concepts/todo.copf',
+        symbol: 'clef/action/Todo/create',
+        file: 'concepts/todo.clef',
         line: 10,
         col: 5,
       });
@@ -340,7 +340,7 @@ describe('RuntimeFlow Handler', () => {
       expect(result.variant).toBe('ok');
       const locations = JSON.parse(result.locations as string);
       expect(locations).toHaveLength(1);
-      expect(locations[0].file).toBe('concepts/todo.copf');
+      expect(locations[0].file).toBe('concepts/todo.clef');
       expect(locations[0].line).toBe(10);
     });
 

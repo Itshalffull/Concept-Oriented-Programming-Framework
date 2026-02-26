@@ -1,4 +1,4 @@
-// Workflow Concept Implementation (Interface Kit)
+// Workflow Concept Implementation (Clef Bind)
 import type { ConceptHandler } from '@clef/kernel';
 
 export const interfaceWorkflowHandler: ConceptHandler = {

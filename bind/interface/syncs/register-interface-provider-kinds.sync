@@ -1,9 +1,9 @@
-# RegisterInterfaceProviderKinds — interface kit registration sync
+# RegisterInterfaceProviderKinds — Clef Bind registration sync
 #
 # Auto-populate KindSystem edges from interface provider registrations
-# (targets, SDKs, specs). Mirrors the generation kit's
+# (targets, SDKs, specs). Mirrors the generation suite's
 # RegisterGeneratorKinds sync for the interface generation pipeline.
-# See generation kit syncs: register-generator-kinds.sync
+# See generation suite syncs: register-generator-kinds.sync
 
 sync RegisterInterfaceProviderKinds [eager]
   purpose { Auto-populate KindSystem edges from interface provider registrations. }

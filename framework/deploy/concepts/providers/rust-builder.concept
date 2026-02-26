@@ -83,7 +83,7 @@ concept RustBuilder [R] {
 
   invariant {
     after build(source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: { mode: "release" })
-      -> ok(build: r, artifactPath: ".copf-artifacts/rust/password", artifactHash: "sha256:ghi")
+      -> ok(build: r, artifactPath: ".clef-artifacts/rust/password", artifactHash: "sha256:ghi")
     then test(build: r, toolchainPath: "/usr/local/bin/rustc",
               invocation: { command: "cargo test", args: ["--", "--format=json"], outputFormat: "cargo-test-json", configFile: "Cargo.toml", env: null },
               testType: "unit")

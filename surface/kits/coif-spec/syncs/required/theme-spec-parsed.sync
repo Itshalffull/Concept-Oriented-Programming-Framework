@@ -1,5 +1,5 @@
 # ============================================================
-# ThemeSpecParsed — coif-spec required sync
+# ThemeSpecParsed — surface-spec required sync
 #
 # When a .theme file is loaded as a Resource, parse it into
 # a typed ThemeAST via ThemeParser.

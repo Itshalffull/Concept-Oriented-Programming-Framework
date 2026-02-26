@@ -1,7 +1,7 @@
 # Route CoifComponentScaffoldGen file output through Emitter
 
 sync EmitCoifComponentScaffoldFiles [eager]
-  purpose { Write generated COIF component scaffold through Emitter. }
+  purpose { Write generated Clef Surface component scaffold through Emitter. }
 when {
   CoifComponentScaffoldGen/generate: [ name: ?name ]
     => [ files: ?files ]

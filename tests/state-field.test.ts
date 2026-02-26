@@ -95,7 +95,7 @@ describe('StateField Handler', () => {
         storage,
       );
       const record = await storage.get('state-field', 'state-field-1');
-      expect(record!.symbol).toBe('copf/field/Todo/title');
+      expect(record!.symbol).toBe('clef/field/Todo/title');
     });
   });
 
@@ -154,7 +154,7 @@ describe('StateField Handler', () => {
 
       await storage.put('provenance', 'prov-1', {
         id: 'prov-1',
-        sourceSymbol: 'copf/field/Todo/title',
+        sourceSymbol: 'clef/field/Todo/title',
         targetSymbol: 'Todo.title',
         language: 'typescript',
         targetFile: 'generated/Todo.ts',
@@ -188,7 +188,7 @@ describe('StateField Handler', () => {
 
       await storage.put('storage-mapping', 'sm-1', {
         id: 'sm-1',
-        fieldSymbol: 'copf/field/Todo/title',
+        fieldSymbol: 'clef/field/Todo/title',
         adapter: 'postgres',
         columnOrKey: 'todo_title',
       });

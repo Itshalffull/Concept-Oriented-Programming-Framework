@@ -1,7 +1,7 @@
 // ContentParserTests.swift — Tests for ContentParser concept
 
 import XCTest
-@testable import COPF
+@testable import Clef
 
 final class ContentParserTests: XCTestCase {
 
