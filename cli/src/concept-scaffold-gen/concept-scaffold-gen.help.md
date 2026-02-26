@@ -118,7 +118,7 @@ npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,de
 ```
 *Validate generated concept:*
 ```bash
-npx tsx cli/src/index.ts check specs/app/user.concept
+npx tsx cli/src/index.ts check concepts/user.concept
 ```
 *Run scaffold generator tests:*
 ```bash

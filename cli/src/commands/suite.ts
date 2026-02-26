@@ -387,9 +387,9 @@ async function kitInit(
     process.exit(1);
   }
 
-  const suiteDir = resolve(process.cwd(), 'kits', name);
+  const suiteDir = resolve(process.cwd(), 'suites', name);
   if (existsSync(suiteDir)) {
-    console.error(`Suite directory already exists: kits/${name}`);
+    console.error(`Suite directory already exists: suites/${name}`);
     process.exit(1);
   }
 
@@ -422,17 +422,17 @@ async function kitInit(
   );
 
   console.log(`
-Suite created at kits/${name}/
+Suite created at suites/${name}/
 
-  suite.yaml                    Suite manifest
+  suite.yaml                  Suite manifest
   example.concept             Example concept spec
   syncs/example.sync          Example synchronization
-  implementations/            Concept implementations
+  handlers/ts/                Concept implementations
   tests/                      Suite tests
 
 Next steps:
-  clef suite validate kits/${name}
-  clef suite test kits/${name}
+  clef suite validate suites/${name}
+  clef suite test suites/${name}
 `);
 }
 
@@ -692,10 +692,10 @@ async function kitList(
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
-  const kitsDir = join(projectDir, 'kits');
+  const suitesDir = join(projectDir, 'suites');
 
   if (!existsSync(suitesDir)) {
-    console.log('No kits/ directory found.');
+    console.log('No suites/ directory found.');
     return;
   }
 
@@ -703,7 +703,7 @@ async function kitList(
   const suiteManifests = findFiles(suitesDir, 'suite.yaml');
 
   if (suiteManifests.length === 0) {
-    console.log('No suites found in kits/ directory.');
+    console.log('No suites found in suites/ directory.');
     return;
   }
 
@@ -734,11 +734,11 @@ async function kitCheckOverrides(
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
-  const kitsDir = join(projectDir, 'kits');
+  const suitesDir = join(projectDir, 'suites');
   const syncsDir = join(projectDir, 'syncs');
 
   if (!existsSync(suitesDir)) {
-    console.log('No kits/ directory found.');
+    console.log('No suites/ directory found.');
     return;
   }
 

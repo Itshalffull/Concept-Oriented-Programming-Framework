@@ -173,7 +173,7 @@ function yamlToInterfaceManifest(
       .filter(([k, v]) => v === true && k !== 'outputDir')
       .map(([k]) => k),
     concepts: conceptNames,
-    outputDir: (output.dir as string) || './generated/interfaces',
+    outputDir: (output.dir as string) || './bind',
     formatting: 'prettier',
     manifestYaml: yaml,
     targetOutputDirs,
@@ -314,11 +314,11 @@ async function interfaceGenerate(
   const projectDir = resolve(process.cwd());
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
-    : resolve(projectDir, 'app.interface.yaml');
+    : resolve(projectDir, 'interfaces', 'api.interface.yaml');
 
   if (!existsSync(manifestPath)) {
     console.error(`Interface manifest not found: ${relative(projectDir, manifestPath)}`);
-    console.error('Create app.interface.yaml or specify --manifest <path>');
+    console.error('Create interfaces/api.interface.yaml or specify --manifest <path>');
     process.exit(1);
   }
 
@@ -328,7 +328,7 @@ async function interfaceGenerate(
 
   // 2. Find and parse all concept specs
   // If the manifest explicitly lists concept file paths, use those.
-  // Otherwise, scan specs/app/ or specs/ directory.
+  // Otherwise, scan concepts/ directory.
   let conceptFiles: string[] = [];
 
   const manifestConcepts = (manifestYaml.concepts as string[] | undefined) || [];
@@ -346,19 +346,14 @@ async function interfaceGenerate(
     }
   } else {
     // Fall back to directory scanning
-    const specsDir = resolve(projectDir, 'specs', 'app');
-    if (existsSync(specsDir)) {
-      conceptFiles = findFiles(specsDir, '.concept');
-    } else {
-      const altDir = resolve(projectDir, 'specs');
-      if (existsSync(altDir)) {
-        conceptFiles = findFiles(altDir, '.concept');
-      }
+    const conceptsDir = resolve(projectDir, 'concepts');
+    if (existsSync(conceptsDir)) {
+      conceptFiles = findFiles(conceptsDir, '.concept');
     }
   }
 
   if (conceptFiles.length === 0) {
-    console.error('No concept files found. Specify paths in manifest or add files to specs/app/.');
+    console.error('No concept files found. Specify paths in manifest or add files to concepts/.');
     process.exit(1);
   }
 
@@ -578,11 +573,11 @@ async function interfacePlan(
   const projectDir = resolve(process.cwd());
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
-    : resolve(projectDir, 'app.interface.yaml');
+    : resolve(projectDir, 'interfaces', 'api.interface.yaml');
 
   if (!existsSync(manifestPath)) {
     console.error(`Interface manifest not found: ${relative(projectDir, manifestPath)}`);
-    console.error('Create app.interface.yaml or specify --manifest <path>');
+    console.error('Create interfaces/api.interface.yaml or specify --manifest <path>');
     process.exit(1);
   }
 
@@ -598,7 +593,7 @@ async function interfacePlan(
   console.log('========================\n');
   console.log(`  Name:       ${iface.name || '(auto-detect)'}`);
   console.log(`  Version:    ${iface.version || '1.0.0'}`);
-  console.log(`  Default output dir: ${output.dir || 'generated/interfaces'}\n`);
+  console.log(`  Default output dir: ${output.dir || 'bind'}\n`);
 
   const targetList = Object.keys(targets);
   if (targetList.length > 0) {
@@ -636,14 +631,9 @@ async function interfacePlan(
   if (explicitPaths.length > 0) {
     conceptCount = explicitPaths.filter(p => existsSync(resolve(projectDir, p))).length;
   } else {
-    const specsDir = resolve(projectDir, 'specs', 'app');
-    if (existsSync(specsDir)) {
-      conceptCount = findFiles(specsDir, '.concept').length;
-    } else {
-      const altDir = resolve(projectDir, 'specs');
-      if (existsSync(altDir)) {
-        conceptCount = findFiles(altDir, '.concept').length;
-      }
+    const conceptsDir = resolve(projectDir, 'concepts');
+    if (existsSync(conceptsDir)) {
+      conceptCount = findFiles(conceptsDir, '.concept').length;
     }
   }
   console.log(`\n  Concepts: ${conceptCount}`);
@@ -662,7 +652,7 @@ async function interfaceValidate(
   const projectDir = resolve(process.cwd());
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
-    : resolve(projectDir, 'app.interface.yaml');
+    : resolve(projectDir, 'interfaces', 'api.interface.yaml');
 
   if (!existsSync(manifestPath)) {
     console.error(`Interface manifest not found: ${relative(projectDir, manifestPath)}`);
@@ -760,7 +750,7 @@ async function interfaceFiles(
   // Try to use tracking manifest first
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
-    : resolve(projectDir, 'app.interface.yaml');
+    : resolve(projectDir, 'interfaces', 'api.interface.yaml');
   const genManifestPath = resolve(dirname(manifestPath), '.clef-gen-manifest.json');
   const genManifest = loadGenManifest(genManifestPath);
 
@@ -799,7 +789,7 @@ async function interfaceFiles(
   // Fallback: walk default output directory
   const outputDir = typeof flags.output === 'string'
     ? resolve(projectDir, flags.output)
-    : resolve(projectDir, 'generated', 'interfaces');
+    : resolve(projectDir, 'bind');
 
   if (!existsSync(outputDir)) {
     console.log('No generated output directory or tracking manifest found.');
@@ -845,7 +835,7 @@ async function interfaceClean(
   // Use tracking manifest for cross-directory cleanup
   const manifestPath = typeof flags.manifest === 'string'
     ? resolve(projectDir, flags.manifest)
-    : resolve(projectDir, 'app.interface.yaml');
+    : resolve(projectDir, 'interfaces', 'api.interface.yaml');
   const genManifestPath = resolve(dirname(manifestPath), '.clef-gen-manifest.json');
   const genManifest = loadGenManifest(genManifestPath);
 
@@ -876,7 +866,7 @@ async function interfaceClean(
   // Fallback: clean single output directory
   const outputDir = typeof flags.output === 'string'
     ? resolve(projectDir, flags.output)
-    : resolve(projectDir, 'generated', 'interfaces');
+    : resolve(projectDir, 'bind');
 
   if (!existsSync(outputDir)) {
     console.log('No generated output directory or tracking manifest found. Nothing to clean.');

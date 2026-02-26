@@ -160,7 +160,7 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
       const kebab = toKebab(name);
 
       const files: { path: string; content: string }[] = [
-        { path: `${kebab}.concept`, content: conceptSpec },
+        { path: `concepts/${kebab}.concept`, content: conceptSpec },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

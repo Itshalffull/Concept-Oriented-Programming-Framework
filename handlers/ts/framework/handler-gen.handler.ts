@@ -415,23 +415,21 @@ function primitiveToTs(name: string): string {
 function determineOutputPath(manifest: ConceptManifest, specPath: string): string {
   const kebab = toKebab(manifest.name);
   // Route based on where the spec lives
-  if (specPath.startsWith('kits/')) {
-    // Extract kit name: kits/<suite-name>/...
+  if (specPath.startsWith('suites/')) {
+    // Extract suite name: suites/<suite-name>/...
     const parts = specPath.split('/');
     const suiteName = parts[1];
     // Providers go under providers/ subfolder
     if (specPath.includes('/providers/')) {
       const providerPath = specPath.slice(specPath.indexOf('/providers/') + 1);
       const dir = providerPath.replace(/\/[^/]+\.concept$/, '');
-      return `kits/${suiteName}/handlers/ts/${dir}/${kebab}.handler.ts`;
+      return `suites/${suiteName}/handlers/ts/${dir}/${kebab}.handler.ts`;
     }
-    return `kits/${suiteName}/handlers/ts/${kebab}.handler.ts`;
+    return `suites/${suiteName}/handlers/ts/${kebab}.handler.ts`;
   }
-  if (specPath.startsWith('specs/framework/')) {
-    return `handlers/ts/framework/${kebab}.handler.ts`;
-  }
-  if (specPath.startsWith('specs/app/')) {
-    return `handlers/ts/app/${kebab}.handler.ts`;
+  // Concept specs live in concepts/ per clef-naming-reference.md
+  if (specPath.startsWith('concepts/')) {
+    return `handlers/ts/${kebab}.handler.ts`;
   }
   return `handlers/ts/${kebab}.handler.ts`;
 }

@@ -45,6 +45,14 @@ import { findFiles } from '../util.js';
 const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity', 'handler'] as const;
 type Target = (typeof SUPPORTED_TARGETS)[number];
 
+// Map target names to output directory names per clef-naming-reference.md
+const TARGET_DIR_NAMES: Record<string, string> = {
+  typescript: 'ts',
+  rust: 'rust',
+  swift: 'swift',
+  solidity: 'solidity',
+};
+
 const GENERATOR_META: Record<string, {
   name: string;
   family: string;
@@ -140,7 +148,7 @@ export async function generateCommand(
   const filterFamily = flags.family as string | undefined;
   const forceRebuild = flags.force === true;
   const projectDir = resolve(process.cwd());
-  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'concepts';
   const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
 
   // Initialize generation suite storages
@@ -160,12 +168,12 @@ export async function generateCommand(
   const runId = beginResult.run as string;
   const runStartTime = Date.now();
 
-  // Scan for concept files. Handler target scans both specs/ and kits/ by default.
+  // Scan for concept files. Handler target scans both concepts/ and suites/ by default.
   let conceptFiles: string[];
-  if (specsDir === 'all' || (target === 'handler' && specsDir === 'specs')) {
+  if (specsDir === 'all' || (target === 'handler' && specsDir === 'concepts')) {
     conceptFiles = [
-      ...findFiles(resolve(projectDir, 'specs'), '.concept'),
-      ...findFiles(resolve(projectDir, 'kits'), '.concept'),
+      ...findFiles(resolve(projectDir, 'concepts'), '.concept'),
+      ...findFiles(resolve(projectDir, 'suites'), '.concept'),
     ];
   } else {
     conceptFiles = findFiles(resolve(projectDir, specsDir), '.concept');
@@ -234,7 +242,7 @@ export async function generateCommand(
     }
     walkForImpls(join(projectDir, 'handlers'));
     walkForImpls(join(projectDir, 'generated'));
-    walkForImpls(join(projectDir, 'kits'));
+    walkForImpls(join(projectDir, 'suites'));
   }
 
   console.log(
@@ -290,8 +298,8 @@ export async function generateCommand(
 
     // Handler target skips schema generation (writes impls, not schemas)
     if (target !== 'handler') {
-      // Write JSON schemas
-      const jsonSchemaDir = join(projectDir, outDir, 'schemas', 'json', ast.name.toLowerCase());
+      // Write JSON schemas (under generated/openapi/ for spec output)
+      const jsonSchemaDir = join(projectDir, outDir, 'openapi', ast.name.toLowerCase());
       mkdirSync(jsonSchemaDir, { recursive: true });
       writeFileSync(
         join(jsonSchemaDir, 'manifest.json'),
@@ -299,7 +307,7 @@ export async function generateCommand(
       );
 
       // Write GraphQL schema fragment
-      const gqlDir = join(projectDir, outDir, 'schemas', 'graphql');
+      const gqlDir = join(projectDir, outDir, 'graphql');
       mkdirSync(gqlDir, { recursive: true });
       writeFileSync(
         join(gqlDir, `${ast.name.toLowerCase()}.graphql`),
@@ -334,7 +342,7 @@ export async function generateCommand(
 
     // Handler target: files contain project-relative paths (write to project root)
     // Other targets: files are relative to generated/<target>/
-    const targetDir = target === 'handler' ? projectDir : join(projectDir, outDir, target);
+    const targetDir = target === 'handler' ? projectDir : join(projectDir, outDir, TARGET_DIR_NAMES[target] || target);
 
     for (const f of files) {
       const filePath = join(targetDir, f.path);
@@ -429,7 +437,7 @@ async function generatePlan(
   flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
-  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'concepts';
   const filterFamily = flags.family as string | undefined;
   const filterTarget = flags.target as string | undefined;
 
@@ -532,7 +540,7 @@ async function generateDryRun(
   flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
-  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'concepts';
   const outDir = typeof flags.out === 'string' ? flags.out : 'generated';
   const target = flags.target as string;
 
@@ -573,7 +581,7 @@ async function generateDryRun(
     if (codeResult.variant !== 'ok') continue;
 
     const files = codeResult.files as { path: string; content: string }[];
-    const targetDir = join(projectDir, outDir, target);
+    const targetDir = join(projectDir, outDir, TARGET_DIR_NAMES[target] || target);
 
     for (const f of files) {
       const filePath = join(targetDir, f.path);

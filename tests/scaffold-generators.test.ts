@@ -268,7 +268,7 @@ describe('ConceptScaffoldGen', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(1);
-    expect(files[0]!.path).toBe('bookmark.concept');
+    expect(files[0]!.path).toBe('concepts/bookmark.concept');
 
     const content = files[0]!.content;
     expect(content).toContain('concept Bookmark [T]');
@@ -322,7 +322,7 @@ describe('SyncScaffoldGen', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(1);
-    expect(files[0]!.path).toBe('bookmark-on-save.sync');
+    expect(files[0]!.path).toBe('syncs/bookmark-on-save.sync');
 
     const content = files[0]!.content;
     expect(content).toContain('sync BookmarkOnSave');

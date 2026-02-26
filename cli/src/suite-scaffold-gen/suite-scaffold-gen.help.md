@@ -108,7 +108,7 @@ npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session
 ```
 *Validate generated kit:*
 ```bash
-npx tsx cli/src/index.ts suite validate ./kits/my-kit
+npx tsx cli/src/index.ts suite validate ./suites/my-kit
 ```
 *Run scaffold generator tests:*
 ```bash

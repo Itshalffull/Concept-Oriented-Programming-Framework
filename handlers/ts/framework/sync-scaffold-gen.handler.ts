@@ -150,7 +150,7 @@ export const syncScaffoldGenHandler: ConceptHandler = {
       const kebab = toKebab(name);
 
       const files: { path: string; content: string }[] = [
-        { path: `${kebab}.sync`, content: syncSpec },
+        { path: `syncs/${kebab}.sync`, content: syncSpec },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };
