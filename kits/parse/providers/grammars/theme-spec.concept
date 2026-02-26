@@ -1,0 +1,32 @@
+@version(1)
+concept TreeSitterThemeSpec [I] {
+
+  purpose {
+    Tree-sitter grammar provider for COIF theme spec files.
+    Sections: purpose, palette, typography, spacing, motion,
+    elevation, radius. Supports extends clause for theme
+    inheritance.
+  }
+
+  state {
+    instances: set I
+    grammarRef: I -> String
+    wasmPath: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Load the theme spec WASM parser and register it with
+        LanguageGrammar for .theme extensions.
+      }
+      -> loadError(message: String) {
+        Failed to load the WASM parser binary.
+      }
+    }
+  }
+}

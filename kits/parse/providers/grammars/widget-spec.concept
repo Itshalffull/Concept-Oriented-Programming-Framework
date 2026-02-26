@@ -1,0 +1,31 @@
+@version(1)
+concept TreeSitterWidgetSpec [I] {
+
+  purpose {
+    Tree-sitter grammar provider for COIF widget spec files.
+    Sections: purpose, anatomy, slots, states (FSM), accessibility,
+    props, connect, affordance, compose, invariant.
+  }
+
+  state {
+    instances: set I
+    grammarRef: I -> String
+    wasmPath: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Load the widget spec WASM parser and register it with
+        LanguageGrammar for .widget extensions.
+      }
+      -> loadError(message: String) {
+        Failed to load the WASM parser binary.
+      }
+    }
+  }
+}

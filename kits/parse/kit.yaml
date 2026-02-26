@@ -54,6 +54,12 @@ concepts:
   TreeSitterSyncSpec:
     spec: ./providers/grammars/sync-spec.concept
     optional: true
+  TreeSitterWidgetSpec:
+    spec: ./providers/grammars/widget-spec.concept
+    optional: true
+  TreeSitterThemeSpec:
+    spec: ./providers/grammars/theme-spec.concept
+    optional: true
 
   # Pattern engine providers
   TreeSitterQueryProvider:
