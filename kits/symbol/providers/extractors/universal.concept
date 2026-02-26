@@ -1,0 +1,31 @@
+@version(1)
+concept UniversalTreeSitterExtractor [I] {
+
+  purpose {
+    Fallback symbol extraction provider using generic Tree-sitter
+    queries for function, class, and type declarations. Works with
+    any language that has a Tree-sitter grammar but no dedicated
+    symbol extractor.
+  }
+
+  state {
+    instances: set I
+    extractorRef: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this universal extractor as a fallback
+        with PluginRegistry.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the Tree-sitter query engine.
+      }
+    }
+  }
+}

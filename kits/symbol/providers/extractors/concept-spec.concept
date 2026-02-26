@@ -1,0 +1,31 @@
+@version(1)
+concept ConceptSpecSymbolExtractor [I] {
+
+  purpose {
+    Symbol extraction provider for .concept files. Extracts
+    concept name, action names, variant names, and state field
+    names as symbols in the copf/* namespace.
+  }
+
+  state {
+    instances: set I
+    extractorRef: I -> String
+    handledExtensions: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this extractor with PluginRegistry for
+        .concept file extensions.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the extractor.
+      }
+    }
+  }
+}

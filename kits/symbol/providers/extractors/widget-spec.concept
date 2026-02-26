@@ -1,0 +1,33 @@
+@version(1)
+concept WidgetSpecSymbolExtractor [I] {
+
+  purpose {
+    Symbol extraction provider for .widget spec files. Extracts
+    widget name, anatomy part names, state names, transition
+    events, prop names, slot names, composed widget references,
+    and affordance interactor bindings as symbols in the
+    coif/* namespace.
+  }
+
+  state {
+    instances: set I
+    extractorRef: I -> String
+    handledExtensions: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this extractor with PluginRegistry for
+        .widget file extensions.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the widget spec extractor.
+      }
+    }
+  }
+}

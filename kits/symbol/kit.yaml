@@ -1,0 +1,117 @@
+kit:
+  name: symbol
+  version: 0.1.0
+  description: >
+    Cross-file identity, occurrence tracking, scope resolution,
+    and typed semantic relationships. Provides the Symbol concept
+    for globally unique program entity identification and
+    SymbolRelationship for typed connections between entities.
+
+concepts:
+  Symbol:
+    spec: ./symbol.concept
+    params:
+      S: { as: symbol-id, description: "Symbol identifier" }
+
+  SymbolOccurrence:
+    spec: ./symbol-occurrence.concept
+    params:
+      O: { as: occurrence-id, description: "Occurrence identifier" }
+
+  ScopeGraph:
+    spec: ./scope-graph.concept
+    params:
+      C: { as: scope-graph-id, description: "Scope graph identifier" }
+
+  SymbolRelationship:
+    spec: ./symbol-relationship.concept
+    params:
+      R: { as: relationship-id, description: "Relationship identifier" }
+
+  # Symbol extractor providers
+  TypeScriptSymbolExtractor:
+    spec: ./providers/extractors/typescript.concept
+    optional: true
+  ConceptSpecSymbolExtractor:
+    spec: ./providers/extractors/concept-spec.concept
+    optional: true
+  SyncSpecSymbolExtractor:
+    spec: ./providers/extractors/sync-spec.concept
+    optional: true
+  UniversalTreeSitterExtractor:
+    spec: ./providers/extractors/universal.concept
+    optional: true
+
+  # COIF symbol extractor providers
+  WidgetSpecSymbolExtractor:
+    spec: ./providers/extractors/widget-spec.concept
+    optional: true
+  ThemeSpecSymbolExtractor:
+    spec: ./providers/extractors/theme-spec.concept
+    optional: true
+  ReactComponentSymbolExtractor:
+    spec: ./providers/extractors/react-component.concept
+    optional: true
+  CssTokenSymbolExtractor:
+    spec: ./providers/extractors/css-token.concept
+    optional: true
+
+  # Scope providers
+  TypeScriptScopeProvider:
+    spec: ./providers/scope/typescript.concept
+    optional: true
+  ConceptScopeProvider:
+    spec: ./providers/scope/concept.concept
+    optional: true
+  SyncScopeProvider:
+    spec: ./providers/scope/sync.concept
+    optional: true
+  WidgetScopeProvider:
+    spec: ./providers/scope/widget.concept
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/symbol-extraction.sync
+      name: SymbolExtractionSync
+      description: >
+        Extract symbols from parsed syntax trees via
+        provider-dispatched extractors.
+
+  recommended:
+    - path: ./syncs/scope-resolution.sync
+      name: ScopeResolutionSync
+      description: >
+        Build scope graphs after symbol extraction.
+
+    - path: ./syncs/cross-file-resolution.sync
+      name: CrossFileResolutionSync
+      description: >
+        Resolve unresolved references across files.
+
+    - path: ./syncs/symbol-relationship.sync
+      name: SymbolRelationshipSync
+      description: >
+        Maintain typed relationships between symbols.
+
+  integration: []
+
+uses:
+  - kit: parse
+    concepts:
+      - name: SyntaxTree
+      - name: LanguageGrammar
+      - name: FileArtifact
+  - kit: linking
+    concepts:
+      - name: Reference
+      - name: Relation
+      - name: Backlink
+  - kit: classification
+    concepts:
+      - name: Namespace
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+dependencies: []

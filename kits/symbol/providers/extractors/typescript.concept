@@ -1,0 +1,32 @@
+@version(1)
+concept TypeScriptSymbolExtractor [I] {
+
+  purpose {
+    Symbol extraction provider for TypeScript and TSX files.
+    Uses the TypeScript compiler API for full type resolution.
+    Extracts functions, classes, types, interfaces, variables,
+    and module exports as symbols.
+  }
+
+  state {
+    instances: set I
+    extractorRef: I -> String
+    handledExtensions: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this extractor with PluginRegistry for
+        .ts and .tsx file extensions.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the TypeScript compiler API.
+      }
+    }
+  }
+}
