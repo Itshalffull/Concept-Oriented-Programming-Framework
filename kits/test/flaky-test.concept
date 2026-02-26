@@ -119,6 +119,6 @@ concept FlakyTest [F] {
     after record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 50) -> ok(test: f)
     and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: false, duration: 5001) -> ok(test: f)
     and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 48) -> ok(test: f)
-    then isQuarantined(testId: "test_timing") depends on policy.autoQuarantine
+    then isQuarantined(testId: "test_timing") -> yes(test: f, reason: r, owner: o, quarantinedAt: t)
   }
 }

@@ -64,13 +64,8 @@ concept Content [C] {
     }
   }
 
-  invariant "store then resolve returns same data" {
-    after {
-      store(data: d, name: "test.txt", contentType: "text/plain")
-        -> ok(cid: c, size: s)
-    }
-    then {
-      resolve(cid: c) -> ok(data: d, contentType: "text/plain", size: s)
-    }
+  invariant {
+    after store(data: d, name: "test.txt", contentType: "text/plain") -> ok(cid: c, size: s)
+    then resolve(cid: c) -> ok(data: d, contentType: "text/plain", size: s)
   }
 }

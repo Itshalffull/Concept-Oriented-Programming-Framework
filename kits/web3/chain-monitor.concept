@@ -62,23 +62,13 @@ concept ChainMonitor [B] {
     }
   }
 
-  invariant "finality completion removes subscription" {
-    after {
-      awaitFinality(txHash: tx, level: "confirmations")
-        -> ok(chain: "ethereum", block: 100, confirmations: 12)
-    }
-    then {
-      // txHash is no longer in subscriptions
-    }
+  invariant {
+    after awaitFinality(txHash: tx, level: "confirmations") -> ok(chain: "ethereum", block: 100, confirmations: 12)
+    then status(txHash: tx) -> ok(chain: "ethereum", block: 100, confirmations: 12)
   }
 
-  invariant "reorg completion removes subscription" {
-    after {
-      awaitFinality(txHash: tx, level: "confirmations")
-        -> reorged(txHash: tx, depth: 3)
-    }
-    then {
-      // txHash is no longer in subscriptions
-    }
+  invariant {
+    after awaitFinality(txHash: tx, level: "confirmations") -> reorged(txHash: tx, depth: 3)
+    then status(txHash: tx) -> ok(chain: "ethereum", block: 100, confirmations: 0)
   }
 }

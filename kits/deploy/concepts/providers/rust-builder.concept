@@ -45,7 +45,7 @@ concept RustBuilder [R] {
       }
     }
 
-    action test(build: R, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }, testType: option String) {
+    action test(build: R, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }, testType: option String) {
       -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
         Run tests using the resolved invocation profile. If
         invocation is provided, uses it to determine the test

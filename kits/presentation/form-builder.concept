@@ -25,6 +25,7 @@ concept FormBuilder [F] {
   }
 
   invariant {
-    after buildForm(form: f, schema: "user-profile") -> ok(definition: _)
+    after buildForm(form: f, schema: "user-profile") -> ok(definition: d)
+    then buildForm(form: f, schema: "user-profile") -> ok(definition: d)
   }
 }

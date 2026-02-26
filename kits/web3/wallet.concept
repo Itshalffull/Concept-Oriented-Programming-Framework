@@ -64,13 +64,8 @@ concept Wallet [W] {
     }
   }
 
-  invariant "valid signature verifies" {
-    after {
-      verify(address: addr, message: msg, signature: sig)
-        -> ok(address: addr, recoveredAddress: addr)
-    }
-    then {
-      // recoveredAddress matches the claimed address
-    }
+  invariant {
+    after verify(address: addr, message: msg, signature: sig) -> ok(address: addr, recoveredAddress: addr)
+    then verify(address: addr, message: msg, signature: sig) -> ok(address: addr, recoveredAddress: addr)
   }
 }

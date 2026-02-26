@@ -84,12 +84,12 @@ concept DAGHistory [N] {
   }
 
   invariant {
-    after append(parents: {}, contentRef: "abc123", metadata: "") -> ok(nodeId: n)
-    then getNode(nodeId: n) -> ok(parents: {}, contentRef: "abc123", metadata: "")
+    after append(parents: "[]", contentRef: "abc123", metadata: "") -> ok(nodeId: n)
+    then getNode(nodeId: n) -> ok(parents: "[]", contentRef: "abc123", metadata: "")
   }
 
   invariant {
-    after append(parents: {p1}, contentRef: "def456", metadata: "") -> ok(nodeId: n)
+    after append(parents: "[p1]", contentRef: "def456", metadata: "") -> ok(nodeId: n)
     then ancestors(nodeId: n) -> ok(nodes: path)
   }
 }

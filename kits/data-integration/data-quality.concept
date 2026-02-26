@@ -62,6 +62,7 @@ concept DataQuality [D] {
 
   invariant {
     after validate(item: "{\"title\":\"Test\",\"body\":\"content\"}", rulesetId: "article_rules") -> ok(valid: "true", score: "0.95")
+    then inspect(itemId: "item-1") -> ok(score: "0.95", violations: "[]")
   }
 
   invariant {

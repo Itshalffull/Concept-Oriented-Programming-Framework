@@ -50,7 +50,7 @@ concept SwiftBuilder [S] {
       }
     }
 
-    action test(build: S, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }, testType: option String) {
+    action test(build: S, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }, testType: option String) {
       -> ok(passed: Int, failed: Int, skipped: Int, duration: Int, testType: String) {
         Run tests against the built product using the resolved
         invocation profile. If invocation is provided, uses it

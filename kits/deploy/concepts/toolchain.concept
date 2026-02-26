@@ -27,7 +27,7 @@ concept Toolchain [T] {
       args: T -> list String
       outputFormat: T -> String
       configFile: T -> option String
-      env: T -> option map String String
+      env: T -> option String
     }
     constraints {
       versionRange: T -> option String
@@ -37,7 +37,7 @@ concept Toolchain [T] {
 
   actions {
     action resolve(language: String, platform: String, versionConstraint: option String, category: option String, toolName: option String) {
-      -> ok(tool: T, version: String, path: String, capabilities: list String, invocation: { command: String, args: list String, outputFormat: String, configFile: option String, env: option map String String }) {
+      -> ok(tool: T, version: String, path: String, capabilities: list String, invocation: { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }) {
         Resolve a toolchain for the given language and platform.
         Returns both the tool location AND how to invoke it.
         Completion arrives after the provider concept finishes

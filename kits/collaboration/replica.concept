@@ -74,15 +74,8 @@ concept Replica [R] {
     }
   }
 
-  invariant "convergence" {
-    after {
-      // After all replicas have received all updates (quiescence),
-      // all replicas return identical state from getState().
-      localUpdate(op: o) -> ok(newState: _)
-    }
-    then {
-      // Post-sync: all peers converge to the same state.
-      getState() -> ok(state: s, clock: _)
-    }
+  invariant {
+    after localUpdate(op: o) -> ok(newState: n)
+    then getState() -> ok(state: s, clock: c)
   }
 }

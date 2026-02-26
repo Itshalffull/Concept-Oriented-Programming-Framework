@@ -55,5 +55,6 @@ concept Transform [T] {
 
   invariant {
     after chain(value: "Hello World!", transformIds: "slugify,truncate") -> ok(result: "hello-world")
+    then preview(value: "hello-world", transformId: "slugify") -> ok(before: "hello-world", after: "hello-world")
   }
 }
