@@ -1,0 +1,15 @@
+// Track widget mounts correlated to WidgetEntity.
+// When Machine/spawn creates a new widget instance, record
+// the mount event for lifecycle tracking.
+
+sync WidgetMountCorrelationSync [eventual]
+when {
+  Machine/spawn: [ machine: ?m; widget: ?widgetName ]
+    => [ machine: ?m ]
+}
+where {
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "widget-mount"; flowId: ?m ]
+}

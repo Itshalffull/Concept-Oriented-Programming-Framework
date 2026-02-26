@@ -1,0 +1,15 @@
+// Track slot clear activity correlated to the host widget.
+// Records when content is removed from a widget's slot.
+
+sync SlotClearCorrelationSync [eventual]
+when {
+  Slot/clear: [ slot: ?slot ]
+    => [ slot: ?slot ]
+}
+where {
+  Slot: { ?slot host: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?slotSymbol; kind: "slot-clear"; flowId: ?slot ]
+}

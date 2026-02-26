@@ -1,0 +1,12 @@
+// Record affordance matches when WidgetResolver resolves a widget.
+// Validates static affordance analysis against actual runtime
+// resolution decisions.
+
+sync SelectionPipelineProfilingSync [eventual]
+when {
+  WidgetResolver/resolve: [ element: ?element; context: ?context ]
+    => [ widget: ?widget; score: ?score; reason: ?reason ]
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "affordance-match"; flowId: ?element ]
+}

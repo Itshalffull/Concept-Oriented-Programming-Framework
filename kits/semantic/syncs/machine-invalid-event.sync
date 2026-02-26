@@ -1,0 +1,16 @@
+// Record errors when Machine/send receives an invalid event.
+// Resolves the machine's widget to its WidgetEntity and records
+// a machine-invalid-event error for debugging FSM issues.
+
+sync MachineInvalidEventSync [eager]
+when {
+  Machine/send: [ machine: ?m; event: ?event ]
+    => invalid(message: ?msg)
+}
+where {
+  Machine: { ?m component: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  ErrorCorrelation/record: [ flowId: ?m; errorKind: "machine-invalid-event"; message: ?msg; rawEvent: ?event ]
+}

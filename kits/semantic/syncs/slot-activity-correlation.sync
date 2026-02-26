@@ -1,0 +1,15 @@
+// Track slot fill activity correlated to the host widget.
+// Records when content is injected into a widget's slot.
+
+sync SlotActivityCorrelationSync [eventual]
+when {
+  Slot/fill: [ slot: ?slot; content: ?content ]
+    => [ slot: ?slot ]
+}
+where {
+  Slot: { ?slot host: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?slotSymbol; kind: "slot-fill"; flowId: ?slot ]
+}

@@ -1,0 +1,19 @@
+// Correlate Machine state transitions with WidgetStateEntity.
+// When a Machine/send transitions to a new state, resolve the
+// widget and state to their static entities and record coverage
+// for both the state and the transition.
+
+sync MachineStateCorrelationSync [eventual]
+when {
+  Machine/send: [ machine: ?m; event: ?event ]
+    => [ machine: ?m; state: ?newState ]
+}
+where {
+  Machine: { ?m component: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+  WidgetStateEntity: { ?stateEntity widget: ?widgetEntity; name: ?newState }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?stateSymbol; kind: "widget-state"; flowId: ?m ]
+  RuntimeCoverage/record: [ symbol: ?transitionSymbol; kind: "transition"; flowId: ?m ]
+}

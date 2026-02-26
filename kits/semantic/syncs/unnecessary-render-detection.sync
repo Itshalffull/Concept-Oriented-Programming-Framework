@@ -1,0 +1,17 @@
+// Detect renders where Machine/connect output didn't change.
+// When props are unchanged from the previous connect call,
+// the resulting render is unnecessary — a performance waste.
+
+sync UnnecessaryRenderDetectionSync [eventual]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => [ machine: ?machine; props: ?newProps ]
+}
+where {
+  Machine: { ?machine component: ?widgetName }
+  filter(?newProps == ?previousProps)
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "widget-unnecessary-render"; flowId: ?machine ]
+}

@@ -1,0 +1,12 @@
+// Aggregate performance data periodically when Telemetry flushes.
+// Computes timing statistics (p50, p90, p99), error rates, sync
+// breakdowns, and render performance per static entity.
+
+sync PerformanceAggregationSync [eventual]
+when {
+  Telemetry/flush: [ window: ?window ]
+    => [ window: ?window ]
+}
+then {
+  PerformanceProfile/aggregate: [ symbol: ?entitySymbol; window: ?window ]
+}

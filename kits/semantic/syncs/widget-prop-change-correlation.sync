@@ -1,0 +1,16 @@
+// Track prop changes when Machine/connect produces new props.
+// Records what changed and correlates to the widget entity
+// for lifecycle reporting.
+
+sync WidgetPropChangeCorrelationSync [eventual]
+when {
+  Machine/connect: [ machine: ?machine ]
+    => [ machine: ?machine; props: ?newProps ]
+}
+where {
+  Machine: { ?machine component: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "widget-prop-change"; flowId: ?machine ]
+}

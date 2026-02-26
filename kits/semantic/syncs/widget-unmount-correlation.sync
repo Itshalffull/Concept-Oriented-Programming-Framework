@@ -1,0 +1,16 @@
+// Track widget unmounts correlated to WidgetEntity.
+// When Machine/destroy removes a widget instance, record
+// the unmount event for lifecycle tracking.
+
+sync WidgetUnmountCorrelationSync [eventual]
+when {
+  Machine/destroy: [ machine: ?m ]
+    => [ machine: ?m ]
+}
+where {
+  Machine: { ?m component: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "widget-unmount"; flowId: ?m ]
+}

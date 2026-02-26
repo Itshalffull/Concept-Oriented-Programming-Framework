@@ -1,0 +1,19 @@
+// Trace which signal write caused which widget(s) to re-render.
+// The causal chain from data change to pixels: Signal/write →
+// Binding (via signalMap) → Host (via tracked binding) →
+// Machine (via host's tracked resources) → WidgetEntity.
+
+sync SignalToWidgetRenderTraceSync [eventual]
+when {
+  Signal/write: [ signal: ?signal; value: ?value ]
+    => [ signal: ?signal; version: ?version ]
+}
+where {
+  Binding: { ?binding signalMap: ?map }
+  filter(contains(?map, ?signal))
+  Host: { ?host binding: ?binding }
+  Machine: { ?machine status: "running" }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "widget-render"; flowId: ?signal ]
+}

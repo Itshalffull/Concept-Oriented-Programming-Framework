@@ -1,0 +1,16 @@
+// Track every widget render correlated to the widget entity
+// and the triggering signal. Resolves which machine instance
+// this render is for via the FrameworkAdapter.
+
+sync WidgetRenderCorrelationSync [eventual]
+when {
+  FrameworkAdapter/render: [ adapter: ?adapter; props: ?props ]
+    => [ adapter: ?adapter ]
+}
+where {
+  Machine: { ?machine status: "running"; component: ?widgetName }
+  WidgetEntity: { ?widgetEntity name: ?widgetName }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?widgetSymbol; kind: "widget-render"; flowId: ?machine ]
+}
