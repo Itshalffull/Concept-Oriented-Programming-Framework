@@ -1,0 +1,31 @@
+@version(1)
+concept SymbolIndexProvider [I] {
+
+  purpose {
+    Search index provider optimized for symbol lookup. Indexes
+    symbol strings, kinds, and namespaces for fast symbol
+    resolution and fuzzy symbol search. Registers as a
+    SearchIndex provider.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this index provider with PluginRegistry
+        for symbol search.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the symbol index.
+      }
+    }
+  }
+}

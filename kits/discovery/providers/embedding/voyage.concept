@@ -1,0 +1,32 @@
+@version(1)
+concept VoyageCodeEmbeddingProvider [I] {
+
+  purpose {
+    Embedding model provider using Voyage AI's voyage-code-3
+    model. Code-optimized embeddings with superior performance
+    on code search tasks. Requires network access and API key.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    modelName: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this embedding provider with PluginRegistry
+        for Voyage Code model.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the Voyage Code embedding provider.
+      }
+    }
+  }
+}

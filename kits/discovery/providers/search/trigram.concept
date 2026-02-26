@@ -1,0 +1,30 @@
+@version(1)
+concept TrigramIndexProvider [I] {
+
+  purpose {
+    Search index provider using trigram indexing for fast
+    substring and regex text search across project files.
+    Registers as a SearchIndex provider.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this index provider with PluginRegistry
+        for trigram text search.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the trigram index.
+      }
+    }
+  }
+}

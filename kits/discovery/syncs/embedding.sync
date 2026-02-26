@@ -1,0 +1,17 @@
+// Compute embeddings for extracted definition units.
+// Only recomputes when the content digest changes, avoiding
+// unnecessary embedding API calls for unchanged code.
+
+sync EmbeddingSync [eventual]
+when {
+  DefinitionUnit/extract: [ tree: ?tree; startByte: ?start; endByte: ?end ]
+    => [ unit: ?unit ]
+  ContentDigest/compute: [ unit: ?unit; algorithm: ?algo ]
+    => [ digest: ?digest ]
+}
+where {
+  filter(NOT SemanticEmbedding: { ?existing digest: ?digest })
+}
+then {
+  SemanticEmbedding/compute: [ unit: ?unit; model: ?configuredModel ]
+}

@@ -1,0 +1,66 @@
+@version(1)
+concept SemanticEmbedding [B] {
+
+  purpose {
+    Vector representation of DefinitionUnits for similarity search
+    and natural language code search. Cached by content digest so
+    embeddings are recomputed only when the underlying code changes.
+  }
+
+  state {
+    embeddings: set B
+    unit: B -> String
+    digest: B -> String
+    model: B -> String
+    vector: B -> String
+    dimensions: B -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action compute(unit: String, model: String) {
+      -> ok(embedding: B) {
+        Compute a vector embedding for a definition unit using
+        the specified model (codeBERT, unixcoder, openai-code,
+        voyage-code).
+      }
+      -> modelUnavailable(model: String) {
+        The requested embedding model is not available.
+      }
+    }
+
+    action searchSimilar(queryVector: String, topK: Int, language: String, kind: String) {
+      -> ok(results: String) {
+        Find definition units most similar to the query vector,
+        optionally filtered by language and kind. Results as
+        serialized JSON array of { unit, score }.
+      }
+    }
+
+    action searchNaturalLanguage(query: String, topK: Int) {
+      -> ok(results: String) {
+        Search for code matching a natural language description.
+        Embeds the query and finds nearest definition units.
+        Results as serialized JSON array of { unit, score }.
+      }
+    }
+
+    action get(embedding: B) {
+      -> ok(embedding: B, unit: String, model: String, dimensions: Int) {
+        Retrieve embedding metadata (vector omitted for size).
+      }
+      -> notfound() {
+        Embedding does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after compute(unit: "def-123", model: "codeBERT") -> ok(embedding: b)
+    then get(embedding: b) -> ok(embedding: b, unit: "def-123", model: "codeBERT", dimensions: _)
+  }
+}

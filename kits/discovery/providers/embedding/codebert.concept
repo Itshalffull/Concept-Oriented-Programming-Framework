@@ -1,0 +1,31 @@
+@version(1)
+concept CodeBERTEmbeddingProvider [I] {
+
+  purpose {
+    Embedding model provider using CodeBERT for local,
+    open-source code embeddings. Runs without network
+    access after initial model download.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    modelName: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this embedding provider with PluginRegistry
+        for CodeBERT model.
+      }
+      -> loadError(message: String) {
+        Failed to load the CodeBERT model.
+      }
+    }
+  }
+}

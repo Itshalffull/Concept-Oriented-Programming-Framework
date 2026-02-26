@@ -1,0 +1,30 @@
+@version(1)
+concept SuffixArrayIndexProvider [I] {
+
+  purpose {
+    Search index provider using suffix arrays for exact and
+    approximate substring matching with compressed storage.
+    Registers as a SearchIndex provider.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this index provider with PluginRegistry
+        for suffix array search.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the suffix array index.
+      }
+    }
+  }
+}

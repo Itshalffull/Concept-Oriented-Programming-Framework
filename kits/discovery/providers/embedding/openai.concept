@@ -1,0 +1,31 @@
+@version(1)
+concept OpenAIEmbeddingProvider [I] {
+
+  purpose {
+    Embedding model provider using OpenAI's text-embedding-3-large
+    API. Requires network access and API key.
+  }
+
+  state {
+    instances: set I
+    providerRef: I -> String
+    modelName: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action initialize() {
+      -> ok(instance: I) {
+        Register this embedding provider with PluginRegistry
+        for OpenAI embedding model.
+      }
+      -> loadError(message: String) {
+        Failed to initialize the OpenAI embedding provider.
+      }
+    }
+  }
+}
