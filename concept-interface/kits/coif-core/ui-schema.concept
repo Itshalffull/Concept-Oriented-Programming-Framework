@@ -2,13 +2,12 @@
 concept UISchema [S, C] {
 
   purpose {
-    Inspect a COPF concept spec and generate a UI schema — the
+    Inspect a concept spec and generate a UI schema — the
     complete description of how that concept should be presented.
-    Implements the dual-schema pattern: data schema (from .concept
-    spec) is the source, UI schema (generated here) is the
-    presentation layer. This is the Metawidget-style inspection
-    pipeline: inspect → apply defaults → apply overrides → produce
-    element tree.
+    Implements the dual-schema pattern: data schema (from spec)
+    is the source, UI schema (generated here) is the presentation
+    layer. Inspection pipeline: inspect → classify interaction
+    types → apply defaults → apply overrides → produce element tree.
   }
 
   state {
@@ -26,42 +25,41 @@ concept UISchema [S, C] {
   actions {
     action inspect(schema: S, conceptSpec: String) {
       -> ok(schema: S) {
-        Parse the concept spec. Extract state fields, actions, and
-        return variants. Apply type-mapping rules (String → input-text,
-        Int → input-number, Bool → toggle, etc.). Generate default
-        views: list, detail, create, edit. If spec contains an
-        interface section, apply overrides on top of defaults.
+        Parse concept spec. Extract state fields, actions,
+        and return variants. Generate default views: list,
+        detail, create, edit. If spec contains an interface
+        section, apply overrides on top of defaults.
       }
-      -> parseError(message: String) { The concept spec could not be parsed. }
+      -> parseError(message: String) { Spec could not be parsed. }
     }
 
     action override(schema: S, overrides: String) {
       -> ok(schema: S) {
-        Apply partial UI schema on top of the generated one.
-        Merges at field/action/view level — only specified
-        properties are replaced.
+        Apply partial UI schema on top of generated one.
+        Merges at field/action/view level.
       }
-      -> notfound(message: String) { No schema exists for this concept. }
-      -> invalid(message: String) { Override JSON is malformed. }
+      -> notfound(message: String) { No schema for this concept. }
+      -> invalid(message: String) { Override malformed. }
     }
 
     action getSchema(schema: S) {
-      -> ok(schema: S, uiSchema: String) { Return current UI schema as JSON. }
+      -> ok(schema: S, uiSchema: String) { Return current schema. }
       -> notfound(message: String) { No schema exists. }
     }
 
     action getElements(schema: S) {
       -> ok(elements: String) {
-        Return abstract element tree as JSON — intermediate
-        representation consumed by Widget concept.
+        Return abstract element tree — intermediate
+        representation consumed by downstream classification
+        and widget resolution.
       }
       -> notfound(message: String) { No schema exists. }
     }
   }
 
   invariant {
-    after inspect(schema: s, conceptSpec: "concept Test [T] { state { name: T -> String } actions { action create(t: T, name: String) { -> ok(t: T) { Create it. } } } }")
+    after inspect(schema: s, conceptSpec: "concept Test [T] { state { name: T -> String } }")
       -> ok(schema: s)
-    then getSchema(schema: s) -> ok(schema: s, uiSchema: _)
+    then getElements(schema: s) -> ok(elements: _)
   }
 }

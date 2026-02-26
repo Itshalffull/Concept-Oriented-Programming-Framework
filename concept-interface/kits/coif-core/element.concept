@@ -4,10 +4,9 @@ concept Element [E] {
   purpose {
     Abstract, modality-independent interaction units. An Element
     describes WHAT a user can do — select, input, trigger, navigate,
-    display — without specifying HOW it renders. Drawn from the
-    CAMELEON Reference Framework's Abstract Interaction Objects.
-    The same Element renders as a dropdown in GUI, a prompt in CLI,
-    an enum in API, or a picker in mobile.
+    display — without specifying HOW it renders. The same Element
+    renders as a dropdown in GUI, a prompt in CLI, an enum in API,
+    or a picker in mobile.
   }
 
   state {
@@ -19,6 +18,9 @@ concept Element [E] {
     constraints: E -> option String
     children: E -> list E
     parent: E -> option E
+    interactorType: E -> option String
+    interactorProps: E -> option String
+    resolvedWidget: E -> option String
   }
 
   capabilities {
@@ -26,7 +28,8 @@ concept Element [E] {
   }
 
   actions {
-    action create(element: E, kind: String, label: String, dataType: String) {
+    action create(element: E, kind: String, label: String,
+                  dataType: String) {
       -> ok(element: E) {
         Create an abstract element. Kind is one of:
         input-text, input-number, input-date, input-bool,
@@ -34,35 +37,49 @@ concept Element [E] {
         output-text, output-number, output-date, output-bool,
         group, container, rich-text, file-upload, media-display.
       }
-      -> invalid(message: String) { The kind is not recognized. }
+      -> invalid(message: String) { Kind not recognized. }
     }
 
     action nest(parent: E, child: E) {
-      -> ok(parent: E) { Add a child to a group or container. }
+      -> ok(parent: E) { Add child to group or container. }
       -> invalid(message: String) { Parent cannot contain children. }
     }
 
     action setConstraints(element: E, constraints: String) {
       -> ok(element: E) {
-        Apply constraints as JSON: min, max, minLength,
-        maxLength, pattern, options (for selections).
+        Apply constraints: min, max, minLength, maxLength,
+        pattern, options (for selections).
       }
-      -> notfound(message: String) { Element does not exist. }
+      -> notfound(message: String) { Element missing. }
+    }
+
+    action enrich(element: E, interactorType: String,
+                  interactorProps: String) {
+      -> ok(element: E) {
+        Set the semantic interaction type and properties
+        determined by classification.
+      }
+      -> notfound(message: String) { Element missing. }
+    }
+
+    action assignWidget(element: E, widget: String) {
+      -> ok(element: E) {
+        Set the resolved widget name determined by
+        affordance matching.
+      }
+      -> notfound(message: String) { Element missing. }
     }
 
     action remove(element: E) {
       -> ok(element: E) { Remove element and detach children. }
-      -> notfound(message: String) { Element does not exist. }
+      -> notfound(message: String) { Element missing. }
     }
   }
 
   invariant {
     after create(element: e, kind: "input-text", label: "Title",
                  dataType: "String") -> ok(element: e)
-    then setConstraints(element: e,
-           constraints: "{ \"maxLength\": 100, \"pattern\": \"^[A-Z]\" }")
-      -> ok(element: e)
-    and create(element: e2, kind: "not-a-real-kind", label: "X",
-               dataType: "String") -> invalid(message: _)
+    then enrich(element: e, interactorType: "text-short",
+                interactorProps: "{}") -> ok(element: e)
   }
 }

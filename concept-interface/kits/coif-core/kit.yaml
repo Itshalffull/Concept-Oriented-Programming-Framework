@@ -1,12 +1,13 @@
 # kits/coif-core/kit.yaml
 kit:
   name: coif-core
-  version: 0.1.0
+  version: 0.4.0
   description: >
     Foundation concepts for COIF: design tokens, abstract elements,
     UI schemas, concept bindings, and reactive signals. Required by
-    all other COIF kits. Implements the core pipeline: concept spec
-    inspection → UI schema generation → signal-based reactive state.
+    all other COIF kits. Inspection pipeline: inspect → classify
+    interaction types → apply defaults → apply overrides → produce
+    element tree.
 
 concepts:
   DesignToken:
