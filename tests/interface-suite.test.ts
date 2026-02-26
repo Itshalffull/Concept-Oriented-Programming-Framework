@@ -748,7 +748,7 @@ describe('Kit YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(25);
+    expect(specPaths.length).toBe(27);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);
@@ -757,7 +757,7 @@ describe('Kit YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(38);
+    expect(syncPaths.length).toBe(41);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(INTERFACE_DIR, relPath);

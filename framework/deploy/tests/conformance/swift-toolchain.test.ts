@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { swiftToolchainHandler } from '../../../../implementations/typescript/deploy/swift-toolchain.impl.js';
+import { swiftToolchainHandler } from '../../../../handlers/ts/deploy/swift-toolchain.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('SwiftToolchain conformance', () => {

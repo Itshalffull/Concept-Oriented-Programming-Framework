@@ -13,9 +13,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { toolchainHandler } from '../../../../implementations/typescript/deploy/toolchain.impl.js';
-import { builderHandler } from '../../../../implementations/typescript/deploy/builder.impl.js';
-import { artifactHandler } from '../../../../implementations/typescript/deploy/artifact.impl.js';
+import { toolchainHandler } from '../../../../handlers/ts/deploy/toolchain.handler.js';
+import { builderHandler } from '../../../../handlers/ts/deploy/builder.handler.js';
+import { artifactHandler } from '../../../../handlers/ts/deploy/artifact.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 /**

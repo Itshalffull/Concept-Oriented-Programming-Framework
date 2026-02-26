@@ -10,9 +10,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
-import { kindSystemHandler } from '../../implementations/typescript/kind-system.impl.js';
-import { generationPlanHandler } from '../../implementations/typescript/generation-plan.impl.js';
+import { buildCacheHandler } from '../../../../handlers/ts/framework/generation/build-cache.handler.js';
+import { kindSystemHandler } from '../../../../handlers/ts/framework/generation/kind-system.handler.js';
+import { generationPlanHandler } from '../../../../handlers/ts/framework/generation/generation-plan.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Multi-family integration', () => {

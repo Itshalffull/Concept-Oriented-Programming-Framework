@@ -10,9 +10,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { resourceHandler } from '../../implementations/typescript/resource.impl.js';
-import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
-import { kindSystemHandler } from '../../implementations/typescript/kind-system.impl.js';
+import { resourceHandler } from '../../../../handlers/ts/framework/generation/resource.handler.js';
+import { buildCacheHandler } from '../../../../handlers/ts/framework/generation/build-cache.handler.js';
+import { kindSystemHandler } from '../../../../handlers/ts/framework/generation/kind-system.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Cascade invalidation integration', () => {

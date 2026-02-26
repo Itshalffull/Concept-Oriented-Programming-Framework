@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "fp-ts": "^2.16.11",
     "tree-sitter-wasms": "^0.1.13",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"

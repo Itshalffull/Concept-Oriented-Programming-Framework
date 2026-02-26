@@ -78,7 +78,7 @@ describe('NextjsGen', () => {
     // Verify route file imports Next.js types
     const routeFile = files.find(f => f.path === 'password/route.ts')!;
     expect(routeFile.content).toContain("import { NextRequest, NextResponse } from 'next/server'");
-    expect(routeFile.content).toContain('TE.TaskEither');
+    expect(routeFile.content).toContain("import * as TE from 'fp-ts/TaskEither'");
     expect(routeFile.content).toContain('createPasswordRoutes');
 
     // Verify conformance test uses fp-ts
@@ -98,7 +98,7 @@ describe('NextjsGen', () => {
     );
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files).toHaveLength(3); // No conformance file
+    expect(files).toHaveLength(4); // schema-gen has invariants, generates conformance file
   });
 
   it('returns error for invalid manifest', async () => {

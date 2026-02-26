@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { cliTargetHandler } from '../../../../implementations/typescript/framework/providers/cli-target.impl.js';
+import { cliTargetHandler } from '../../../../handlers/ts/framework/providers/cli-target.handler.js';
 import type { ConceptManifest } from '@clef/runtime';
 
 function makeProjection(manifest: ConceptManifest, name: string): string {

@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
+import { emitterHandler } from '../../../../handlers/ts/framework/emitter.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Source traceability integration', () => {

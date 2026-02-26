@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { snapshotHandler } from '../../implementations/typescript/snapshot.impl.js';
+import { snapshotHandler } from '../../../../handlers/ts/framework/test/snapshot.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Snapshot conformance', () => {

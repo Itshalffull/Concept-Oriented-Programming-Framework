@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '@clef/runtime';
-import { builderHandler } from '../../../../implementations/typescript/deploy/builder.impl.js';
+import { builderHandler } from '../../../../handlers/ts/deploy/builder.handler.js';
 import type { ConceptStorage } from '@clef/runtime';
 
 describe('Builder conformance', () => {

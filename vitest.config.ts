@@ -8,7 +8,16 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/**/*.test.ts', 'generated/surface/**/*.test.ts', 'generated/typescript/**/*.test.ts', 'kits/generation/tests/**/*.test.ts'],
+    include: [
+      'tests/**/*.test.ts',
+      'generated/surface/**/*.test.ts',
+      'generated/typescript/**/*.test.ts',
+      'generated/deploy/**/*.test.ts',
+      'generated/repertoire/**/*.test.ts',
+      'framework/**/tests/**/*.test.ts',
+      'codegen/**/*.test.ts',
+      'kits/generation/tests/**/*.test.ts',
+    ],
     globals: true,
   },
 });
