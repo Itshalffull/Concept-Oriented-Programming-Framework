@@ -1,0 +1,109 @@
+@version(1)
+concept RuntimeFlow [F] {
+
+  purpose {
+    Enriched execution flow that correlates ActionLog events with
+    static semantic entities — the resolved version of FlowTrace.
+    Enables comparing actual runtime paths against static FlowGraph
+    predictions to find deviations, missing syncs, and unexpected
+    branches.
+  }
+
+  state {
+    flows: set F
+    flowId: F -> String
+    startedAt: F -> String
+    completedAt: F -> String
+    status: F -> String
+    trigger: F -> String
+    steps: F -> String
+    expectedPath: F -> String
+    deviations: F -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action correlate(flowId: String) {
+      -> ok(flow: F) {
+        Build an enriched flow by resolving all ActionLog entries
+        for this flow ID to their static semantic entities
+        (ConceptEntity, ActionEntity, VariantEntity, SyncEntity).
+      }
+      -> partial(flow: F, unresolved: String) {
+        Flow built but some events could not be resolved to
+        static entities. Unresolved items as serialized JSON array.
+      }
+      -> notfound() {
+        No ActionLog entries exist for this flow ID.
+      }
+    }
+
+    action findByAction(action: String, since: String) {
+      -> ok(flows: String) {
+        Return all flows that include the given action.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findBySync(sync: String, since: String) {
+      -> ok(flows: String) {
+        Return all flows that triggered the given sync.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findByVariant(variant: String, since: String) {
+      -> ok(flows: String) {
+        Return all flows that produced the given variant.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findFailures(since: String) {
+      -> ok(flows: String) {
+        Return all flows with status "failed" or "timeout".
+        Results as serialized JSON array.
+      }
+    }
+
+    action compareToStatic(flow: F) {
+      -> matches(pathLength: Int) {
+        The runtime execution path matches the predicted
+        static FlowGraph path exactly.
+      }
+      -> deviates(deviations: String) {
+        Runtime path deviates from static prediction.
+        Deviations as serialized JSON array of
+        { step, expected, actual }.
+      }
+      -> noStaticPath() {
+        No FlowGraph path exists for this flow's trigger action.
+      }
+    }
+
+    action sourceLocations(flow: F) {
+      -> ok(locations: String) {
+        Return source file locations for each step in the flow.
+        Results as serialized JSON array of
+        { step, file, line, col, symbol }.
+      }
+    }
+
+    action get(flow: F) {
+      -> ok(flow: F, flowId: String, status: String, stepCount: Int, deviationCount: Int) {
+        Retrieve runtime flow metadata.
+      }
+      -> notfound() {
+        Flow does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after correlate(flowId: "f-123") -> ok(flow: f)
+    then get(flow: f) -> ok(flow: f, flowId: "f-123", status: _, stepCount: _, deviationCount: _)
+  }
+}

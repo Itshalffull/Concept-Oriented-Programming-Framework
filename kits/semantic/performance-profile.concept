@@ -1,0 +1,84 @@
+@version(1)
+concept PerformanceProfile [P] {
+
+  purpose {
+    Aggregate performance data per static entity — connecting
+    slow operations to their declared structure for optimization.
+    Supports timing breakdown for syncs (when/where/then phases),
+    selection pipeline (classify/resolve/spawn/connect/render),
+    and widget rendering (render count, unnecessary renders,
+    mount/unmount timing).
+  }
+
+  state {
+    profiles: set P
+    entitySymbol: P -> String
+    entityKind: P -> String
+    sampleWindow: P -> String
+    invocationCount: P -> Int
+    timing: P -> String
+    errorRate: P -> String
+    syncBreakdown: P -> String
+    selectionBreakdown: P -> String
+    renderBreakdown: P -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action aggregate(symbol: String, window: String) {
+      -> ok(profile: P) {
+        Aggregate performance data for a static entity over a
+        time window. Window as serialized JSON { start, end }.
+      }
+      -> insufficientData(count: Int) {
+        Not enough data points in the window for meaningful
+        statistics.
+      }
+    }
+
+    action hotspots(kind: String, metric: String, topN: Int) {
+      -> ok(hotspots: String) {
+        Return top N entities by the given metric (p50, p90,
+        p99, errorRate, unnecessaryRenderPct). Results as
+        serialized JSON array of { symbol, value }.
+      }
+    }
+
+    action slowChains(thresholdMs: Int) {
+      -> ok(chains: String) {
+        Find sync chains whose total p90 exceeds the threshold.
+        Identifies the bottleneck entity in each chain. Results
+        as serialized JSON array of { flowGraphPath, p90TotalMs,
+        bottleneck }.
+      }
+    }
+
+    action compareWindows(symbol: String, windowA: String, windowB: String) {
+      -> ok(comparison: String) {
+        Compare performance between two time windows for
+        regression detection. Results as serialized JSON:
+        { aP50, bP50, aP99, bP99, regression, pctChange }.
+      }
+      -> insufficientData(window: String, count: Int) {
+        Not enough data in one of the windows.
+      }
+    }
+
+    action get(profile: P) {
+      -> ok(profile: P, entitySymbol: String, entityKind: String, invocationCount: Int, errorRate: String) {
+        Retrieve profile metadata.
+      }
+      -> notfound() {
+        Profile does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after aggregate(symbol: "copf/action/Article/create", window: "{}") -> ok(profile: p)
+    then get(profile: p) -> ok(profile: p, entitySymbol: "copf/action/Article/create", entityKind: _, invocationCount: _, errorRate: _)
+  }
+}

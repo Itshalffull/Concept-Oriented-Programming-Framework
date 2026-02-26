@@ -1,12 +1,13 @@
 kit:
   name: semantic
-  version: 0.2.0
+  version: 0.3.0
   description: >
     Semantic entities for COPF and COIF — concepts, actions, variants,
     syncs, state fields, widgets, anatomy parts, widget states, widget
-    props, themes, and interactors as first-class queryable nodes.
-    The semantic glue connecting spec declarations to generated
-    artifacts, runtime behavior, and cross-system data flow.
+    props, themes, interactors, runtime flows, runtime coverage,
+    performance profiles, and error correlations as first-class
+    queryable nodes. The semantic glue connecting spec declarations
+    to generated artifacts, runtime behavior, and cross-system data flow.
 
 concepts:
   # COPF semantic entities
@@ -65,6 +66,27 @@ concepts:
     spec: ./interactor-entity.concept
     params:
       I: { as: interactor-entity-id, description: "Interactor entity identifier" }
+
+  # Runtime semantic entities
+  RuntimeFlow:
+    spec: ./runtime-flow.concept
+    params:
+      F: { as: runtime-flow-id, description: "Runtime flow identifier" }
+
+  RuntimeCoverage:
+    spec: ./runtime-coverage.concept
+    params:
+      C: { as: runtime-coverage-id, description: "Runtime coverage identifier" }
+
+  PerformanceProfile:
+    spec: ./performance-profile.concept
+    params:
+      P: { as: performance-profile-id, description: "Performance profile identifier" }
+
+  ErrorCorrelation:
+    spec: ./error-correlation.concept
+    params:
+      R: { as: error-correlation-id, description: "Error correlation identifier" }
 
 syncs:
   required:
@@ -154,7 +176,113 @@ syncs:
         and triggers relationships between anatomy parts and
         concept state fields or actions.
 
-  integration: []
+  integration:
+    # COPF runtime correlation syncs
+    - path: ./syncs/action-log-correlation.sync
+      name: ActionLogCorrelationSync
+      description: >
+        Correlate ActionLog entries to static ConceptEntity and
+        ActionEntity via symbol resolution.
+
+    - path: ./syncs/variant-coverage.sync
+      name: VariantCoverageSync
+      description: >
+        Record which VariantEntity branches are exercised at runtime.
+
+    - path: ./syncs/sync-firing-correlation.sync
+      name: SyncFiringCorrelationSync
+      description: >
+        Correlate SyncEngine firings to static SyncEntity definitions.
+
+    - path: ./syncs/flow-correlation.sync
+      name: FlowCorrelationSync
+      description: >
+        Build enriched RuntimeFlow from FlowTrace spans, resolving
+        each hop to its static entity.
+
+    - path: ./syncs/flow-deviation-check.sync
+      name: FlowDeviationCheckSync
+      description: >
+        Compare actual RuntimeFlow paths against declared flow-graph
+        edges to detect undeclared data flows.
+
+    - path: ./syncs/error-correlation.sync
+      name: ErrorCorrelationSync
+      description: >
+        Correlate runtime errors to the static concept, action, or
+        sync where they originated.
+
+    - path: ./syncs/sync-mismatch-error.sync
+      name: SyncMismatchErrorSync
+      description: >
+        Detect sync failures where expected patterns don't match
+        actual action completions.
+
+    # COIF runtime correlation syncs
+    - path: ./syncs/machine-state-correlation.sync
+      name: MachineStateCorrelationSync
+      description: >
+        Correlate Machine state transitions to static WidgetStateEntity.
+
+    - path: ./syncs/machine-invalid-event.sync
+      name: MachineInvalidEventSync
+      description: >
+        Record Machine events rejected in the current state as
+        error correlations.
+
+    - path: ./syncs/selection-pipeline-profiling.sync
+      name: SelectionPipelineProfilingSync
+      description: >
+        Profile WidgetResolver selection pipeline timing with
+        per-candidate breakdowns.
+
+    - path: ./syncs/widget-mount-correlation.sync
+      name: WidgetMountCorrelationSync
+      description: >
+        Track widget mounts correlated to static WidgetEntity.
+
+    - path: ./syncs/widget-unmount-correlation.sync
+      name: WidgetUnmountCorrelationSync
+      description: >
+        Track widget unmounts correlated to static WidgetEntity.
+
+    - path: ./syncs/widget-render-correlation.sync
+      name: WidgetRenderCorrelationSync
+      description: >
+        Track widget renders correlated to static WidgetEntity.
+
+    - path: ./syncs/widget-prop-change-correlation.sync
+      name: WidgetPropChangeCorrelationSync
+      description: >
+        Track prop changes on widgets with source attribution.
+
+    - path: ./syncs/signal-to-widget-render-trace.sync
+      name: SignalToWidgetRenderTraceSync
+      description: >
+        Trace causality from Signal writes through Bindings and
+        Hosts to widget re-renders.
+
+    - path: ./syncs/slot-activity-correlation.sync
+      name: SlotActivityCorrelationSync
+      description: >
+        Track slot fill activity correlated to the host widget.
+
+    - path: ./syncs/slot-clear-correlation.sync
+      name: SlotClearCorrelationSync
+      description: >
+        Track slot clear activity correlated to the host widget.
+
+    - path: ./syncs/unnecessary-render-detection.sync
+      name: UnnecessaryRenderDetectionSync
+      description: >
+        Detect renders where Machine/connect output didn't change,
+        indicating wasted render cycles.
+
+    - path: ./syncs/performance-aggregation.sync
+      name: PerformanceAggregationSync
+      description: >
+        Aggregate performance data periodically when Telemetry
+        flushes, computing timing statistics and breakdowns.
 
 uses:
   - kit: parse
@@ -191,5 +319,15 @@ uses:
       - name: WidgetResolver
       - name: WidgetGen
       - name: ThemeGen
+      - name: Signal
+      - name: Host
+      - name: Slot
+  - kit: runtime
+    concepts:
+      - name: ActionLog
+      - name: FlowTrace
+      - name: SyncEngine
+      - name: Telemetry
+      - name: FrameworkAdapter
 
 dependencies: []

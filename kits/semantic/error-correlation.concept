@@ -1,0 +1,91 @@
+@version(1)
+concept ErrorCorrelation [E] {
+
+  purpose {
+    Links runtime errors to their static context — which concept,
+    action, variant, sync, widget, file, and line produced the
+    error, and what was the state of the flow at failure time.
+    The root_cause action walks backward through the flow to find
+    the earliest deviation from the expected FlowGraph path.
+  }
+
+  state {
+    errors: set E
+    flowId: E -> String
+    timestamp: E -> String
+    errorKind: E -> String
+    errorMessage: E -> String
+    conceptEntity: E -> String
+    actionEntity: E -> String
+    variantEntity: E -> String
+    syncEntity: E -> String
+    widgetEntity: E -> String
+    sourceLocation: E -> String
+    flowContext: E -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(flowId: String, errorKind: String, message: String, rawEvent: String) {
+      -> ok(error: E) {
+        Record a runtime error with auto-resolution of static
+        context. Error kind is one of: action-error, sync-mismatch,
+        where-clause-failure, transport-error,
+        machine-invalid-event, signal-cycle.
+      }
+    }
+
+    action findByEntity(symbol: String, since: String) {
+      -> ok(errors: String) {
+        Return all errors associated with a static entity.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findByKind(errorKind: String, since: String) {
+      -> ok(errors: String) {
+        Return all errors of a given kind.
+        Results as serialized JSON array.
+      }
+    }
+
+    action errorHotspots(since: String, topN: Int) {
+      -> ok(hotspots: String) {
+        Return entities with the most errors. Results as
+        serialized JSON array of { symbol, count, lastSeen,
+        sampleMessage }.
+      }
+    }
+
+    action rootCause(error: E) {
+      -> ok(chain: String, likelyCause: String, source: String) {
+        Walk backward through the flow's execution steps to
+        find the earliest deviation from the expected FlowGraph
+        path. Chain as serialized JSON array of { step, entity,
+        status }. LikelyCause as { entity, reason }. Source
+        as { file, line, col }.
+      }
+      -> inconclusive(partialChain: String) {
+        Could not determine root cause — partial chain returned
+        as serialized JSON array.
+      }
+    }
+
+    action get(error: E) {
+      -> ok(error: E, flowId: String, errorKind: String, errorMessage: String, timestamp: String) {
+        Retrieve error metadata.
+      }
+      -> notfound() {
+        Error does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after record(flowId: "f-123", errorKind: "action-error", message: "Token signing key not configured", rawEvent: "{}") -> ok(error: e)
+    then get(error: e) -> ok(error: e, flowId: "f-123", errorKind: "action-error", errorMessage: "Token signing key not configured", timestamp: _)
+  }
+}

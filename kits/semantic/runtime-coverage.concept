@@ -1,0 +1,115 @@
+@version(1)
+concept RuntimeCoverage [C] {
+
+  purpose {
+    Tracks which static entities have been exercised at runtime —
+    the bridge between declared structure and observed behavior.
+    Answers "which declared syncs/variants/widget states have
+    actually fired in production?" Combined with static dead-variant
+    analysis, gives the complete picture: statically dead vs
+    dynamically dead.
+  }
+
+  state {
+    entries: set C
+    entitySymbol: C -> String
+    entityKind: C -> String
+    firstExercised: C -> String
+    lastExercised: C -> String
+    executionCount: C -> Int
+    flowIds: C -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(symbol: String, kind: String, flowId: String) {
+      -> ok(entry: C) {
+        Record that a static entity was exercised. Kind is one of:
+        action, variant, sync, state-field, widget-state, transition,
+        widget-mount, widget-unmount, widget-render,
+        widget-prop-change, slot-fill, slot-clear, affordance-match,
+        widget-unnecessary-render.
+      }
+      -> created(entry: C) {
+        First time this entity was ever exercised.
+      }
+    }
+
+    action coverageReport(kind: String, since: String) {
+      -> ok(report: String) {
+        Coverage report for the given entity kind. Report as
+        serialized JSON: { totalEntities, exercised,
+        unexercised, coveragePct }.
+      }
+    }
+
+    action variantCoverage(concept: String) {
+      -> ok(report: String) {
+        Variant coverage for a specific concept. Report as
+        serialized JSON array of { action, variant, exercised,
+        count, lastSeen }.
+      }
+    }
+
+    action syncCoverage(since: String) {
+      -> ok(report: String) {
+        Sync coverage report. Results as serialized JSON array
+        of { sync, tier, exercised, count, avgDurationMs }.
+      }
+    }
+
+    action widgetStateCoverage(widget: String) {
+      -> ok(report: String) {
+        FSM state and transition coverage for a widget.
+        Results as serialized JSON array of { state, entered,
+        count, transitionsExercised, transitionsUnexercised }.
+      }
+    }
+
+    action widgetLifecycleReport(widget: String, since: String) {
+      -> ok(report: String) {
+        Full widget lifecycle report: mount/unmount counts,
+        active instances, render counts, unnecessary render
+        percentage, prop change sources, slot activity.
+        Report as serialized JSON.
+      }
+    }
+
+    action widgetRenderTrace(widgetInstance: String) {
+      -> ok(renders: String) {
+        Per-instance render trace: every render with timestamp,
+        duration, trigger (signal/field), props changed, and
+        whether the render was necessary. Results as serialized
+        JSON array.
+      }
+      -> notfound() {
+        No render data for this widget instance.
+      }
+    }
+
+    action widgetComparison(since: String, topN: Int) {
+      -> ok(ranking: String) {
+        Rank all widgets by render performance. Results as
+        serialized JSON array of { widget, mountCount,
+        totalRenders, unnecessaryRenderPct, avgRenderMs,
+        p90RenderMs }.
+      }
+    }
+
+    action deadAtRuntime(kind: String) {
+      -> ok(neverExercised: String) {
+        Return all static entities of the given kind that
+        have never been exercised at runtime.
+        Results as serialized JSON array of symbol strings.
+      }
+    }
+  }
+
+  invariant {
+    after record(symbol: "copf/action/Article/create", kind: "action", flowId: "f-123") -> ok(entry: c)
+    then coverageReport(kind: "action", since: "") -> ok(report: _)
+  }
+}
