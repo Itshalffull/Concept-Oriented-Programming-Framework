@@ -97,10 +97,10 @@ function buildDeployYaml(input: Record<string, unknown>): string {
     lines.push('concepts:');
     for (const c of concepts) {
       lines.push(`  ${c.name}:`);
-      lines.push(`    spec: ./specs/app/${toKebab(c.name)}.concept`);
+      lines.push(`    spec: ./concepts/${toKebab(c.name)}.concept`);
       lines.push('    implementations:');
       lines.push(`      - language: ${c.language || 'typescript'}`);
-      lines.push(`        path: ./handlers/${(c.language || 'typescript') === 'typescript' ? 'ts' : (c.language || 'typescript')}/app/${toKebab(c.name)}.handler.ts`);
+      lines.push(`        path: ./handlers/${(c.language || 'typescript') === 'typescript' ? 'ts' : (c.language || 'typescript')}/${toKebab(c.name)}.handler.ts`);
       lines.push(`        runtime: ${c.runtime || runtimes[0]?.name || 'main'}`);
       lines.push(`        storage: ${runtimes.find(r => r.name === (c.runtime || runtimes[0]?.name))?.storage || 'sqlite'}`);
     }
@@ -143,7 +143,7 @@ export const deployScaffoldGenHandler: ConceptHandler = {
       const deployYaml = buildDeployYaml(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `deploy/${toKebab(appName)}.deploy.yaml`, content: deployYaml },
+        { path: `deploys/${toKebab(appName)}.deploy.yaml`, content: deployYaml },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

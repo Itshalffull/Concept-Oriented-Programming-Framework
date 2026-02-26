@@ -83,7 +83,7 @@ emitterCommand
   .argument('<sourcePath>', 'Source Path')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
-  .addHelpText('after', '  clef emitter affected ./specs/app/user.concept  # Impact analysis for a concept spec')
+  .addHelpText('after', '  clef emitter affected ./concepts/user.concept  # Impact analysis for a concept spec')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'affected', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);

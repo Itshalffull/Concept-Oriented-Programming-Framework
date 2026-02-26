@@ -29,10 +29,19 @@ Scaffold a new Clef project named **<source>** with the standard directory layou
 
 | Directory | Purpose | Contains |
 |-----------|---------|----------|
-| specs/ | Concept specifications | .concept files |
+| concepts/ | Concept specifications | .concept files |
 | syncs/ | Synchronization rules | .sync files |
+| widgets/ | Widget specifications | .widget files |
+| themes/ | Theme specifications | .theme files |
+| interfaces/ | Interface manifests | .interface.yaml files |
+| deploys/ | Deploy manifests | .deploy.yaml files |
+| suites/ | Custom suites | suite.yaml + concepts + syncs |
 | handlers/ts/ | Handler code | .handler.ts files |
-| kits/ | Kit manifests | suite.yaml + concepts + syncs |
+| generated/ | Generated code (do not edit) | Per-target subdirs |
+| bind/ | Generated interface entry points | REST, CLI, MCP, SDK, etc. |
+| tests/ | Test files | conformance, contract, integration |
+| migrations/ | Schema migrations | Migration files |
+| .clef/ | Build artifacts (gitignored) | score, build, cache |
 
 
 ## Validation

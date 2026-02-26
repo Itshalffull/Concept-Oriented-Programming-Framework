@@ -308,23 +308,37 @@ describe('init command (project scaffolding)', () => {
       process.exit = origExit;
     }
 
-    // Verify directory structure
-    expect(existsSync(join(testProjectDir, 'specs/app'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'syncs/app'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'handlers/ts/app'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'tests'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'repertoire'))).toBe(true);
+    // Verify directory structure per clef-naming-reference.md
+    expect(existsSync(join(testProjectDir, 'concepts'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'syncs'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'handlers/ts'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'widgets'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'themes'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'interfaces'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'deploys'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'suites'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'tests/conformance'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'tests/contract'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'tests/integration'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'bind'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'migrations'))).toBe(true);
+    expect(existsSync(join(testProjectDir, '.clef/score'))).toBe(true);
+    expect(existsSync(join(testProjectDir, '.clef/build'))).toBe(true);
+    expect(existsSync(join(testProjectDir, '.clef/cache'))).toBe(true);
 
     // Verify template files
+    expect(existsSync(join(testProjectDir, 'clef.yaml'))).toBe(true);
     expect(existsSync(join(testProjectDir, 'package.json'))).toBe(true);
     expect(existsSync(join(testProjectDir, 'tsconfig.json'))).toBe(true);
     expect(existsSync(join(testProjectDir, '.gitignore'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'specs/app/hello.concept'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'syncs/app/hello.sync'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'concepts/hello.concept'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'syncs/hello.sync'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'interfaces/api.interface.yaml'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'deploys/local.deploy.yaml'))).toBe(true);
 
     // Verify the example concept is parseable
     const conceptSource = readFileSync(
-      join(testProjectDir, 'specs/app/hello.concept'),
+      join(testProjectDir, 'concepts/hello.concept'),
       'utf-8',
     );
     const ast = parseConceptFile(conceptSource);
@@ -332,7 +346,7 @@ describe('init command (project scaffolding)', () => {
 
     // Verify the example sync is parseable
     const syncSource = readFileSync(
-      join(testProjectDir, 'syncs/app/hello.sync'),
+      join(testProjectDir, 'syncs/hello.sync'),
       'utf-8',
     );
     const syncs = parseSyncFile(syncSource);

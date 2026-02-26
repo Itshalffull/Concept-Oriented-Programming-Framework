@@ -144,7 +144,7 @@ function buildConformanceTest(input: Record<string, unknown>): string {
 
   const lines: string[] = [
     "import { describe, it, expect } from 'vitest';",
-    `import { ${toCamel(conceptName)}Handler } from '../handlers/ts/framework/${kebab}.handler.js';`,
+    `import { ${toCamel(conceptName)}Handler } from '../handlers/ts/${kebab}.handler.js';`,
     "import { createInMemoryStorage } from '../kernel/src/storage.js';",
     '',
     `describe('${conceptName} handler', () => {`,
@@ -202,7 +202,7 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
 
       const files: { path: string; content: string }[] = [
         {
-          path: `handlers/ts/framework/${kebab}.handler.ts`,
+          path: `handlers/ts/${kebab}.handler.ts`,
           content: handlerCode,
         },
       ];
@@ -211,7 +211,7 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
       if (input.actions) {
         const testCode = buildConformanceTest(input);
         files.push({
-          path: `tests/${kebab}.conformance.test.ts`,
+          path: `tests/conformance/${kebab}.conformance.test.ts`,
           content: testCode,
         });
       }

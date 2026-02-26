@@ -32,7 +32,7 @@ export async function compileSyncsCommand(
   flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
-  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'specs';
+  const specsDir = typeof flags.specs === 'string' ? flags.specs : 'concepts';
   const syncsDir = typeof flags.syncs === 'string' ? flags.syncs : 'syncs';
 
   // Load all concept specs for reference validation

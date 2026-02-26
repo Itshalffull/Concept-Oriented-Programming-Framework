@@ -104,11 +104,27 @@ const TEMPLATE_TSCONFIG = `{
 const TEMPLATE_GITIGNORE = `node_modules/
 dist/
 generated/
+bind/
+.clef/
 *.js
 *.d.ts
 *.js.map
 *.d.ts.map
 !vitest.config.ts
+`;
+
+const TEMPLATE_CLEF_YAML = `# Clef Project Configuration
+name: {{NAME}}
+version: 0.1.0
+
+# Target languages for code generation
+targets:
+  - typescript
+
+# Adapters and storage
+adapters:
+  storage: sqlite
+  transport: http
 `;
 
 export async function initCommand(
@@ -130,21 +146,30 @@ export async function initCommand(
 
   console.log(`Initializing Clef project: ${name}`);
 
-  // Create directory structure (Section 11)
+  // Create directory structure per clef-naming-reference.md
   const dirs = [
     '',
-    'specs/app',
-    'specs/framework',
-    'syncs/app',
-    'syncs/framework',
-    'handlers/ts/app',
-    'handlers/ts/framework',
-    'tests',
-    'generated/schemas/graphql',
-    'generated/schemas/json',
-    'generated/typescript',
-    'deploy',
-    'repertoire',
+    'concepts',
+    'syncs',
+    'widgets',
+    'themes',
+    'interfaces',
+    'deploys',
+    'suites',
+    'handlers/ts',
+    'generated/ts',
+    'generated/graphql',
+    'generated/openapi',
+    'bind/rest',
+    'bind/cli',
+    'bind/mcp',
+    'tests/conformance',
+    'tests/contract',
+    'tests/integration',
+    'migrations',
+    '.clef/score',
+    '.clef/build',
+    '.clef/cache',
   ];
 
   for (const dir of dirs) {
@@ -153,6 +178,10 @@ export async function initCommand(
 
   // Write template files
   writeFileSync(join(projectDir, '.gitignore'), TEMPLATE_GITIGNORE);
+  writeFileSync(
+    join(projectDir, 'clef.yaml'),
+    TEMPLATE_CLEF_YAML.replace(/\{\{NAME\}\}/g, name),
+  );
   writeFileSync(join(projectDir, 'tsconfig.json'), TEMPLATE_TSCONFIG);
 
   writeFileSync(
@@ -200,18 +229,17 @@ export default defineConfig({
   );
 
   // Example concept, sync, and implementation
-  writeFileSync(join(projectDir, 'specs/app/hello.concept'), TEMPLATE_CONCEPT);
-  writeFileSync(join(projectDir, 'syncs/app/hello.sync'), TEMPLATE_SYNC);
+  writeFileSync(join(projectDir, 'concepts/hello.concept'), TEMPLATE_CONCEPT);
+  writeFileSync(join(projectDir, 'syncs/hello.sync'), TEMPLATE_SYNC);
   writeFileSync(
-    join(projectDir, 'handlers/ts/app/hello.handler.ts'),
+    join(projectDir, 'handlers/ts/hello.handler.ts'),
     TEMPLATE_IMPL,
   );
 
   // Empty deployment manifest
   writeFileSync(
-    join(projectDir, 'deploy/app.deploy.yaml'),
+    join(projectDir, 'deploys/local.deploy.yaml'),
     `# Clef Deployment Manifest
-# See Section 6 of the architecture doc.
 
 runtimes: []
 concepts: []
@@ -219,12 +247,36 @@ syncs: []
 `,
   );
 
+  // Example interface manifest
+  writeFileSync(
+    join(projectDir, 'interfaces/api.interface.yaml'),
+    `interface:
+  name: ${name}-api
+  version: "0.1.0"
+
+targets:
+  rest:
+    basePath: /api
+    framework: hono
+
+specs:
+  openapi: true
+
+output:
+  dir: ./bind
+  clean: true
+`,
+  );
+
   console.log(`
 Project created at ./${name}/
 
-  specs/app/hello.concept     Example concept spec
-  syncs/app/hello.sync        Example synchronization
-  handlers/ts/app/            Concept handlers
+  clef.yaml                   Project configuration
+  concepts/hello.concept      Example concept spec
+  syncs/hello.sync            Example synchronization
+  handlers/ts/                Concept handlers
+  interfaces/                 Interface manifests (Bind)
+  deploys/                    Deployment manifests
 
 Next steps:
   cd ${name}

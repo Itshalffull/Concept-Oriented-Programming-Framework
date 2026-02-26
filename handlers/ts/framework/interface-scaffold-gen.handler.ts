@@ -135,7 +135,7 @@ function buildInterfaceYaml(input: Record<string, unknown>): string {
 
   // Output
   lines.push('  output:');
-  lines.push('    dir: ./generated/interface');
+  lines.push('    dir: ./bind');
   lines.push('    clean: true');
   lines.push('');
 
@@ -187,7 +187,7 @@ export const interfaceScaffoldGenHandler: ConceptHandler = {
       const interfaceYaml = buildInterfaceYaml(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `${toKebab(name)}.interface.yaml`, content: interfaceYaml },
+        { path: `interfaces/${toKebab(name)}.interface.yaml`, content: interfaceYaml },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };

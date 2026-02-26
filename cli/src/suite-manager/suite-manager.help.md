@@ -102,11 +102,11 @@ kit: { name: commerce }  # concepts: [Payment, Invoice, Refund]
 
 *Validate a suite:*
 ```bash
-npx tsx cli/src/index.ts suite validate ./kits/my-kit
+npx tsx cli/src/index.ts suite validate ./suites/my-kit
 ```
 *Run suite tests:*
 ```bash
-npx tsx cli/src/index.ts suite test ./kits/my-kit
+npx tsx cli/src/index.ts suite test ./suites/my-kit
 ```
 *List active suites:*
 ```bash
