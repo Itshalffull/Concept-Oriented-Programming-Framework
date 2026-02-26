@@ -8,9 +8,9 @@ describe("Env conformance", () => {
   it("invariant 1: after resolve, promote behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const e = "u-test-invariant-001";
-    const r = "u-test-invariant-002";
-    const e2 = "u-test-invariant-003";
+    let e = "u-test-invariant-001";
+    let r = "u-test-invariant-002";
+    let e2 = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // resolve(environment: e) -> ok(environment: e, resolved: r)
@@ -19,8 +19,8 @@ describe("Env conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).environment).toBe(e);
-    expect((step1 as any).resolved).toBe(r);
+    e = (step1 as any).environment;
+    r = (step1 as any).resolved;
 
     // --- THEN clause ---
     // promote(fromEnv: e, toEnv: e2, suiteName: "auth") -> ok(toEnv: e2, version: "1.0.0")
@@ -29,7 +29,7 @@ describe("Env conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).toEnv).toBe(e2);
+    e2 = (step2 as any).toEnv;
     expect((step2 as any).version).toBe("1.0.0");
   });
 

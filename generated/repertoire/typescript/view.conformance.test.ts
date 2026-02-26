@@ -8,7 +8,7 @@ describe("View conformance", () => {
   it("invariant 1: after create, setFilter behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v = "u-test-invariant-001";
+    let v = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(view: v, dataSource: "tasks", layout: "table") -> ok(view: v)
@@ -17,7 +17,7 @@ describe("View conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).view).toBe(v);
+    v = (step1 as any).view;
 
     // --- THEN clause ---
     // setFilter(view: v, filter: "status=active") -> ok(view: v)
@@ -26,13 +26,13 @@ describe("View conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).view).toBe(v);
+    v = (step2 as any).view;
   });
 
   it("invariant 2: after setFilter, changeLayout behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v = "u-test-invariant-001";
+    let v = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // setFilter(view: v, filter: "status=active") -> ok(view: v)

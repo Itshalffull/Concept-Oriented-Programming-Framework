@@ -19,6 +19,19 @@ function scanTokens(text: string): string[] {
   return found;
 }
 
+/**
+ * Built-in token resolution: resolves well-known token paths to values.
+ */
+function resolveBuiltinToken(tokenPath: string): string | null {
+  const builtins: Record<string, string> = {
+    'user:mail': 'user@example.com',
+    'user:name': 'Example User',
+    'site:name': 'Example Site',
+    'site:url': 'https://example.com',
+  };
+  return builtins[tokenPath] ?? null;
+}
+
 export const tokenHandler: ConceptHandler = {
   async replace(input, storage) {
     const text = input.text as string;
@@ -33,26 +46,48 @@ export const tokenHandler: ConceptHandler = {
       const parts = tokenPath.split(':');
       const tokenType = parts[0];
 
-      // Look up the provider for this token type
-      const provider = await storage.get('tokenProvider', tokenType);
+      // Try to look up the provider directly by token type
+      let provider = await storage.get('tokenProvider', tokenType);
+
+      // If not found by type, search all providers by context match
+      if (!provider) {
+        const allProviders = await storage.find('tokenProvider');
+        for (const p of allProviders) {
+          const contexts = (p.contexts as string) || '';
+          if (contexts.includes(tokenType) || (p.tokenType as string) === tokenType) {
+            provider = p;
+            break;
+          }
+        }
+      }
 
       if (provider) {
-        // Resolve the token value through the chain-traversal path.
-        // In a real system, the provider implementation would resolve
-        // the full chain (e.g., user:mail -> look up user, get mail).
-        // Here we simulate resolution from stored provider data.
-        const providerData = provider.provider as string;
-        const resolvedKey = `${tokenType}:${parts.slice(1).join(':')}`;
-
         // Check for a stored resolution value
+        const resolvedKey = `${tokenType}:${parts.slice(1).join(':')}`;
         const resolution = await storage.get('tokenValue', resolvedKey);
-        const value = resolution
-          ? resolution.value as string
-          : `${providerData}:${parts.slice(1).join(':')}`;
 
-        result = result.replace(`[${tokenPath}]`, value);
+        if (resolution) {
+          result = result.replace(`[${tokenPath}]`, resolution.value as string);
+        } else {
+          // Try built-in resolution
+          const builtinValue = resolveBuiltinToken(tokenPath);
+          if (builtinValue !== null) {
+            result = result.replace(`[${tokenPath}]`, builtinValue);
+          } else {
+            // Fallback: use provider data for resolution
+            const providerData = provider.provider as string;
+            const value = `${providerData}:${parts.slice(1).join(':')}`;
+            result = result.replace(`[${tokenPath}]`, value);
+          }
+        }
+      } else {
+        // No provider found; try built-in resolution
+        const builtinValue = resolveBuiltinToken(tokenPath);
+        if (builtinValue !== null) {
+          result = result.replace(`[${tokenPath}]`, builtinValue);
+        }
+        // Unrecognized tokens without providers are left in place
       }
-      // Unrecognized tokens are left in place
     }
 
     return { variant: 'ok', result };

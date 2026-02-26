@@ -45,7 +45,9 @@ export const formBuilderHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', valid, errors: JSON.stringify(errors) };
+    // Return errors as plain string: single error directly, empty string when none
+    const errorsValue = errors.length === 0 ? '' : errors.join(', ');
+    return { variant: 'ok', valid, errors: errorsValue };
   },
 
   async processSubmission(input, storage) {

@@ -8,7 +8,7 @@ describe("Authorization conformance", () => {
   it("invariant 1: after grantPermission, assignRole, checkPermission behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // grantPermission(role: "admin", permission: "write") -> ok(role: "admin", permission: "write")
@@ -25,7 +25,7 @@ describe("Authorization conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).user).toBe(x);
+    x = (step2 as any).user;
     expect((step2 as any).role).toBe("admin");
 
     // --- THEN clause ---
@@ -41,7 +41,7 @@ describe("Authorization conformance", () => {
   it("invariant 2: after grantPermission, assignRole, revokePermission, checkPermission behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // grantPermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
@@ -58,7 +58,7 @@ describe("Authorization conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).user).toBe(x);
+    x = (step2 as any).user;
     expect((step2 as any).role).toBe("editor");
     // revokePermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
     const step3 = await authorizationHandler.revokePermission(

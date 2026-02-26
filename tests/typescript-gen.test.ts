@@ -170,7 +170,7 @@ describe('TypeScriptGen Output Identity', () => {
     const testFile = files.find(f => f.path === 'password.conformance.test.ts')!;
 
     // Exact content checks for conformance test structure
-    expect(testFile.content).toContain('const x = "u-test-invariant-001"');
+    expect(testFile.content).toContain('let x = "u-test-invariant-001"');
     expect(testFile.content).toContain('// --- AFTER clause ---');
     expect(testFile.content).toContain('// set(user: x, password: "secret123") -> ok(user: x)');
     expect(testFile.content).toContain('// --- THEN clause ---');

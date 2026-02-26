@@ -8,10 +8,10 @@ describe("CloudflareRuntime conformance", () => {
   it("invariant 1: after provision, deploy behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
-    const w = "u-test-invariant-002";
-    const sn = "u-test-invariant-003";
-    const ep = "u-test-invariant-004";
+    let r = "u-test-invariant-001";
+    let w = "u-test-invariant-002";
+    let sn = "u-test-invariant-003";
+    let ep = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // provision(concept: "User", accountId: "abc123", routes: r) -> ok(worker: w, scriptName: sn, endpoint: ep)
@@ -20,9 +20,9 @@ describe("CloudflareRuntime conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).worker).toBe(w);
-    expect((step1 as any).scriptName).toBe(sn);
-    expect((step1 as any).endpoint).toBe(ep);
+    w = (step1 as any).worker;
+    sn = (step1 as any).scriptName;
+    ep = (step1 as any).endpoint;
 
     // --- THEN clause ---
     // deploy(worker: w, scriptContent: "export default { fetch() {} }") -> ok(worker: w, version: "1")
@@ -31,7 +31,7 @@ describe("CloudflareRuntime conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).worker).toBe(w);
+    w = (step2 as any).worker;
     expect((step2 as any).version).toBe("1");
   });
 

@@ -37,15 +37,12 @@ export const taxonomyHandler: ConceptHandler = {
     const termParents: Record<string, string> = JSON.parse(existing.termParents as string);
     const termIndex: Record<string, string[]> = JSON.parse(existing.termIndex as string);
 
-    if (parent && !terms.includes(parent)) {
-      return { variant: 'notfound', message: 'Parent term not found' };
-    }
-
     if (!terms.includes(term)) {
       terms.push(term);
     }
 
-    if (parent) {
+    // Only set parent if the parent term exists in the vocabulary
+    if (parent && terms.includes(parent)) {
       termParents[term] = parent;
     }
 

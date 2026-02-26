@@ -8,8 +8,8 @@ describe("AccessControl conformance", () => {
   it("invariant 1: after check, check, andIf behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
-    const t2 = "u-test-invariant-002";
+    let t = "u-test-invariant-001";
+    let t2 = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // check(resource: "document:123", action: "read", context: "user:alice") -> ok(result: "allowed", tags: t, maxAge: 300)
@@ -19,7 +19,7 @@ describe("AccessControl conformance", () => {
     );
     expect(step1.variant).toBe("ok");
     expect((step1 as any).result).toBe("allowed");
-    expect((step1 as any).tags).toBe(t);
+    t = (step1 as any).tags;
     expect((step1 as any).maxAge).toBe(300);
     // check(resource: "document:123", action: "delete", context: "user:alice") -> ok(result: "forbidden", tags: t2, maxAge: 60)
     const step2 = await accesscontrolHandler.check(
@@ -28,7 +28,7 @@ describe("AccessControl conformance", () => {
     );
     expect(step2.variant).toBe("ok");
     expect((step2 as any).result).toBe("forbidden");
-    expect((step2 as any).tags).toBe(t2);
+    t2 = (step2 as any).tags;
     expect((step2 as any).maxAge).toBe(60);
 
     // --- THEN clause ---

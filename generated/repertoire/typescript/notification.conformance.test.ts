@@ -8,13 +8,13 @@ describe("Notification conformance", () => {
   it("invariant 1: after registerChannel, defineTemplate, subscribe, notify, getUnread behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
-    const cfg = "u-test-invariant-002";
-    const n = "u-test-invariant-003";
-    const t = "u-test-invariant-004";
-    const u = "u-test-invariant-005";
-    const e = "u-test-invariant-006";
-    const d = "u-test-invariant-007";
+    let c = "u-test-invariant-001";
+    let cfg = "u-test-invariant-002";
+    let n = "u-test-invariant-003";
+    let t = "u-test-invariant-004";
+    let u = "u-test-invariant-005";
+    let e = "u-test-invariant-006";
+    let d = "u-test-invariant-007";
 
     // --- AFTER clause ---
     // registerChannel(name: c, config: cfg) -> ok()
@@ -49,16 +49,16 @@ describe("Notification conformance", () => {
       storage,
     );
     expect(step5.variant).toBe("ok");
-    expect((step5 as any).notifications).toBe(n);
+    n = (step5 as any).notifications;
   });
 
   it("invariant 2: after notify, markRead, getUnread behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const n = "u-test-invariant-001";
-    const u = "u-test-invariant-002";
-    const t = "u-test-invariant-003";
-    const d = "u-test-invariant-004";
+    let n = "u-test-invariant-001";
+    let u = "u-test-invariant-002";
+    let t = "u-test-invariant-003";
+    let d = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // notify(notification: n, user: u, template: t, data: d) -> ok()

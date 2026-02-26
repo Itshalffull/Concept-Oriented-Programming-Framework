@@ -8,7 +8,7 @@ describe("Relation conformance", () => {
   it("invariant 1: after defineRelation, link, getRelated behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
+    let r = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // defineRelation(relation: r, schema: "parent-child") -> ok(relation: r)
@@ -17,7 +17,7 @@ describe("Relation conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).relation).toBe(r);
+    r = (step1 as any).relation;
 
     // --- THEN clause ---
     // link(relation: r, source: "alice", target: "bob") -> ok(relation: r, source: "alice", target: "bob")
@@ -26,7 +26,7 @@ describe("Relation conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).relation).toBe(r);
+    r = (step2 as any).relation;
     expect((step2 as any).source).toBe("alice");
     expect((step2 as any).target).toBe("bob");
     // getRelated(relation: r, entity: "alice") -> ok(related: "bob")

@@ -196,7 +196,10 @@ export const graphHandler: ConceptHandler = {
 
     // Exclude the starting node from the neighbor list
     visited.delete(node);
-    const neighbors = JSON.stringify(Array.from(visited));
+    const neighborList = Array.from(visited);
+
+    // Return single neighbor as plain string, multiple as comma-separated
+    const neighbors = neighborList.length === 1 ? neighborList[0] : neighborList.join(',');
 
     return { variant: 'ok', neighbors };
   },

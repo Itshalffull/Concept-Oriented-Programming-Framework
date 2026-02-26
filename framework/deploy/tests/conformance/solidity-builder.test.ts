@@ -23,7 +23,7 @@ describe('SolidityBuilder conformance', () => {
 
   it('should build successfully and return artifact path and hash', async () => {
     const result = await solidityBuilderHandler.build(
-      { sourcePath: './contracts/Token.sol', target: 'paris' },
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -31,87 +31,109 @@ describe('SolidityBuilder conformance', () => {
     expect(result.artifactHash).toBeDefined();
   });
 
-  it('should return compilationError with file, line, and message', async () => {
+  it('should return compilationError when source is missing', async () => {
     const result = await solidityBuilderHandler.build(
-      { sourcePath: './contracts/Invalid.sol', target: 'paris', simulateError: 'compilationError' },
+      { source: '', toolchainPath: '', platform: 'paris', config: { mode: 'release', features: [] } },
       storage,
     );
     expect(result.variant).toBe('compilationError');
-    expect(result.file).toBeDefined();
-    expect(result.line).toBeDefined();
-    expect(result.message).toBeDefined();
+    expect(result.errors).toBeDefined();
   });
 
   it('should return pragmaMismatch on solidity version conflict', async () => {
     const result = await solidityBuilderHandler.build(
-      { sourcePath: './contracts/Token.sol', target: 'paris', simulateError: 'pragmaMismatch' },
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: ['pragma:0.8.25'] } },
       storage,
     );
     expect(result.variant).toBe('pragmaMismatch');
-    expect(result.message).toBeDefined();
+    expect(result.required).toBeDefined();
+    expect(result.installed).toBeDefined();
   });
 
   // --- test ---
 
   it('should run tests and return pass/fail/skipped/duration', async () => {
+    const buildResult = await solidityBuilderHandler.build(
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await solidityBuilderHandler.test(
-      { sourcePath: './contracts/Token.sol', testTarget: 'forge-test' },
+      { build: buildResult.build as string, toolchainPath: '/usr/local/bin/solc' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(typeof result.pass).toBe('number');
-    expect(typeof result.fail).toBe('number');
+    expect(typeof result.passed).toBe('number');
+    expect(typeof result.failed).toBe('number');
     expect(typeof result.skipped).toBe('number');
     expect(typeof result.duration).toBe('number');
   });
 
-  it('should return testFailure with failure details', async () => {
+  it('should return testFailure when build is not found', async () => {
     const result = await solidityBuilderHandler.test(
-      { sourcePath: './contracts/Token.sol', testTarget: 'forge-test', simulateError: 'testFailure' },
+      { build: 'nonexistent-build-id', toolchainPath: '/usr/local/bin/solc' },
       storage,
     );
     expect(result.variant).toBe('testFailure');
     expect(result.failures).toBeDefined();
     expect(Array.isArray(result.failures)).toBe(true);
-    const failures = result.failures as any[];
-    expect(failures.length).toBeGreaterThan(0);
-    expect(failures[0].testName).toBeDefined();
-    expect(failures[0].message).toBeDefined();
   });
 
   // --- package ---
 
   it('should package as abi-bundle format', async () => {
+    const buildResult = await solidityBuilderHandler.build(
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await solidityBuilderHandler.package(
-      { sourcePath: './contracts/Token.sol', format: 'abi-bundle' },
+      { build: buildResult.build as string, format: 'abi-bundle' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('abi-bundle');
-    expect(result.outputPath).toBeDefined();
+    expect(result.artifactPath).toBeDefined();
   });
 
   it('should package as hardhat-artifacts format', async () => {
+    const buildResult = await solidityBuilderHandler.build(
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await solidityBuilderHandler.package(
-      { sourcePath: './contracts/Token.sol', format: 'hardhat-artifacts' },
+      { build: buildResult.build as string, format: 'hardhat-artifacts' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('hardhat-artifacts');
   });
 
   it('should package as foundry-out format', async () => {
+    const buildResult = await solidityBuilderHandler.build(
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await solidityBuilderHandler.package(
-      { sourcePath: './contracts/Token.sol', format: 'foundry-out' },
+      { build: buildResult.build as string, format: 'foundry-out' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('foundry-out');
   });
 
   it('should return formatUnsupported for unknown format', async () => {
+    const buildResult = await solidityBuilderHandler.build(
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await solidityBuilderHandler.package(
-      { sourcePath: './contracts/Token.sol', format: 'tar' },
+      { build: buildResult.build as string, format: 'tar' },
       storage,
     );
     expect(result.variant).toBe('formatUnsupported');
@@ -133,14 +155,14 @@ describe('SolidityBuilder conformance', () => {
 
   it('should build then test using solc artifact paths', async () => {
     const buildResult = await solidityBuilderHandler.build(
-      { sourcePath: './contracts/Token.sol', target: 'paris' },
+      { source: './contracts/Token.sol', toolchainPath: '/usr/local/bin/solc', platform: 'paris', config: { mode: 'release', features: [] } },
       storage,
     );
     expect(buildResult.variant).toBe('ok');
-    expect((buildResult.artifactPath as string)).toMatch(/\.json|artifacts|out/);
+    expect((buildResult.artifactPath as string)).toMatch(/build\/solidity/);
 
     const testResult = await solidityBuilderHandler.test(
-      { sourcePath: './contracts/Token.sol', testTarget: 'forge-test' },
+      { build: buildResult.build as string, toolchainPath: '/usr/local/bin/solc' },
       storage,
     );
     expect(testResult.variant).toBe('ok');

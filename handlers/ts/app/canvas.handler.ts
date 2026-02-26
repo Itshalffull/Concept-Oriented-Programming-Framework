@@ -8,9 +8,15 @@ export const canvasHandler: ConceptHandler = {
     const x = input.x as number;
     const y = input.y as number;
 
-    const existing = await storage.get('canvas', canvas);
+    let existing = await storage.get('canvas', canvas);
     if (!existing) {
-      return { variant: 'notfound', message: 'Canvas not found' };
+      // Auto-create canvas on first node addition
+      existing = {
+        canvas,
+        nodes: '[]',
+        positions: '{}',
+        edges: '[]',
+      };
     }
 
     const nodes = JSON.parse((existing.nodes as string) || '[]') as string[];
@@ -60,14 +66,28 @@ export const canvasHandler: ConceptHandler = {
     const from = input.from as string;
     const to = input.to as string;
 
-    const existing = await storage.get('canvas', canvas);
+    let existing = await storage.get('canvas', canvas);
     if (!existing) {
-      return { variant: 'notfound', message: 'Canvas not found' };
+      // Auto-create canvas
+      existing = {
+        canvas,
+        nodes: '[]',
+        positions: '{}',
+        edges: '[]',
+      };
     }
 
     const nodes = JSON.parse((existing.nodes as string) || '[]') as string[];
-    if (!nodes.includes(from) || !nodes.includes(to)) {
-      return { variant: 'notfound', message: 'One or both nodes not found on canvas' };
+    const positions = JSON.parse((existing.positions as string) || '{}') as Record<string, { x: number; y: number }>;
+
+    // Auto-add missing nodes to the canvas
+    if (!nodes.includes(from)) {
+      nodes.push(from);
+      positions[from] = { x: 0, y: 0 };
+    }
+    if (!nodes.includes(to)) {
+      nodes.push(to);
+      positions[to] = { x: 0, y: 0 };
     }
 
     const edges = JSON.parse((existing.edges as string) || '[]') as Array<{ from: string; to: string }>;
@@ -75,6 +95,8 @@ export const canvasHandler: ConceptHandler = {
 
     await storage.put('canvas', canvas, {
       ...existing,
+      nodes: JSON.stringify(nodes),
+      positions: JSON.stringify(positions),
       edges: JSON.stringify(edges),
     });
 

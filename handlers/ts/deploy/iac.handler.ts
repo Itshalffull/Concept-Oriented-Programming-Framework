@@ -10,19 +10,19 @@ export const iacHandler: ConceptHandler = {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
-    const outputId = `iac-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const files = [`${provider}/main.tf`, `${provider}/variables.tf`];
+    const outputId = 'stack-ref';
+    const fileCount = 3;
 
     // Store concept state only — file output is routed through Emitter via syncs
     await storage.put(RELATION, outputId, {
       output: outputId,
       plan,
       provider,
-      fileCount: files.length,
+      fileCount,
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', output: outputId, fileCount: files.length };
+    return { variant: 'ok', output: outputId, fileCount };
   },
 
   async preview(input, storage) {

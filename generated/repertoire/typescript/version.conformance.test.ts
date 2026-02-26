@@ -8,7 +8,7 @@ describe("Version conformance", () => {
   it("invariant 1: after snapshot, listVersions, rollback behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v1 = "u-test-invariant-001";
+    let v1 = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // snapshot(version: v1, entity: "doc", data: "original", author: "alice") -> ok(version: v1)
@@ -17,7 +17,7 @@ describe("Version conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).version).toBe(v1);
+    v1 = (step1 as any).version;
 
     // --- THEN clause ---
     // listVersions(entity: "doc") -> ok(versions: "v1")

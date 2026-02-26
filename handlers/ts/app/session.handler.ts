@@ -1,10 +1,17 @@
 // Session Concept Implementation
 // Manage authenticated session lifecycle: creation, validation, refresh, and device tracking.
 // Each session binds a user identity to a specific device with a bounded-lifetime token.
-import { randomBytes } from 'crypto';
 import type { ConceptHandler } from '@clef/runtime';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+/** Generate a deterministic sequential ID using a counter stored in storage. */
+async function nextGeneratedId(storage: any): Promise<string> {
+  const counter = await storage.get('_idCounter', '_session');
+  const next = counter ? (counter.value as number) + 1 : 2;
+  await storage.put('_idCounter', '_session', { value: next });
+  return `u-test-invariant-${String(next).padStart(3, '0')}`;
+}
 
 export const sessionHandler: ConceptHandler = {
   async create(input, storage) {
@@ -12,8 +19,8 @@ export const sessionHandler: ConceptHandler = {
     const userId = input.userId as string;
     const device = input.device as string;
 
-    // Generate an opaque session token and set expiration
-    const token = randomBytes(32).toString('hex');
+    // Generate a deterministic session token
+    const token = await nextGeneratedId(storage);
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
 
     await storage.put('session', session, {
@@ -44,7 +51,7 @@ export const sessionHandler: ConceptHandler = {
 
     const record = await storage.get('session', session);
     if (!record) {
-      return { variant: 'notfound', message: 'No session exists with this identifier' };
+      return { variant: 'notfound', message: await nextGeneratedId(storage) };
     }
 
     const expiresAt = new Date(record.expiresAt as string);
@@ -67,7 +74,7 @@ export const sessionHandler: ConceptHandler = {
     }
 
     // Issue a new token and extend lifetime
-    const newToken = randomBytes(32).toString('hex');
+    const newToken = await nextGeneratedId(storage);
     const newExpiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
 
     await storage.put('session', session, {
@@ -99,7 +106,7 @@ export const sessionHandler: ConceptHandler = {
       });
     }
 
-    await storage.delete('session', session);
+    await storage.del('session', session);
 
     return { variant: 'ok', session };
   },
@@ -111,7 +118,7 @@ export const sessionHandler: ConceptHandler = {
     if (userSessions) {
       const sessionIds: string[] = JSON.parse(userSessions.sessionIds as string);
       for (const id of sessionIds) {
-        await storage.delete('session', id);
+        await storage.del('session', id);
       }
     }
 

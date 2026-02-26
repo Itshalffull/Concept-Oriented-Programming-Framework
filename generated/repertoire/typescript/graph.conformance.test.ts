@@ -8,7 +8,7 @@ describe("Graph conformance", () => {
   it("invariant 1: after addNode, addNode, addEdge, getNeighbors behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const g = "u-test-invariant-001";
+    let g = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // addNode(graph: g, node: "A") -> ok()

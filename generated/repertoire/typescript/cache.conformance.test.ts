@@ -8,7 +8,7 @@ describe("Cache conformance", () => {
   it("invariant 1: after set, get behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const b = "u-test-invariant-001";
+    let b = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // set(bin: b, key: "k", data: "v", tags: "t1", maxAge: 300) -> ok()
@@ -31,7 +31,7 @@ describe("Cache conformance", () => {
   it("invariant 2: after set, invalidateByTags, get behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const b = "u-test-invariant-001";
+    let b = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // set(bin: b, key: "k", data: "v", tags: "t1", maxAge: 300) -> ok()

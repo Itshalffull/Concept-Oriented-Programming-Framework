@@ -14,8 +14,13 @@ export const accessControlHandler: ConceptHandler = {
     const policyRecord = await storage.get('policy', policyKey);
 
     if (!policyRecord) {
-      // No policy registered: neutral result with default cache
-      return { variant: 'ok', result: 'neutral', tags: '', maxAge: 0 };
+      // No explicit policy registered: derive a default access decision.
+      // Read actions are allowed by default; mutating actions are forbidden.
+      const readActions = ['read', 'view', 'list', 'get'];
+      const result = readActions.includes(action) ? 'allowed' : 'forbidden';
+      const tags = `${resource}:${action}:${context}`;
+      const maxAge = result === 'allowed' ? 300 : 60;
+      return { variant: 'ok', result, tags, maxAge };
     }
 
     return {

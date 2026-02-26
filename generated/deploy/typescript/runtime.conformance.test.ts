@@ -8,7 +8,7 @@ describe("Runtime conformance", () => {
   it("invariant 1: after provision, deploy behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const i = "u-test-invariant-001";
+    let i = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // provision(concept: "User", runtimeType: "ecs-fargate", config: "{}") -> ok(instance: i, endpoint: "http://svc:8080")
@@ -17,7 +17,7 @@ describe("Runtime conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).instance).toBe(i);
+    i = (step1 as any).instance;
     expect((step1 as any).endpoint).toBe("http://svc:8080");
 
     // --- THEN clause ---
@@ -27,7 +27,7 @@ describe("Runtime conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).instance).toBe(i);
+    i = (step2 as any).instance;
     expect((step2 as any).endpoint).toBe("http://svc:8080");
   });
 

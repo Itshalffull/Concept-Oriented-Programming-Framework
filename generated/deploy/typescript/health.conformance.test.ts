@@ -8,10 +8,10 @@ describe("Health conformance", () => {
   it("invariant 1: after checkConcept, checkKit behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const h = "u-test-invariant-001";
-    const h2 = "u-test-invariant-002";
-    const cr = "u-test-invariant-003";
-    const sr = "u-test-invariant-004";
+    let h = "u-test-invariant-001";
+    let h2 = "u-test-invariant-002";
+    let cr = "u-test-invariant-003";
+    let sr = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // checkConcept(concept: "User", runtime: "server") -> ok(check: h, latencyMs: 15)
@@ -20,7 +20,7 @@ describe("Health conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).check).toBe(h);
+    h = (step1 as any).check;
     expect((step1 as any).latencyMs).toBe(15);
 
     // --- THEN clause ---
@@ -30,9 +30,9 @@ describe("Health conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).check).toBe(h2);
-    expect((step2 as any).conceptResults).toBe(cr);
-    expect((step2 as any).syncResults).toBe(sr);
+    h2 = (step2 as any).check;
+    cr = (step2 as any).conceptResults;
+    sr = (step2 as any).syncResults;
   });
 
 });

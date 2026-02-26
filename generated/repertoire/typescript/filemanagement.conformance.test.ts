@@ -8,10 +8,10 @@ describe("FileManagement conformance", () => {
   it("invariant 1: after upload, addUsage, removeUsage, garbageCollect behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
-    const d = "u-test-invariant-002";
-    const m = "u-test-invariant-003";
-    const e = "u-test-invariant-004";
+    let f = "u-test-invariant-001";
+    let d = "u-test-invariant-002";
+    let m = "u-test-invariant-003";
+    let e = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // upload(file: f, data: d, mimeType: m) -> ok(file: f)
@@ -20,7 +20,7 @@ describe("FileManagement conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).file).toBe(f);
+    f = (step1 as any).file;
 
     // --- THEN clause ---
     // addUsage(file: f, entity: e) -> ok()

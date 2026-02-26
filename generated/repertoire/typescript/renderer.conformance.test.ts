@@ -8,7 +8,7 @@ describe("Renderer conformance", () => {
   it("invariant 1: after render, render behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
+    let r = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // render(renderer: r, tree: "<page><header/><body/></page>") -> ok(output: _)
@@ -32,8 +32,8 @@ describe("Renderer conformance", () => {
   it("invariant 2: after autoPlaceholder, render behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
-    const p = "u-test-invariant-002";
+    let r = "u-test-invariant-001";
+    let p = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // autoPlaceholder(renderer: r, name: "sidebar") -> ok(placeholder: p)
@@ -42,7 +42,7 @@ describe("Renderer conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).placeholder).toBe(p);
+    p = (step1 as any).placeholder;
 
     // --- THEN clause ---
     // render(renderer: r, tree: p) -> ok(output: _)

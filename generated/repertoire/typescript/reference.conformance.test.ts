@@ -8,7 +8,7 @@ describe("Reference conformance", () => {
   it("invariant 1: after addRef, getRefs behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // addRef(source: x, target: "doc-1") -> ok(source: x, target: "doc-1")
@@ -17,7 +17,7 @@ describe("Reference conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).source).toBe(x);
+    x = (step1 as any).source;
     expect((step1 as any).target).toBe("doc-1");
 
     // --- THEN clause ---

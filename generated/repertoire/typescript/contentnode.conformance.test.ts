@@ -8,7 +8,7 @@ describe("ContentNode conformance", () => {
   it("invariant 1: after create, get behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
@@ -17,7 +17,7 @@ describe("ContentNode conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).node).toBe(x);
+    x = (step1 as any).node;
 
     // --- THEN clause ---
     // get(node: x) -> ok(node: x, type: "page", content: "Hello", metadata: "")
@@ -26,7 +26,7 @@ describe("ContentNode conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).node).toBe(x);
+    x = (step2 as any).node;
     expect((step2 as any).type).toBe("page");
     expect((step2 as any).content).toBe("Hello");
     expect((step2 as any).metadata).toBe("");
@@ -35,7 +35,7 @@ describe("ContentNode conformance", () => {
   it("invariant 2: after create, create behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)

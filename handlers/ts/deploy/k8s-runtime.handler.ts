@@ -62,7 +62,9 @@ export const k8sRuntimeHandler: ConceptHandler = {
       };
     }
 
-    const revision = `rev-${Date.now()}`;
+    const prevRevision = record.currentRevision as string || '0';
+    const revNum = prevRevision ? parseInt(prevRevision, 10) || 0 : 0;
+    const revision = String(revNum + 1);
 
     await storage.put(RELATION, deployment, {
       ...record,

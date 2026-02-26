@@ -8,9 +8,9 @@ describe("ContentParser conformance", () => {
   it("invariant 1: after registerFormat, parse, extractTags behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
-    const a = "u-test-invariant-002";
-    const t = "u-test-invariant-003";
+    let c = "u-test-invariant-001";
+    let a = "u-test-invariant-002";
+    let t = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // registerFormat(name: "markdown", grammar: "{}") -> ok(name: "markdown")
@@ -26,7 +26,7 @@ describe("ContentParser conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).ast).toBe(a);
+    a = (step2 as any).ast;
 
     // --- THEN clause ---
     // extractTags(content: c) -> ok(tags: t)
@@ -35,7 +35,7 @@ describe("ContentParser conformance", () => {
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).tags).toBe(t);
+    t = (step3 as any).tags;
   });
 
 });

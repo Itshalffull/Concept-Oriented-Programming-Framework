@@ -8,7 +8,7 @@ describe("Validator conformance", () => {
   it("invariant 1: after registerConstraint, addRule, validate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v = "u-test-invariant-001";
+    let v = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // registerConstraint(validator: v, constraint: "required") -> ok()

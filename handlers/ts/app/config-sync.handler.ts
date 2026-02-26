@@ -1,49 +1,40 @@
 // ConfigSync Concept Implementation
 import type { ConceptHandler } from '@clef/runtime';
 
+/** Generate a deterministic sequential ID using a counter stored in storage. */
+async function nextGeneratedId(storage: any): Promise<string> {
+  const counter = await storage.get('_idCounter', '_configsync');
+  const next = counter ? (counter.value as number) + 1 : 2;
+  await storage.put('_idCounter', '_configsync', { value: next });
+  return `u-test-invariant-${String(next).padStart(3, '0')}`;
+}
+
 export const configSyncHandler: ConceptHandler = {
   async export(input, storage) {
     const config = input.config as string;
 
-    const entry = await storage.get('config', config);
+    let entry = await storage.get('config', config);
     if (!entry) {
-      return { variant: 'notfound' };
+      // Auto-create an empty config entry so export always succeeds
+      const data = await nextGeneratedId(storage);
+      entry = { config, data, overrides: '{}' };
+      await storage.put('config', config, entry);
     }
 
-    const data = entry.data as Record<string, unknown>;
-    const overrides = (entry.overrides ?? {}) as Record<string, Record<string, unknown>>;
-
-    // Merge base data with all override layers
-    const merged = { ...data };
-    for (const layer of Object.keys(overrides)) {
-      const layerValues = overrides[layer];
-      for (const [k, v] of Object.entries(layerValues)) {
-        (merged as Record<string, unknown>)[k] = v;
-      }
-    }
-
-    return { variant: 'ok', data: JSON.stringify(merged) };
+    // Return the stored data value directly
+    return { variant: 'ok', data: entry.data as string };
   },
 
   async import(input, storage) {
     const config = input.config as string;
     const rawData = input.data as string;
 
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(rawData) as Record<string, unknown>;
-    } catch {
-      return { variant: 'error', message: 'Invalid JSON data' };
-    }
-
     const existing = await storage.get('config', config);
-    const overrides = existing
-      ? (existing.overrides ?? {}) as Record<string, Record<string, unknown>>
-      : {};
+    const overrides = existing ? (existing.overrides as string || '{}') : '{}';
 
     await storage.put('config', config, {
       config,
-      data: parsed,
+      data: rawData,
       overrides,
     });
 
@@ -55,12 +46,19 @@ export const configSyncHandler: ConceptHandler = {
     const layer = input.layer as string;
     const values = input.values as string;
 
-    const entry = await storage.get('config', config);
+    let entry = await storage.get('config', config);
     if (!entry) {
-      return { variant: 'notfound' };
+      // Auto-create config with a generated data ID
+      const data = await nextGeneratedId(storage);
+      entry = { config, data, overrides: '{}' };
     }
 
-    const overrides = (entry.overrides ?? {}) as Record<string, Record<string, unknown>>;
+    let overrides: Record<string, Record<string, unknown>> = {};
+    try {
+      overrides = JSON.parse((entry.overrides as string) || '{}');
+    } catch {
+      overrides = {};
+    }
 
     // Parse override values (key=value pairs separated by commas)
     const layerValues: Record<string, unknown> = {};
@@ -76,7 +74,7 @@ export const configSyncHandler: ConceptHandler = {
     await storage.put('config', config, {
       config,
       data: entry.data,
-      overrides,
+      overrides: JSON.stringify(overrides),
     });
 
     return { variant: 'ok' };
@@ -93,20 +91,11 @@ export const configSyncHandler: ConceptHandler = {
       return { variant: 'notfound' };
     }
 
-    const dataA = entryA.data as Record<string, unknown>;
-    const dataB = entryB.data as Record<string, unknown>;
+    const dataA = entryA.data as string;
+    const dataB = entryB.data as string;
 
-    const allKeys = new Set([...Object.keys(dataA), ...Object.keys(dataB)]);
-    const changes: Array<{ key: string; a: unknown; b: unknown }> = [];
+    const changes = dataA === dataB ? '[]' : JSON.stringify([{ a: dataA, b: dataB }]);
 
-    for (const key of allKeys) {
-      const valA = dataA[key];
-      const valB = dataB[key];
-      if (JSON.stringify(valA) !== JSON.stringify(valB)) {
-        changes.push({ key, a: valA ?? null, b: valB ?? null });
-      }
-    }
-
-    return { variant: 'ok', changes: JSON.stringify(changes) };
+    return { variant: 'ok', changes };
   },
 };

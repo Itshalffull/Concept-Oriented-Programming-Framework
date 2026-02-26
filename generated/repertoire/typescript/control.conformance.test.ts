@@ -8,7 +8,7 @@ describe("Control conformance", () => {
   it("invariant 1: after create, setValue, getValue behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const k = "u-test-invariant-001";
+    let k = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(control: k, type: "slider", binding: "volume") -> ok()

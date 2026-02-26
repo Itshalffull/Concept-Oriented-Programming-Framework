@@ -8,10 +8,10 @@ describe("Flag conformance", () => {
   it("invariant 1: after flag, isFlagged behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
-    const e = "u-test-invariant-003";
-    const u = "u-test-invariant-004";
+    let f = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
+    let e = "u-test-invariant-003";
+    let u = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // flag(flagging: f, flagType: t, entity: e, user: u) -> ok()
@@ -34,10 +34,10 @@ describe("Flag conformance", () => {
   it("invariant 2: after flag, unflag, isFlagged behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
-    const e = "u-test-invariant-003";
-    const u = "u-test-invariant-004";
+    let f = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
+    let e = "u-test-invariant-003";
+    let u = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // flag(flagging: f, flagType: t, entity: e, user: u) -> ok()

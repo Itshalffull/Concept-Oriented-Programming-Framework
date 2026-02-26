@@ -8,7 +8,7 @@ describe("Workflow conformance", () => {
   it("invariant 1: after defineState, defineState, defineTransition, transition, getCurrentState behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const w = "u-test-invariant-001";
+    let w = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // defineState(workflow: w, name: "draft", flags: "initial") -> ok()

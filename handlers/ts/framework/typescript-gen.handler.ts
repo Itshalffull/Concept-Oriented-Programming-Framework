@@ -209,16 +209,20 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     lines.push('');
 
     // Declare free variable bindings (Section 7.4 Rule 1)
+    // Use 'let' so setup steps can rebind output variables
     for (const fv of inv.freeVariables) {
-      lines.push(`    const ${fv.name} = "${fv.testValue}";`);
+      lines.push(`    let ${fv.name} = "${fv.testValue}";`);
     }
     if (inv.freeVariables.length > 0) lines.push('');
+
+    // Track which variables have been bound by setup step outputs
+    const boundVars = new Set<string>();
 
     // After clause (Section 7.4 Rule 2)
     let stepNum = 1;
     lines.push(`    // --- AFTER clause ---`);
     for (const step of inv.setup) {
-      lines.push(...generateStepCode(handlerVar, step, stepNum));
+      lines.push(...generateStepCode(handlerVar, step, stepNum, boundVars));
       stepNum++;
     }
     lines.push('');
@@ -226,7 +230,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     // Then clause (Section 7.4 Rule 3)
     lines.push(`    // --- THEN clause ---`);
     for (const step of inv.assertions) {
-      lines.push(...generateStepCode(handlerVar, step, stepNum));
+      lines.push(...generateStepCode(handlerVar, step, stepNum, null));
       stepNum++;
     }
 
@@ -259,6 +263,7 @@ function generateStepCode(
   handlerVar: string,
   step: InvariantStep,
   stepNum: number,
+  boundVars: Set<string> | null,
 ): string[] {
   const lines: string[] = [];
   const varName = `step${stepNum}`;
@@ -287,8 +292,12 @@ function generateStepCode(
       if (out.value.name === '_') {
         // Wildcard — just assert the field exists
         lines.push(`    expect((${varName} as any).${out.name}).toBeDefined();`);
+      } else if (boundVars && !boundVars.has(out.value.name)) {
+        // Setup step with unbound variable — capture the output value
+        boundVars.add(out.value.name);
+        lines.push(`    ${out.value.name} = (${varName} as any).${out.name};`);
       } else {
-        // Variable reference — assert consistency
+        // Assertion step or already-bound variable — assert consistency
         lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
       }
     } else {

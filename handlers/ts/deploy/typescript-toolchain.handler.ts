@@ -16,8 +16,8 @@ export const typescriptToolchainHandler: ConceptHandler = {
       const rec = existing[0];
       return {
         variant: 'ok',
-        toolchain: rec.toolchain as string,
-        tscPath: rec.tscPath as string,
+        tool: rec.toolchain as string,
+        path: rec.tscPath as string,
         version: rec.version as string,
         capabilities: JSON.parse(rec.capabilities as string),
       };
@@ -64,8 +64,8 @@ export const typescriptToolchainHandler: ConceptHandler = {
 
     return {
       variant: 'ok',
-      toolchain: toolchainId,
-      tscPath,
+      tool: toolchainId,
+      path: tscPath,
       version,
       capabilities,
     };

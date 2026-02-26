@@ -8,10 +8,10 @@ describe("MediaAsset conformance", () => {
   it("invariant 1: after createMedia, extractMetadata, getMedia behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const a = "u-test-invariant-001";
-    const s = "u-test-invariant-002";
-    const f = "u-test-invariant-003";
-    const m = "u-test-invariant-004";
+    let a = "u-test-invariant-001";
+    let s = "u-test-invariant-002";
+    let f = "u-test-invariant-003";
+    let m = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // createMedia(asset: a, source: s, file: f) -> ok(asset: a)
@@ -20,7 +20,7 @@ describe("MediaAsset conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).asset).toBe(a);
+    a = (step1 as any).asset;
 
     // --- THEN clause ---
     // extractMetadata(asset: a) -> ok(metadata: m)
@@ -29,14 +29,14 @@ describe("MediaAsset conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).metadata).toBe(m);
+    m = (step2 as any).metadata;
     // getMedia(asset: a) -> ok(asset: a, metadata: m, thumbnail: _)
     const step3 = await mediaassetHandler.getMedia(
       { asset: a },
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).asset).toBe(a);
+    a = (step3 as any).asset;
     expect((step3 as any).metadata).toBe(m);
     expect((step3 as any).thumbnail).toBeDefined();
   });

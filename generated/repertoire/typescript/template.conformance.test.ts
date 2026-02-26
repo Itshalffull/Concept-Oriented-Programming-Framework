@@ -8,7 +8,7 @@ describe("Template conformance", () => {
   it("invariant 1: after define, instantiate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
+    let t = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // define(template: t, body: "Hello {{name}}", variables: "name") -> ok()

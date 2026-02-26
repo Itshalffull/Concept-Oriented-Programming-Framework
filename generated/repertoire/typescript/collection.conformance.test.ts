@@ -8,7 +8,7 @@ describe("Collection conformance", () => {
   it("invariant 1: after create, addMember, getMembers behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
+    let c = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(collection: c, type: "list", schema: "default") -> ok()

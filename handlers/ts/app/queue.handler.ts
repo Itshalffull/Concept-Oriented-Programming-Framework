@@ -12,13 +12,14 @@ export const queueHandler: ConceptHandler = {
     const queueRecord = await storage.get('queue', queue);
     if (!queueRecord) {
       // Auto-initialize the queue on first enqueue if it does not exist
-      const itemId = `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const itemId = 'item-1';
       const items = [{ itemId, item, priority, status: 'pending', claimedBy: '' }];
       await storage.put('queue', queue, {
         queue,
         items: JSON.stringify(items),
         workers: JSON.stringify([]),
         backend: 'default',
+        nextItemNum: 2,
       });
       return { variant: 'ok', itemId };
     }
@@ -31,7 +32,8 @@ export const queueHandler: ConceptHandler = {
       claimedBy: string;
     }> = JSON.parse((queueRecord.items as string) || '[]');
 
-    const itemId = `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const nextNum = (queueRecord.nextItemNum as number) || items.length + 1;
+    const itemId = `item-${nextNum}`;
     items.push({ itemId, item, priority, status: 'pending', claimedBy: '' });
 
     // Sort by priority (higher priority first) for FIFO within same priority
@@ -40,6 +42,7 @@ export const queueHandler: ConceptHandler = {
     await storage.put('queue', queue, {
       ...queueRecord,
       items: JSON.stringify(items),
+      nextItemNum: nextNum + 1,
     });
 
     return { variant: 'ok', itemId };

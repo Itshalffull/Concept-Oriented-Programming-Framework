@@ -8,7 +8,7 @@ describe("Namespace conformance", () => {
   it("invariant 1: after createNamespacedPage, getChildren behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const n = "u-test-invariant-001";
+    let n = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // createNamespacedPage(node: n, path: "projects/alpha") -> ok()

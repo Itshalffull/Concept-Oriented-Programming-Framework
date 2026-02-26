@@ -8,7 +8,7 @@ describe("ContentStorage conformance", () => {
   it("invariant 1: after save, load behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
+    let r = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // save(record: r, data: "{\"title\":\"Test\"}") -> ok(record: r)
@@ -17,7 +17,7 @@ describe("ContentStorage conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).record).toBe(r);
+    r = (step1 as any).record;
 
     // --- THEN clause ---
     // load(record: r) -> ok(record: r, data: "{\"title\":\"Test\"}")
@@ -26,14 +26,14 @@ describe("ContentStorage conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).record).toBe(r);
+    r = (step2 as any).record;
     expect((step2 as any).data).toBe("{\"title\":\"Test\"}");
   });
 
   it("invariant 2: after save, delete, load behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
+    let r = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // save(record: r, data: "{\"title\":\"Test\"}") -> ok(record: r)

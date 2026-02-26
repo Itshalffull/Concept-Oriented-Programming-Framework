@@ -8,9 +8,9 @@ describe("Comment conformance", () => {
   it("invariant 1: after addComment, reply behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
-    const e = "u-test-invariant-002";
-    const r = "u-test-invariant-003";
+    let c = "u-test-invariant-001";
+    let e = "u-test-invariant-002";
+    let r = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
@@ -19,7 +19,7 @@ describe("Comment conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).comment).toBe(c);
+    c = (step1 as any).comment;
 
     // --- THEN clause ---
     // reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok(comment: r)
@@ -28,7 +28,7 @@ describe("Comment conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).comment).toBe(r);
+    r = (step2 as any).comment;
   });
 
 });

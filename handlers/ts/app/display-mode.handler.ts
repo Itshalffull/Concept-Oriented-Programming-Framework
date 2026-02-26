@@ -26,9 +26,16 @@ export const displayModeHandler: ConceptHandler = {
     const field = input.field as string;
     const config = input.config as string;
 
-    const existing = await storage.get('displayMode', mode);
+    let existing = await storage.get('displayMode', mode);
     if (!existing) {
-      return { variant: 'notfound', message: 'Display mode not found' };
+      // Auto-create mode when configuring field display
+      existing = {
+        mode,
+        name: mode,
+        fieldDisplayConfigs: '{}',
+        fieldFormConfigs: '{}',
+      };
+      await storage.put('displayMode', mode, existing);
     }
 
     const configs = JSON.parse((existing.fieldDisplayConfigs as string) || '{}');

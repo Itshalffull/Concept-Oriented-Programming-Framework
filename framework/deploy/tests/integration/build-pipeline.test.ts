@@ -69,12 +69,13 @@ async function runBuildPipeline(
   }
 
   // Step 3: Artifact/store — store the content-addressed artifact
-  await artifactHandler.build(
+  await artifactHandler.store(
     {
+      hash: artifactHash,
+      location: buildResult.artifactLocation as string,
       concept,
-      spec: `${concept}.concept`,
-      implementation: `${concept}.impl.${language}`,
-      deps: [source],
+      language,
+      platform,
     },
     artifactStorage,
   );

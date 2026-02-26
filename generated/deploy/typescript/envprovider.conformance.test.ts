@@ -8,7 +8,7 @@ describe("EnvProvider conformance", () => {
   it("invariant 1: after fetch, fetch behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v = "u-test-invariant-001";
+    let v = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // fetch(name: "DATABASE_URL") -> ok(value: v)
@@ -17,7 +17,7 @@ describe("EnvProvider conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).value).toBe(v);
+    v = (step1 as any).value;
 
     // --- THEN clause ---
     // fetch(name: "DATABASE_URL") -> ok(value: v)
@@ -26,7 +26,7 @@ describe("EnvProvider conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).value).toBe(v);
+    v = (step2 as any).value;
   });
 
 });

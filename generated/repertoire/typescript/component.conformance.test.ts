@@ -8,7 +8,7 @@ describe("Component conformance", () => {
   it("invariant 1: after register, place, render behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
+    let c = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // register(component: c, config: "hero-banner") -> ok()

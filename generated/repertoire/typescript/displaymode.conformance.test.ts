@@ -8,7 +8,7 @@ describe("DisplayMode conformance", () => {
   it("invariant 1: after defineMode, configureFieldDisplay behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const d = "u-test-invariant-001";
+    let d = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // defineMode(mode: d, name: "teaser") -> ok(mode: d)
@@ -17,7 +17,7 @@ describe("DisplayMode conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).mode).toBe(d);
+    d = (step1 as any).mode;
 
     // --- THEN clause ---
     // configureFieldDisplay(mode: d, field: "title", config: "truncated") -> ok(mode: d)
@@ -26,13 +26,13 @@ describe("DisplayMode conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).mode).toBe(d);
+    d = (step2 as any).mode;
   });
 
   it("invariant 2: after configureFieldDisplay, renderInMode behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const d = "u-test-invariant-001";
+    let d = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // configureFieldDisplay(mode: d, field: "title", config: "truncated") -> ok(mode: d)

@@ -8,7 +8,7 @@ describe("Queue conformance", () => {
   it("invariant 1: after enqueue, claim, process behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const q = "u-test-invariant-001";
+    let q = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // enqueue(queue: q, item: "send_email", priority: 1) -> ok(itemId: "item-1")

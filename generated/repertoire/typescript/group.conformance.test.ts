@@ -8,9 +8,9 @@ describe("Group conformance", () => {
   it("invariant 1: after createGroup, addMember, checkGroupAccess behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const g = "u-test-invariant-001";
-    const n = "u-test-invariant-002";
-    const u = "u-test-invariant-003";
+    let g = "u-test-invariant-001";
+    let n = "u-test-invariant-002";
+    let u = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // createGroup(group: g, name: n) -> ok()

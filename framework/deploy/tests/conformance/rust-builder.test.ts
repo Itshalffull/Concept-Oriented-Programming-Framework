@@ -23,7 +23,7 @@ describe('RustBuilder conformance', () => {
 
   it('should build successfully and return artifact path and hash', async () => {
     const result = await rustBuilderHandler.build(
-      { sourcePath: './src/lib.rs', target: 'debug' },
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'debug', features: [] } },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -31,96 +31,123 @@ describe('RustBuilder conformance', () => {
     expect(result.artifactHash).toBeDefined();
   });
 
-  it('should return compilationError with file, line, and message', async () => {
+  it('should return compilationError when source is missing', async () => {
     const result = await rustBuilderHandler.build(
-      { sourcePath: './src/invalid.rs', target: 'debug', simulateError: 'compilationError' },
+      { source: '', toolchainPath: '', platform: 'x86_64-linux', config: { mode: 'debug', features: [] } },
       storage,
     );
     expect(result.variant).toBe('compilationError');
-    expect(result.file).toBeDefined();
-    expect(result.line).toBeDefined();
-    expect(result.message).toBeDefined();
+    expect(result.errors).toBeDefined();
   });
 
-  it('should return featureConflict on incompatible feature flags', async () => {
+  it('should return featureConflict on duplicate feature flags', async () => {
     const result = await rustBuilderHandler.build(
-      { sourcePath: './src/lib.rs', target: 'release', simulateError: 'featureConflict' },
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'release', features: ['serde', 'serde'] } },
       storage,
     );
     expect(result.variant).toBe('featureConflict');
-    expect(result.message).toBeDefined();
+    expect(result.conflicting).toBeDefined();
   });
 
   // --- test ---
 
   it('should run tests and return pass/fail/skipped/duration', async () => {
+    // Build first to get a build ID
+    const buildResult = await rustBuilderHandler.build(
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'debug', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await rustBuilderHandler.test(
-      { sourcePath: './src/lib.rs', testTarget: 'cargo-test' },
+      { build: buildResult.build as string, toolchainPath: '/usr/local/bin/rustc' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(typeof result.pass).toBe('number');
-    expect(typeof result.fail).toBe('number');
+    expect(typeof result.passed).toBe('number');
+    expect(typeof result.failed).toBe('number');
     expect(typeof result.skipped).toBe('number');
     expect(typeof result.duration).toBe('number');
   });
 
-  it('should return testFailure with failure details', async () => {
+  it('should return testFailure when build is not found', async () => {
     const result = await rustBuilderHandler.test(
-      { sourcePath: './src/lib.rs', testTarget: 'cargo-test', simulateError: 'testFailure' },
+      { build: 'nonexistent-build-id', toolchainPath: '/usr/local/bin/rustc' },
       storage,
     );
     expect(result.variant).toBe('testFailure');
     expect(result.failures).toBeDefined();
     expect(Array.isArray(result.failures)).toBe(true);
-    const failures = result.failures as any[];
-    expect(failures.length).toBeGreaterThan(0);
-    expect(failures[0].testName).toBeDefined();
-    expect(failures[0].message).toBeDefined();
   });
 
   // --- package ---
 
   it('should package as crate format', async () => {
+    const buildResult = await rustBuilderHandler.build(
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await rustBuilderHandler.package(
-      { sourcePath: './src/lib.rs', format: 'crate' },
+      { build: buildResult.build as string, format: 'crate' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('crate');
-    expect(result.outputPath).toBeDefined();
+    expect(result.artifactPath).toBeDefined();
   });
 
   it('should package as binary format', async () => {
+    const buildResult = await rustBuilderHandler.build(
+      { source: './src/main.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await rustBuilderHandler.package(
-      { sourcePath: './src/main.rs', format: 'binary' },
+      { build: buildResult.build as string, format: 'binary' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('binary');
   });
 
   it('should package as wasm-pack format', async () => {
+    const buildResult = await rustBuilderHandler.build(
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'wasm32', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await rustBuilderHandler.package(
-      { sourcePath: './src/lib.rs', format: 'wasm-pack' },
+      { build: buildResult.build as string, format: 'wasm-pack' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('wasm-pack');
   });
 
   it('should package as docker format', async () => {
+    const buildResult = await rustBuilderHandler.build(
+      { source: './src/main.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await rustBuilderHandler.package(
-      { sourcePath: './src/main.rs', format: 'docker' },
+      { build: buildResult.build as string, format: 'docker' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('docker');
   });
 
   it('should return formatUnsupported for unknown format', async () => {
+    const buildResult = await rustBuilderHandler.build(
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await rustBuilderHandler.package(
-      { sourcePath: './src/lib.rs', format: 'msi' },
+      { build: buildResult.build as string, format: 'msi' },
       storage,
     );
     expect(result.variant).toBe('formatUnsupported');
@@ -142,14 +169,14 @@ describe('RustBuilder conformance', () => {
 
   it('should build then test using cargo artifact paths', async () => {
     const buildResult = await rustBuilderHandler.build(
-      { sourcePath: './src/lib.rs', target: 'debug' },
+      { source: './src/lib.rs', toolchainPath: '/usr/local/bin/rustc', platform: 'x86_64-linux', config: { mode: 'debug', features: [] } },
       storage,
     );
     expect(buildResult.variant).toBe('ok');
-    expect((buildResult.artifactPath as string)).toMatch(/target|\.rlib|\.so|\.d/);
+    expect((buildResult.artifactPath as string)).toMatch(/build\/rust/);
 
     const testResult = await rustBuilderHandler.test(
-      { sourcePath: './src/lib.rs', testTarget: 'cargo-test' },
+      { build: buildResult.build as string, toolchainPath: '/usr/local/bin/rustc' },
       storage,
     );
     expect(testResult.variant).toBe('ok');

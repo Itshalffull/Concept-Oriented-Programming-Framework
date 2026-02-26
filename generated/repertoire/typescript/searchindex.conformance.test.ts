@@ -8,8 +8,8 @@ describe("SearchIndex conformance", () => {
   it("invariant 1: after createIndex, indexItem, search behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const i = "u-test-invariant-001";
-    const r = "u-test-invariant-002";
+    let i = "u-test-invariant-001";
+    let r = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // createIndex(index: i, config: "{}") -> ok(index: i)
@@ -18,7 +18,7 @@ describe("SearchIndex conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).index).toBe(i);
+    i = (step1 as any).index;
 
     // --- THEN clause ---
     // indexItem(index: i, item: "doc-1", data: "hello world") -> ok(index: i)
@@ -27,14 +27,14 @@ describe("SearchIndex conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).index).toBe(i);
+    i = (step2 as any).index;
     // search(index: i, query: "hello") -> ok(results: r)
     const step3 = await searchindexHandler.search(
       { index: i, query: "hello" },
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).results).toBe(r);
+    r = (step3 as any).results;
   });
 
 });

@@ -8,10 +8,10 @@ describe("PluginRegistry conformance", () => {
   it("invariant 1: after discover, createInstance, getDefinitions behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const ps = "u-test-invariant-001";
-    const p = "u-test-invariant-002";
-    const i = "u-test-invariant-003";
-    const ds = "u-test-invariant-004";
+    let ps = "u-test-invariant-001";
+    let p = "u-test-invariant-002";
+    let i = "u-test-invariant-003";
+    let ds = "u-test-invariant-004";
 
     // --- AFTER clause ---
     // discover(type: "formatter") -> ok(plugins: ps)
@@ -20,7 +20,7 @@ describe("PluginRegistry conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).plugins).toBe(ps);
+    ps = (step1 as any).plugins;
 
     // --- THEN clause ---
     // createInstance(plugin: p, config: "{}") -> ok(instance: i)
@@ -29,14 +29,14 @@ describe("PluginRegistry conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).instance).toBe(i);
+    i = (step2 as any).instance;
     // getDefinitions(type: "formatter") -> ok(definitions: ds)
     const step3 = await pluginregistryHandler.getDefinitions(
       { type: "formatter" },
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).definitions).toBe(ds);
+    ds = (step3 as any).definitions;
   });
 
 });

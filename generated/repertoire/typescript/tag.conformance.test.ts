@@ -8,7 +8,7 @@ describe("Tag conformance", () => {
   it("invariant 1: after addTag, getByTag behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
+    let t = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // addTag(entity: "page-1", tag: t) -> ok()
