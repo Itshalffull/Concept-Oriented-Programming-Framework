@@ -1,0 +1,15 @@
+// Record coverage when the SyncEngine fires a sync.
+// Resolves the sync name to its SyncEntity and records
+// that the sync was exercised at runtime.
+
+sync SyncFiringCorrelationSync [eventual]
+when {
+  SyncEngine/evaluate: [ sync: ?syncName; candidates: ?candidates ]
+    => [ syncName: ?sync; matched: true; flow: ?flowId ]
+}
+where {
+  SyncEntity: { ?syncEntity name: ?sync }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?syncSymbol; kind: "sync"; flowId: ?flowId ]
+}

@@ -1,0 +1,12 @@
+// Build enriched RuntimeFlow when FlowTrace records a trace.
+// Resolves all ActionLog entries in the flow to their static
+// semantic entities.
+
+sync FlowCorrelationSync [eventual]
+when {
+  FlowTrace/record: [ concept: ?concept; action: ?action ]
+    => [ trace: ?trace; flowId: ?flowId ]
+}
+then {
+  RuntimeFlow/correlate: [ flowId: ?flowId ]
+}

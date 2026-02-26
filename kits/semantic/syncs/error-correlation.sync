@@ -1,0 +1,16 @@
+// Record errors when action completions return error variants.
+// Matches entries where the variant indicates an error condition
+// (error, invalid, notfound, timeout) and auto-resolves the
+// static context.
+
+sync ErrorCorrelationSync [eager]
+when {
+  ActionLog/append: [ entry: ?entry ]
+    => [ entry: ?entry ]
+}
+where {
+  filter(?entryVariant matches "error" or "invalid" or "notfound" or "timeout")
+}
+then {
+  ErrorCorrelation/record: [ flowId: ?flowId; errorKind: "action-error"; message: ?entryOutput; rawEvent: ?entry ]
+}

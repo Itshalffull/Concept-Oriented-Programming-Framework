@@ -1,0 +1,12 @@
+// Record errors when the SyncEngine fails to match a sync.
+// Captures the sync name and mismatch reason for debugging
+// sync configuration issues.
+
+sync SyncMismatchErrorSync [eager]
+when {
+  SyncEngine/evaluate: [ sync: ?syncName; candidates: ?candidates ]
+    => [ syncName: ?sync; matched: false; reason: ?reason ]
+}
+then {
+  ErrorCorrelation/record: [ flowId: ?flowId; errorKind: "sync-mismatch"; message: ?reason; rawEvent: ?sync ]
+}

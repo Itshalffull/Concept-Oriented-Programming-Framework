@@ -1,0 +1,16 @@
+// Correlate ActionLog entries with semantic entities.
+// On every ActionLog append, resolve the concept and action
+// strings to their static entities and record coverage.
+
+sync ActionLogCorrelationSync [eventual]
+when {
+  ActionLog/append: [ entry: ?entry ]
+    => [ entry: ?entry ]
+}
+where {
+  ConceptEntity: { ?conceptEntity name: ?entryConcept }
+  ActionEntity: { ?actionEntity concept: ?conceptEntity; name: ?entryAction }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?actionSymbol; kind: "action"; flowId: ?flowId ]
+}

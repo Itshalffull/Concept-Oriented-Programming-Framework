@@ -1,0 +1,12 @@
+// Compare correlated runtime flows against static FlowGraph.
+// After a RuntimeFlow is built, diff the actual execution path
+// against the predicted static path to find deviations.
+
+sync FlowDeviationCheckSync [eventual]
+when {
+  RuntimeFlow/correlate: [ flowId: ?flowId ]
+    => [ flow: ?flow ]
+}
+then {
+  RuntimeFlow/compareToStatic: [ flow: ?flow ]
+}

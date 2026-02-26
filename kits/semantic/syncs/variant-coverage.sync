@@ -1,0 +1,16 @@
+// Record coverage when action completions include variants.
+// Resolves the variant tag to its VariantEntity and records
+// that the variant was exercised at runtime.
+
+sync VariantCoverageSync [eventual]
+when {
+  ActionLog/append: [ entry: ?entry ]
+    => [ entry: ?entry ]
+}
+where {
+  filter(?entry has variant)
+  VariantEntity: { ?variant action: ?action; tag: ?entryVariant }
+}
+then {
+  RuntimeCoverage/record: [ symbol: ?variantSymbol; kind: "variant"; flowId: ?flowId ]
+}
