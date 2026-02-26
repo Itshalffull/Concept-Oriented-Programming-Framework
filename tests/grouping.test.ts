@@ -17,7 +17,7 @@ import {
   type GroupingConfig,
   type ConceptGroup,
 } from '../handlers/ts/framework/providers/codegen-utils';
-import type { ConceptManifest, ActionSchema } from '../kernel/src/types';
+import type { ConceptManifest, ActionSchema } from '../runtime/types';
 
 // --- Helpers ---
 

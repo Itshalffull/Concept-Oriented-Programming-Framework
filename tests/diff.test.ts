@@ -1,7 +1,7 @@
 // Diff concept handler tests -- registerProvider, diff computation, and patch application.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { diffHandler, resetDiffCounter } from '../handlers/ts/diff.handler.js';
 
 describe('Diff', () => {

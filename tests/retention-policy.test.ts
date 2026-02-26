@@ -2,7 +2,7 @@
 // checkDisposition, dispose, and auditLog.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { retentionPolicyHandler, resetRetentionPolicyCounter } from '../handlers/ts/retention-policy.handler.js';
 
 describe('RetentionPolicy', () => {

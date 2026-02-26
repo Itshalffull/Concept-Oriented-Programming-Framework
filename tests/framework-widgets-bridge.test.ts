@@ -28,7 +28,7 @@ import {
   motionToCSS,
   reducedMotionCSS,
   mapElementToHTML,
-} from '../framework-widgets/shared/surface-bridge.js';
+} from '../surface/widgets/shared/surface-bridge.js';
 
 import type {
   DesignTokenValue,
@@ -41,7 +41,7 @@ import type {
   MotionEasing,
   MotionTransition,
   ShadowLayer,
-} from '../framework-widgets/shared/types.js';
+} from '../surface/widgets/shared/types.js';
 
 // ==============================
 // Signal

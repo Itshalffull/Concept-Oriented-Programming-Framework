@@ -1,7 +1,7 @@
 // JWT Concept Implementation
 // Simplified JWT — uses base64 encoding with HMAC signature
 import { createHmac, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 const JWT_SECRET = randomBytes(32);
 

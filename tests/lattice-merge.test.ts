@@ -1,7 +1,7 @@
 // LatticeMerge provider tests -- CRDT lattice join semantics for conflict-free merging.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { latticeMergeHandler, resetLatticeMergeCounter } from '../handlers/ts/lattice-merge.handler.js';
 
 describe('LatticeMerge', () => {

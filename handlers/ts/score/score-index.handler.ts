@@ -5,7 +5,7 @@
 // fast LLM-friendly lookups. Auto-registered as a built-in
 // concept in every Clef runtime.
 
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const scoreIndexHandler: ConceptHandler = {
   async upsertConcept(input, storage) {

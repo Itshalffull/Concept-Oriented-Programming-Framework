@@ -6,7 +6,7 @@
 // adapter, lite query implementation, and conformance tests.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
@@ -110,7 +110,7 @@ export const typeScriptGenHandler: ConceptHandler = {
     // 2. Generate handler interface
     const handlerLines: string[] = [
       `// Auto-generated handler interface for ${conceptName}`,
-      `import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';`,
+      `import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';`,
       '',
       `export interface ${pascal}Handler extends ConceptHandler {`,
     ];
@@ -131,7 +131,7 @@ export const typeScriptGenHandler: ConceptHandler = {
     // 3. Generate transport adapter
     const adapterLines: string[] = [
       `// Auto-generated transport adapter for ${conceptName}`,
-      `import type { ConceptHandler, ConceptStorage, ActionInvocation, ActionCompletion } from '../../kernel/src/types.js';`,
+      `import type { ConceptHandler, ConceptStorage, ActionInvocation, ActionCompletion } from '../../runtime/types.js';`,
       '',
       `export function create${pascal}Adapter(handler: ConceptHandler, storage: ConceptStorage) {`,
       `  return {`,
@@ -175,7 +175,7 @@ export const typeScriptGenHandler: ConceptHandler = {
     // 4. Generate lite query implementation
     const queryLines: string[] = [
       `// Auto-generated lite query protocol for ${conceptName}`,
-      `import type { ConceptStorage } from '../../kernel/src/types.js';`,
+      `import type { ConceptStorage } from '../../runtime/types.js';`,
       '',
       `export function create${pascal}Query(storage: ConceptStorage) {`,
       `  return {`,

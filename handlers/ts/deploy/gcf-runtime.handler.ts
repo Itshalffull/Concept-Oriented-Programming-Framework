@@ -1,7 +1,7 @@
 // GcfRuntime Concept Implementation
 // Google Cloud Functions provider for the Runtime coordination concept. Manages
 // function provisioning, source deployment, traffic shifting, and teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'gcf';
 

@@ -1,4 +1,4 @@
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const intentHandler: ConceptHandler = {
   async define(input, storage) {

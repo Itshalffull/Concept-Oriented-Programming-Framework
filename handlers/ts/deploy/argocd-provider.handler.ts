@@ -1,7 +1,7 @@
 // ArgoCDProvider Concept Implementation
 // ArgoCD GitOps provider. Generates ArgoCD Application CRDs, manages
 // sync waves, and tracks reconciliation status.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'argocd';
 

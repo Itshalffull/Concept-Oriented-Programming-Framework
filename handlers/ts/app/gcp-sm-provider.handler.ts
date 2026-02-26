@@ -1,7 +1,7 @@
 // GcpSmProvider Concept Implementation
 // Manage secret resolution from Google Cloud Secret Manager. Owns project
 // and secret IDs, IAM binding state, version tracking, and access configuration.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const gcpSmProviderHandler: ConceptHandler = {
   async fetch(input, storage) {

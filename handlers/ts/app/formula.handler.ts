@@ -1,7 +1,7 @@
 // Formula Concept Implementation
 // Evaluate reactive computed values derived from properties and relations,
 // with dependency tracking and automatic invalidation.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /**
  * Extract variable names from a formula expression.

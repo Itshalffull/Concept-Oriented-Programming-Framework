@@ -1,7 +1,7 @@
 // TypeScriptToolchain Concept Implementation
 // TypeScript provider for the Toolchain coordination concept. Manages
 // tsc resolution, Node.js version checking, and bundler detection.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'ts-tool';
 

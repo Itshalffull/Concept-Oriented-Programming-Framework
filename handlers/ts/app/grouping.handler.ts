@@ -1,5 +1,5 @@
 // Grouping Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /** Classify a single action name by its operational properties. */
 function classifyAction(actionName: string): {

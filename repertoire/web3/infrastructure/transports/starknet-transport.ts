@@ -15,7 +15,7 @@
 import type {
   ActionInvocation,
   ActionCompletion,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 /** Configuration for a StarkNet connection */
 export interface StarkNetConfig {

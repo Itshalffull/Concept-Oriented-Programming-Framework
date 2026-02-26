@@ -5,13 +5,13 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { parseConceptFile } from '../../handlers/ts/framework/spec-parser.handler.js';
-import { createInMemoryStorage } from '../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 import { schemaGenHandler } from '../../handlers/ts/framework/schema-gen.handler.js';
 import { typescriptGenHandler } from '../../handlers/ts/framework/typescript-gen.handler.js';
 import { rustGenHandler } from '../../handlers/ts/framework/rust-gen.handler.js';
 import { swiftGenHandler } from '../../handlers/ts/framework/swift-gen.handler.js';
 import { solidityGenHandler } from '../../handlers/ts/framework/solidity-gen.handler.js';
-import type { ConceptAST, ConceptManifest, ConceptHandler } from '../../kernel/src/types.js';
+import type { ConceptAST, ConceptManifest, ConceptHandler } from '../../runtime/types.js';
 
 const PROJECT_ROOT = resolve(import.meta.dirname || __dirname, '..', '..');
 const SPECS_DIR = resolve(PROJECT_ROOT, 'specs', 'app');

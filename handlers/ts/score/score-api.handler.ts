@@ -9,7 +9,7 @@
 // and to the underlying Score kit concepts for complex queries
 // (dependence graph traversal, data flow analysis, embeddings).
 
-import type { ConceptHandler, ConceptStorage } from '@clef/kernel';
+import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
 
 // ─── Helpers ─────────────────────────────────────────────
 

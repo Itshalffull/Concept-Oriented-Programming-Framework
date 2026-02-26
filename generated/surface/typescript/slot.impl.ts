@@ -7,7 +7,7 @@
 // Relation: 'slot' keyed by slot (L).
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 export const slotHandler: ConceptHandler = {
   async define(input, storage) {

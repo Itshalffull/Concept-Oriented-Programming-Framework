@@ -9,9 +9,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
 import { toolchainHandler } from '../../../../implementations/typescript/deploy/toolchain.impl.js';
-import type { ConceptStorage } from '@clef/kernel';
+import type { ConceptStorage } from '@clef/runtime';
 
 describe('Toolchain conformance', () => {
   let storage: ConceptStorage;

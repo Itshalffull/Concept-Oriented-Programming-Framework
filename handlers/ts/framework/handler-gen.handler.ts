@@ -15,7 +15,7 @@ import type {
   ConceptManifest,
   ActionSchema,
   VariantSchema,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -57,7 +57,7 @@ function generateHandlerImpl(manifest: ConceptManifest, relativeKernelPath: stri
   }
   lines.push(`// ============================================================`);
   lines.push(``);
-  lines.push(`import type { ConceptHandler, ConceptStorage } from '${relativeKernelPath}/kernel/src/types.js';`);
+  lines.push(`import type { ConceptHandler, ConceptStorage } from '${relativeKernelPath}/runtime/types.js';`);
   lines.push(``);
 
   // ID counter

@@ -3,7 +3,7 @@
 // Wraps ecrecover and EIP-712 typed data verification.
 // See Architecture doc for auth pattern details.
 import { createHash, createHmac } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /**
  * Simulate ecrecover by hashing (address + message + signature) and checking

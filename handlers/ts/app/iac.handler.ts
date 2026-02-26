@@ -1,6 +1,6 @@
 // IaC Concept Implementation (Deploy Kit)
 // Coordinate infrastructure-as-code generation and application across IaC providers.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const iacHandler: ConceptHandler = {
   async emit(input, storage) {

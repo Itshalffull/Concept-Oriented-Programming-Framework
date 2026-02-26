@@ -7,7 +7,7 @@
 // Relation: 'theme' keyed by H.
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 export const themeHandler: ConceptHandler = {
   async create(input, storage) {

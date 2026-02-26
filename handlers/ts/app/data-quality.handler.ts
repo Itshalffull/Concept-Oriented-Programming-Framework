@@ -1,5 +1,5 @@
 // DataQuality Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const dataQualityHandler: ConceptHandler = {
   async validate(input, storage) {

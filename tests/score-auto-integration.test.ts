@@ -8,11 +8,11 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { scoreApiHandler } from '../handlers/ts/score/score-api.handler.js';
 import { scoreIndexHandler } from '../handlers/ts/score/score-index.handler.js';
-import { bootstrapScore, isScoreRegistered, SCORE_API_URI, SCORE_INDEX_URI } from '../kernel/src/score-bootstrap.js';
-import type { ConceptStorage } from '../kernel/src/types.js';
+import { bootstrapScore, isScoreRegistered, SCORE_API_URI, SCORE_INDEX_URI } from '../runtime/score-bootstrap.js';
+import type { ConceptStorage } from '../runtime/types.js';
 
 // ─── ScoreIndex Conformance ─────────────────────────────
 

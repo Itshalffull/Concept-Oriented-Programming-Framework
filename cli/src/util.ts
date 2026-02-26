@@ -4,7 +4,7 @@
 
 import { readdirSync, statSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
-import type { ConceptStorage } from '../../kernel/src/types.js';
+import type { ConceptStorage } from '../../runtime/types.js';
 import { emitterHandler } from '../../handlers/ts/framework/emitter.handler.js';
 
 /**

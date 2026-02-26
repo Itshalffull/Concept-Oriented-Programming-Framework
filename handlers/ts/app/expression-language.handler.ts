@@ -1,7 +1,7 @@
 // ExpressionLanguage Concept Implementation
 // Parse and evaluate expressions in pluggable language grammars with typed
 // functions, operators, and autocompletion.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /**
  * Simple recursive-descent parser and evaluator for arithmetic expressions.

@@ -17,24 +17,24 @@ import type {
   ActionInvocation,
   ActionCompletion,
   CompiledSync,
-} from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
-import { createConceptRegistry } from '../kernel/src/transport.js';
+} from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
+import { createConceptRegistry } from '../runtime/adapters/transport.js';
 
-import { createPerRequestEngine, invalidatePerRequestCache } from '../engine/per-request-engine.js';
-import { createDynamoDBActionLog } from '../engine/durable-action-log-dynamodb.js';
+import { createPerRequestEngine, invalidatePerRequestCache } from '../runtime/sync-engine/per-request-engine.js';
+import { createDynamoDBActionLog } from '../runtime/action-log/durable-action-log-dynamodb.js';
 import {
   createSQSEvaluatorHandler,
   createPubSubEvaluatorHandler,
-} from '../engine/serverless-evaluator.js';
+} from '../runtime/sync-engine/serverless-evaluator.js';
 import {
   createModuleInitializer,
   invalidateSyncCache,
   clearHandlerCache,
-} from '../infrastructure/serverless/cold-start.js';
-import type { DurableActionLog } from '../engine/durable-action-log.js';
-import type { DynamoDBDocumentClient } from '../infrastructure/storage/dynamodb-storage.js';
-import type { DistributedFiringGuard } from '../infrastructure/serverless/distributed-lock.js';
+} from '../runtime/adapters/serverless/cold-start.js';
+import type { DurableActionLog } from '../runtime/action-log/durable-action-log.js';
+import type { DynamoDBDocumentClient } from '../runtime/adapters/dynamodb-storage.js';
+import type { DistributedFiringGuard } from '../runtime/adapters/serverless/distributed-lock.js';
 
 // ============================================================
 // Mock DynamoDB Client

@@ -13,7 +13,7 @@
 import type {
   ConceptHandler,
   ConceptStorage,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 /** Chain finality configuration */
 interface ChainConfig {

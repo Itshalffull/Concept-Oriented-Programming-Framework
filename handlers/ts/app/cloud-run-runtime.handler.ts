@@ -1,7 +1,7 @@
 // CloudRunRuntime Concept Implementation
 // Manage Google Cloud Run service deployments. Owns service URLs, revision
 // history, IAM bindings, traffic splitting, and concurrency settings.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const cloudRunRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

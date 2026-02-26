@@ -1,5 +1,5 @@
 // Enricher Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const enricherHandler: ConceptHandler = {
   async enrich(input, storage) {

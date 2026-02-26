@@ -1,5 +1,5 @@
 // User Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const userHandler: ConceptHandler = {
   async register(input, storage) {

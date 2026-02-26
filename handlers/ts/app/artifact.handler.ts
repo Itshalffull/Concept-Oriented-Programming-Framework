@@ -1,6 +1,6 @@
 // Artifact Concept Implementation (Deploy Kit)
 // Manage immutable, content-addressed build artifacts for concept deployments.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 import { createHash } from 'crypto';
 
 export const artifactHandler: ConceptHandler = {

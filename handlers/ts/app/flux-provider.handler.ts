@@ -2,7 +2,7 @@
 // Generate Flux CRDs from Clef deploy plans. Owns Kustomization CRDs,
 // HelmRelease objects, source controller references, and reconciliation
 // status tracking.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const fluxProviderHandler: ConceptHandler = {
   async register() {

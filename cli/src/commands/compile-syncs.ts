@@ -14,9 +14,9 @@ import { readFileSync } from 'fs';
 import { resolve, relative } from 'path';
 import { parseSyncFile } from '../../../handlers/ts/framework/sync-parser.handler.js';
 import { parseConceptFile } from '../../../handlers/ts/framework/spec-parser.handler.js';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { syncCompilerHandler } from '../../../handlers/ts/framework/sync-compiler.handler.js';
-import type { ConceptAST, CompiledSync, ActionDecl } from '../../../kernel/src/types.js';
+import type { ConceptAST, CompiledSync, ActionDecl } from '../../../runtime/types.js';
 import { findFiles } from '../util.js';
 
 interface SyncCheckResult {

@@ -7,9 +7,9 @@
 // Architecture doc: Clef Bind, Section 1.2
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
-import { generateId, timestamp } from '../../../kernel/src/types.js';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { generateId, timestamp } from '../../../runtime/types.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 
 // --- Internal Types ---
 

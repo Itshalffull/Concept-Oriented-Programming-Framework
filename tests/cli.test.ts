@@ -14,15 +14,15 @@ import { parseArgs } from '../cli/src/main';
 import { findFiles } from '../cli/src/util';
 
 // Import kernel modules used by commands
-import { createInMemoryStorage } from '@clef/kernel';
-import type { ConceptManifest } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
+import type { ConceptManifest } from '@clef/runtime';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler';
 import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler';
 import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler';
 import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler';
-import type { ConceptAST } from '../kernel/src/types';
+import type { ConceptAST } from '../runtime/types';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const SPECS_DIR = resolve(PROJECT_ROOT, 'specs');

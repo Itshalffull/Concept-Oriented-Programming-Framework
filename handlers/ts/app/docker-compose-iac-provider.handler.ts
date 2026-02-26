@@ -2,7 +2,7 @@
 // Generate and apply Docker Compose files from Clef deploy plans. Owns
 // the compose file path, service definitions, and running container state
 // for local IaC management.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const dockerComposeIacProviderHandler: ConceptHandler = {
   async register() {

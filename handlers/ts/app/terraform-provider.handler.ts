@@ -1,7 +1,7 @@
 // TerraformProvider Concept Implementation
 // Generate and apply Terraform HCL modules from Clef deploy plans. Owns
 // Terraform state file management, lock handling, and workspace configuration.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const terraformProviderHandler: ConceptHandler = {
   async register() {

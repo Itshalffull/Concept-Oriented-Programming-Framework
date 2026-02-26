@@ -1,5 +1,5 @@
 // Capture Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const captureHandler: ConceptHandler = {
   async clip(input, storage) {

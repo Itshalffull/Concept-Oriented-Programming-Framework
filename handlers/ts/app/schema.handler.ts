@@ -1,5 +1,5 @@
 // Schema Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const schemaHandler: ConceptHandler = {
   async defineSchema(input, storage) {

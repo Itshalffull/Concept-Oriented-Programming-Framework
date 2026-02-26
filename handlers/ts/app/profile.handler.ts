@@ -1,5 +1,5 @@
 // Profile Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const profileHandler: ConceptHandler = {
   async update(input, storage) {

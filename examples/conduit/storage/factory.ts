@@ -1,8 +1,8 @@
 // Conduit Example App — Storage Backend Factory
 // Creates the appropriate ConceptStorage based on configuration.
 
-import type { ConceptStorage } from '../../../kernel/src/types.js';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import type { ConceptStorage } from '../../../runtime/types.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import type { AppConfig } from '../server/config.js';
 
 export function createStorageForBackend(config: AppConfig): ConceptStorage {
@@ -11,17 +11,17 @@ export function createStorageForBackend(config: AppConfig): ConceptStorage {
       return createInMemoryStorage();
 
     case 'redis':
-      // Redis storage from infrastructure/storage/redis-storage.ts
+      // Redis storage from runtime/adapters/redis-storage.ts
       // Requires REDIS_URL env var and a running Redis instance
       return createRedisStorageAdapter(config.redisUrl);
 
     case 'dynamodb':
-      // DynamoDB storage from infrastructure/storage/dynamodb-storage.ts
+      // DynamoDB storage from runtime/adapters/dynamodb-storage.ts
       // Requires AWS credentials and DynamoDB Local or cloud instance
       return createDynamoDBStorageAdapter();
 
     case 'firestore':
-      // Firestore storage from infrastructure/storage/firestore-storage.ts
+      // Firestore storage from runtime/adapters/firestore-storage.ts
       // Requires GCP credentials or Firestore emulator
       return createFirestoreStorageAdapter();
 
@@ -55,7 +55,7 @@ function createRedisStorageAdapter(redisUrl: string): ConceptStorage {
   // falls back to in-memory if Redis is not available.
   try {
     // Dynamic import would go here:
-    // const { createRedisStorage } = await import('../../../infrastructure/storage/redis-storage.js');
+    // const { createRedisStorage } = await import('../../../runtime/adapters/redis-storage.js');
     // return createRedisStorage({ url: redisUrl });
     console.log(`Redis storage configured at ${redisUrl}`);
     return createInMemoryStorage(); // fallback for now

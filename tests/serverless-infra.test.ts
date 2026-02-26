@@ -18,16 +18,16 @@ import type {
   ActionCompletion,
   ConceptHandler,
   CompiledSync,
-} from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { createConceptRegistry } from '../kernel/src/transport.js';
+} from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
+import { createConceptRegistry } from '../runtime/adapters/transport.js';
 
 // Lambda/GCF handlers
-import { createHttpLambdaHandler, createSqsLambdaHandler } from '../infrastructure/serverless/lambda-handler.js';
-import { createHttpGCFHandler } from '../infrastructure/serverless/gcf-handler.js';
-import type { APIGatewayEvent, SQSEvent } from '../infrastructure/serverless/lambda-handler.js';
-import type { GCFHttpRequest, GCFHttpResponse } from '../infrastructure/serverless/gcf-handler.js';
+import { createHttpLambdaHandler, createSqsLambdaHandler } from '../runtime/adapters/serverless/lambda-handler.js';
+import { createHttpGCFHandler } from '../runtime/adapters/serverless/gcf-handler.js';
+import type { APIGatewayEvent, SQSEvent } from '../runtime/adapters/serverless/lambda-handler.js';
+import type { GCFHttpRequest, GCFHttpResponse } from '../runtime/adapters/serverless/gcf-handler.js';
 
 // Cold start
 import {
@@ -37,35 +37,35 @@ import {
   invalidateSyncCache,
   clearHandlerCache,
   createModuleInitializer,
-} from '../infrastructure/serverless/cold-start.js';
+} from '../runtime/adapters/serverless/cold-start.js';
 
 // Durable action log
-import type { DurableActionLog } from '../engine/durable-action-log.js';
-import { createDynamoDBActionLog } from '../engine/durable-action-log-dynamodb.js';
-import { createFirestoreActionLog } from '../engine/durable-action-log-firestore.js';
+import type { DurableActionLog } from '../runtime/action-log/durable-action-log.js';
+import { createDynamoDBActionLog } from '../runtime/action-log/durable-action-log-dynamodb.js';
+import { createFirestoreActionLog } from '../runtime/action-log/durable-action-log-firestore.js';
 
 // Distributed firing guard
 import {
   createDynamoDBFiringGuard,
   createFirestoreFiringGuard,
-} from '../infrastructure/serverless/distributed-lock.js';
+} from '../runtime/adapters/serverless/distributed-lock.js';
 
 // Per-request engine
-import { createPerRequestEngine, invalidatePerRequestCache } from '../engine/per-request-engine.js';
+import { createPerRequestEngine, invalidatePerRequestCache } from '../runtime/sync-engine/per-request-engine.js';
 
 // SQS/Pub/Sub transports
-import { createSQSTransport, createSQSCompletionPublisher } from '../infrastructure/transports/sqs-transport.js';
-import { createPubSubTransport, createPubSubCompletionPublisher } from '../infrastructure/transports/pubsub-transport.js';
+import { createSQSTransport, createSQSCompletionPublisher } from '../runtime/adapters/sqs-transport.js';
+import { createPubSubTransport, createPubSubCompletionPublisher } from '../runtime/adapters/pubsub-transport.js';
 
 // Serverless evaluator
-import { createSQSEvaluatorHandler } from '../engine/serverless-evaluator.js';
+import { createSQSEvaluatorHandler } from '../runtime/sync-engine/serverless-evaluator.js';
 
 // Blob storage
-import { createBlobStorage, getPresignedUrl } from '../infrastructure/storage/blob-storage.js';
+import { createBlobStorage, getPresignedUrl } from '../runtime/adapters/blob-storage.js';
 
 // Re-use mock factories from serverless-storage.test.ts patterns
-import type { DynamoDBDocumentClient } from '../infrastructure/storage/dynamodb-storage.js';
-import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../infrastructure/storage/firestore-storage.js';
+import type { DynamoDBDocumentClient } from '../runtime/adapters/dynamodb-storage.js';
+import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../runtime/adapters/firestore-storage.js';
 
 // ============================================================
 // Test Fixtures

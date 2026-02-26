@@ -1,5 +1,5 @@
 // Tag Concept Implementation (Classification Kit)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const tagHandler: ConceptHandler = {
   async add(input, storage) {

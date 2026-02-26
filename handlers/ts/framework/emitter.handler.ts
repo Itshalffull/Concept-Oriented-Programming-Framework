@@ -11,7 +11,7 @@
 // See clef-generation-suite.md Part 1.5
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { createHash, randomUUID } from 'crypto';
 
 // Storage relation names

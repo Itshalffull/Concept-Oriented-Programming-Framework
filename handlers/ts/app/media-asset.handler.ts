@@ -1,6 +1,6 @@
 // MediaAsset Concept Implementation
 // Source-abstracted asset facade with metadata extraction and thumbnail generation.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const mediaAssetHandler: ConceptHandler = {
   async createMedia(input, storage) {

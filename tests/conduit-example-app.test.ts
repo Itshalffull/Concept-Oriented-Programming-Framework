@@ -20,7 +20,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
 
 // --- Parsers & Generators ---
@@ -38,18 +38,18 @@ import type { DeploymentManifest } from '../handlers/ts/framework/deployment-val
 import {
   createHttpLambdaHandler,
   createSqsLambdaHandler,
-} from '../infrastructure/serverless/lambda-handler.js';
-import type { APIGatewayEvent, SQSEvent } from '../infrastructure/serverless/lambda-handler.js';
+} from '../runtime/adapters/serverless/lambda-handler.js';
+import type { APIGatewayEvent, SQSEvent } from '../runtime/adapters/serverless/lambda-handler.js';
 import {
   createHttpGCFHandler,
   createPubSubGCFHandler,
-} from '../infrastructure/serverless/gcf-handler.js';
+} from '../runtime/adapters/serverless/gcf-handler.js';
 import type {
   GCFHttpRequest,
   GCFHttpResponse,
   PubSubMessage,
   PubSubContext,
-} from '../infrastructure/serverless/gcf-handler.js';
+} from '../runtime/adapters/serverless/gcf-handler.js';
 
 // --- App Concept Handlers ---
 import { userHandler } from '../handlers/ts/app/user.handler.js';
@@ -72,8 +72,8 @@ import type {
   ConceptHandler,
   ActionCompletion,
   ActionInvocation,
-} from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
+} from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
 
 // ============================================================
 // Shared Constants & Helpers
@@ -589,7 +589,7 @@ describe('Conduit Example App — All Framework Adapters', () => {
 
   it('adapter pipeline sync file references all 6 frameworks', () => {
     const source = readFileSync(
-      resolve(__dirname, '..', 'surface', 'kits', 'surface-render', 'syncs', 'adapter-pipeline.sync'),
+      resolve(__dirname, '..', 'surface', 'suites', 'surface-render', 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     for (const fw of FRAMEWORKS) {

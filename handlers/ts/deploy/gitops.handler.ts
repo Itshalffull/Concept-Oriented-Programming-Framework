@@ -1,7 +1,7 @@
 // GitOps Concept Implementation
 // GitOps manifest generation and reconciliation tracking. Emits
 // controller-specific manifests (ArgoCD, Flux) and monitors sync status.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'gitops';
 const SUPPORTED_CONTROLLERS = ['argocd', 'flux'];

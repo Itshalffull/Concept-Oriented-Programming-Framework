@@ -14,7 +14,7 @@ import type {
   ActionPattern,
   ArgPattern,
   ArgPatternValue,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 // --- Token Types ---
 

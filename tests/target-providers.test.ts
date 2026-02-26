@@ -7,10 +7,10 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { claudeSkillsTargetHandler } from '../handlers/ts/framework/providers/claude-skills-target.handler.js';
 import { cliTargetHandler } from '../handlers/ts/framework/providers/cli-target.handler.js';
-import type { ConceptManifest } from '../kernel/src/types.js';
+import type { ConceptManifest } from '../runtime/types.js';
 
 // --- Test Fixtures ---
 

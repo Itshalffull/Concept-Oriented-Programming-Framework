@@ -15,7 +15,7 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ResolvedType } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
 import {
   toKebabCase,
   toCamelCase,

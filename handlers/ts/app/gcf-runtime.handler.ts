@@ -1,7 +1,7 @@
 // GcfRuntime Concept Implementation
 // Manage Google Cloud Functions deployments. Owns function names, trigger
 // configurations, gen1 and gen2 distinctions, and invocation metrics.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const gcfRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

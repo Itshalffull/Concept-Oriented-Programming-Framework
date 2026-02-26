@@ -20,7 +20,7 @@ import {
   createHttpConceptServer,
   createWebSocketAdapter,
   createWebSocketConceptServer,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import { createSyncEngineHandler } from '../handlers/ts/framework/sync-engine.handler.js';
 import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
@@ -29,8 +29,8 @@ import type {
   ConceptTransport,
   ActionInvocation,
   ActionCompletion,
-} from '../kernel/src/types.js';
-import type { MockWebSocket } from '../kernel/src/ws-transport.js';
+} from '../runtime/types.js';
+import type { MockWebSocket } from '../runtime/adapters/ws-transport.js';
 
 // ============================================================
 // 1. HTTP Transport Adapters

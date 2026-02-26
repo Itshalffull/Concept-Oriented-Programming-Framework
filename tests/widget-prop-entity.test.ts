@@ -6,7 +6,7 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import {
   widgetPropEntityHandler,
   resetWidgetPropEntityCounter,

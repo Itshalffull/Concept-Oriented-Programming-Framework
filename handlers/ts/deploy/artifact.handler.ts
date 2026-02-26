@@ -1,7 +1,7 @@
 // Artifact Concept Implementation
 // Immutable build artifact management. Builds content-addressed artifacts,
 // resolves by hash, and garbage-collects stale versions.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'artifact';
 

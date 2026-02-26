@@ -6,7 +6,7 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ResolvedType, ActionSchema, ConceptManifest } from '../../../../kernel/src/types.js';
+import type { ResolvedType, ActionSchema, ConceptManifest } from '../../../../runtime/types.js';
 
 // --- Type Mapping Functions ---
 

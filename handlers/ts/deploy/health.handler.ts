@@ -1,7 +1,7 @@
 // Health Concept Implementation
 // Health verification for concepts, syncs, suites, and invariants.
 // Checks connectivity, latency, and behavioral correctness.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'health';
 

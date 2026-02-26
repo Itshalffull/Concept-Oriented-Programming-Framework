@@ -2,11 +2,11 @@
 // Alternative login via Ethereum wallet using the Web3 suite's Wallet concept
 // and the wallet-auth sync.
 
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { walletHandler } from '../../../handlers/ts/repertoire/web3/wallet.handler.js';
 import { jwtHandler } from '../../../handlers/ts/app/jwt.handler.js';
 import { userHandler } from '../../../handlers/ts/app/user.handler.js';
-import type { ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptStorage } from '../../../runtime/types.js';
 
 export interface WalletAuthResult {
   variant: 'ok' | 'error';

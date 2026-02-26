@@ -1,7 +1,7 @@
 // Authentication Concept Implementation
 // Verify user identity via pluggable providers, token-based session auth, and credential reset flows.
 import { createHash, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const authenticationHandler: ConceptHandler = {
   async register(input, storage) {

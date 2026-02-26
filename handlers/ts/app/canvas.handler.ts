@@ -1,5 +1,5 @@
 // Canvas Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const canvasHandler: ConceptHandler = {
   async addNode(input, storage) {

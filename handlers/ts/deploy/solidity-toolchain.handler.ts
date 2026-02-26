@@ -1,7 +1,7 @@
 // SolidityToolchain Concept Implementation
 // Solidity provider for the Toolchain coordination concept. Manages
 // solc version resolution, Foundry/Hardhat detection, and EVM version targeting.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'sol-tool';
 

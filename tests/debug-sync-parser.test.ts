@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
 import { syncParserHandler } from '../handlers/ts/framework/sync-parser.handler.js';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 
 describe('SyncParser invariant debug', () => {
   it('traces the full pipeline', async () => {

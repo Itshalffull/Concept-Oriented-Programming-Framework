@@ -1,7 +1,7 @@
 // PatienceDiff provider tests -- unique-line anchoring and LIS-based alignment.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { patienceDiffHandler, resetPatienceDiffCounter } from '../handlers/ts/patience-diff.handler.js';
 
 describe('PatienceDiff', () => {

@@ -15,7 +15,7 @@ import type {
   ActionSchema,
   ActionParamSchema,
   VariantSchema,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 import {
   typeToGo,

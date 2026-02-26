@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createCloudflareKVStorage } from '../handlers/ts/storage/cloudflare-kv.js';
 import { createDurableObjectStorage } from '../handlers/ts/storage/cloudflare-do.js';
 import { createVercelKVStorage } from '../handlers/ts/storage/vercel-kv.js';
-import type { ConceptStorage, ConflictResolution } from '../kernel/src/types.js';
+import type { ConceptStorage, ConflictResolution } from '../runtime/types.js';
 
 // ============================================================
 // Mock Cloudflare KV Namespace

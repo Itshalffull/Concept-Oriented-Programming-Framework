@@ -1,6 +1,6 @@
 // Group Concept Implementation
 // Isolated content spaces with group-level role-based access control for multi-tenant collaboration.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const groupHandler: ConceptHandler = {
   async createGroup(input, storage) {

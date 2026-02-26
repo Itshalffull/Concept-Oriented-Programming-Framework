@@ -2,7 +2,7 @@
 // Coordination concept for tool resolution. Manages discovering, validating,
 // and querying toolchain capabilities across languages and platforms.
 // Supports multiple tools per category with optional toolName selection.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'toolchain';
 

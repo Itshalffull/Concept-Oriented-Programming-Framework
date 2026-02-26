@@ -1,5 +1,5 @@
 // Surface Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const interfaceSurfaceHandler: ConceptHandler = {
   async compose(input, storage) {

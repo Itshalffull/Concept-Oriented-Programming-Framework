@@ -1,5 +1,5 @@
 // Provenance Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const provenanceHandler: ConceptHandler = {
   async record(input, storage) {

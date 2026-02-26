@@ -2,7 +2,7 @@
 // Clef Kernel - .sync File Parser
 // ============================================================
 
-import type { CompiledSync, WhenPattern, FieldPattern, WhereEntry, ThenAction, ThenField } from '../../../kernel/src/types.js';
+import type { CompiledSync, WhenPattern, FieldPattern, WhereEntry, ThenAction, ThenField } from '../../../runtime/types.js';
 
 // --- Token Types ---
 

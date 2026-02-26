@@ -1,5 +1,5 @@
 // SwiftSdkTarget Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const swiftSdkTargetHandler: ConceptHandler = {
   async generate(input, storage) {

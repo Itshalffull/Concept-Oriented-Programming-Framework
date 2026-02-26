@@ -1,5 +1,5 @@
 // Follow Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const followHandler: ConceptHandler = {
   async follow(input, storage) {

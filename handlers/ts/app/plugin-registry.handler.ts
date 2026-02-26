@@ -1,5 +1,5 @@
 // PluginRegistry Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const pluginRegistryHandler: ConceptHandler = {
   async register(input, storage) {

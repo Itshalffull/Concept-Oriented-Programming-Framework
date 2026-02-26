@@ -11,7 +11,7 @@
 //   - surface-core suite: Signal, Binding, UISchema concepts
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -172,7 +172,7 @@ function buildMachineImpl(config: ComponentConfig): string {
     `// Finite state machine for the ${name} headless component.`,
     '// ============================================================',
     '',
-    "import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';",
+    "import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';",
     '',
     `interface ${name}Context {`,
     `  state: ${states.map(s => `'${s}'`).join(' | ')};`,

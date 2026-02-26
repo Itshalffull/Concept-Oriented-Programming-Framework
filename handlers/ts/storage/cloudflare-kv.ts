@@ -23,7 +23,7 @@ import type {
   EntryMeta,
   ConflictInfo,
   ConflictResolution,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 /**
  * Cloudflare KV namespace interface.

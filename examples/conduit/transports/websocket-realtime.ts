@@ -2,11 +2,11 @@
 // Concepts served via WebSocket for real-time push notifications.
 // When articles/comments are created, connected clients get notified.
 
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
-import { createInProcessAdapter, createConceptRegistry } from '../../../kernel/src/transport.js';
-import { createWebSocketConceptServer } from '../../../kernel/src/ws-transport.js';
-import type { MockWebSocket } from '../../../kernel/src/ws-transport.js';
-import type { ConceptHandler, ActionCompletion } from '../../../kernel/src/types.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { createInProcessAdapter, createConceptRegistry } from '../../../runtime/adapters/transport.js';
+import { createWebSocketConceptServer } from '../../../runtime/adapters/ws-transport.js';
+import type { MockWebSocket } from '../../../runtime/adapters/ws-transport.js';
+import type { ConceptHandler, ActionCompletion } from '../../../runtime/types.js';
 
 // App concept handlers
 import { userHandler } from '../../../handlers/ts/app/user.handler.js';

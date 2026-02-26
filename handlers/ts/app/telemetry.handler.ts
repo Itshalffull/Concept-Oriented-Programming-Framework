@@ -1,6 +1,6 @@
 // Telemetry Concept Implementation (Deploy Kit)
 // Manage observability configuration for deployed concepts.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const telemetryHandler: ConceptHandler = {
   async configure(input, storage) {

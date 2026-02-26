@@ -1,6 +1,6 @@
 // Runtime Concept Implementation (Deploy Kit)
 // Coordinate compute provisioning across cloud providers.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const runtimeHandler: ConceptHandler = {
   async provision(input, storage) {

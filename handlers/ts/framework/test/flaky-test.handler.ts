@@ -7,7 +7,7 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 
 const TESTS = 'flaky-tests';
 const POLICY = 'flaky-policy';

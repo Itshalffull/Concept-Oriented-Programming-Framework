@@ -1,7 +1,7 @@
 // Graph Concept Implementation
 // Entity network visualization with force-directed layouts, filtering,
 // and depth-limited neighborhood exploration.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 interface Edge {
   source: string;

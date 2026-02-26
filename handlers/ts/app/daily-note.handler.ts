@@ -1,5 +1,5 @@
 // DailyNote Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const dailyNoteHandler: ConceptHandler = {
   async getOrCreateToday(input, storage) {

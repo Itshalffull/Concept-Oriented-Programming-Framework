@@ -1,7 +1,7 @@
 // PulumiProvider Concept Implementation
 // Pulumi IaC provider. Generates Pulumi programs from deploy plans,
 // previews changes, applies stacks, and tears down resources.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'pulumi';
 

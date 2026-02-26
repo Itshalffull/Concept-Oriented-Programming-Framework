@@ -1,7 +1,7 @@
 // ExposedFilter Concept Implementation
 // Expose interactive filter and sort controls to end users,
 // allowing them to modify query parameters through the UI.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const exposedFilterHandler: ConceptHandler = {
   async expose(input, storage) {

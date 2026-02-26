@@ -7,7 +7,7 @@
 // Relation: 'typography' keyed by X (kind discriminates entries).
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 /**
  * Scale step names, ordered from smallest to largest.

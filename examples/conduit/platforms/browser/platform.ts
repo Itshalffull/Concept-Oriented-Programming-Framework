@@ -2,7 +2,7 @@
 // Wires the BrowserAdapter concept to the React frontend.
 // This is the default platform for web deployment.
 
-import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../../runtime/adapters/storage.js';
 import { browseradapterHandler } from '../../../../generated/surface/typescript/browseradapter.handler.js';
 
 // Browser platform lifecycle

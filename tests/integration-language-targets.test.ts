@@ -11,14 +11,14 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
 import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
 import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler.js';
 import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
 import { swiftGenHandler } from '../handlers/ts/framework/swift-gen.handler.js';
-import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
+import type { ConceptAST, ConceptManifest } from '../runtime/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');

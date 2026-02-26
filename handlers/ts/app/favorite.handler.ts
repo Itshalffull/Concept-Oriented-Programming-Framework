@@ -1,5 +1,5 @@
 // Favorite Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const favoriteHandler: ConceptHandler = {
   async favorite(input, storage) {

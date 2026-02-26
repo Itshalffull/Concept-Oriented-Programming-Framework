@@ -1,7 +1,7 @@
 // GcpSmProvider Concept Implementation
 // Google Cloud Secret Manager provider for the Secret coordination concept.
 // Fetches secret versions and handles rotation.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'gcpsm';
 

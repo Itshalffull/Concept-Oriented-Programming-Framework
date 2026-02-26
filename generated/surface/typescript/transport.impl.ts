@@ -1,6 +1,6 @@
 // Transport Concept Implementation
 // Network communication for concept data synchronization.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'transport';
 

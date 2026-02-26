@@ -1,6 +1,6 @@
 // Rollout Concept Implementation (Deploy Kit)
 // Manage progressive delivery of concept deployments (canary, blue-green, rolling).
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const rolloutHandler: ConceptHandler = {
   async begin(input, storage) {

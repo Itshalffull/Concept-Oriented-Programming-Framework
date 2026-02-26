@@ -1,7 +1,7 @@
 // AwsSmProvider Concept Implementation
 // Manage secret resolution from AWS Secrets Manager. Owns IAM session state,
 // KMS key accessibility, and rotation schedule tracking.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const awsSmProviderHandler: ConceptHandler = {
   async fetch(input, storage) {

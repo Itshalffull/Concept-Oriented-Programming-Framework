@@ -8,7 +8,7 @@
 // See clef-generation-suite.md Part 1.2
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 import { randomUUID } from 'crypto';
 
 const KINDS_RELATION = 'kinds';

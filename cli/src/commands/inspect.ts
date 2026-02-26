@@ -10,10 +10,10 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { resolve, extname } from 'path';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { languageGrammarHandler } from '../../../../kits/parse/handlers/ts/language-grammar.handler.js';
 import { syntaxTreeHandler, clearTreeCaches } from '../../../../kits/parse/handlers/ts/syntax-tree.handler.js';
-import type { ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptStorage } from '../../../runtime/types.js';
 
 // Grammar configurations for supported languages
 const GRAMMAR_CONFIGS: Array<{

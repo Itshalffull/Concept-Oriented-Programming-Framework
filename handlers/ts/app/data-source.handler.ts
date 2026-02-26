@@ -1,5 +1,5 @@
 // DataSource Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const dataSourceHandler: ConceptHandler = {
   async register(input, storage) {

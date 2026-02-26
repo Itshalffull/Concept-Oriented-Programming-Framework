@@ -6,9 +6,9 @@
 // and stores them keyed by a generated spec reference.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { parseConceptFile as parseConceptFileKernel } from './parser.js';
-import { generateId } from '../../../kernel/src/types.js';
+import { generateId } from '../../../runtime/types.js';
 
 // Re-export the raw parse function so consumers can import it
 // from the concept implementation rather than the kernel parser.

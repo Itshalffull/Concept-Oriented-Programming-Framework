@@ -13,14 +13,14 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 
-const Clef Surface_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-render');
-const Clef Surface_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-core');
-const Clef Surface_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-theme');
-const Clef Surface_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-component');
-const Clef Surface_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-integration');
+const SURFACE_RENDER_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-render');
+const SURFACE_CORE_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-core');
+const SURFACE_THEME_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-theme');
+const SURFACE_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-component');
+const SURFACE_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-integration');
 
 // All framework adapter concepts
 const frameworkAdapters = [
@@ -39,7 +39,7 @@ const frameworkAdapters = [
 describe('Framework Target Integration — Concept File Structure', () => {
   for (const adapter of frameworkAdapters) {
     it(`${adapter.displayName} concept file exists and has correct structure`, () => {
-      const path = resolve(Clef Surface_RENDER_DIR, `${adapter.name}.concept`);
+      const path = resolve(SURFACE_RENDER_DIR, `${adapter.name}.concept`);
       expect(existsSync(path)).toBe(true);
 
       const source = readFileSync(path, 'utf-8');
@@ -55,7 +55,7 @@ describe('Framework Target Integration — Concept File Structure', () => {
   }
 
   it('FrameworkAdapter (registry) concept file has register, mount, unmount actions', () => {
-    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'framework-adapter.concept'), 'utf-8');
+    const source = readFileSync(resolve(SURFACE_RENDER_DIR, 'framework-adapter.concept'), 'utf-8');
     expect(source).toContain('concept FrameworkAdapter');
     expect(source).toContain('action register(');
     expect(source).toContain('action mount(');
@@ -66,26 +66,26 @@ describe('Framework Target Integration — Concept File Structure', () => {
   });
 
   it('Surface concept file exists and has correct structure', () => {
-    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'surface.concept'), 'utf-8');
+    const source = readFileSync(resolve(SURFACE_RENDER_DIR, 'surface.concept'), 'utf-8');
     expect(source).toContain('concept Surface');
     expect(source).toContain('actions {');
   });
 
   it('Viewport concept file exists and has correct structure', () => {
-    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'viewport.concept'), 'utf-8');
+    const source = readFileSync(resolve(SURFACE_RENDER_DIR, 'viewport.concept'), 'utf-8');
     expect(source).toContain('concept Viewport');
     expect(source).toContain('actions {');
   });
 
   it('Layout concept file exists and has correct structure', () => {
-    const source = readFileSync(resolve(Clef Surface_RENDER_DIR, 'layout.concept'), 'utf-8');
+    const source = readFileSync(resolve(SURFACE_RENDER_DIR, 'layout.concept'), 'utf-8');
     expect(source).toContain('concept Layout');
     expect(source).toContain('actions {');
   });
 
   it('all adapter concepts have identical action signatures', () => {
     for (const adapter of frameworkAdapters) {
-      const source = readFileSync(resolve(Clef Surface_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
       // All adapters should have normalize(adapter: A, props: String)
       expect(source).toContain('action normalize(adapter: A, props: String)');
       // All should have ok and error variants
@@ -96,7 +96,7 @@ describe('Framework Target Integration — Concept File Structure', () => {
 
   it('all adapter concepts have a type parameter [A]', () => {
     for (const adapter of frameworkAdapters) {
-      const source = readFileSync(resolve(Clef Surface_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_RENDER_DIR, `${adapter.name}.concept`), 'utf-8');
       expect(source).toMatch(/concept \w+Adapter \[A\]/);
     }
   });
@@ -269,7 +269,7 @@ describe('Framework Target Integration — Multi-Framework Coexistence', () => {
 // ============================================================
 
 describe('Framework Target Integration — Adapter Pipeline Syncs', () => {
-  const adapterPipelinePath = resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync');
+  const adapterPipelinePath = resolve(SURFACE_RENDER_DIR, 'syncs', 'adapter-pipeline.sync');
 
   it('adapter pipeline sync file exists', () => {
     expect(existsSync(adapterPipelinePath)).toBe(true);
@@ -330,7 +330,7 @@ describe('Framework Target Integration — Adapter Pipeline Syncs', () => {
 // ============================================================
 
 describe('Framework Target Integration — Clef Surface Integration Syncs', () => {
-  const integrationSyncDir = resolve(Clef Surface_INTEGRATION_DIR, 'syncs');
+  const integrationSyncDir = resolve(SURFACE_INTEGRATION_DIR, 'syncs');
 
   const integrationSyncs = [
     'view-embed-creates-surface',
@@ -373,7 +373,7 @@ describe('Framework Target Integration — Clef Surface Integration Syncs', () =
 // ============================================================
 
 describe('Framework Target Integration — Render Kit Syncs', () => {
-  const renderSyncDir = resolve(Clef Surface_RENDER_DIR, 'syncs');
+  const renderSyncDir = resolve(SURFACE_RENDER_DIR, 'syncs');
 
   const renderSyncs = [
     'attach-adapter-to-surface',
@@ -438,21 +438,21 @@ describe('Framework Target Integration — Clef Surface Kit Completeness', () =>
   it('surface-core has exactly 5 concept files', () => {
     const concepts = ['design-token', 'binding', 'signal', 'ui-schema', 'element'];
     for (const name of concepts) {
-      expect(existsSync(resolve(Clef Surface_CORE_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(SURFACE_CORE_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
   it('surface-theme has exactly 5 concept files', () => {
     const concepts = ['typography', 'palette', 'elevation', 'theme', 'motion'];
     for (const name of concepts) {
-      expect(existsSync(resolve(Clef Surface_THEME_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(SURFACE_THEME_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
   it('surface-component has exactly 6 concept files', () => {
     const concepts = ['machine', 'slot', 'widget', 'affordance', 'interactor', 'widget-resolver'];
     for (const name of concepts) {
-      expect(existsSync(resolve(Clef Surface_COMPONENT_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(SURFACE_COMPONENT_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
@@ -463,7 +463,7 @@ describe('Framework Target Integration — Clef Surface Kit Completeness', () =>
       'framework-adapter', 'surface', 'viewport', 'layout',
     ];
     for (const name of concepts) {
-      expect(existsSync(resolve(Clef Surface_RENDER_DIR, `${name}.concept`))).toBe(true);
+      expect(existsSync(resolve(SURFACE_RENDER_DIR, `${name}.concept`))).toBe(true);
     }
   });
 
@@ -476,7 +476,7 @@ describe('Framework Target Integration — Clef Surface Kit Completeness', () =>
       'notification-to-toast',
     ];
     for (const name of syncs) {
-      expect(existsSync(resolve(Clef Surface_INTEGRATION_DIR, 'syncs', `${name}.sync`))).toBe(true);
+      expect(existsSync(resolve(SURFACE_INTEGRATION_DIR, 'syncs', `${name}.sync`))).toBe(true);
     }
   });
 });

@@ -13,26 +13,26 @@ import type {
   ActionInvocation,
   ActionCompletion,
   ConceptHandler,
-} from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+} from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 
 import {
   createHttpLambdaHandler,
   createSqsLambdaHandler,
-} from '../infrastructure/serverless/lambda-handler.js';
-import type { APIGatewayEvent, SQSEvent } from '../infrastructure/serverless/lambda-handler.js';
+} from '../runtime/adapters/serverless/lambda-handler.js';
+import type { APIGatewayEvent, SQSEvent } from '../runtime/adapters/serverless/lambda-handler.js';
 
 import {
   createHttpGCFHandler,
   createPubSubGCFHandler,
-} from '../infrastructure/serverless/gcf-handler.js';
+} from '../runtime/adapters/serverless/gcf-handler.js';
 import type {
   GCFHttpRequest,
   GCFHttpResponse,
   PubSubMessage,
   PubSubContext,
-} from '../infrastructure/serverless/gcf-handler.js';
+} from '../runtime/adapters/serverless/gcf-handler.js';
 
 // ============================================================
 // Test Fixtures

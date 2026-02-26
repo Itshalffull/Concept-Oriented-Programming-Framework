@@ -1,6 +1,6 @@
 // Component Concept Implementation
 // Discoverable, configurable UI units with conditional placement rules for composing page layouts.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const componentHandler: ConceptHandler = {
   async register(input, storage) {

@@ -1,5 +1,5 @@
 // ProgressiveSchema Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const progressiveSchemaHandler: ConceptHandler = {
   async captureFreeform(input, storage) {

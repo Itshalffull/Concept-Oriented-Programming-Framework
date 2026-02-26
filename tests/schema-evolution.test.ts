@@ -1,7 +1,7 @@
 // SchemaEvolution concept handler tests -- register, check compatibility, upcast, resolve, getSchema.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { schemaEvolutionHandler, resetSchemaEvolutionCounter } from '../handlers/ts/schema-evolution.handler.js';
 
 describe('SchemaEvolution', () => {

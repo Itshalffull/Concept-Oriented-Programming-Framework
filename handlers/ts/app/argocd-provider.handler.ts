@@ -1,7 +1,7 @@
 // ArgoCDProvider Concept Implementation
 // Generate ArgoCD Application CRDs from Clef deploy plans. Owns Application
 // resources, sync wave ordering, health assessments, and auto-sync configuration.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const argocdProviderHandler: ConceptHandler = {
   async register() {

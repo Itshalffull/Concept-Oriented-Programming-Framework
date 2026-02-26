@@ -20,7 +20,7 @@ import {
   getOptionalSyncPaths,
 } from '../cli/src/commands/suite.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
-import type { CompiledSync } from '../kernel/src/types.js';
+import type { CompiledSync } from '../runtime/types.js';
 
 // ---- parseUsesSection ----
 

@@ -1,7 +1,7 @@
 // Runtime Concept Implementation
 // Coordination concept for runtime lifecycle. Manages provisioning, deployment,
 // traffic shifting, rollback, and health checking across provider backends.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'runtime';
 

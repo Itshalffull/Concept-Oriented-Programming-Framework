@@ -1,4 +1,4 @@
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const contentStorageHandler: ConceptHandler = {
   async save(input, storage) {

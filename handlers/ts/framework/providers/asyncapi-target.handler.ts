@@ -15,7 +15,7 @@ import type {
   ConceptManifest,
   ActionSchema,
   VariantSchema,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 import {
   typeToJsonSchema,

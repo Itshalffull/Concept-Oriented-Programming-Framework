@@ -722,7 +722,7 @@ workflows:
       - title: Start Broad
         rule: Begin with listFiles or getFileTree to orient, then drill into specifics
       - title: Follow Conventions
-        rule: Clef projects follow a standard layout — specs/, handlers/, syncs/, kernel/
+        rule: Clef projects follow a standard layout — specs/, handlers/, syncs/, runtime/
       - title: Check Roles
         rule: File roles (source, generated, config, test, doc) indicate intent
 

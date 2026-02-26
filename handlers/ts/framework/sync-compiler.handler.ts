@@ -11,8 +11,8 @@
 // query plans per Section 6.5 of the architecture doc.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, CompiledSync } from '../../../kernel/src/types.js';
-import { generateId } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage, CompiledSync } from '../../../runtime/types.js';
+import { generateId } from '../../../runtime/types.js';
 
 export const syncCompilerHandler: ConceptHandler = {
   async compile(input, storage) {

@@ -7,7 +7,7 @@
 // inheritance.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {

@@ -4,7 +4,7 @@
 // The unavailable variant enables reactive sync chains for retry, fallback,
 // or alerting.
 import { createHash } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /**
  * Generate a deterministic IPFS-style CID from raw data bytes.

@@ -1,7 +1,7 @@
 // AccessControl Concept Implementation
 // Evaluate three-valued access decisions (allowed/forbidden/neutral) with cacheable results.
 // Policies are composable via logical OR and AND combinators.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const accessControlHandler: ConceptHandler = {
   async check(input, storage) {

@@ -1,7 +1,7 @@
 // DotenvProvider Concept Implementation
 // .env file provider for the Secret coordination concept. Parses
 // .env files and resolves variables for local development.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'dotenv';
 

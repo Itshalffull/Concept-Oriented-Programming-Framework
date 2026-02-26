@@ -1,5 +1,8 @@
 node_modules/
 dist/
+.playwright-mcp/
+.clef/
+skill-packs/
 generated/schemas/
 generated/typescript/
 generated/concept-interface/schemas/

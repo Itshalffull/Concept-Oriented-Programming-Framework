@@ -1,6 +1,6 @@
 // Flag Concept Implementation
 // Generalized user-entity toggle interactions (bookmarks, likes, follows, spam reports) with counts.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const flagHandler: ConceptHandler = {
   async flag(input, storage) {

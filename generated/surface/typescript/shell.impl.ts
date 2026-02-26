@@ -1,6 +1,6 @@
 // Shell Concept Implementation
 // Root app composition with semantic zone roles and overlays.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'shell';
 

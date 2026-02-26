@@ -1,6 +1,6 @@
 // DeployPlan Concept Implementation (Deploy Kit)
 // Compute, validate, and execute deployment plans for suites.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const deployPlanHandler: ConceptHandler = {
   async plan(input, storage) {

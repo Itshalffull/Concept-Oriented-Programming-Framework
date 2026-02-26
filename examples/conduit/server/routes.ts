@@ -1,7 +1,7 @@
 // Conduit Example App — REST API Route Mapping
 // Maps standard REST endpoints to kernel handleRequest calls.
 
-import type { Kernel } from '../../../kernel/src/self-hosted.js';
+import type { Kernel } from '../../../runtime/self-hosted.js';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 interface RouteMapping {

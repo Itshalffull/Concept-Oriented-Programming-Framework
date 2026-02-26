@@ -1,7 +1,7 @@
 // ThreeWayMerge provider tests -- classic three-way merge algorithm with conflict detection.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { threeWayMergeHandler, resetThreeWayMergeCounter } from '../handlers/ts/three-way-merge.handler.js';
 
 describe('ThreeWayMerge', () => {

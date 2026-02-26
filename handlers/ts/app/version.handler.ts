@@ -1,5 +1,5 @@
 // Version Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const versionHandler: ConceptHandler = {
   async snapshot(input, storage) {

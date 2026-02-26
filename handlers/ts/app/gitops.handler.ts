@@ -1,6 +1,6 @@
 // GitOps Concept Implementation (Deploy Kit)
 // Coordinate manifest generation for GitOps controllers.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const gitopsHandler: ConceptHandler = {
   async emit(input, storage) {

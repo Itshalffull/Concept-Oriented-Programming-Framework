@@ -1,7 +1,7 @@
 // Secret Concept Implementation
 // Coordination concept for secret management. Resolves secrets through
 // provider backends, caches results, and tracks rotation/audit history.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'secret';
 

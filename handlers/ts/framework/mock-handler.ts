@@ -13,7 +13,7 @@ import type {
   ConceptHandler,
   TypeExpr,
   ConceptStorage,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 type ActionHandler = (
   input: Record<string, unknown>,

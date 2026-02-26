@@ -18,8 +18,8 @@
 // See Architecture doc Section 17.2.
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
-import { generateId } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
+import { generateId } from '../../../runtime/types.js';
 
 // --- Deployment Manifest Types ---
 

@@ -24,7 +24,7 @@ import type {
   EntryMeta,
   ConflictInfo,
   ConflictResolution,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 /**
  * Vercel KV client interface (Redis-compatible).

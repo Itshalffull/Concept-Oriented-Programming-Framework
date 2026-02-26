@@ -1,7 +1,7 @@
 // LambdaRuntime Concept Implementation
 // Manage AWS Lambda function deployments. Owns function configurations,
 // IAM roles, API Gateway routes, layer versions, and cold start metrics.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const lambdaRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

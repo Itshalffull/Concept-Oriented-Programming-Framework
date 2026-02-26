@@ -1,5 +1,5 @@
 // FieldMapping Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const fieldMappingHandler: ConceptHandler = {
   async map(input, storage) {

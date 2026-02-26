@@ -27,7 +27,7 @@ import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, existsSy
 import { resolve, relative, join, basename } from 'path';
 import { createHash } from 'crypto';
 import { parseConceptFile } from '../../../handlers/ts/framework/spec-parser.handler.js';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { schemaGenHandler } from '../../../handlers/ts/framework/schema-gen.handler.js';
 import { typescriptGenHandler } from '../../../handlers/ts/framework/typescript-gen.handler.js';
 import { rustGenHandler } from '../../../handlers/ts/framework/rust-gen.handler.js';
@@ -39,7 +39,7 @@ import { buildCacheHandler } from '../../../../kits/generation/handlers/ts/build
 import { generationPlanHandler } from '../../../../kits/generation/handlers/ts/generation-plan.handler.js';
 import { resourceHandler } from '../../../../kits/generation/handlers/ts/resource.handler.js';
 import { kindSystemHandler } from '../../../../kits/generation/handlers/ts/kind-system.handler.js';
-import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../kernel/src/types.js';
+import type { ConceptAST, ConceptHandler, ConceptManifest } from '../../../runtime/types.js';
 import { findFiles } from '../util.js';
 
 const SUPPORTED_TARGETS = ['typescript', 'rust', 'swift', 'solidity', 'handler'] as const;

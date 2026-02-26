@@ -6,9 +6,9 @@
 // and validates concept/action references against manifests.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptAST } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptAST } from '../../../runtime/types.js';
 import { parseSyncFile as parseSyncFileKernel } from './sync-parser.js';
-import { generateId } from '../../../kernel/src/types.js';
+import { generateId } from '../../../runtime/types.js';
 
 // Re-export the raw parse function so consumers can import it
 // from the concept implementation rather than the kernel parser.

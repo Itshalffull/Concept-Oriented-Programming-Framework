@@ -8,7 +8,7 @@
 // See design doc Section 4.1 (LanguageGrammar).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 
 let grammarCounter = 0;
 

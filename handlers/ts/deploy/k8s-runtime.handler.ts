@@ -1,7 +1,7 @@
 // K8sRuntime Concept Implementation
 // Kubernetes provider for the Runtime coordination concept. Manages
 // Deployment, Service, ConfigMap, and Ingress resource lifecycle.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'k8s';
 

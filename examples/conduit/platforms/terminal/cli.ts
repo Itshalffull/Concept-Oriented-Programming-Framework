@@ -2,7 +2,7 @@
 // Wires the TerminalAdapter concept to the Ink frontend.
 // Provides a full terminal UI for browsing articles, posting, and social features.
 
-import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../../runtime/adapters/storage.js';
 import { terminaladapterHandler } from '../../../../generated/surface/typescript/terminaladapter.handler.js';
 import { ConduitAPI } from '../../frontend/shared/api-client.js';
 

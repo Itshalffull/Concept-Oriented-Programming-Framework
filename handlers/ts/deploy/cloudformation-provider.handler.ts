@@ -1,7 +1,7 @@
 // CloudFormationProvider Concept Implementation
 // AWS CloudFormation IaC provider. Generates CloudFormation templates,
 // manages change sets, applies stacks, and handles teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'cfn';
 

@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
@@ -25,7 +25,7 @@ import { syncParserHandler } from '../handlers/ts/framework/sync-parser.handler.
 import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler.js';
 import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
 import { registryHandler } from '../handlers/ts/framework/registry.handler.js';
-import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
+import type { ConceptAST, ConceptManifest } from '../runtime/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');

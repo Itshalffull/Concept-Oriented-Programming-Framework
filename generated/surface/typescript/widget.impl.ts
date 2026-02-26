@@ -6,7 +6,7 @@
 // Relation: 'widget' keyed by component (P).
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 export const widgetHandler: ConceptHandler = {
   async register(input, storage) {

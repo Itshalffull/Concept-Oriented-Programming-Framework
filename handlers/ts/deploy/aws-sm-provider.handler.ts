@@ -1,7 +1,7 @@
 // AwsSmProvider Concept Implementation
 // AWS Secrets Manager provider for the Secret coordination concept. Fetches
 // secret values by ID and version stage, and triggers rotation.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'awssm';
 

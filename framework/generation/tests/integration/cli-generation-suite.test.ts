@@ -10,9 +10,9 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createInMemoryStorage } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
 import { cliTargetHandler } from '../../../../implementations/typescript/framework/providers/cli-target.impl.js';
-import type { ConceptManifest } from '@clef/kernel';
+import type { ConceptManifest } from '@clef/runtime';
 
 function makeProjection(manifest: ConceptManifest, name: string): string {
   return JSON.stringify({

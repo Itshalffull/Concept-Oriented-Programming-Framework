@@ -1,7 +1,7 @@
 // FluxProvider Concept Implementation
 // Flux GitOps provider. Generates Flux Kustomization CRDs, manages
 // HelmRelease objects, and tracks reconciliation status.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'flux';
 

@@ -17,18 +17,18 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
 import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
 import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
-import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
+import type { ConceptAST, ConceptManifest } from '../runtime/types.js';
 
-const Clef Surface_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-render');
-const Clef Surface_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-core');
-const Clef Surface_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-theme');
-const Clef Surface_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-component');
-const Clef Surface_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-integration');
+const SURFACE_RENDER_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-render');
+const SURFACE_CORE_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-core');
+const SURFACE_THEME_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-theme');
+const SURFACE_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-component');
+const SURFACE_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'suites', 'surface-integration');
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
@@ -288,7 +288,7 @@ describe('E2E Framework Pipeline — Framework Concepts Through Pipeline', () =>
 describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
   it('adapter-pipeline.sync has 30 sync declarations (2 per framework × 15 frameworks)', () => {
     const source = readFileSync(
-      resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
+      resolve(SURFACE_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     const syncDecls = source.match(/^sync \w+/gm) || [];
@@ -297,7 +297,7 @@ describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
 
   it('each framework has Machine and Renderer trigger syncs', () => {
     const source = readFileSync(
-      resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
+      resolve(SURFACE_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
 
@@ -310,7 +310,7 @@ describe('E2E Framework Pipeline — Adapter Pipeline Sync Wiring', () => {
 
   it('all adapter pipeline syncs invoke the normalize action', () => {
     const source = readFileSync(
-      resolve(Clef Surface_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
+      resolve(SURFACE_RENDER_DIR, 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
 
@@ -347,7 +347,7 @@ describe('E2E Framework Pipeline — Integration Syncs', () => {
   it('all 13 integration sync files exist', () => {
     for (const syncName of integrationSyncs) {
       expect(
-        existsSync(resolve(Clef Surface_INTEGRATION_DIR, 'syncs', `${syncName}.sync`)),
+        existsSync(resolve(SURFACE_INTEGRATION_DIR, 'syncs', `${syncName}.sync`)),
       ).toBe(true);
     }
   });
@@ -355,7 +355,7 @@ describe('E2E Framework Pipeline — Integration Syncs', () => {
   it('all integration syncs have when and then clauses', () => {
     for (const syncName of integrationSyncs) {
       const source = readFileSync(
-        resolve(Clef Surface_INTEGRATION_DIR, 'syncs', `${syncName}.sync`),
+        resolve(SURFACE_INTEGRATION_DIR, 'syncs', `${syncName}.sync`),
         'utf-8',
       );
       expect(source).toContain('when {');
@@ -378,7 +378,7 @@ describe('E2E Framework Pipeline — Render Kit Syncs', () => {
 
   for (const syncName of renderSyncs) {
     it(`render sync ${syncName} exists and has valid structure`, () => {
-      const path = resolve(Clef Surface_RENDER_DIR, 'syncs', `${syncName}.sync`);
+      const path = resolve(SURFACE_RENDER_DIR, 'syncs', `${syncName}.sync`);
       expect(existsSync(path)).toBe(true);
 
       const source = readFileSync(path, 'utf-8');
@@ -397,7 +397,7 @@ describe('E2E Framework Pipeline — Clef Surface Completeness', () => {
   it('surface-core has exactly 5 concepts', () => {
     const concepts = ['design-token', 'binding', 'signal', 'ui-schema', 'element'];
     for (const name of concepts) {
-      const source = readFileSync(resolve(Clef Surface_CORE_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_CORE_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
       expect(source).toContain('actions {');
     }
@@ -406,7 +406,7 @@ describe('E2E Framework Pipeline — Clef Surface Completeness', () => {
   it('surface-theme has exactly 5 concepts', () => {
     const concepts = ['typography', 'palette', 'elevation', 'theme', 'motion'];
     for (const name of concepts) {
-      const source = readFileSync(resolve(Clef Surface_THEME_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_THEME_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
       expect(source).toContain('actions {');
     }
@@ -415,7 +415,7 @@ describe('E2E Framework Pipeline — Clef Surface Completeness', () => {
   it('surface-component has exactly 6 concepts', () => {
     const concepts = ['machine', 'slot', 'widget', 'affordance', 'interactor', 'widget-resolver'];
     for (const name of concepts) {
-      const source = readFileSync(resolve(Clef Surface_COMPONENT_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_COMPONENT_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
       expect(source).toContain('actions {');
     }
@@ -428,7 +428,7 @@ describe('E2E Framework Pipeline — Clef Surface Completeness', () => {
       'framework-adapter', 'surface', 'viewport', 'layout',
     ];
     for (const name of concepts) {
-      const source = readFileSync(resolve(Clef Surface_RENDER_DIR, `${name}.concept`), 'utf-8');
+      const source = readFileSync(resolve(SURFACE_RENDER_DIR, `${name}.concept`), 'utf-8');
       expect(source).toContain('concept ');
     }
   });

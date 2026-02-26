@@ -7,7 +7,7 @@
 // Relation: 'machine' keyed by machine (M).
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 export const machineHandler: ConceptHandler = {
   async spawn(input, storage) {

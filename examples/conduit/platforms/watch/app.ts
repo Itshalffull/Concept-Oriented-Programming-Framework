@@ -2,7 +2,7 @@
 // Wires the WatchAdapter concept for wearable deployment.
 // Supports watchOS (WatchKit) and Wear OS (Wear Compose).
 
-import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../../runtime/adapters/storage.js';
 import { watchadapterHandler } from '../../../../generated/surface/typescript/watchadapter.handler.js';
 
 async function initWatchPlatform() {

@@ -3,7 +3,7 @@
 // Async gate concept: awaitFinality holds invocations and completes them
 // when the chain-specific finality condition is met (confirmations, L1 batch,
 // validity proof). See Architecture doc for gate convention details.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /** Maximum wait time (ms) before a finality request times out */
 const FINALITY_TIMEOUT_MS = 300_000; // 5 minutes

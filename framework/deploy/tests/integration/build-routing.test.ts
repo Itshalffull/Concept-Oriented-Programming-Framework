@@ -12,13 +12,13 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
 import { builderHandler } from '../../../../implementations/typescript/deploy/builder.impl.js';
 import { swiftBuilderHandler } from '../../../../implementations/typescript/deploy/swift-builder.impl.js';
 import { typescriptBuilderHandler } from '../../../../implementations/typescript/deploy/typescript-builder.impl.js';
 import { rustBuilderHandler } from '../../../../implementations/typescript/deploy/rust-builder.impl.js';
 import { solidityBuilderHandler } from '../../../../implementations/typescript/deploy/solidity-builder.impl.js';
-import type { ConceptStorage } from '@clef/kernel';
+import type { ConceptStorage } from '@clef/runtime';
 
 describe('Build routing integration', () => {
   let storage: ConceptStorage;

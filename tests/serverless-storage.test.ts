@@ -8,19 +8,19 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createDynamoDBStorage } from '../infrastructure/storage/dynamodb-storage.js';
-import { createFirestoreStorage } from '../infrastructure/storage/firestore-storage.js';
-import { createRedisStorage } from '../infrastructure/storage/redis-storage.js';
+import { createDynamoDBStorage } from '../runtime/adapters/dynamodb-storage.js';
+import { createFirestoreStorage } from '../runtime/adapters/firestore-storage.js';
+import { createRedisStorage } from '../runtime/adapters/redis-storage.js';
 import {
   getDynamoDBStorage,
   getFirestoreStorage,
   getRedisStorage,
   clearStorageCache,
-} from '../infrastructure/serverless/connection-pool.js';
-import type { DynamoDBDocumentClient } from '../infrastructure/storage/dynamodb-storage.js';
-import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../infrastructure/storage/firestore-storage.js';
-import type { RedisClient } from '../infrastructure/storage/redis-storage.js';
-import type { ConceptStorage } from '../kernel/src/types.js';
+} from '../runtime/adapters/serverless/connection-pool.js';
+import type { DynamoDBDocumentClient } from '../runtime/adapters/dynamodb-storage.js';
+import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../runtime/adapters/firestore-storage.js';
+import type { RedisClient } from '../runtime/adapters/redis-storage.js';
+import type { ConceptStorage } from '../runtime/types.js';
 
 // ============================================================
 // Mock DynamoDB Document Client

@@ -14,7 +14,7 @@ import { join, resolve, relative, basename } from 'path';
 import { parseConceptFile } from '../../../handlers/ts/framework/spec-parser.handler.js';
 import { parseSyncFile } from '../../../handlers/ts/framework/sync-parser.handler.js';
 import { findFiles } from '../util.js';
-import type { CompiledSync, UsesEntry } from '../../../kernel/src/types.js';
+import type { CompiledSync, UsesEntry } from '../../../runtime/types.js';
 
 const KIT_YAML_TEMPLATE = `# Suite Manifest
 name: {{NAME}}

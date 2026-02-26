@@ -1,5 +1,5 @@
 // Alias Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const aliasHandler: ConceptHandler = {
   async addAlias(input, storage) {

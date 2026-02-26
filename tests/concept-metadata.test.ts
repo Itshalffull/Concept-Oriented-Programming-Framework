@@ -15,8 +15,8 @@
 import { describe, it, expect } from 'vitest';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
-import { createInMemoryStorage } from '../kernel/src/index.js';
-import type { ConceptManifest } from '../kernel/src/types.js';
+import { createInMemoryStorage } from '../runtime/index.js';
+import type { ConceptManifest } from '../runtime/types.js';
 
 // ============================================================
 // Test Data

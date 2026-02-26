@@ -1,6 +1,6 @@
 // Secret Concept Implementation (Deploy Kit)
 // Coordinate secret resolution across vault and secret manager providers.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 import { createHash, randomBytes } from 'crypto';
 
 export const secretHandler: ConceptHandler = {

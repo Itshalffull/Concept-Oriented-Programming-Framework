@@ -23,8 +23,8 @@ import { resolve } from 'path';
 
 // Kernel components
 import { createKernel } from '../handlers/ts/framework/kernel-factory';
-import { createInMemoryStorage } from '@clef/kernel';
-import type { ConceptAST, CompiledSync } from '../kernel/src/types';
+import { createInMemoryStorage } from '@clef/runtime';
+import type { ConceptAST, CompiledSync } from '../runtime/types';
 
 // Concept handlers (the handmade CLI calls these directly)
 import {

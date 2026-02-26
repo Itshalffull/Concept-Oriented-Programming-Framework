@@ -1,5 +1,5 @@
 // Connector Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const connectorHandler: ConceptHandler = {
   async configure(input, storage) {

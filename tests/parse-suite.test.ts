@@ -226,7 +226,7 @@ describe('Parse Kit — suite.yaml Manifest', () => {
 
   it('declares uses for foundation, generation, infrastructure kits', () => {
     const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    const suiteNames = parsed.uses.map((u: { kit: string }) => u.kit);
+    const suiteNames = parsed.uses.map((u: { suite: string }) => u.suite);
     expect(suiteNames).toContain('foundation');
     expect(suiteNames).toContain('generation');
     expect(suiteNames).toContain('infrastructure');

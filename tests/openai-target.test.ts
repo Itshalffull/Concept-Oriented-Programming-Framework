@@ -8,9 +8,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { openaiTargetHandler } from '../handlers/ts/framework/providers/openai-target.handler.js';
-import type { ConceptManifest, ConceptStorage } from '../kernel/src/types.js';
+import type { ConceptManifest, ConceptStorage } from '../runtime/types.js';
 
 // --- Test Helpers ---
 

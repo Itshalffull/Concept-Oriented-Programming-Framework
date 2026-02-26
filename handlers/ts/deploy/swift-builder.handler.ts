@@ -1,7 +1,7 @@
 // SwiftBuilder Concept Implementation
 // Swift provider for the Builder coordination concept. Manages
 // swift build, swift test, and framework packaging.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'swift-build';
 

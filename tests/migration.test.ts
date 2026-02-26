@@ -13,7 +13,7 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-} from '@clef/kernel';
+} from '@clef/runtime';
 import { createKernel } from '../handlers/ts/framework/kernel-factory';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
 import {
@@ -22,8 +22,8 @@ import {
   getStoredVersion,
   setStoredVersion,
 } from '../handlers/ts/framework/migration.handler';
-import type { ConceptHandler, ConceptStorage, ActionInvocation } from '@clef/kernel';
-import { generateId, timestamp } from '../kernel/src/types';
+import type { ConceptHandler, ConceptStorage, ActionInvocation } from '@clef/runtime';
+import { generateId, timestamp } from '../runtime/types';
 
 // --- Helper: create a simple handler with a migrate action ---
 

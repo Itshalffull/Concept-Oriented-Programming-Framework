@@ -1,7 +1,7 @@
 // Merge concept handler tests -- registerStrategy, merge, resolveConflict, and finalize.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { mergeHandler, resetMergeCounter } from '../handlers/ts/merge.handler.js';
 
 describe('Merge', () => {

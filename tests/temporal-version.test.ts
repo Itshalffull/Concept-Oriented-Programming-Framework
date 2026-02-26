@@ -1,7 +1,7 @@
 // TemporalVersion concept handler tests -- record, asOf, between, current, and supersede.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { temporalVersionHandler, resetTemporalVersionCounter } from '../handlers/ts/temporal-version.handler.js';
 
 describe('TemporalVersion', () => {

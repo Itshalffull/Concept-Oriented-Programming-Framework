@@ -1,7 +1,7 @@
 // Notification Concept Implementation
 // Deliver user-facing alerts across multiple channels with subscription management,
 // templating, and inbox tracking.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const notificationHandler: ConceptHandler = {
   async registerChannel(input, storage) {

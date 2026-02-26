@@ -1,7 +1,7 @@
 // PulumiProvider Concept Implementation
 // Generate and apply Pulumi TypeScript programs from Clef deploy plans.
 // Owns Pulumi stack state, backend configuration, and plugin versioning.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const pulumiProviderHandler: ConceptHandler = {
   async register() {

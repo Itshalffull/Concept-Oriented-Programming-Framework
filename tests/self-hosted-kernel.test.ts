@@ -13,7 +13,7 @@ import {
   createSelfHostedKernel,
   createInMemoryStorage,
   createConceptRegistry,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
@@ -21,7 +21,7 @@ import type {
   ConceptHandler,
   ConceptAST,
   ConceptManifest,
-} from '../kernel/src/types.js';
+} from '../runtime/types.js';
 
 // Framework concept handlers
 import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';

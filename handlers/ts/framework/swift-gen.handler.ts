@@ -31,7 +31,7 @@ import type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 // --- ResolvedType → Swift mapping ---
 

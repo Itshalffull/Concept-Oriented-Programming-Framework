@@ -1,5 +1,5 @@
 // SyncPair Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const syncPairHandler: ConceptHandler = {
   async link(input, storage) {

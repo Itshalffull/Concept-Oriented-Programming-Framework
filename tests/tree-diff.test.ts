@@ -1,7 +1,7 @@
 // TreeDiff provider tests -- structural JSON diffing with insert/delete/update/equal operations.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { treeDiffHandler, resetTreeDiffCounter } from '../handlers/ts/tree-diff.handler.js';
 
 describe('TreeDiff', () => {
