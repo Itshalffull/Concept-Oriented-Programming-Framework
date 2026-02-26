@@ -2,27 +2,22 @@
 concept Host [W] {
 
   purpose {
-    Orchestrate the full lifecycle of rendering a concept instance
-    as a widget tree. Host is the missing integration layer — it
-    triggers Binding/bind (starting the sync cascade through UISchema,
-    Elements, Widgets, Machines, FrameworkAdapter), owns the resulting
-    set of machines as a unit, and manages the async lifecycle:
-    loading → hydrating → interactive → unmounting.
-
-    Host IS the coif.auto() implementation. One Host per route,
-    one per embedded view, one per modal. The progressive
-    customization API (Levels 0-4) maps to Host configurations.
+    Lifecycle state of a mounted view instance. Tracks which
+    concept is being presented, the current lifecycle phase,
+    the set of subordinate resources created during mounting,
+    and error state. Provides a single handle for mount/unmount
+    that downstream syncs trigger on.
   }
 
   state {
     concept: W -> String
     view: W -> String
+    level: W -> Int
     zone: W -> option String
     status: W -> String
     binding: W -> option String
     machines: W -> set String
     errorInfo: W -> option String
-    config: W -> String
   }
 
   capabilities {
@@ -30,59 +25,56 @@ concept Host [W] {
   }
 
   actions {
-    action mount(host: W, config: String) {
+    action mount(host: W, concept: String, view: String,
+                 level: Int, zone: option String) {
       -> ok(host: W) {
-        Begin the rendering lifecycle:
-        1. Parse config to extract concept URN, view, customizations
-        2. Binding/bind triggers UISchema cascade (via syncs)
-        3. Transport/fetch brings data, Signal/batch updates
-        4. Collect spawned Machine refs into machines set
-        5. FrameworkAdapter/render to Surface/mount to zone
-        6. Status: created to loading to hydrating to interactive
+        Create host instance. Store concept URN, view name,
+        customization level, target zone. Set status "loading".
       }
-      -> error(message: String) { Concept not found, binding or transport failed. }
+      -> invalid(message: String) { Concept URN or view unrecognized. }
+    }
+
+    action ready(host: W) {
+      -> ok(host: W) {
+        Transition status from "loading" to "interactive".
+        All subordinate resources have been created.
+      }
+      -> invalid(message: String) { Not in "loading" status. }
+    }
+
+    action trackResource(host: W, kind: String, ref: String) {
+      -> ok(host: W) {
+        Associate subordinate resource (binding, machine)
+        with this host. Stored for cleanup on unmount.
+      }
+      -> notfound(message: String) { Host missing. }
     }
 
     action unmount(host: W) {
-      -> ok(host: W) {
-        Clean teardown:
-        1. Machine/destroy for each owned machine
-        2. Binding/unbind
-        3. Surface/unmount from zone
-        4. Status set to unmounted
+      -> ok(host: W, machines: set String, binding: option String) {
+        Set status "unmounted". Return all tracked resources
+        so downstream syncs can destroy them.
       }
-      -> notfound(message: String) { Host does not exist. }
+      -> notfound(message: String) { Host missing. }
     }
 
     action refresh(host: W) {
       -> ok(host: W) {
-        Re-fetch data via Transport, update signals.
-        Machines re-render via signal subscriptions.
+        Signal data re-fetch. Status remains "interactive".
       }
-      -> error(message: String) { Transport or binding error. }
+      -> notfound(message: String) { Host missing. }
+      -> invalid(message: String) { Host not interactive. }
     }
 
     action setError(host: W, errorInfo: String) {
-      -> ok(host: W) {
-        Transition to error state. Renders error boundary widget.
-      }
-      -> notfound(message: String) { Host does not exist. }
-    }
-
-    action updateConfig(host: W, config: String) {
-      -> ok(host: W) {
-        Hot-update configuration (visible fields, layout)
-        without full unmount/remount. Applies UISchema/override
-        and re-renders affected machines.
-      }
-      -> notfound(message: String) { Host does not exist. }
+      -> ok(host: W) { Set status "error" with diagnostics. }
+      -> notfound(message: String) { Host missing. }
     }
   }
 
   invariant {
-    after mount(host: w,
-      config: "{ \"concept\": \"urn:app/Article\", \"view\": \"list\" }")
-      -> ok(host: w)
-    then unmount(host: w) -> ok(host: w)
+    after mount(host: w, concept: "urn:app/Article", view: "list",
+      level: 0, zone: "primary") -> ok(host: w)
+    then unmount(host: w) -> ok(host: w, machines: _, binding: _)
   }
 }

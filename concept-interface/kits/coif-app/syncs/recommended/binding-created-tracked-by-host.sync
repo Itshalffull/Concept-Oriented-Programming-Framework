@@ -1,0 +1,19 @@
+# ============================================================
+# BindingCreatedTrackedByHost — coif-app recommended sync
+#
+# When a binding is created, track it as a subordinate
+# resource on the loading host.
+# ============================================================
+
+sync BindingCreatedTrackedByHost [eager]
+when {
+  Binding/bind: [ binding: ?binding ]
+    => ok(binding: ?binding)
+}
+where {
+  Host: { ?host status: "loading" }
+  filter(?binding == ?host)
+}
+then {
+  Host/trackResource: [ host: ?host; kind: "binding"; ref: ?binding ]
+}

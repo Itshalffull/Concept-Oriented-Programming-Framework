@@ -1,0 +1,18 @@
+# ============================================================
+# MachineSpawnedTrackedByHost — coif-app recommended sync
+#
+# When a machine is spawned, track it as a subordinate
+# resource on the loading host.
+# ============================================================
+
+sync MachineSpawnedTrackedByHost [eager]
+when {
+  Machine/spawn: [ machine: ?machine ]
+    => ok(machine: ?machine)
+}
+where {
+  Host: { ?host status: "loading" }
+}
+then {
+  Host/trackResource: [ host: ?host; kind: "machine"; ref: ?machine ]
+}

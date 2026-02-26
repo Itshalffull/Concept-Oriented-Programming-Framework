@@ -1,0 +1,15 @@
+# ============================================================
+# TransportResponseToSignals — coif-app recommended sync
+#
+# When Transport/fetch returns data, batch-update the
+# corresponding signals.
+# ============================================================
+
+sync TransportResponseToSignals [eager]
+when {
+  Transport/fetch: [ transport: ?t ]
+    => ok(transport: ?t; data: ?data)
+}
+then {
+  Signal/batch: [ signals: ?data ]
+}

@@ -1,0 +1,16 @@
+# ============================================================
+# HostUnmountDestroysMachines — coif-app required sync
+#
+# When a Host is unmounted, destroy all tracked machines
+# and unbind the binding.
+# ============================================================
+
+sync HostUnmountDestroysMachines [eager]
+when {
+  Host/unmount: [ host: ?host ]
+    => ok(host: ?host; machines: ?machines; binding: ?binding)
+}
+then {
+  Machine/destroy: [ machine: ?machines ]
+  Binding/unbind: [ binding: ?binding ]
+}

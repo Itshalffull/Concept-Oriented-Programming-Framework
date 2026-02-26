@@ -1,0 +1,19 @@
+# ============================================================
+# BindingSyncViaTransport — coif-app recommended sync
+#
+# When a binding syncs in non-coupled mode, route through
+# Transport to fetch data from the external source.
+# ============================================================
+
+sync BindingSyncViaTransport [eager]
+when {
+  Binding/sync: [ binding: ?binding ]
+    => ok(binding: ?binding)
+}
+where {
+  Binding: { ?binding mode: ?mode; endpoint: ?endpoint }
+  filter(?mode != "coupled" && ?mode != "static")
+}
+then {
+  Transport/fetch: [ transport: ?binding; query: ?endpoint ]
+}

@@ -2,27 +2,15 @@
 concept PlatformAdapter [D] {
 
   purpose {
-    Platform-specific translation layer. Maps Navigator transitions
-    and Shell zone assignments to platform primitives. Each adapter
-    is thin (~100-200 LOC), following the same pattern as
-    FrameworkAdapter (which maps Machine props to framework bindings).
-
-    Platform adapters:
-    - Browser (~150 LOC): URL pushState, popstate listener,
-      deep link parsing, sidebar/main layout
-    - Mobile (~200 LOC): React Navigation stack/tab/drawer,
-      hardware back button, deep link config
-    - Watch (~100 LOC): WK page list, crown interaction,
-      single-focus screen, auto-save
-    - Desktop (~200 LOC): multi-window management, menubar,
-      Cmd+[ back navigation
-    - Terminal (~80 LOC): screen switching, escape=back,
-      no URL or history persistence
+    Translate abstract interface operations into platform-
+    specific implementations. Maps navigation transitions
+    to platform conventions, shell zones to platform layouts,
+    and platform-native events back to abstract operations.
+    Each platform adapter is ~100-200 LOC.
   }
 
   state {
     platform: D -> String
-    capabilities: D -> set String
     config: D -> String
     status: D -> String
   }
@@ -32,49 +20,33 @@ concept PlatformAdapter [D] {
   }
 
   actions {
-    action register(adapter: D, platform: String, config: String) {
+    action register(adapter: D, platform: String,
+                    config: String) {
       -> ok(adapter: D) {
-        Register platform adapter. Auto-detects capabilities
-        from runtime environment if not specified.
+        Register platform adapter. Platform: "browser",
+        "mobile", "watch", "desktop", "terminal".
       }
-      -> conflict(message: String) { Adapter already registered. }
+      -> duplicate(message: String) { Platform already registered. }
     }
 
     action mapNavigation(adapter: D, transition: String) {
-      -> ok(adapter: D) {
-        Translate Navigator transition to platform action.
-        Browser: pushState. Mobile: navigation.push.
-        Watch: WK push. Desktop: focus window. Terminal: clear+render.
+      -> ok(adapter: D, platformAction: String) {
+        Translate abstract navigation to platform action.
+        Returns platform-specific instruction.
       }
-      -> unsupported(message: String) { Transition not supported on platform. }
+      -> unsupported(message: String) { Transition type unsupported. }
     }
 
-    action mapZone(adapter: D, zone: String, role: String) {
-      -> ok(adapter: D, platformZone: String) {
-        Map abstract Shell zone to platform convention.
-        Returns platform-specific zone configuration.
-        Mobile: persistent is bottom tab bar.
-        Watch: only "primary" mapped, others silently skipped.
+    action mapZone(adapter: D, role: String) {
+      -> ok(adapter: D, platformConfig: String) {
+        Translate zone role to platform layout.
       }
       -> unmapped(message: String) { Role has no platform equivalent. }
     }
 
-    action mapOverlay(adapter: D, overlay: String) {
-      -> ok(adapter: D) {
-        Translate overlay to platform presentation.
-        Browser: portal div. Mobile: modal sheet.
-        Watch: haptic + alert. Terminal: floating box.
-      }
-      -> unsupported(message: String) { Overlays not supported. }
-    }
-
     action handlePlatformEvent(adapter: D, event: String) {
       -> ok(adapter: D, action: String) {
-        Translate platform-native events to Navigator/Shell actions.
-        Browser: popstate to Navigator/back.
-        Mobile: hardware back to Navigator/back.
-        Watch: crown press to Navigator/back.
-        Desktop: window close to Navigator cleanup.
+        Translate platform-native event to abstract action.
       }
       -> ignored(message: String) { Event not relevant. }
     }
@@ -84,7 +56,6 @@ concept PlatformAdapter [D] {
     after register(adapter: d, platform: "browser", config: "{}")
       -> ok(adapter: d)
     then mapNavigation(adapter: d,
-      transition: "{ \"type\": \"push\", \"destination\": \"test\" }")
-      -> ok(adapter: d)
+      transition: "{ \"type\": \"push\" }") -> ok(adapter: d, platformAction: _)
   }
 }

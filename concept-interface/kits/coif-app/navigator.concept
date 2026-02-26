@@ -2,29 +2,24 @@
 concept Navigator [N] {
 
   purpose {
-    Abstract navigation between destinations. A destination is a
-    named configuration: { concept, view, params }. Transitions
-    move between destinations with optional guards, animations,
-    and history tracking.
-
-    Navigator knows nothing about URLs, screen stacks, or tabs.
-    Platform adapters translate Navigator state to platform
-    primitives: browser history, React Navigation stacks,
-    WatchOS page lists, terminal screen buffers.
-
-    Destinations carry platform hints in meta (urlPattern,
-    stackBehavior, tabGroup, windowConfig) consumed by adapters
-    but ignored by Navigator itself.
+    Manage transitions between abstract destinations and
+    maintain navigation history. Each destination associates
+    a name with a target concept and view configuration.
+    Navigation state is a stack of previously visited
+    destinations supporting back/forward traversal.
   }
 
   state {
-    destinations: N -> String
-    current: N -> option String
-    params: N -> String
-    history: N -> list String
-    guards: N -> String
-    graph: N -> String
-    depth: N -> Int
+    destinations: set N
+    name: N -> String
+    targetConcept: N -> String
+    targetView: N -> String
+    paramsSchema: N -> option String
+    meta: N -> option String
+    current: N -> option N
+    history: N -> list N
+    forwardStack: N -> list N
+    guards: N -> list String
   }
 
   capabilities {
@@ -32,77 +27,60 @@ concept Navigator [N] {
   }
 
   actions {
-    action register(nav: N, destination: String, config: String) {
-      -> ok(nav: N) {
-        Register a destination. Config:
-        { id, concept, view, paramsSchema, guard, meta }.
-        Meta carries platform hints consumed by PlatformAdapter:
-        { urlPattern: "/articles/:id", stackBehavior: "push",
-          tabGroup: "content", windowConfig: { ... } }.
-      }
-      -> conflict(message: String) { Destination ID already registered. }
+    action register(nav: N, name: String, targetConcept: String,
+                    targetView: String, paramsSchema: option String,
+                    meta: option String) {
+      -> ok(nav: N) { Register a navigable destination. }
+      -> duplicate(message: String) { Name already registered. }
     }
 
-    action go(nav: N, destination: String, params: String) {
-      -> ok(nav: N, resolved: String) {
-        Navigate to destination. Evaluates guards on current
-        destination (can-leave?) and target (can-enter?).
-        Pushes to history. Returns resolved config with params.
+    action go(nav: N, params: option String) {
+      -> ok(nav: N, previous: option N) {
+        Evaluate guards, push previous to history, clear
+        forward stack. Return previous for teardown.
       }
-      -> blocked(message: String) { Guard prevented transition. }
+      -> blocked(nav: N, reason: String) { Guard prevented transition. }
       -> notfound(message: String) { Destination not registered. }
     }
 
     action back(nav: N) {
-      -> ok(nav: N) { Pop history, go to previous destination. }
-      -> empty(message: String) { History stack empty. }
+      -> ok(nav: N, previous: N) {
+        Pop from history, push current to forward.
+      }
+      -> empty(message: String) { History empty. }
     }
 
     action forward(nav: N) {
-      -> ok(nav: N) { Navigate forward in history. }
-      -> empty(message: String) { No forward history. }
+      -> ok(nav: N, previous: N) {
+        Pop from forward, push current to history.
+      }
+      -> empty(message: String) { Forward stack empty. }
     }
 
-    action replace(nav: N, destination: String, params: String) {
-      -> ok(nav: N) { Replace current without pushing history. }
-      -> notfound(message: String) { Destination not registered. }
-    }
-
-    action reset(nav: N, destination: String, params: String) {
-      -> ok(nav: N) {
-        Clear history and navigate. Used for auth redirects,
-        deep link handling, "start over" flows.
+    action replace(nav: N, params: option String) {
+      -> ok(nav: N, previous: option N) {
+        Replace current without modifying history.
       }
       -> notfound(message: String) { Destination not registered. }
     }
 
     action addGuard(nav: N, guard: String) {
-      -> ok(nav: N) {
-        Add navigation guard. Evaluated before leaving current
-        destination. Returns { allow, reason, action }.
-      }
-      -> invalid(message: String) { Guard spec invalid. }
+      -> ok(nav: N) { Register guard evaluated before departure. }
+      -> invalid(message: String) { Guard expression invalid. }
     }
 
     action removeGuard(nav: N, guard: String) {
-      -> ok(nav: N) { Remove a guard. }
-      -> notfound(message: String) { Guard not found. }
-    }
-
-    action canGo(nav: N, destination: String) {
-      -> ok(nav: N, allowed: String) {
-        Check if transition is allowed without performing it.
-        Returns { allowed: bool, reason: string }.
-      }
-      -> notfound(message: String) { Destination not registered. }
+      -> ok(nav: N) { Remove guard. }
+      -> notfound(message: String) { Guard not registered. }
     }
   }
 
   invariant {
-    after register(nav: n, destination: "detail",
-      config: "{ \"concept\": \"Article\", \"view\": \"detail\" }")
-      -> ok(nav: n)
-    then go(nav: n, destination: "detail", params: "{ \"id\": 123 }")
-      -> ok(nav: n, resolved: _)
+    after register(nav: n, name: "detail", targetConcept: "Article",
+      targetView: "detail", paramsSchema: _, meta: _) -> ok(nav: n)
+    then go(nav: n, params: _) -> ok(nav: n, previous: _)
+
+    after go(nav: a, params: _) -> ok(nav: a, previous: _)
+    then back(nav: b) -> ok(nav: b, previous: _)
   }
 }

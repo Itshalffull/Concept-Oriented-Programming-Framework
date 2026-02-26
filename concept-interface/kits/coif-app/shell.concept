@@ -1,29 +1,21 @@
 @version(1)
-concept Shell [A] {
+concept Shell [S] {
 
   purpose {
-    Root application composition. Defines named zones with semantic
-    roles (navigated, persistent, transient) and manages overlays
-    (modals, toasts, drawers). Platform-agnostic — PlatformAdapter
-    maps abstract zones to platform conventions:
-
-    Browser: navigated is main content, persistent is sidebar/header
-    Mobile: navigated is stack screen, persistent is bottom tab bar
-    Watch: navigated is full screen (only one zone)
-    Desktop: navigated is main window, persistent is panels
-    Terminal: navigated is main buffer, persistent is status line
-
-    Shell is the root Host container — it mounts to Surface
-    directly and contains all other Hosts.
+    Root composition frame. Defines semantic zones —
+    named regions with layout roles — that Host instances
+    mount into. Zone roles (navigated, persistent, transient,
+    overlay) describe behavior without prescribing appearance.
   }
 
   state {
-    zones: A -> String
-    zoneHosts: A -> String
-    globalState: A -> String
-    overlays: A -> list String
-    platform: A -> String
-    config: A -> String
+    zones: S -> set String
+    zoneRole {
+      name: S -> String
+      role: S -> String
+    }
+    activeOverlays: S -> list String
+    status: S -> String
   }
 
   capabilities {
@@ -31,65 +23,41 @@ concept Shell [A] {
   }
 
   actions {
-    action initialize(shell: A, config: String) {
-      -> ok(shell: A) {
-        Set up shell. Config defines zones with semantic roles:
-        [
-          { name: "primary", role: "navigated", defaultHost: ... },
-          { name: "sidebar", role: "persistent", defaultHost: ... }
-        ]
-        Creates Surface, attaches FrameworkAdapter, mounts root layout.
+    action initialize(shell: S, zones: String) {
+      -> ok(shell: S) {
+        Create shell with zone definitions. Each zone has
+        a name and role. Status becomes "ready".
       }
-      -> error(message: String) { Initialization failed. }
+      -> invalid(message: String) { Zone config malformed. }
     }
 
-    action assignHost(shell: A, zone: String, host: String) {
-      -> ok(shell: A) {
-        Mount a Host in a zone. If role is "navigated", unmount
-        the previous Host. If "persistent", reject if occupied.
+    action assignToZone(shell: S, zone: String, ref: String) {
+      -> ok(shell: S) { Place a host reference in a zone. }
+      -> notfound(message: String) { Zone not defined. }
+    }
+
+    action clearZone(shell: S, zone: String) {
+      -> ok(shell: S, previous: option String) {
+        Remove content from zone. Return previous ref.
       }
       -> notfound(message: String) { Zone not defined. }
-      -> occupied(message: String) { Persistent zone already has a Host. }
     }
 
-    action removeHost(shell: A, zone: String) {
-      -> ok(shell: A) { Unmount Host from zone. }
-      -> notfound(message: String) { Zone empty or not defined. }
+    action pushOverlay(shell: S, ref: String) {
+      -> ok(shell: S) { Add overlay to stack. }
+      -> invalid(message: String) { Shell not ready. }
     }
 
-    action pushOverlay(shell: A, overlay: String, host: String) {
-      -> ok(shell: A) {
-        Push overlay Host onto stack. Renders above all zones.
-        Platform adapter decides rendering: browser portal,
-        mobile modal sheet, watch alert, terminal floating box.
-      }
-      -> error(message: String) { Overlay failed. }
-    }
-
-    action popOverlay(shell: A) {
-      -> ok(shell: A, overlay: String) { Pop top overlay. }
-      -> empty(message: String) { No overlays active. }
-    }
-
-    action setGlobalState(shell: A, state: String) {
-      -> ok(shell: A) {
-        App-level state. "locked" shows auth gate (login page,
-        biometric prompt, passcode per platform). "error"
-        shows error boundary.
-      }
-      -> invalid(message: String) { Unknown state. }
-    }
-
-    action destroy(shell: A) {
-      -> ok(shell: A) { Unmount all Hosts, destroy Surface. }
-      -> notfound(message: String) { Shell does not exist. }
+    action popOverlay(shell: S) {
+      -> ok(shell: S, overlay: String) { Remove top overlay. }
+      -> empty(message: String) { No overlays. }
     }
   }
 
   invariant {
-    after initialize(shell: s,
-      config: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }")
+    after initialize(shell: s, zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }")
       -> ok(shell: s)
-    then destroy(shell: s) -> ok(shell: s)
+    then assignToZone(shell: s, zone: "primary", ref: "host-1")
+      -> ok(shell: s)
   }
 }

@@ -1,0 +1,18 @@
+# ============================================================
+# HostRefreshSyncsBinding — coif-app recommended sync
+#
+# When a host is refreshed, sync its binding to re-fetch
+# data from the backend.
+# ============================================================
+
+sync HostRefreshSyncsBinding [eager]
+when {
+  Host/refresh: [ host: ?host ]
+    => ok(host: ?host)
+}
+where {
+  Host: { ?host binding: ?binding }
+}
+then {
+  Binding/sync: [ binding: ?binding ]
+}

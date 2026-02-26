@@ -1,81 +1,139 @@
 kit:
   name: coif-app
-  version: 0.1.0
+  version: 0.4.0
   description: >
-    Application orchestration: navigation, lifecycle management,
-    network transport, platform composition. PlatformAdapter
-    provides generic registration; per-platform adapters (Browser,
-    Mobile, Desktop, Watch, Terminal) handle platform specifics.
+    Application orchestration: navigation, view lifecycle, data
+    transport, root composition, and platform adaptation. All
+    specs corrected per COPF independence rule — action bodies
+    describe own state only, sync chains declare all coordination.
 
 concepts:
   Navigator:
     spec: ./navigator.concept
-    params: { N: { as: navigator-ref } }
+    params:
+      N: { as: nav-ref, description: "Reference to a navigation destination" }
+
   Host:
     spec: ./host.concept
-    params: { W: { as: host-ref } }
+    params:
+      W: { as: host-ref, description: "Reference to a mounted view instance" }
+
   Transport:
     spec: ./transport.concept
-    params: { P: { as: transport-ref } }
+    params:
+      P: { as: transport-ref, description: "Reference to a transport connection" }
+
   Shell:
     spec: ./shell.concept
-    params: { A: { as: shell-ref } }
+    params:
+      S: { as: shell-ref, description: "Reference to the root composition frame" }
+
   PlatformAdapter:
     spec: ./platform-adapter.concept
-    params: { D: { as: platform-adapter-ref } }
+    params:
+      D: { as: platform-adapter-ref, description: "Reference to a platform adapter" }
+
+  # Platform-specific adapters (keep existing ones)
   BrowserAdapter:
     spec: ./browser-adapter.concept
-    params: { A: { as: browser-adapter-ref } }
+    params:
+      D: { as: browser-adapter-ref, description: "Browser platform adapter" }
+    optional: true
+
   MobileAdapter:
     spec: ./mobile-adapter.concept
-    params: { A: { as: mobile-adapter-ref } }
+    params:
+      D: { as: mobile-adapter-ref, description: "Mobile platform adapter" }
+    optional: true
+
   DesktopAdapter:
     spec: ./desktop-adapter.concept
-    params: { A: { as: desktop-adapter-ref } }
+    params:
+      D: { as: desktop-adapter-ref, description: "Desktop platform adapter" }
+    optional: true
+
   WatchAdapter:
     spec: ./watch-adapter.concept
-    params: { A: { as: watch-adapter-ref } }
+    params:
+      D: { as: watch-adapter-ref, description: "Watch platform adapter" }
+    optional: true
+
   TerminalAdapter:
     spec: ./terminal-adapter.concept
-    params: { A: { as: terminal-adapter-ref } }
+    params:
+      D: { as: terminal-adapter-ref, description: "Terminal platform adapter" }
+    optional: true
 
 syncs:
   required:
-    - path: ./syncs/host-mount-creates-binding.sync
-      name: HostMountCreatesBinding
-    - path: ./syncs/host-unmount-cleans-up.sync
-      name: HostUnmountCleansUp
-    - path: ./syncs/binding-sync-via-transport.sync
-      name: BindingSyncViaTransport
-    - path: ./syncs/transport-response-to-signals.sync
-      name: TransportResponseToSignals
-  recommended:
-    - path: ./syncs/navigator-go-mounts-host.sync
+    - path: ./syncs/required/navigator-go-mounts-host.sync
       name: NavigatorGoMountsHost
-    - path: ./syncs/navigator-go-unmounts-previous.sync
+      description: >
+        When Navigator/go succeeds, mount a Host for the
+        target concept and view.
+
+    - path: ./syncs/required/navigator-go-unmounts-previous.sync
       name: NavigatorGoUnmountsPrevious
-    - path: ./syncs/host-tracks-machines.sync
-      name: HostTracksMachines
-    - path: ./syncs/binding-invoke-via-mutate.sync
-      name: BindingInvokeViaMutate
-    - path: ./syncs/navigator-to-platform.sync
+      description: >
+        When Navigator/go has a previous destination, unmount it.
+
+    - path: ./syncs/required/host-mount-creates-binding.sync
+      name: HostMountCreatesBinding
+      description: >
+        When a Host is mounted, create a Binding to the concept.
+
+    - path: ./syncs/required/host-unmount-destroys-machines.sync
+      name: HostUnmountDestroysMachines
+      description: >
+        When a Host is unmounted, destroy machines and unbind.
+
+  recommended:
+    - path: ./syncs/recommended/binding-created-tracked-by-host.sync
+      name: BindingCreatedTrackedByHost
+      description: >
+        Track created bindings as host resources.
+
+    - path: ./syncs/recommended/machine-spawned-tracked-by-host.sync
+      name: MachineSpawnedTrackedByHost
+      description: >
+        Track spawned machines as host resources.
+
+    - path: ./syncs/recommended/cascade-complete-host-ready.sync
+      name: CascadeCompleteHostReady
+      description: >
+        When rendering completes, transition host to interactive.
+
+    - path: ./syncs/recommended/host-refresh-syncs-binding.sync
+      name: HostRefreshSyncsBinding
+      description: >
+        When a host refreshes, sync its binding.
+
+    - path: ./syncs/recommended/binding-sync-via-transport.sync
+      name: BindingSyncViaTransport
+      description: >
+        Route non-coupled binding syncs through Transport.
+
+    - path: ./syncs/recommended/transport-response-to-signals.sync
+      name: TransportResponseToSignals
+      description: >
+        Batch-update signals from transport response data.
+
+    - path: ./syncs/recommended/navigator-to-platform.sync
       name: NavigatorToPlatform
-    - path: ./syncs/navigator-back-to-platform.sync
-      name: NavigatorBackToPlatform
-    - path: ./syncs/platform-event-to-navigator.sync
+      description: >
+        Translate navigation to platform-specific actions.
+
+    - path: ./syncs/recommended/platform-event-to-navigator.sync
       name: PlatformEventToNavigator
-    - path: ./syncs/shell-init-creates-root-surface.sync
+      description: >
+        Translate platform back events to Navigator/back.
+
+    - path: ./syncs/recommended/shell-init-creates-root-surface.sync
       name: ShellInitCreatesRootSurface
-    - path: ./syncs/shell-zone-to-platform.sync
-      name: ShellZoneToPlatform
-    - path: ./syncs/shell-overlay-to-platform.sync
-      name: ShellOverlayToPlatform
-    - path: ./syncs/navigator-go-assigns-host-to-shell.sync
-      name: NavigatorGoAssignsHostToShell
-    - path: ./syncs/platform-pipeline.sync
-      name: PlatformPipeline
+      description: >
+        Create root Surface and Layout on shell initialization.
 
 dependencies:
-  - coif-core: ">=0.2.0"
-  - coif-component: ">=0.2.0"
-  - coif-render: ">=0.2.0"
+  - coif-core: ">=0.4.0"
+  - coif-component: ">=0.4.0"
+  - coif-render: ">=0.4.0"
