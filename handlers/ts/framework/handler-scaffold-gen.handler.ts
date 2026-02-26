@@ -10,7 +10,7 @@
 //   - Section 6.2: Storage patterns
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -73,7 +73,7 @@ function buildHandlerImpl(input: Record<string, unknown>): string {
     `// Handler for the ${conceptName} concept.`,
     '// ============================================================',
     '',
-    "import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';",
+    "import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';",
     '',
     `export const ${toCamel(conceptName)}Handler: ConceptHandler = {`,
     '  async register() {',
@@ -145,7 +145,7 @@ function buildConformanceTest(input: Record<string, unknown>): string {
   const lines: string[] = [
     "import { describe, it, expect } from 'vitest';",
     `import { ${toCamel(conceptName)}Handler } from '../handlers/ts/${kebab}.handler.js';`,
-    "import { createInMemoryStorage } from '../kernel/src/storage.js';",
+    "import { createInMemoryStorage } from '../runtime/adapters/storage.js';",
     '',
     `describe('${conceptName} handler', () => {`,
     '  it(\'should register with correct metadata\', async () => {',

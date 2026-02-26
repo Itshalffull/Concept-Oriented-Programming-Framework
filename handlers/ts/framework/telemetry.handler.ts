@@ -17,7 +17,7 @@
 //   sync name      → span link annotation
 // ============================================================
 
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /**
  * Exporter configuration.

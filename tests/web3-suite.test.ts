@@ -6,11 +6,11 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { chainMonitorHandler } from '../handlers/ts/repertoire/web3/chain-monitor.handler.js';
 import { contentHandler } from '../handlers/ts/repertoire/web3/content.handler.js';
 import { walletHandler } from '../handlers/ts/repertoire/web3/wallet.handler.js';
-import type { ConceptStorage } from '../kernel/src/types.js';
+import type { ConceptStorage } from '../runtime/types.js';
 
 // ============================================================
 // ChainMonitor Tests

@@ -10,7 +10,7 @@
 //   - Section 2.2: Action signatures and variants
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name

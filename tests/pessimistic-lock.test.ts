@@ -9,7 +9,7 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import {
   pessimisticLockHandler,
   resetPessimisticLockCounter,

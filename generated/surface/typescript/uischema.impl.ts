@@ -1,6 +1,6 @@
 // UISchema Concept Implementation
 // Inspects a concept spec and generates a UI schema for form/view rendering.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'schema';
 

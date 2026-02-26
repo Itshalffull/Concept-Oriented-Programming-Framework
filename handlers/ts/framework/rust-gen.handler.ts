@@ -30,7 +30,7 @@ import type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 // --- ResolvedType → Rust mapping (Section 10.1) ---
 

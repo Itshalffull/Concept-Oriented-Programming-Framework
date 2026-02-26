@@ -1,5 +1,5 @@
 // Echo Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const echoHandler: ConceptHandler = {
   async send(input, storage) {

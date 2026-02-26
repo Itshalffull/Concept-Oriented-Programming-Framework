@@ -11,13 +11,13 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
 import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler.js';
-import type { ConceptHandler, ConceptAST, ConceptManifest } from '../kernel/src/types.js';
+import type { ConceptHandler, ConceptAST, ConceptManifest } from '../runtime/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 

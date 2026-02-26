@@ -7,11 +7,11 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
 import { resourceHandler } from '../../implementations/typescript/resource.impl.js';
 import { buildCacheHandler } from '../../implementations/typescript/build-cache.impl.js';
 import { emitterHandler } from '../../../../implementations/typescript/framework/emitter.impl.js';
-import type { ConceptStorage } from '@clef/kernel';
+import type { ConceptStorage } from '@clef/runtime';
 
 /**
  * Simulates the generation pipeline that sync chains would orchestrate:

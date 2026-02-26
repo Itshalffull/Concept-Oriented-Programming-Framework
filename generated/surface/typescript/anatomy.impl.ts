@@ -7,7 +7,7 @@
 // Relation: 'anatomy' keyed by anatomy (N).
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 export const anatomyHandler: ConceptHandler = {
   async define(input, storage) {

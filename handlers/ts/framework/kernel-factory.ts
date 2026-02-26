@@ -10,11 +10,11 @@
 // ============================================================
 
 import { readFileSync } from 'fs';
-import { createConceptRegistry, createInProcessAdapter } from '../../../kernel/src/transport.js';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
-import { createSelfHostedKernel } from '../../../kernel/src/self-hosted.js';
-import type { Kernel } from '../../../kernel/src/self-hosted.js';
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import { createConceptRegistry, createInProcessAdapter } from '../../../runtime/adapters/transport.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { createSelfHostedKernel } from '../../../runtime/self-hosted.js';
+import type { Kernel } from '../../../runtime/self-hosted.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 import { createSyncEngineHandler } from './sync-engine.handler.js';
 import { parseConceptFile } from './spec-parser.handler.js';
 import { parseSyncFile } from './sync-parser.handler.js';

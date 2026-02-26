@@ -2,7 +2,7 @@
 // Generate and apply AWS CloudFormation templates from Clef deploy plans.
 // Owns stack IDs, change set management, rollback configurations, and
 // stack event tracking.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const cloudformationProviderHandler: ConceptHandler = {
   async register() {

@@ -24,8 +24,8 @@ import {
 } from '../../../handlers/ts/framework/interface-generator.handler.js';
 import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.js';
 import { surfaceHandler } from '../../../handlers/ts/framework/surface.handler.js';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
-import type { ConceptManifest, ConceptAST } from '../../../kernel/src/types.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import type { ConceptManifest, ConceptAST } from '../../../runtime/types.js';
 
 /** Recursively find files matching an extension under a directory. */
 function findFiles(dir: string, ext: string): string[] {

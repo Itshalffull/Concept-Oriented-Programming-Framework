@@ -9,7 +9,7 @@
 // See design doc Section 4.1 (SyntaxTree).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 import { readFileSync } from 'fs';
 import { createParser, loadLanguage } from './tree-sitter-loader.js';
 import type Parser from 'web-tree-sitter';

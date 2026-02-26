@@ -1,7 +1,7 @@
 // DockerComposeIacProvider Concept Implementation
 // Docker Compose IaC provider. Generates Compose files from deploy plans,
 // previews changes, applies services, and handles teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'dciac';
 

@@ -2,7 +2,7 @@
 // Wires the MobileAdapter concept for iOS/Android deployment.
 // Works with React Native, NativeScript, or any mobile framework.
 
-import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../../runtime/adapters/storage.js';
 import { mobileadapterHandler } from '../../../../generated/surface/typescript/mobileadapter.handler.js';
 
 async function initMobilePlatform() {

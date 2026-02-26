@@ -12,9 +12,9 @@ import { describe, it, expect } from 'vitest';
 import {
   createDynamoDBFiringGuard,
   createFirestoreFiringGuard,
-} from '../infrastructure/serverless/distributed-lock.js';
-import type { DynamoDBDocumentClient } from '../infrastructure/storage/dynamodb-storage.js';
-import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../infrastructure/storage/firestore-storage.js';
+} from '../runtime/adapters/serverless/distributed-lock.js';
+import type { DynamoDBDocumentClient } from '../runtime/adapters/dynamodb-storage.js';
+import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../runtime/adapters/firestore-storage.js';
 
 // ============================================================
 // Mock DynamoDB Client

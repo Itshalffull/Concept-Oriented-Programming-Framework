@@ -1,6 +1,6 @@
 // Password Concept Implementation
 import { createHash, randomBytes } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const passwordHandler: ConceptHandler = {
   async set(input, storage) {

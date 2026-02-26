@@ -1,7 +1,7 @@
 // TerraformProvider Concept Implementation
 // Terraform IaC provider. Generates HCL from deploy plans,
 // previews changes, applies workspaces, and tears down resources.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'terraform';
 

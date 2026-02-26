@@ -1,4 +1,4 @@
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const outlineHandler: ConceptHandler = {
   async create(input, storage) {

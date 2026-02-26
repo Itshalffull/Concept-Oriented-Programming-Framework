@@ -1,7 +1,7 @@
 // ChangeStream concept handler tests -- append, subscribe, read, acknowledge, and replay.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { changeStreamHandler, resetChangeStreamCounter } from '../handlers/ts/change-stream.handler.js';
 
 describe('ChangeStream', () => {

@@ -1,5 +1,5 @@
 // EventBus Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const eventBusHandler: ConceptHandler = {
   async registerEventType(input, storage) {

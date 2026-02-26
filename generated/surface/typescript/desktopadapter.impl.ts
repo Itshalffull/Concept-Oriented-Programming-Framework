@@ -1,5 +1,5 @@
 // generated: desktopadapter.handler.ts
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'output';
 

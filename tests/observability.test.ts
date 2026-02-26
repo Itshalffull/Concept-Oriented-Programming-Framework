@@ -15,11 +15,11 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-} from '@clef/kernel';
+} from '@clef/runtime';
 import { createKernel } from '../handlers/ts/framework/kernel-factory';
 import { SyncEngine, ActionLog, buildSyncIndex } from '../handlers/ts/framework/sync-engine.handler';
-import type { CompiledSync, ConceptHandler, ActionCompletion } from '@clef/kernel';
-import { generateId, timestamp } from '../kernel/src/types';
+import type { CompiledSync, ConceptHandler, ActionCompletion } from '@clef/runtime';
+import { generateId, timestamp } from '../runtime/types';
 import {
   telemetryHandler,
   getExportedSpans,

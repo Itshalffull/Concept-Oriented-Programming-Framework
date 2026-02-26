@@ -19,7 +19,7 @@ import type {
   ConceptStorage,
   EntryMeta,
   ConflictInfo,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 /** Configuration for the IPFS storage adapter */
 export interface IPFSConfig {

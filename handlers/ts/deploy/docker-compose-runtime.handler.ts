@@ -1,7 +1,7 @@
 // DockerComposeRuntime Concept Implementation
 // Docker Compose provider for the Runtime coordination concept. Manages
 // service provisioning, container deployment, and lifecycle.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'dockercompose';
 

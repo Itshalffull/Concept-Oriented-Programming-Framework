@@ -9,13 +9,13 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { generateId, timestamp } from '../kernel/src/types.js';
-import type { ActionRecord } from '../kernel/src/types.js';
-import { toPersistenceKey, syncEdgeKey } from '../engine/durable-action-log.js';
-import { createDynamoDBActionLog } from '../engine/durable-action-log-dynamodb.js';
-import { createFirestoreActionLog } from '../engine/durable-action-log-firestore.js';
-import type { DynamoDBDocumentClient } from '../infrastructure/storage/dynamodb-storage.js';
-import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../infrastructure/storage/firestore-storage.js';
+import { generateId, timestamp } from '../runtime/types.js';
+import type { ActionRecord } from '../runtime/types.js';
+import { toPersistenceKey, syncEdgeKey } from '../runtime/action-log/durable-action-log.js';
+import { createDynamoDBActionLog } from '../runtime/action-log/durable-action-log-dynamodb.js';
+import { createFirestoreActionLog } from '../runtime/action-log/durable-action-log-firestore.js';
+import type { DynamoDBDocumentClient } from '../runtime/adapters/dynamodb-storage.js';
+import type { FirestoreClient, FirestoreDocument, FirestoreQuerySnapshot } from '../runtime/adapters/firestore-storage.js';
 
 // ============================================================
 // Mock DynamoDB Client

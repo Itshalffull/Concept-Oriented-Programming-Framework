@@ -1,5 +1,5 @@
 // Annotation Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const annotationHandler: ConceptHandler = {
   async annotate(input, storage) {

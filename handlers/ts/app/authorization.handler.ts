@@ -1,7 +1,7 @@
 // Authorization Concept Implementation
 // Manage roles, permissions, and permission-checking for users.
 // Roles group permissions into reusable bundles; users inherit permissions through role assignment.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const authorizationHandler: ConceptHandler = {
   async grantPermission(input, storage) {

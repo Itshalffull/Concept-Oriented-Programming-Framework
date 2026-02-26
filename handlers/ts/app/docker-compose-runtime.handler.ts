@@ -1,7 +1,7 @@
 // DockerComposeRuntime Concept Implementation
 // Manage Docker Compose service deployments for local and development
 // environments. Owns service definitions, port mappings, and container lifecycle.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const dockerComposeRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

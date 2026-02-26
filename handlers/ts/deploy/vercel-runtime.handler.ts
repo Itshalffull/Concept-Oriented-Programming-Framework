@@ -1,7 +1,7 @@
 // VercelRuntime Concept Implementation
 // Vercel provider for the Runtime coordination concept. Manages project
 // provisioning, deployment, traffic splitting, and teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'vercel';
 

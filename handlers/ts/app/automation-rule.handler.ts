@@ -1,6 +1,6 @@
 // AutomationRule Concept Implementation
 // User-configurable event-condition-action rules that fire automatically when conditions are met.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const automationRuleHandler: ConceptHandler = {
   async define(input, storage) {

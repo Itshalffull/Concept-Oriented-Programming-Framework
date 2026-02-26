@@ -10,7 +10,7 @@
 //   - Section 10.1: ConceptManifest as language-neutral IR
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name

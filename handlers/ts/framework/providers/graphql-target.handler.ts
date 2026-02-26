@@ -16,7 +16,7 @@ import type {
   ActionParamSchema,
   RelationSchema,
   FieldSchema,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 import {
   typeToGraphQL,

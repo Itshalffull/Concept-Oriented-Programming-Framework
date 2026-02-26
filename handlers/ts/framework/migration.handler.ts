@@ -14,8 +14,8 @@ import type {
   ConceptStorage,
   ActionInvocation,
   ActionCompletion,
-} from '../../../kernel/src/types.js';
-import { timestamp } from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
+import { timestamp } from '../../../runtime/types.js';
 
 /**
  * Metadata stored in concept storage under the `_meta` relation.

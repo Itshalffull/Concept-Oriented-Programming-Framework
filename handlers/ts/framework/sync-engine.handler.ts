@@ -24,7 +24,7 @@ import type {
   ConceptRegistry,
   Binding,
   ConflictInfo,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 import {
   SyncEngine,
   ActionLog,
@@ -35,7 +35,7 @@ import {
   buildSyncIndex,
 } from './engine.js';
 import type { SyncIndex } from './engine.js';
-import { generateId, timestamp } from '../../../kernel/src/types.js';
+import { generateId, timestamp } from '../../../runtime/types.js';
 
 // Re-export engine classes and functions so consumers can import
 // them from the concept implementation rather than the kernel engine.

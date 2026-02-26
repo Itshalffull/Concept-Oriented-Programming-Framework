@@ -1,5 +1,5 @@
 // Article Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 function slugify(title: string): string {
   return title

@@ -1,7 +1,7 @@
 // CausalClock concept handler tests -- tick, merge, compare, and dominates operations.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { causalClockHandler, resetCausalClockCounter } from '../handlers/ts/causal-clock.handler.js';
 
 describe('CausalClock', () => {

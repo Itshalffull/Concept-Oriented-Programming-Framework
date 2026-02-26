@@ -9,7 +9,7 @@
 //   - Section 9.2: ConceptTransport interface
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -187,7 +187,7 @@ function buildTransportAdapter(input: Record<string, unknown>): string {
 
     case 'in-process':
       lines.push(...[
-        "import type { ConceptHandler } from '../../../kernel/src/types.js';",
+        "import type { ConceptHandler } from '../../../runtime/types.js';",
         '',
         `export class ${name} {`,
         '  private handlers: Map<string, ConceptHandler> = new Map();',

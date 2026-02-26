@@ -1,5 +1,5 @@
 // Workflow Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const interfaceWorkflowHandler: ConceptHandler = {
   async define(input, storage) {

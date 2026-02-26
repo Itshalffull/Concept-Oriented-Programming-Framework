@@ -1,7 +1,7 @@
 // SemanticMerge provider tests -- AST-level block merging with import deduplication.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { semanticMergeHandler, resetSemanticMergeCounter } from '../handlers/ts/semantic-merge.handler.js';
 
 describe('SemanticMerge', () => {

@@ -9,7 +9,7 @@
 import type {
   ConceptHandler,
   ConceptStorage,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 /** IPFS client interface — injected at concept instantiation */
 interface IPFSClient {

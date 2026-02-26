@@ -1,5 +1,5 @@
 // FormBuilder Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const formBuilderHandler: ConceptHandler = {
   async buildForm(input, storage) {

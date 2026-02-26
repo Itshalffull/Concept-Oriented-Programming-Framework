@@ -2,7 +2,7 @@
 // Wraps the React frontend in an Electron desktop shell.
 // Uses the DesktopAdapter concept for native window management.
 
-import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../../runtime/adapters/storage.js';
 import { desktopadapterHandler } from '../../../../generated/surface/typescript/desktopadapter.handler.js';
 
 // Electron main process setup

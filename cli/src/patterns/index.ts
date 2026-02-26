@@ -11,7 +11,7 @@
 // See Architecture doc Sections 16.11, 16.12.
 // ============================================================
 
-import type { ConceptAST } from '../../../kernel/src/types.js';
+import type { ConceptAST } from '../../../runtime/types.js';
 import { asyncGateValidator } from './async-gate.js';
 
 export interface ValidationMessage {

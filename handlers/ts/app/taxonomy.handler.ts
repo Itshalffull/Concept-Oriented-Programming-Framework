@@ -1,5 +1,5 @@
 // Taxonomy Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const taxonomyHandler: ConceptHandler = {
   async createVocabulary(input, storage) {

@@ -1,6 +1,6 @@
 // Env Concept Implementation (Deploy Kit)
 // Manage deployment environments with composable configuration.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const envHandler: ConceptHandler = {
   async resolve(input, storage) {

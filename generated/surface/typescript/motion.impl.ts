@@ -7,7 +7,7 @@
 // Relation: 'motion' keyed by O.
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 export const motionHandler: ConceptHandler = {
   async defineDuration(input, storage) {

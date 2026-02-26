@@ -1,5 +1,5 @@
 // Reference Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const referenceHandler: ConceptHandler = {
   async addRef(input, storage) {

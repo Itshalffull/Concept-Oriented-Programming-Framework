@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 
 // App concept handlers
 import { profileHandler } from '../handlers/ts/app/profile.handler.js';

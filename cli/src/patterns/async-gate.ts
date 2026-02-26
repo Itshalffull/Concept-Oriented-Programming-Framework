@@ -12,7 +12,7 @@
 // ⚠  No @gate but concept shape matches gate pattern (suggest it)
 // ============================================================
 
-import type { ConceptAST } from '../../../kernel/src/types.js';
+import type { ConceptAST } from '../../../runtime/types.js';
 import type { ValidationResult, ValidationMessage } from './index.js';
 
 export function asyncGateValidator(ast: ConceptAST): ValidationResult {

@@ -2,7 +2,7 @@
 // Manage secret resolution from .env files. Owns the file path, parsed
 // key-value pairs, and file load state. Used for local development
 // secret management.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const dotenvProviderHandler: ConceptHandler = {
   async fetch(input, storage) {

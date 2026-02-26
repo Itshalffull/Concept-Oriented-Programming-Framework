@@ -5,8 +5,8 @@
 // Stores concept registrations with URIs and transport configs.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
-import { generateId } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { generateId } from '../../../runtime/types.js';
 
 export const registryHandler: ConceptHandler = {
   async register(input, storage) {

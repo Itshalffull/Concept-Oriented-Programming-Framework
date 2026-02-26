@@ -7,7 +7,7 @@
 // Relation: 'elevation' keyed by W.
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const MIN_LEVEL = 0;
 const MAX_LEVEL = 5;

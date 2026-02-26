@@ -1,5 +1,5 @@
 // Emitter Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 function computeHash(content: string): string {
   let hash = 0;

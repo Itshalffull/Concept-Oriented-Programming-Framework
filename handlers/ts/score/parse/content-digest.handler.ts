@@ -6,7 +6,7 @@
 // Suite manifest; this stub returns unsupported for all actions.
 // ============================================================
 
-import type { ConceptHandler } from '../../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../../runtime/types.js';
 
 export const contentDigestHandler: ConceptHandler = {
   async compute() {

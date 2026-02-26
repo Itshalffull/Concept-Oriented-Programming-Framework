@@ -18,7 +18,7 @@
 import type {
   ActionInvocation,
   ActionCompletion,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 /** Configuration for an EVM chain connection */
 export interface EVMChainConfig {

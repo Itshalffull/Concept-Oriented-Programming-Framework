@@ -57,7 +57,7 @@ then {
 }
 `;
 
-const TEMPLATE_IMPL = `import type { ConceptHandler } from '@clef/kernel';
+const TEMPLATE_IMPL = `import type { ConceptHandler } from '@clef/runtime';
 
 export const helloHandler: ConceptHandler = {
   async greet(input, storage) {
@@ -88,12 +88,12 @@ const TEMPLATE_TSCONFIG = `{
     "declaration": true,
     "sourceMap": true,
     "paths": {
-      "@clef/kernel": ["./kernel/src/index.ts"],
-      "@clef/kernel/*": ["./kernel/src/*"]
+      "@clef/runtime": ["./runtime/index.ts"],
+      "@clef/runtime/*": ["./runtime/*"]
     }
   },
   "include": [
-    "kernel/src/**/*.ts",
+    "runtime/**/*.ts",
     "handlers/**/*.ts",
     "tests/**/*.ts",
     "cli/**/*.ts"
@@ -217,7 +217,7 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@clef/kernel': path.resolve(__dirname, './kernel/src/index.ts'),
+      '@clef/runtime': path.resolve(__dirname, './runtime/index.ts'),
     },
   },
   test: {

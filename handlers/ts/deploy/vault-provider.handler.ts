@@ -1,7 +1,7 @@
 // VaultProvider Concept Implementation
 // HashiCorp Vault provider for the Secret coordination concept. Fetches
 // secrets, manages lease renewals, and handles secret rotation.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'vault';
 

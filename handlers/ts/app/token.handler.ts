@@ -1,7 +1,7 @@
 // Token Concept Implementation
 // Replace typed placeholders in text using chain-traversal patterns
 // like [node:author:mail] for dynamic content substitution.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /** Regex matching token placeholders in the form [type:chain:path] */
 const TOKEN_PATTERN = /\[([a-zA-Z_][a-zA-Z_0-9]*(?::[a-zA-Z_][a-zA-Z_0-9]*)*)\]/g;

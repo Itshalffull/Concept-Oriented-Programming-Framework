@@ -1,6 +1,6 @@
 // Binding Concept Implementation
 // Bridges backend concepts to frontend signals with mode-based connectivity.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'binding';
 

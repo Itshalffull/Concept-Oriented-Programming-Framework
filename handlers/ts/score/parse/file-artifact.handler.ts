@@ -7,7 +7,7 @@
 // See design doc Section 4.1 (FileArtifact).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 import { inferLanguage, inferRole } from './file-role-inference.js';
 
 let artifactCounter = 0;

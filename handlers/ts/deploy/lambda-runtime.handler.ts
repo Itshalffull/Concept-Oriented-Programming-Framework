@@ -1,7 +1,7 @@
 // LambdaRuntime Concept Implementation
 // AWS Lambda provider for the Runtime coordination concept. Manages
 // Lambda function provisioning, deployment, traffic shifting, and teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'lambda';
 

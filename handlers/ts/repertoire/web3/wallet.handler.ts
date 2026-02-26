@@ -9,7 +9,7 @@
 import type {
   ConceptHandler,
   ConceptStorage,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 /**
  * Recover the signer address from a personal_sign signature.

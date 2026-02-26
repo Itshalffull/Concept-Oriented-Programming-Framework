@@ -1,7 +1,7 @@
 // IaC Concept Implementation
 // Coordination concept for infrastructure-as-code. Generates provider-specific
 // configuration, previews changes, applies updates, detects drift, and tears down.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'iac';
 

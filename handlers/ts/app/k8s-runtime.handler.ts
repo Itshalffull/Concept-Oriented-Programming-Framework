@@ -2,7 +2,7 @@
 // Manage Kubernetes deployments. Owns Deployment, Service, ConfigMap, and
 // Ingress resources. Handles pod scheduling, rolling updates, and resource
 // quota management.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const k8sRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

@@ -1,7 +1,7 @@
 // Branch concept handler tests -- lifecycle, protection, upstream tracking, and divergence detection.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { branchHandler, resetBranchCounter } from '../handlers/ts/branch.handler.js';
 
 describe('Branch', () => {

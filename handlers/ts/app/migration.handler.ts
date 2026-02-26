@@ -1,6 +1,6 @@
 // Migration Concept Implementation (Deploy Kit)
 // Orchestrate storage schema migrations using the expand/contract pattern.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const migrationHandler: ConceptHandler = {
   async plan(input, storage) {

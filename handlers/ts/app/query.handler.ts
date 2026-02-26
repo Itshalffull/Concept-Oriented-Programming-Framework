@@ -2,7 +2,7 @@
 // Execute structured retrieval over content with filtering, sorting, grouping, and aggregation.
 // Supports live subscriptions for reactive updates.
 import { randomBytes } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const queryHandler: ConceptHandler = {
   async parse(input, storage) {

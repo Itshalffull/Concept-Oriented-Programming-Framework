@@ -1,6 +1,6 @@
 // Health Concept Implementation (Deploy Kit)
 // Verify deployment health at concept, sync, and suite levels.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const healthHandler: ConceptHandler = {
   async checkConcept(input, storage) {

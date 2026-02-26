@@ -1,7 +1,7 @@
 // Env Concept Implementation
 // Environment management for deployment targets. Resolves environment
 // configurations, handles promotion pipelines, and computes diffs.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'env';
 

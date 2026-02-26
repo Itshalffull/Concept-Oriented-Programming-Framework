@@ -1,6 +1,6 @@
 // SearchIndex Concept Implementation
 // Build and maintain full-text and faceted search indexes with a pluggable processor pipeline.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const searchIndexHandler: ConceptHandler = {
   async createIndex(input, storage) {

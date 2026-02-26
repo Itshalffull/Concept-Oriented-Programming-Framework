@@ -1,5 +1,5 @@
 // TsSdkTarget Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const tsSdkTargetHandler: ConceptHandler = {
   async generate(input, storage) {

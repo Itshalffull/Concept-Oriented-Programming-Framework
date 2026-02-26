@@ -10,9 +10,9 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
-import type { ConceptAST } from '../kernel/src/types.js';
+import type { ConceptAST } from '../runtime/types.js';
 
 // Framework concept handlers
 import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';

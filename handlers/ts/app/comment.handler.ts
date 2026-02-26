@@ -1,5 +1,5 @@
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const commentHandler: ConceptHandler = {
   async create(input, storage) {

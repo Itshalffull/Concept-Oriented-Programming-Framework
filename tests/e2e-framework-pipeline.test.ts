@@ -17,12 +17,12 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
 import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
 import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
 import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
-import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
+import type { ConceptAST, ConceptManifest } from '../runtime/types.js';
 
 const Clef Surface_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-render');
 const Clef Surface_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-core');

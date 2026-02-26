@@ -3,7 +3,7 @@
 // platform-specific props and handle lifecycle events.
 
 import { describe, it, expect } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 

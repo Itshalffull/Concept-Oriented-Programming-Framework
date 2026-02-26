@@ -1,7 +1,7 @@
 // VercelRuntime Concept Implementation
 // Manage Vercel project deployments. Owns project configurations,
 // deployment URLs, edge regions, and serverless function settings.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const vercelRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

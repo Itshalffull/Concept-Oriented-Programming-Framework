@@ -1,7 +1,7 @@
 // Builder Concept Implementation
 // Coordination concept for build lifecycle. Manages building, testing,
 // and tracking build history across languages and platforms.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'build';
 

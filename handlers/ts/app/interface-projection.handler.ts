@@ -1,5 +1,5 @@
 // Projection Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const interfaceProjectionHandler: ConceptHandler = {
   async project(input, storage) {

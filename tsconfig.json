@@ -16,22 +16,19 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "@clef/kernel": ["./kernel/src/index.ts"],
-      "@clef/kernel/*": ["./kernel/src/*"],
-      "@clef/runtime": ["./kernel/src/index.ts"]
+      "@clef/runtime": ["./runtime/index.ts"],
+      "@clef/runtime/*": ["./runtime/*"]
     }
   },
   "include": [
-    "kernel/src/**/*.ts",
+    "runtime/**/*.ts",
     "implementations/**/*.ts",
-    "infrastructure/**/*.ts",
-    "engine/**/*.ts",
     "tests/**/*.ts",
     "cli/**/*.ts",
     "generated/surface/**/*.ts",
     "generated/deploy/**/*.ts",
-    "framework-widgets/**/*.ts",
-    "framework-widgets/**/*.tsx",
+    "surface/widgets/**/*.ts",
+    "surface/widgets/**/*.tsx",
     "examples/**/*.ts",
     "examples/**/*.tsx",
     "kits/**/*.ts"

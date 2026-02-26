@@ -1,7 +1,7 @@
 // RustBuilder Concept Implementation
 // Rust provider for the Builder coordination concept. Manages
 // cargo build, cargo test, and crate packaging.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'rust-build';
 

@@ -1,6 +1,6 @@
 // Navigator Concept Implementation
 // Abstract navigation between destinations with guards and history.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'navigator';
 

@@ -1,7 +1,7 @@
 // Ref concept handler tests -- create, update (CAS), delete, resolve, and reflog.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { refHandler, resetRefCounter } from '../handlers/ts/ref.handler.js';
 
 describe('Ref', () => {

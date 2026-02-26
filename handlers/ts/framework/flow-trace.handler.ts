@@ -9,7 +9,7 @@
 // See Architecture doc Section 16.1 / 17.1.
 // ============================================================
 
-import type { ActionRecord, CompiledSync, ConceptAST, ConceptHandler, WhenPattern } from '../../../kernel/src/types.js';
+import type { ActionRecord, CompiledSync, ConceptAST, ConceptHandler, WhenPattern } from '../../../runtime/types.js';
 import type { SyncIndex } from './engine.js';
 import { ActionLog, indexKey } from './engine.js';
 

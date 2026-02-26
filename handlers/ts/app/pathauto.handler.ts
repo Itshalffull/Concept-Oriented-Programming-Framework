@@ -1,5 +1,5 @@
 // Pathauto Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 function slugify(input: string): string {
   return input

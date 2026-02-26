@@ -1,5 +1,5 @@
 // Namespace Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const namespaceHandler: ConceptHandler = {
   async createNamespacedPage(input, storage) {

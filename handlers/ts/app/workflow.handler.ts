@@ -1,6 +1,6 @@
 // Workflow Concept Implementation
 // Finite state machines with named states and guarded transitions for content lifecycle management.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const workflowHandler: ConceptHandler = {
   async defineState(input, storage) {

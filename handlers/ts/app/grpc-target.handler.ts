@@ -1,5 +1,5 @@
 // GrpcTarget Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const grpcTargetHandler: ConceptHandler = {
   async generate(input, storage) {

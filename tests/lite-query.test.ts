@@ -8,12 +8,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { LiteQueryAdapter, createStorageLiteProtocol } from '../handlers/ts/framework/lite-query-adapter.js';
 import type {
   LiteQueryProtocol,
   ConceptStateSnapshot,
-} from '../kernel/src/types.js';
+} from '../runtime/types.js';
 
 // ============================================================
 // Lite Query Protocol + Adapter with Caching

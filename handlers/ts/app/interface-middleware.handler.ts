@@ -1,5 +1,5 @@
 // Middleware Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /** Numeric ordering for middleware positions. Lower values run first. */
 const POSITION_ORDER: Record<string, number> = {

@@ -18,7 +18,7 @@ import type {
   ConceptStateSnapshot,
   LiteFilter,
   LiteQueryProtocol,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 // --- LiteQueryAdapter with Caching (Section 4.2) ---
 

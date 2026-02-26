@@ -7,7 +7,7 @@
 // Relation: 'palette' keyed by C.
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 // --- Color helpers ---
 

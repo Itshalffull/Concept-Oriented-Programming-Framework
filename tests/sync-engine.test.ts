@@ -11,14 +11,14 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
   createConceptRegistry,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import type {
   ConceptAST,
   CompiledSync,
   ActionCompletion,
-} from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
+} from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
 
 // Framework concept handlers
 import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';

@@ -19,7 +19,7 @@ import {
   generateInterfaceSyncs,
   INTERFACE_TARGET_META,
 } from '../../../../tools/clef-cli/src/commands/generate.js';
-import { createInMemoryStorage } from '../../../../kernel/src/index.js';
+import { createInMemoryStorage } from '../../../../runtime/index.js';
 
 let tempDir: string;
 let emitStorage: ReturnType<typeof createInMemoryStorage>;

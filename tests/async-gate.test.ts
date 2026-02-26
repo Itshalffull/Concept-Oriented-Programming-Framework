@@ -27,8 +27,8 @@ import { ActionLog, indexKey } from '../handlers/ts/framework/engine.js';
 import type { SyncIndex } from '../handlers/ts/framework/engine.js';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
-import type { ConceptAST, CompiledSync, ConceptManifest } from '../kernel/src/types.js';
+} from '../runtime/index.js';
+import type { ConceptAST, CompiledSync, ConceptManifest } from '../runtime/types.js';
 
 // ============================================================
 // Test Data: A conforming gate concept (ChainMonitor)

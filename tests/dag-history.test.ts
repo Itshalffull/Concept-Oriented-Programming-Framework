@@ -1,7 +1,7 @@
 // DAGHistory concept handler tests -- append, ancestors, commonAncestor, descendants, between, getNode.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { dagHistoryHandler, resetDAGHistoryCounter } from '../handlers/ts/dag-history.handler.js';
 
 describe('DAGHistory', () => {

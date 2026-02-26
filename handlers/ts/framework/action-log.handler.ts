@@ -6,8 +6,8 @@
 // queried and participate in synchronizations.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
-import { generateId } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { generateId } from '../../../runtime/types.js';
 
 export const actionLogHandler: ConceptHandler = {
   async append(input, storage) {

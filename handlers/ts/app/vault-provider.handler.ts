@@ -1,7 +1,7 @@
 // VaultProvider Concept Implementation
 // Manage secret resolution from HashiCorp Vault. Owns Vault connection state,
 // lease tracking, token renewal, and seal status monitoring.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const vaultProviderHandler: ConceptHandler = {
   async fetch(input, storage) {

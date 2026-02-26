@@ -1,6 +1,6 @@
 // DesignToken Concept Implementation
 // Stores design tokens with alias resolution chain.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'token';
 

@@ -7,7 +7,7 @@
 // Relation: 'surface' keyed by surface (F).
 // ============================================================
 
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'surface';
 

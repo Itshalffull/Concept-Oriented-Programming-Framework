@@ -15,9 +15,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
 import { flakyTestHandler } from '../../implementations/typescript/flaky-test.impl.js';
-import type { ConceptStorage } from '@clef/kernel';
+import type { ConceptStorage } from '@clef/runtime';
 
 /**
  * Simulates a Builder/test result being fed into FlakyTest/record.

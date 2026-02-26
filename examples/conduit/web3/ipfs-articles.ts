@@ -2,9 +2,9 @@
 // Store article content on IPFS using the Web3 suite's Content concept
 // and content-pinning sync.
 
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { contentHandler } from '../../../handlers/ts/repertoire/web3/content.handler.js';
-import type { ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptStorage } from '../../../runtime/types.js';
 
 export interface IPFSArticle {
   cid: string;

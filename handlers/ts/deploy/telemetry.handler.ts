@@ -1,7 +1,7 @@
 // Telemetry Concept Implementation
 // Observability injection for deployments. Configures telemetry endpoints,
 // emits deploy markers, and analyzes health metrics within time windows.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'telemetry';
 

@@ -12,7 +12,7 @@ import type {
   ConceptStorage,
   ConceptManifest,
   ActionSchema,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 import {
   inferHttpRoute,

@@ -1,7 +1,7 @@
 // Control Concept Implementation
 // Bind interactive elements (buttons, sliders, toggles) to data values and actions,
 // enabling direct manipulation in content.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const controlHandler: ConceptHandler = {
   async create(input, storage) {

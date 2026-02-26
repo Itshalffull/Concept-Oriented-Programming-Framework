@@ -1,5 +1,5 @@
 // Backlink Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const backlinkHandler: ConceptHandler = {
   async getBacklinks(input, storage) {

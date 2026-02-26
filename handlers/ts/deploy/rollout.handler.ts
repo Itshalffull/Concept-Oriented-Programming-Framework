@@ -1,7 +1,7 @@
 // Rollout Concept Implementation
 // Progressive delivery orchestration. Manages canary, blue-green, and
 // linear rollout strategies with step-by-step traffic shifting.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'rollout';
 const VALID_STRATEGIES = ['canary', 'blue-green', 'linear', 'immediate'];

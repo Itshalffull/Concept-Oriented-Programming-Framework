@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 
 // Import shared module directly (no framework dependencies)
-import * as shared from '../framework-widgets/shared/index.js';
+import * as shared from '../surface/widgets/shared/index.js';
 
 // ==============================
 // Framework Registry (tested via inline since main index
@@ -186,7 +186,7 @@ describe('End-to-end concept integration', () => {
   });
 
   it('creates a machine, transitions, and produces connected props', () => {
-    const buttonSpec: import('../framework-widgets/shared/types.js').WidgetSpec = {
+    const buttonSpec: import('../surface/widgets/shared/types.js').WidgetSpec = {
       name: 'button',
       anatomy: { parts: ['root'] },
       machineSpec: {

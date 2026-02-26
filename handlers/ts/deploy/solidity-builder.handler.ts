@@ -1,7 +1,7 @@
 // SolidityBuilder Concept Implementation
 // Solidity provider for the Builder coordination concept. Manages
 // solc compilation, test execution, and ABI packaging.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'sol-build';
 

@@ -1,6 +1,6 @@
 // PlatformAdapter Concept Implementation
 // Platform-specific translation layer for Navigator and Shell.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'platformadapter';
 

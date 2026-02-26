@@ -9,7 +9,7 @@
 //   - Section 9.1: ConceptStorage interface
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -256,7 +256,7 @@ function buildStorageAdapter(input: Record<string, unknown>): string {
     `// ConceptStorage implementation backed by ${backend}.`,
     '// ============================================================',
     '',
-    "import type { ConceptStorage } from '../../../kernel/src/types.js';",
+    "import type { ConceptStorage } from '../../../runtime/types.js';",
     importLine!,
     '',
     `export class ${name} implements ConceptStorage {`,

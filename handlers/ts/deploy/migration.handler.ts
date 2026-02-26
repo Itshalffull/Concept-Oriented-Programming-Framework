@@ -1,7 +1,7 @@
 // Migration Concept Implementation
 // Schema migration via expand-migrate-contract pattern. Plans, executes,
 // and tracks multi-step schema evolution across concept versions.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'migration';
 

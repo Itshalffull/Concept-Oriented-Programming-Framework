@@ -1,7 +1,7 @@
 // SwiftToolchain Concept Implementation
 // Swift provider for the Toolchain coordination concept. Manages
 // swiftc resolution, Xcode detection, and platform SDK paths.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'swift-tool';
 

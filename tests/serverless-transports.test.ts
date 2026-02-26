@@ -11,11 +11,11 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import type { ActionInvocation, ActionCompletion } from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
+import type { ActionInvocation, ActionCompletion } from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
 
-import { createSQSTransport, createSQSCompletionPublisher } from '../infrastructure/transports/sqs-transport.js';
-import { createPubSubTransport, createPubSubCompletionPublisher } from '../infrastructure/transports/pubsub-transport.js';
+import { createSQSTransport, createSQSCompletionPublisher } from '../runtime/adapters/sqs-transport.js';
+import { createPubSubTransport, createPubSubCompletionPublisher } from '../runtime/adapters/pubsub-transport.js';
 
 // ============================================================
 // Mock SQS Client

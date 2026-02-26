@@ -1,5 +1,5 @@
 // ConfigSync Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const configSyncHandler: ConceptHandler = {
   async export(input, storage) {

@@ -13,10 +13,10 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '@clef/kernel';
+import { createInMemoryStorage } from '@clef/runtime';
 import { contractTestHandler } from '../../implementations/typescript/contract-test.impl.js';
 import { builderHandler } from '../../../../implementations/typescript/deploy/builder.impl.js';
-import type { ConceptStorage } from '@clef/kernel';
+import type { ConceptStorage } from '@clef/runtime';
 
 /**
  * Simulates the cross-target contract verification pipeline.

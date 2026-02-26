@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { browseradapterHandler } from '../generated/surface/typescript/browseradapter.impl.js';
 import { mobileadapterHandler } from '../generated/surface/typescript/mobileadapter.impl.js';
 import { desktopadapterHandler } from '../generated/surface/typescript/desktopadapter.impl.js';

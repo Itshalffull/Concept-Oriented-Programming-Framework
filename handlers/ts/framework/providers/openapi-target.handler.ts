@@ -16,7 +16,7 @@ import type {
   VariantSchema,
   RelationSchema,
   FieldSchema,
-} from '../../../../kernel/src/types.js';
+} from '../../../../runtime/types.js';
 
 import {
   typeToJsonSchema,

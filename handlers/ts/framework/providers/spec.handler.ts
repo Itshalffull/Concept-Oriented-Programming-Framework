@@ -6,7 +6,7 @@
 // Architecture doc: Clef Bind, Section 1.5
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 import { randomUUID } from 'crypto';
 
 export const specHandler: ConceptHandler = {

@@ -1,7 +1,7 @@
 // HistogramDiff provider tests -- algorithm behavior with frequency-based anchoring.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { histogramDiffHandler, resetHistogramDiffCounter } from '../handlers/ts/histogram-diff.handler.js';
 
 describe('HistogramDiff', () => {

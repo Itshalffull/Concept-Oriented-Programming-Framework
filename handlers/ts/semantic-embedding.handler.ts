@@ -6,7 +6,7 @@
 // embeddings are recomputed only when the underlying code changes.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../kernel/src/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {

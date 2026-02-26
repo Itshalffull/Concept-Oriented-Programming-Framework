@@ -1,5 +1,5 @@
 // Cache Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const cacheHandler: ConceptHandler = {
   async set(input, storage) {

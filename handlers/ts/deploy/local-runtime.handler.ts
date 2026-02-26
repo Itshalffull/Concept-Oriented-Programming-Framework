@@ -1,7 +1,7 @@
 // LocalRuntime Concept Implementation
 // Local process provider for the Runtime coordination concept. Manages
 // child process PIDs, port assignments, and restart policies.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'local';
 

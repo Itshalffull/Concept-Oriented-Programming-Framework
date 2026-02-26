@@ -35,7 +35,7 @@ import type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 // --- TypeExpr → ResolvedType conversion ---
 
@@ -168,7 +168,7 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
       }
     }
 
-    function convertValue(v: import('../../../kernel/src/types.js').ArgPatternValue): InvariantValue {
+    function convertValue(v: import('../../../runtime/types.js').ArgPatternValue): InvariantValue {
       if (v.type === 'literal') {
         return { kind: 'literal', value: v.value };
       }
@@ -187,7 +187,7 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
       return { kind: 'literal', value: '' };
     }
 
-    function collectVarsFromValue(v: import('../../../kernel/src/types.js').ArgPatternValue): void {
+    function collectVarsFromValue(v: import('../../../runtime/types.js').ArgPatternValue): void {
       if (v.type === 'variable') {
         collectVar(v.name);
       } else if (v.type === 'record') {

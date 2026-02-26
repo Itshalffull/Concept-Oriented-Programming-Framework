@@ -5,13 +5,13 @@
 import { createServer } from 'http';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
-import { createInMemoryStorage } from '../../../kernel/src/storage.js';
-import { createInProcessAdapter, createConceptRegistry } from '../../../kernel/src/transport.js';
-import { createHttpConceptServer, createHttpLiteAdapter } from '../../../kernel/src/http-transport.js';
-import { createSelfHostedKernel } from '../../../kernel/src/self-hosted.js';
+import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { createInProcessAdapter, createConceptRegistry } from '../../../runtime/adapters/transport.js';
+import { createHttpConceptServer, createHttpLiteAdapter } from '../../../runtime/adapters/http-transport.js';
+import { createSelfHostedKernel } from '../../../runtime/self-hosted.js';
 import { createSyncEngineHandler } from '../../../handlers/ts/framework/sync-engine.handler.js';
 import { parseSyncFile } from '../../../handlers/ts/framework/sync-parser.handler.js';
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 // App concept handlers
 import { userHandler } from '../../../handlers/ts/app/user.handler.js';

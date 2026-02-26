@@ -1,5 +1,5 @@
 // OpenApiTarget Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const openapiTargetHandler: ConceptHandler = {
   async generate(input, storage) {

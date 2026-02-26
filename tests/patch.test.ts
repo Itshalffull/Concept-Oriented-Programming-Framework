@@ -1,7 +1,7 @@
 // Patch concept handler tests -- create, apply, invert, compose, and commute operations.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { patchHandler, resetPatchCounter } from '../handlers/ts/patch.handler.js';
 
 describe('Patch', () => {

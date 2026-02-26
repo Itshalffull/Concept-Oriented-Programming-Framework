@@ -1,7 +1,7 @@
 // DeployPlan Concept Implementation
 // Compute, validate, and execute deployment plans. Constructs a dependency
 // graph (DAG) from concept specs and syncs, then executes in topological order.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'deployplan';
 

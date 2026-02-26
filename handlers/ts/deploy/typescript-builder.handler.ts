@@ -1,7 +1,7 @@
 // TypeScriptBuilder Concept Implementation
 // TypeScript provider for the Builder coordination concept. Manages
 // tsc compilation, bundler integration, and npm packaging.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'ts-build';
 

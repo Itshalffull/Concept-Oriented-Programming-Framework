@@ -4,8 +4,7 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@clef/kernel': path.resolve(__dirname, './kernel/src/index.ts'),
-      '@clef/runtime': path.resolve(__dirname, './kernel/src/index.ts'),
+      '@clef/runtime': path.resolve(__dirname, './runtime/index.ts'),
     },
   },
   test: {

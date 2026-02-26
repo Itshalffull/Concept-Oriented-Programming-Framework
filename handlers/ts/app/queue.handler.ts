@@ -1,7 +1,7 @@
 // Queue Concept Implementation
 // Defer task processing via a managed queue with claim-process-release lifecycle
 // and pluggable backends.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const queueHandler: ConceptHandler = {
   async enqueue(input, storage) {

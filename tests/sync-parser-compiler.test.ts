@@ -10,13 +10,13 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import { syncParserHandler } from '../handlers/ts/framework/sync-parser.handler.js';
 import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler.js';
 import { validateSyncFields } from '../cli/src/commands/compile-syncs.js';
 import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
-import type { CompiledSync, ConceptAST } from '../kernel/src/types.js';
+import type { CompiledSync, ConceptAST } from '../runtime/types.js';
 
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 const SPECS_DIR = resolve(__dirname, '..', 'specs', 'app');

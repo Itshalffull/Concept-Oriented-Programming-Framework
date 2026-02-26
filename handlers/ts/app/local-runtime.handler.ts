@@ -1,7 +1,7 @@
 // LocalRuntime Concept Implementation
 // Manage local process deployments for development. Owns child process
 // PIDs, port assignments, log file paths, and restart policies.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const localRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

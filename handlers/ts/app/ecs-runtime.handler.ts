@@ -2,7 +2,7 @@
 // Manage AWS ECS Fargate service deployments. Owns service configurations,
 // task definitions, ALB target groups, auto-scaling policies, and service
 // mesh settings.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const ecsRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

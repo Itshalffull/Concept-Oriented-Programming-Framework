@@ -13,7 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { createInMemoryStorage } from '../kernel/src/index.js';
+import { createInMemoryStorage } from '../runtime/index.js';
 import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 
 const Clef Surface_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'surface-render');

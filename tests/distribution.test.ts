@@ -10,14 +10,14 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { ActionLog, DistributedSyncEngine } from '../handlers/ts/framework/sync-engine.handler.js';
 import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import type {
   ConceptHandler,
   ActionCompletion,
-} from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
+} from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
 
 // ============================================================
 // 1. Eventual Sync Queue

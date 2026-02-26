@@ -1,7 +1,7 @@
 // EcsRuntime Concept Implementation
 // AWS ECS Fargate provider for the Runtime coordination concept. Manages
 // ECS service provisioning, task deployments, traffic shifting, and teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'ecs';
 

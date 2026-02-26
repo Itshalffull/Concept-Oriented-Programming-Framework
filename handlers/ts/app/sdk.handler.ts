@@ -1,5 +1,5 @@
 // Sdk Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 /** Map of language to package manifest filename. */
 const PACKAGE_MANIFESTS: Record<string, string> = {

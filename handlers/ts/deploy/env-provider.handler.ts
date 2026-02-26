@@ -1,7 +1,7 @@
 // EnvProvider Concept Implementation
 // Environment variable provider for the Secret coordination concept.
 // Fetches secrets from process environment variables.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'env';
 

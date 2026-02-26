@@ -1,6 +1,6 @@
 // Element Concept Implementation
 // Abstract interaction units for UI composition.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'element';
 

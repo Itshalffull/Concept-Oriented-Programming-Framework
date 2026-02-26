@@ -1,6 +1,6 @@
 // Collection Concept Implementation
 // Organize content into queryable sets: concrete (manually curated) or virtual (computed from a query).
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const collectionHandler: ConceptHandler = {
   async create(input, storage) {

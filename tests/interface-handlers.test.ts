@@ -6,7 +6,7 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { projectionHandler } from '../handlers/ts/framework/projection.handler.js';
 import { interfaceGeneratorHandler } from '../handlers/ts/framework/interface-generator.handler.js';
 import { emitterHandler } from '../handlers/ts/framework/emitter.handler.js';

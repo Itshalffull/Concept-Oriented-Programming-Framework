@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
-} from '../kernel/src/index.js';
+} from '../runtime/index.js';
 import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
 
 // ============================================================

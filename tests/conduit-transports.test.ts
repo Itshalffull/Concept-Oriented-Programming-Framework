@@ -2,16 +2,16 @@
 // Validates in-process, HTTP distributed, and WebSocket transports.
 
 import { describe, it, expect } from 'vitest';
-import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { createInProcessAdapter, createConceptRegistry } from '../kernel/src/transport.js';
-import { createHttpConceptServer, createHttpLiteAdapter } from '../kernel/src/http-transport.js';
-import { createWebSocketConceptServer, createWebSocketAdapter } from '../kernel/src/ws-transport.js';
-import type { MockWebSocket } from '../kernel/src/ws-transport.js';
+import { createInMemoryStorage } from '../runtime/adapters/storage.js';
+import { createInProcessAdapter, createConceptRegistry } from '../runtime/adapters/transport.js';
+import { createHttpConceptServer, createHttpLiteAdapter } from '../runtime/adapters/http-transport.js';
+import { createWebSocketConceptServer, createWebSocketAdapter } from '../runtime/adapters/ws-transport.js';
+import type { MockWebSocket } from '../runtime/adapters/ws-transport.js';
 import { echoHandler } from '../handlers/ts/app/echo.handler.js';
 import { userHandler } from '../handlers/ts/app/user.handler.js';
 import { passwordHandler } from '../handlers/ts/app/password.handler.js';
-import type { ActionInvocation } from '../kernel/src/types.js';
-import { generateId, timestamp } from '../kernel/src/types.js';
+import type { ActionInvocation } from '../runtime/types.js';
+import { generateId, timestamp } from '../runtime/types.js';
 
 function mkInvocation(concept: string, action: string, input: Record<string, unknown>): ActionInvocation {
   return { id: generateId(), concept, action, input, flow: 'transport-test', timestamp: timestamp() };

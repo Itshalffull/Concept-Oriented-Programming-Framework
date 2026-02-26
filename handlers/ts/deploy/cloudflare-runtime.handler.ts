@@ -1,7 +1,7 @@
 // CloudflareRuntime Concept Implementation
 // Cloudflare Workers provider for the Runtime coordination concept. Manages
 // worker script provisioning, deployment, traffic splitting, and teardown.
-import type { ConceptHandler } from '../../../kernel/src/types.js';
+import type { ConceptHandler } from '../../../runtime/types.js';
 
 const RELATION = 'cloudflare';
 

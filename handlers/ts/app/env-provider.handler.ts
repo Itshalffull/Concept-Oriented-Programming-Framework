@@ -2,7 +2,7 @@
 // Manage secret resolution from process environment variables. Owns the
 // environment variable cache, tracks which variables have been accessed,
 // and validates variable existence.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const envProviderHandler: ConceptHandler = {
   async fetch(input, storage) {

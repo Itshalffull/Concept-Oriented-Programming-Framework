@@ -2,7 +2,7 @@
 // Manage authenticated session lifecycle: creation, validation, refresh, and device tracking.
 // Each session binds a user identity to a specific device with a bounded-lifetime token.
 import { randomBytes } from 'crypto';
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 

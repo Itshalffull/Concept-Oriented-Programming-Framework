@@ -26,7 +26,7 @@ import type {
   InvariantSchema,
   InvariantStep,
   InvariantValue,
-} from '../../../kernel/src/types.js';
+} from '../../../runtime/types.js';
 
 // --- ResolvedType → TypeScript mapping (Section 3.3) ---
 

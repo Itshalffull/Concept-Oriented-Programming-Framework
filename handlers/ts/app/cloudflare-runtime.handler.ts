@@ -1,7 +1,7 @@
 // CloudflareRuntime Concept Implementation
 // Manage Cloudflare Workers deployments. Owns worker scripts, routes,
 // KV namespace bindings, and Durable Object configurations.
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const cloudflareRuntimeHandler: ConceptHandler = {
   async provision(input, storage) {

@@ -1,5 +1,5 @@
 // DisplayMode Concept Implementation
-import type { ConceptHandler } from '@clef/kernel';
+import type { ConceptHandler } from '@clef/runtime';
 
 export const displayModeHandler: ConceptHandler = {
   async defineMode(input, storage) {
