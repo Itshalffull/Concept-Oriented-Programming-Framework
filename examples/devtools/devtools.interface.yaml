@@ -66,6 +66,57 @@ concepts:
   - kits/test/flaky-test.concept
   - kits/test/contract-test.concept
   - kits/test/snapshot.concept
+  # Symbol kit
+  - kits/symbol/symbol.concept
+  - kits/symbol/symbol-occurrence.concept
+  - kits/symbol/scope-graph.concept
+  - kits/symbol/symbol-relationship.concept
+  # Semantic kit
+  - kits/semantic/concept-entity.concept
+  - kits/semantic/action-entity.concept
+  - kits/semantic/variant-entity.concept
+  - kits/semantic/state-field.concept
+  - kits/semantic/sync-entity.concept
+  - kits/semantic/widget-entity.concept
+  - kits/semantic/anatomy-part-entity.concept
+  - kits/semantic/widget-state-entity.concept
+  - kits/semantic/widget-prop-entity.concept
+  - kits/semantic/theme-entity.concept
+  - kits/semantic/interactor-entity.concept
+  - kits/semantic/runtime-flow.concept
+  - kits/semantic/runtime-coverage.concept
+  - kits/semantic/performance-profile.concept
+  - kits/semantic/error-correlation.concept
+  # Analysis kit
+  - kits/analysis/dependence-graph.concept
+  - kits/analysis/data-flow-path.concept
+  - kits/analysis/program-slice.concept
+  - kits/analysis/analysis-rule.concept
+  # Discovery kit
+  - kits/discovery/semantic-embedding.concept
+  # Versioning kit
+  - kits/versioning/branch.concept
+  - kits/versioning/change-stream.concept
+  - kits/versioning/content-hash.concept
+  - kits/versioning/dag-history.concept
+  - kits/versioning/diff.concept
+  - kits/versioning/merge.concept
+  - kits/versioning/patch.concept
+  - kits/versioning/ref.concept
+  - kits/versioning/retention-policy.concept
+  - kits/versioning/schema-evolution.concept
+  - kits/versioning/temporal-version.concept
+  # Collaboration kit
+  - kits/collaboration/attribution.concept
+  - kits/collaboration/causal-clock.concept
+  - kits/collaboration/conflict-resolution.concept
+  - kits/collaboration/inline-annotation.concept
+  - kits/collaboration/pessimistic-lock.concept
+  - kits/collaboration/replica.concept
+  - kits/collaboration/signature.concept
+  # Interface kit (additional)
+  - kits/interface/concepts/action-guide.concept
+  - kits/interface/concepts/enrichment-renderer.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
