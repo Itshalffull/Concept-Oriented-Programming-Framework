@@ -4,7 +4,7 @@ This is the complete walkthrough of how the TypeScript language target is implem
 
 ## File Location
 
-`implementations/typescript/framework/typescript-gen.impl.ts`
+`handlers/ts/framework/typescript-gen.handler.ts`
 
 ## Type Mapping Function
 

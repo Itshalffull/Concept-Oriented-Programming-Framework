@@ -281,4 +281,4 @@ const merged = await storage.get('articles', 'art-1');
 | `put()` with conflict detection | `kernel/src/storage.ts` | 43-97 |
 | Conflict resolution tests | `tests/conflict-resolution.test.ts` | 132-241 |
 | End-to-end concurrent writes | `tests/conflict-resolution.test.ts` | 429-575 |
-| `DistributedSyncEngine.produceConflictCompletion` | `framework/sync-engine.impl.ts` | 277-313 |
+| `DistributedSyncEngine.produceConflictCompletion` | `framework/sync-engine.handler.ts` | 277-313 |

@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   multiValueResolutionHandler,
   resetMultiValueResolutionCounter,
-} from '../implementations/typescript/multi-value-resolution.impl.js';
+} from '../handlers/ts/multi-value-resolution.handler.js';
 
 describe('MultiValueResolution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

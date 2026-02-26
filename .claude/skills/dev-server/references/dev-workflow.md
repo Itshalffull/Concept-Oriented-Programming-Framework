@@ -22,7 +22,7 @@ The dev server:
 
 1. **Edit a .concept file** — Save triggers reparse + validation.
 2. **Edit a .sync file** — Save triggers recompile + binding check.
-3. **Edit a .impl.ts file** — Save triggers type check against manifest.
+3. **Edit a .handler.ts file** — Save triggers type check against manifest.
 4. **View errors** — Parse/compile errors show in terminal immediately.
 
 ## Watch Mode Behavior
@@ -31,7 +31,7 @@ The dev server:
 |-------------|-------------|
 | `.concept` modified | Reparse spec, regenerate manifest |
 | `.sync` modified | Recompile sync, recheck bindings |
-| `.impl.ts` modified | Type-check against manifest |
+| `.handler.ts` modified | Type-check against manifest |
 | `copf.config.yaml` modified | Full restart |
 
 ## Debugging During Dev

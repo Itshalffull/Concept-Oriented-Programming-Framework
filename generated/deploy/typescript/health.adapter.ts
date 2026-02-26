@@ -2,9 +2,9 @@
 import type {
   ActionInvocation, ActionCompletion,
   ConceptTransport, ConceptQuery
-} from "@copf/runtime";
+} from "@clef/runtime";
 import type { HealthHandler } from "./health.handler";
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 
 export function createHealthLiteAdapter(
   handler: HealthHandler,

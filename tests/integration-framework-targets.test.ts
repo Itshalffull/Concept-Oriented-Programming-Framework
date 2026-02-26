@@ -14,13 +14,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { frameworkadapterHandler } from '../generated/concept-interface/typescript/frameworkadapter.impl.js';
+import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 
-const COIF_RENDER_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-render');
-const COIF_CORE_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-core');
-const COIF_THEME_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-theme');
-const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-component');
-const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-integration');
+const COIF_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-render');
+const COIF_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-core');
+const COIF_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-theme');
+const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-component');
+const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-integration');
 
 // All framework adapter concepts
 const frameworkAdapters = [
@@ -403,11 +403,11 @@ describe('Framework Target Integration — Render Kit Syncs', () => {
 // ============================================================
 
 describe('Framework Target Integration — Generated Code', () => {
-  const generatedDir = resolve(__dirname, '..', 'generated', 'concept-interface', 'typescript');
+  const generatedDir = resolve(__dirname, '..', 'generated', 'surface', 'typescript');
 
   // Verify generated files exist for framework adapter
   it('generated FrameworkAdapter implementation files exist', () => {
-    expect(existsSync(resolve(generatedDir, 'frameworkadapter.impl.ts'))).toBe(true);
+    expect(existsSync(resolve(generatedDir, 'frameworkadapter.handler.ts'))).toBe(true);
     expect(existsSync(resolve(generatedDir, 'frameworkadapter.handler.ts'))).toBe(true);
     expect(existsSync(resolve(generatedDir, 'frameworkadapter.types.ts'))).toBe(true);
     expect(existsSync(resolve(generatedDir, 'frameworkadapter.adapter.ts'))).toBe(true);
@@ -423,7 +423,7 @@ describe('Framework Target Integration — Generated Code', () => {
 
   for (const concept of coifConcepts) {
     it(`generated code exists for COIF concept: ${concept}`, () => {
-      expect(existsSync(resolve(generatedDir, `${concept}.impl.ts`))).toBe(true);
+      expect(existsSync(resolve(generatedDir, `${concept}.handler.ts`))).toBe(true);
       expect(existsSync(resolve(generatedDir, `${concept}.handler.ts`))).toBe(true);
       expect(existsSync(resolve(generatedDir, `${concept}.types.ts`))).toBe(true);
     });

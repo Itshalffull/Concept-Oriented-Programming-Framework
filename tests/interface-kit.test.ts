@@ -1,7 +1,7 @@
 // ============================================================
 // Interface Kit Tests
 //
-// Validates all concept specs, sync definitions, and kit.yaml
+// Validates all concept specs, sync definitions, and suite.yaml
 // for the interface generation kit parse correctly.
 // See Architecture doc: Textual Interface Layer Extension.
 // ============================================================
@@ -9,10 +9,10 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 
-const INTERFACE_DIR = resolve(__dirname, '../kits/interface');
+const INTERFACE_DIR = resolve(__dirname, '../bind/interface');
 const CONCEPTS_DIR = resolve(INTERFACE_DIR, 'concepts');
 const PROVIDERS_DIR = resolve(CONCEPTS_DIR, 'providers');
 
@@ -71,7 +71,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.invariants).toHaveLength(1);
   });
 
-  // Emitter: imported from generation kit (see kit.yaml uses section)
+  // Emitter: imported from generation kit (see suite.yaml uses section)
 
   it('parses ApiSurface', () => {
     const ast = readConcept('api-surface.concept');
@@ -738,8 +738,8 @@ describe('Bulk Sync Validation', () => {
 
 describe('Kit YAML', () => {
 
-  it('kit.yaml exists and references valid files', () => {
-    const kitPath = resolve(INTERFACE_DIR, 'kit.yaml');
+  it('suite.yaml exists and references valid files', () => {
+    const kitPath = resolve(INTERFACE_DIR, 'suite.yaml');
     expect(existsSync(kitPath)).toBe(true);
 
     const content = readFileSync(kitPath, 'utf-8');

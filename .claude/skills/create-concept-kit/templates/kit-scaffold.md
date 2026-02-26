@@ -170,7 +170,7 @@ dependencies: []
 
 1. Scaffold the directory:
    ```bash
-   npx tsx tools/copf-cli/src/index.ts kit init <kit-name>
+   npx tsx cli/src/index.ts kit init <kit-name>
    ```
    Then replace the generated `kit.yaml` with your filled template.
 
@@ -183,19 +183,19 @@ dependencies: []
 
 3. Write syncs under `kits/<kit-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
 
-4. Write implementations under `kits/<kit-name>/implementations/typescript/`.
+4. Write implementations under `kits/<kit-name>/handlers/ts/`.
 
 5. Validate:
    ```bash
-   npx tsx tools/copf-cli/src/index.ts kit validate kits/<kit-name>
-   npx tsx tools/copf-cli/src/index.ts kit test kits/<kit-name>
+   npx tsx cli/src/index.ts kit validate kits/<kit-name>
+   npx tsx cli/src/index.ts kit test kits/<kit-name>
    ```
 
 ### Domain Kit
 
 1. Scaffold the directory:
    ```bash
-   npx tsx tools/copf-cli/src/index.ts kit init <kit-name>
+   npx tsx cli/src/index.ts kit init <kit-name>
    mkdir -p kits/<kit-name>/infrastructure/{transports,storage,deploy-templates}
    ```
 
@@ -218,14 +218,14 @@ dependencies: []
 
 6. Write syncs under `kits/<kit-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
 
-7. Write implementations under `kits/<kit-name>/implementations/typescript/`.
+7. Write implementations under `kits/<kit-name>/handlers/ts/`.
 
 8. Validate:
    ```bash
-   npx tsx tools/copf-cli/src/index.ts kit validate kits/<kit-name>
-   npx tsx tools/copf-cli/src/index.ts kit test kits/<kit-name>
+   npx tsx cli/src/index.ts kit validate kits/<kit-name>
+   npx tsx cli/src/index.ts kit test kits/<kit-name>
    # For gate concepts:
-   npx tsx tools/copf-cli/src/index.ts check --pattern async-gate kits/<kit-name>/<gate>.concept
+   npx tsx cli/src/index.ts check --pattern async-gate kits/<kit-name>/<gate>.concept
    ```
 
 ## Sync File Templates

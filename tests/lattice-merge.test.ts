@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { latticeMergeHandler, resetLatticeMergeCounter } from '../implementations/typescript/lattice-merge.impl.js';
+import { latticeMergeHandler, resetLatticeMergeCounter } from '../handlers/ts/lattice-merge.handler.js';
 
 describe('LatticeMerge', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

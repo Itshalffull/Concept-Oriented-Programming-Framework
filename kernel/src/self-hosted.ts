@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Self-Hosted Runtime
+// Clef Kernel - Self-Hosted Runtime
 //
 // From Section 10.1:
 // "The SyncEngine concept is itself run by the kernel engine.

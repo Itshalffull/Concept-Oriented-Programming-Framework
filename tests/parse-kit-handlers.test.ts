@@ -12,9 +12,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { languageGrammarHandler } from '../kits/parse/implementations/typescript/language-grammar.impl.js';
-import { syntaxTreeHandler, clearTreeCaches } from '../kits/parse/implementations/typescript/syntax-tree.impl.js';
-import { fileArtifactHandler, resetArtifactCounter } from '../kits/parse/implementations/typescript/file-artifact.impl.js';
+import { languageGrammarHandler } from '../handlers/ts/score/parse/language-grammar.handler.js';
+import { syntaxTreeHandler, clearTreeCaches } from '../handlers/ts/score/parse/syntax-tree.handler.js';
+import { fileArtifactHandler, resetArtifactCounter } from '../handlers/ts/score/parse/file-artifact.handler.js';
 import type { ConceptStorage } from '../kernel/src/types.js';
 
 // ============================================================

@@ -8,16 +8,16 @@ Each concept typically uses a **single relation** named after the concept (lower
 
 | Concept | Relation | Key | Value Fields | Source |
 |---------|----------|-----|-------------|--------|
-| User | `'user'` | user ID | `user, name, email` | `app/user.impl.ts` |
-| Article | `'article'` | article ID | `article, slug, title, description, body, author, createdAt, updatedAt` | `app/article.impl.ts` |
-| Password | `'password'` | user ID | `user, hash, salt` | `app/password.impl.ts` |
-| Profile | `'profile'` | user ID | `user, bio, image` | `app/profile.impl.ts` |
-| Comment | `'comment'` | comment ID | `comment, target, author, body, createdAt` | `app/comment.impl.ts` |
-| Follow | `'follow'` | user ID | `user, following: string[]` | `app/follow.impl.ts` |
-| Favorite | `'favorite'` | user ID | `user, favorites: string[]` | `app/favorite.impl.ts` |
-| Tag | `'tag'` | tag name | `tag, articles: string[]` | `app/tag.impl.ts` |
-| Echo | `'echo'` | id | `id, message` | `app/echo.impl.ts` |
-| JWT | `'tokens'` | user ID | `user, token` | `app/jwt.impl.ts` |
+| User | `'user'` | user ID | `user, name, email` | `app/user.handler.ts` |
+| Article | `'article'` | article ID | `article, slug, title, description, body, author, createdAt, updatedAt` | `app/article.handler.ts` |
+| Password | `'password'` | user ID | `user, hash, salt` | `app/password.handler.ts` |
+| Profile | `'profile'` | user ID | `user, bio, image` | `app/profile.handler.ts` |
+| Comment | `'comment'` | comment ID | `comment, target, author, body, createdAt` | `app/comment.handler.ts` |
+| Follow | `'follow'` | user ID | `user, following: string[]` | `app/follow.handler.ts` |
+| Favorite | `'favorite'` | user ID | `user, favorites: string[]` | `app/favorite.handler.ts` |
+| Tag | `'tag'` | tag name | `tag, articles: string[]` | `app/tag.handler.ts` |
+| Echo | `'echo'` | id | `id, message` | `app/echo.handler.ts` |
+| JWT | `'tokens'` | user ID | `user, token` | `app/jwt.handler.ts` |
 
 **Exception — multi-relation concepts:** The Registry concept uses four relations (`'concepts'`, `'uri'`, `'transport'`, `'available'`), all keyed by concept ID.
 
@@ -30,7 +30,7 @@ The most common pattern. One relation, keyed by entity ID.
 ### Create
 
 ```typescript
-// article.impl.ts — create action
+// article.handler.ts — create action
 async create(input, storage) {
   const article = input.article as string;
   const title = input.title as string;
@@ -54,7 +54,7 @@ async create(input, storage) {
 ### Read
 
 ```typescript
-// article.impl.ts — get action
+// article.handler.ts — get action
 async get(input, storage) {
   const article = input.article as string;
 
@@ -78,7 +78,7 @@ async get(input, storage) {
 ### Update (Spread + Overwrite)
 
 ```typescript
-// article.impl.ts — update action
+// article.handler.ts — update action
 async update(input, storage) {
   const article = input.article as string;
 
@@ -105,7 +105,7 @@ async update(input, storage) {
 ### Delete
 
 ```typescript
-// article.impl.ts — delete action
+// article.handler.ts — delete action
 async delete(input, storage) {
   const article = input.article as string;
 
@@ -125,7 +125,7 @@ async delete(input, storage) {
 ## Pattern 2: Uniqueness Check via find()
 
 ```typescript
-// user.impl.ts — register action
+// user.handler.ts — register action
 async register(input, storage) {
   const user = input.user as string;
   const name = input.name as string;
@@ -159,7 +159,7 @@ For set-typed state (e.g., "users a user follows"), concepts store arrays inside
 ### Add to Array
 
 ```typescript
-// follow.impl.ts — follow action
+// follow.handler.ts — follow action
 async follow(input, storage) {
   const user = input.user as string;
   const target = input.target as string;
@@ -185,7 +185,7 @@ async follow(input, storage) {
 ### Remove from Array
 
 ```typescript
-// follow.impl.ts — unfollow action
+// follow.handler.ts — unfollow action
 async unfollow(input, storage) {
   const user = input.user as string;
   const target = input.target as string;
@@ -203,7 +203,7 @@ async unfollow(input, storage) {
 ### Check Membership
 
 ```typescript
-// follow.impl.ts — isFollowing action
+// follow.handler.ts — isFollowing action
 async isFollowing(input, storage) {
   const user = input.user as string;
   const target = input.target as string;
@@ -226,7 +226,7 @@ async isFollowing(input, storage) {
 When `find()` criteria isn't sufficient, concepts scan all records and filter in application code:
 
 ```typescript
-// favorite.impl.ts — count action
+// favorite.handler.ts — count action
 async count(input, storage) {
   const article = input.article as string;
 
@@ -259,7 +259,7 @@ const count = await storage.delMany('comment', { target: articleId });
 Some concepts use multiple relations. Each relation stores a different aspect:
 
 ```typescript
-// registry.impl.ts — register action
+// registry.handler.ts — register action
 async register(input, storage) {
   const conceptId = generateId();
 
@@ -288,7 +288,7 @@ async register(input, storage) {
 ### Cascading Delete Across Relations
 
 ```typescript
-// registry.impl.ts — deregister action
+// registry.handler.ts — deregister action
 async deregister(input, storage) {
   const conceptId = input.conceptId as string;
 
@@ -308,7 +308,7 @@ async deregister(input, storage) {
 The migration framework uses a reserved `_meta` relation:
 
 ```typescript
-// migration.impl.ts
+// migration.handler.ts
 const META_RELATION = '_meta';
 const META_KEY = 'schema';
 
@@ -325,7 +325,7 @@ await storage.put('_meta', 'schema', { version: 2 });
 ## Pattern 8: Sensitive Data Storage
 
 ```typescript
-// password.impl.ts — register action
+// password.handler.ts — register action
 async register(input, storage) {
   const user = input.user as string;
   const password = input.password as string;

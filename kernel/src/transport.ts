@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - In-Process Transport Adapter & Concept Registry
+// Clef Kernel - In-Process Transport Adapter & Concept Registry
 // ============================================================
 
 import type {

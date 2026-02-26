@@ -1,6 +1,6 @@
 // generated: artifact.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { artifactHandler } from "./artifact.impl";
 
 describe("Artifact conformance", () => {
@@ -14,9 +14,9 @@ describe("Artifact conformance", () => {
     const loc = "u-test-invariant-004";
 
     // --- AFTER clause ---
-    // build(concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: d) -> ok(artifact: a, hash: h, sizeBytes: 1024)
+    // build(concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: d) -> ok(artifact: a, hash: h, sizeBytes: 1024)
     const step1 = await artifactHandler.build(
-      { concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: d },
+      { concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: d },
       storage,
     );
     expect(step1.variant).toBe("ok");

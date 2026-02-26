@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { temporalVersionHandler, resetTemporalVersionCounter } from '../implementations/typescript/temporal-version.impl.js';
+import { temporalVersionHandler, resetTemporalVersionCounter } from '../handlers/ts/temporal-version.handler.js';
 
 describe('TemporalVersion', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

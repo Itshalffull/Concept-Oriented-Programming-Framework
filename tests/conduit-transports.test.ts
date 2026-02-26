@@ -7,9 +7,9 @@ import { createInProcessAdapter, createConceptRegistry } from '../kernel/src/tra
 import { createHttpConceptServer, createHttpLiteAdapter } from '../kernel/src/http-transport.js';
 import { createWebSocketConceptServer, createWebSocketAdapter } from '../kernel/src/ws-transport.js';
 import type { MockWebSocket } from '../kernel/src/ws-transport.js';
-import { echoHandler } from '../implementations/typescript/app/echo.impl.js';
-import { userHandler } from '../implementations/typescript/app/user.impl.js';
-import { passwordHandler } from '../implementations/typescript/app/password.impl.js';
+import { echoHandler } from '../handlers/ts/app/echo.handler.js';
+import { userHandler } from '../handlers/ts/app/user.handler.js';
+import { passwordHandler } from '../handlers/ts/app/password.handler.js';
 import type { ActionInvocation } from '../kernel/src/types.js';
 import { generateId, timestamp } from '../kernel/src/types.js';
 

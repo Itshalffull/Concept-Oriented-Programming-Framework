@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   themeEntityHandler,
   resetThemeEntityCounter,
-} from '../implementations/typescript/theme-entity.impl.js';
+} from '../handlers/ts/theme-entity.handler.js';
 
 describe('ThemeEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

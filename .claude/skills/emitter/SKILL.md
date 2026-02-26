@@ -151,11 +151,11 @@ copf emitter affected ./specs/app/user.concept
 
 *Audit generated files:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --audit
+npx tsx cli/src/index.ts generate --audit
 ```
 *Clean orphans:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --clean
+npx tsx cli/src/index.ts generate --clean
 ```
 ## Related Skills
 

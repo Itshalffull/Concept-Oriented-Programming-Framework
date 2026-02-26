@@ -179,15 +179,15 @@ kit: { name: commerce }  # concepts: [Payment, Invoice, Refund]
 
 *Validate a kit:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit validate ./kits/my-kit
+npx tsx cli/src/index.ts kit validate ./kits/my-kit
 ```
 *Run kit tests:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit test ./kits/my-kit
+npx tsx cli/src/index.ts kit test ./kits/my-kit
 ```
 *List active kits:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit list
+npx tsx cli/src/index.ts kit list
 ```
 ## Related Skills
 

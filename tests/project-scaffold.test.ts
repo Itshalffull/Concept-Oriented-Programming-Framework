@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   projectScaffoldHandler,
   resetProjectScaffoldCounter,
-} from '../implementations/typescript/project-scaffold.impl.js';
+} from '../handlers/ts/project-scaffold.handler.js';
 
 describe('ProjectScaffold', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

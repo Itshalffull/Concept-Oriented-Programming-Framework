@@ -98,7 +98,7 @@ copf scaffold component --name Tabs --parts root,list,trigger,content,indicator 
 | `{name}-widget.concept` | Widget FSM specification |
 | `{name}-anatomy.concept` | Parts contract definition |
 | `kit.yaml` | Kit manifest with dependencies |
-| `{name}-machine.impl.ts` | Machine handler implementation |
+| `{name}-machine.handler.ts` | Machine handler implementation |
 
 
 ## Anti-Patterns
@@ -158,7 +158,7 @@ machine {
 
 *Generate a COIF component scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open
+npx tsx cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open
 ```
 *Run scaffold generator tests:*
 ```bash

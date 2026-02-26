@@ -335,10 +335,10 @@ kits/content-management/
 │   └── entity-ownership.sync             # Integration (auth)
 ├── implementations/
 │   └── typescript/
-│       ├── entity.impl.ts
-│       ├── field.impl.ts
-│       ├── relation.impl.ts
-│       └── node.impl.ts
+│       ├── entity.handler.ts
+│       ├── field.handler.ts
+│       ├── relation.handler.ts
+│       └── node.handler.ts
 └── tests/
     ├── conformance/
     └── integration/

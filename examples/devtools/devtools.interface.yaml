@@ -1,4 +1,4 @@
-# COPF DevTools — Interface Generation Manifest
+# CLEF DevTools — Interface Generation Manifest
 #
 # Generates Claude Skills and CLI commands from
 # framework concept specs. Uses workflow and annotation
@@ -6,22 +6,22 @@
 # match the hand-written originals.
 #
 # Usage:
-#   copf interface generate --manifest examples/devtools/devtools.interface.yaml
+#   clef interface generate --manifest examples/devtools/devtools.interface.yaml
 
 interface:
-  name: copf-devtools
+  name: clef-devtools
   version: 0.2.0
 
 # ─── GENERATION TARGETS ──────────────────────────────
 targets:
   claude-skills:
-    name: copf-devtools
+    name: clef-devtools
     grouping: per-concept
     outputDir: ./.claude/skills
 
   cli:
-    name: copf
-    outputDir: ./tools/copf-cli/src
+    name: clef
+    outputDir: ./cli/src
 
 # ─── CONCEPT SPECS ───────────────────────────────────
 # Framework concepts that map to CLI commands and skills.
@@ -36,15 +36,7 @@ concepts:
   - specs/framework/project-scaffold.concept
   - specs/framework/dev-server.concept
   - specs/framework/kit-manager.concept
-  # Generation kit concepts
-  - kits/generation/emitter.concept
-  - kits/generation/build-cache.concept
-  - kits/generation/resource.concept
-  - kits/generation/kind-system.concept
-  - kits/generation/generation-plan.concept
-  # Deploy kit build concepts
-  - kits/deploy/concepts/builder.concept
-  - kits/deploy/concepts/toolchain.concept
+  # (Generation and deploy kit concepts removed during restructure)
   # Scaffold generator concepts
   - specs/framework/kit-scaffold-gen.concept
   - specs/framework/deploy-scaffold-gen.concept
@@ -56,67 +48,62 @@ concepts:
   - specs/framework/transport-adapter-scaffold-gen.concept
   - specs/framework/coif-component-scaffold-gen.concept
   - specs/framework/coif-theme-scaffold-gen.concept
-  # Interface kit orchestration
-  - kits/interface/concepts/generator.concept
-  - kits/interface/concepts/projection.concept
-  - kits/interface/concepts/api-surface.concept
-  # Test kit
-  - kits/test/conformance.concept
-  - kits/test/test-selection.concept
-  - kits/test/flaky-test.concept
-  - kits/test/contract-test.concept
-  - kits/test/snapshot.concept
-  # Symbol kit
-  - kits/symbol/symbol.concept
-  - kits/symbol/symbol-occurrence.concept
-  - kits/symbol/scope-graph.concept
-  - kits/symbol/symbol-relationship.concept
-  # Semantic kit
-  - kits/semantic/concept-entity.concept
-  - kits/semantic/action-entity.concept
-  - kits/semantic/variant-entity.concept
-  - kits/semantic/state-field.concept
-  - kits/semantic/sync-entity.concept
-  - kits/semantic/widget-entity.concept
-  - kits/semantic/anatomy-part-entity.concept
-  - kits/semantic/widget-state-entity.concept
-  - kits/semantic/widget-prop-entity.concept
-  - kits/semantic/theme-entity.concept
-  - kits/semantic/interactor-entity.concept
-  - kits/semantic/runtime-flow.concept
-  - kits/semantic/runtime-coverage.concept
-  - kits/semantic/performance-profile.concept
-  - kits/semantic/error-correlation.concept
-  # Analysis kit
-  - kits/analysis/dependence-graph.concept
-  - kits/analysis/data-flow-path.concept
-  - kits/analysis/program-slice.concept
-  - kits/analysis/analysis-rule.concept
-  # Discovery kit
-  - kits/discovery/semantic-embedding.concept
-  # Versioning kit
-  - kits/versioning/branch.concept
-  - kits/versioning/change-stream.concept
-  - kits/versioning/content-hash.concept
-  - kits/versioning/dag-history.concept
-  - kits/versioning/diff.concept
-  - kits/versioning/merge.concept
-  - kits/versioning/patch.concept
-  - kits/versioning/ref.concept
-  - kits/versioning/retention-policy.concept
-  - kits/versioning/schema-evolution.concept
-  - kits/versioning/temporal-version.concept
-  # Collaboration kit
-  - kits/collaboration/attribution.concept
-  - kits/collaboration/causal-clock.concept
-  - kits/collaboration/conflict-resolution.concept
-  - kits/collaboration/inline-annotation.concept
-  - kits/collaboration/pessimistic-lock.concept
-  - kits/collaboration/replica.concept
-  - kits/collaboration/signature.concept
-  # Interface kit (additional)
-  - kits/interface/concepts/action-guide.concept
-  - kits/interface/concepts/enrichment-renderer.concept
+  # Interface kit orchestration (bind/)
+  - bind/interface/concepts/generator.concept
+  - bind/interface/concepts/projection.concept
+  - bind/interface/concepts/api-surface.concept
+  # (Test kit concepts removed during restructure)
+  # Symbol kit (score/)
+  - score/symbol/symbol.concept
+  - score/symbol/symbol-occurrence.concept
+  - score/symbol/scope-graph.concept
+  - score/symbol/symbol-relationship.concept
+  # Semantic kit (score/)
+  - score/semantic/concept-entity.concept
+  - score/semantic/action-entity.concept
+  - score/semantic/variant-entity.concept
+  - score/semantic/state-field.concept
+  - score/semantic/sync-entity.concept
+  - score/semantic/widget-entity.concept
+  - score/semantic/anatomy-part-entity.concept
+  - score/semantic/widget-state-entity.concept
+  - score/semantic/widget-prop-entity.concept
+  - score/semantic/theme-entity.concept
+  - score/semantic/interactor-entity.concept
+  - score/semantic/runtime-flow.concept
+  - score/semantic/runtime-coverage.concept
+  - score/semantic/performance-profile.concept
+  - score/semantic/error-correlation.concept
+  # Analysis kit (score/)
+  - score/analysis/dependence-graph.concept
+  - score/analysis/data-flow-path.concept
+  - score/analysis/program-slice.concept
+  - score/analysis/analysis-rule.concept
+  # Discovery kit (score/)
+  - score/discovery/semantic-embedding.concept
+  # Versioning kit (repertoire/)
+  - repertoire/versioning/branch.concept
+  - repertoire/versioning/change-stream.concept
+  - repertoire/versioning/content-hash.concept
+  - repertoire/versioning/dag-history.concept
+  - repertoire/versioning/diff.concept
+  - repertoire/versioning/merge.concept
+  - repertoire/versioning/patch.concept
+  - repertoire/versioning/ref.concept
+  - repertoire/versioning/retention-policy.concept
+  - repertoire/versioning/schema-evolution.concept
+  - repertoire/versioning/temporal-version.concept
+  # Collaboration kit (repertoire/)
+  - repertoire/collaboration/attribution.concept
+  - repertoire/collaboration/causal-clock.concept
+  - repertoire/collaboration/conflict-resolution.concept
+  - repertoire/collaboration/inline-annotation.concept
+  - repertoire/collaboration/pessimistic-lock.concept
+  - repertoire/collaboration/replica.concept
+  - repertoire/collaboration/signature.concept
+  # Interface kit additional (bind/)
+  - bind/interface/concepts/action-guide.concept
+  - bind/interface/concepts/enrichment-renderer.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -241,7 +228,7 @@ workflows:
           # Jackson's Concept Design Methodology
 
           Summary of Daniel Jackson's software concept design methodology
-          as applied in COPF.
+          as applied in CLEF.
 
           ## Five Core Principles
 
@@ -276,7 +263,7 @@ workflows:
              variants. Each variant represents a distinct outcome.
           4. **Write invariants** — For each action+variant, state what must be
              true afterward. This catches design gaps early.
-          5. **Validate** — Run `copf check` to verify syntax, completeness, and
+          5. **Validate** — Run `clef check` to verify syntax, completeness, and
              consistency.
 
           ## Common Concept Patterns
@@ -289,7 +276,7 @@ workflows:
           | Guard | `(no primary state)` | Password, RateLimit |
     validation-commands:
       - label: "Parse and validate all concept specs"
-        command: "npx tsx tools/copf-cli/src/index.ts check"
+        command: "npx tsx cli/src/index.ts check"
       - label: "Run parser tests"
         command: "npx vitest run tests/spec-parser.test.ts"
     quick-reference:
@@ -297,7 +284,7 @@ workflows:
       body: |
         | Action | Command | Purpose |
         |--------|---------|---------|
-        | parse | `copf check <file>` | Validate concept spec syntax and structure |
+        | parse | `clef check <file>` | Validate concept spec syntax and structure |
     related-workflows:
       - name: concept-designer
         description: "Design new concepts following Jackson's methodology"
@@ -369,7 +356,7 @@ workflows:
           # Jackson's Concept Design Methodology
 
           Summary of Daniel Jackson's software concept design methodology
-          as applied in COPF.
+          as applied in CLEF.
 
           ## Five Core Principles
 
@@ -404,7 +391,7 @@ workflows:
              variants. Each variant represents a distinct outcome.
           4. **Write invariants** — For each action+variant, state what must be
              true afterward. This catches design gaps early.
-          5. **Validate** — Run `copf check` to verify syntax, completeness, and
+          5. **Validate** — Run `clef check` to verify syntax, completeness, and
              consistency.
 
           ## Common Concept Patterns
@@ -505,7 +492,7 @@ workflows:
           }
     validation-commands:
       - label: "Validate the new concept spec"
-        command: "npx tsx tools/copf-cli/src/index.ts check"
+        command: "npx tsx cli/src/index.ts check"
     quick-reference:
       heading: "Quick Reference"
       body: |
@@ -747,7 +734,7 @@ workflows:
           }
     validation-commands:
       - label: "Compile all sync rules"
-        command: "npx tsx tools/copf-cli/src/index.ts compile-syncs"
+        command: "npx tsx cli/src/index.ts compile-syncs"
       - label: "Run sync compiler tests"
         command: "npx vitest run tests/sync-compiler.test.ts"
     quick-reference:
@@ -923,7 +910,7 @@ workflows:
           ```
     validation-commands:
       - label: "Generate manifests from specs"
-        command: "npx tsx tools/copf-cli/src/index.ts generate"
+        command: "npx tsx cli/src/index.ts generate"
       - label: "Run schema generation tests"
         command: "npx vitest run tests/schema-gen.test.ts"
     quick-reference:
@@ -1076,7 +1063,7 @@ workflows:
           ```
     validation-commands:
       - label: "Parse all sync files"
-        command: "npx tsx tools/copf-cli/src/index.ts compile-syncs"
+        command: "npx tsx cli/src/index.ts compile-syncs"
       - label: "Run sync parser tests"
         command: "npx vitest run tests/sync-parser.test.ts"
     quick-reference:
@@ -1182,18 +1169,18 @@ workflows:
 
           | Command | Purpose |
           |---------|---------|
-          | `copf trace <flow-id>` | Build and display a trace |
-          | `copf trace <flow-id> --json` | Output trace as JSON |
-          | `copf trace --recent` | Show last 10 flow traces |
+          | `clef trace <flow-id>` | Build and display a trace |
+          | `clef trace <flow-id> --json` | Output trace as JSON |
+          | `clef trace --recent` | Show last 10 flow traces |
     validation-commands:
       - label: "Build a trace"
-        command: "npx tsx tools/copf-cli/src/index.ts trace <flow-id>"
+        command: "npx tsx cli/src/index.ts trace <flow-id>"
     quick-reference:
       heading: "Quick Reference"
       body: |
         | Action | Command | Purpose |
         |--------|---------|---------|
-        | build | `copf trace <flow-id>` | Build trace from a flow ID |
+        | build | `clef trace <flow-id>` | Build trace from a flow ID |
         | render | (automatic) | Render trace as tree output |
     related-workflows:
       - name: sync-designer
@@ -1202,262 +1189,6 @@ workflows:
         description: "Validate specs before debugging runtime issues"
       - name: dev-workflow
         description: "Run the dev server to generate flow IDs for tracing"
-
-  # ─── Builder: build-orchestration ─────────────────
-  build-orchestration:
-    concept: Builder
-    steps:
-      - action: build
-        title: "Build Concept"
-        prose: "Compile, test, and package a concept implementation for a language and platform. Routes to language-specific providers."
-      - action: buildAll
-        title: "Build All Targets"
-        prose: "Build multiple concepts across multiple target languages and platforms in parallel."
-      - action: test
-        title: "Run Tests"
-        prose: "Run tests only for a previously built concept — no recompilation."
-      - action: status
-        title: "Build Status"
-        prose: "Check the current status of a build: pending, compiling, testing, packaging, done, or failed."
-      - action: history
-        title: "Build History"
-        prose: "Show build history for a concept, optionally filtered by language."
-    checklists:
-      build:
-        - "Toolchain resolved for language+platform?"
-        - "Source directory exists and is non-empty?"
-        - "Config mode is valid (debug/release/skip-tests)?"
-        - "Artifact hash is content-addressed?"
-      buildAll:
-        - "All target languages have resolved toolchains?"
-        - "Independent targets build in parallel?"
-        - "Partial results reported if some builds fail?"
-      test:
-        - "Build artifact exists for this concept+language?"
-        - "Test runner detected for language?"
-      status:
-        - "Build reference is valid?"
-      history:
-        - "Language filter is valid (if provided)?"
-    design-principles:
-      - title: "Coordination, Not Compilation"
-        rule: "Builder coordinates — it never compiles directly. Language-specific provider concepts own compilation logic."
-      - title: "Content-Addressed Artifacts"
-        rule: "Build outputs are stored in Artifact with content-addressed hashes. Same inputs always produce same artifact."
-      - title: "Executor Transparency"
-        rule: "Builder doesn't know whether builds run locally, remotely, or in containers. Execution strategy is a provider-internal concern."
-    references:
-      - path: references/build-pipeline.md
-        label: "Build pipeline architecture"
-        tier: reference
-        content: |
-          # Build Pipeline Architecture
-
-          The build layer bridges generated source and deployable artifacts.
-
-          ## Pipeline Flow
-
-          1. DeployPlan/execute — triggers build phase
-          2. Toolchain/resolve — find compiler for language+platform
-          3. Builder/build — compile, test, package (routed to provider)
-          4. Artifact/store — content-addressed artifact storage
-          5. Runtime/deploy — deploy the stored artifact
-
-          ## Execution Strategies
-
-          Builder providers support three executor types configured in
-          the deploy manifest:
-
-          | Type | Description |
-          |------|-------------|
-          | `local` | Invoke compiler directly on host |
-          | `remote` | Send source to remote build service |
-          | `container` | Run build in Docker container |
-
-          ## Deploy Manifest Build Section
-
-          ```yaml
-          build:
-            targets:
-              - language: swift
-                platform: linux-arm64
-                mode: release
-                config:
-                  version: ">=5.10"
-                  package-format: framework
-
-            executor:
-              swift:
-                type: remote
-                endpoint: https://build.internal/swift
-          ```
-
-          ## DAG Integration
-
-          Build nodes insert before deploy nodes in the DAG:
-
-          ```
-          resolve-toolchain → build-concept → store-artifact → deploy-concept
-          ```
-
-          Independent language targets build in parallel. Toolchain
-          resolution happens once per language, shared across concepts.
-    validation-commands:
-      - label: "Build all targets"
-        command: "copf build ./app.deploy.yaml"
-      - label: "Build specific language"
-        command: "copf build ./app.deploy.yaml --language swift"
-      - label: "Dry run (show build plan)"
-        command: "copf build ./app.deploy.yaml --plan"
-      - label: "Run tests only"
-        command: "copf build test --concept password --language swift"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | build | `copf build` | Compile, test, package one concept |
-        | buildAll | `copf build` (all targets) | Build all concepts for all targets |
-        | test | `copf build test` | Run tests only (no compile) |
-        | status | `copf build status` | Check build status |
-        | history | `copf build history` | Show build history |
-    related-workflows:
-      - name: toolchain-management
-        description: "Resolve toolchains before building"
-      - name: deployment-config
-        description: "Deploy built artifacts"
-    anti-patterns:
-      - title: "Building without toolchain resolution"
-        description: "Calling Builder/build before Toolchain/resolve — compilation will fail."
-        bad: |
-          # Skip toolchain resolution
-          Builder/build(concept: "password", language: "swift", ...)
-        good: |
-          # Resolve first, then build
-          Toolchain/resolve(language: "swift", platform: "linux-arm64")
-          # -> ok(tool, version, path)
-          Builder/build(concept: "password", language: "swift", ...)
-      - title: "Monolithic build action"
-        description: "Putting compilation, testing, and packaging logic in Builder instead of provider concepts."
-        bad: |
-          # Builder implementation knows about swiftc flags
-          if (language === "swift") { exec("swiftc -c release ..."); }
-        good: |
-          # Builder routes to SwiftBuilder which owns swift-specific logic
-          SwiftBuilder/build(source, toolchainPath, platform, config)
-
-  # ─── Toolchain: toolchain-management ────────────────
-  toolchain-management:
-    concept: Toolchain
-    steps:
-      - action: resolve
-        title: "Resolve Toolchain"
-        prose: "Find and validate a compiler toolchain for a language and platform. Routes to language-specific providers."
-      - action: validate
-        title: "Validate Toolchain"
-        prose: "Verify a previously resolved toolchain is still valid — tool exists at path, version matches."
-      - action: list
-        title: "List Toolchains"
-        prose: "List all resolved toolchains, optionally filtered by language."
-      - action: capabilities
-        title: "Show Capabilities"
-        prose: "Return detailed capabilities for a resolved tool."
-    checklists:
-      resolve:
-        - "Language is supported (swift/typescript/rust/solidity)?"
-        - "Platform identifier is valid?"
-        - "Version constraint parseable?"
-        - "Provider registered for this language?"
-      validate:
-        - "Tool reference is valid?"
-        - "Tool still exists at recorded path?"
-        - "Version hasn't changed since resolution?"
-      list:
-        - "Language filter is valid (if provided)?"
-      capabilities:
-        - "Tool reference is valid?"
-    design-principles:
-      - title: "Resolution Caching"
-        rule: "Resolve once per language+platform, reuse across all concept builds. Toolchain resolution is shared."
-      - title: "Drift Detection"
-        rule: "Validate before build to catch environment drift — tools may be uninstalled, upgraded, or moved between resolves."
-      - title: "Provider Routing"
-        rule: "Toolchain never knows about swiftc, tsc, or rustc — it routes to SwiftToolchain, TypeScriptToolchain, etc."
-    references:
-      - path: references/toolchain-resolution.md
-        label: "Toolchain resolution and validation"
-        tier: reference
-        content: |
-          # Toolchain Resolution
-
-          Toolchain resolves compilers for the build layer.
-
-          ## Resolution Flow
-
-          1. Toolchain/resolve(language, platform, versionConstraint)
-          2. → Routes to language provider (SwiftToolchain, etc.)
-          3. Provider checks PATH, validates version, detects capabilities
-          4. Returns: tool ref, version, path, capability list
-
-          ## Capabilities
-
-          Capabilities describe what a resolved tool supports:
-
-          | Language | Example Capabilities |
-          |----------|---------------------|
-          | Swift | macros, swift-testing, typed-throws, cross-compile |
-          | TypeScript | esm, cjs, declaration-maps, composite-projects |
-          | Rust | wasm-target, proc-macros, incremental |
-          | Solidity | optimizer, via-ir, foundry-tests, hardhat-tests |
-
-          ## Validation
-
-          `validate(tool)` re-checks a previously resolved tool:
-          - File exists at recorded path
-          - Version matches what was resolved
-          - Not corrupted or partially uninstalled
-
-          Used before builds to catch environment drift without
-          full re-resolution.
-
-          ## Commands
-
-          | Command | Purpose |
-          |---------|---------|
-          | `copf toolchain list` | Show all resolved toolchains |
-          | `copf toolchain resolve swift` | Resolve Swift toolchain |
-          | `copf toolchain validate` | Re-validate all toolchains |
-    validation-commands:
-      - label: "List resolved toolchains"
-        command: "copf toolchain list"
-      - label: "Resolve a specific toolchain"
-        command: "copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'"
-      - label: "Validate all toolchains"
-        command: "copf toolchain validate"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | resolve | `copf toolchain resolve <lang>` | Find compiler for language |
-        | validate | `copf toolchain validate` | Re-check resolved tools |
-        | list | `copf toolchain list` | Show all toolchains |
-        | capabilities | `copf toolchain capabilities` | Show tool capabilities |
-    related-workflows:
-      - name: build-orchestration
-        description: "Builder uses resolved toolchains"
-      - name: deployment-config
-        description: "Deploy manifest configures build targets"
-    anti-patterns:
-      - title: "Hardcoded tool paths"
-        description: "Builder uses hardcoded paths to compilers instead of resolving through Toolchain."
-        bad: |
-          SwiftBuilder/build(toolchainPath: "/usr/bin/swiftc", ...)
-        good: |
-          Toolchain/resolve(language: "swift", platform: "linux-arm64")
-          # -> ok(tool, version, path: "/usr/bin/swiftc", capabilities)
-          SwiftBuilder/build(toolchainPath: ?path, ...)
-
   # ─── DeploymentValidator: deployment-config ────────
   deployment-config:
     concept: DeploymentValidator
@@ -1591,7 +1322,7 @@ workflows:
               from: api
               to: worker
               url: amqp://rabbitmq:5672
-              exchange: copf-events
+              exchange: clef-events
               queue: worker-tasks
           ```
 
@@ -1603,7 +1334,7 @@ workflows:
             low-latency bidirectional communication.
     validation-commands:
       - label: "Validate deployment manifest"
-        command: "npx tsx tools/copf-cli/src/index.ts deploy --validate"
+        command: "npx tsx cli/src/index.ts deploy --validate"
       - label: "Run deployment validator tests"
         command: "npx vitest run tests/deployment-validator.test.ts"
     quick-reference:
@@ -1646,7 +1377,7 @@ workflows:
     steps:
       - action: scaffold
         title: "Scaffold New Project"
-        prose: "Create a new COPF project directory with specs, syncs, implementations, and configuration files."
+        prose: "Create a new CLEF project directory with specs, syncs, implementations, and configuration files."
     checklists:
       scaffold:
         - "Project name is valid (kebab-case, no conflicts)?"
@@ -1655,7 +1386,7 @@ workflows:
         - "Configuration files have sensible defaults?"
     design-principles:
       - title: "Minimal Viable Structure"
-        rule: "Scaffold the minimum needed to run `copf check` and `copf generate` — don't overload with unused templates."
+        rule: "Scaffold the minimum needed to run `clef check` and `clef generate` — don't overload with unused templates."
       - title: "Convention Over Configuration"
         rule: "Project follows standard directory layout (specs/, syncs/, implementations/) so tools work without configuration."
     references:
@@ -1665,7 +1396,7 @@ workflows:
         content: |
           # Standard Project Directory Layout
 
-          A COPF project follows a convention-over-configuration directory
+          A CLEF project follows a convention-over-configuration directory
           structure. Tools expect this layout to work without extra config.
 
           ## Directory Tree
@@ -1680,9 +1411,9 @@ workflows:
           │   ├── create-profile.sync
           │   └── welcome-email.sync
           ├── implementations/       # Handler code
-          │   ├── user.impl.ts
-          │   ├── article.impl.ts
-          │   └── comment.impl.ts
+          │   ├── user.handler.ts
+          │   ├── article.handler.ts
+          │   └── comment.handler.ts
           ├── kits/                  # Reusable concept packages
           │   └── auth-kit/
           │       ├── kit.yaml
@@ -1695,7 +1426,7 @@ workflows:
           │   ├── manifests/
           │   └── types/
           ├── deploy.yaml            # Deployment manifest
-          └── copf.config.yaml       # Project configuration
+          └── clef.config.yaml       # Project configuration
           ```
 
           ## Key Directories
@@ -1704,7 +1435,7 @@ workflows:
           |-----------|---------|------------|
           | `specs/` | Concept definitions | `.concept` |
           | `syncs/` | Sync rules | `.sync` |
-          | `implementations/` | Handler code | `.impl.ts` |
+          | `implementations/` | Handler code | `.handler.ts` |
           | `kits/` | Reusable packages | `kit.yaml` + subdirs |
           | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
           | `tests/` | Tests | `.test.ts` |
@@ -1712,7 +1443,7 @@ workflows:
           ## Configuration File
 
           ```yaml
-          # copf.config.yaml
+          # clef.config.yaml
           project:
             name: my-app
             version: 0.1.0
@@ -1725,7 +1456,7 @@ workflows:
           ```
     validation-commands:
       - label: "Validate scaffolded project"
-        command: "npx tsx tools/copf-cli/src/index.ts check"
+        command: "npx tsx cli/src/index.ts check"
     quick-reference:
       heading: "Quick Reference"
       body: |
@@ -1733,7 +1464,7 @@ workflows:
         |-----------|---------|----------|
         | specs/ | Concept specifications | .concept files |
         | syncs/ | Synchronization rules | .sync files |
-        | implementations/ | Handler code | .impl.ts files |
+        | implementations/ | Handler code | .handler.ts files |
         | kits/ | Kit manifests | kit.yaml + concepts + syncs |
     related-workflows:
       - name: concept-designer
@@ -1781,7 +1512,7 @@ workflows:
         - "Override parameters match original sync signature?"
     design-principles:
       - title: "Kit as Reusable Unit"
-        rule: "A kit bundles related concepts and syncs into a single distributable package — like an npm package for COPF."
+        rule: "A kit bundles related concepts and syncs into a single distributable package — like an npm package for CLEF."
       - title: "Cross-Kit Isolation"
         rule: "Concepts in one kit never reference concepts in another kit directly — cross-kit integration happens through syncs and type parameter alignment."
       - title: "Required vs Recommended Syncs"
@@ -1806,8 +1537,8 @@ workflows:
           ├── syncs/                # Internal syncs
           │   └── create-profile.sync
           ├── implementations/      # Default implementations
-          │   ├── user.impl.ts
-          │   └── profile.impl.ts
+          │   ├── user.handler.ts
+          │   └── profile.handler.ts
           └── tests/                # Kit tests
               └── conformance.test.ts
           ```
@@ -1868,11 +1599,11 @@ workflows:
 
           ## Publishing Workflow
 
-          1. **Validate** — `copf kit validate ./kits/my-kit`
-          2. **Test** — `copf kit test ./kits/my-kit`
+          1. **Validate** — `clef kit validate ./kits/my-kit`
+          2. **Test** — `clef kit test ./kits/my-kit`
           3. **Version** — Update `kit.yaml` version field.
-          4. **Package** — `copf kit pack ./kits/my-kit`
-          5. **Publish** — `copf kit publish ./kits/my-kit`
+          4. **Package** — `clef kit pack ./kits/my-kit`
+          5. **Publish** — `clef kit publish ./kits/my-kit`
 
           ## Registry
 
@@ -1880,19 +1611,19 @@ workflows:
 
           ```bash
           # Publish to default registry
-          copf kit publish ./kits/my-kit
+          clef kit publish ./kits/my-kit
 
           # Publish to custom registry
-          copf kit publish ./kits/my-kit --registry https://my-registry.com
+          clef kit publish ./kits/my-kit --registry https://my-registry.com
           ```
 
           ## Installing Kits
 
           ```bash
-          copf kit add auth@1.0.0
+          clef kit add auth@1.0.0
           ```
 
-          This adds the kit to the project's `copf.config.yaml`:
+          This adds the kit to the project's `clef.config.yaml`:
 
           ```yaml
           kits:
@@ -1934,21 +1665,21 @@ workflows:
           kit: { name: commerce }  # concepts: [Payment, Invoice, Refund]
     validation-commands:
       - label: "Validate a kit"
-        command: "npx tsx tools/copf-cli/src/index.ts kit validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts kit validate ./kits/my-kit"
       - label: "Run kit tests"
-        command: "npx tsx tools/copf-cli/src/index.ts kit test ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts kit test ./kits/my-kit"
       - label: "List active kits"
-        command: "npx tsx tools/copf-cli/src/index.ts kit list"
+        command: "npx tsx cli/src/index.ts kit list"
     quick-reference:
       heading: "Quick Reference"
       body: |
         | Action | Command | Purpose |
         |--------|---------|---------|
-        | init | `copf kit init <name>` | Scaffold a new kit |
-        | validate | `copf kit validate <path>` | Validate kit manifest |
-        | test | `copf kit test <path>` | Run kit tests |
-        | list | `copf kit list` | List active kits |
-        | checkOverrides | `copf kit check-overrides <path>` | Verify sync overrides |
+        | init | `clef kit init <name>` | Scaffold a new kit |
+        | validate | `clef kit validate <path>` | Validate kit manifest |
+        | test | `clef kit test <path>` | Run kit tests |
+        | list | `clef kit list` | List active kits |
+        | checkOverrides | `clef kit check-overrides <path>` | Verify sync overrides |
     related-workflows:
       - name: concept-designer
         description: "Design concepts to include in the kit"
@@ -1990,13 +1721,13 @@ workflows:
         content: |
           # Development Workflow Guide
 
-          The COPF dev server provides a fast feedback loop for iterating
+          The CLEF dev server provides a fast feedback loop for iterating
           on concept specs and sync rules.
 
           ## Starting the Dev Server
 
           ```bash
-          copf dev --port 3000
+          clef dev --port 3000
           ```
 
           The dev server:
@@ -2009,7 +1740,7 @@ workflows:
 
           1. **Edit a .concept file** — Save triggers reparse + validation.
           2. **Edit a .sync file** — Save triggers recompile + binding check.
-          3. **Edit a .impl.ts file** — Save triggers type check against manifest.
+          3. **Edit a .handler.ts file** — Save triggers type check against manifest.
           4. **View errors** — Parse/compile errors show in terminal immediately.
 
           ## Watch Mode Behavior
@@ -2018,13 +1749,13 @@ workflows:
           |-------------|-------------|
           | `.concept` modified | Reparse spec, regenerate manifest |
           | `.sync` modified | Recompile sync, recheck bindings |
-          | `.impl.ts` modified | Type-check against manifest |
-          | `copf.config.yaml` modified | Full restart |
+          | `.handler.ts` modified | Type-check against manifest |
+          | `clef.config.yaml` modified | Full restart |
 
           ## Debugging During Dev
 
           The dev server assigns flow IDs to every action invocation.
-          Use `copf trace <flow-id>` to debug execution chains.
+          Use `clef trace <flow-id>` to debug execution chains.
 
           ## Performance
 
@@ -2033,17 +1764,17 @@ workflows:
           - Full rebuild on config change or first start.
     validation-commands:
       - label: "Start dev server"
-        command: "npx tsx tools/copf-cli/src/index.ts dev --port 3000"
+        command: "npx tsx cli/src/index.ts dev --port 3000"
       - label: "Check dev server status"
-        command: "npx tsx tools/copf-cli/src/index.ts dev status"
+        command: "npx tsx cli/src/index.ts dev status"
     quick-reference:
       heading: "Quick Reference"
       body: |
         | Action | Command | Purpose |
         |--------|---------|---------|
-        | start | `copf dev --port <port>` | Start dev server |
-        | status | `copf dev status` | Check if running |
-        | stop | `copf dev stop` | Stop the server |
+        | start | `clef dev --port <port>` | Start dev server |
+        | status | `clef dev status` | Check if running |
+        | stop | `clef dev stop` | Stop the server |
     related-workflows:
       - name: concept-validator
         description: "Validate specs that the dev server watches"
@@ -2051,456 +1782,6 @@ workflows:
         description: "Debug flows generated during dev server sessions"
       - name: cache-build
         description: "Pre-compile for production after dev iteration"
-
-  # ─── BuildCache: cache-build ────────────────────────
-  cache-build:
-    concept: BuildCache
-    steps:
-      - action: compile
-        title: "Build Cache"
-        prose: "Parse specs and syncs, generate manifests, compile sync rules, and write pre-compiled artifacts to the cache directory."
-    checklists:
-      compile:
-        - "All concept specs parse without errors?"
-        - "All sync files compile?"
-        - "Cache directory is writable?"
-        - "Previous cache is cleaned or invalidated?"
-    design-principles:
-      - title: "Content-Addressed Cache"
-        rule: "Cached artifacts are keyed by content hash — identical input produces identical output, and unchanged files are never rewritten."
-      - title: "Complete Compilation"
-        rule: "Cache includes everything needed for deployment — parsed ASTs, generated manifests, compiled syncs, and type information."
-    references:
-      - path: references/caching.md
-        label: "Cache compilation and invalidation"
-        tier: reference
-        content: |
-          # Cache Compilation and Invalidation
-
-          The cache compiler pre-compiles all concept specs and sync rules
-          into artifacts for faster startup and deployment.
-
-          ## What Gets Cached
-
-          | Artifact | Source | Format |
-          |----------|--------|--------|
-          | Parsed ASTs | `.concept` files | JSON |
-          | Concept manifests | Parsed ASTs | JSON |
-          | Compiled syncs | `.sync` files | JavaScript |
-          | Type definitions | Manifests | TypeScript `.d.ts` |
-
-          ## Cache Directory
-
-          ```
-          .copf-cache/
-          ├── manifests/
-          │   ├── user.manifest.json
-          │   └── article.manifest.json
-          ├── syncs/
-          │   ├── create-profile.compiled.js
-          │   └── welcome-email.compiled.js
-          ├── types/
-          │   ├── user.d.ts
-          │   └── article.d.ts
-          └── cache.lock.json       # Content hashes for invalidation
-          ```
-
-          ## Content-Addressed Invalidation
-
-          Each cached artifact is keyed by the content hash of its source
-          file. When you run `copf compile --cache`:
-
-          1. Hash each source file.
-          2. Compare against `cache.lock.json`.
-          3. Only recompile files whose hash changed.
-          4. Update `cache.lock.json` with new hashes.
-
-          ## Commands
-
-          | Command | Purpose |
-          |---------|---------|
-          | `copf compile --cache` | Build/rebuild the cache |
-          | `copf compile --cache --clean` | Wipe and rebuild from scratch |
-          | `copf compile --cache --verbose` | Show per-file cache hits/misses |
-
-          ## Deployment Use
-
-          In production, deploy the `.copf-cache/` directory alongside
-          your application. The runtime loads pre-compiled artifacts
-          instead of parsing specs at startup.
-    validation-commands:
-      - label: "Build the cache"
-        command: "npx tsx tools/copf-cli/src/index.ts compile --cache"
-      - label: "Verify cache contents"
-        command: "ls -la .copf-cache/"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | compile | `copf compile --cache` | Build pre-compiled cache |
-    related-workflows:
-      - name: concept-validator
-        description: "Validate specs before caching"
-      - name: deployment-config
-        description: "Deploy using cached artifacts"
-      - name: dev-workflow
-        description: "Dev server uses cache for fast startup"
-
-  # ─── Emitter: file-emission ──────────────────────────
-  file-emission:
-    concept: Emitter
-    steps:
-      - action: write
-        title: "Write Single File"
-        prose: "Write a single generated file with content-addressed deduplication."
-      - action: writeBatch
-        title: "Emit Generated Files"
-        prose: "Atomically write a batch of generated files with content-addressed deduplication."
-      - action: audit
-        title: "Drift Detection"
-        prose: "Compare generated files on disk against expected output to detect manual edits."
-      - action: clean
-        title: "Orphan Cleanup"
-        prose: "Remove output files that are no longer produced by any generator."
-      - action: trace
-        title: "Source Provenance"
-        prose: "Show which source files and concept actions produced a given output file."
-      - action: affected
-        title: "Impact Analysis"
-        prose: "Show what output files are affected by a change to a given source file."
-    checklists:
-      write:
-        - "Path is within the designated output directory?"
-        - "Content hash computed before write?"
-      writeBatch:
-        - "All source provenance metadata attached?"
-        - "Format hint set for each file?"
-        - "Output directory exists?"
-      audit:
-        - "Generated files match expected hashes?"
-        - "No manual edits detected?"
-      clean:
-        - "Current manifest accurately lists all expected files?"
-        - "Orphaned files identified and removed?"
-      trace:
-        - "Output path resolves to a tracked generated file?"
-        - "Source provenance entries are complete?"
-      affected:
-        - "Source path resolves to a tracked input?"
-        - "All downstream outputs identified?"
-    design-principles:
-      - title: "Content-Addressed Writes"
-        rule: "Files are only written when their content hash changes — identical rewrites are skipped."
-      - title: "Source Provenance"
-        rule: "Every output file tracks which source files and concept actions produced it."
-    references:
-      - path: references/emitter-architecture.md
-        label: "Emitter architecture and traceability"
-        tier: reference
-        content: |
-          # Emitter Architecture
-
-          The Emitter concept manages all file I/O for the generation pipeline.
-
-          ## Content-Addressed Writes
-
-          Every `write` or `writeBatch` call computes a SHA-256 hash of the
-          content. If the on-disk file already matches, the write is skipped.
-          This prevents unnecessary file-system churn and avoids triggering
-          downstream watchers.
-
-          ## Source Provenance (sourceMap)
-
-          Each output file stores a list of sources that contributed to it:
-          - `sourcePath` — the input file (e.g., `specs/app/article.concept`)
-          - `conceptName` — the concept that produced it
-          - `actionName` — the action (e.g., `generate`)
-
-          This enables:
-          - `copf impact <file>` — which outputs change if this input changes
-          - `copf emitter trace <output>` — which inputs produced this output
-          - `copf emitter audit <dir>` — detect files modified outside generation
-
-          ## Batch Writes
-
-          `writeBatch` writes multiple files atomically — if any file fails,
-          the batch reports the failure while the successful writes persist.
-    validation-commands:
-      - label: "Audit generated files"
-        command: "npx tsx tools/copf-cli/src/index.ts generate --audit"
-      - label: "Clean orphans"
-        command: "npx tsx tools/copf-cli/src/index.ts generate --clean"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | write | `copf emitter write` | Write a single file |
-        | writeBatch | `copf emitter write-batch` | Atomic batch write |
-        | audit | `copf emitter audit <dir>` | Detect drift |
-        | clean | `copf emitter clean <dir>` | Remove orphans |
-        | trace | `copf emitter trace <path>` | Show source provenance |
-        | affected | `copf emitter affected <path>` | Show impact of a source change |
-        | manifest | `copf emitter manifest <dir>` | List all tracked outputs |
-        | format | `copf emitter format <path>` | Format a generated file |
-    related-workflows:
-      - name: cache-build
-        description: "Build cache uses Emitter for output"
-      - name: implementation-builder
-        description: "Code generation writes through Emitter"
-
-  # ─── BuildCache: incremental-caching ──────────────────
-  incremental-caching:
-    concept: BuildCache
-    steps:
-      - action: check
-        title: "Check Cache"
-        prose: "Compare input hash against cached entry to determine if regeneration is needed."
-      - action: record
-        title: "Record Result"
-        prose: "Store generation result with input/output hashes for future cache lookups."
-      - action: status
-        title: "Cache Status"
-        prose: "Show all cache entries with staleness indicators."
-      - action: staleSteps
-        title: "List Stale Entries"
-        prose: "List step keys that need regeneration because their inputs have changed."
-    checklists:
-      check:
-        - "Step key uniquely identifies this generation step?"
-        - "Input hash is deterministic?"
-      record:
-        - "Output hash computed from actual files written?"
-        - "Source locator recorded for invalidation?"
-      status:
-        - "Stale entries identified?"
-      staleSteps:
-        - "All step keys evaluated?"
-    design-principles:
-      - title: "Hash-Based Invalidation"
-        rule: "Cache validity is determined solely by comparing input hashes — no timestamps or file watchers."
-      - title: "Per-Step Granularity"
-        rule: "Each generator+concept pair has its own cache entry, enabling partial rebuilds."
-    references:
-      - path: references/build-cache-architecture.md
-        label: "BuildCache design and invalidation strategy"
-        tier: reference
-        content: |
-          # BuildCache Architecture
-
-          BuildCache tracks generation results per step key (generator:concept pair).
-
-          ## Cache Check Flow
-
-          1. Compute input hash (deterministic hash of concept manifest or projection)
-          2. Look up step key in cache
-          3. Compare hashes → `unchanged` (cache hit) or `changed` (cache miss)
-
-          ## Invalidation Strategies
-
-          - **By source**: When a `.concept` file changes, invalidate all steps
-            that used it (`invalidateBySource`)
-          - **By kind**: When an IR kind is invalidated, cascade to all dependent
-            kinds (`invalidateByKind`)
-          - **Manual**: `invalidateAll` clears the entire cache
-
-          ## Deterministic vs Non-Deterministic
-
-          Deterministic generators (same input → same output) can be cached
-          aggressively. Non-deterministic generators (e.g., timestamp-based)
-          are always re-run.
-    validation-commands:
-      - label: "Show cache status"
-        command: "npx tsx tools/copf-cli/src/index.ts generate --status"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | check | `copf build-cache check` | Check if step is cached |
-        | record | `copf build-cache record` | Record generation result |
-        | status | `copf build-cache status` | Show all cache entries |
-        | staleSteps | `copf build-cache stale-steps` | List stale entries |
-        | invalidate | `copf build-cache invalidate` | Invalidate one step |
-        | invalidateBySource | `copf build-cache invalidate-by-source` | Invalidate by source file |
-        | invalidateByKind | `copf build-cache invalidate-by-kind` | Invalidate by IR kind |
-        | invalidateAll | `copf build-cache invalidate-all` | Clear entire cache |
-    related-workflows:
-      - name: file-emission
-        description: "Emitter writes files after cache miss"
-      - name: incremental-caching
-        description: "Self-referential: cache checks gate generation"
-
-  # ─── Resource: input-tracking ────────────────────────
-  input-tracking:
-    concept: Resource
-    steps:
-      - action: upsert
-        title: "Track Input"
-        prose: "Register or update a tracked input resource with its content digest."
-      - action: list
-        title: "List Resources"
-        prose: "List all tracked input resources, optionally filtered by kind."
-    checklists:
-      upsert:
-        - "Locator is a stable, unique identifier?"
-        - "Digest is a content hash (not a timestamp)?"
-      list:
-        - "Kind filter matches expected resource types?"
-    design-principles:
-      - title: "Content-Addressed Tracking"
-        rule: "Resources are tracked by content digest, not modification time. Two files with identical content have the same digest."
-    validation-commands:
-      - label: "List tracked resources"
-        command: "npx tsx tools/copf-cli/src/index.ts generate --status"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | upsert | `copf resource upsert` | Track or update an input |
-        | get | `copf resource get` | Look up a tracked resource |
-        | list | `copf resource list` | List all tracked inputs |
-        | remove | `copf resource remove` | Stop tracking a resource |
-        | diff | `copf resource diff` | Classify a content change |
-    related-workflows:
-      - name: incremental-caching
-        description: "Resource changes invalidate BuildCache entries"
-      - name: file-emission
-        description: "Resource tracking feeds into generation pipeline"
-
-  # ─── KindSystem: pipeline-topology ───────────────────
-  pipeline-topology:
-    concept: KindSystem
-    steps:
-      - action: graph
-        title: "View Kind Graph"
-        prose: "Display the full IR kind taxonomy showing all kinds and transform edges."
-      - action: route
-        title: "Find Transform Path"
-        prose: "Find the shortest transform path between two IR kinds."
-      - action: consumers
-        title: "Show Consumers"
-        prose: "List all transforms that consume a given kind."
-      - action: producers
-        title: "Show Producers"
-        prose: "List all transforms that produce a given kind."
-    checklists:
-      graph:
-        - "All generator kinds registered?"
-        - "No orphan kinds (unreachable from any source)?"
-      route:
-        - "Path exists between the two kinds?"
-    design-principles:
-      - title: "Cycle-Free DAG"
-        rule: "The kind graph must be a directed acyclic graph. Cycle detection runs on every connect() call."
-      - title: "Static Topology"
-        rule: "Kinds and edges are registered at startup from kit.yaml metadata, not at generation time."
-    references:
-      - path: references/kind-system-architecture.md
-        label: "KindSystem taxonomy and routing"
-        tier: reference
-        content: |
-          # KindSystem Architecture
-
-          The KindSystem models the pipeline topology as a directed acyclic graph
-          of IR (intermediate representation) kinds.
-
-          ## Kind Categories
-
-          - **source**: Raw input files (ConceptDSL, SyncDSL, InterfaceManifest)
-          - **model**: Parsed/structured data (ConceptAST, ConceptManifest, Projection)
-          - **artifact**: Generated output files (TypeScriptFiles, RestRoutes, etc.)
-
-          ## Transform Edges
-
-          Each edge represents a generator that transforms one kind into another:
-          - `ConceptDSL →[SpecParser]→ ConceptAST`
-          - `ConceptAST →[SchemaGen]→ ConceptManifest`
-          - `ConceptManifest →[TypeScriptGen]→ TypeScriptFiles`
-          - `Projection →[RestTarget]→ RestRoutes`
-
-          ## Routing
-
-          `route(from, to)` finds the shortest path using BFS. This determines
-          which generators must run to produce a desired artifact from a given source.
-
-          ## Cascade Invalidation
-
-          When a kind is invalidated, `dependents(kind)` returns all downstream
-          kinds that need re-generation. This drives the cascade invalidation syncs.
-    validation-commands:
-      - label: "List all kinds"
-        command: "npx tsx tools/copf-cli/src/index.ts kinds list"
-      - label: "Find transform path"
-        command: "npx tsx tools/copf-cli/src/index.ts kinds path ConceptDSL TypeScriptFiles"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | graph | `copf kind-system graph` | Show full kind taxonomy |
-        | route | `copf kind-system route` | Find shortest transform path |
-        | consumers | `copf kind-system consumers` | What consumes a kind |
-        | producers | `copf kind-system producers` | What produces a kind |
-        | define | `copf kind-system define` | Register a new kind |
-        | connect | `copf kind-system connect` | Declare a transform edge |
-        | validate | `copf kind-system validate` | Validate an edge |
-        | dependents | `copf kind-system dependents` | List downstream kinds |
-    related-workflows:
-      - name: incremental-caching
-        description: "Kind graph drives cascade invalidation"
-      - name: file-emission
-        description: "Kind routing determines generation order"
-
-  # ─── GenerationPlan: run-tracking ────────────────────
-  run-tracking:
-    concept: GenerationPlan
-    steps:
-      - action: status
-        title: "Run Status"
-        prose: "Show detailed step-by-step status of a generation run."
-      - action: summary
-        title: "Run Summary"
-        prose: "Show aggregate statistics: total/executed/cached/failed steps, duration, files produced."
-      - action: history
-        title: "Run History"
-        prose: "Show recent generation runs with their outcomes."
-    checklists:
-      status:
-        - "Run reference is valid?"
-      summary:
-        - "All steps accounted for?"
-      history:
-        - "Limit is reasonable?"
-    design-principles:
-      - title: "Passive Observer"
-        rule: "GenerationPlan is purely passive — it records what syncs report, never drives execution."
-      - title: "Run Isolation"
-        rule: "Each generation run has its own reference. Steps are recorded against the active run."
-    validation-commands:
-      - label: "Show generation summary"
-        command: "npx tsx tools/copf-cli/src/index.ts generate --summary"
-      - label: "Show generation history"
-        command: "npx tsx tools/copf-cli/src/index.ts generate --history"
-    quick-reference:
-      heading: "Quick Reference"
-      body: |
-        | Action | Command | Purpose |
-        |--------|---------|---------|
-        | begin | `copf generation-plan begin` | Mark run started |
-        | recordStep | `copf generation-plan record-step` | Record step outcome |
-        | complete | `copf generation-plan complete` | Mark run finished |
-        | status | `copf generation-plan status` | Show step-by-step status |
-        | summary | `copf generation-plan summary` | Show aggregate statistics |
-        | history | `copf generation-plan history` | Show recent runs |
-    related-workflows:
-      - name: file-emission
-        description: "Emitter writes tracked by GenerationPlan"
-      - name: incremental-caching
-        description: "Cache hits/misses recorded as steps"
-
   # ─── KitScaffoldGen: kit-scaffold ──────────────────
   kit-scaffold:
     concept: KitScaffoldGen
@@ -2658,9 +1939,9 @@ workflows:
           enabling syncs to pass user references between them.
     validation-commands:
       - label: "Generate a kit scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold kit --name my-kit --concepts User,Session"
+        command: "npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session"
       - label: "Validate generated kit"
-        command: "npx tsx tools/copf-cli/src/index.ts kit validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts kit validate ./kits/my-kit"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -2750,7 +2031,7 @@ workflows:
       - title: "Runtime Isolation"
         rule: "Each concept runs in exactly one runtime. Cross-runtime communication uses transport adapters configured in the infrastructure section."
       - title: "Infrastructure as Code"
-        rule: "The IaC provider setting enables `copf deploy` to generate Terraform, CloudFormation, or Pulumi resources from the manifest."
+        rule: "The IaC provider setting enables `clef deploy` to generate Terraform, CloudFormation, or Pulumi resources from the manifest."
     references:
       - path: references/deploy-manifest-schema.md
         label: "Deploy manifest (deploy.yaml) schema reference"
@@ -2825,7 +2106,7 @@ workflows:
               spec: ./specs/app/user.concept
               implementations:
                 - language: typescript
-                  path: ./implementations/typescript/app/user.impl.ts
+                  path: ./handlers/ts/app/user.handler.ts
                   runtime: api
                   storage: postgresql
           ```
@@ -2840,9 +2121,9 @@ workflows:
           ```
     validation-commands:
       - label: "Generate a deploy scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold deploy --app my-app"
+        command: "npx tsx cli/src/index.ts scaffold deploy --app my-app"
       - label: "Validate deploy manifest"
-        command: "npx tsx tools/copf-cli/src/index.ts deploy --validate"
+        command: "npx tsx cli/src/index.ts deploy --validate"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3019,9 +2300,9 @@ workflows:
           ```
     validation-commands:
       - label: "Generate an interface scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold interface --name my-api --targets rest,graphql"
+        command: "npx tsx cli/src/index.ts scaffold interface --name my-api --targets rest,graphql"
       - label: "Generate interfaces from manifest"
-        command: "npx tsx tools/copf-cli/src/index.ts interface generate --manifest my-api.interface.yaml"
+        command: "npx tsx cli/src/index.ts interface generate --manifest my-api.interface.yaml"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3166,9 +2447,9 @@ workflows:
           ```
     validation-commands:
       - label: "Generate a concept scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold concept --name User --actions create,update,delete"
+        command: "npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,delete"
       - label: "Validate generated concept"
-        command: "npx tsx tools/copf-cli/src/index.ts check specs/app/user.concept"
+        command: "npx tsx cli/src/index.ts check specs/app/user.concept"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3324,9 +2605,9 @@ workflows:
           | `[recommended]` | Can be overridden by application |
     validation-commands:
       - label: "Generate a sync scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold sync --name CreateProfile --from User/create --to Profile/init"
+        command: "npx tsx cli/src/index.ts scaffold sync --name CreateProfile --from User/create --to Profile/init"
       - label: "Validate generated sync"
-        command: "npx tsx tools/copf-cli/src/index.ts sync validate syncs/create-profile.sync"
+        command: "npx tsx cli/src/index.ts sync validate syncs/create-profile.sync"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3386,7 +2667,7 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Handler Implementation"
-        prose: "Generate a TypeScript .impl.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: handler-scaffold-emit.sync routes files through Emitter, handler-scaffold-record-cache.sync records output in BuildCache, and handler-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a TypeScript .handler.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: handler-scaffold-emit.sync routes files through Emitter, handler-scaffold-record-cache.sync records output in BuildCache, and handler-scaffold-observer.sync tracks the run in GenerationPlan."
     checklists:
       generate:
         - "Handler export name follows convention (camelCase + 'Handler')?"
@@ -3415,7 +2696,7 @@ workflows:
         content: |
           # Handler Implementation Guide
 
-          How to implement COPF concept handlers in TypeScript.
+          How to implement CLEF concept handlers in TypeScript.
 
           ## ConceptHandler Interface
 
@@ -3480,7 +2761,7 @@ workflows:
           | option T | T \| undefined |
     validation-commands:
       - label: "Generate a handler scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold handler --concept User --actions create,update,delete"
+        command: "npx tsx cli/src/index.ts scaffold handler --concept User --actions create,update,delete"
       - label: "Run generated conformance test"
         command: "npx vitest run tests/user.conformance.test.ts"
       - label: "Run scaffold generator tests"
@@ -3613,7 +2894,7 @@ workflows:
           ```
     validation-commands:
       - label: "Generate a storage adapter"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold storage --name AppStorage --backend postgresql"
+        command: "npx tsx cli/src/index.ts scaffold storage --name AppStorage --backend postgresql"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3744,7 +3025,7 @@ workflows:
           - **Real-time**: Use `websocket` — bidirectional streaming
     validation-commands:
       - label: "Generate a transport adapter"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold transport --name ApiTransport --protocol http"
+        command: "npx tsx cli/src/index.ts scaffold transport --name ApiTransport --protocol http"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3903,7 +3184,7 @@ workflows:
           | Slider | root, track, range, thumb | idle, dragging | Range |
     validation-commands:
       - label: "Generate a COIF component scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open"
+        command: "npx tsx cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -3924,7 +3205,7 @@ workflows:
         | `{name}-widget.concept` | Widget FSM specification |
         | `{name}-anatomy.concept` | Parts contract definition |
         | `kit.yaml` | Kit manifest with dependencies |
-        | `{name}-machine.impl.ts` | Machine handler implementation |
+        | `{name}-machine.handler.ts` | Machine handler implementation |
     related-workflows:
       - name: coif-theme-scaffold
         description: "Generate themes to style the component"
@@ -4096,7 +3377,7 @@ workflows:
           | AAA | 7:1 | 4.5:1 |
     validation-commands:
       - label: "Generate a COIF theme scaffold"
-        command: "npx tsx tools/copf-cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'"
+        command: "npx tsx cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -4241,7 +3522,7 @@ annotations:
             ## Step 5: Validate
 
             ```bash
-            copf check specs/bookmark.concept
+            clef check specs/bookmark.concept
             ```
       example-walkthroughs:
         - path: examples/design-a-concept.md
@@ -4255,7 +3536,7 @@ annotations:
             const ast = parseConceptFile(source);
         - label: "Parse from CLI"
           language: bash
-          code: "copf check specs/my-concept.concept"
+          code: "clef check specs/my-concept.concept"
       references:
         - path: references/concept-grammar.md
           label: "Full concept grammar specification"
@@ -4283,7 +3564,7 @@ annotations:
             ## Step 1: Generate the Manifest
 
             ```bash
-            copf generate specs/user.concept
+            clef generate specs/user.concept
             ```
 
             This produces `generated/manifests/user.manifest.json` with typed
@@ -4292,8 +3573,8 @@ annotations:
             ## Step 2: Create the Handler File
 
             ```typescript
-            // implementations/user.impl.ts
-            import type { ConceptHandler, ConceptStorage } from '@copf/kernel';
+            // implementations/user.handler.ts
+            import type { ConceptHandler, ConceptStorage } from '@clef/kernel';
 
             interface UserState {
               name: string;
@@ -4351,7 +3632,7 @@ annotations:
             );
         - label: "Generate from CLI"
           language: bash
-          code: "copf generate specs/my-concept.concept"
+          code: "clef generate specs/my-concept.concept"
       references:
         - path: references/type-mapping.md
           label: "Spec-to-TypeScript type mapping rules"
@@ -4389,7 +3670,7 @@ annotations:
             ## Step 2: Parse and Validate
 
             ```bash
-            copf compile-syncs syncs/welcome-email.sync
+            clef compile-syncs syncs/welcome-email.sync
             ```
 
             ## Step 3: Fix Common Errors
@@ -4422,7 +3703,7 @@ annotations:
             );
         - label: "Parse from CLI"
           language: bash
-          code: "copf compile-syncs syncs/my-sync.sync"
+          code: "clef compile-syncs syncs/my-sync.sync"
       references:
         - path: references/sync-design.md
           label: "Sync language reference"
@@ -4496,7 +3777,7 @@ annotations:
       examples:
         - label: "Compile sync rules"
           language: bash
-          code: "copf compile-syncs --dir ./syncs"
+          code: "clef compile-syncs --dir ./syncs"
         - label: "Compile programmatically"
           language: typescript
           code: |
@@ -4536,7 +3817,7 @@ annotations:
             ## Step 1: Find the Flow ID
 
             ```bash
-            copf trace --recent
+            clef trace --recent
             ```
 
             Output shows recent flows. Find the User/create flow.
@@ -4544,7 +3825,7 @@ annotations:
             ## Step 2: Build the Trace
 
             ```bash
-            copf trace abc-123
+            clef trace abc-123
             ```
 
             ```
@@ -4573,7 +3854,7 @@ annotations:
       examples:
         - label: "Build trace from flow ID"
           language: bash
-          code: "copf trace <flow-id>"
+          code: "clef trace <flow-id>"
         - label: "Build trace programmatically"
           language: typescript
           code: |
@@ -4581,193 +3862,6 @@ annotations:
             const result = await flowTraceHandler.build(
               { flowId: 'abc-123' }, storage
             );
-
-  Builder:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when compiling, testing, and packaging concept implementations
-        across languages. Coordinates build operations and routes to
-        language-specific providers (SwiftBuilder, TypeScriptBuilder,
-        RustBuilder, SolidityBuilder).
-      intro-template: >
-        Build concept **$ARGUMENTS** for the configured language targets,
-        routing to the appropriate provider and storing content-addressed
-        artifacts.
-      companion-docs:
-        - path: examples/build-all-targets.md
-          label: "Multi-target build walkthrough"
-          content: |
-            # Walkthrough: Building All Targets
-
-            This walkthrough shows how to build a concept for multiple
-            language targets using the deploy manifest.
-
-            ## Step 1: Configure Build Targets
-
-            ```yaml
-            # app.deploy.yaml
-            build:
-              targets:
-                - language: swift
-                  platform: linux-arm64
-                  mode: release
-                  config:
-                    version: ">=5.10"
-                    package-format: framework
-
-                - language: typescript
-                  platform: node-20
-                  mode: release
-                  config:
-                    version: ">=5.7"
-                    bundler: esbuild
-                    package-format: npm
-            ```
-
-            ## Step 2: Build
-
-            ```bash
-            copf build ./app.deploy.yaml
-            ```
-
-            The build layer:
-            1. Resolves toolchains (once per language)
-            2. Builds each concept for each target (in parallel)
-            3. Stores artifacts in content-addressed storage
-
-            ## Step 3: Check Results
-
-            ```bash
-            copf build history --concept password
-            ```
-
-            ## Executor Strategies
-
-            Configure how builds execute in the manifest:
-
-            ```yaml
-            executor:
-              swift:
-                type: local        # Direct invocation
-              typescript:
-                type: container    # Docker-based
-              rust:
-                type: remote       # Remote build service
-                endpoint: https://build.internal/rust
-            ```
-    build:
-      examples:
-        - label: "Build a concept"
-          language: bash
-          code: "copf build ./app.deploy.yaml --concept password --language swift"
-        - label: "Build all targets"
-          language: bash
-          code: "copf build ./app.deploy.yaml"
-    buildAll:
-      examples:
-        - label: "Build all concepts for all targets"
-          language: bash
-          code: "copf build ./app.deploy.yaml"
-    test:
-      examples:
-        - label: "Run tests for a concept"
-          language: bash
-          code: "copf build test --concept password --language swift"
-    history:
-      examples:
-        - label: "Show build history"
-          language: bash
-          code: "copf build history --concept password"
-
-  Toolchain:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when resolving, validating, or listing compiler toolchains
-        for the build layer. Routes resolution to language-specific
-        providers (SwiftToolchain, TypeScriptToolchain, RustToolchain,
-        SolidityToolchain).
-      intro-template: >
-        Resolve toolchain for **$ARGUMENTS**, validating compiler
-        availability, version constraints, and platform capabilities.
-      companion-docs:
-        - path: examples/resolve-toolchains.md
-          label: "Toolchain resolution walkthrough"
-          content: |
-            # Walkthrough: Resolving Toolchains
-
-            This walkthrough shows how toolchain resolution works
-            for a multi-language build.
-
-            ## Step 1: List Installed Toolchains
-
-            ```bash
-            copf toolchain list
-            ```
-            ```
-            Language     Platform       Version   Path                  Status
-            swift        linux-arm64    5.10.1    /usr/bin/swiftc       ok
-            typescript   node-20        5.7.2     /usr/local/bin/tsc    ok
-            rust         linux-x86_64   1.78.0    /usr/local/bin/rustc  ok
-            solidity     evm-shanghai   0.8.25    /usr/local/bin/solc   ok
-            ```
-
-            ## Step 2: Resolve with Constraints
-
-            ```bash
-            copf toolchain resolve swift --platform linux-arm64 --version ">=5.10"
-            ```
-            ```
-            Resolved: swift 5.10.1
-            Path: /usr/bin/swiftc
-            Capabilities: macros, swift-testing, cross-compile
-            ```
-
-            ## Step 3: Validate Before Build
-
-            ```bash
-            copf toolchain validate
-            ```
-
-            Checks all previously resolved toolchains are still
-            valid (exist at path, version unchanged).
-
-            ## Capability-Based Decisions
-
-            Builder checks capabilities to determine build modes:
-            - "incremental" → enable incremental compilation
-            - "wasm-target" → WASM output available
-            - "cross-compile" → cross-platform builds supported
-    resolve:
-      examples:
-        - label: "Resolve Swift toolchain"
-          language: bash
-          code: "copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'"
-        - label: "Resolve programmatically"
-          language: typescript
-          code: |
-            import { toolchainHandler } from './toolchain.impl';
-            const result = await toolchainHandler.resolve(
-              { language: 'swift', platform: 'linux-arm64', versionConstraint: '>=5.10' },
-              storage,
-            );
-    validate:
-      examples:
-        - label: "Validate all toolchains"
-          language: bash
-          code: "copf toolchain validate"
-    list:
-      examples:
-        - label: "List all resolved toolchains"
-          language: bash
-          code: "copf toolchain list"
-        - label: "List by language"
-          language: bash
-          code: "copf toolchain list --language swift"
-
   DeploymentValidator:
     concept:
       tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
@@ -4835,13 +3929,13 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            copf deploy --validate deploy.yaml
+            clef deploy --validate deploy.yaml
             ```
     validate:
       examples:
         - label: "Validate deployment manifest"
           language: bash
-          code: "copf deploy --validate app.deploy.yaml"
+          code: "clef deploy --validate app.deploy.yaml"
       references:
         - path: references/deployment-guide.md
           label: "Deployment configuration guide"
@@ -4853,11 +3947,11 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "$ARGUMENTS"
       trigger-description: >
-        Use when starting a new COPF project from scratch. Creates the
+        Use when starting a new CLEF project from scratch. Creates the
         standard directory structure, example concept spec, and
         configuration files.
       intro-template: >
-        Scaffold a new COPF project named **$ARGUMENTS** with the standard
+        Scaffold a new CLEF project named **$ARGUMENTS** with the standard
         directory layout, example concept, and configuration files.
       companion-docs:
         - path: templates/concept-template.md
@@ -4911,10 +4005,10 @@ annotations:
       examples:
         - label: "Scaffold a new project"
           language: bash
-          code: "copf init my-app"
+          code: "clef init my-app"
         - label: "Scaffold with custom template"
           language: bash
-          code: "copf init my-app --template minimal"
+          code: "clef init my-app --template minimal"
 
   DevServer:
     concept:
@@ -4939,11 +4033,11 @@ annotations:
             ## Step 1: Start the Dev Server
 
             ```bash
-            copf dev --port 3000
+            clef dev --port 3000
             ```
 
             ```
-            COPF dev server started on port 3000
+            CLEF dev server started on port 3000
             Watching: specs/, syncs/, implementations/
             Parsed 5 concepts, compiled 3 syncs — all valid
             ```
@@ -4987,23 +4081,23 @@ annotations:
 
             ## Step 4: Implement the Handler
 
-            Add the handler method in `implementations/user.impl.ts`,
+            Add the handler method in `implementations/user.handler.ts`,
             then run tests to verify.
     start:
       examples:
         - label: "Start dev server"
           language: bash
-          code: "copf dev --port 3000"
+          code: "clef dev --port 3000"
     status:
       examples:
         - label: "Check dev server status"
           language: bash
-          code: "copf dev status"
+          code: "clef dev status"
     stop:
       examples:
         - label: "Stop dev server"
           language: bash
-          code: "copf dev stop"
+          code: "clef dev stop"
 
   KitManager:
     concept:
@@ -5027,7 +4121,7 @@ annotations:
             ## Step 1: Scaffold
 
             ```bash
-            copf kit init auth-kit
+            clef kit init auth-kit
             ```
 
             Creates:
@@ -5071,8 +4165,8 @@ annotations:
             ## Step 4: Validate and Test
 
             ```bash
-            copf kit validate ./auth-kit
-            copf kit test ./auth-kit
+            clef kit validate ./auth-kit
+            clef kit test ./auth-kit
             ```
       example-walkthroughs:
         - path: examples/create-a-kit.md
@@ -5081,268 +4175,37 @@ annotations:
       examples:
         - label: "Create a new kit"
           language: bash
-          code: "copf kit init my-kit"
+          code: "clef kit init my-kit"
     validate:
       examples:
         - label: "Validate a kit"
           language: bash
-          code: "copf kit validate ./kits/my-kit"
+          code: "clef kit validate ./kits/my-kit"
     test:
       examples:
         - label: "Test a kit"
           language: bash
-          code: "copf kit test ./kits/my-kit"
+          code: "clef kit test ./kits/my-kit"
     list:
       examples:
         - label: "List active kits"
           language: bash
-          code: "copf kit list"
+          code: "clef kit list"
     checkOverrides:
       examples:
         - label: "Check sync overrides"
           language: bash
-          code: "copf kit check-overrides ./kits/my-kit"
-
-  Emitter:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when writing generated files, auditing for drift, tracing
-        source provenance, or cleaning orphaned outputs.
-      intro-template: >
-        Manage generated file output for **$ARGUMENTS** with content-addressed
-        writes, source traceability, and drift detection.
-    write:
-      examples:
-        - label: "Write a single file"
-          language: typescript
-          code: |
-            const result = await emitterHandler.write(
-              { path: 'generated/user.types.ts', content: typesCode, formatHint: 'typescript' },
-              storage,
-            );
-    writeBatch:
-      examples:
-        - label: "Batch write generated files"
-          language: typescript
-          code: |
-            const result = await emitterHandler.writeBatch(
-              { files: [{ path: 'user.types.ts', content: types }, { path: 'user.handler.ts', content: handler }] },
-              storage,
-            );
-    audit:
-      examples:
-        - label: "Audit generated directory"
-          language: bash
-          code: "copf emitter audit ./generated"
-    trace:
-      examples:
-        - label: "Trace source provenance"
-          language: bash
-          code: "copf emitter trace ./generated/user.types.ts"
-    affected:
-      examples:
-        - label: "Show impact of changing a source file"
-          language: bash
-          code: "copf emitter affected ./specs/app/user.concept"
-    clean:
-      examples:
-        - label: "Remove orphaned files"
-          language: bash
-          code: "copf emitter clean ./generated"
-
-  BuildCache:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when checking cache validity, recording generation results,
-        or invalidating stale entries for incremental rebuilds.
-      intro-template: >
-        Manage incremental build cache for **$ARGUMENTS** with hash-based
-        invalidation and per-step granularity.
-    check:
-      examples:
-        - label: "Check if step is cached"
-          language: typescript
-          code: |
-            const result = await buildCacheHandler.check(
-              { stepKey: 'framework:TypeScriptGen:article', inputHash: hash, deterministic: true },
-              storage,
-            );
-            if (result.variant === 'unchanged') { /* skip generation */ }
-    status:
-      examples:
-        - label: "Show cache status"
-          language: bash
-          code: "copf build-cache status"
-    staleSteps:
-      examples:
-        - label: "List stale cache entries"
-          language: bash
-          code: "copf build-cache stale-steps"
-    cli:
-      command-group: build-cache
-      description: "Manage incremental build cache for generation pipeline."
-      actions:
-        check:
-          description: "Check if a generation step is cached"
-          flags:
-            stepKey:
-              type: string
-              required: true
-              short: k
-              description: "Unique step identifier (generator:concept)"
-            inputHash:
-              type: string
-              required: true
-              description: "Hash of current input"
-            deterministic:
-              type: boolean
-              required: false
-              description: "Whether generator is deterministic"
-        record:
-          description: "Record a generation result in the cache"
-        invalidate:
-          description: "Invalidate a single cache entry"
-          flags:
-            stepKey:
-              type: string
-              required: true
-              short: k
-              description: "Step key to invalidate"
-        invalidateBySource:
-          command: invalidate-by-source
-          description: "Invalidate all steps that used a source file"
-          args:
-            sourceLocator:
-              positional: true
-          examples:
-            - description: "Invalidate after concept change"
-              command: "copf build-cache invalidate-by-source specs/app/article.concept"
-        invalidateByKind:
-          command: invalidate-by-kind
-          description: "Invalidate all steps producing a given IR kind"
-          args:
-            kindName:
-              positional: true
-          examples:
-            - description: "Invalidate all TypeScript generation"
-              command: "copf build-cache invalidate-by-kind TypeScriptFiles"
-        invalidateAll:
-          command: invalidate-all
-          description: "Clear the entire build cache"
-          examples:
-            - description: "Full cache reset"
-              command: "copf build-cache invalidate-all"
-        status:
-          description: "Show all cache entries with staleness indicators"
-          examples:
-            - description: "View cache status"
-              command: "copf build-cache status"
-        staleSteps:
-          command: stale-steps
-          description: "List step keys that need regeneration"
-          examples:
-            - description: "Find stale entries"
-              command: "copf build-cache stale-steps"
-
-  Resource:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when tracking input files, detecting changes, or querying
-        which resources are currently registered.
-      intro-template: >
-        Track input resources for **$ARGUMENTS** with content-addressed
-        digests and change classification.
-    upsert:
-      examples:
-        - label: "Track a concept spec file"
-          language: typescript
-          code: |
-            const result = await resourceHandler.upsert(
-              { locator: 'specs/app/article.concept', kind: 'concept-spec', digest: contentHash },
-              storage,
-            );
-    list:
-      examples:
-        - label: "List all tracked resources"
-          language: bash
-          code: "copf resource list"
-        - label: "List only concept specs"
-          language: bash
-          code: "copf resource list --kind concept-spec"
-
-  KindSystem:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when inspecting the IR kind taxonomy, finding transform paths
-        between kinds, or querying which generators consume or produce a kind.
-      intro-template: >
-        Inspect the generation pipeline topology for **$ARGUMENTS** showing
-        IR kinds, transform edges, and routing paths.
-    graph:
-      examples:
-        - label: "Show full kind graph"
-          language: bash
-          code: "copf kind-system graph"
-    route:
-      examples:
-        - label: "Find path from source to artifact"
-          language: bash
-          code: "copf kind-system route --from ConceptDSL --to TypeScriptFiles"
-    consumers:
-      examples:
-        - label: "What consumes ConceptManifest?"
-          language: bash
-          code: "copf kind-system consumers --kind ConceptManifest"
-    producers:
-      examples:
-        - label: "What produces TypeScriptFiles?"
-          language: bash
-          code: "copf kind-system producers --kind TypeScriptFiles"
-
-  GenerationPlan:
-    concept:
-      tool-permissions: [Read, Grep, Glob, Bash]
-      argument-template: "$ARGUMENTS"
-      trigger-description: >
-        Use when checking the status of a generation run, viewing run
-        summaries, or browsing generation history.
-      intro-template: >
-        View generation run tracking for **$ARGUMENTS** with step-by-step
-        status, aggregate summaries, and run history.
-    status:
-      examples:
-        - label: "Show current run status"
-          language: bash
-          code: "copf generation-plan status"
-    summary:
-      examples:
-        - label: "Show run summary"
-          language: bash
-          code: "copf generation-plan summary"
-    history:
-      examples:
-        - label: "Show last 5 runs"
-          language: bash
-          code: "copf generation-plan history --limit 5"
-
+          code: "clef kit check-overrides ./kits/my-kit"
   KitScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <kit-name>"
       trigger-description: >
-        Use when creating a new COPF kit from scratch. Generates a kit.yaml
+        Use when creating a new CLEF kit from scratch. Generates a kit.yaml
         manifest with concept declarations, sync tier groupings, type parameter
         alignment, and directory structure stubs.
       intro-template: >
-        Scaffold a new COPF kit named **$ARGUMENTS** with a kit.yaml manifest,
+        Scaffold a new CLEF kit named **$ARGUMENTS** with a kit.yaml manifest,
         concept spec stubs, and sync directory structure.
       companion-docs:
         - path: examples/scaffold-a-kit.md
@@ -5356,7 +4219,7 @@ annotations:
             ## Step 1: Generate the Kit Scaffold
 
             ```bash
-            copf scaffold kit --name auth --concepts User,Session,Password
+            clef scaffold kit --name auth --concepts User,Session,Password
             ```
 
             Output:
@@ -5406,7 +4269,7 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            copf kit validate ./kits/auth
+            clef kit validate ./kits/auth
             ```
     register:
       examples:
@@ -5419,10 +4282,10 @@ annotations:
       examples:
         - label: "Generate a basic kit"
           language: bash
-          code: "copf scaffold kit --name auth --concepts User,Session,Password"
+          code: "clef scaffold kit --name auth --concepts User,Session,Password"
         - label: "Generate a domain kit with infrastructure"
           language: bash
-          code: "copf scaffold kit --name web3 --concepts Token,Wallet --domain"
+          code: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
         - label: "Generate programmatically"
           language: typescript
           code: |
@@ -5445,7 +4308,7 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--app <app-name>"
       trigger-description: >
-        Use when creating a new deployment manifest for a COPF application.
+        Use when creating a new deployment manifest for a CLEF application.
         Generates deploy.yaml with runtime configurations, infrastructure
         declarations, concept-to-runtime assignments, and build settings.
       intro-template: >
@@ -5463,7 +4326,7 @@ annotations:
             ## Step 1: Generate the Deploy Scaffold
 
             ```bash
-            copf scaffold deploy --app conduit \
+            clef scaffold deploy --app conduit \
               --runtimes api:node:http:postgresql,worker:node:sqs:redis \
               --iac terraform
             ```
@@ -5500,7 +4363,7 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            copf deploy --validate deploy/conduit.deploy.yaml
+            clef deploy --validate deploy/conduit.deploy.yaml
             ```
     register:
       examples:
@@ -5512,10 +4375,10 @@ annotations:
       examples:
         - label: "Generate a basic deploy manifest"
           language: bash
-          code: "copf scaffold deploy --app my-app"
+          code: "clef scaffold deploy --app my-app"
         - label: "Generate with custom runtimes"
           language: bash
-          code: "copf scaffold deploy --app conduit --iac terraform"
+          code: "clef scaffold deploy --app conduit --iac terraform"
         - label: "Generate programmatically"
           language: typescript
           code: |
@@ -5559,7 +4422,7 @@ annotations:
             ## Step 1: Generate the Interface Scaffold
 
             ```bash
-            copf scaffold interface --name conduit-api \
+            clef scaffold interface --name conduit-api \
               --targets rest,graphql \
               --sdks typescript,python \
               --concepts User,Article,Comment
@@ -5597,7 +4460,7 @@ annotations:
             ## Step 4: Generate Interfaces
 
             ```bash
-            copf interface generate --manifest conduit-api.interface.yaml
+            clef interface generate --manifest conduit-api.interface.yaml
             ```
     register:
       examples:
@@ -5609,10 +4472,10 @@ annotations:
       examples:
         - label: "Generate a REST + GraphQL interface"
           language: bash
-          code: "copf scaffold interface --name my-api --targets rest,graphql --sdks typescript"
+          code: "clef scaffold interface --name my-api --targets rest,graphql --sdks typescript"
         - label: "Generate a full-stack interface"
           language: bash
-          code: "copf scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills --sdks typescript,python,go"
+          code: "clef scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills --sdks typescript,python,go"
       references:
         - path: references/interface-manifest-schema.md
           label: "Interface manifest schema reference"
@@ -5639,7 +4502,7 @@ annotations:
             ## Step 1: Generate the Concept Scaffold
 
             ```bash
-            copf scaffold concept --name Bookmark \
+            clef scaffold concept --name Bookmark \
               --param B \
               --purpose "Allow users to save and organize references to items." \
               --actions add,remove,list
@@ -5679,7 +4542,7 @@ annotations:
             ## Step 5: Validate
 
             ```bash
-            copf check specs/app/bookmark.concept
+            clef check specs/app/bookmark.concept
             ```
     register:
       examples:
@@ -5691,10 +4554,10 @@ annotations:
       examples:
         - label: "Generate a basic concept"
           language: bash
-          code: "copf scaffold concept --name User --actions create,update,delete"
+          code: "clef scaffold concept --name User --actions create,update,delete"
         - label: "Generate with custom state"
           language: bash
-          code: "copf scaffold concept --name Article --param A --category domain"
+          code: "clef scaffold concept --name Article --param A --category domain"
       references:
         - path: references/concept-spec-guide.md
           label: "Concept specification writing guide"
@@ -5722,7 +4585,7 @@ annotations:
             ## Step 1: Generate the Sync Scaffold
 
             ```bash
-            copf scaffold sync --name CreateProfile \
+            clef scaffold sync --name CreateProfile \
               --from User/create \
               --to Profile/init \
               --tier required
@@ -5760,7 +4623,7 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            copf sync validate syncs/create-profile.sync
+            clef sync validate syncs/create-profile.sync
             ```
     register:
       examples:
@@ -5772,10 +4635,10 @@ annotations:
       examples:
         - label: "Generate a simple sync"
           language: bash
-          code: "copf scaffold sync --name CreateProfile --from User/create --to Profile/init"
+          code: "clef scaffold sync --name CreateProfile --from User/create --to Profile/init"
         - label: "Generate an eager sync"
           language: bash
-          code: "copf scaffold sync --name ValidateOrder --tier required --eager"
+          code: "clef scaffold sync --name ValidateOrder --tier required --eager"
       references:
         - path: references/sync-rule-guide.md
           label: "Sync rule writing guide"
@@ -5786,7 +4649,7 @@ annotations:
       argument-template: "--concept <ConceptName>"
       trigger-description: >
         Use when implementing a concept handler in TypeScript. Generates a
-        .impl.ts handler with register(), typed action methods, input extraction,
+        .handler.ts handler with register(), typed action methods, input extraction,
         storage patterns, and a conformance test file.
       intro-template: >
         Scaffold a TypeScript handler for concept **$ARGUMENTS** with typed
@@ -5802,19 +4665,19 @@ annotations:
             ## Step 1: Generate the Handler Scaffold
 
             ```bash
-            copf scaffold handler --concept Bookmark \
+            clef scaffold handler --concept Bookmark \
               --actions add:url:String,remove:bookmark:String,list:owner:String
             ```
 
             Output:
             ```
-            Created implementations/typescript/framework/bookmark.impl.ts
+            Created handlers/ts/framework/bookmark.handler.ts
             Created tests/bookmark.conformance.test.ts
             ```
 
             ## Step 2: Implement Action Logic
 
-            Edit `bookmark.impl.ts` — replace TODO comments:
+            Edit `bookmark.handler.ts` — replace TODO comments:
 
             ```typescript
             async add(input, storage) {
@@ -5845,10 +4708,10 @@ annotations:
       examples:
         - label: "Generate a handler"
           language: bash
-          code: "copf scaffold handler --concept User --actions create,update,delete"
+          code: "clef scaffold handler --concept User --actions create,update,delete"
         - label: "Generate with test only"
           language: bash
-          code: "copf scaffold handler --concept Article"
+          code: "clef scaffold handler --concept Article"
       references:
         - path: references/handler-implementation-guide.md
           label: "Handler implementation patterns"
@@ -5858,7 +4721,7 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <AdapterName> --backend <backend>"
       trigger-description: >
-        Use when adding a new storage backend to a COPF application. Generates
+        Use when adding a new storage backend to a CLEF application. Generates
         a ConceptStorage adapter implementation with put, get, find, del, and
         delMany methods for the specified backend.
       intro-template: >
@@ -5875,7 +4738,7 @@ annotations:
             ## Step 1: Generate the Adapter Scaffold
 
             ```bash
-            copf scaffold storage --name AppStorage --backend postgresql
+            clef scaffold storage --name AppStorage --backend postgresql
             ```
 
             ## Step 2: Configure Connection
@@ -5921,13 +4784,13 @@ annotations:
       examples:
         - label: "Generate a PostgreSQL adapter"
           language: bash
-          code: "copf scaffold storage --name AppStorage --backend postgresql"
+          code: "clef scaffold storage --name AppStorage --backend postgresql"
         - label: "Generate a Redis adapter"
           language: bash
-          code: "copf scaffold storage --name CacheStorage --backend redis"
+          code: "clef scaffold storage --name CacheStorage --backend redis"
         - label: "Generate an in-memory adapter"
           language: bash
-          code: "copf scaffold storage --name TestStorage --backend memory"
+          code: "clef scaffold storage --name TestStorage --backend memory"
       references:
         - path: references/storage-adapter-guide.md
           label: "Storage adapter implementation guide"
@@ -5937,7 +4800,7 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <AdapterName> --protocol <protocol>"
       trigger-description: >
-        Use when adding a new transport protocol to a COPF application.
+        Use when adding a new transport protocol to a CLEF application.
         Generates a transport adapter with invoke, query, and health methods
         for the specified protocol.
       intro-template: >
@@ -5954,7 +4817,7 @@ annotations:
             ## Step 1: Generate the Adapter Scaffold
 
             ```bash
-            copf scaffold transport --name ApiTransport --protocol http
+            clef scaffold transport --name ApiTransport --protocol http
             ```
 
             ## Step 2: Configure Base URL
@@ -5994,13 +4857,13 @@ annotations:
       examples:
         - label: "Generate an HTTP adapter"
           language: bash
-          code: "copf scaffold transport --name ApiTransport --protocol http"
+          code: "clef scaffold transport --name ApiTransport --protocol http"
         - label: "Generate a WebSocket adapter"
           language: bash
-          code: "copf scaffold transport --name RealtimeTransport --protocol websocket"
+          code: "clef scaffold transport --name RealtimeTransport --protocol websocket"
         - label: "Generate an in-process adapter"
           language: bash
-          code: "copf scaffold transport --name TestTransport --protocol in-process"
+          code: "clef scaffold transport --name TestTransport --protocol in-process"
       references:
         - path: references/transport-adapter-guide.md
           label: "Transport adapter implementation guide"
@@ -6027,7 +4890,7 @@ annotations:
             ## Step 1: Generate the Component Scaffold
 
             ```bash
-            copf scaffold component --name Dialog \
+            clef scaffold component --name Dialog \
               --parts root,trigger,backdrop,content,title,closeTrigger \
               --states closed,open \
               --events open,close,escape
@@ -6038,7 +4901,7 @@ annotations:
             Created coif-dialog/dialog-widget.concept
             Created coif-dialog/dialog-anatomy.concept
             Created coif-dialog/kit.yaml
-            Created coif-dialog/dialog-machine.impl.ts
+            Created coif-dialog/dialog-machine.handler.ts
             ```
 
             ## Step 2: Add Accessibility
@@ -6057,7 +4920,7 @@ annotations:
             ## Step 3: Customize the Machine
 
             Add guards and transition side effects in
-            `dialog-machine.impl.ts`:
+            `dialog-machine.handler.ts`:
 
             ```typescript
             // Add escape key handler
@@ -6092,10 +4955,10 @@ annotations:
       examples:
         - label: "Generate a dialog component"
           language: bash
-          code: "copf scaffold component --name Dialog --parts root,trigger,content --states closed,open"
+          code: "clef scaffold component --name Dialog --parts root,trigger,content --states closed,open"
         - label: "Generate a tabs component"
           language: bash
-          code: "copf scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
+          code: "clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
       references:
         - path: references/coif-component-guide.md
           label: "COIF headless component architecture"
@@ -6122,7 +4985,7 @@ annotations:
             ## Step 1: Generate the Theme Scaffold
 
             ```bash
-            copf scaffold theme --name ocean \
+            clef scaffold theme --name ocean \
               --primary 220 \
               --font "Inter, sans-serif" \
               --base-size 16 \
@@ -6197,13 +5060,13 @@ annotations:
       examples:
         - label: "Generate a theme with defaults"
           language: bash
-          code: "copf scaffold theme --name ocean"
+          code: "clef scaffold theme --name ocean"
         - label: "Generate a custom theme"
           language: bash
-          code: "copf scaffold theme --name brand --primary '#3b82f6' --font 'Inter, sans-serif' --base-size 18"
+          code: "clef scaffold theme --name brand --primary '#3b82f6' --font 'Inter, sans-serif' --base-size 18"
         - label: "Generate light-only theme"
           language: bash
-          code: "copf scaffold theme --name print --mode light"
+          code: "clef scaffold theme --name print --mode light"
       references:
         - path: references/coif-theme-guide.md
           label: "COIF design system and theme architecture"
@@ -6245,274 +5108,6 @@ concept-overrides:
           params:
             path:
               positional: true
-
-  Emitter:
-    cli:
-      command-group: emitter
-      description: "Manage generated file output, traceability, and drift detection."
-      actions:
-        write:
-          description: "Write a single generated file"
-          args:
-            path:
-              positional: true
-          flags:
-            content:
-              type: string
-              required: true
-              description: "File content to write"
-            formatHint:
-              type: string
-              required: false
-              short: f
-              description: "Formatter to apply (e.g., prettier, rustfmt)"
-        writeBatch:
-          command: write-batch
-          description: "Atomically write a batch of generated files"
-        format:
-          description: "Format a generated file"
-          args:
-            path:
-              positional: true
-        clean:
-          description: "Remove orphaned generated files"
-          args:
-            outputDir:
-              positional: true
-          flags:
-            currentManifest:
-              type: string
-              required: false
-              description: "Path to current manifest listing expected files"
-          examples:
-            - description: "Clean generated directory"
-              command: "copf emitter clean ./generated"
-        manifest:
-          description: "List all tracked output files"
-          args:
-            outputDir:
-              positional: true
-          examples:
-            - description: "List outputs in generated/"
-              command: "copf emitter manifest ./generated"
-        trace:
-          description: "Show which sources produced an output file"
-          args:
-            outputPath:
-              positional: true
-          examples:
-            - description: "Trace provenance of a generated file"
-              command: "copf emitter trace ./generated/user.types.ts"
-        affected:
-          description: "Show what outputs change if a source changes"
-          args:
-            sourcePath:
-              positional: true
-          examples:
-            - description: "Impact analysis for a concept spec"
-              command: "copf emitter affected ./specs/app/user.concept"
-        audit:
-          description: "Check generated files for drift from expected output"
-          args:
-            outputDir:
-              positional: true
-          examples:
-            - description: "Audit generated directory"
-              command: "copf emitter audit ./generated"
-
-  Resource:
-    cli:
-      command-group: resource
-      description: "Track input resources with content-addressed digests."
-      actions:
-        upsert:
-          description: "Register or update a tracked input resource"
-          args:
-            locator:
-              positional: true
-          flags:
-            kind:
-              type: string
-              required: true
-              short: k
-              description: "Resource kind (concept-spec, sync-spec, etc.)"
-            digest:
-              type: string
-              required: true
-              description: "Content hash of the resource"
-        get:
-          description: "Look up a tracked resource"
-          args:
-            locator:
-              positional: true
-        list:
-          description: "List all tracked input resources"
-          flags:
-            kind:
-              type: string
-              required: false
-              short: k
-              description: "Filter by resource kind"
-          examples:
-            - description: "List all tracked resources"
-              command: "copf resource list"
-            - description: "List only concept specs"
-              command: "copf resource list --kind concept-spec"
-        remove:
-          description: "Stop tracking a resource"
-          args:
-            locator:
-              positional: true
-        diff:
-          description: "Classify a content change between two digests"
-          args:
-            locator:
-              positional: true
-
-  KindSystem:
-    cli:
-      command-group: kind-system
-      description: "Inspect the IR kind taxonomy and pipeline topology."
-      actions:
-        define:
-          description: "Register a new IR kind"
-          args:
-            name:
-              positional: true
-          flags:
-            category:
-              type: string
-              required: true
-              short: c
-              description: "Kind category (source, model, artifact)"
-              choices: [source, model, artifact]
-        connect:
-          description: "Declare a transform edge between two kinds"
-          flags:
-            from:
-              type: string
-              required: true
-              description: "Source kind"
-            to:
-              type: string
-              required: true
-              description: "Target kind"
-            relation:
-              type: string
-              required: true
-              description: "Transform relation (normalizes_to, compiles_to, etc.)"
-            transformName:
-              type: string
-              required: false
-              short: t
-              description: "Name of the transform/generator"
-        route:
-          description: "Find shortest transform path between two kinds"
-          flags:
-            from:
-              type: string
-              required: true
-              description: "Source kind"
-            to:
-              type: string
-              required: true
-              description: "Target kind"
-          examples:
-            - description: "Route from source to TypeScript"
-              command: "copf kind-system route --from ConceptDSL --to TypeScriptFiles"
-        validate:
-          description: "Validate a transform edge"
-        dependents:
-          description: "List all downstream kinds from a given kind"
-          args:
-            kind:
-              positional: true
-          examples:
-            - description: "What depends on ConceptManifest?"
-              command: "copf kind-system dependents ConceptManifest"
-        producers:
-          description: "Show what transforms produce a given kind"
-          args:
-            kind:
-              positional: true
-          examples:
-            - description: "What produces TypeScriptFiles?"
-              command: "copf kind-system producers TypeScriptFiles"
-        consumers:
-          description: "Show what transforms consume a given kind"
-          args:
-            kind:
-              positional: true
-          examples:
-            - description: "What consumes ConceptManifest?"
-              command: "copf kind-system consumers ConceptManifest"
-        graph:
-          description: "Show the full kind taxonomy graph"
-          examples:
-            - description: "Display kind graph"
-              command: "copf kind-system graph"
-
-  GenerationPlan:
-    cli:
-      command-group: generation-plan
-      description: "Track and inspect generation runs."
-      actions:
-        begin:
-          description: "Mark a new generation run as started"
-        recordStep:
-          command: record-step
-          description: "Record a step outcome in the current run"
-          flags:
-            stepKey:
-              type: string
-              required: true
-              short: k
-              description: "Step identifier"
-            status:
-              type: string
-              required: true
-              description: "Step outcome (done, cached, failed)"
-            cached:
-              type: boolean
-              required: false
-              description: "Whether the step was a cache hit"
-        complete:
-          description: "Mark the current generation run as finished"
-        status:
-          description: "Show step-by-step status of a generation run"
-          examples:
-            - description: "Show current run status"
-              command: "copf generation-plan status"
-        summary:
-          description: "Show aggregate statistics for a generation run"
-          examples:
-            - description: "Show run summary"
-              command: "copf generation-plan summary"
-        history:
-          description: "Show recent generation runs"
-          flags:
-            limit:
-              type: string
-              required: false
-              short: n
-              description: "Maximum number of runs to show"
-              default: "10"
-          examples:
-            - description: "Show last 5 runs"
-              command: "copf generation-plan history --limit 5"
-            - description: "Show last 10 runs"
-              command: "copf generation-plan history"
-
-  # ─── Scaffold Generators CLI ─────────────────────────
-  # All scaffold generators live under `copf scaffold <type>`.
-  # They share a common pattern: --name for the output name,
-  # type-specific flags for configuration, and --output for
-  # the target directory.
-  #
-  # Pipeline integration: Each generator exposes preview and generate
-  # actions. Sync rules automatically cascade from generate to wire
-  # Emitter/writeBatch, BuildCache/record, and GenerationPlan/recordStep.
-
   KitScaffoldGen:
     cli:
       command-group: scaffold
@@ -6535,7 +5130,7 @@ concept-overrides:
               description: "Comma-separated PascalCase concept names"
         generate:
           command: kit
-          description: "Scaffold a new COPF kit with kit.yaml, concept stubs, and sync directories."
+          description: "Scaffold a new CLEF kit with kit.yaml, concept stubs, and sync directories."
           flags:
             name:
               type: string
@@ -6571,11 +5166,11 @@ concept-overrides:
               description: "Output directory (default: ./kits/<name>)"
           examples:
             - description: "Scaffold a basic kit"
-              command: "copf scaffold kit --name auth --concepts User,Session,Password"
+              command: "clef scaffold kit --name auth --concepts User,Session,Password"
             - description: "Scaffold a domain kit with infrastructure"
-              command: "copf scaffold kit --name web3 --concepts Token,Wallet --domain"
+              command: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
             - description: "Scaffold with syncs"
-              command: "copf scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
+              command: "clef scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
 
   DeployScaffoldGen:
     cli:
@@ -6626,11 +5221,11 @@ concept-overrides:
               description: "Output directory (default: ./deploy)"
           examples:
             - description: "Scaffold a basic deploy manifest"
-              command: "copf scaffold deploy --app my-app"
+              command: "clef scaffold deploy --app my-app"
             - description: "Scaffold with custom runtimes"
-              command: "copf scaffold deploy --app conduit --runtimes api:node:http:postgresql,worker:node:sqs:redis --iac terraform"
+              command: "clef scaffold deploy --app conduit --runtimes api:node:http:postgresql,worker:node:sqs:redis --iac terraform"
             - description: "Scaffold with concept assignments"
-              command: "copf scaffold deploy --app conduit --concepts User:api,Article:api,Email:worker"
+              command: "clef scaffold deploy --app conduit --concepts User:api,Article:api,Email:worker"
 
   InterfaceScaffoldGen:
     cli:
@@ -6695,9 +5290,9 @@ concept-overrides:
               description: "Output directory"
           examples:
             - description: "Scaffold a REST + GraphQL interface"
-              command: "copf scaffold interface --name my-api --targets rest,graphql --sdks typescript,python"
+              command: "clef scaffold interface --name my-api --targets rest,graphql --sdks typescript,python"
             - description: "Scaffold a full-stack interface"
-              command: "copf scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills"
+              command: "clef scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills"
 
   ConceptScaffoldGen:
     cli:
@@ -6749,11 +5344,11 @@ concept-overrides:
               description: "Output directory (default: ./specs/app)"
           examples:
             - description: "Scaffold a basic concept"
-              command: "copf scaffold concept --name User --actions create,update,delete"
+              command: "clef scaffold concept --name User --actions create,update,delete"
             - description: "Scaffold with custom type parameter"
-              command: "copf scaffold concept --name Article --param A --category domain"
+              command: "clef scaffold concept --name Article --param A --category domain"
             - description: "Scaffold with purpose"
-              command: "copf scaffold concept --name Bookmark --purpose 'Save and organize references.'"
+              command: "clef scaffold concept --name Bookmark --purpose 'Save and organize references.'"
 
   SyncScaffoldGen:
     cli:
@@ -6805,15 +5400,15 @@ concept-overrides:
               description: "Output directory (default: ./syncs)"
           examples:
             - description: "Scaffold a sync between two concepts"
-              command: "copf scaffold sync --name CreateProfile --from User/create --to Profile/init"
+              command: "clef scaffold sync --name CreateProfile --from User/create --to Profile/init"
             - description: "Scaffold a required sync"
-              command: "copf scaffold sync --name ValidateOrder --tier required"
+              command: "clef scaffold sync --name ValidateOrder --tier required"
 
   HandlerScaffoldGen:
     cli:
       command-group: scaffold
       subcommand: handler
-      description: "Generate TypeScript concept handler (.impl.ts) and conformance test."
+      description: "Generate TypeScript concept handler (.handler.ts) and conformance test."
       actions:
         preview:
           command: preview
@@ -6826,7 +5421,7 @@ concept-overrides:
               description: "PascalCase concept name"
         generate:
           command: handler
-          description: "Scaffold a .impl.ts handler with register(), typed actions, and a conformance test."
+          description: "Scaffold a .handler.ts handler with register(), typed actions, and a conformance test."
           flags:
             concept:
               type: string
@@ -6850,12 +5445,12 @@ concept-overrides:
               type: string
               required: false
               short: o
-              description: "Output directory (default: ./implementations/typescript)"
+              description: "Output directory (default: ./handlers/ts)"
           examples:
             - description: "Scaffold a handler"
-              command: "copf scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String"
+              command: "clef scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String"
             - description: "Scaffold with kind metadata"
-              command: "copf scaffold handler --concept Bookmark --input-kind BookmarkInput --output-kind BookmarkResult"
+              command: "clef scaffold handler --concept Bookmark --input-kind BookmarkInput --output-kind BookmarkResult"
 
   StorageAdapterScaffoldGen:
     cli:
@@ -6900,11 +5495,11 @@ concept-overrides:
               description: "Output directory"
           examples:
             - description: "Generate a PostgreSQL adapter"
-              command: "copf scaffold storage --name AppStorage --backend postgresql"
+              command: "clef scaffold storage --name AppStorage --backend postgresql"
             - description: "Generate a Redis adapter"
-              command: "copf scaffold storage --name CacheStorage --backend redis"
+              command: "clef scaffold storage --name CacheStorage --backend redis"
             - description: "Generate an in-memory adapter for tests"
-              command: "copf scaffold storage --name TestStorage --backend memory"
+              command: "clef scaffold storage --name TestStorage --backend memory"
 
   TransportAdapterScaffoldGen:
     cli:
@@ -6954,11 +5549,11 @@ concept-overrides:
               description: "Output directory"
           examples:
             - description: "Generate an HTTP adapter"
-              command: "copf scaffold transport --name ApiTransport --protocol http"
+              command: "clef scaffold transport --name ApiTransport --protocol http"
             - description: "Generate a WebSocket adapter"
-              command: "copf scaffold transport --name RealtimeTransport --protocol websocket --base-url ws://localhost:3000"
+              command: "clef scaffold transport --name RealtimeTransport --protocol websocket --base-url ws://localhost:3000"
             - description: "Generate an in-process adapter for tests"
-              command: "copf scaffold transport --name TestTransport --protocol in-process"
+              command: "clef scaffold transport --name TestTransport --protocol in-process"
 
   CoifComponentScaffoldGen:
     cli:
@@ -7023,11 +5618,11 @@ concept-overrides:
               description: "Output directory"
           examples:
             - description: "Generate a dialog component"
-              command: "copf scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape"
+              command: "clef scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape"
             - description: "Generate a tabs component"
-              command: "copf scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
+              command: "clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
             - description: "Generate with slots"
-              command: "copf scaffold component --name Card --parts root,header,body,footer --slots header,footer"
+              command: "clef scaffold component --name Card --parts root,header,body,footer --slots header,footer"
 
   CoifThemeScaffoldGen:
     cli:
@@ -7097,10 +5692,10 @@ concept-overrides:
               description: "Output directory"
           examples:
             - description: "Generate a theme with defaults"
-              command: "copf scaffold theme --name ocean"
+              command: "clef scaffold theme --name ocean"
             - description: "Generate a custom theme"
-              command: "copf scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18"
+              command: "clef scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18"
             - description: "Generate a light-only theme"
-              command: "copf scaffold theme --name print --mode light"
+              command: "clef scaffold theme --name print --mode light"
             - description: "Generate a dark theme"
-              command: "copf scaffold theme --name midnight --mode dark --primary '#6366f1'"
+              command: "clef scaffold theme --name midnight --mode dark --primary '#6366f1'"

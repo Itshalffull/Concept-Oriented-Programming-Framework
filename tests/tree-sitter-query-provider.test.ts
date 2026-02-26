@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   treeSitterQueryProviderHandler,
   resetTreeSitterQueryProviderCounter,
-} from '../implementations/typescript/tree-sitter-query-provider.impl.js';
+} from '../handlers/ts/tree-sitter-query-provider.handler.js';
 
 describe('TreeSitterQueryProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

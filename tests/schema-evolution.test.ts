@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { schemaEvolutionHandler, resetSchemaEvolutionCounter } from '../implementations/typescript/schema-evolution.impl.js';
+import { schemaEvolutionHandler, resetSchemaEvolutionCounter } from '../handlers/ts/schema-evolution.handler.js';
 
 describe('SchemaEvolution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

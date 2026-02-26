@@ -428,7 +428,7 @@ The `copf kit validate` command checks:
 9. Optional uses syncs are exempt from strict reference checking (they only load conditionally)
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit validate kits/<kit-name>
+npx tsx cli/src/index.ts kit validate kits/<kit-name>
 ```
 
 Output for a framework kit:

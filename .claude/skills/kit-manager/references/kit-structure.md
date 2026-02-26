@@ -16,8 +16,8 @@ my-kit/
 ├── syncs/                # Internal syncs
 │   └── create-profile.sync
 ├── implementations/      # Default implementations
-│   ├── user.impl.ts
-│   └── profile.impl.ts
+│   ├── user.handler.ts
+│   └── profile.handler.ts
 └── tests/                # Kit tests
     └── conformance.test.ts
 ```

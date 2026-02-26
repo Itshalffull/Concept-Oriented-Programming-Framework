@@ -6,8 +6,8 @@
 // handlers to their UI renderers.
 //
 // Usage:
-//   import { shared, react, vue, svelte, solid, vanilla, ink } from '@copf/framework-widgets';
-//   import { createFrameworkAdapter } from '@copf/framework-widgets';
+//   import { shared, react, vue, svelte, solid, vanilla, ink } from '@clef/framework-widgets';
+//   import { createFrameworkAdapter } from '@clef/framework-widgets';
 // ============================================================
 
 // --- Shared Module ---

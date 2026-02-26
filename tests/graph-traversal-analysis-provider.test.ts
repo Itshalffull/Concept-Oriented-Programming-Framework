@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   graphTraversalAnalysisProviderHandler,
   resetGraphTraversalAnalysisProviderCounter,
-} from '../implementations/typescript/graph-traversal-analysis-provider.impl.js';
+} from '../handlers/ts/graph-traversal-analysis-provider.handler.js';
 
 describe('GraphTraversalAnalysisProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

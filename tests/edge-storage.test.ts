@@ -7,9 +7,9 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createCloudflareKVStorage } from '../implementations/typescript/storage/cloudflare-kv.js';
-import { createDurableObjectStorage } from '../implementations/typescript/storage/cloudflare-do.js';
-import { createVercelKVStorage } from '../implementations/typescript/storage/vercel-kv.js';
+import { createCloudflareKVStorage } from '../handlers/ts/storage/cloudflare-kv.js';
+import { createDurableObjectStorage } from '../handlers/ts/storage/cloudflare-do.js';
+import { createVercelKVStorage } from '../handlers/ts/storage/vercel-kv.js';
 import type { ConceptStorage, ConflictResolution } from '../kernel/src/types.js';
 
 // ============================================================

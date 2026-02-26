@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   performanceProfileHandler,
   resetPerformanceProfileCounter,
-} from '../implementations/typescript/performance-profile.impl.js';
+} from '../handlers/ts/performance-profile.handler.js';
 
 describe('PerformanceProfile Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

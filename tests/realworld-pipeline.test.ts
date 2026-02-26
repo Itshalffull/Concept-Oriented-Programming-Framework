@@ -11,18 +11,18 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 // Framework concept handlers (for self-compilation tests)
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
-const KITS_DIR = resolve(__dirname, '..', 'kits');
+const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 
 // Tag and Comment were superseded by richer kit versions.
@@ -30,8 +30,8 @@ const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 const SPEC_LOCATIONS: Record<string, { dir: string; file: string }> = {
   profile:  { dir: resolve(SPECS_DIR, 'app'), file: 'profile.concept' },
   article:  { dir: resolve(SPECS_DIR, 'app'), file: 'article.concept' },
-  comment:  { dir: resolve(KITS_DIR, 'content'), file: 'comment.concept' },
-  tag:      { dir: resolve(KITS_DIR, 'classification'), file: 'tag.concept' },
+  comment:  { dir: resolve(REPERTOIRE_DIR, 'content'), file: 'comment.concept' },
+  tag:      { dir: resolve(REPERTOIRE_DIR, 'classification'), file: 'tag.concept' },
   favorite: { dir: resolve(SPECS_DIR, 'app'), file: 'favorite.concept' },
   follow:   { dir: resolve(SPECS_DIR, 'app'), file: 'follow.concept' },
 };

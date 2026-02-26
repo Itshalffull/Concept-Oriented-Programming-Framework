@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   apiSurfaceHandler,
   resetApiSurfaceCounter,
-} from '../implementations/typescript/api-surface.impl.js';
+} from '../handlers/ts/api-surface.handler.js';
 
 describe('ApiSurface', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

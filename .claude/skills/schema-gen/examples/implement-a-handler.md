@@ -18,7 +18,7 @@ action signatures.
 ## Step 2: Create the Handler File
 
 ```typescript
-// implementations/user.impl.ts
+// implementations/user.handler.ts
 import type { ConceptHandler, ConceptStorage } from '@copf/kernel';
 
 interface UserState {

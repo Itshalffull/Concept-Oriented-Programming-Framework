@@ -117,11 +117,11 @@ concepts:
 
 *Generate an interface scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold interface --name my-api --targets rest,graphql
+npx tsx cli/src/index.ts scaffold interface --name my-api --targets rest,graphql
 ```
 *Generate interfaces from manifest:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts interface generate --manifest my-api.interface.yaml
+npx tsx cli/src/index.ts interface generate --manifest my-api.interface.yaml
 ```
 *Run scaffold generator tests:*
 ```bash

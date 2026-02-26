@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   syncDependenceProviderHandler,
   resetSyncDependenceProviderCounter,
-} from '../implementations/typescript/sync-dependence-provider.impl.js';
+} from '../handlers/ts/sync-dependence-provider.handler.js';
 
 describe('SyncDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

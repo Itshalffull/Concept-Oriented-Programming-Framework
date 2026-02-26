@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Entry Point
+// Clef Kernel - Entry Point
 //
 // Pre-conceptual code only (Section 10.3):
 //   - Message dispatch (self-hosted.ts)

@@ -23,7 +23,7 @@ concepts:
     spec: ./specs/user.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/user.impl.ts
+        path: ./handlers/ts/app/user.handler.ts
         runtime: server
         storage: sqlite
         queryMode: graphql
@@ -32,7 +32,7 @@ concepts:
     spec: ./specs/password.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/password.impl.ts
+        path: ./handlers/ts/app/password.handler.ts
         runtime: server
         storage: sqlite
         queryMode: graphql
@@ -41,7 +41,7 @@ concepts:
     spec: ./specs/jwt.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/jwt.impl.ts
+        path: ./handlers/ts/app/jwt.handler.ts
         runtime: server
         storage: memory
         queryMode: lite
@@ -50,7 +50,7 @@ concepts:
     spec: ./specs/article.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/article.impl.ts
+        path: ./handlers/ts/app/article.handler.ts
         runtime: server
         storage: sqlite
         queryMode: graphql
@@ -59,7 +59,7 @@ concepts:
     spec: ./specs/comment.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/comment.impl.ts
+        path: ./handlers/ts/app/comment.handler.ts
         runtime: server
         storage: sqlite
         queryMode: graphql
@@ -410,7 +410,7 @@ concepts:
     spec: ./specs/user.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/user.impl.ts
+        path: ./handlers/ts/app/user.handler.ts
         runtime: dev
         storage: memory
         queryMode: lite
@@ -419,7 +419,7 @@ concepts:
     spec: ./specs/password.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/password.impl.ts
+        path: ./handlers/ts/app/password.handler.ts
         runtime: dev
         storage: memory
         queryMode: lite
@@ -428,7 +428,7 @@ concepts:
     spec: ./specs/jwt.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/jwt.impl.ts
+        path: ./handlers/ts/app/jwt.handler.ts
         runtime: dev
         storage: memory
         queryMode: lite
@@ -437,7 +437,7 @@ concepts:
     spec: ./specs/article.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/article.impl.ts
+        path: ./handlers/ts/app/article.handler.ts
         runtime: dev
         storage: memory
         queryMode: lite

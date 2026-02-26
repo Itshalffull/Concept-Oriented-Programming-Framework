@@ -13,7 +13,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   pessimisticLockHandler,
   resetPessimisticLockCounter,
-} from '../implementations/typescript/pessimistic-lock.impl.js';
+} from '../handlers/ts/pessimistic-lock.handler.js';
 
 describe('PessimisticLock', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -132,7 +132,7 @@ action create(name: String, email: String) { -> ok(user: U) { New user registere
 
 *Parse and validate all concept specs:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts check
+npx tsx cli/src/index.ts check
 ```
 *Run parser tests:*
 ```bash

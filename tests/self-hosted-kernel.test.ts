@@ -14,9 +14,9 @@ import {
   createInMemoryStorage,
   createConceptRegistry,
 } from '../kernel/src/index.js';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import type {
   ConceptHandler,
   ConceptAST,
@@ -24,14 +24,14 @@ import type {
 } from '../kernel/src/types.js';
 
 // Framework concept handlers
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
-import { registryHandler } from '../implementations/typescript/framework/registry.impl.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
+import { registryHandler } from '../handlers/ts/framework/registry.handler.js';
 
 // SyncEngine concept handler
-import { createSyncEngineHandler } from '../implementations/typescript/framework/sync-engine.impl.js';
+import { createSyncEngineHandler } from '../handlers/ts/framework/sync-engine.handler.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');

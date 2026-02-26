@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { recursiveMergeHandler, resetRecursiveMergeCounter } from '../implementations/typescript/recursive-merge.impl.js';
+import { recursiveMergeHandler, resetRecursiveMergeCounter } from '../handlers/ts/recursive-merge.handler.js';
 
 describe('RecursiveMerge', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

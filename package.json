@@ -1,17 +1,17 @@
 {
-  "name": "copf",
+  "name": "clef",
   "version": "0.1.0",
-  "description": "Concept-Oriented Programming Framework",
+  "description": "Clef — composable software framework",
   "private": true,
   "type": "module",
   "bin": {
-    "copf": "./dist/tools/copf-cli/src/main.js"
+    "clef": "./dist/cli/src/main.js"
   },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "copf": "npx tsx tools/copf-cli/src/main.ts",
+    "clef": "npx tsx cli/src/main.ts",
     "postinstall": "node scripts/copy-tree-sitter-wasm.mjs"
   },
   "dependencies": {

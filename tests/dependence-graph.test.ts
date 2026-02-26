@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   dependenceGraphHandler,
   resetDependenceGraphCounter,
-} from '../implementations/typescript/dependence-graph.impl.js';
+} from '../handlers/ts/dependence-graph.handler.js';
 
 describe('DependenceGraph Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

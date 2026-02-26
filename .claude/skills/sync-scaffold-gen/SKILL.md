@@ -138,11 +138,11 @@ then {
 
 *Generate a sync scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold sync --name CreateProfile --from User/create --to Profile/init
+npx tsx cli/src/index.ts scaffold sync --name CreateProfile --from User/create --to Profile/init
 ```
 *Validate generated sync:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts sync validate syncs/create-profile.sync
+npx tsx cli/src/index.ts sync validate syncs/create-profile.sync
 ```
 *Run scaffold generator tests:*
 ```bash

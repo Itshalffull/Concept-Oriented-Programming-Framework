@@ -8,11 +8,11 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 
 // Import generated platform adapter handlers
-import { browseradapterHandler } from '../generated/concept-interface/typescript/browseradapter.impl.js';
-import { mobileadapterHandler } from '../generated/concept-interface/typescript/mobileadapter.impl.js';
-import { desktopadapterHandler } from '../generated/concept-interface/typescript/desktopadapter.impl.js';
-import { watchadapterHandler } from '../generated/concept-interface/typescript/watchadapter.impl.js';
-import { terminaladapterHandler } from '../generated/concept-interface/typescript/terminaladapter.impl.js';
+import { browseradapterHandler } from '../generated/surface/typescript/browseradapter.impl.js';
+import { mobileadapterHandler } from '../generated/surface/typescript/mobileadapter.impl.js';
+import { desktopadapterHandler } from '../generated/surface/typescript/desktopadapter.impl.js';
+import { watchadapterHandler } from '../generated/surface/typescript/watchadapter.impl.js';
+import { terminaladapterHandler } from '../generated/surface/typescript/terminaladapter.impl.js';
 
 describe('Conduit Platform Adapters — All 5 Platforms', () => {
   describe('BrowserAdapter', () => {

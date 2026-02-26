@@ -2,18 +2,18 @@
 // Parse Kit Concept & Sync Conformance Tests
 //
 // Validates that all concept specs, grammar provider specs,
-// pattern engine specs, sync definitions, and the kit.yaml
+// pattern engine specs, sync definitions, and the suite.yaml
 // manifest parse correctly and contain expected structure.
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import { parse as parseYaml } from 'yaml';
 
-const PARSE_DIR = resolve(__dirname, '../kits/parse');
+const PARSE_DIR = resolve(__dirname, '../score/parse');
 
 // ============================================================
 // 1. Coordination Concept Specs
@@ -183,8 +183,8 @@ describe('Parse Kit — Sync Definitions', () => {
 // 5. Kit Manifest
 // ============================================================
 
-describe('Parse Kit — kit.yaml Manifest', () => {
-  const kitYamlPath = resolve(PARSE_DIR, 'kit.yaml');
+describe('Parse Kit — suite.yaml Manifest', () => {
+  const kitYamlPath = resolve(PARSE_DIR, 'suite.yaml');
 
   it('exists and is valid YAML', () => {
     expect(existsSync(kitYamlPath)).toBe(true);
@@ -195,8 +195,8 @@ describe('Parse Kit — kit.yaml Manifest', () => {
 
   it('has correct kit metadata', () => {
     const parsed = parseYaml(readFileSync(kitYamlPath, 'utf-8'));
-    expect(parsed.kit.name).toBe('parse');
-    expect(parsed.kit.version).toBe('0.1.0');
+    expect(parsed.suite.name).toBe('parse');
+    expect(parsed.suite.version).toBe('0.1.0');
   });
 
   it('lists 6 coordination concepts', () => {

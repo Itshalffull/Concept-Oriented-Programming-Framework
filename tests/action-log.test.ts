@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
+import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
 
 // ============================================================
 // ActionLog Concept

@@ -12,9 +12,9 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { solidityGenHandler } from '../implementations/typescript/framework/solidity-gen.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');

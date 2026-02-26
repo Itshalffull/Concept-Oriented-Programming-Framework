@@ -72,8 +72,8 @@ concept Article [A] {
 
 Place the file at:
 ```
-implementations/typescript/app/<name>.impl.ts        # App concepts
-implementations/typescript/framework/<name>.impl.ts   # Framework concepts
+handlers/ts/app/<name>.handler.ts        # App concepts
+handlers/ts/framework/<name>.handler.ts   # Framework concepts
 ```
 
 Start with the imports and handler skeleton:
@@ -217,8 +217,8 @@ Write tests in `tests/<name>.test.ts` or `tests/<name>-flow.test.ts`. Three test
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { myHandler } from '../implementations/typescript/app/my.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { myHandler } from '../handlers/ts/app/my.impl';
 
 describe('My Concept', () => {
   it('performs action correctly', async () => {

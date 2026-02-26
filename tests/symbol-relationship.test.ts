@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   symbolRelationshipHandler,
   resetSymbolRelationshipCounter,
-} from '../implementations/typescript/symbol-relationship.impl.js';
+} from '../handlers/ts/symbol-relationship.handler.js';
 
 describe('SymbolRelationship', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

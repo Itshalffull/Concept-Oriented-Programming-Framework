@@ -11,8 +11,8 @@ import {
   createInProcessAdapter,
   createConceptRegistry,
 } from '../kernel/src/index.js';
-import { ActionLog, DistributedSyncEngine } from '../implementations/typescript/framework/sync-engine.impl.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { ActionLog, DistributedSyncEngine } from '../handlers/ts/framework/sync-engine.handler.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import type {
   ConceptHandler,
   ActionCompletion,

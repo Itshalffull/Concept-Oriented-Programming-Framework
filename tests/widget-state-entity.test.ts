@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   widgetStateEntityHandler,
   resetWidgetStateEntityCounter,
-} from '../implementations/typescript/widget-state-entity.impl.js';
+} from '../handlers/ts/widget-state-entity.handler.js';
 
 describe('WidgetStateEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

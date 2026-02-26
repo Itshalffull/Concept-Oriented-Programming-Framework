@@ -858,8 +858,8 @@ describe('MyStorage', () => {
 // bootstrap.ts — How to wire your storage adapter into COPF
 import { createInProcessAdapter, createConceptRegistry } from '@copf/kernel';
 import { createMyStorage } from './my-storage.js';
-import { articleHandler } from './app/article.impl.js';
-import { userHandler } from './app/user.impl.js';
+import { articleHandler } from './app/article.handler.js';
+import { userHandler } from './app/user.handler.js';
 
 // Create registry
 const registry = createConceptRegistry();

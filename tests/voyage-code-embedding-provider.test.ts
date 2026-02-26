@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   voyageCodeEmbeddingProviderHandler,
   resetVoyageCodeEmbeddingProviderCounter,
-} from '../implementations/typescript/voyage-code-embedding-provider.impl.js';
+} from '../handlers/ts/voyage-code-embedding-provider.handler.js';
 
 describe('VoyageCodeEmbeddingProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

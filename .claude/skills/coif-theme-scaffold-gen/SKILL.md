@@ -154,7 +154,7 @@ Animations play regardless of prefers-reduced-motion setting.
 
 *Generate a COIF theme scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'
+npx tsx cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'
 ```
 *Run scaffold generator tests:*
 ```bash

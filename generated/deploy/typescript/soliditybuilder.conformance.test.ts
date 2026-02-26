@@ -1,6 +1,6 @@
 // generated: soliditybuilder.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { soliditybuilderHandler } from "./soliditybuilder.impl";
 
 describe("SolidityBuilder conformance", () => {

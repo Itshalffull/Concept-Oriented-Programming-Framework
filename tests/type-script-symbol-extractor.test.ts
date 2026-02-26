@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   typeScriptSymbolExtractorHandler,
   resetTypeScriptSymbolExtractorCounter,
-} from '../implementations/typescript/type-script-symbol-extractor.impl.js';
+} from '../handlers/ts/type-script-symbol-extractor.handler.js';
 
 describe('TypeScriptSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
@@ -223,7 +223,7 @@ const timeout = 5000;`;
     });
 
     it('extracts re-exports', async () => {
-      const source = `export { symbolHandler, resetSymbolCounter } from './symbol.impl.js';`;
+      const source = `export { symbolHandler, resetSymbolCounter } from './symbol.handler.js';`;
       const result = await typeScriptSymbolExtractorHandler.extract({
         source, file: 'index.ts',
       }, storage);

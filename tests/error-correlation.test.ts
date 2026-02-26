@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   errorCorrelationHandler,
   resetErrorCorrelationCounter,
-} from '../implementations/typescript/error-correlation.impl.js';
+} from '../handlers/ts/error-correlation.handler.js';
 
 describe('ErrorCorrelation Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

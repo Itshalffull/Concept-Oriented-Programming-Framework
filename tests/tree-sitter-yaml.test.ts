@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   treeSitterYamlHandler,
   resetTreeSitterYamlCounter,
-} from '../implementations/typescript/tree-sitter-yaml.impl.js';
+} from '../handlers/ts/tree-sitter-yaml.handler.js';
 
 describe('TreeSitterYaml', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

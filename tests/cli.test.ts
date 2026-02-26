@@ -10,18 +10,18 @@ import { existsSync, readFileSync, rmSync, mkdirSync } from 'fs';
 import { resolve, join } from 'path';
 
 // Import CLI internals
-import { parseArgs } from '../tools/copf-cli/src/main';
-import { findFiles } from '../tools/copf-cli/src/util';
+import { parseArgs } from '../cli/src/main';
+import { findFiles } from '../cli/src/util';
 
 // Import kernel modules used by commands
-import { createInMemoryStorage } from '@copf/kernel';
-import type { ConceptManifest } from '@copf/kernel';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl';
-import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl';
-import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl';
+import { createInMemoryStorage } from '@clef/kernel';
+import type { ConceptManifest } from '@clef/kernel';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler';
+import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler';
+import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler';
 import type { ConceptAST } from '../kernel/src/types';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
@@ -288,7 +288,7 @@ describe('init command (project scaffolding)', () => {
   it('creates project directory structure', async () => {
     // Import init command and call it
     const { initCommand } = await import(
-      '../tools/copf-cli/src/commands/init'
+      '../cli/src/commands/init'
     );
 
     // Override process.cwd for the test
@@ -311,9 +311,9 @@ describe('init command (project scaffolding)', () => {
     // Verify directory structure
     expect(existsSync(join(testProjectDir, 'specs/app'))).toBe(true);
     expect(existsSync(join(testProjectDir, 'syncs/app'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'implementations/typescript/app'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'handlers/ts/app'))).toBe(true);
     expect(existsSync(join(testProjectDir, 'tests'))).toBe(true);
-    expect(existsSync(join(testProjectDir, 'kits'))).toBe(true);
+    expect(existsSync(join(testProjectDir, 'repertoire'))).toBe(true);
 
     // Verify template files
     expect(existsSync(join(testProjectDir, 'package.json'))).toBe(true);

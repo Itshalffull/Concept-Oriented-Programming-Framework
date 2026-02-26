@@ -17,7 +17,7 @@ allowed-tools: Read, Write, Bash
 Scaffold a TypeScript handler for concept **$ARGUMENTS** with typed actions, storage patterns, and a conformance test.
 
 
-> **When to use:** Use when implementing a concept handler in TypeScript. Generates a .impl.ts handler with register(), typed action methods, input extraction, storage patterns, and a conformance test file.
+> **When to use:** Use when implementing a concept handler in TypeScript. Generates a .handler.ts handler with register(), typed action methods, input extraction, storage patterns, and a conformance test file.
 
 
 ## Design Principles
@@ -125,7 +125,7 @@ async create(input, storage) {
 
 *Generate a handler scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold handler --concept User --actions create,update,delete
+npx tsx cli/src/index.ts scaffold handler --concept User --actions create,update,delete
 ```
 *Run generated conformance test:*
 ```bash

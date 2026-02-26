@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   conceptSpecSymbolExtractorHandler,
   resetConceptSpecSymbolExtractorCounter,
-} from '../implementations/typescript/concept-spec-symbol-extractor.impl.js';
+} from '../handlers/ts/concept-spec-symbol-extractor.handler.js';
 
 describe('ConceptSpecSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

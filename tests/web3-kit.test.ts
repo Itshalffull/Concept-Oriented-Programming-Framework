@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { chainMonitorHandler } from '../kits/web3/implementations/typescript/chain-monitor.impl.js';
-import { contentHandler } from '../kits/web3/implementations/typescript/content.impl.js';
-import { walletHandler } from '../kits/web3/implementations/typescript/wallet.impl.js';
+import { chainMonitorHandler } from '../handlers/ts/repertoire/web3/chain-monitor.handler.js';
+import { contentHandler } from '../handlers/ts/repertoire/web3/content.handler.js';
+import { walletHandler } from '../handlers/ts/repertoire/web3/wallet.handler.js';
 import type { ConceptStorage } from '../kernel/src/types.js';
 
 // ============================================================

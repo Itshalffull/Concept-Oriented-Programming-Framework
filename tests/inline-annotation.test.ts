@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   inlineAnnotationHandler,
   resetInlineAnnotationCounter,
-} from '../implementations/typescript/inline-annotation.impl.js';
+} from '../handlers/ts/inline-annotation.handler.js';
 
 describe('InlineAnnotation', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

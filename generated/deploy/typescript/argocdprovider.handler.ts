@@ -1,5 +1,5 @@
 // generated: argocdprovider.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./argocdprovider.types";
 
 export interface ArgoCDProviderHandler {

@@ -15,11 +15,11 @@ import { resolve } from 'path';
 import {
   parseDeploymentManifest,
   validateDeploymentManifest,
-} from '../implementations/typescript/framework/deployment-validator.impl.js';
+} from '../handlers/ts/framework/deployment-validator.handler.js';
 import type {
   DeploymentManifest,
   RuntimeConfig,
-} from '../implementations/typescript/framework/deployment-validator.impl.js';
+} from '../handlers/ts/framework/deployment-validator.handler.js';
 import { createInMemoryStorage } from '../kernel/src/index.js';
 import type {
   ActionInvocation,

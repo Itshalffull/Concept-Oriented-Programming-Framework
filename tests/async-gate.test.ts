@@ -15,16 +15,16 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { asyncGateValidator } from '../tools/copf-cli/src/patterns/async-gate.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { asyncGateValidator } from '../cli/src/patterns/async-gate.js';
 import {
   buildFlowTrace,
   renderFlowTrace,
-} from '../implementations/typescript/framework/flow-trace.impl.js';
-import type { FlowTrace, TraceNode, GateLookup } from '../implementations/typescript/framework/flow-trace.impl.js';
-import { ActionLog, indexKey } from '../implementations/typescript/framework/engine.js';
-import type { SyncIndex } from '../implementations/typescript/framework/engine.js';
+} from '../handlers/ts/framework/flow-trace.handler.js';
+import type { FlowTrace, TraceNode, GateLookup } from '../handlers/ts/framework/flow-trace.handler.js';
+import { ActionLog, indexKey } from '../handlers/ts/framework/engine.js';
+import type { SyncIndex } from '../handlers/ts/framework/engine.js';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';

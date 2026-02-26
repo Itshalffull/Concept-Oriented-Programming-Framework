@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   manualResolutionHandler,
   resetManualResolutionCounter,
-} from '../implementations/typescript/manual-resolution.impl.js';
+} from '../handlers/ts/manual-resolution.handler.js';
 
 describe('ManualResolution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

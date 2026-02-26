@@ -1,5 +1,5 @@
 // generated: lambdaruntime.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./lambdaruntime.types";
 
 export interface LambdaRuntimeHandler {

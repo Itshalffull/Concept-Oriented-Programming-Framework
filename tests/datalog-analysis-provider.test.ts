@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   datalogAnalysisProviderHandler,
   resetDatalogAnalysisProviderCounter,
-} from '../implementations/typescript/datalog-analysis-provider.impl.js';
+} from '../handlers/ts/datalog-analysis-provider.handler.js';
 
 describe('DatalogAnalysisProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

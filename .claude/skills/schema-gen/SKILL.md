@@ -106,7 +106,7 @@ async create(input, storage) {
 
 *Generate manifests from specs:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate
+npx tsx cli/src/index.ts generate
 ```
 *Run schema generation tests:*
 ```bash

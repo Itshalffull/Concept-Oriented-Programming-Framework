@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   trigramIndexProviderHandler,
   resetTrigramIndexProviderCounter,
-} from '../implementations/typescript/trigram-index-provider.impl.js';
+} from '../handlers/ts/trigram-index-provider.handler.js';
 
 describe('TrigramIndexProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

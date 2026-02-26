@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   treeSitterJsonHandler,
   resetTreeSitterJsonCounter,
-} from '../implementations/typescript/tree-sitter-json.impl.js';
+} from '../handlers/ts/tree-sitter-json.handler.js';
 
 describe('TreeSitterJson', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

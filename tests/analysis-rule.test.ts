@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   analysisRuleHandler,
   resetAnalysisRuleCounter,
-} from '../implementations/typescript/analysis-rule.impl.js';
+} from '../handlers/ts/analysis-rule.handler.js';
 
 describe('AnalysisRule Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

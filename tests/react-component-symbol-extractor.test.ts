@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   reactComponentSymbolExtractorHandler,
   resetReactComponentSymbolExtractorCounter,
-} from '../implementations/typescript/react-component-symbol-extractor.impl.js';
+} from '../handlers/ts/react-component-symbol-extractor.handler.js';
 
 describe('ReactComponentSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

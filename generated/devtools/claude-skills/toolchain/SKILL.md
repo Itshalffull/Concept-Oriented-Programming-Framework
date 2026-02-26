@@ -26,7 +26,7 @@ Find and validate a compiler toolchain for a language and platform. Routes to la
 **Examples:**
 *Resolve Swift toolchain*
 ```bash
-copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'
+clef toolchain resolve swift --platform linux-arm64 --version '>=5.10'
 ```
 *Resolve programmatically*
 ```typescript
@@ -51,7 +51,7 @@ Verify a previously resolved toolchain is still valid — tool exists at path, v
 **Examples:**
 *Validate all toolchains*
 ```bash
-copf toolchain validate
+clef toolchain validate
 ```
 
 **Checklist:**
@@ -66,11 +66,11 @@ List all resolved toolchains, optionally filtered by language.
 **Examples:**
 *List all resolved toolchains*
 ```bash
-copf toolchain list
+clef toolchain list
 ```
 *List by language*
 ```bash
-copf toolchain list --language swift
+clef toolchain list --language swift
 ```
 
 **Checklist:**
@@ -95,10 +95,10 @@ Return detailed capabilities for a resolved tool.
 
 | Action | Command | Purpose |
 |--------|---------|---------|
-| resolve | `copf toolchain resolve <lang>` | Find compiler for language |
-| validate | `copf toolchain validate` | Re-check resolved tools |
-| list | `copf toolchain list` | Show all toolchains |
-| capabilities | `copf toolchain capabilities` | Show tool capabilities |
+| resolve | `clef toolchain resolve <lang>` | Find compiler for language |
+| validate | `clef toolchain validate` | Re-check resolved tools |
+| list | `clef toolchain list` | Show all toolchains |
+| capabilities | `clef toolchain capabilities` | Show tool capabilities |
 
 
 ## Anti-Patterns
@@ -122,15 +122,15 @@ SwiftBuilder/build(toolchainPath: ?path, ...)
 
 *List resolved toolchains:*
 ```bash
-copf toolchain list
+clef toolchain list
 ```
 *Resolve a specific toolchain:*
 ```bash
-copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'
+clef toolchain resolve swift --platform linux-arm64 --version '>=5.10'
 ```
 *Validate all toolchains:*
 ```bash
-copf toolchain validate
+clef toolchain validate
 ```
 
 ## Related Skills

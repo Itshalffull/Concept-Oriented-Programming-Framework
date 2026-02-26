@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   conceptEntityHandler,
   resetConceptEntityCounter,
-} from '../implementations/typescript/concept-entity.impl.js';
+} from '../handlers/ts/concept-entity.handler.js';
 
 describe('ConceptEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

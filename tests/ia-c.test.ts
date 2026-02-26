@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   iaCHandler,
   resetIaCCounter,
-} from '../implementations/typescript/ia-c.impl.js';
+} from '../handlers/ts/ia-c.handler.js';
 
 describe('IaC', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

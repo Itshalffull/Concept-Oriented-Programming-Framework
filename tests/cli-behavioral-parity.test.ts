@@ -22,18 +22,18 @@ import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 // Kernel components
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { createInMemoryStorage } from '@copf/kernel';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { createInMemoryStorage } from '@clef/kernel';
 import type { ConceptAST, CompiledSync } from '../kernel/src/types';
 
 // Concept handlers (the handmade CLI calls these directly)
 import {
   parseConceptFile,
   specParserHandler,
-} from '../implementations/typescript/framework/spec-parser.impl';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl';
-import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
+} from '../handlers/ts/framework/spec-parser.handler';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler';
+import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const SPECS_DIR = resolve(PROJECT_ROOT, 'specs');

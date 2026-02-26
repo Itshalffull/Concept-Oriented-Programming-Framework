@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Shared Types
+// Clef Kernel - Shared Types
 // ============================================================
 
 import { randomUUID } from 'crypto';

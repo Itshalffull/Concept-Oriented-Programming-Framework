@@ -13,7 +13,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   runtimeCoverageHandler,
   resetRuntimeCoverageCounter,
-} from '../implementations/typescript/runtime-coverage.impl.js';
+} from '../handlers/ts/runtime-coverage.handler.js';
 
 describe('RuntimeCoverage Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   argoCDProviderHandler,
   resetArgoCDProviderCounter,
-} from '../implementations/typescript/argo-cd-provider.impl.js';
+} from '../handlers/ts/argo-cd-provider.handler.js';
 
 describe('ArgoCDProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

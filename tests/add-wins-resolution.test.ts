@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   addWinsResolutionHandler,
   resetAddWinsResolutionCounter,
-} from '../implementations/typescript/add-wins-resolution.impl.js';
+} from '../handlers/ts/add-wins-resolution.handler.js';
 
 describe('AddWinsResolution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

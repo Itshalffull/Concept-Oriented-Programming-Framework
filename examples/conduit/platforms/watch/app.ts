@@ -3,7 +3,7 @@
 // Supports watchOS (WatchKit) and Wear OS (Wear Compose).
 
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
-import { watchadapterHandler } from '../../../../generated/concept-interface/typescript/watchadapter.impl.js';
+import { watchadapterHandler } from '../../../../generated/surface/typescript/watchadapter.handler.js';
 
 async function initWatchPlatform() {
   const storage = createInMemoryStorage();

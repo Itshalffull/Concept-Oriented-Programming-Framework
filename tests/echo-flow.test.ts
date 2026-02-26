@@ -5,9 +5,9 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
-import { echoHandler } from '../implementations/typescript/app/echo.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
+import { echoHandler } from '../handlers/ts/app/echo.handler';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

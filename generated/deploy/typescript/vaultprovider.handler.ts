@@ -1,5 +1,5 @@
 // generated: vaultprovider.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./vaultprovider.types";
 
 export interface VaultProviderHandler {

@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { branchHandler, resetBranchCounter } from '../implementations/typescript/branch.impl.js';
+import { branchHandler, resetBranchCounter } from '../handlers/ts/branch.handler.js';
 
 describe('Branch', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

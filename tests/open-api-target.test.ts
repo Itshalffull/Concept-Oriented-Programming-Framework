@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   openApiTargetHandler,
   resetOpenApiTargetCounter,
-} from '../implementations/typescript/open-api-target.impl.js';
+} from '../handlers/ts/open-api-target.handler.js';
 
 describe('OpenApiTarget', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
@@ -73,7 +73,7 @@ describe('OpenApiTarget', () => {
         storage,
       );
       const doc = JSON.parse(result.content as string);
-      expect(doc.info.title).toBe('COPF OpenAPI Specification');
+      expect(doc.info.title).toBe('Clef OpenAPI Specification');
       expect(doc.info.version).toBe('1.0.0');
       expect(doc.paths['/api/test']).toBeDefined();
     });

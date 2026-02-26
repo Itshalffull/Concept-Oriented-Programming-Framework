@@ -1,4 +1,4 @@
-# copf toolchain — Help
+# clef toolchain — Help
 
 Use when resolving, validating, or listing compiler toolchains for the build layer. Routes resolution to language-specific providers (SwiftToolchain, TypeScriptToolchain, RustToolchain, SolidityToolchain).
 
@@ -39,10 +39,10 @@ Use when resolving, validating, or listing compiler toolchains for the build lay
 
 | Action | Command | Purpose |
 |--------|---------|---------|
-| resolve | `copf toolchain resolve <lang>` | Find compiler for language |
-| validate | `copf toolchain validate` | Re-check resolved tools |
-| list | `copf toolchain list` | Show all toolchains |
-| capabilities | `copf toolchain capabilities` | Show tool capabilities |
+| resolve | `clef toolchain resolve <lang>` | Find compiler for language |
+| validate | `clef toolchain validate` | Re-check resolved tools |
+| list | `clef toolchain list` | Show all toolchains |
+| capabilities | `clef toolchain capabilities` | Show tool capabilities |
 
 
 ## Anti-Patterns
@@ -66,15 +66,15 @@ SwiftBuilder/build(toolchainPath: ?path, ...)
 
 *List resolved toolchains:*
 ```bash
-copf toolchain list
+clef toolchain list
 ```
 *Resolve a specific toolchain:*
 ```bash
-copf toolchain resolve swift --platform linux-arm64 --version '>=5.10'
+clef toolchain resolve swift --platform linux-arm64 --version '>=5.10'
 ```
 *Validate all toolchains:*
 ```bash
-copf toolchain validate
+clef toolchain validate
 ```
 
 ## Related Skills

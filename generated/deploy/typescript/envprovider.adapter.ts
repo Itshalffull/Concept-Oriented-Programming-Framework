@@ -2,9 +2,9 @@
 import type {
   ActionInvocation, ActionCompletion,
   ConceptTransport, ConceptQuery
-} from "@copf/runtime";
+} from "@clef/runtime";
 import type { EnvProviderHandler } from "./envprovider.handler";
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 
 export function createEnvProviderLiteAdapter(
   handler: EnvProviderHandler,

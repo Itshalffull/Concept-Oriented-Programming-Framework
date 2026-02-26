@@ -80,7 +80,7 @@ copf resource list --kind concept-spec
 
 *List tracked resources:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --status
+npx tsx cli/src/index.ts generate --status
 ```
 ## Related Skills
 

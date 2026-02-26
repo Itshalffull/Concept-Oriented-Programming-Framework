@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { registryHandler } from '../implementations/typescript/framework/registry.impl.js';
+import { registryHandler } from '../handlers/ts/framework/registry.handler.js';
 
 // ============================================================
 // Registry Concept

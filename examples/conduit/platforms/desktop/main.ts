@@ -3,7 +3,7 @@
 // Uses the DesktopAdapter concept for native window management.
 
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
-import { desktopadapterHandler } from '../../../../generated/concept-interface/typescript/desktopadapter.impl.js';
+import { desktopadapterHandler } from '../../../../generated/surface/typescript/desktopadapter.handler.js';
 
 // Electron main process setup
 // In a real Electron app, this would use electron's BrowserWindow.

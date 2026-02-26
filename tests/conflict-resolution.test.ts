@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   conflictResolutionHandler,
   resetConflictResolutionCounter,
-} from '../implementations/typescript/conflict-resolution.impl.js';
+} from '../handlers/ts/conflict-resolution.handler.js';
 
 describe('ConflictResolution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

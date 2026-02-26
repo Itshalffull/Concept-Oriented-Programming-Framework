@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   asyncApiTargetHandler,
   resetAsyncApiTargetCounter,
-} from '../implementations/typescript/async-api-target.impl.js';
+} from '../handlers/ts/async-api-target.handler.js';
 
 describe('AsyncApiTarget', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

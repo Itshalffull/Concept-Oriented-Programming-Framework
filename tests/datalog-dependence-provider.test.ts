@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   datalogDependenceProviderHandler,
   resetDatalogDependenceProviderCounter,
-} from '../implementations/typescript/datalog-dependence-provider.impl.js';
+} from '../handlers/ts/datalog-dependence-provider.handler.js';
 
 describe('DatalogDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -19,7 +19,7 @@ Output:
 Created coif-dialog/dialog-widget.concept
 Created coif-dialog/dialog-anatomy.concept
 Created coif-dialog/kit.yaml
-Created coif-dialog/dialog-machine.impl.ts
+Created coif-dialog/dialog-machine.handler.ts
 ```
 
 ## Step 2: Add Accessibility
@@ -38,7 +38,7 @@ accessibility {
 ## Step 3: Customize the Machine
 
 Add guards and transition side effects in
-`dialog-machine.impl.ts`:
+`dialog-machine.handler.ts`:
 
 ```typescript
 // Add escape key handler

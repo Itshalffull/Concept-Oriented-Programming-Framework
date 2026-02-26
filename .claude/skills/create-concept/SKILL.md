@@ -257,7 +257,7 @@ Run the parser to verify your concept is syntactically valid:
 ```bash
 npx tsx -e "
 import { readFileSync } from 'fs';
-import { parseConceptFile } from './implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from './handlers/ts/framework/spec-parser.handler.js';
 
 const source = readFileSync('specs/<domain>/<name>.concept', 'utf-8');
 const ast = parseConceptFile(source);
@@ -277,10 +277,10 @@ Run the full pipeline to verify your concept produces valid output:
 ```bash
 npx tsx -e "
 import { readFileSync } from 'fs';
-import { parseConceptFile } from './implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from './handlers/ts/framework/spec-parser.handler.js';
 import { createInMemoryStorage } from './kernel/src/storage.js';
-import { schemaGenHandler } from './implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from './implementations/typescript/framework/typescript-gen.impl.js';
+import { schemaGenHandler } from './handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from './handlers/ts/framework/typescript-gen.handler.js';
 
 const source = readFileSync('specs/<domain>/<name>.concept', 'utf-8');
 const ast = parseConceptFile(source);
@@ -307,7 +307,7 @@ for (const f of code.files) {
 ### Step 11: Run Full Check
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts check
+npx tsx cli/src/index.ts check
 ```
 
 This validates all concepts in the project parse correctly.

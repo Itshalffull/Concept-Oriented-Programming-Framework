@@ -161,11 +161,11 @@ action create(name: String) {
 
 *Generate a concept scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold concept --name User --actions create,update,delete
+npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,delete
 ```
 *Validate generated concept:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts check specs/app/user.concept
+npx tsx cli/src/index.ts check specs/app/user.concept
 ```
 *Run scaffold generator tests:*
 ```bash

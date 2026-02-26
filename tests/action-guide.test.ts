@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   actionGuideHandler,
   resetActionGuideCounter,
-} from '../implementations/typescript/action-guide.impl.js';
+} from '../handlers/ts/action-guide.handler.js';
 
 describe('ActionGuide', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

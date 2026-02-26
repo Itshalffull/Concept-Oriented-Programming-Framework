@@ -2,9 +2,9 @@
 import type {
   ActionInvocation, ActionCompletion,
   ConceptTransport, ConceptQuery
-} from "@copf/runtime";
+} from "@clef/runtime";
 import type { K8sRuntimeHandler } from "./k8sruntime.handler";
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 
 export function createK8sRuntimeLiteAdapter(
   handler: K8sRuntimeHandler,

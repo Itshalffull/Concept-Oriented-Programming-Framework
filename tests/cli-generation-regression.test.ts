@@ -2,7 +2,7 @@
 // CLI Generation Regression Tests
 //
 // Compares the generated CLI (from devtools.interface.yaml via
-// CliTarget) against the handmade CLI (tools/copf-cli/) to
+// CliTarget) against the handmade CLI (cli/) to
 // detect regressions in command names, flags, positional args,
 // and overall command coverage.
 //
@@ -917,14 +917,14 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli).toBeDefined();
     });
 
-    it('manifest cli target has name "copf"', () => {
+    it('manifest cli target has name "clef"', () => {
       const targets = manifestYaml.targets as Record<string, Record<string, unknown>>;
-      expect(targets.cli.name).toBe('copf');
+      expect(targets.cli.name).toBe('clef');
     });
 
-    it('manifest lists exactly 78 concept specs', () => {
+    it('manifest lists exactly 66 concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(78);
+      expect(concepts.length).toBe(66);
     });
   });
 });

@@ -1,0 +1,141 @@
+suite:
+  name: collaboration
+  version: 0.2.0
+  description: >
+    Real-time and asynchronous collaboration — distributed consistency,
+    conflict resolution, attribution, signatures, inline review annotations,
+    pessimistic locking, group membership, and flagging. Provides the full
+    collaborative editing and versioning substrate for multi-user systems.
+
+concepts:
+  # --- Existing concepts ---
+
+  Flag:
+    spec: ./flag.concept
+    params:
+      F: { as: flagging, description: "Flagging record" }
+
+  Group:
+    spec: ./group.concept
+    params:
+      G: { as: group, description: "Group entity" }
+
+  # --- New concepts ---
+
+  CausalClock:
+    spec: ./causal-clock.concept
+    params:
+      T: { as: timestamp, description: "Causal timestamp entry" }
+
+  Replica:
+    spec: ./replica.concept
+    params:
+      R: { as: replica, description: "Replica instance" }
+
+  ConflictResolution:
+    spec: ./conflict-resolution.concept
+    params:
+      V: { as: value, description: "Value being reconciled" }
+
+  Attribution:
+    spec: ./attribution.concept
+    params:
+      A: { as: attribution, description: "Attribution record" }
+
+  Signature:
+    spec: ./signature.concept
+    params:
+      G: { as: signature, description: "Signature record" }
+
+  InlineAnnotation:
+    spec: ./inline-annotation.concept
+    params:
+      A: { as: annotation, description: "Inline annotation" }
+
+  PessimisticLock:
+    spec: ./pessimistic-lock.concept
+    params:
+      L: { as: lock, description: "Lock record" }
+
+  # --- ConflictResolution providers ---
+
+  LWWResolution:
+    spec: ./providers/lww-resolution.concept
+    params:
+      V: { as: value, description: "Value being resolved" }
+    optional: true
+
+  AddWinsResolution:
+    spec: ./providers/add-wins-resolution.concept
+    params:
+      V: { as: value, description: "Value being resolved" }
+    optional: true
+
+  ManualResolution:
+    spec: ./providers/manual-resolution.concept
+    params:
+      V: { as: value, description: "Value being resolved" }
+    optional: true
+
+  MultiValueResolution:
+    spec: ./providers/multi-value-resolution.concept
+    params:
+      V: { as: value, description: "Value being resolved" }
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/required/replica-causal-clock.sync
+      description: "Every Replica operation advances the CausalClock"
+
+    - path: ./syncs/required/replica-conflict-resolution.sync
+      description: "Remote updates that conflict are routed through ConflictResolution"
+
+    - path: ./syncs/required/attribution-causal-clock.sync
+      description: "Every Attribution record is causally timestamped"
+
+    - path: ./syncs/required/pessimistic-lock-conflict-resolution.sync
+      description: "PessimisticLock checked before any ConflictResolution merge attempt"
+
+  recommended:
+    - path: ./syncs/group-access.sync
+      description: "Group-scoped access check when flagging entities within a group"
+
+    - path: ./syncs/recommended/signature-content-hash.sync
+      description: "Signature/sign verifies the content hash exists in ContentHash"
+
+    - path: ./syncs/recommended/attribution-dag-history.sync
+      description: "Attribution/blame walks DAGHistory for line-level provenance"
+
+    - path: ./syncs/recommended/inline-annotation-attribution.sync
+      description: "Every InlineAnnotation is attributed to its author via Attribution"
+
+    - path: ./syncs/recommended/inline-annotation-change-stream.sync
+      description: "InlineAnnotation accept/reject events feed ChangeStream for audit"
+
+    - path: ./syncs/recommended/pessimistic-lock-change-stream.sync
+      description: "Lock/unlock events feed ChangeStream for audit trail"
+
+  integration:
+    - path: ./syncs/integration/lww-resolution-activation.sync
+      description: "LWWResolution provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/add-wins-resolution-activation.sync
+      description: "AddWinsResolution provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/manual-resolution-activation.sync
+      description: "ManualResolution provider self-registers with PluginRegistry"
+
+    - path: ./syncs/integration/multi-value-resolution-activation.sync
+      description: "MultiValueResolution provider self-registers with PluginRegistry"
+
+uses:
+  - kit: versioning
+    concepts:
+      - name: ContentHash
+      - name: DAGHistory
+      - name: ChangeStream
+      - name: Merge
+  - kit: infrastructure
+    concepts:
+      - name: PluginRegistry

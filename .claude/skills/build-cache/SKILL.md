@@ -51,7 +51,7 @@ Parse specs and syncs, generate manifests, compile sync rules, and write pre-com
 
 *Build the cache:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts compile --cache
+npx tsx cli/src/index.ts compile --cache
 ```
 *Verify cache contents:*
 ```bash

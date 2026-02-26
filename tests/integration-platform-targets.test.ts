@@ -11,13 +11,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { browseradapterHandler } from '../generated/concept-interface/typescript/browseradapter.impl.js';
-import { mobileadapterHandler } from '../generated/concept-interface/typescript/mobileadapter.impl.js';
-import { desktopadapterHandler } from '../generated/concept-interface/typescript/desktopadapter.impl.js';
-import { watchadapterHandler } from '../generated/concept-interface/typescript/watchadapter.impl.js';
-import { terminaladapterHandler } from '../generated/concept-interface/typescript/terminaladapter.impl.js';
+import { browseradapterHandler } from '../generated/surface/typescript/browseradapter.impl.js';
+import { mobileadapterHandler } from '../generated/surface/typescript/mobileadapter.impl.js';
+import { desktopadapterHandler } from '../generated/surface/typescript/desktopadapter.impl.js';
+import { watchadapterHandler } from '../generated/surface/typescript/watchadapter.impl.js';
+import { terminaladapterHandler } from '../generated/surface/typescript/terminaladapter.impl.js';
 
-const COIF_APP_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-app');
+const COIF_APP_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-app');
 
 // All platform adapter concepts
 const platformAdapters = [
@@ -625,7 +625,7 @@ describe('Platform Target Integration — Platform Pipeline Syncs', () => {
 // ============================================================
 
 describe('Platform Target Integration — Generated Implementation Files', () => {
-  const generatedDir = resolve(__dirname, '..', 'generated', 'concept-interface', 'typescript');
+  const generatedDir = resolve(__dirname, '..', 'generated', 'surface', 'typescript');
 
   for (const adapter of platformAdapters) {
     const implName = adapter.displayName.toLowerCase();

@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   anatomyPartEntityHandler,
   resetAnatomyPartEntityCounter,
-} from '../implementations/typescript/anatomy-part-entity.impl.js';
+} from '../handlers/ts/anatomy-part-entity.handler.js';
 
 describe('AnatomyPartEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -42,16 +42,16 @@ Create or replace a record.
 
 **Example calls from real concepts:**
 ```typescript
-// Simple create (user.impl.ts)
+// Simple create (user.handler.ts)
 await storage.put('user', user, { user, name, email });
 
-// Create with timestamps (article.impl.ts)
+// Create with timestamps (article.handler.ts)
 await storage.put('article', article, {
   article, slug, title, description, body, author,
   createdAt: now, updatedAt: now,
 });
 
-// Update via spread (article.impl.ts)
+// Update via spread (article.handler.ts)
 const existing = await storage.get('article', article);
 await storage.put('article', article, {
   ...existing,
@@ -59,7 +59,7 @@ await storage.put('article', article, {
   updatedAt: now,
 });
 
-// Store array-valued field (follow.impl.ts)
+// Store array-valued field (follow.handler.ts)
 await storage.put('follow', user, { user, following });
 ```
 
@@ -80,13 +80,13 @@ Retrieve a single record by key.
 
 **Example calls:**
 ```typescript
-// Read with null check (article.impl.ts)
+// Read with null check (article.handler.ts)
 const record = await storage.get('article', article);
 if (!record) {
   return { variant: 'notfound', message: 'Article not found' };
 }
 
-// Read-modify-write (follow.impl.ts)
+// Read-modify-write (follow.handler.ts)
 const existing = await storage.get('follow', user);
 const following: string[] = existing ? (existing.following as string[]) : [];
 ```
@@ -110,16 +110,16 @@ Query records in a relation.
 
 **Example calls:**
 ```typescript
-// Find all (tag.impl.ts)
+// Find all (tag.handler.ts)
 const allTags = await storage.find('tag');
 
-// Find with criteria — uniqueness check (user.impl.ts)
+// Find with criteria — uniqueness check (user.handler.ts)
 const existingByName = await storage.find('user', { name });
 if (existingByName.length > 0) {
   return { variant: 'error', message: 'name already taken' };
 }
 
-// Find with criteria — filter by field (comment.impl.ts)
+// Find with criteria — filter by field (comment.handler.ts)
 const results = await storage.find('comment', { target });
 ```
 
@@ -140,10 +140,10 @@ Delete a single record.
 
 **Example calls:**
 ```typescript
-// Simple delete (article.impl.ts)
+// Simple delete (article.handler.ts)
 await storage.del('article', article);
 
-// Cascading delete across relations (registry.impl.ts)
+// Cascading delete across relations (registry.handler.ts)
 await storage.del('concepts', conceptId);
 await storage.del('uri', conceptId);
 await storage.del('transport', conceptId);

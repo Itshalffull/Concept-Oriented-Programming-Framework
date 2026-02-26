@@ -1,0 +1,42 @@
+[    3762ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/favicon.ico:0
+[    3827ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at http://localhost:5173/pages/Home.tsx:156:96
+    at Array.map (<anonymous>)
+    at Home (http://localhost:5173/pages/Home.tsx:102:30)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:11546:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:14580:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:15922:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:3672:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:3697:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:3731:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:19763:15)
+[    3831ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at http://localhost:5173/pages/Home.tsx:156:96
+    at Array.map (<anonymous>)
+    at Home (http://localhost:5173/pages/Home.tsx:102:30)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:11546:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:14580:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:15922:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:3672:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:3697:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:3731:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:19763:15)
+[    3835ms] [ERROR] The above error occurred in the <Home> component:
+
+    at Home (http://localhost:5173/pages/Home.tsx:19:24)
+    at div
+    at App (http://localhost:5173/App.tsx:57:27)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:14029
+[    3839ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at http://localhost:5173/pages/Home.tsx:156:96
+    at Array.map (<anonymous>)
+    at Home (http://localhost:5173/pages/Home.tsx:102:30)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:11546:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:14580:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:15922:22)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:19751:22)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:19196:20)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:19135:13)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=a5dd8ce0:19114:15)

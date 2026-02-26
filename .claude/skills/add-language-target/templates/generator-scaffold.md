@@ -1,6 +1,6 @@
 # Generator Scaffold Template
 
-Copy this template as your starting point for `implementations/typescript/framework/<lang>-gen.impl.ts`. Replace all `<Lang>`, `<lang>`, and `<ext>` placeholders.
+Copy this template as your starting point for `handlers/ts/framework/<lang>-gen.handler.ts`. Replace all `<Lang>`, `<lang>`, and `<ext>` placeholders.
 
 ```typescript
 // ============================================================
@@ -321,9 +321,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { langGenHandler } from '../implementations/typescript/framework/<lang>-gen.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { langGenHandler } from '../handlers/ts/framework/<lang>-gen.handler.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');

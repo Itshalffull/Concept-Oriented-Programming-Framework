@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   openAIEmbeddingProviderHandler,
   resetOpenAIEmbeddingProviderCounter,
-} from '../implementations/typescript/open-ai-embedding-provider.impl.js';
+} from '../handlers/ts/open-ai-embedding-provider.handler.js';
 
 describe('OpenAIEmbeddingProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

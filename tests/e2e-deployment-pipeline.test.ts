@@ -12,15 +12,15 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
 import {
   parseDeploymentManifest,
   validateDeploymentManifest,
   deploymentValidatorHandler,
-} from '../implementations/typescript/framework/deployment-validator.impl.js';
-import type { DeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl.js';
+} from '../handlers/ts/framework/deployment-validator.handler.js';
+import type { DeploymentManifest } from '../handlers/ts/framework/deployment-validator.handler.js';
 import {
   createHttpLambdaHandler,
   createSqsLambdaHandler,

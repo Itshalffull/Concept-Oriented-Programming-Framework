@@ -3,7 +3,7 @@
 // Provides a full terminal UI for browsing articles, posting, and social features.
 
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
-import { terminaladapterHandler } from '../../../../generated/concept-interface/typescript/terminaladapter.impl.js';
+import { terminaladapterHandler } from '../../../../generated/surface/typescript/terminaladapter.handler.js';
 import { ConduitAPI } from '../../frontend/shared/api-client.js';
 
 const api = new ConduitAPI('http://localhost:3000');

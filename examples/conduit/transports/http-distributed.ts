@@ -9,21 +9,21 @@ import { createInMemoryStorage } from '../../../kernel/src/storage.js';
 import { createInProcessAdapter, createConceptRegistry } from '../../../kernel/src/transport.js';
 import { createHttpConceptServer, createHttpLiteAdapter } from '../../../kernel/src/http-transport.js';
 import { createSelfHostedKernel } from '../../../kernel/src/self-hosted.js';
-import { createSyncEngineHandler } from '../../../implementations/typescript/framework/sync-engine.impl.js';
-import { parseSyncFile } from '../../../implementations/typescript/framework/sync-parser.impl.js';
+import { createSyncEngineHandler } from '../../../handlers/ts/framework/sync-engine.handler.js';
+import { parseSyncFile } from '../../../handlers/ts/framework/sync-parser.handler.js';
 import type { ConceptHandler } from '../../../kernel/src/types.js';
 
 // App concept handlers
-import { userHandler } from '../../../implementations/typescript/app/user.impl.js';
-import { passwordHandler } from '../../../implementations/typescript/app/password.impl.js';
-import { jwtHandler } from '../../../implementations/typescript/app/jwt.impl.js';
-import { profileHandler } from '../../../implementations/typescript/app/profile.impl.js';
-import { articleHandler } from '../../../implementations/typescript/app/article.impl.js';
-import { commentHandler } from '../../../implementations/typescript/app/comment.impl.js';
-import { tagHandler } from '../../../implementations/typescript/app/tag.impl.js';
-import { favoriteHandler } from '../../../implementations/typescript/app/favorite.impl.js';
-import { followHandler } from '../../../implementations/typescript/app/follow.impl.js';
-import { echoHandler } from '../../../implementations/typescript/app/echo.impl.js';
+import { userHandler } from '../../../handlers/ts/app/user.handler.js';
+import { passwordHandler } from '../../../handlers/ts/app/password.handler.js';
+import { jwtHandler } from '../../../handlers/ts/app/jwt.handler.js';
+import { profileHandler } from '../../../handlers/ts/app/profile.handler.js';
+import { articleHandler } from '../../../handlers/ts/app/article.handler.js';
+import { commentHandler } from '../../../handlers/ts/app/comment.handler.js';
+import { tagHandler } from '../../../handlers/ts/app/tag.handler.js';
+import { favoriteHandler } from '../../../handlers/ts/app/favorite.handler.js';
+import { followHandler } from '../../../handlers/ts/app/follow.handler.js';
+import { echoHandler } from '../../../handlers/ts/app/echo.handler.js';
 
 import { createRouter } from '../server/routes.js';
 

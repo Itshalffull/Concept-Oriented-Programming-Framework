@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   enrichmentRendererHandler,
   resetEnrichmentRendererCounter,
-} from '../implementations/typescript/enrichment-renderer.impl.js';
+} from '../handlers/ts/enrichment-renderer.handler.js';
 
 describe('EnrichmentRenderer', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

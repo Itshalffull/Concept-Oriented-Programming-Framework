@@ -7,11 +7,11 @@
 
 import { describe, it, expect } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { projectionHandler } from '../implementations/typescript/framework/projection.impl.js';
-import { interfaceGeneratorHandler } from '../implementations/typescript/framework/interface-generator.impl.js';
-import { emitterHandler } from '../implementations/typescript/framework/emitter.impl.js';
-import { surfaceHandler } from '../implementations/typescript/framework/surface.impl.js';
-import { middlewareHandler } from '../implementations/typescript/framework/middleware.impl.js';
+import { projectionHandler } from '../handlers/ts/framework/projection.handler.js';
+import { interfaceGeneratorHandler } from '../handlers/ts/framework/interface-generator.handler.js';
+import { emitterHandler } from '../handlers/ts/framework/emitter.handler.js';
+import { surfaceHandler } from '../handlers/ts/framework/surface.handler.js';
+import { middlewareHandler } from '../handlers/ts/framework/middleware.handler.js';
 
 // ============================================================
 // Projection Handler

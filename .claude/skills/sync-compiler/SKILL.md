@@ -157,7 +157,7 @@ sync Precise [eager] {
 
 *Compile all sync rules:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts compile-syncs
+npx tsx cli/src/index.ts compile-syncs
 ```
 *Run sync compiler tests:*
 ```bash

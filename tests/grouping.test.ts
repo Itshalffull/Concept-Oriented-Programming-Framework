@@ -9,19 +9,19 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 import {
   classifyAction,
   buildConceptGroups,
   type GroupingConfig,
   type ConceptGroup,
-} from '../implementations/typescript/framework/providers/codegen-utils';
+} from '../handlers/ts/framework/providers/codegen-utils';
 import type { ConceptManifest, ActionSchema } from '../kernel/src/types';
 
 // --- Helpers ---
 
-const INTERFACE_DIR = resolve(__dirname, '../kits/interface');
+const INTERFACE_DIR = resolve(__dirname, '../bind/interface');
 
 /** Build a minimal ConceptManifest with the given name and action names. */
 function mockManifest(name: string, actionNames: string[], opts?: { purpose?: string }): ConceptManifest {

@@ -30,9 +30,9 @@ kits/auth/
 │   └── token-refresh.sync            # recommended
 ├── implementations/
 │   └── typescript/
-│       ├── user.impl.ts
-│       ├── password.impl.ts
-│       └── jwt.impl.ts
+│       ├── user.handler.ts
+│       ├── password.handler.ts
+│       └── jwt.handler.ts
 └── tests/
     ├── conformance/
     └── integration/
@@ -58,10 +58,10 @@ kits/web3/
 │   └── wallet-auth.sync             # integration (auth kit)
 ├── implementations/
 │   └── typescript/
-│       ├── chain-monitor.impl.ts
-│       ├── contract.impl.ts
-│       ├── content.impl.ts
-│       └── wallet.impl.ts
+│       ├── chain-monitor.handler.ts
+│       ├── contract.handler.ts
+│       ├── content.handler.ts
+│       └── wallet.handler.ts
 ├── infrastructure/                   # pre-conceptual, domain-specific
 │   ├── transports/
 │   │   ├── evm-transport.ts          # EVM JSON-RPC adapter
@@ -190,7 +190,7 @@ sync BridgeAfterFinality {
 Use the CLI to scaffold the directory structure:
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit init $ARGUMENTS
+npx tsx cli/src/index.ts kit init $ARGUMENTS
 ```
 
 This creates:
@@ -199,7 +199,7 @@ kits/$ARGUMENTS/
 ├── kit.yaml                 # Template manifest
 ├── example.concept          # Placeholder concept
 ├── syncs/example.sync       # Placeholder sync
-├── implementations/typescript/
+├── handlers/ts/
 └── tests/
 ```
 
@@ -286,7 +286,7 @@ then {
 
 ### Step 11: Write Default Implementations
 
-For each concept, create a TypeScript implementation at `kits/$ARGUMENTS/implementations/typescript/<name>.impl.ts`.
+For each concept, create a TypeScript implementation at `kits/$ARGUMENTS/handlers/ts/<name>.handler.ts`.
 
 Use the `/create-implementation` skill. A kit should **ship implementations, not just specs**. Apps can use them as-is or provide their own.
 
@@ -304,19 +304,19 @@ kits/$ARGUMENTS/tests/
 
 ```bash
 # Validate kit manifest, concept specs, sync parsing, and tier annotations
-npx tsx tools/copf-cli/src/index.ts kit validate kits/$ARGUMENTS
+npx tsx cli/src/index.ts kit validate kits/$ARGUMENTS
 
 # Run kit conformance and integration tests
-npx tsx tools/copf-cli/src/index.ts kit test kits/$ARGUMENTS
+npx tsx cli/src/index.ts kit test kits/$ARGUMENTS
 
 # List all kits in the project
-npx tsx tools/copf-cli/src/index.ts kit list
+npx tsx cli/src/index.ts kit list
 
 # Verify app overrides reference valid sync names
-npx tsx tools/copf-cli/src/index.ts kit check-overrides
+npx tsx cli/src/index.ts kit check-overrides
 
 # Validate async gate convention (if kit has @gate concepts)
-npx tsx tools/copf-cli/src/index.ts check --pattern async-gate kits/$ARGUMENTS/<gate-concept>.concept
+npx tsx cli/src/index.ts check --pattern async-gate kits/$ARGUMENTS/<gate-concept>.concept
 ```
 
 ### Step 14: Document App Integration

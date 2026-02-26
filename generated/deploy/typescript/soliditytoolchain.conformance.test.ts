@@ -1,6 +1,6 @@
 // generated: soliditytoolchain.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { soliditytoolchainHandler } from "./soliditytoolchain.impl";
 
 describe("SolidityToolchain conformance", () => {

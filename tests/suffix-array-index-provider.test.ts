@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   suffixArrayIndexProviderHandler,
   resetSuffixArrayIndexProviderCounter,
-} from '../implementations/typescript/suffix-array-index-provider.impl.js';
+} from '../handlers/ts/suffix-array-index-provider.handler.js';
 
 describe('SuffixArrayIndexProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

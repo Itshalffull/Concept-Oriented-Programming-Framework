@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   lWWResolutionHandler,
   resetLWWResolutionCounter,
-} from '../implementations/typescript/lww-resolution.impl.js';
+} from '../handlers/ts/lww-resolution.handler.js';
 
 describe('LWWResolution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

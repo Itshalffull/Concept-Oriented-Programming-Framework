@@ -21,20 +21,20 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
+import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
 
 // --- Parsers & Generators ---
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl.js';
-import { solidityGenHandler } from '../implementations/typescript/framework/solidity-gen.impl.js';
-import { swiftGenHandler } from '../implementations/typescript/framework/swift-gen.impl.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler.js';
+import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
+import { swiftGenHandler } from '../handlers/ts/framework/swift-gen.handler.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 
 // --- Deployment ---
-import { validateDeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl.js';
-import type { DeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl.js';
+import { validateDeploymentManifest } from '../handlers/ts/framework/deployment-validator.handler.js';
+import type { DeploymentManifest } from '../handlers/ts/framework/deployment-validator.handler.js';
 import {
   createHttpLambdaHandler,
   createSqsLambdaHandler,
@@ -52,19 +52,19 @@ import type {
 } from '../infrastructure/serverless/gcf-handler.js';
 
 // --- App Concept Handlers ---
-import { userHandler } from '../implementations/typescript/app/user.impl.js';
-import { passwordHandler } from '../implementations/typescript/app/password.impl.js';
-import { jwtHandler } from '../implementations/typescript/app/jwt.impl.js';
-import { profileHandler } from '../implementations/typescript/app/profile.impl.js';
-import { articleHandler } from '../implementations/typescript/app/article.impl.js';
-import { commentHandler } from '../implementations/typescript/app/comment.impl.js';
-import { tagHandler } from '../implementations/typescript/app/tag.impl.js';
-import { favoriteHandler } from '../implementations/typescript/app/favorite.impl.js';
-import { followHandler } from '../implementations/typescript/app/follow.impl.js';
-import { echoHandler } from '../implementations/typescript/app/echo.impl.js';
+import { userHandler } from '../handlers/ts/app/user.handler.js';
+import { passwordHandler } from '../handlers/ts/app/password.handler.js';
+import { jwtHandler } from '../handlers/ts/app/jwt.handler.js';
+import { profileHandler } from '../handlers/ts/app/profile.handler.js';
+import { articleHandler } from '../handlers/ts/app/article.handler.js';
+import { commentHandler } from '../handlers/ts/app/comment.handler.js';
+import { tagHandler } from '../handlers/ts/app/tag.handler.js';
+import { favoriteHandler } from '../handlers/ts/app/favorite.handler.js';
+import { followHandler } from '../handlers/ts/app/follow.handler.js';
+import { echoHandler } from '../handlers/ts/app/echo.handler.js';
 
 // --- Framework Adapter ---
-import { frameworkadapterHandler } from '../generated/concept-interface/typescript/frameworkadapter.impl.js';
+import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 
 import type {
   ConceptAST,
@@ -81,11 +81,11 @@ import { generateId, timestamp } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
-const KITS_DIR = resolve(__dirname, '..', 'kits');
+const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
 const RELOCATED_APP_SPECS: Record<string, string> = {
-  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
-  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+  tag: resolve(REPERTOIRE_DIR, 'classification', 'tag.concept'),
+  comment: resolve(REPERTOIRE_DIR, 'content', 'comment.concept'),
 };
 
 const APP_CONCEPTS = [
@@ -589,7 +589,7 @@ describe('Conduit Example App — All Framework Adapters', () => {
 
   it('adapter pipeline sync file references all 6 frameworks', () => {
     const source = readFileSync(
-      resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-render', 'syncs', 'adapter-pipeline.sync'),
+      resolve(__dirname, '..', 'surface', 'kits', 'coif-render', 'syncs', 'adapter-pipeline.sync'),
       'utf-8',
     );
     for (const fw of FRAMEWORKS) {

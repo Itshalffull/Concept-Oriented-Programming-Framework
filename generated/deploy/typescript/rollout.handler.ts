@@ -1,5 +1,5 @@
 // generated: rollout.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./rollout.types";
 
 export interface RolloutHandler {

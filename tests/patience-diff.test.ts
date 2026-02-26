@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { patienceDiffHandler, resetPatienceDiffCounter } from '../implementations/typescript/patience-diff.impl.js';
+import { patienceDiffHandler, resetPatienceDiffCounter } from '../handlers/ts/patience-diff.handler.js';
 
 describe('PatienceDiff', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

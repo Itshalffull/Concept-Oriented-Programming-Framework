@@ -16,9 +16,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "@copf/kernel": ["./kernel/src/index.ts"],
-      "@copf/kernel/*": ["./kernel/src/*"],
-      "@copf/runtime": ["./kernel/src/index.ts"]
+      "@clef/kernel": ["./kernel/src/index.ts"],
+      "@clef/kernel/*": ["./kernel/src/*"],
+      "@clef/runtime": ["./kernel/src/index.ts"]
     }
   },
   "include": [
@@ -27,8 +27,8 @@
     "infrastructure/**/*.ts",
     "engine/**/*.ts",
     "tests/**/*.ts",
-    "tools/**/*.ts",
-    "generated/concept-interface/**/*.ts",
+    "cli/**/*.ts",
+    "generated/surface/**/*.ts",
     "generated/deploy/**/*.ts",
     "framework-widgets/**/*.ts",
     "framework-widgets/**/*.tsx",

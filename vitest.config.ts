@@ -4,12 +4,12 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@copf/kernel': path.resolve(__dirname, './kernel/src/index.ts'),
-      '@copf/runtime': path.resolve(__dirname, './kernel/src/index.ts'),
+      '@clef/kernel': path.resolve(__dirname, './kernel/src/index.ts'),
+      '@clef/runtime': path.resolve(__dirname, './kernel/src/index.ts'),
     },
   },
   test: {
-    include: ['tests/**/*.test.ts', 'generated/concept-interface/**/*.test.ts', 'generated/typescript/**/*.test.ts', 'kits/generation/tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'generated/surface/**/*.test.ts', 'generated/typescript/**/*.test.ts', 'kits/generation/tests/**/*.test.ts'],
     globals: true,
   },
 });

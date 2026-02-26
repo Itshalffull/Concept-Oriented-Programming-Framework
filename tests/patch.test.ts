@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { patchHandler, resetPatchCounter } from '../implementations/typescript/patch.impl.js';
+import { patchHandler, resetPatchCounter } from '../handlers/ts/patch.handler.js';
 
 describe('Patch', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

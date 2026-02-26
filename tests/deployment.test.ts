@@ -6,11 +6,11 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { parseDeploymentManifest, validateDeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl.js';
+import { parseDeploymentManifest, validateDeploymentManifest } from '../handlers/ts/framework/deployment-validator.handler.js';
 import type {
   DeploymentManifest,
   ValidationResult,
-} from '../implementations/typescript/framework/deployment-validator.impl.js';
+} from '../handlers/ts/framework/deployment-validator.handler.js';
 
 // ============================================================
 // Deployment Manifest — Parsing & Validation

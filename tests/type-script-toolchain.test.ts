@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   typeScriptToolchainHandler,
   resetTypeScriptToolchainCounter,
-} from '../implementations/typescript/type-script-toolchain.impl.js';
+} from '../handlers/ts/type-script-toolchain.handler.js';
 
 describe('TypeScriptToolchain', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

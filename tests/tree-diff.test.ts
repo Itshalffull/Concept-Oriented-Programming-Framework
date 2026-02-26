@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { treeDiffHandler, resetTreeDiffCounter } from '../implementations/typescript/tree-diff.impl.js';
+import { treeDiffHandler, resetTreeDiffCounter } from '../handlers/ts/tree-diff.handler.js';
 
 describe('TreeDiff', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

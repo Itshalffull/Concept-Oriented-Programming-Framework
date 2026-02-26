@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createHash } from 'crypto';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { contentHashHandler, resetContentHashCounter } from '../implementations/typescript/content-hash.impl.js';
+import { contentHashHandler, resetContentHashCounter } from '../handlers/ts/content-hash.handler.js';
 
 function sha256(content: string): string {
   return createHash('sha256').update(content, 'utf8').digest('hex');

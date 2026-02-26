@@ -9,8 +9,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   validateDeploymentManifest,
-} from '../implementations/typescript/framework/deployment-validator.impl.js';
-import type { DeploymentManifest } from '../implementations/typescript/framework/deployment-validator.impl.js';
+} from '../handlers/ts/framework/deployment-validator.handler.js';
+import type { DeploymentManifest } from '../handlers/ts/framework/deployment-validator.handler.js';
 
 function createMinimalManifest(
   runtimes: DeploymentManifest['runtimes'],

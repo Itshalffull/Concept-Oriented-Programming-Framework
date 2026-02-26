@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   semanticEmbeddingHandler,
   resetSemanticEmbeddingCounter,
-} from '../implementations/typescript/semantic-embedding.impl.js';
+} from '../handlers/ts/semantic-embedding.handler.js';
 
 describe('SemanticEmbedding', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

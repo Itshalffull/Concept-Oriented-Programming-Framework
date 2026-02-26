@@ -1,6 +1,6 @@
 // generated: iac.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { iacHandler } from "./iac.impl";
 
 describe("IaC conformance", () => {

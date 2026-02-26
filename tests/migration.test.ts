@@ -13,16 +13,16 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-} from '@copf/kernel';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
+} from '@clef/kernel';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
 import {
   checkMigrationNeeded,
   createMigrationGatedTransport,
   getStoredVersion,
   setStoredVersion,
-} from '../implementations/typescript/framework/migration.impl';
-import type { ConceptHandler, ConceptStorage, ActionInvocation } from '@copf/kernel';
+} from '../handlers/ts/framework/migration.handler';
+import type { ConceptHandler, ConceptStorage, ActionInvocation } from '@clef/kernel';
 import { generateId, timestamp } from '../kernel/src/types';
 
 // --- Helper: create a simple handler with a migrate action ---

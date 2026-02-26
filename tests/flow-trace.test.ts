@@ -10,13 +10,13 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { renderFlowTrace } from '../implementations/typescript/framework/flow-trace.impl';
-import type { FlowTrace, TraceNode, TraceSyncNode } from '../implementations/typescript/framework/flow-trace.impl';
-import { echoHandler } from '../implementations/typescript/app/echo.impl';
-import { userHandler } from '../implementations/typescript/app/user.impl';
-import { passwordHandler } from '../implementations/typescript/app/password.impl';
-import { jwtHandler } from '../implementations/typescript/app/jwt.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { renderFlowTrace } from '../handlers/ts/framework/flow-trace.handler';
+import type { FlowTrace, TraceNode, TraceSyncNode } from '../handlers/ts/framework/flow-trace.handler';
+import { echoHandler } from '../handlers/ts/app/echo.handler';
+import { userHandler } from '../handlers/ts/app/user.handler';
+import { passwordHandler } from '../handlers/ts/app/password.handler';
+import { jwtHandler } from '../handlers/ts/app/jwt.handler';
 
 describe('Flow Tracing', () => {
 

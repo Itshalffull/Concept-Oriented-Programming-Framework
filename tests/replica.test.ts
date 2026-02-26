@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   replicaHandler,
   resetReplicaCounter,
-} from '../implementations/typescript/replica.impl.js';
+} from '../handlers/ts/replica.handler.js';
 
 describe('Replica', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

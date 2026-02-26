@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   scopeGraphHandler,
   resetScopeGraphCounter,
-} from '../implementations/typescript/scope-graph.impl.js';
+} from '../handlers/ts/scope-graph.handler.js';
 
 describe('ScopeGraph', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

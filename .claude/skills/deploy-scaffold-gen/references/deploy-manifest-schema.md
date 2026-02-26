@@ -70,7 +70,7 @@ concepts:
     spec: ./specs/app/user.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/user.impl.ts
+        path: ./handlers/ts/app/user.handler.ts
         runtime: api
         storage: postgresql
 ```

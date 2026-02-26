@@ -95,7 +95,7 @@ sync Working [eager] {
 
 *Parse all sync files:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts compile-syncs
+npx tsx cli/src/index.ts compile-syncs
 ```
 *Run sync parser tests:*
 ```bash

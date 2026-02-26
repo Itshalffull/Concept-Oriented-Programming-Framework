@@ -10,26 +10,26 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { resolve, join } from 'path';
-import { createInMemoryStorage } from '@copf/runtime';
-import { parseConceptFile } from '../implementations/typescript/framework/parser.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl.js';
-import { solidityGenHandler } from '../implementations/typescript/framework/solidity-gen.impl.js';
-import { swiftGenHandler } from '../implementations/typescript/framework/swift-gen.impl.js';
+import { createInMemoryStorage } from '@clef/runtime';
+import { parseConceptFile } from '../handlers/ts/framework/parser.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler.js';
+import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
+import { swiftGenHandler } from '../handlers/ts/framework/swift-gen.handler.js';
 
 // ── Paths ──────────────────────────────────────────────────
 
 const ROOT = resolve(__dirname, '..');
 const SPECS_DIR = join(ROOT, 'specs', 'app');
-const KITS_DIR = join(ROOT, 'kits');
+const REPERTOIRE_DIR = join(ROOT, 'repertoire');
 const RELOCATED_APP_SPECS: Record<string, string> = {
-  tag: join(KITS_DIR, 'classification', 'tag.concept'),
-  comment: join(KITS_DIR, 'content', 'comment.concept'),
+  tag: join(REPERTOIRE_DIR, 'classification', 'tag.concept'),
+  comment: join(REPERTOIRE_DIR, 'content', 'comment.concept'),
 };
-const IMPL_RUST = join(ROOT, 'implementations', 'rust', 'src');
-const IMPL_SOLIDITY = join(ROOT, 'implementations', 'solidity', 'src');
-const IMPL_SWIFT = join(ROOT, 'implementations', 'swift', 'Sources', 'COPF');
-const IMPL_TS = join(ROOT, 'implementations', 'typescript', 'app');
+const IMPL_RUST = join(ROOT, 'codegen', 'rust', 'src');
+const IMPL_SOLIDITY = join(ROOT, 'codegen', 'solidity', 'src');
+const IMPL_SWIFT = join(ROOT, 'codegen', 'swift', 'Sources', 'COPF');
+const IMPL_TS = join(ROOT, 'handlers', 'ts', 'app');
 const GENERATED_RUST = join(ROOT, 'generated', 'rust');
 const GENERATED_SOLIDITY = join(ROOT, 'generated', 'solidity');
 const GENERATED_SWIFT = join(ROOT, 'generated', 'swift');
@@ -83,8 +83,8 @@ const CONCEPT_ACTIONS: Record<string, string[]> = {
 describe('PART 1 — Implementation files exist for all concepts', () => {
   describe('TypeScript implementations', () => {
     for (const concept of APP_CONCEPTS) {
-      it(`${concept}.impl.ts exists`, () => {
-        const path = join(IMPL_TS, `${concept}.impl.ts`);
+      it(`${concept}.handler.ts exists`, () => {
+        const path = join(IMPL_TS, `${concept}.handler.ts`);
         expect(existsSync(path)).toBe(true);
       });
     }
@@ -92,7 +92,7 @@ describe('PART 1 — Implementation files exist for all concepts', () => {
 
   describe('Rust implementations', () => {
     it('Cargo.toml exists', () => {
-      expect(existsSync(join(ROOT, 'implementations', 'rust', 'Cargo.toml'))).toBe(true);
+      expect(existsSync(join(ROOT, 'codegen', 'rust', 'Cargo.toml'))).toBe(true);
     });
 
     it('lib.rs exists with all module declarations', () => {
@@ -117,7 +117,7 @@ describe('PART 1 — Implementation files exist for all concepts', () => {
 
   describe('Solidity implementations', () => {
     it('foundry.toml exists', () => {
-      expect(existsSync(join(ROOT, 'implementations', 'solidity', 'foundry.toml'))).toBe(true);
+      expect(existsSync(join(ROOT, 'codegen', 'solidity', 'foundry.toml'))).toBe(true);
     });
 
     for (const name of CONCEPT_NAMES) {
@@ -129,7 +129,7 @@ describe('PART 1 — Implementation files exist for all concepts', () => {
 
   describe('Swift implementations', () => {
     it('Package.swift exists', () => {
-      expect(existsSync(join(ROOT, 'implementations', 'swift', 'Package.swift'))).toBe(true);
+      expect(existsSync(join(ROOT, 'codegen', 'swift', 'Package.swift'))).toBe(true);
     });
 
     it('ConceptStorage.swift exists', () => {
@@ -493,7 +493,7 @@ describe('PART 5 — Code generation pipeline produces valid output for all lang
 describe('PART 6 — TypeScript implementations are functional', () => {
   it('User: register + uniqueness check', async () => {
     const { userHandler } = await import(
-      '../implementations/typescript/app/user.impl.js'
+      '../handlers/ts/app/user.handler.js'
     );
     const storage = createInMemoryStorage();
 
@@ -512,7 +512,7 @@ describe('PART 6 — TypeScript implementations are functional', () => {
 
   it('Password: set + check + validate', async () => {
     const { passwordHandler } = await import(
-      '../implementations/typescript/app/password.impl.js'
+      '../handlers/ts/app/password.handler.js'
     );
     const storage = createInMemoryStorage();
 
@@ -538,7 +538,7 @@ describe('PART 6 — TypeScript implementations are functional', () => {
 
   it('Article: CRUD lifecycle', async () => {
     const { articleHandler } = await import(
-      '../implementations/typescript/app/article.impl.js'
+      '../handlers/ts/app/article.handler.js'
     );
     const storage = createInMemoryStorage();
 
@@ -567,7 +567,7 @@ describe('PART 6 — TypeScript implementations are functional', () => {
 
   it('Echo: send and receive', async () => {
     const { echoHandler } = await import(
-      '../implementations/typescript/app/echo.impl.js'
+      '../handlers/ts/app/echo.handler.js'
     );
     const storage = createInMemoryStorage();
 
@@ -580,10 +580,10 @@ describe('PART 6 — TypeScript implementations are functional', () => {
   });
 
   it('Favorite + Follow + Comment + Tag all functional', async () => {
-    const { favoriteHandler } = await import('../implementations/typescript/app/favorite.impl.js');
-    const { followHandler } = await import('../implementations/typescript/app/follow.impl.js');
-    const { commentHandler } = await import('../implementations/typescript/app/comment.impl.js');
-    const { tagHandler } = await import('../implementations/typescript/app/tag.impl.js');
+    const { favoriteHandler } = await import('../handlers/ts/app/favorite.handler.js');
+    const { followHandler } = await import('../handlers/ts/app/follow.handler.js');
+    const { commentHandler } = await import('../handlers/ts/app/comment.handler.js');
+    const { tagHandler } = await import('../handlers/ts/app/tag.handler.js');
 
     const favStorage = createInMemoryStorage();
     await favoriteHandler.favorite({ user: 'u1', article: 'a1' }, favStorage);

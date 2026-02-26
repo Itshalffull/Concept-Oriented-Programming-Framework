@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - In-Memory Storage Implementation
+// Clef Kernel - In-Memory Storage Implementation
 //
 // Tracks lastWrittenAt timestamps for all entries,
 // supports getMeta() for timestamp retrieval, and onConflict

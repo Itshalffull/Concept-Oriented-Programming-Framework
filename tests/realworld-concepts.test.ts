@@ -12,12 +12,12 @@ import {
 } from '../kernel/src/index.js';
 
 // App concept handlers
-import { profileHandler } from '../implementations/typescript/app/profile.impl.js';
-import { articleHandler } from '../implementations/typescript/app/article.impl.js';
-import { commentHandler } from '../implementations/typescript/app/comment.impl.js';
-import { tagHandler } from '../implementations/typescript/app/tag.impl.js';
-import { favoriteHandler } from '../implementations/typescript/app/favorite.impl.js';
-import { followHandler } from '../implementations/typescript/app/follow.impl.js';
+import { profileHandler } from '../handlers/ts/app/profile.handler.js';
+import { articleHandler } from '../handlers/ts/app/article.handler.js';
+import { commentHandler } from '../handlers/ts/app/comment.handler.js';
+import { tagHandler } from '../handlers/ts/app/tag.handler.js';
+import { favoriteHandler } from '../handlers/ts/app/favorite.handler.js';
+import { followHandler } from '../handlers/ts/app/follow.handler.js';
 
 // ============================================================
 // 1. Profile Concept

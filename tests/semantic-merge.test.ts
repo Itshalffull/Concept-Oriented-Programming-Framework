@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { semanticMergeHandler, resetSemanticMergeCounter } from '../implementations/typescript/semantic-merge.impl.js';
+import { semanticMergeHandler, resetSemanticMergeCounter } from '../handlers/ts/semantic-merge.handler.js';
 
 describe('SemanticMerge', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

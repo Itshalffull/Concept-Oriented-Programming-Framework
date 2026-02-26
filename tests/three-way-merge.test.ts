@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { threeWayMergeHandler, resetThreeWayMergeCounter } from '../implementations/typescript/three-way-merge.impl.js';
+import { threeWayMergeHandler, resetThreeWayMergeCounter } from '../handlers/ts/three-way-merge.handler.js';
 
 describe('ThreeWayMerge', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

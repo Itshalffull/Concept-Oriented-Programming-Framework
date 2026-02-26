@@ -126,7 +126,7 @@ class MyTransport {
 
 *Generate a transport adapter:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold transport --name ApiTransport --protocol http
+npx tsx cli/src/index.ts scaffold transport --name ApiTransport --protocol http
 ```
 *Run scaffold generator tests:*
 ```bash

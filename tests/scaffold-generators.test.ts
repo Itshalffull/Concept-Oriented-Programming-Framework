@@ -13,16 +13,16 @@
 import { describe, it, expect } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
 
-import { kitScaffoldGenHandler } from '../implementations/typescript/framework/kit-scaffold-gen.impl.js';
-import { deployScaffoldGenHandler } from '../implementations/typescript/framework/deploy-scaffold-gen.impl.js';
-import { interfaceScaffoldGenHandler } from '../implementations/typescript/framework/interface-scaffold-gen.impl.js';
-import { conceptScaffoldGenHandler } from '../implementations/typescript/framework/concept-scaffold-gen.impl.js';
-import { syncScaffoldGenHandler } from '../implementations/typescript/framework/sync-scaffold-gen.impl.js';
-import { handlerScaffoldGenHandler } from '../implementations/typescript/framework/handler-scaffold-gen.impl.js';
-import { storageAdapterScaffoldGenHandler } from '../implementations/typescript/framework/storage-adapter-scaffold-gen.impl.js';
-import { transportAdapterScaffoldGenHandler } from '../implementations/typescript/framework/transport-adapter-scaffold-gen.impl.js';
-import { coifComponentScaffoldGenHandler } from '../implementations/typescript/framework/coif-component-scaffold-gen.impl.js';
-import { coifThemeScaffoldGenHandler } from '../implementations/typescript/framework/coif-theme-scaffold-gen.impl.js';
+import { kitScaffoldGenHandler } from '../handlers/ts/framework/kit-scaffold-gen.handler.js';
+import { deployScaffoldGenHandler } from '../handlers/ts/framework/deploy-scaffold-gen.handler.js';
+import { interfaceScaffoldGenHandler } from '../handlers/ts/framework/interface-scaffold-gen.handler.js';
+import { conceptScaffoldGenHandler } from '../handlers/ts/framework/concept-scaffold-gen.handler.js';
+import { syncScaffoldGenHandler } from '../handlers/ts/framework/sync-scaffold-gen.handler.js';
+import { handlerScaffoldGenHandler } from '../handlers/ts/framework/handler-scaffold-gen.handler.js';
+import { storageAdapterScaffoldGenHandler } from '../handlers/ts/framework/storage-adapter-scaffold-gen.handler.js';
+import { transportAdapterScaffoldGenHandler } from '../handlers/ts/framework/transport-adapter-scaffold-gen.handler.js';
+import { coifComponentScaffoldGenHandler } from '../handlers/ts/framework/coif-component-scaffold-gen.handler.js';
+import { coifThemeScaffoldGenHandler } from '../handlers/ts/framework/coif-theme-scaffold-gen.handler.js';
 
 const storage = createInMemoryStorage();
 
@@ -91,16 +91,16 @@ describe('Scaffold Generator Registration', () => {
 // ── Kit Scaffold Generator ──────────────────────────────────
 
 describe('KitScaffoldGen', () => {
-  it('should generate kit.yaml with basic inputs', async () => {
+  it('should generate suite.yaml with basic inputs', async () => {
     const result = await kitScaffoldGenHandler.generate!(
       { name: 'auth', description: 'Authentication kit' },
       storage,
     );
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
-    expect(files.length).toBeGreaterThanOrEqual(2); // kit.yaml + syncs/.gitkeep
+    expect(files.length).toBeGreaterThanOrEqual(2); // suite.yaml + syncs/.gitkeep
 
-    const kitYaml = files.find(f => f.path.endsWith('kit.yaml'));
+    const kitYaml = files.find(f => f.path.endsWith('suite.yaml'));
     expect(kitYaml).toBeDefined();
     expect(kitYaml!.content).toContain('name: auth');
     expect(kitYaml!.content).toContain('Authentication kit');
@@ -134,7 +134,7 @@ describe('KitScaffoldGen', () => {
       storage,
     );
     const files = result.files as Array<{ path: string; content: string }>;
-    const kitYaml = files.find(f => f.path.endsWith('kit.yaml'));
+    const kitYaml = files.find(f => f.path.endsWith('suite.yaml'));
     expect(kitYaml!.content).toContain('required:');
     expect(kitYaml!.content).toContain('ValidateToken');
     expect(kitYaml!.content).toContain('recommended:');
@@ -361,7 +361,7 @@ describe('SyncScaffoldGen', () => {
 // ── Handler Scaffold Generator ──────────────────────────────
 
 describe('HandlerScaffoldGen', () => {
-  it('should generate an .impl.ts file', async () => {
+  it('should generate an .handler.ts file', async () => {
     const result = await handlerScaffoldGenHandler.generate!(
       {
         conceptName: 'Bookmark',
@@ -382,7 +382,7 @@ describe('HandlerScaffoldGen', () => {
     const files = result.files as Array<{ path: string; content: string }>;
     expect(files.length).toBe(2); // impl + test
 
-    const impl = files.find(f => f.path.endsWith('.impl.ts'));
+    const impl = files.find(f => f.path.endsWith('.handler.ts'));
     expect(impl).toBeDefined();
     expect(impl!.content).toContain('bookmarkHandler');
     expect(impl!.content).toContain('async register()');
@@ -463,7 +463,7 @@ describe('CoifComponentScaffoldGen', () => {
     );
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
-    expect(files.length).toBe(4); // widget, anatomy, kit.yaml, machine impl
+    expect(files.length).toBe(4); // widget, anatomy, suite.yaml, machine impl
 
     const widget = files.find(f => f.path.includes('widget.concept'));
     expect(widget).toBeDefined();
@@ -473,11 +473,11 @@ describe('CoifComponentScaffoldGen', () => {
     expect(anatomy).toBeDefined();
     expect(anatomy!.content).toContain('anatomy Dialog');
 
-    const kit = files.find(f => f.path.endsWith('kit.yaml'));
+    const kit = files.find(f => f.path.endsWith('suite.yaml'));
     expect(kit).toBeDefined();
     expect(kit!.content).toContain('name: coif-dialog');
 
-    const machine = files.find(f => f.path.endsWith('.impl.ts'));
+    const machine = files.find(f => f.path.endsWith('.handler.ts'));
     expect(machine).toBeDefined();
     expect(machine!.content).toContain('async register()');
     expect(machine!.content).toContain('async spawn(');
@@ -517,9 +517,9 @@ describe('CoifThemeScaffoldGen', () => {
     );
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
-    expect(files.length).toBe(7); // kit.yaml + light + dark + palette + typography + motion + elevation
+    expect(files.length).toBe(7); // suite.yaml + light + dark + palette + typography + motion + elevation
 
-    const kit = files.find(f => f.path.endsWith('kit.yaml'));
+    const kit = files.find(f => f.path.endsWith('suite.yaml'));
     expect(kit!.content).toContain('name: theme-ocean');
 
     const light = files.find(f => f.path.includes('light.json'));

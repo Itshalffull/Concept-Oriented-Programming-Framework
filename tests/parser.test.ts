@@ -3,8 +3,8 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

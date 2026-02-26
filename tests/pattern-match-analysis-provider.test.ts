@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   patternMatchAnalysisProviderHandler,
   resetPatternMatchAnalysisProviderCounter,
-} from '../implementations/typescript/pattern-match-analysis-provider.impl.js';
+} from '../handlers/ts/pattern-match-analysis-provider.handler.js';
 
 describe('PatternMatchAnalysisProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

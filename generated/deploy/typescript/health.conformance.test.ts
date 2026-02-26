@@ -1,6 +1,6 @@
 // generated: health.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { healthHandler } from "./health.impl";
 
 describe("Health conformance", () => {

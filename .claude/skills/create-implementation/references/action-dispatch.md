@@ -168,8 +168,8 @@ npx vitest run                        # All tests
 Test the handler via the kernel's `invokeConcept()` method:
 
 ```typescript
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { echoHandler } from '../implementations/typescript/app/echo.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { echoHandler } from '../handlers/ts/app/echo.impl';
 
 describe('Echo Concept', () => {
   it('stores and echoes message', async () => {

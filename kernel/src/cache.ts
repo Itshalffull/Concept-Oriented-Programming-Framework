@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel - Compiled Artifact Cache
+// Clef Kernel - Compiled Artifact Cache
 //
 // Reads and writes pre-compiled artifacts from .copf-cache/.
 // Used by the cached boot path to skip parsing on startup

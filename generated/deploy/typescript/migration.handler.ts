@@ -1,5 +1,5 @@
 // generated: migration.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./migration.types";
 
 export interface MigrationHandler {

@@ -65,7 +65,7 @@ concepts:
     spec: specs/app/user.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/user.impl.ts
+        path: handlers/ts/app/user.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -73,7 +73,7 @@ concepts:
     spec: specs/app/password.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/password.impl.ts
+        path: handlers/ts/app/password.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -81,7 +81,7 @@ concepts:
     spec: specs/app/jwt.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/jwt.impl.ts
+        path: handlers/ts/app/jwt.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -89,7 +89,7 @@ concepts:
     spec: specs/app/profile.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/profile.impl.ts
+        path: handlers/ts/app/profile.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -97,7 +97,7 @@ concepts:
     spec: specs/app/article.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/article.impl.ts
+        path: handlers/ts/app/article.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -105,7 +105,7 @@ concepts:
     spec: kits/content/comment.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/comment.impl.ts
+        path: handlers/ts/app/comment.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -113,7 +113,7 @@ concepts:
     spec: kits/classification/tag.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/tag.impl.ts
+        path: handlers/ts/app/tag.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -121,7 +121,7 @@ concepts:
     spec: specs/app/favorite.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/favorite.impl.ts
+        path: handlers/ts/app/favorite.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -129,7 +129,7 @@ concepts:
     spec: specs/app/follow.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/follow.impl.ts
+        path: handlers/ts/app/follow.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite
@@ -137,7 +137,7 @@ concepts:
     spec: specs/app/echo.concept
     implementations:
       - language: typescript
-        path: implementations/typescript/app/echo.impl.ts
+        path: handlers/ts/app/echo.impl.ts
         runtime: cloud-run
         storage: firestore
         queryMode: lite

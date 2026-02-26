@@ -61,7 +61,7 @@ copf init my-app --template minimal
 |-----------|---------|----------|
 | specs/ | Concept specifications | .concept files |
 | syncs/ | Synchronization rules | .sync files |
-| implementations/ | Handler code | .impl.ts files |
+| implementations/ | Handler code | .handler.ts files |
 | kits/ | Kit manifests | kit.yaml + concepts + syncs |
 
 
@@ -69,7 +69,7 @@ copf init my-app --template minimal
 
 *Validate scaffolded project:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts check
+npx tsx cli/src/index.ts check
 ```
 ## Related Skills
 

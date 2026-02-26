@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   selectionPipelineDependenceProviderHandler,
   resetSelectionPipelineDependenceProviderCounter,
-} from '../implementations/typescript/selection-pipeline-dependence-provider.impl.js';
+} from '../handlers/ts/selection-pipeline-dependence-provider.handler.js';
 
 describe('SelectionPipelineDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

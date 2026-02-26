@@ -1,0 +1,12 @@
+{
+  "name": "@clef/cli",
+  "version": "0.1.0",
+  "description": "CLI for the Clef composable software framework",
+  "type": "module",
+  "bin": {
+    "clef": "../../dist/cli/src/main.js"
+  },
+  "scripts": {
+    "build": "tsc -b ../../tsconfig.json"
+  }
+}

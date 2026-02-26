@@ -14,13 +14,13 @@ copf scaffold handler --concept Bookmark \
 
 Output:
 ```
-Created implementations/typescript/framework/bookmark.impl.ts
+Created handlers/ts/framework/bookmark.handler.ts
 Created tests/bookmark.conformance.test.ts
 ```
 
 ## Step 2: Implement Action Logic
 
-Edit `bookmark.impl.ts` — replace TODO comments:
+Edit `bookmark.handler.ts` — replace TODO comments:
 
 ```typescript
 async add(input, storage) {

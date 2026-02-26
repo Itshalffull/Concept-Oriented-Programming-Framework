@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   cssTokenSymbolExtractorHandler,
   resetCssTokenSymbolExtractorCounter,
-} from '../implementations/typescript/css-token-symbol-extractor.impl.js';
+} from '../handlers/ts/css-token-symbol-extractor.handler.js';
 
 describe('CssTokenSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

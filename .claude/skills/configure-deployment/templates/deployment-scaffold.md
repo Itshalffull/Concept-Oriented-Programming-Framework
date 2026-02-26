@@ -21,7 +21,7 @@ concepts:
     spec: ./specs/TODO_concept_a.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/TODO_concept_a.impl.ts
+        path: ./handlers/ts/app/TODO_concept_a.handler.ts
         runtime: server
         storage: sqlite
         queryMode: graphql
@@ -30,7 +30,7 @@ concepts:
     spec: ./specs/TODO_concept_b.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/TODO_concept_b.impl.ts
+        path: ./handlers/ts/app/TODO_concept_b.handler.ts
         runtime: server
         storage: sqlite
         queryMode: graphql
@@ -59,7 +59,7 @@ concepts:
     spec: ./specs/TODO_concept.concept
     implementations:
       - language: typescript
-        path: ./implementations/TODO_concept.impl.ts
+        path: ./implementations/TODO_concept.handler.ts
         runtime: server
         storage: postgres
         queryMode: graphql
@@ -249,7 +249,7 @@ concepts:
     spec: ./specs/TODO_concept.concept
     implementations:
       - language: typescript
-        path: ./implementations/typescript/app/TODO_concept.impl.ts
+        path: ./handlers/ts/app/TODO_concept.handler.ts
         runtime: dev
         storage: memory
         queryMode: lite
@@ -308,7 +308,7 @@ TODO_Concept:
   spec: ./specs/TODO_concept.concept
   implementations:
     - language: typescript
-      path: ./implementations/TODO_concept.impl.ts
+      path: ./implementations/TODO_concept.handler.ts
       runtime: TODO_runtime
       storage: TODO_storage     # sqlite | postgres | memory
       queryMode: TODO_mode      # graphql | lite

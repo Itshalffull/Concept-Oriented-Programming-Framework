@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   typeScriptScopeProviderHandler,
   resetTypeScriptScopeProviderCounter,
-} from '../implementations/typescript/type-script-scope-provider.impl.js';
+} from '../handlers/ts/type-script-scope-provider.handler.js';
 
 describe('TypeScriptScopeProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

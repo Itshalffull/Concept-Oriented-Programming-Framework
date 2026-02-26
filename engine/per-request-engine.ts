@@ -23,8 +23,8 @@ import {
   SyncEngine,
   ActionLog,
   buildSyncIndex,
-} from '../implementations/typescript/framework/engine.js';
-import type { SyncIndex } from '../implementations/typescript/framework/engine.js';
+} from '../handlers/ts/framework/engine.js';
+import type { SyncIndex } from '../handlers/ts/framework/engine.js';
 import type { DurableActionLog } from './durable-action-log.js';
 import type { DistributedFiringGuard } from '../infrastructure/serverless/distributed-lock.js';
 

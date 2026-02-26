@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   gitOpsHandler,
   resetGitOpsCounter,
-} from '../implementations/typescript/git-ops.impl.js';
+} from '../handlers/ts/git-ops.handler.js';
 
 describe('GitOps', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

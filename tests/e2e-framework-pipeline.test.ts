@@ -18,24 +18,21 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { frameworkadapterHandler } from '../generated/concept-interface/typescript/frameworkadapter.impl.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { frameworkadapterHandler } from '../generated/surface/typescript/frameworkadapter.impl.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
-const COIF_RENDER_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-render');
-const COIF_CORE_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-core');
-const COIF_THEME_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-theme');
-const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-component');
-const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'concept-interface', 'kits', 'coif-integration');
+const COIF_RENDER_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-render');
+const COIF_CORE_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-core');
+const COIF_THEME_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-theme');
+const COIF_COMPONENT_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-component');
+const COIF_INTEGRATION_DIR = resolve(__dirname, '..', 'surface', 'kits', 'coif-integration');
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
-const KITS_DIR = resolve(__dirname, '..', 'kits');
+const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
-const RELOCATED_SPECS: Record<string, string> = {
-  migration: resolve(KITS_DIR, 'deploy', 'concepts', 'migration.concept'),
-  telemetry: resolve(KITS_DIR, 'deploy', 'concepts', 'telemetry.concept'),
-};
+const RELOCATED_SPECS: Record<string, string> = {};
 
 async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
   const storage = createInMemoryStorage();
@@ -256,8 +253,8 @@ describe('E2E Framework Pipeline — Framework Concepts Through Pipeline', () =>
   const frameworkConcepts = [
     'spec-parser', 'schema-gen', 'typescript-gen', 'rust-gen',
     'solidity-gen', 'swift-gen', 'sync-parser', 'sync-engine',
-    'sync-compiler', 'action-log', 'registry', 'telemetry',
-    'flow-trace', 'deployment-validator', 'migration',
+    'sync-compiler', 'action-log', 'registry',
+    'flow-trace', 'deployment-validator',
   ];
 
   for (const conceptName of frameworkConcepts) {

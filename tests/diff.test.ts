@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { diffHandler, resetDiffCounter } from '../implementations/typescript/diff.impl.js';
+import { diffHandler, resetDiffCounter } from '../handlers/ts/diff.handler.js';
 
 describe('Diff', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

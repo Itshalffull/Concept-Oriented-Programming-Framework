@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { syncParserHandler } from '../handlers/ts/framework/sync-parser.handler.js';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
 
 describe('SyncParser invariant debug', () => {

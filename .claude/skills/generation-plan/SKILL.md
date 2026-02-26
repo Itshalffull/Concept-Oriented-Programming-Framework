@@ -88,11 +88,11 @@ copf generation-plan history --limit 5
 
 *Show generation summary:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --summary
+npx tsx cli/src/index.ts generate --summary
 ```
 *Show generation history:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --history
+npx tsx cli/src/index.ts generate --history
 ```
 ## Related Skills
 

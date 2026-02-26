@@ -102,11 +102,11 @@ copf kind-system producers --kind TypeScriptFiles
 
 *List all kinds:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts kinds list
+npx tsx cli/src/index.ts kinds list
 ```
 *Find transform path:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts kinds path ConceptDSL TypeScriptFiles
+npx tsx cli/src/index.ts kinds path ConceptDSL TypeScriptFiles
 ```
 ## Related Skills
 

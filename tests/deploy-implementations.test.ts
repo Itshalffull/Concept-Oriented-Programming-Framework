@@ -2,46 +2,46 @@
 // Tests all 17 concept handler implementations for the deploy kit,
 // verifying action variants, storage behavior, and invariant contracts.
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
+import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
 
 // --- Orchestration handlers ---
-import { deployPlanHandler } from '../implementations/typescript/deploy/deploy-plan.impl.js';
-import { rolloutHandler } from '../implementations/typescript/deploy/rollout.impl.js';
-import { migrationHandler } from '../implementations/typescript/deploy/migration.impl.js';
-import { healthHandler } from '../implementations/typescript/deploy/health.impl.js';
-import { envHandler } from '../implementations/typescript/deploy/env.impl.js';
-import { telemetryHandler } from '../implementations/typescript/deploy/telemetry.impl.js';
-import { artifactHandler } from '../implementations/typescript/deploy/artifact.impl.js';
+import { deployPlanHandler } from '../handlers/ts/deploy/deploy-plan.handler.js';
+import { rolloutHandler } from '../handlers/ts/deploy/rollout.handler.js';
+import { migrationHandler } from '../handlers/ts/deploy/migration.handler.js';
+import { healthHandler } from '../handlers/ts/deploy/health.handler.js';
+import { envHandler } from '../handlers/ts/deploy/env.handler.js';
+import { telemetryHandler } from '../handlers/ts/deploy/telemetry.handler.js';
+import { artifactHandler } from '../handlers/ts/deploy/artifact.handler.js';
 
 // --- Coordination handlers ---
-import { runtimeHandler } from '../implementations/typescript/deploy/runtime.impl.js';
-import { secretHandler } from '../implementations/typescript/deploy/secret.impl.js';
-import { iacHandler } from '../implementations/typescript/deploy/iac.impl.js';
-import { gitopsHandler } from '../implementations/typescript/deploy/gitops.impl.js';
+import { runtimeHandler } from '../handlers/ts/deploy/runtime.handler.js';
+import { secretHandler } from '../handlers/ts/deploy/secret.handler.js';
+import { iacHandler } from '../handlers/ts/deploy/iac.handler.js';
+import { gitopsHandler } from '../handlers/ts/deploy/gitops.handler.js';
 
 // --- Provider handlers ---
-import { lambdaRuntimeHandler } from '../implementations/typescript/deploy/lambda-runtime.impl.js';
-import { ecsRuntimeHandler } from '../implementations/typescript/deploy/ecs-runtime.impl.js';
-import { vaultProviderHandler } from '../implementations/typescript/deploy/vault-provider.impl.js';
-import { awsSmProviderHandler } from '../implementations/typescript/deploy/aws-sm-provider.impl.js';
-import { pulumiProviderHandler } from '../implementations/typescript/deploy/pulumi-provider.impl.js';
-import { terraformProviderHandler } from '../implementations/typescript/deploy/terraform-provider.impl.js';
+import { lambdaRuntimeHandler } from '../handlers/ts/deploy/lambda-runtime.handler.js';
+import { ecsRuntimeHandler } from '../handlers/ts/deploy/ecs-runtime.handler.js';
+import { vaultProviderHandler } from '../handlers/ts/deploy/vault-provider.handler.js';
+import { awsSmProviderHandler } from '../handlers/ts/deploy/aws-sm-provider.handler.js';
+import { pulumiProviderHandler } from '../handlers/ts/deploy/pulumi-provider.handler.js';
+import { terraformProviderHandler } from '../handlers/ts/deploy/terraform-provider.handler.js';
 
 // --- Additional Provider handlers ---
-import { cloudRunRuntimeHandler } from '../implementations/typescript/deploy/cloud-run-runtime.impl.js';
-import { gcfRuntimeHandler } from '../implementations/typescript/deploy/gcf-runtime.impl.js';
-import { cloudflareRuntimeHandler } from '../implementations/typescript/deploy/cloudflare-runtime.impl.js';
-import { vercelRuntimeHandler } from '../implementations/typescript/deploy/vercel-runtime.impl.js';
-import { k8sRuntimeHandler } from '../implementations/typescript/deploy/k8s-runtime.impl.js';
-import { dockerComposeRuntimeHandler } from '../implementations/typescript/deploy/docker-compose-runtime.impl.js';
-import { localRuntimeHandler } from '../implementations/typescript/deploy/local-runtime.impl.js';
-import { gcpSmProviderHandler } from '../implementations/typescript/deploy/gcp-sm-provider.impl.js';
-import { envProviderHandler } from '../implementations/typescript/deploy/env-provider.impl.js';
-import { dotenvProviderHandler } from '../implementations/typescript/deploy/dotenv-provider.impl.js';
-import { cloudFormationProviderHandler } from '../implementations/typescript/deploy/cloudformation-provider.impl.js';
-import { dockerComposeIacProviderHandler } from '../implementations/typescript/deploy/docker-compose-iac-provider.impl.js';
-import { argoCDProviderHandler } from '../implementations/typescript/deploy/argocd-provider.impl.js';
-import { fluxProviderHandler } from '../implementations/typescript/deploy/flux-provider.impl.js';
+import { cloudRunRuntimeHandler } from '../handlers/ts/deploy/cloud-run-runtime.handler.js';
+import { gcfRuntimeHandler } from '../handlers/ts/deploy/gcf-runtime.handler.js';
+import { cloudflareRuntimeHandler } from '../handlers/ts/deploy/cloudflare-runtime.handler.js';
+import { vercelRuntimeHandler } from '../handlers/ts/deploy/vercel-runtime.handler.js';
+import { k8sRuntimeHandler } from '../handlers/ts/deploy/k8s-runtime.handler.js';
+import { dockerComposeRuntimeHandler } from '../handlers/ts/deploy/docker-compose-runtime.handler.js';
+import { localRuntimeHandler } from '../handlers/ts/deploy/local-runtime.handler.js';
+import { gcpSmProviderHandler } from '../handlers/ts/deploy/gcp-sm-provider.handler.js';
+import { envProviderHandler } from '../handlers/ts/deploy/env-provider.handler.js';
+import { dotenvProviderHandler } from '../handlers/ts/deploy/dotenv-provider.handler.js';
+import { cloudFormationProviderHandler } from '../handlers/ts/deploy/cloudformation-provider.handler.js';
+import { dockerComposeIacProviderHandler } from '../handlers/ts/deploy/docker-compose-iac-provider.handler.js';
+import { argoCDProviderHandler } from '../handlers/ts/deploy/argocd-provider.handler.js';
+import { fluxProviderHandler } from '../handlers/ts/deploy/flux-provider.handler.js';
 
 // ============================================================
 // Orchestration Concept Implementations
@@ -406,7 +406,7 @@ describe('Artifact Implementation', () => {
 
   it('build -> ok produces content-addressed artifact', async () => {
     const result = await kernel.invokeConcept('urn:copf/Artifact', 'build', {
-      concept: 'User', spec: 'user.concept', implementation: 'user.impl.ts', deps: [],
+      concept: 'User', spec: 'user.concept', implementation: 'user.handler.ts', deps: [],
     });
     expect(result.variant).toBe('ok');
     expect(result.hash).toBeDefined();
@@ -422,7 +422,7 @@ describe('Artifact Implementation', () => {
 
   it('resolve -> ok finds artifact by hash', async () => {
     const built = await kernel.invokeConcept('urn:copf/Artifact', 'build', {
-      concept: 'User', spec: 'user.concept', implementation: 'user.impl.ts', deps: [],
+      concept: 'User', spec: 'user.concept', implementation: 'user.handler.ts', deps: [],
     });
     const result = await kernel.invokeConcept('urn:copf/Artifact', 'resolve', {
       hash: built.hash,

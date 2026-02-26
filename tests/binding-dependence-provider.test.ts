@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   bindingDependenceProviderHandler,
   resetBindingDependenceProviderCounter,
-} from '../implementations/typescript/binding-dependence-provider.impl.js';
+} from '../handlers/ts/binding-dependence-provider.handler.js';
 
 describe('BindingDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

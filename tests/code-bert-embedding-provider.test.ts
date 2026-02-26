@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   codeBERTEmbeddingProviderHandler,
   resetCodeBERTEmbeddingProviderCounter,
-} from '../implementations/typescript/code-bert-embedding-provider.impl.js';
+} from '../handlers/ts/code-bert-embedding-provider.handler.js';
 
 describe('CodeBERTEmbeddingProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

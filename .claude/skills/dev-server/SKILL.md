@@ -96,11 +96,11 @@ copf dev stop
 
 *Start dev server:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts dev --port 3000
+npx tsx cli/src/index.ts dev --port 3000
 ```
 *Check dev server status:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts dev status
+npx tsx cli/src/index.ts dev status
 ```
 ## Related Skills
 

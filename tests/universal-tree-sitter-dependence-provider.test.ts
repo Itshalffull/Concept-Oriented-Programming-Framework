@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   universalTreeSitterDependenceProviderHandler,
   resetUniversalTreeSitterDependenceProviderCounter,
-} from '../implementations/typescript/universal-tree-sitter-dependence-provider.impl.js';
+} from '../handlers/ts/universal-tree-sitter-dependence-provider.handler.js';
 
 describe('UniversalTreeSitterDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

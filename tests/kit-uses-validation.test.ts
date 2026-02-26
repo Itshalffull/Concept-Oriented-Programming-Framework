@@ -18,8 +18,8 @@ import {
   parseLocalConceptNames,
   extractConceptRefs,
   getOptionalSyncPaths,
-} from '../tools/copf-cli/src/commands/kit.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
+} from '../cli/src/commands/kit.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
 import type { CompiledSync } from '../kernel/src/types.js';
 
 // ---- parseUsesSection ----

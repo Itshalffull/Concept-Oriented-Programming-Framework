@@ -349,4 +349,4 @@ Create a framework concept when:
 
 **Always include at least one invariant**, even for framework concepts. Use record `{ }` and list `[ ]` literals to pass minimal-but-real structured inputs (see Pattern 8 in [invariant-design.md](../references/invariant-design.md)).
 
-Place framework concepts in `specs/framework/` and their implementations in `implementations/typescript/framework/`.
+Place framework concepts in `specs/framework/` and their implementations in `handlers/ts/framework/`.

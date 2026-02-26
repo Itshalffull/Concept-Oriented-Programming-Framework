@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   programSliceHandler,
   resetProgramSliceCounter,
-} from '../implementations/typescript/program-slice.impl.js';
+} from '../handlers/ts/program-slice.handler.js';
 
 describe('ProgramSlice Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

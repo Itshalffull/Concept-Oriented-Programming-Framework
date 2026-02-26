@@ -6,20 +6,20 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl.js';
-import { swiftGenHandler } from '../implementations/typescript/framework/swift-gen.impl.js';
-import { solidityGenHandler } from '../implementations/typescript/framework/solidity-gen.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler.js';
+import { swiftGenHandler } from '../handlers/ts/framework/swift-gen.handler.js';
+import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
 import type { ConceptManifest, ConceptHandler } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs', 'app');
-const KITS_DIR = resolve(__dirname, '..', 'kits');
+const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
 const RELOCATED_APP_SPECS: Record<string, string> = {
-  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
-  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+  tag: resolve(REPERTOIRE_DIR, 'classification', 'tag.concept'),
+  comment: resolve(REPERTOIRE_DIR, 'content', 'comment.concept'),
 };
 
 const CONCEPTS = [

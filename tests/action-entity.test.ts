@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   actionEntityHandler,
   resetActionEntityCounter,
-} from '../implementations/typescript/action-entity.impl.js';
+} from '../handlers/ts/action-entity.handler.js';
 
 describe('ActionEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

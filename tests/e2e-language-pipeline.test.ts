@@ -12,31 +12,29 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createInMemoryStorage } from '../kernel/src/index.js';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl.js';
-import { solidityGenHandler } from '../implementations/typescript/framework/solidity-gen.impl.js';
-import { swiftGenHandler } from '../implementations/typescript/framework/swift-gen.impl.js';
-import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
-import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
-import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
-import { registryHandler } from '../implementations/typescript/framework/registry.impl.js';
+import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler.js';
+import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
+import { swiftGenHandler } from '../handlers/ts/framework/swift-gen.handler.js';
+import { syncParserHandler } from '../handlers/ts/framework/sync-parser.handler.js';
+import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler.js';
+import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
+import { registryHandler } from '../handlers/ts/framework/registry.handler.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
-const KITS_DIR = resolve(__dirname, '..', 'kits');
+const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 
-// Concepts relocated from specs/ to kits/
+// Concepts relocated from specs/ to repertoire/
 const RELOCATED_SPECS: Record<string, string> = {
-  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
-  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
-  migration: resolve(KITS_DIR, 'deploy', 'concepts', 'migration.concept'),
-  telemetry: resolve(KITS_DIR, 'deploy', 'concepts', 'telemetry.concept'),
+  tag: resolve(REPERTOIRE_DIR, 'classification', 'tag.concept'),
+  comment: resolve(REPERTOIRE_DIR, 'content', 'comment.concept'),
 };
 
 function readSpec(category: string, name: string): string {
@@ -335,10 +333,8 @@ describe('E2E Language Pipeline — Framework Self-Compilation', () => {
     'sync-compiler',
     'action-log',
     'registry',
-    'telemetry',
     'flow-trace',
     'deployment-validator',
-    'migration',
   ];
 
   for (const conceptName of frameworkConcepts) {

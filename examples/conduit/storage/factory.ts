@@ -26,17 +26,17 @@ export function createStorageForBackend(config: AppConfig): ConceptStorage {
       return createFirestoreStorageAdapter();
 
     case 'cloudflare-kv':
-      // Cloudflare KV from implementations/typescript/storage/cloudflare-kv.ts
+      // Cloudflare KV from handlers/ts/storage/cloudflare-kv.ts
       // Requires Cloudflare Workers environment
       return createCloudflareKVAdapter();
 
     case 'cloudflare-do':
-      // Cloudflare Durable Objects from implementations/typescript/storage/cloudflare-do.ts
+      // Cloudflare Durable Objects from handlers/ts/storage/cloudflare-do.ts
       // Requires Cloudflare Workers environment
       return createCloudflareDOAdapter();
 
     case 'vercel-kv':
-      // Vercel KV from implementations/typescript/storage/vercel-kv.ts
+      // Vercel KV from handlers/ts/storage/vercel-kv.ts
       // Requires Vercel project or local mock
       return createVercelKVAdapter();
 

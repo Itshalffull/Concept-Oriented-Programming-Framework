@@ -132,7 +132,7 @@ kits:
 The `copf kit check-overrides` command validates that app-level sync overrides reference valid kit sync names:
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit check-overrides
+npx tsx cli/src/index.ts kit check-overrides
 ```
 
 Output:

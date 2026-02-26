@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { histogramDiffHandler, resetHistogramDiffCounter } from '../implementations/typescript/histogram-diff.impl.js';
+import { histogramDiffHandler, resetHistogramDiffCounter } from '../handlers/ts/histogram-diff.handler.js';
 
 describe('HistogramDiff', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -163,11 +163,11 @@ syncs:
 
 *Generate a kit scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold kit --name my-kit --concepts User,Session
+npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session
 ```
 *Validate generated kit:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts kit validate ./kits/my-kit
+npx tsx cli/src/index.ts kit validate ./kits/my-kit
 ```
 *Run scaffold generator tests:*
 ```bash

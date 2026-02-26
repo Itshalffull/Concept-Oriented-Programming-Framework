@@ -11,21 +11,21 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
-import { syncParserHandler } from '../implementations/typescript/framework/sync-parser.impl.js';
-import { syncCompilerHandler } from '../implementations/typescript/framework/sync-compiler.impl.js';
-import { validateSyncFields } from '../tools/copf-cli/src/commands/compile-syncs.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
+import { syncParserHandler } from '../handlers/ts/framework/sync-parser.handler.js';
+import { syncCompilerHandler } from '../handlers/ts/framework/sync-compiler.handler.js';
+import { validateSyncFields } from '../cli/src/commands/compile-syncs.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import type { CompiledSync, ConceptAST } from '../kernel/src/types.js';
 
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 const SPECS_DIR = resolve(__dirname, '..', 'specs', 'app');
 
 // Relocated specs: tag → kits/classification, comment → kits/content
-const KITS_DIR = resolve(__dirname, '..', 'kits');
+const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 const RELOCATED_APP_SPECS: Record<string, string> = {
-  tag: resolve(KITS_DIR, 'classification', 'tag.concept'),
-  comment: resolve(KITS_DIR, 'content', 'comment.concept'),
+  tag: resolve(REPERTOIRE_DIR, 'classification', 'tag.concept'),
+  comment: resolve(REPERTOIRE_DIR, 'content', 'comment.concept'),
 };
 
 // ============================================================

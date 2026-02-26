@@ -1,6 +1,6 @@
 // generated: cloudflareruntime.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { cloudflareruntimeHandler } from "./cloudflareruntime.impl";
 
 describe("CloudflareRuntime conformance", () => {

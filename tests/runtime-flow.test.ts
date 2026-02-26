@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   runtimeFlowHandler,
   resetRuntimeFlowCounter,
-} from '../implementations/typescript/runtime-flow.impl.js';
+} from '../handlers/ts/runtime-flow.handler.js';
 
 describe('RuntimeFlow Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

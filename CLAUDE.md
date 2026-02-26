@@ -1,4 +1,4 @@
-# COPF Project Conventions
+# Clef Project Conventions
 
 ## Naming & Comments
 

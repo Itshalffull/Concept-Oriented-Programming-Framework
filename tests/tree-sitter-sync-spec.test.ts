@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   treeSitterSyncSpecHandler,
   resetTreeSitterSyncSpecCounter,
-} from '../implementations/typescript/tree-sitter-sync-spec.impl.js';
+} from '../handlers/ts/tree-sitter-sync-spec.handler.js';
 
 describe('TreeSitterSyncSpec', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

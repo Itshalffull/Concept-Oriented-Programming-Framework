@@ -57,5 +57,5 @@ Save → dev server output:
 
 ## Step 4: Implement the Handler
 
-Add the handler method in `implementations/user.impl.ts`,
+Add the handler method in `implementations/user.handler.ts`,
 then run tests to verify.

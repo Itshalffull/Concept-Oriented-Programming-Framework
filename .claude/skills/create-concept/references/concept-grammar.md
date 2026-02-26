@@ -1,6 +1,6 @@
 # .concept File Grammar Reference
 
-The `.concept` file format is parsed by a recursive descent parser at `implementations/typescript/framework/parser.ts`. This document describes the complete grammar.
+The `.concept` file format is parsed by a recursive descent parser at `handlers/ts/framework/parser.ts`. This document describes the complete grammar.
 
 ## Top-Level Structure
 

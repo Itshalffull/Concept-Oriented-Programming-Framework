@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createConduitKernel } from '../examples/conduit/server/server.js';
 import { createRouter } from '../examples/conduit/server/routes.js';
 import { createServer, type Server } from 'http';
-import type { FullKernel } from '../implementations/typescript/framework/kernel-factory.js';
+import type { FullKernel } from '../handlers/ts/framework/kernel-factory.js';
 
 describe('Conduit Standalone Server — Full Stack Integration', () => {
   let server: Server;

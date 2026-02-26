@@ -2,9 +2,9 @@
 import type {
   ActionInvocation, ActionCompletion,
   ConceptTransport, ConceptQuery
-} from "@copf/runtime";
+} from "@clef/runtime";
 import type { IaCHandler } from "./iac.handler";
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 
 export function createIaCLiteAdapter(
   handler: IaCHandler,

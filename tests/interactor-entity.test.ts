@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   interactorEntityHandler,
   resetInteractorEntityCounter,
-} from '../implementations/typescript/interactor-entity.impl.js';
+} from '../handlers/ts/interactor-entity.handler.js';
 
 describe('InteractorEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

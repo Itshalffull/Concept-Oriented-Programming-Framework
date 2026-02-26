@@ -204,10 +204,10 @@ engine:
 
 ```bash
 # Validate the deployment manifest
-npx tsx tools/copf-cli/src/index.ts deploy --manifest app.deploy.json
+npx tsx cli/src/index.ts deploy --manifest app.deploy.json
 
 # With custom specs directory
-npx tsx tools/copf-cli/src/index.ts deploy --manifest app.deploy.json --specs specs
+npx tsx cli/src/index.ts deploy --manifest app.deploy.json --specs specs
 ```
 
 Read [references/validation-rules.md](references/validation-rules.md) for all validation rules and their error messages.

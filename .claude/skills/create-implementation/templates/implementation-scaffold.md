@@ -330,8 +330,8 @@ export const TODO_nameHandler: ConceptHandler = {
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { TODO_nameHandler } from '../implementations/typescript/app/TODO_name.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { TODO_nameHandler } from '../handlers/ts/app/TODO_name.impl';
 
 describe('TODO_Name Concept', () => {
   it('TODO_action returns ok', async () => {
@@ -364,8 +364,8 @@ describe('TODO_Name Concept', () => {
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { TODO_nameHandler } from '../implementations/typescript/app/TODO_name.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { TODO_nameHandler } from '../handlers/ts/app/TODO_name.impl';
 
 describe('TODO_Name Invariants', () => {
   it('invariant: after TODO_action1 then TODO_action2', async () => {
@@ -393,8 +393,8 @@ describe('TODO_Name Invariants', () => {
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { TODO_nameHandler } from '../implementations/typescript/app/TODO_name.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { TODO_nameHandler } from '../handlers/ts/app/TODO_name.impl';
 import { resolve } from 'path';
 
 const SYNCS_DIR = resolve(__dirname, '../syncs/app');

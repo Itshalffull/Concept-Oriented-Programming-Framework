@@ -21,9 +21,9 @@ import {
   createWebSocketAdapter,
   createWebSocketConceptServer,
 } from '../kernel/src/index.js';
-import { parseSyncFile } from '../implementations/typescript/framework/sync-parser.impl.js';
-import { createSyncEngineHandler } from '../implementations/typescript/framework/sync-engine.impl.js';
-import { actionLogHandler } from '../implementations/typescript/framework/action-log.impl.js';
+import { parseSyncFile } from '../handlers/ts/framework/sync-parser.handler.js';
+import { createSyncEngineHandler } from '../handlers/ts/framework/sync-engine.handler.js';
+import { actionLogHandler } from '../handlers/ts/framework/action-log.handler.js';
 import type {
   ConceptHandler,
   ConceptTransport,

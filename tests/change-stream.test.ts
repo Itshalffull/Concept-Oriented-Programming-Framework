@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { changeStreamHandler, resetChangeStreamCounter } from '../implementations/typescript/change-stream.impl.js';
+import { changeStreamHandler, resetChangeStreamCounter } from '../handlers/ts/change-stream.handler.js';
 
 describe('ChangeStream', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

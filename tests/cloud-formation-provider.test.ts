@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   cloudFormationProviderHandler,
   resetCloudFormationProviderCounter,
-} from '../implementations/typescript/cloud-formation-provider.impl.js';
+} from '../handlers/ts/cloud-formation-provider.handler.js';
 
 describe('CloudFormationProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

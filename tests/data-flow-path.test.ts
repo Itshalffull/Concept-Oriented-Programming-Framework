@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   dataFlowPathHandler,
   resetDataFlowPathCounter,
-} from '../implementations/typescript/data-flow-path.impl.js';
+} from '../handlers/ts/data-flow-path.handler.js';
 
 describe('DataFlowPath Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

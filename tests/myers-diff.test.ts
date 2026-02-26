@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { myersDiffHandler, resetMyersDiffCounter } from '../implementations/typescript/myers-diff.impl.js';
+import { myersDiffHandler, resetMyersDiffCounter } from '../handlers/ts/myers-diff.handler.js';
 
 describe('MyersDiff', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -1,6 +1,6 @@
 // generated: deployplan.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { deployplanHandler } from "./deployplan.impl";
 
 describe("DeployPlan conformance", () => {

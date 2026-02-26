@@ -15,8 +15,8 @@
 // ============================================================
 
 import type { CompiledSync } from '../../kernel/src/types.js';
-import { buildSyncIndex } from '../../implementations/typescript/framework/engine.js';
-import type { SyncIndex } from '../../implementations/typescript/framework/engine.js';
+import { buildSyncIndex } from '../../handlers/ts/framework/engine.js';
+import type { SyncIndex } from '../../handlers/ts/framework/engine.js';
 
 // --- Compiled Sync Cache ---
 

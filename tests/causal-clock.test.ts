@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { causalClockHandler, resetCausalClockCounter } from '../implementations/typescript/causal-clock.impl.js';
+import { causalClockHandler, resetCausalClockCounter } from '../handlers/ts/causal-clock.handler.js';
 
 describe('CausalClock', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -1,6 +1,6 @@
 // generated: gcfruntime.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { gcfruntimeHandler } from "./gcfruntime.impl";
 
 describe("GcfRuntime conformance", () => {

@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   syncEntityHandler,
   resetSyncEntityCounter,
-} from '../implementations/typescript/sync-entity.impl.js';
+} from '../handlers/ts/sync-entity.handler.js';
 
 describe('SyncEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

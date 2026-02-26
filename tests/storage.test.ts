@@ -3,7 +3,7 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage, type ConceptStorage } from '@copf/kernel';
+import { createInMemoryStorage, type ConceptStorage } from '@clef/kernel';
 
 describe('In-Memory Storage', () => {
   let storage: ConceptStorage;

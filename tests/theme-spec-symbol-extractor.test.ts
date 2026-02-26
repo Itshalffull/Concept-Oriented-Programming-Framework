@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   themeSpecSymbolExtractorHandler,
   resetThemeSpecSymbolExtractorCounter,
-} from '../implementations/typescript/theme-spec-symbol-extractor.impl.js';
+} from '../handlers/ts/theme-spec-symbol-extractor.handler.js';
 
 describe('ThemeSpecSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

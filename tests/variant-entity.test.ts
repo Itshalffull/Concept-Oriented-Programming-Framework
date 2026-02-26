@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   variantEntityHandler,
   resetVariantEntityCounter,
-} from '../implementations/typescript/variant-entity.impl.js';
+} from '../handlers/ts/variant-entity.handler.js';
 
 describe('VariantEntity Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

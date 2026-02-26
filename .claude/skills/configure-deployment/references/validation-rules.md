@@ -5,8 +5,8 @@ All validation rules applied by the deployment validator, with error messages an
 ## Running Validation
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts deploy --manifest app.deploy.json
-npx tsx tools/copf-cli/src/index.ts deploy --manifest app.deploy.json --specs specs
+npx tsx cli/src/index.ts deploy --manifest app.deploy.json
+npx tsx cli/src/index.ts deploy --manifest app.deploy.json --specs specs
 ```
 
 The validator parses the manifest, loads concept specs, and checks all rules. On success, it produces a deployment plan. On failure, it reports errors and exits with code 1.

@@ -127,7 +127,7 @@ async find(relation, criteria?) {
 
 *Generate a storage adapter:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold storage --name AppStorage --backend postgresql
+npx tsx cli/src/index.ts scaffold storage --name AppStorage --backend postgresql
 ```
 *Run scaffold generator tests:*
 ```bash

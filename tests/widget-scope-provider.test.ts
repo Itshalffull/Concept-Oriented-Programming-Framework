@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   widgetScopeProviderHandler,
   resetWidgetScopeProviderCounter,
-} from '../implementations/typescript/widget-scope-provider.impl.js';
+} from '../handlers/ts/widget-scope-provider.handler.js';
 
 describe('WidgetScopeProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

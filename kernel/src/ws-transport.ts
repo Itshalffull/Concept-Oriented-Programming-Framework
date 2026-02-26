@@ -1,5 +1,5 @@
 // ============================================================
-// COPF Kernel — WebSocket Transport Adapter
+// Clef Kernel — WebSocket Transport Adapter
 //
 // Section 6.4: Transport Layer
 //   WebSocketAdapter — persistent connection, negotiates mode

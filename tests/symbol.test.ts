@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { symbolHandler, resetSymbolCounter } from '../implementations/typescript/symbol.impl.js';
+import { symbolHandler, resetSymbolCounter } from '../handlers/ts/symbol.handler.js';
 
 describe('Symbol', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { mergeHandler, resetMergeCounter } from '../implementations/typescript/merge.impl.js';
+import { mergeHandler, resetMergeCounter } from '../handlers/ts/merge.handler.js';
 
 describe('Merge', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

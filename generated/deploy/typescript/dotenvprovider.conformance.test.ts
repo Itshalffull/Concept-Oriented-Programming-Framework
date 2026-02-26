@@ -1,6 +1,6 @@
 // generated: dotenvprovider.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { dotenvproviderHandler } from "./dotenvprovider.impl";
 
 describe("DotenvProvider conformance", () => {

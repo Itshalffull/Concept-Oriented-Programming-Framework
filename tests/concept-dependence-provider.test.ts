@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   conceptDependenceProviderHandler,
   resetConceptDependenceProviderCounter,
-} from '../implementations/typescript/concept-dependence-provider.impl.js';
+} from '../handlers/ts/concept-dependence-provider.handler.js';
 
 describe('ConceptDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

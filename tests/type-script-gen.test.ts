@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   typeScriptGenHandler,
   resetTypeScriptGenCounter,
-} from '../implementations/typescript/type-script-gen.impl.js';
+} from '../handlers/ts/type-script-gen.handler.js';
 
 describe('TypeScriptGen', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

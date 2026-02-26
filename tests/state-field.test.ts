@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   stateFieldHandler,
   resetStateFieldCounter,
-} from '../implementations/typescript/state-field.impl.js';
+} from '../handlers/ts/state-field.handler.js';
 
 describe('StateField Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

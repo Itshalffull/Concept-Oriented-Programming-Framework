@@ -12,20 +12,20 @@ import { resolve } from 'path';
 
 const ROOT = resolve(__dirname, '..');
 const SPECS_DIR = resolve(ROOT, 'specs');
-const KITS_DIR = resolve(ROOT, 'kits');
+const REPERTOIRE_DIR = resolve(ROOT, 'repertoire');
 
-/** Concepts whose specs moved from specs/ to kits/ */
+/** Concepts whose specs moved from specs/ to repertoire/ */
 const RELOCATED_SPECS: Record<string, { dir: string; file: string }> = {
   // specs/app → kits
-  tag:       { dir: resolve(KITS_DIR, 'classification'), file: 'tag.concept' },
-  comment:   { dir: resolve(KITS_DIR, 'content'), file: 'comment.concept' },
+  tag:       { dir: resolve(REPERTOIRE_DIR, 'classification'), file: 'tag.concept' },
+  comment:   { dir: resolve(REPERTOIRE_DIR, 'content'), file: 'comment.concept' },
   // specs/framework → kits
-  migration: { dir: resolve(KITS_DIR, 'deploy', 'concepts'), file: 'migration.concept' },
-  telemetry: { dir: resolve(KITS_DIR, 'deploy', 'concepts'), file: 'telemetry.concept' },
+  migration: { dir: resolve(REPERTOIRE_DIR, 'deploy', 'concepts'), file: 'migration.concept' },
+  telemetry: { dir: resolve(REPERTOIRE_DIR, 'deploy', 'concepts'), file: 'telemetry.concept' },
 };
 
 /**
- * Resolve a concept spec path. If the concept was relocated to a kit,
+ * Resolve a concept spec path. If the concept was relocated to a repertoire,
  * returns the kit path; otherwise returns the original specs/ path.
  */
 export function resolveSpecPath(category: string, name: string): string {

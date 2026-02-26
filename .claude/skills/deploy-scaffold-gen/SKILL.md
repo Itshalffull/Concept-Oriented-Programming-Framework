@@ -156,11 +156,11 @@ infrastructure:
 
 *Generate a deploy scaffold:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts scaffold deploy --app my-app
+npx tsx cli/src/index.ts scaffold deploy --app my-app
 ```
 *Validate deploy manifest:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts deploy --validate
+npx tsx cli/src/index.ts deploy --validate
 ```
 *Run scaffold generator tests:*
 ```bash

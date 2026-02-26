@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   symbolOccurrenceHandler,
   resetSymbolOccurrenceCounter,
-} from '../implementations/typescript/symbol-occurrence.impl.js';
+} from '../handlers/ts/symbol-occurrence.handler.js';
 
 describe('SymbolOccurrence', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

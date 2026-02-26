@@ -185,13 +185,13 @@ for (const flow of flows) {
 Parse all concepts to verify syntax:
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts check
+npx tsx cli/src/index.ts check
 ```
 
 Compile syncs to verify they reference valid concepts and actions:
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts compile-syncs
+npx tsx cli/src/index.ts compile-syncs
 ```
 
 ## Step 9: Hand Off to create-concept

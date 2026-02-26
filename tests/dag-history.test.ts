@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { dagHistoryHandler, resetDAGHistoryCounter } from '../implementations/typescript/dag-history.impl.js';
+import { dagHistoryHandler, resetDAGHistoryCounter } from '../handlers/ts/dag-history.handler.js';
 
 describe('DAGHistory', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

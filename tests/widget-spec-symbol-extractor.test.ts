@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   widgetSpecSymbolExtractorHandler,
   resetWidgetSpecSymbolExtractorCounter,
-} from '../implementations/typescript/widget-spec-symbol-extractor.impl.js';
+} from '../handlers/ts/widget-spec-symbol-extractor.handler.js';
 
 describe('WidgetSpecSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

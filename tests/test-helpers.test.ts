@@ -9,9 +9,9 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { createMockHandler } from '../implementations/typescript/framework/mock-handler';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { createMockHandler } from '../handlers/ts/framework/mock-handler';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

@@ -12,7 +12,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   signatureHandler,
   resetSignatureCounter,
-} from '../implementations/typescript/signature.impl.js';
+} from '../handlers/ts/signature.handler.js';
 
 describe('Signature', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

@@ -5,11 +5,11 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl';
-import { userHandler } from '../implementations/typescript/app/user.impl';
-import { passwordHandler } from '../implementations/typescript/app/password.impl';
-import { jwtHandler } from '../implementations/typescript/app/jwt.impl';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler';
+import { userHandler } from '../handlers/ts/app/user.handler';
+import { passwordHandler } from '../handlers/ts/app/password.handler';
+import { jwtHandler } from '../handlers/ts/app/jwt.handler';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 

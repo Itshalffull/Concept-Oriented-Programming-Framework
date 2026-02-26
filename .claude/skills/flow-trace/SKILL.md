@@ -79,7 +79,7 @@ Render the trace tree as a human-readable output with timing, success/failure st
 
 *Build a trace:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts trace <flow-id>
+npx tsx cli/src/index.ts trace <flow-id>
 ```
 ## Related Skills
 

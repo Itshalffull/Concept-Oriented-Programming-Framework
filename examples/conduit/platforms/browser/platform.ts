@@ -3,7 +3,7 @@
 // This is the default platform for web deployment.
 
 import { createInMemoryStorage } from '../../../../kernel/src/storage.js';
-import { browseradapterHandler } from '../../../../generated/concept-interface/typescript/browseradapter.impl.js';
+import { browseradapterHandler } from '../../../../generated/surface/typescript/browseradapter.handler.js';
 
 // Browser platform lifecycle
 async function initBrowserPlatform() {

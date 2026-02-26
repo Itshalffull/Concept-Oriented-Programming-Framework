@@ -2,15 +2,15 @@
 
 ## File to Modify
 
-`tools/copf-cli/src/commands/generate.ts`
+`cli/src/commands/generate.ts`
 
 This is the only file you need to change to wire a new language target into the CLI.
 
 ## Current Structure
 
 ```typescript
-import { typescriptGenHandler } from '../../../../implementations/typescript/framework/typescript-gen.impl.js';
-import { rustGenHandler } from '../../../../implementations/typescript/framework/rust-gen.impl.js';
+import { typescriptGenHandler } from '../../../../handlers/ts/framework/typescript-gen.handler.js';
+import { rustGenHandler } from '../../../../handlers/ts/framework/rust-gen.handler.js';
 
 const SUPPORTED_TARGETS = ['typescript', 'rust'] as const;
 type Target = (typeof SUPPORTED_TARGETS)[number];
@@ -34,7 +34,7 @@ const SUPPORTED_TARGETS = ['typescript', 'rust', '<lang>'] as const;
 ### 2. Import the Handler
 
 ```typescript
-import { <lang>GenHandler } from '../../../../implementations/typescript/framework/<lang>-gen.impl.js';
+import { <lang>GenHandler } from '../../../../handlers/ts/framework/<lang>-gen.handler.js';
 ```
 
 ### 3. Update Generator Selection
@@ -89,10 +89,10 @@ Instead of running through the CLI binary, verify your generator works by execut
 npx tsx -e "
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { parseConceptFile } from './implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from './handlers/ts/framework/spec-parser.handler.js';
 import { createInMemoryStorage } from './kernel/src/storage.js';
-import { schemaGenHandler } from './implementations/typescript/framework/schema-gen.impl.js';
-import { <lang>GenHandler } from './implementations/typescript/framework/<lang>-gen.impl.js';
+import { schemaGenHandler } from './handlers/ts/framework/schema-gen.handler.js';
+import { <lang>GenHandler } from './handlers/ts/framework/<lang>-gen.handler.js';
 
 // Parse a concept
 const source = readFileSync('specs/app/password.concept', 'utf-8');
@@ -125,7 +125,7 @@ console.log(result.files.length + ' file(s) generated');
 Then also verify the full pipeline via the CLI entry point:
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --target <lang> --concept Password
+npx tsx cli/src/index.ts generate --target <lang> --concept Password
 ```
 
 This exercises the complete path: parse -> schema-gen -> your code-gen -> file writing.

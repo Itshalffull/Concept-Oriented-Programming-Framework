@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
-import { refHandler, resetRefCounter } from '../implementations/typescript/ref.impl.js';
+import { refHandler, resetRefCounter } from '../handlers/ts/ref.handler.js';
 
 describe('Ref', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

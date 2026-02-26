@@ -13,41 +13,41 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
-import { rustGenHandler } from '../implementations/typescript/framework/rust-gen.impl.js';
-import { swiftGenHandler } from '../implementations/typescript/framework/swift-gen.impl.js';
-import { solidityGenHandler } from '../implementations/typescript/framework/solidity-gen.impl.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
+import { rustGenHandler } from '../handlers/ts/framework/rust-gen.handler.js';
+import { swiftGenHandler } from '../handlers/ts/framework/swift-gen.handler.js';
+import { solidityGenHandler } from '../handlers/ts/framework/solidity-gen.handler.js';
 
 // Interface target providers
-import { restTargetHandler } from '../implementations/typescript/framework/providers/rest-target.impl.js';
-import { graphqlTargetHandler } from '../implementations/typescript/framework/providers/graphql-target.impl.js';
-import { grpcTargetHandler } from '../implementations/typescript/framework/providers/grpc-target.impl.js';
-import { cliTargetHandler } from '../implementations/typescript/framework/providers/cli-target.impl.js';
-import { mcpTargetHandler } from '../implementations/typescript/framework/providers/mcp-target.impl.js';
-import { claudeSkillsTargetHandler } from '../implementations/typescript/framework/providers/claude-skills-target.impl.js';
+import { restTargetHandler } from '../handlers/ts/framework/providers/rest-target.handler.js';
+import { graphqlTargetHandler } from '../handlers/ts/framework/providers/graphql-target.handler.js';
+import { grpcTargetHandler } from '../handlers/ts/framework/providers/grpc-target.handler.js';
+import { cliTargetHandler } from '../handlers/ts/framework/providers/cli-target.handler.js';
+import { mcpTargetHandler } from '../handlers/ts/framework/providers/mcp-target.handler.js';
+import { claudeSkillsTargetHandler } from '../handlers/ts/framework/providers/claude-skills-target.handler.js';
 
 // Interface SDK providers
-import { tsSdkTargetHandler } from '../implementations/typescript/framework/providers/ts-sdk-target.impl.js';
-import { pySdkTargetHandler } from '../implementations/typescript/framework/providers/py-sdk-target.impl.js';
-import { goSdkTargetHandler } from '../implementations/typescript/framework/providers/go-sdk-target.impl.js';
-import { javaSdkTargetHandler } from '../implementations/typescript/framework/providers/java-sdk-target.impl.js';
-import { rustSdkTargetHandler } from '../implementations/typescript/framework/providers/rust-sdk-target.impl.js';
-import { swiftSdkTargetHandler } from '../implementations/typescript/framework/providers/swift-sdk-target.impl.js';
+import { tsSdkTargetHandler } from '../handlers/ts/framework/providers/ts-sdk-target.handler.js';
+import { pySdkTargetHandler } from '../handlers/ts/framework/providers/py-sdk-target.handler.js';
+import { goSdkTargetHandler } from '../handlers/ts/framework/providers/go-sdk-target.handler.js';
+import { javaSdkTargetHandler } from '../handlers/ts/framework/providers/java-sdk-target.handler.js';
+import { rustSdkTargetHandler } from '../handlers/ts/framework/providers/rust-sdk-target.handler.js';
+import { swiftSdkTargetHandler } from '../handlers/ts/framework/providers/swift-sdk-target.handler.js';
 
 // Interface spec providers
-import { openapiTargetHandler } from '../implementations/typescript/framework/providers/openapi-target.impl.js';
-import { asyncapiTargetHandler } from '../implementations/typescript/framework/providers/asyncapi-target.impl.js';
+import { openapiTargetHandler } from '../handlers/ts/framework/providers/openapi-target.handler.js';
+import { asyncapiTargetHandler } from '../handlers/ts/framework/providers/asyncapi-target.handler.js';
 
 // Deploy IaC providers
-import { terraformProviderHandler } from '../implementations/typescript/app/terraform-provider.impl.js';
-import { cloudformationProviderHandler } from '../implementations/typescript/app/cloudformation-provider.impl.js';
-import { pulumiProviderHandler } from '../implementations/typescript/app/pulumi-provider.impl.js';
-import { dockerComposeIacProviderHandler } from '../implementations/typescript/app/docker-compose-iac-provider.impl.js';
+import { terraformProviderHandler } from '../handlers/ts/app/terraform-provider.handler.js';
+import { cloudformationProviderHandler } from '../handlers/ts/app/cloudformation-provider.handler.js';
+import { pulumiProviderHandler } from '../handlers/ts/app/pulumi-provider.handler.js';
+import { dockerComposeIacProviderHandler } from '../handlers/ts/app/docker-compose-iac-provider.handler.js';
 
 // Deploy GitOps providers
-import { argocdProviderHandler } from '../implementations/typescript/app/argocd-provider.impl.js';
-import { fluxProviderHandler } from '../implementations/typescript/app/flux-provider.impl.js';
+import { argocdProviderHandler } from '../handlers/ts/app/argocd-provider.handler.js';
+import { fluxProviderHandler } from '../handlers/ts/app/flux-provider.handler.js';
 
 // All generators/providers must return these fields from register() so
 // the kit syncs can bind ?meta.name, ?meta.inputKind, and ?meta.outputKind.

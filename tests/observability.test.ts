@@ -15,16 +15,16 @@ import {
   createInMemoryStorage,
   createInProcessAdapter,
   createConceptRegistry,
-} from '@copf/kernel';
-import { createKernel } from '../implementations/typescript/framework/kernel-factory';
-import { SyncEngine, ActionLog, buildSyncIndex } from '../implementations/typescript/framework/sync-engine.impl';
-import type { CompiledSync, ConceptHandler, ActionCompletion } from '@copf/kernel';
+} from '@clef/kernel';
+import { createKernel } from '../handlers/ts/framework/kernel-factory';
+import { SyncEngine, ActionLog, buildSyncIndex } from '../handlers/ts/framework/sync-engine.handler';
+import type { CompiledSync, ConceptHandler, ActionCompletion } from '@clef/kernel';
 import { generateId, timestamp } from '../kernel/src/types';
 import {
   telemetryHandler,
   getExportedSpans,
   clearExportedSpans,
-} from '../implementations/typescript/framework/telemetry.impl';
+} from '../handlers/ts/framework/telemetry.handler';
 
 // --- Telemetry Concept Tests ---
 

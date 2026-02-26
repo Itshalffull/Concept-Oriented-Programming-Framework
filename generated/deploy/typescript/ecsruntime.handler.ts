@@ -1,5 +1,5 @@
 // generated: ecsruntime.handler.ts
-import type { ConceptStorage } from "@copf/runtime";
+import type { ConceptStorage } from "@clef/runtime";
 import type * as T from "./ecsruntime.types";
 
 export interface EcsRuntimeHandler {

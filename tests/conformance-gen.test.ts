@@ -11,9 +11,9 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
-import { schemaGenHandler } from '../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../implementations/typescript/framework/typescript-gen.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
+import { schemaGenHandler } from '../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../handlers/ts/framework/typescript-gen.handler.js';
 import type { ConceptAST, ConceptManifest } from '../kernel/src/types.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
@@ -58,7 +58,7 @@ describe('Conformance Test Generation (Section 7.4)', () => {
 
     // Section 7.4: imports
     expect(content).toContain('import { describe, it, expect } from "vitest"');
-    expect(content).toContain('import { createInMemoryStorage } from "@copf/runtime"');
+    expect(content).toContain('import { createInMemoryStorage } from "@clef/runtime"');
     expect(content).toContain('passwordHandler');
 
     // Section 7.4 Rule 1: free variables get deterministic IDs

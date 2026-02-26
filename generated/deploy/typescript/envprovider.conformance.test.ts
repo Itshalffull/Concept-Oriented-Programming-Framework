@@ -1,6 +1,6 @@
 // generated: envprovider.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { envproviderHandler } from "./envprovider.impl";
 
 describe("EnvProvider conformance", () => {

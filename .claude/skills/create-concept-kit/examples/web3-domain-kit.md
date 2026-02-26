@@ -405,10 +405,10 @@ kits/web3/
 │   └── wallet-auth.sync              # Integration (auth)
 ├── implementations/
 │   └── typescript/
-│       ├── chain-monitor.impl.ts
-│       ├── contract.impl.ts
-│       ├── content.impl.ts
-│       └── wallet.impl.ts
+│       ├── chain-monitor.handler.ts
+│       ├── contract.handler.ts
+│       ├── content.handler.ts
+│       └── wallet.handler.ts
 ├── infrastructure/
 │   ├── transports/
 │   │   ├── evm-transport.ts           # EVM JSON-RPC adapter
@@ -430,6 +430,6 @@ kits/web3/
 
 **Why chainConfigs is a top-level field**: Finality rules are per-chain configuration, not concept state. They're read by the ChainMonitor implementation at startup, not modified by actions. Putting them in `kit.yaml` makes them visible and overridable at the deployment level.
 
-**Why infrastructure is separate from implementations**: The EVM transport is pre-conceptual — it speaks JSON-RPC, manages gas and nonces, polls for receipts. That's plumbing, not concept logic. The `contract.impl.ts` implementation uses the transport to execute contract calls, but the transport itself is infrastructure that the kernel manages. Keeping them separate maintains the infrastructure boundary (Section 10.3).
+**Why infrastructure is separate from implementations**: The EVM transport is pre-conceptual — it speaks JSON-RPC, manages gas and nonces, polls for receipts. That's plumbing, not concept logic. The `contract.handler.ts` implementation uses the transport to execute contract calls, but the transport itself is infrastructure that the kernel manages. Keeping them separate maintains the infrastructure boundary (Section 10.3).
 
 **Framework kit vs. domain kit comparison**: The auth kit (User, Password, JWT) is a framework kit — it works with any transport and storage. The web3 kit is a domain kit — ChainMonitor literally can't function without an EVM transport, and Content can't function without IPFS storage. That's the deciding factor.

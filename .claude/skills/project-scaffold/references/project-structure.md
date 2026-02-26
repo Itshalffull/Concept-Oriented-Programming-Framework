@@ -18,9 +18,9 @@ my-app/
 │   ├── create-profile.sync
 │   └── welcome-email.sync
 ├── implementations/       # Handler code
-│   ├── user.impl.ts
-│   ├── article.impl.ts
-│   └── comment.impl.ts
+│   ├── user.handler.ts
+│   ├── article.handler.ts
+│   └── comment.handler.ts
 ├── kits/                  # Reusable concept packages
 │   └── auth-kit/
 │       ├── kit.yaml
@@ -42,7 +42,7 @@ my-app/
 |-----------|---------|------------|
 | `specs/` | Concept definitions | `.concept` |
 | `syncs/` | Sync rules | `.sync` |
-| `implementations/` | Handler code | `.impl.ts` |
+| `implementations/` | Handler code | `.handler.ts` |
 | `kits/` | Reusable packages | `kit.yaml` + subdirs |
 | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
 | `tests/` | Tests | `.test.ts` |

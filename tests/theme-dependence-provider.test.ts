@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   themeDependenceProviderHandler,
   resetThemeDependenceProviderCounter,
-} from '../implementations/typescript/theme-dependence-provider.impl.js';
+} from '../handlers/ts/theme-dependence-provider.handler.js';
 
 describe('ThemeDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

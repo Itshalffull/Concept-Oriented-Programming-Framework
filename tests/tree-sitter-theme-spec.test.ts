@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   treeSitterThemeSpecHandler,
   resetTreeSitterThemeSpecCounter,
-} from '../implementations/typescript/tree-sitter-theme-spec.impl.js';
+} from '../handlers/ts/tree-sitter-theme-spec.handler.js';
 
 describe('TreeSitterThemeSpec', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

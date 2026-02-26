@@ -4,13 +4,13 @@
 
 import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { resolve, join } from 'path';
-import { parseConceptFile } from '../../implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from '../../handlers/ts/framework/spec-parser.handler.js';
 import { createInMemoryStorage } from '../../kernel/src/storage.js';
-import { schemaGenHandler } from '../../implementations/typescript/framework/schema-gen.impl.js';
-import { typescriptGenHandler } from '../../implementations/typescript/framework/typescript-gen.impl.js';
-import { rustGenHandler } from '../../implementations/typescript/framework/rust-gen.impl.js';
-import { swiftGenHandler } from '../../implementations/typescript/framework/swift-gen.impl.js';
-import { solidityGenHandler } from '../../implementations/typescript/framework/solidity-gen.impl.js';
+import { schemaGenHandler } from '../../handlers/ts/framework/schema-gen.handler.js';
+import { typescriptGenHandler } from '../../handlers/ts/framework/typescript-gen.handler.js';
+import { rustGenHandler } from '../../handlers/ts/framework/rust-gen.handler.js';
+import { swiftGenHandler } from '../../handlers/ts/framework/swift-gen.handler.js';
+import { solidityGenHandler } from '../../handlers/ts/framework/solidity-gen.handler.js';
 import type { ConceptAST, ConceptManifest, ConceptHandler } from '../../kernel/src/types.js';
 
 const PROJECT_ROOT = resolve(import.meta.dirname || __dirname, '..', '..');

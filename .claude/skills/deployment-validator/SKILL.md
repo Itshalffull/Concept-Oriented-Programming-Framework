@@ -91,7 +91,7 @@ syncs:
 
 *Validate deployment manifest:*
 ```bash
-npx tsx tools/copf-cli/src/index.ts deploy --validate
+npx tsx cli/src/index.ts deploy --validate
 ```
 *Run deployment validator tests:*
 ```bash

@@ -797,7 +797,7 @@ describe('Claude Skills Generation Parity', () => {
     it('has compile sync example', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
       expect(content).toContain('Compile sync rules');
-      expect(content).toContain('copf compile-syncs');
+      expect(content).toContain('clef compile-syncs');
     });
 
     it('.commands.ts exports ["compile"]', () => {
@@ -822,9 +822,9 @@ describe('Claude Skills Generation Parity', () => {
     it('has "Create a new kit" and "Validate a kit" examples', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
       expect(content).toContain('Create a new kit');
-      expect(content).toContain('copf kit init my-kit');
+      expect(content).toContain('clef kit init my-kit');
       expect(content).toContain('Validate a kit');
-      expect(content).toContain('copf kit validate');
+      expect(content).toContain('clef kit validate');
     });
 
     it('.commands.ts exports all 5 actions', () => {
@@ -846,8 +846,8 @@ describe('Claude Skills Generation Parity', () => {
 
     it('has start/stop examples', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
-      expect(content).toContain('copf dev --port 3000');
-      expect(content).toContain('copf dev stop');
+      expect(content).toContain('clef dev --port 3000');
+      expect(content).toContain('clef dev stop');
     });
 
     it('.commands.ts exports ["start", "stop", "status"]', () => {
@@ -868,7 +868,7 @@ describe('Claude Skills Generation Parity', () => {
 
     it('has trace example and debugging reference', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
-      expect(content).toContain('copf trace');
+      expect(content).toContain('clef trace');
       const refs = extractReferences(content);
       expect(refs.some(r => r.label === 'Debugging with FlowTrace')).toBe(true);
     });
@@ -913,7 +913,7 @@ describe('Claude Skills Generation Parity', () => {
     it('has scaffold example', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
       expect(content).toContain('Scaffold a new project');
-      expect(content).toContain('copf init my-app');
+      expect(content).toContain('clef init my-app');
     });
 
     it('.commands.ts exports ["scaffold"]', () => {
@@ -1039,8 +1039,8 @@ describe('Claude Skills Generation Parity', () => {
       expect(manifest.targets['claude-skills']).toBeDefined();
     });
 
-    it('claude-skills target name matches "copf-devtools"', () => {
-      expect(manifest.targets['claude-skills'].name).toBe('copf-devtools');
+    it('claude-skills target name matches "clef-devtools"', () => {
+      expect(manifest.targets['claude-skills'].name).toBe('clef-devtools');
     });
 
     it('claude-skills target uses per-concept grouping', () => {

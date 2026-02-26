@@ -216,10 +216,10 @@ syncs/
 
 ```bash
 # Parse and validate all sync files against concept specs
-npx tsx tools/copf-cli/src/index.ts compile-syncs
+npx tsx cli/src/index.ts compile-syncs
 
 # For kit syncs
-npx tsx tools/copf-cli/src/index.ts kit validate kits/<kit-name>
+npx tsx cli/src/index.ts kit validate kits/<kit-name>
 ```
 
 The compiler checks:

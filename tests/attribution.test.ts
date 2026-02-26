@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   attributionHandler,
   resetAttributionCounter,
-} from '../implementations/typescript/attribution.impl.js';
+} from '../handlers/ts/attribution.handler.js';
 
 describe('Attribution', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

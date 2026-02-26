@@ -11,11 +11,11 @@ import { resolve } from 'path';
 import {
   createInMemoryStorage,
 } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import type { ConceptAST } from '../kernel/src/types.js';
 
 // Framework concept handlers
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
 
 // Paths to spec files
 const SPECS_DIR = resolve(__dirname, '..', 'specs');

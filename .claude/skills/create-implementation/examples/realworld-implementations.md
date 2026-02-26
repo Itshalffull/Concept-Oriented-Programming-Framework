@@ -6,15 +6,15 @@ All concept handler implementations from the RealWorld (Conduit) blogging platfo
 
 | Concept | File | Actions | Relations | Lines | Key Pattern |
 |---------|------|---------|-----------|-------|-------------|
-| Echo | echo.impl.ts | send | echo | 12 | Minimal: put + return |
-| User | user.impl.ts | register | user | 27 | Uniqueness check |
-| Password | password.impl.ts | set, check, validate | password | 47 | Crypto (hash + salt) |
-| JWT | jwt.impl.ts | generate, verify | tokens | 56 | Crypto (HMAC), helper functions |
-| Article | article.impl.ts | create, update, delete, get | article | 93 | Full CRUD, derived fields |
-| Comment | comment.impl.ts | create, delete, list | comment | 50 | Query + JSON serialization |
-| Profile | profile.impl.ts | update, get | profile | 31 | Simple read/write |
-| Follow | follow.impl.ts | follow, unfollow, isFollowing | follow | 48 | Array mutation |
-| Favorite | favorite.impl.ts | favorite, unfavorite, isFavorited, count | favorite | 63 | Array mutation + aggregation |
+| Echo | echo.handler.ts | send | echo | 12 | Minimal: put + return |
+| User | user.handler.ts | register | user | 27 | Uniqueness check |
+| Password | password.handler.ts | set, check, validate | password | 47 | Crypto (hash + salt) |
+| JWT | jwt.handler.ts | generate, verify | tokens | 56 | Crypto (HMAC), helper functions |
+| Article | article.handler.ts | create, update, delete, get | article | 93 | Full CRUD, derived fields |
+| Comment | comment.handler.ts | create, delete, list | comment | 50 | Query + JSON serialization |
+| Profile | profile.handler.ts | update, get | profile | 31 | Simple read/write |
+| Follow | follow.handler.ts | follow, unfollow, isFollowing | follow | 48 | Array mutation |
+| Favorite | favorite.handler.ts | favorite, unfavorite, isFavorited, count | favorite | 63 | Array mutation + aggregation |
 
 ---
 
@@ -23,7 +23,7 @@ All concept handler implementations from the RealWorld (Conduit) blogging platfo
 **Spec requirements**: One action, one variant, one relation.
 
 ```typescript
-// echo.impl.ts — 12 lines
+// echo.handler.ts — 12 lines
 import type { ConceptHandler } from '@copf/kernel';
 
 export const echoHandler: ConceptHandler = {
@@ -45,7 +45,7 @@ export const echoHandler: ConceptHandler = {
 **Spec requirements**: Register user with unique name and email.
 
 ```typescript
-// user.impl.ts — 27 lines
+// user.handler.ts — 27 lines
 import type { ConceptHandler } from '@copf/kernel';
 
 export const userHandler: ConceptHandler = {
@@ -81,7 +81,7 @@ export const userHandler: ConceptHandler = {
 **Spec requirements**: Salted hash storage, check comparison, stateless validation. Requires `crypto` capability.
 
 ```typescript
-// password.impl.ts — 47 lines
+// password.handler.ts — 47 lines
 import { createHash, randomBytes } from 'crypto';
 import type { ConceptHandler } from '@copf/kernel';
 
@@ -141,7 +141,7 @@ export const passwordHandler: ConceptHandler = {
 **Spec requirements**: Token generation and verification. Requires `crypto` capability.
 
 ```typescript
-// jwt.impl.ts — 56 lines
+// jwt.handler.ts — 56 lines
 import { createHmac, randomBytes } from 'crypto';
 import type { ConceptHandler } from '@copf/kernel';
 
@@ -208,7 +208,7 @@ export const jwtHandler: ConceptHandler = {
 **Spec requirements**: Create/update/delete/get with slug generation, timestamps, not-found handling.
 
 ```typescript
-// article.impl.ts — 93 lines
+// article.handler.ts — 93 lines
 import type { ConceptHandler } from '@copf/kernel';
 
 function slugify(title: string): string {
@@ -303,7 +303,7 @@ export const articleHandler: ConceptHandler = {
 **Spec requirements**: Create/delete/list with target (article) association.
 
 ```typescript
-// comment.impl.ts — 50 lines
+// comment.handler.ts — 50 lines
 import type { ConceptHandler } from '@copf/kernel';
 
 export const commentHandler: ConceptHandler = {
@@ -360,7 +360,7 @@ export const commentHandler: ConceptHandler = {
 **Spec requirements**: Toggle favorite status, check status, count favorites.
 
 ```typescript
-// favorite.impl.ts — 63 lines
+// favorite.handler.ts — 63 lines
 import type { ConceptHandler } from '@copf/kernel';
 
 export const favoriteHandler: ConceptHandler = {

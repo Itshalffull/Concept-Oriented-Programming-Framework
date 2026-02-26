@@ -3,9 +3,9 @@
 // and the wallet-auth sync.
 
 import { createInMemoryStorage } from '../../../kernel/src/storage.js';
-import { walletHandler } from '../../../kits/web3/implementations/typescript/wallet.impl.js';
-import { jwtHandler } from '../../../implementations/typescript/app/jwt.impl.js';
-import { userHandler } from '../../../implementations/typescript/app/user.impl.js';
+import { walletHandler } from '../../../handlers/ts/repertoire/web3/wallet.handler.js';
+import { jwtHandler } from '../../../handlers/ts/app/jwt.handler.js';
+import { userHandler } from '../../../handlers/ts/app/user.handler.js';
 import type { ConceptStorage } from '../../../kernel/src/types.js';
 
 export interface WalletAuthResult {

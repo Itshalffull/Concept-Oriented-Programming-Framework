@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   widgetDependenceProviderHandler,
   resetWidgetDependenceProviderCounter,
-} from '../implementations/typescript/widget-dependence-provider.impl.js';
+} from '../handlers/ts/widget-dependence-provider.handler.js';
 
 describe('WidgetDependenceProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

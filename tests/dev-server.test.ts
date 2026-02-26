@@ -9,7 +9,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   devServerHandler,
   resetDevServerCounter,
-} from '../implementations/typescript/dev-server.impl.js';
+} from '../handlers/ts/dev-server.handler.js';
 
 describe('DevServer', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

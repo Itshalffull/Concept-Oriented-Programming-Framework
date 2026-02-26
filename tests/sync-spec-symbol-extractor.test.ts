@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   syncSpecSymbolExtractorHandler,
   resetSyncSpecSymbolExtractorCounter,
-} from '../implementations/typescript/sync-spec-symbol-extractor.impl.js';
+} from '../handlers/ts/sync-spec-symbol-extractor.handler.js';
 
 describe('SyncSpecSymbolExtractor', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

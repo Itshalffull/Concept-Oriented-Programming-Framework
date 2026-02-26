@@ -1,6 +1,6 @@
 // generated: telemetry.conformance.test.ts
 import { describe, it, expect } from "vitest";
-import { createInMemoryStorage } from "@copf/runtime";
+import { createInMemoryStorage } from "@clef/runtime";
 import { telemetryHandler } from "./telemetry.impl";
 
 describe("Telemetry conformance", () => {

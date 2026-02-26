@@ -12,7 +12,7 @@ import {
   createInMemoryStorage,
   createConceptRegistry,
 } from '../kernel/src/index.js';
-import { parseConceptFile } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from '../handlers/ts/framework/spec-parser.handler.js';
 import type {
   ConceptAST,
   CompiledSync,
@@ -21,10 +21,10 @@ import type {
 import { generateId, timestamp } from '../kernel/src/types.js';
 
 // Framework concept handlers
-import { specParserHandler } from '../implementations/typescript/framework/spec-parser.impl.js';
+import { specParserHandler } from '../handlers/ts/framework/spec-parser.handler.js';
 
 // SyncEngine concept handler
-import { createSyncEngineHandler } from '../implementations/typescript/framework/sync-engine.impl.js';
+import { createSyncEngineHandler } from '../handlers/ts/framework/sync-engine.handler.js';
 
 const SPECS_DIR = resolve(__dirname, '..', 'specs');
 

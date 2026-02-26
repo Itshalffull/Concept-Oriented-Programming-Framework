@@ -101,7 +101,7 @@ concept <Lang>Gen [S] {
 
 ### Step 5: Implement the Generator
 
-Create the implementation at `implementations/typescript/framework/<lang>-gen.impl.ts`.
+Create the implementation at `handlers/ts/framework/<lang>-gen.handler.ts`.
 
 Use the scaffold from [templates/generator-scaffold.md](templates/generator-scaffold.md) as your starting point, then fill in the language-specific type mapping and code generation functions.
 
@@ -116,7 +116,7 @@ The implementation file is a TypeScript file that:
 
 ### Step 6: Wire into the CLI
 
-Read [references/cli-integration.md](references/cli-integration.md), then update `tools/copf-cli/src/commands/generate.ts`:
+Read [references/cli-integration.md](references/cli-integration.md), then update `cli/src/commands/generate.ts`:
 
 1. Add the language to `SUPPORTED_TARGETS`
 2. Import the handler
@@ -130,10 +130,10 @@ Do NOT use the `copf` CLI binary. Instead, execute TypeScript files directly via
 # Verify the generator works on a known concept
 npx tsx -e "
 import { readFileSync } from 'fs';
-import { parseConceptFile } from './implementations/typescript/framework/spec-parser.impl.js';
+import { parseConceptFile } from './handlers/ts/framework/spec-parser.handler.js';
 import { createInMemoryStorage } from './kernel/src/storage.js';
-import { schemaGenHandler } from './implementations/typescript/framework/schema-gen.impl.js';
-import { <lang>GenHandler } from './implementations/typescript/framework/<lang>-gen.impl.js';
+import { schemaGenHandler } from './handlers/ts/framework/schema-gen.handler.js';
+import { <lang>GenHandler } from './handlers/ts/framework/<lang>-gen.handler.js';
 
 const source = readFileSync('specs/app/password.concept', 'utf-8');
 const ast = parseConceptFile(source);
@@ -173,7 +173,7 @@ npx vitest run tests/<lang>-gen.test.ts
 Once tests pass, run the full generate pipeline to verify against all concept specs:
 
 ```bash
-npx tsx tools/copf-cli/src/index.ts generate --target <lang>
+npx tsx cli/src/index.ts generate --target <lang>
 ```
 
 This will generate $ARGUMENTS code for all concepts in `specs/` and write output to `generated/<lang>/`.

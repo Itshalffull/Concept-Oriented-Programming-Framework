@@ -10,7 +10,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   symbolIndexProviderHandler,
   resetSymbolIndexProviderCounter,
-} from '../implementations/typescript/symbol-index-provider.impl.js';
+} from '../handlers/ts/symbol-index-provider.handler.js';
 
 describe('SymbolIndexProvider', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

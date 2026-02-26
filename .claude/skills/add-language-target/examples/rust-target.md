@@ -4,7 +4,7 @@ This shows how the Rust generator differs from TypeScript — useful for underst
 
 ## File Location
 
-`implementations/typescript/framework/rust-gen.impl.ts`
+`handlers/ts/framework/rust-gen.handler.ts`
 
 ## Type Mapping Function
 

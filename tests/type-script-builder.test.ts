@@ -11,7 +11,7 @@ import { createInMemoryStorage } from '../kernel/src/storage.js';
 import {
   typeScriptBuilderHandler,
   resetTypeScriptBuilderCounter,
-} from '../implementations/typescript/type-script-builder.impl.js';
+} from '../handlers/ts/type-script-builder.handler.js';
 
 describe('TypeScriptBuilder', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
