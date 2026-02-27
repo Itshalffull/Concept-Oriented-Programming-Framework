@@ -8,7 +8,7 @@ describe("AutomationRule conformance", () => {
   it("invariant 1: after define, enable, evaluate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
+    let r = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // define(rule: r, trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer") -> ok()

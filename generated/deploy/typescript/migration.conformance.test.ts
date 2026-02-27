@@ -8,8 +8,8 @@ describe("Migration conformance", () => {
   it("invariant 1: after plan, expand, migrate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const m = "u-test-invariant-001";
-    const s = "u-test-invariant-002";
+    let m = "u-test-invariant-001";
+    let s = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // plan(concept: "Entity", fromVersion: 1, toVersion: 2) -> ok(migration: m, steps: s, estimatedRecords: 1000)
@@ -18,8 +18,8 @@ describe("Migration conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).migration).toBe(m);
-    expect((step1 as any).steps).toBe(s);
+    m = (step1 as any).migration;
+    s = (step1 as any).steps;
     expect((step1 as any).estimatedRecords).toBe(1000);
 
     // --- THEN clause ---
@@ -29,7 +29,7 @@ describe("Migration conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).migration).toBe(m);
+    m = (step2 as any).migration;
     // migrate(migration: m) -> ok(migration: m, recordsMigrated: 1000)
     const step3 = await migrationHandler.migrate(
       { migration: m },

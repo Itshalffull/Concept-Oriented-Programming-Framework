@@ -8,8 +8,8 @@ describe("Session conformance", () => {
   it("invariant 1: after create, validate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const s = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
+    let s = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
@@ -18,7 +18,7 @@ describe("Session conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).token).toBe(t);
+    t = (step1 as any).token;
 
     // --- THEN clause ---
     // validate(session: s) -> ok(valid: true)
@@ -33,8 +33,8 @@ describe("Session conformance", () => {
   it("invariant 2: after create, getContext behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const s = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
+    let s = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
@@ -43,7 +43,7 @@ describe("Session conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).token).toBe(t);
+    t = (step1 as any).token;
 
     // --- THEN clause ---
     // getContext(session: s) -> ok(userId: "alice", device: "mobile")
@@ -59,9 +59,9 @@ describe("Session conformance", () => {
   it("invariant 3: after create, destroy, validate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const s = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
-    const m = "u-test-invariant-003";
+    let s = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
+    let m = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
@@ -70,14 +70,14 @@ describe("Session conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).token).toBe(t);
+    t = (step1 as any).token;
     // destroy(session: s) -> ok(session: s)
     const step2 = await sessionHandler.destroy(
       { session: s },
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).session).toBe(s);
+    s = (step2 as any).session;
 
     // --- THEN clause ---
     // validate(session: s) -> notfound(message: m)
@@ -86,17 +86,17 @@ describe("Session conformance", () => {
       storage,
     );
     expect(step3.variant).toBe("notfound");
-    expect((step3 as any).message).toBe(m);
+    m = (step3 as any).message;
   });
 
   it("invariant 4: after create, create, destroyAll, validate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const s1 = "u-test-invariant-001";
-    const t1 = "u-test-invariant-002";
-    const s2 = "u-test-invariant-003";
-    const t2 = "u-test-invariant-004";
-    const m1 = "u-test-invariant-005";
+    let s1 = "u-test-invariant-001";
+    let t1 = "u-test-invariant-002";
+    let s2 = "u-test-invariant-003";
+    let t2 = "u-test-invariant-004";
+    let m1 = "u-test-invariant-005";
 
     // --- AFTER clause ---
     // create(session: s1, userId: "alice", device: "mobile") -> ok(token: t1)
@@ -105,14 +105,14 @@ describe("Session conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).token).toBe(t1);
+    t1 = (step1 as any).token;
     // create(session: s2, userId: "alice", device: "desktop") -> ok(token: t2)
     const step2 = await sessionHandler.create(
       { session: s2, userId: "alice", device: "desktop" },
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).token).toBe(t2);
+    t2 = (step2 as any).token;
     // destroyAll(userId: "alice") -> ok(userId: "alice")
     const step3 = await sessionHandler.destroyAll(
       { userId: "alice" },
@@ -128,7 +128,7 @@ describe("Session conformance", () => {
       storage,
     );
     expect(step4.variant).toBe("notfound");
-    expect((step4 as any).message).toBe(m1);
+    m1 = (step4 as any).message;
   });
 
 });

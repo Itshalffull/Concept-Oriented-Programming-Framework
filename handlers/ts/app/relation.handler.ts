@@ -100,7 +100,9 @@ export const relationHandler: ConceptHandler = {
       return { variant: 'notfound', relation, entity };
     }
 
-    return { variant: 'ok', related: JSON.stringify(related) };
+    // Return single related entity as plain string, multiple as comma-separated
+    const relatedValue = related.length === 1 ? related[0] : related.join(',');
+    return { variant: 'ok', related: relatedValue };
   },
 
   async defineRollup(input, storage) {

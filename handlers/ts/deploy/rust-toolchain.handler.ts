@@ -16,8 +16,8 @@ export const rustToolchainHandler: ConceptHandler = {
       const rec = existing[0];
       return {
         variant: 'ok',
-        toolchain: rec.toolchain as string,
-        rustcPath: rec.rustcPath as string,
+        tool: rec.toolchain as string,
+        path: rec.rustcPath as string,
         version: rec.version as string,
         capabilities: JSON.parse(rec.capabilities as string),
       };
@@ -64,8 +64,8 @@ export const rustToolchainHandler: ConceptHandler = {
 
     return {
       variant: 'ok',
-      toolchain: toolchainId,
-      rustcPath,
+      tool: toolchainId,
+      path: rustcPath,
       version,
       capabilities,
     };

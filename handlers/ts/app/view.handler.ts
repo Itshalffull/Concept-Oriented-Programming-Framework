@@ -30,9 +30,19 @@ export const viewHandler: ConceptHandler = {
     const view = input.view as string;
     const filter = input.filter as string;
 
-    const existing = await storage.get('view', view);
+    let existing = await storage.get('view', view);
     if (!existing) {
-      return { variant: 'notfound', message: 'View not found' };
+      // Auto-create a minimal view entry
+      existing = {
+        view,
+        dataSource: '',
+        layout: '',
+        filters: '',
+        sorts: '',
+        groups: '',
+        visibleFields: '',
+        formatting: '',
+      };
     }
 
     await storage.put('view', view, {
@@ -98,9 +108,19 @@ export const viewHandler: ConceptHandler = {
     const view = input.view as string;
     const layout = input.layout as string;
 
-    const existing = await storage.get('view', view);
+    let existing = await storage.get('view', view);
     if (!existing) {
-      return { variant: 'notfound', message: 'View not found' };
+      // Auto-create a minimal view entry
+      existing = {
+        view,
+        dataSource: '',
+        layout: '',
+        filters: '',
+        sorts: '',
+        groups: '',
+        visibleFields: '',
+        formatting: '',
+      };
     }
 
     await storage.put('view', view, {

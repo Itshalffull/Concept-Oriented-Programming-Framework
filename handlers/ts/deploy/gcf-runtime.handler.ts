@@ -42,7 +42,9 @@ export const gcfRuntimeHandler: ConceptHandler = {
       return { variant: 'buildFailed', function: fn, errors: ['Function not found'] };
     }
 
-    const version = `v${Date.now()}`;
+    const prevVersion = record.currentVersion as string || '0';
+    const versionNum = prevVersion ? parseInt(prevVersion, 10) || 0 : 0;
+    const version = String(versionNum + 1);
 
     await storage.put(RELATION, fn, {
       ...record,

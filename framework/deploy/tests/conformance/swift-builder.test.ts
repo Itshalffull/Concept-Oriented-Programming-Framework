@@ -23,7 +23,7 @@ describe('SwiftBuilder conformance', () => {
 
   it('should build successfully and return artifact path and hash', async () => {
     const result = await swiftBuilderHandler.build(
-      { sourcePath: './src/Main.swift', target: 'debug' },
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'debug', features: [] } },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -31,96 +31,113 @@ describe('SwiftBuilder conformance', () => {
     expect(result.artifactHash).toBeDefined();
   });
 
-  it('should return compilationError with file, line, and message', async () => {
+  it('should return compilationError when source is missing', async () => {
     const result = await swiftBuilderHandler.build(
-      { sourcePath: './src/Invalid.swift', target: 'debug', simulateError: 'compilationError' },
+      { source: '', toolchainPath: '', platform: 'linux-arm64', config: { mode: 'debug', features: [] } },
       storage,
     );
     expect(result.variant).toBe('compilationError');
-    expect(result.file).toBeDefined();
-    expect(result.line).toBeDefined();
-    expect(result.message).toBeDefined();
-  });
-
-  it('should return linkerError on linking failure', async () => {
-    const result = await swiftBuilderHandler.build(
-      { sourcePath: './src/Main.swift', target: 'release', simulateError: 'linkerError' },
-      storage,
-    );
-    expect(result.variant).toBe('linkerError');
-    expect(result.message).toBeDefined();
+    expect(result.errors).toBeDefined();
   });
 
   // --- test ---
 
   it('should run tests and return pass/fail/skipped/duration', async () => {
+    const buildResult = await swiftBuilderHandler.build(
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'debug', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await swiftBuilderHandler.test(
-      { sourcePath: './src/Main.swift', testTarget: 'MainTests' },
+      { build: buildResult.build as string, toolchainPath: '/usr/bin/swiftc' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(typeof result.pass).toBe('number');
-    expect(typeof result.fail).toBe('number');
+    expect(typeof result.passed).toBe('number');
+    expect(typeof result.failed).toBe('number');
     expect(typeof result.skipped).toBe('number');
     expect(typeof result.duration).toBe('number');
   });
 
-  it('should return testFailure with failure details', async () => {
+  it('should return testFailure when build is not found', async () => {
     const result = await swiftBuilderHandler.test(
-      { sourcePath: './src/Main.swift', testTarget: 'MainTests', simulateError: 'testFailure' },
+      { build: 'nonexistent-build-id', toolchainPath: '/usr/bin/swiftc' },
       storage,
     );
     expect(result.variant).toBe('testFailure');
     expect(result.failures).toBeDefined();
     expect(Array.isArray(result.failures)).toBe(true);
-    const failures = result.failures as any[];
-    expect(failures.length).toBeGreaterThan(0);
-    expect(failures[0].testName).toBeDefined();
-    expect(failures[0].message).toBeDefined();
   });
 
   // --- package ---
 
   it('should package as framework format', async () => {
+    const buildResult = await swiftBuilderHandler.build(
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await swiftBuilderHandler.package(
-      { sourcePath: './src/Main.swift', format: 'framework' },
+      { build: buildResult.build as string, format: 'framework' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('framework');
-    expect(result.outputPath).toBeDefined();
+    expect(result.artifactPath).toBeDefined();
   });
 
   it('should package as xcframework format', async () => {
+    const buildResult = await swiftBuilderHandler.build(
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await swiftBuilderHandler.package(
-      { sourcePath: './src/Main.swift', format: 'xcframework' },
+      { build: buildResult.build as string, format: 'xcframework' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('xcframework');
   });
 
   it('should package as binary format', async () => {
+    const buildResult = await swiftBuilderHandler.build(
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await swiftBuilderHandler.package(
-      { sourcePath: './src/Main.swift', format: 'binary' },
+      { build: buildResult.build as string, format: 'binary' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('binary');
   });
 
   it('should package as library format', async () => {
+    const buildResult = await swiftBuilderHandler.build(
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await swiftBuilderHandler.package(
-      { sourcePath: './src/Main.swift', format: 'library' },
+      { build: buildResult.build as string, format: 'library' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('library');
   });
 
   it('should return formatUnsupported for unknown format', async () => {
+    const buildResult = await swiftBuilderHandler.build(
+      { source: './src/Main.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await swiftBuilderHandler.package(
-      { sourcePath: './src/Main.swift', format: 'deb' },
+      { build: buildResult.build as string, format: 'deb' },
       storage,
     );
     expect(result.variant).toBe('formatUnsupported');
@@ -142,14 +159,14 @@ describe('SwiftBuilder conformance', () => {
 
   it('should build then test using swift artifact paths', async () => {
     const buildResult = await swiftBuilderHandler.build(
-      { sourcePath: './src/App.swift', target: 'debug' },
+      { source: './src/App.swift', toolchainPath: '/usr/bin/swiftc', platform: 'linux-arm64', config: { mode: 'debug', features: [] } },
       storage,
     );
     expect(buildResult.variant).toBe('ok');
-    expect((buildResult.artifactPath as string)).toMatch(/\.swift|\.build|\.o/);
+    expect((buildResult.artifactPath as string)).toMatch(/build\/swift/);
 
     const testResult = await swiftBuilderHandler.test(
-      { sourcePath: './src/App.swift', testTarget: 'AppTests' },
+      { build: buildResult.build as string, toolchainPath: '/usr/bin/swiftc' },
       storage,
     );
     expect(testResult.variant).toBe('ok');

@@ -10,11 +10,14 @@ export const rolloutHandler: ConceptHandler = {
   async begin(input, storage) {
     const plan = input.plan as string;
     const strategy = input.strategy as string;
-    const steps = input.steps as string[];
+    const steps = input.steps;
 
     if (!VALID_STRATEGIES.includes(strategy)) {
       return { variant: 'invalidStrategy', message: `Invalid strategy "${strategy}". Valid: ${VALID_STRATEGIES.join(', ')}` };
     }
+
+    // Default canary weight steps
+    const weightSteps = [10, 25, 50, 100];
 
     const rolloutId = `ro-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
@@ -23,8 +26,9 @@ export const rolloutHandler: ConceptHandler = {
       rollout: rolloutId,
       plan,
       strategy,
-      steps: JSON.stringify(steps),
-      currentStep: 0,
+      steps: JSON.stringify(Array.isArray(steps) ? steps : [steps].filter(Boolean)),
+      weightSteps: JSON.stringify(weightSteps),
+      currentStep: 1,
       currentWeight: 0,
       status: 'active',
       startedAt: now,
@@ -47,10 +51,11 @@ export const rolloutHandler: ConceptHandler = {
       return { variant: 'paused', rollout, reason: 'Rollout is paused' };
     }
 
-    const steps: string[] = JSON.parse(record.steps as string || '[]');
+    const weightSteps: number[] = JSON.parse(record.weightSteps as string || '[10,25,50,100]');
     const currentStep = (record.currentStep as number) + 1;
+    const stepIndex = currentStep - 1;
 
-    if (currentStep >= steps.length) {
+    if (stepIndex >= weightSteps.length) {
       await storage.put(RELATION, rollout, {
         ...record,
         currentStep,
@@ -60,7 +65,7 @@ export const rolloutHandler: ConceptHandler = {
       return { variant: 'complete', rollout };
     }
 
-    const newWeight = Math.min(100, Math.round((currentStep / steps.length) * 100));
+    const newWeight = weightSteps[stepIndex];
 
     await storage.put(RELATION, rollout, {
       ...record,

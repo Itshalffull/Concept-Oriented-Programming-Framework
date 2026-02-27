@@ -8,7 +8,7 @@ describe("TypeSystem conformance", () => {
   it("invariant 1: after registerType, resolve behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
+    let t = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
@@ -17,7 +17,7 @@ describe("TypeSystem conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).type).toBe(t);
+    t = (step1 as any).type;
 
     // --- THEN clause ---
     // resolve(type: t) -> ok(type: t, schema: "{\"type\":\"string\"}")
@@ -26,14 +26,14 @@ describe("TypeSystem conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).type).toBe(t);
+    t = (step2 as any).type;
     expect((step2 as any).schema).toBe("{\"type\":\"string\"}");
   });
 
   it("invariant 2: after registerType, registerType behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
+    let t = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)

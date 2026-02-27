@@ -83,7 +83,9 @@ export const collectionHandler: ConceptHandler = {
 
     const members: string[] = JSON.parse(existing.members as string);
 
-    return { variant: 'ok', members: JSON.stringify(members) };
+    // Return single member as plain string, multiple as comma-separated
+    const membersValue = members.length === 1 ? members[0] : members.join(',');
+    return { variant: 'ok', members: membersValue };
   },
 
   async setSchema(input, storage) {

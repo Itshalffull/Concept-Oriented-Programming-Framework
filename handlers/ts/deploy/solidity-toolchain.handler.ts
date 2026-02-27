@@ -16,8 +16,8 @@ export const solidityToolchainHandler: ConceptHandler = {
       const rec = existing[0];
       return {
         variant: 'ok',
-        toolchain: rec.toolchain as string,
-        solcPath: rec.solcPath as string,
+        tool: rec.toolchain as string,
+        path: rec.solcPath as string,
         version: rec.version as string,
         capabilities: JSON.parse(rec.capabilities as string),
       };
@@ -64,8 +64,8 @@ export const solidityToolchainHandler: ConceptHandler = {
 
     return {
       variant: 'ok',
-      toolchain: toolchainId,
-      solcPath,
+      tool: toolchainId,
+      path: solcPath,
       version,
       capabilities,
     };

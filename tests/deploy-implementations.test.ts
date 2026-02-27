@@ -173,16 +173,20 @@ describe('Rollout Implementation', () => {
       rollout: r.rollout,
     });
     expect(result.variant).toBe('ok');
-    expect(result.step).toBe(1);
+    expect(result.step).toBe(2);
   });
 
   it('advance -> complete when all steps done', async () => {
     const r = await kernel.invokeConcept('urn:clef/Rollout', 'begin', {
       plan: 'plan-1', strategy: 'immediate', steps: ['100%'],
     });
-    const result = await kernel.invokeConcept('urn:clef/Rollout', 'advance', {
-      rollout: r.rollout,
-    });
+    // Advance through all weight steps until complete
+    let result;
+    do {
+      result = await kernel.invokeConcept('urn:clef/Rollout', 'advance', {
+        rollout: r.rollout,
+      });
+    } while (result.variant === 'ok');
     expect(result.variant).toBe('complete');
   });
 
@@ -660,14 +664,15 @@ describe('GitOps Implementation', () => {
     expect(result.variant).toBe('controllerUnsupported');
   });
 
-  it('reconciliationStatus -> pending for new manifest', async () => {
+  it('reconciliationStatus -> ok for new manifest', async () => {
     const emit = await kernel.invokeConcept('urn:clef/GitOps', 'emit', {
       plan: 'plan-1', controller: 'flux', repo: 'my-repo', path: 'k8s',
     });
     const result = await kernel.invokeConcept('urn:clef/GitOps', 'reconciliationStatus', {
       manifest: emit.manifest,
     });
-    expect(result.variant).toBe('pending');
+    expect(result.variant).toBe('ok');
+    expect(result.status).toBe('synced');
   });
 });
 

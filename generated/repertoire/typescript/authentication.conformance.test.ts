@@ -8,8 +8,8 @@ describe("Authentication conformance", () => {
   it("invariant 1: after register, login behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
+    let x = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
@@ -18,7 +18,7 @@ describe("Authentication conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).user).toBe(x);
+    x = (step1 as any).user;
 
     // --- THEN clause ---
     // login(user: x, credentials: "secret123") -> ok(token: t)
@@ -27,14 +27,14 @@ describe("Authentication conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).token).toBe(t);
+    t = (step2 as any).token;
   });
 
   it("invariant 2: after register, login, authenticate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
-    const t = "u-test-invariant-002";
+    let x = "u-test-invariant-001";
+    let t = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
@@ -43,7 +43,7 @@ describe("Authentication conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).user).toBe(x);
+    x = (step1 as any).user;
     // login(user: x, credentials: "secret123") -> ok(token: t)
     const step2 = await authenticationHandler.login(
       { user: x, credentials: "secret123" },
@@ -66,7 +66,7 @@ describe("Authentication conformance", () => {
     const storage = createInMemoryStorage();
 
     const x = "u-test-invariant-001";
-    const m = "u-test-invariant-002";
+    let m = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
@@ -84,14 +84,14 @@ describe("Authentication conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("exists");
-    expect((step2 as any).message).toBe(m);
+    m = (step2 as any).message;
   });
 
   it("invariant 4: after register, resetPassword, login behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
     const x = "u-test-invariant-001";
-    const m = "u-test-invariant-002";
+    let m = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)

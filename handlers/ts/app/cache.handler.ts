@@ -41,7 +41,7 @@ export const cacheHandler: ConceptHandler = {
     const now = Date.now();
 
     if (maxAge > 0 && now - createdAt > maxAge * 1000) {
-      await storage.delete('cacheEntry', compositeKey);
+      await storage.del('cacheEntry', compositeKey);
       return { variant: 'miss' };
     }
 
@@ -77,7 +77,7 @@ export const cacheHandler: ConceptHandler = {
 
       if (hasMatch) {
         const compositeKey = `${entry.bin as string}:${entry.key as string}`;
-        await storage.delete('cacheEntry', compositeKey);
+        await storage.del('cacheEntry', compositeKey);
         count++;
       }
     }

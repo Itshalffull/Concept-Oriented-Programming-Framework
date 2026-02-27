@@ -23,7 +23,7 @@ describe('TypeScriptBuilder conformance', () => {
 
   it('should build successfully and return artifact path and hash', async () => {
     const result = await typescriptBuilderHandler.build(
-      { sourcePath: './src/index.ts', target: 'es2022' },
+      { source: './src/index.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -31,87 +31,99 @@ describe('TypeScriptBuilder conformance', () => {
     expect(result.artifactHash).toBeDefined();
   });
 
-  it('should return typeError with file, line, and message', async () => {
+  it('should return typeError when source is missing', async () => {
     const result = await typescriptBuilderHandler.build(
-      { sourcePath: './src/broken.ts', target: 'es2022', simulateError: 'typeError' },
+      { source: '', toolchainPath: '', platform: 'node', config: { mode: 'release', features: [] } },
       storage,
     );
     expect(result.variant).toBe('typeError');
-    expect(result.file).toBeDefined();
-    expect(result.line).toBeDefined();
-    expect(result.message).toBeDefined();
-  });
-
-  it('should return bundleError on bundling failure', async () => {
-    const result = await typescriptBuilderHandler.build(
-      { sourcePath: './src/index.ts', target: 'es2022', simulateError: 'bundleError' },
-      storage,
-    );
-    expect(result.variant).toBe('bundleError');
-    expect(result.message).toBeDefined();
+    expect(result.errors).toBeDefined();
   });
 
   // --- test ---
 
   it('should run tests and return pass/fail/skipped/duration', async () => {
+    const buildResult = await typescriptBuilderHandler.build(
+      { source: './src/index.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await typescriptBuilderHandler.test(
-      { sourcePath: './src/index.ts', testTarget: 'vitest' },
+      { build: buildResult.build as string, toolchainPath: '/usr/local/bin/tsc' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(typeof result.pass).toBe('number');
-    expect(typeof result.fail).toBe('number');
+    expect(typeof result.passed).toBe('number');
+    expect(typeof result.failed).toBe('number');
     expect(typeof result.skipped).toBe('number');
     expect(typeof result.duration).toBe('number');
   });
 
-  it('should return testFailure with failure details', async () => {
+  it('should return testFailure when build is not found', async () => {
     const result = await typescriptBuilderHandler.test(
-      { sourcePath: './src/index.ts', testTarget: 'vitest', simulateError: 'testFailure' },
+      { build: 'nonexistent-build-id', toolchainPath: '/usr/local/bin/tsc' },
       storage,
     );
     expect(result.variant).toBe('testFailure');
     expect(result.failures).toBeDefined();
     expect(Array.isArray(result.failures)).toBe(true);
-    const failures = result.failures as any[];
-    expect(failures.length).toBeGreaterThan(0);
-    expect(failures[0].testName).toBeDefined();
-    expect(failures[0].message).toBeDefined();
   });
 
   // --- package ---
 
   it('should package as npm format', async () => {
+    const buildResult = await typescriptBuilderHandler.build(
+      { source: './src/index.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await typescriptBuilderHandler.package(
-      { sourcePath: './src/index.ts', format: 'npm' },
+      { build: buildResult.build as string, format: 'npm' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('npm');
-    expect(result.outputPath).toBeDefined();
+    expect(result.artifactPath).toBeDefined();
   });
 
   it('should package as bundle format', async () => {
+    const buildResult = await typescriptBuilderHandler.build(
+      { source: './src/index.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await typescriptBuilderHandler.package(
-      { sourcePath: './src/index.ts', format: 'bundle' },
+      { build: buildResult.build as string, format: 'bundle' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('bundle');
   });
 
   it('should package as docker format', async () => {
+    const buildResult = await typescriptBuilderHandler.build(
+      { source: './src/index.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await typescriptBuilderHandler.package(
-      { sourcePath: './src/index.ts', format: 'docker' },
+      { build: buildResult.build as string, format: 'docker' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.format).toBe('docker');
   });
 
   it('should return formatUnsupported for unknown format', async () => {
+    const buildResult = await typescriptBuilderHandler.build(
+      { source: './src/index.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
+      storage,
+    );
+    expect(buildResult.variant).toBe('ok');
+
     const result = await typescriptBuilderHandler.package(
-      { sourcePath: './src/index.ts', format: 'rpm' },
+      { build: buildResult.build as string, format: 'rpm' },
       storage,
     );
     expect(result.variant).toBe('formatUnsupported');
@@ -133,14 +145,14 @@ describe('TypeScriptBuilder conformance', () => {
 
   it('should build then test using tsc artifact paths', async () => {
     const buildResult = await typescriptBuilderHandler.build(
-      { sourcePath: './src/app.ts', target: 'es2022' },
+      { source: './src/app.ts', toolchainPath: '/usr/local/bin/tsc', platform: 'node', config: { mode: 'release', features: [] } },
       storage,
     );
     expect(buildResult.variant).toBe('ok');
-    expect((buildResult.artifactPath as string)).toMatch(/\.js|dist|\.tsbuildinfo/);
+    expect((buildResult.artifactPath as string)).toMatch(/build\/typescript/);
 
     const testResult = await typescriptBuilderHandler.test(
-      { sourcePath: './src/app.ts', testTarget: 'vitest' },
+      { build: buildResult.build as string, toolchainPath: '/usr/local/bin/tsc' },
       storage,
     );
     expect(testResult.variant).toBe('ok');

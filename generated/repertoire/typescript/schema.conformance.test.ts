@@ -8,7 +8,7 @@ describe("Schema conformance", () => {
   it("invariant 1: after defineSchema, addField, applyTo behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const s = "u-test-invariant-001";
+    let s = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // defineSchema(schema: s, fields: "title,body") -> ok()

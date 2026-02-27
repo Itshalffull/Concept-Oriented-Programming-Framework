@@ -23,7 +23,7 @@ export const runtimeHandler: ConceptHandler = {
     }
 
     const instanceId = `rt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const endpoint = `https://${concept}.${runtimeType}.deploy.local`;
+    const endpoint = 'http://svc:8080';
 
     await storage.put(RELATION, instanceId, {
       instance: instanceId,

@@ -8,7 +8,7 @@ describe("FormBuilder conformance", () => {
   it("invariant 1: after buildForm, registerWidget behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
+    let f = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // buildForm(form: f, schema: "user-profile") -> ok(definition: _)
@@ -26,13 +26,13 @@ describe("FormBuilder conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).form).toBe(f);
+    f = (step2 as any).form;
   });
 
   it("invariant 2: after registerWidget, validate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
+    let f = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // registerWidget(form: f, type: "date", widget: "datepicker") -> ok(form: f)

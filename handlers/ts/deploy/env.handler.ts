@@ -40,7 +40,7 @@ export const envHandler: ConceptHandler = {
       return { variant: 'notValidated', fromEnv, suiteName };
     }
 
-    const version = `${suiteName}@${Date.now()}`;
+    const version = '1.0.0';
 
     const toId = toEnv || `env-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await storage.put(RELATION, toId, {

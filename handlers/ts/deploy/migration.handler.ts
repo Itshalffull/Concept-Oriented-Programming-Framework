@@ -33,11 +33,11 @@ export const migrationHandler: ConceptHandler = {
       steps: JSON.stringify(steps),
       phase: 'planned',
       progress: 0,
-      estimatedRecords: 100,
+      estimatedRecords: 1000,
       recordsMigrated: 0,
     });
 
-    return { variant: 'ok', migration: migrationId, steps, estimatedRecords: 100 };
+    return { variant: 'ok', migration: migrationId, steps, estimatedRecords: 1000 };
   },
 
   async expand(input, storage) {

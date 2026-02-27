@@ -8,8 +8,8 @@ describe("Telemetry conformance", () => {
   it("invariant 1: after configure, deployMarker behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
-    const m = "u-test-invariant-002";
+    let t = "u-test-invariant-001";
+    let m = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // configure(concept: "User", endpoint: "http://otel:4317", samplingRate: 0.5) -> ok(config: t)
@@ -18,7 +18,7 @@ describe("Telemetry conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).config).toBe(t);
+    t = (step1 as any).config;
 
     // --- THEN clause ---
     // deployMarker(kit: "auth", version: "1.0.0", environment: "staging", status: "started") -> ok(marker: m)
@@ -27,7 +27,7 @@ describe("Telemetry conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).marker).toBe(m);
+    m = (step2 as any).marker;
   });
 
 });

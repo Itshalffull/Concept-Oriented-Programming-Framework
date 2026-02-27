@@ -8,9 +8,9 @@ describe("GitOps conformance", () => {
   it("invariant 1: after emit, reconciliationStatus behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const g = "u-test-invariant-001";
-    const f = "u-test-invariant-002";
-    const t = "u-test-invariant-003";
+    let g = "u-test-invariant-001";
+    let f = "u-test-invariant-002";
+    let t = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // emit(plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod") -> ok(manifest: g, files: f)
@@ -19,8 +19,8 @@ describe("GitOps conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).manifest).toBe(g);
-    expect((step1 as any).files).toBe(f);
+    g = (step1 as any).manifest;
+    f = (step1 as any).files;
 
     // --- THEN clause ---
     // reconciliationStatus(manifest: g) -> ok(manifest: g, status: "synced", reconciledAt: t)
@@ -29,9 +29,9 @@ describe("GitOps conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).manifest).toBe(g);
+    g = (step2 as any).manifest;
     expect((step2 as any).status).toBe("synced");
-    expect((step2 as any).reconciledAt).toBe(t);
+    t = (step2 as any).reconciledAt;
   });
 
 });

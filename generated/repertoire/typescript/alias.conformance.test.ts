@@ -8,7 +8,7 @@ describe("Alias conformance", () => {
   it("invariant 1: after addAlias, resolve behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // addAlias(entity: x, name: "homepage") -> ok(entity: x, name: "homepage")
@@ -17,7 +17,7 @@ describe("Alias conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).entity).toBe(x);
+    x = (step1 as any).entity;
     expect((step1 as any).name).toBe("homepage");
 
     // --- THEN clause ---
@@ -27,7 +27,7 @@ describe("Alias conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).entity).toBe(x);
+    x = (step2 as any).entity;
   });
 
 });

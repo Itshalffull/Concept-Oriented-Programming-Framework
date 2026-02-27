@@ -8,7 +8,7 @@ describe("Formula conformance", () => {
   it("invariant 1: after create, evaluate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
+    let f = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(formula: f, expression: "price * quantity") -> ok()

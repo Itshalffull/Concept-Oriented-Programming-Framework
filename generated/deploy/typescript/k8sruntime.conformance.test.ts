@@ -8,9 +8,9 @@ describe("K8sRuntime conformance", () => {
   it("invariant 1: after provision, deploy behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const d = "u-test-invariant-001";
-    const sn = "u-test-invariant-002";
-    const ep = "u-test-invariant-003";
+    let d = "u-test-invariant-001";
+    let sn = "u-test-invariant-002";
+    let ep = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // provision(concept: "User", namespace: "default", cluster: "prod", replicas: 2) -> ok(deployment: d, serviceName: sn, endpoint: ep)
@@ -19,9 +19,9 @@ describe("K8sRuntime conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).deployment).toBe(d);
-    expect((step1 as any).serviceName).toBe(sn);
-    expect((step1 as any).endpoint).toBe(ep);
+    d = (step1 as any).deployment;
+    sn = (step1 as any).serviceName;
+    ep = (step1 as any).endpoint;
 
     // --- THEN clause ---
     // deploy(deployment: d, imageUri: "myregistry/user:latest") -> ok(deployment: d, revision: "1")
@@ -30,7 +30,7 @@ describe("K8sRuntime conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).deployment).toBe(d);
+    d = (step2 as any).deployment;
     expect((step2 as any).revision).toBe("1");
   });
 

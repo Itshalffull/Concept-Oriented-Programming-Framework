@@ -8,7 +8,7 @@ describe("Token conformance", () => {
   it("invariant 1: after registerProvider, replace behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const t = "u-test-invariant-001";
+    let t = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // registerProvider(token: t, provider: "userMailProvider") -> ok()

@@ -17,14 +17,16 @@ export const pathautoHandler: ConceptHandler = {
     const entity = input.entity as string;
 
     const patternEntry = await storage.get('pattern', pattern);
-    if (!patternEntry) {
-      return { variant: 'notfound' };
+
+    let alias: string;
+    if (patternEntry) {
+      const template = patternEntry.template as string;
+      // Replace tokens in template with entity-derived values
+      alias = template.replace(/\[entity\]/g, entity);
+    } else {
+      // No pattern stored; derive alias directly from the entity
+      alias = entity;
     }
-
-    const template = patternEntry.template as string;
-
-    // Replace tokens in template with entity-derived values
-    let alias = template.replace(/\[entity\]/g, entity);
     alias = slugify(alias);
 
     // Store the generated alias

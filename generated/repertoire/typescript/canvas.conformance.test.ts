@@ -8,7 +8,7 @@ describe("Canvas conformance", () => {
   it("invariant 1: after addNode, moveNode, connectNodes behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v = "u-test-invariant-001";
+    let v = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // addNode(canvas: v, node: "a", x: 0, y: 0) -> ok()

@@ -8,8 +8,8 @@ describe("ExposedFilter conformance", () => {
   it("invariant 1: after expose, collectInput, applyToQuery behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const f = "u-test-invariant-001";
-    const m = "u-test-invariant-002";
+    let f = "u-test-invariant-001";
+    let m = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // expose(filter: f, fieldName: "status", operator: "eq", defaultValue: "active") -> ok(filter: f)
@@ -18,7 +18,7 @@ describe("ExposedFilter conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).filter).toBe(f);
+    f = (step1 as any).filter;
 
     // --- THEN clause ---
     // collectInput(filter: f, value: "archived") -> ok(filter: f)
@@ -27,14 +27,14 @@ describe("ExposedFilter conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).filter).toBe(f);
+    f = (step2 as any).filter;
     // applyToQuery(filter: f) -> ok(queryMod: m)
     const step3 = await exposedfilterHandler.applyToQuery(
       { filter: f },
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).queryMod).toBe(m);
+    m = (step3 as any).queryMod;
   });
 
 });

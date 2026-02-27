@@ -8,7 +8,7 @@ describe("ExpressionLanguage conformance", () => {
   it("invariant 1: after registerLanguage, parse, evaluate behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const e = "u-test-invariant-001";
+    let e = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // registerLanguage(name: "math", grammar: "arithmetic") -> ok()

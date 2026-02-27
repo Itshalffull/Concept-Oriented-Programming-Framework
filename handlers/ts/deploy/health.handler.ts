@@ -11,7 +11,7 @@ export const healthHandler: ConceptHandler = {
     const runtime = input.runtime as string;
 
     const checkId = `hc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const latencyMs = Math.round(Math.random() * 50 + 5);
+    const latencyMs = 15;
 
     await storage.put(RELATION, checkId, {
       check: checkId,

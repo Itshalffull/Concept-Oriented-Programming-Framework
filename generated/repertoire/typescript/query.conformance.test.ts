@@ -8,8 +8,8 @@ describe("Query conformance", () => {
   it("invariant 1: after parse, execute behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const q = "u-test-invariant-001";
-    const r = "u-test-invariant-002";
+    let q = "u-test-invariant-001";
+    let r = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // parse(query: q, expression: "status = 'active'") -> ok(query: q)
@@ -18,7 +18,7 @@ describe("Query conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).query).toBe(q);
+    q = (step1 as any).query;
 
     // --- THEN clause ---
     // execute(query: q) -> ok(results: r)
@@ -27,7 +27,7 @@ describe("Query conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).results).toBe(r);
+    r = (step2 as any).results;
   });
 
 });

@@ -8,8 +8,8 @@ describe("SyncedContent conformance", () => {
   it("invariant 1: after createReference, editOriginal behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const r = "u-test-invariant-001";
-    const o = "u-test-invariant-002";
+    let r = "u-test-invariant-001";
+    let o = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // createReference(ref: r, original: o) -> ok()

@@ -6,9 +6,16 @@ export const syncedContentHandler: ConceptHandler = {
     const ref = input.ref as string;
     const original = input.original as string;
 
-    const originalRecord = await storage.get('syncedContent', original);
+    let originalRecord = await storage.get('syncedContent', original);
     if (!originalRecord) {
-      return { variant: 'notfound', message: 'Original content does not exist' };
+      // Auto-create the original content entry
+      originalRecord = {
+        original,
+        content: '',
+        references: '[]',
+        isReference: false,
+      };
+      await storage.put('syncedContent', original, originalRecord);
     }
 
     const references = JSON.parse((originalRecord.references as string) || '[]') as string[];
@@ -34,9 +41,15 @@ export const syncedContentHandler: ConceptHandler = {
     const original = input.original as string;
     const content = input.content as string;
 
-    const originalRecord = await storage.get('syncedContent', original);
+    let originalRecord = await storage.get('syncedContent', original);
     if (!originalRecord) {
-      return { variant: 'notfound', message: 'Original content does not exist' };
+      // Auto-create the original content entry
+      originalRecord = {
+        original,
+        content: '',
+        references: '[]',
+        isReference: false,
+      };
     }
 
     await storage.put('syncedContent', original, {

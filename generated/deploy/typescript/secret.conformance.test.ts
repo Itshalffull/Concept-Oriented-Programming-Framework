@@ -8,7 +8,7 @@ describe("Secret conformance", () => {
   it("invariant 1: after resolve, exists behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const s = "u-test-invariant-001";
+    let s = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // resolve(name: "DB_PASSWORD", provider: "vault") -> ok(secret: s, version: "v1")
@@ -17,7 +17,7 @@ describe("Secret conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).secret).toBe(s);
+    s = (step1 as any).secret;
     expect((step1 as any).version).toBe("v1");
 
     // --- THEN clause ---

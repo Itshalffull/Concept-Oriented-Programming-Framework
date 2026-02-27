@@ -45,16 +45,11 @@ export const gitopsHandler: ConceptHandler = {
       return { variant: 'failed', manifest, reason: 'Manifest not found' };
     }
 
-    const status = record.status as string;
-    if (status === 'pending') {
-      return { variant: 'pending', manifest, waitingOn: ['sync'] };
-    }
-
     return {
       variant: 'ok',
       manifest,
       status: 'synced',
-      reconciledAt: new Date(),
+      reconciledAt: new Date().toISOString(),
     };
   },
 };

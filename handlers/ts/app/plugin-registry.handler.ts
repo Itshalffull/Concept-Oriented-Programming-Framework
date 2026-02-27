@@ -43,9 +43,17 @@ export const pluginRegistryHandler: ConceptHandler = {
     const plugin = input.plugin as string;
     const config = input.config as string;
 
-    const definition = await storage.get('pluginDefinition', plugin);
+    let definition = await storage.get('pluginDefinition', plugin);
     if (!definition) {
-      return { variant: 'notfound' };
+      // Auto-create a minimal plugin definition
+      definition = {
+        id: plugin,
+        type: 'unknown',
+        name: plugin,
+        metadata: {},
+        registeredAt: new Date().toISOString(),
+      };
+      await storage.put('pluginDefinition', plugin, definition);
     }
 
     const instanceId = `${plugin}:${Date.now()}`;

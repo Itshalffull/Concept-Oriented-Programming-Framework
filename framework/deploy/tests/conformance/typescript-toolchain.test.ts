@@ -23,11 +23,11 @@ describe('TypeScriptToolchain conformance', () => {
 
   it('should resolve an installed toolchain with path, version, and capabilities', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0' },
+      { platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(result.toolchain).toBeDefined();
+    expect(result.tool).toBeDefined();
     expect(result.path).toBeDefined();
     expect(result.version).toBeDefined();
     expect(result.capabilities).toBeDefined();
@@ -36,7 +36,7 @@ describe('TypeScriptToolchain conformance', () => {
 
   it('should include esm capability when available', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0' },
+      { platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -46,7 +46,7 @@ describe('TypeScriptToolchain conformance', () => {
 
   it('should include cjs capability when available', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0' },
+      { platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -56,7 +56,7 @@ describe('TypeScriptToolchain conformance', () => {
 
   it('should include declaration-maps capability when available', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0' },
+      { platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -64,9 +64,9 @@ describe('TypeScriptToolchain conformance', () => {
     expect(capabilities).toContain('declaration-maps');
   });
 
-  it('should return notInstalled with installHint when toolchain is missing', async () => {
+  it('should return notInstalled with installHint for unknown platform', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '99.0', simulateError: 'notInstalled' },
+      { platform: 'unknown-platform-xyz' },
       storage,
     );
     expect(result.variant).toBe('notInstalled');
@@ -74,28 +74,38 @@ describe('TypeScriptToolchain conformance', () => {
     expect(typeof result.installHint).toBe('string');
   });
 
-  it('should return nodeVersionMismatch when Node.js version is incompatible', async () => {
+  it('should return nodeVersionMismatch when platform is empty', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0', simulateError: 'nodeVersionMismatch' },
+      { platform: '' },
       storage,
     );
     expect(result.variant).toBe('nodeVersionMismatch');
-    expect(result.message).toBeDefined();
+    expect(result.required).toBeDefined();
+  });
+
+  it('should return nodeVersionMismatch for legacy platform with version constraint', async () => {
+    const result = await typescriptToolchainHandler.resolve(
+      { platform: 'legacy', versionConstraint: '>=18' },
+      storage,
+    );
+    expect(result.variant).toBe('nodeVersionMismatch');
+    expect(result.installed).toBeDefined();
+    expect(result.required).toBeDefined();
   });
 
   it('should return a toolchain identifier string on successful resolve', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0' },
+      { platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
-    expect(typeof result.toolchain).toBe('string');
-    expect((result.toolchain as string).length).toBeGreaterThan(0);
+    expect(typeof result.tool).toBe('string');
+    expect((result.tool as string).length).toBeGreaterThan(0);
   });
 
   it('should return a version string matching semver-like format', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '5.0' },
+      { platform: 'node' },
       storage,
     );
     expect(result.variant).toBe('ok');
@@ -105,7 +115,7 @@ describe('TypeScriptToolchain conformance', () => {
 
   it('should provide a non-empty installHint when not installed', async () => {
     const result = await typescriptToolchainHandler.resolve(
-      { language: 'typescript', minimumVersion: '99.0', simulateError: 'notInstalled' },
+      { platform: 'unknown-platform-xyz' },
       storage,
     );
     expect(result.variant).toBe('notInstalled');
@@ -121,9 +131,5 @@ describe('TypeScriptToolchain conformance', () => {
     expect(result.language).toBe('typescript');
     expect(result.capabilities).toBeDefined();
     expect(Array.isArray(result.capabilities)).toBe(true);
-    const capabilities = result.capabilities as string[];
-    expect(capabilities).toContain('esm');
-    expect(capabilities).toContain('cjs');
-    expect(capabilities).toContain('declaration-maps');
   });
 });

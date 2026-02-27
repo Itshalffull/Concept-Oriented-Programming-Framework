@@ -16,8 +16,8 @@ export const swiftToolchainHandler: ConceptHandler = {
       const rec = existing[0];
       return {
         variant: 'ok',
-        toolchain: rec.toolchain as string,
-        swiftcPath: rec.swiftcPath as string,
+        tool: rec.toolchain as string,
+        path: rec.swiftcPath as string,
         version: rec.version as string,
         capabilities: JSON.parse(rec.capabilities as string),
       };
@@ -62,8 +62,8 @@ export const swiftToolchainHandler: ConceptHandler = {
 
     return {
       variant: 'ok',
-      toolchain: toolchainId,
-      swiftcPath,
+      tool: toolchainId,
+      path: swiftcPath,
       version,
       capabilities,
     };

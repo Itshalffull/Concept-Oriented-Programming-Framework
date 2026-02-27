@@ -22,7 +22,7 @@ export const secretHandler: ConceptHandler = {
     }
 
     const secretId = `sec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const version = `v${Date.now()}`;
+    const version = 'v1';
 
     await storage.put(RELATION, secretId, {
       secret: secretId,

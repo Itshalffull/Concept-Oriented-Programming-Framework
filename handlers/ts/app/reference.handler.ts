@@ -60,7 +60,9 @@ export const referenceHandler: ConceptHandler = {
 
     const refs: string[] = JSON.parse(existing.refs as string);
 
-    return { variant: 'ok', targets: JSON.stringify(refs) };
+    // Return single ref as plain string, multiple as comma-separated
+    const targets = refs.length === 1 ? refs[0] : refs.join(',');
+    return { variant: 'ok', targets };
   },
 
   async resolveTarget(input, storage) {

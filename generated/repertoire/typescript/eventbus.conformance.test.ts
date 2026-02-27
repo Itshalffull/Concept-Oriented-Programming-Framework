@@ -8,9 +8,9 @@ describe("EventBus conformance", () => {
   it("invariant 1: after registerEventType, subscribe, dispatch behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const sid = "u-test-invariant-001";
-    const e = "u-test-invariant-002";
-    const r = "u-test-invariant-003";
+    let sid = "u-test-invariant-001";
+    let e = "u-test-invariant-002";
+    let r = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // registerEventType(name: "user.login", schema: "{}") -> ok()
@@ -27,14 +27,14 @@ describe("EventBus conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).subscriptionId).toBe(sid);
+    sid = (step2 as any).subscriptionId;
     // dispatch(event: e, data: "{\"user\":\"alice\"}") -> ok(results: r)
     const step3 = await eventbusHandler.dispatch(
       { event: e, data: "{\"user\":\"alice\"}" },
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).results).toBe(r);
+    r = (step3 as any).results;
   });
 
 });

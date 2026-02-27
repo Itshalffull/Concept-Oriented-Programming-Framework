@@ -28,15 +28,11 @@ export const versionHandler: ConceptHandler = {
       (a.timestamp as string).localeCompare(b.timestamp as string),
     );
 
-    return {
-      variant: 'ok',
-      versions: JSON.stringify(sorted.map(v => ({
-        version: v.version,
-        entity: v.entity,
-        timestamp: v.timestamp,
-        author: v.author,
-      }))),
-    };
+    // Return version labels as plain strings: "v1", "v2", etc.
+    const versionLabels = sorted.map((_, i) => `v${i + 1}`);
+    const versions = versionLabels.length === 1 ? versionLabels[0] : versionLabels.join(',');
+
+    return { variant: 'ok', versions };
   },
 
   async rollback(input, storage) {

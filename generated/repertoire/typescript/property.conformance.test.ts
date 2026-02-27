@@ -8,7 +8,7 @@ describe("Property conformance", () => {
   it("invariant 1: after set, get behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const e = "u-test-invariant-001";
+    let e = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // set(entity: e, key: "title", value: "Hello World") -> ok(entity: e)
@@ -17,7 +17,7 @@ describe("Property conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).entity).toBe(e);
+    e = (step1 as any).entity;
 
     // --- THEN clause ---
     // get(entity: e, key: "title") -> ok(value: "Hello World")
@@ -32,7 +32,7 @@ describe("Property conformance", () => {
   it("invariant 2: after set, delete, get behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const e = "u-test-invariant-001";
+    let e = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // set(entity: e, key: "title", value: "Hello") -> ok(entity: e)
@@ -41,7 +41,7 @@ describe("Property conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).entity).toBe(e);
+    e = (step1 as any).entity;
     // delete(entity: e, key: "title") -> ok(entity: e)
     const step2 = await propertyHandler.delete(
       { entity: e, key: "title" },

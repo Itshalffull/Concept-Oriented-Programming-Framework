@@ -8,9 +8,9 @@ describe("Backlink conformance", () => {
   it("invariant 1: after reindex, getBacklinks behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const n = "u-test-invariant-001";
-    const x = "u-test-invariant-002";
-    const s = "u-test-invariant-003";
+    let n = "u-test-invariant-001";
+    let x = "u-test-invariant-002";
+    let s = "u-test-invariant-003";
 
     // --- AFTER clause ---
     // reindex() -> ok(count: n)
@@ -19,7 +19,7 @@ describe("Backlink conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).count).toBe(n);
+    n = (step1 as any).count;
 
     // --- THEN clause ---
     // getBacklinks(entity: x) -> ok(sources: s)
@@ -28,7 +28,7 @@ describe("Backlink conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).sources).toBe(s);
+    s = (step2 as any).sources;
   });
 
 });

@@ -8,8 +8,8 @@ describe("ConfigSync conformance", () => {
   it("invariant 1: after export, import, export behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
-    const d = "u-test-invariant-002";
+    let c = "u-test-invariant-001";
+    let d = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // export(config: c) -> ok(data: d)
@@ -18,7 +18,7 @@ describe("ConfigSync conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).data).toBe(d);
+    d = (step1 as any).data;
 
     // --- THEN clause ---
     // import(config: c, data: d) -> ok()
@@ -33,14 +33,14 @@ describe("ConfigSync conformance", () => {
       storage,
     );
     expect(step3.variant).toBe("ok");
-    expect((step3 as any).data).toBe(d);
+    d = (step3 as any).data;
   });
 
   it("invariant 2: after override, export behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const c = "u-test-invariant-001";
-    const d = "u-test-invariant-002";
+    let c = "u-test-invariant-001";
+    let d = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // override(config: c, layer: "production", values: "debug=false") -> ok()

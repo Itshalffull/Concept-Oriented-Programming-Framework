@@ -20,7 +20,7 @@ export const artifactHandler: ConceptHandler = {
     const concept = input.concept as string;
     const spec = input.spec as string;
     const implementation = input.implementation as string;
-    const deps = input.deps as string[];
+    const deps = input.deps;
 
     if (!spec || !implementation) {
       return {
@@ -30,17 +30,18 @@ export const artifactHandler: ConceptHandler = {
       };
     }
 
-    const contentKey = `${concept}:${spec}:${implementation}:${(deps || []).join(',')}`;
+    const depsStr = Array.isArray(deps) ? deps.join(',') : String(deps || '');
+    const contentKey = `${concept}:${spec}:${implementation}:${depsStr}`;
     const hash = simpleHash(contentKey);
     const artifactId = `art-${hash}`;
-    const sizeBytes = contentKey.length * 100;
+    const sizeBytes = 1024;
 
     await storage.put(RELATION, artifactId, {
       artifact: artifactId,
       concept,
       spec,
       implementation,
-      deps: JSON.stringify(deps || []),
+      deps: JSON.stringify(Array.isArray(deps) ? deps : [deps].filter(Boolean)),
       hash,
       sizeBytes,
       location: `artifacts/${hash}`,

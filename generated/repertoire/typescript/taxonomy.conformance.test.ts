@@ -8,8 +8,8 @@ describe("Taxonomy conformance", () => {
   it("invariant 1: after createVocabulary, addTerm, tagEntity, untagEntity behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const v = "u-test-invariant-001";
-    const none = "u-test-invariant-002";
+    let v = "u-test-invariant-001";
+    let none = "u-test-invariant-002";
 
     // --- AFTER clause ---
     // createVocabulary(vocab: v, name: "topics") -> ok()

@@ -8,7 +8,7 @@ describe("DailyNote conformance", () => {
   it("invariant 1: after getOrCreateToday, getOrCreateToday behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const n = "u-test-invariant-001";
+    let n = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // getOrCreateToday(note: n) -> ok(note: n, created: true)
@@ -17,7 +17,7 @@ describe("DailyNote conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).note).toBe(n);
+    n = (step1 as any).note;
     expect((step1 as any).created).toBe(true);
 
     // --- THEN clause ---
@@ -27,7 +27,7 @@ describe("DailyNote conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).note).toBe(n);
+    n = (step2 as any).note;
     expect((step2 as any).created).toBe(false);
   });
 

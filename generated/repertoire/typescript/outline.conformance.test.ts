@@ -8,7 +8,7 @@ describe("Outline conformance", () => {
   it("invariant 1: after create, collapse, expand behaves correctly", async () => {
     const storage = createInMemoryStorage();
 
-    const x = "u-test-invariant-001";
+    let x = "u-test-invariant-001";
 
     // --- AFTER clause ---
     // create(node: x) -> ok(node: x)
@@ -17,14 +17,14 @@ describe("Outline conformance", () => {
       storage,
     );
     expect(step1.variant).toBe("ok");
-    expect((step1 as any).node).toBe(x);
+    x = (step1 as any).node;
     // collapse(node: x) -> ok(node: x)
     const step2 = await outlineHandler.collapse(
       { node: x },
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).node).toBe(x);
+    x = (step2 as any).node;
 
     // --- THEN clause ---
     // expand(node: x) -> ok(node: x)

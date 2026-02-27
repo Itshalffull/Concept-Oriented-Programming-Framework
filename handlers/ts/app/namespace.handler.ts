@@ -45,7 +45,9 @@ export const namespaceHandler: ConceptHandler = {
       }
     }
 
-    return { variant: 'ok', children: JSON.stringify(children) };
+    // Return children as plain string: single child directly, empty string when none
+    const childrenValue = children.length === 0 ? '' : (children.length === 1 ? children[0] : children.join(','));
+    return { variant: 'ok', children: childrenValue };
   },
 
   async getHierarchy(input, storage) {

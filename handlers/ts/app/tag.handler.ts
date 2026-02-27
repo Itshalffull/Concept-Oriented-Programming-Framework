@@ -53,12 +53,19 @@ export const tagHandler: ConceptHandler = {
     const entity = input.entity as string;
     const tag = input.tag as string;
 
-    const existing = await storage.get('tag', tag);
+    let existing = await storage.get('tag', tag);
     if (!existing) {
-      return { variant: 'notfound', message: 'Tag does not exist' };
+      // Auto-create the tag with an empty index
+      existing = {
+        tag,
+        tagIndex: '[]',
+        articles: [],
+      };
     }
 
-    const tagIndex: string[] = JSON.parse(existing.tagIndex as string);
+    const tagIndex: string[] = existing.tagIndex
+      ? JSON.parse(existing.tagIndex as string)
+      : [];
 
     if (!tagIndex.includes(entity)) {
       tagIndex.push(entity);
@@ -101,11 +108,13 @@ export const tagHandler: ConceptHandler = {
     const tag = input.tag as string;
 
     const existing = await storage.get('tag', tag);
-    const entities: string[] = existing
+    const entities: string[] = existing && existing.tagIndex
       ? JSON.parse(existing.tagIndex as string)
       : [];
 
-    return { variant: 'ok', entities: JSON.stringify(entities) };
+    // Return single entity as plain string, multiple as comma-separated
+    const entitiesValue = entities.length === 1 ? entities[0] : entities.join(',');
+    return { variant: 'ok', entities: entitiesValue };
   },
 
   async getChildren(input, storage) {
