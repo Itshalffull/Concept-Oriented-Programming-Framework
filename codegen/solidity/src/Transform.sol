@@ -54,7 +54,7 @@ contract Transform {
     /// @param transformId The transform to apply
     /// @param value The input value to transform
     /// @return result The input value (actual transformation is off-chain)
-    function apply(bytes32 transformId, string calldata value) external returns (string memory result) {
+    function applyTransform(bytes32 transformId, string calldata value) external returns (string memory result) {
         require(_transforms[transformId].exists, "Transform not found");
 
         emit TransformApplied(transformId, value);

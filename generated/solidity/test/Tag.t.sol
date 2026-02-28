@@ -13,18 +13,18 @@ contract TagTest is Test {
         target = new Tag();
     }
 
-    /// @notice invariant 1: after add, add behaves correctly
+    /// @notice invariant 1: after addTag, getByTag behaves correctly
     function test_invariant_1() public {
         bytes32 t = keccak256(abi.encodePacked("u-test-invariant-001"));
 
         // --- Setup ---
-        // add(tag: t, article: "a1") -> ok
-        // target.add(t, "a1");
+        // addTag(entity: "page-1", tag: t) -> ok
+        // target.addTag("page-1", t);
         // TODO: Assert ok variant
 
         // --- Assertions ---
-        // add(tag: t, article: "a2") -> ok
-        // target.add(t, "a2");
+        // getByTag(tag: t) -> ok
+        // target.getByTag(t);
         // TODO: Assert ok variant
     }
 

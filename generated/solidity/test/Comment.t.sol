@@ -13,18 +13,20 @@ contract CommentTest is Test {
         target = new Comment();
     }
 
-    /// @notice invariant 1: after create, delete behaves correctly
+    /// @notice invariant 1: after addComment, reply behaves correctly
     function test_invariant_1() public {
         bytes32 c = keccak256(abi.encodePacked("u-test-invariant-001"));
+        bytes32 e = keccak256(abi.encodePacked("u-test-invariant-002"));
+        bytes32 r = keccak256(abi.encodePacked("u-test-invariant-003"));
 
         // --- Setup ---
-        // create(comment: c, body: "Great post", target: "a1", author: "u1") -> ok
-        // target.create(c, "Great post", "a1", "u1");
+        // addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok
+        // target.addComment(c, e, "Hello", "alice");
         // TODO: Assert ok variant
 
         // --- Assertions ---
-        // delete(comment: c) -> ok
-        // target.delete(c);
+        // reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok
+        // target.reply(r, c, "Reply", "bob");
         // TODO: Assert ok variant
     }
 

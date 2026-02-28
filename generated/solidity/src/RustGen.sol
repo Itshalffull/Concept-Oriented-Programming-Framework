@@ -29,9 +29,18 @@ contract RustGen {
         string message;
     }
 
+    struct RegisterOkResult {
+        bool success;
+        string name;
+        string inputKind;
+        string outputKind;
+        string[] capabilities;
+    }
+
     // --- Events ---
 
     event GenerateCompleted(string variant, bytes[] files);
+    event RegisterCompleted(string variant, string[] capabilities);
 
     // --- Actions ---
 
@@ -42,6 +51,12 @@ contract RustGen {
         // require(..., "invariant 1: after generate, generate behaves correctly");
 
         // TODO: Implement generate
+        revert("Not implemented");
+    }
+
+    /// @notice register
+    function register() external returns (RegisterOkResult memory) {
+        // TODO: Implement register
         revert("Not implemented");
     }
 

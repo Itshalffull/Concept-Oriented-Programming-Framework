@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @title DatalogAnalysisProvider
+/// @notice Datalog-based analysis engine provider
+/// @dev Implements the DatalogAnalysisProvider concept from Clef specification.
+///      Provides a Datalog-based analysis engine that can be initialized and registered.
+
+contract DatalogAnalysisProvider {
+
+    // --- Types ---
+
+    struct InitializeOkResult {
+        bool success;
+        bytes32 instance;
+    }
+
+    struct InitializeLoadErrorResult {
+        bool success;
+        string message;
+    }
+
+    // --- Storage ---
+
+    /// @dev Maps instance ID to existence
+    mapping(bytes32 => bool) private _instances;
+
+    /// @dev Ordered list of instance IDs
+    bytes32[] private _instanceKeys;
+
+    // --- Events ---
+
+    event InitializeCompleted(string variant, bytes32 instance);
+
+    // --- Metadata ---
+
+    /// @notice Returns static provider metadata
+    /// @return name The provider name
+    /// @return category The provider category
+    function register() external pure returns (string memory name, string memory category) {
+        return ("datalog", "analysis-engine");
+    }
+
+    // --- Actions ---
+
+    /// @notice initialize — create a new Datalog analysis engine instance
+    function initialize() external returns (InitializeOkResult memory) {
+        bytes32 instance = keccak256(abi.encodePacked("datalog", "analysis-engine", block.timestamp, _instanceKeys.length));
+
+        _instances[instance] = true;
+        _instanceKeys.push(instance);
+
+        emit InitializeCompleted("ok", instance);
+
+        return InitializeOkResult({success: true, instance: instance});
+    }
+
+}
