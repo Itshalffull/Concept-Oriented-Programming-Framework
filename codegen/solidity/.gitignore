@@ -4,3 +4,6 @@ cache-hardhat/
 artifacts/
 package.json
 package-lock.json
+cache/
+out/
+foundry.lock
