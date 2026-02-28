@@ -1,6 +1,6 @@
 # Clef — Naming Reference
 
-> **Clef** is a framework for composable software. You write independent concepts — spec-driven services with their own state. You wire them with syncs — declarative rules for when one concept triggers another. The sync engine runs it all. Bind generates every programmatic interface — REST, CLI, MCP, Claude Skills — so LLMs can use your app instantly. Surface generates cross-platform UIs from the same specs. Score makes your entire codebase queryable as data — every file, symbol, concept, sync, and runtime event becomes a traversable node that LLMs can reason over. Clef's Repertoire gives you battle-tested concepts across 16 suites, so you never reinvent the wheel.
+> **Clef** is a framework for composable software. You write independent concepts — spec-driven services with their own state. You wire them with syncs — declarative rules for when one concept triggers another. The sync engine runs it all. Bind generates every programmatic interface — REST, CLI, MCP, Claude Skills — so LLMs can use your app instantly. Surface generates cross-platform UIs from the same specs. Score makes your entire codebase queryable as data — every file, symbol, concept, sync, and runtime event becomes a traversable node that LLMs can reason over. Clef's Repertoire gives you battle-tested concepts, widgets, and themes so you never reinvent the wheel.
 
 **Tagline:** *"Define once. Compose everywhere."*
 
@@ -13,7 +13,7 @@ Only six terms carry the Clef brand. Everything else uses plain, self-describing
 | Term | What it is | Used how |
 |------|-----------|----------|
 | **Clef** | The framework itself | "Built with Clef" |
-| **Repertoire** | The standard library of reusable app-building concepts (16 suites) | "Check the Repertoire" |
+| **Repertoire** | The standard library of reusable app-building blocks — concepts, widgets, and themes | "Check the Repertoire" |
 | **Suite** | A bundle of related concepts | "The Identity Suite" |
 | **Score** | The queryable representation of your entire app — code, structure, and runtime as data | "The Score shows which syncs have never fired" |
 | **Surface** | UI generation system (React, SwiftUI, Compose, etc.) | "Clef Surface generates cross-platform UIs" |
@@ -143,36 +143,51 @@ The framework itself — what lives in the Clef repo.
 clef/
 ├── clef.yaml                           # Framework root config
 │
-├── repertoire/                         # The Repertoire — 16 suites of reusable app concepts
-│   ├── foundation/
-│   │   ├── suite.yaml
-│   │   ├── content-node.concept
-│   │   ├── intent.concept
-│   │   ├── schema.concept
-│   │   ├── type-system.concept
-│   │   ├── property.concept
-│   │   └── syncs/
-│   ├── identity/
-│   │   ├── suite.yaml
-│   │   ├── authentication.concept
-│   │   ├── authorization.concept
-│   │   ├── access-control.concept
-│   │   ├── session.concept
-│   │   └── syncs/
-│   ├── content/
-│   ├── classification/
-│   ├── infrastructure/
-│   ├── automation/
-│   ├── data-integration/
-│   ├── data-organization/
-│   ├── computation/
-│   ├── collaboration/
-│   ├── linking/
-│   ├── presentation/
-│   ├── query/
-│   ├── media/
-│   ├── notification/
-│   └── web3/
+├── repertoire/                         # The Repertoire — reusable concepts, widgets, and themes
+│   ├── concepts/                      # Behavioral concept suites (17 suites)
+│   │   ├── foundation/
+│   │   │   ├── suite.yaml
+│   │   │   ├── content-node.concept
+│   │   │   ├── intent.concept
+│   │   │   ├── schema.concept
+│   │   │   ├── type-system.concept
+│   │   │   ├── property.concept
+│   │   │   └── syncs/
+│   │   ├── identity/
+│   │   │   ├── suite.yaml
+│   │   │   ├── authentication.concept
+│   │   │   ├── authorization.concept
+│   │   │   ├── access-control.concept
+│   │   │   ├── session.concept
+│   │   │   └── syncs/
+│   │   ├── content/
+│   │   ├── classification/
+│   │   ├── infrastructure/
+│   │   ├── automation/
+│   │   ├── data-integration/
+│   │   ├── data-organization/
+│   │   ├── computation/
+│   │   ├── collaboration/
+│   │   ├── linking/
+│   │   ├── presentation/
+│   │   ├── query-retrieval/
+│   │   ├── media/
+│   │   ├── notification/
+│   │   ├── versioning/
+│   │   └── web3/
+│   ├── widgets/                       # UI widget suites (8 categories)
+│   │   ├── primitives/                # button, text-input, checkbox, label, icon, ...
+│   │   ├── form-controls/             # select, combobox, slider, toggle-switch, ...
+│   │   ├── feedback/                  # dialog, toast, popover, tooltip, ...
+│   │   ├── navigation/                # tabs, menu, accordion, breadcrumb, ...
+│   │   ├── data-display/              # data-table, card, list, timeline, ...
+│   │   ├── complex-inputs/            # date-picker, rich-text-editor, color-picker, ...
+│   │   ├── composites/                # filter-builder, file-browser, master-detail, ...
+│   │   └── domain/                    # block-editor, canvas, workflow-editor, ...
+│   └── themes/                        # Design system themes
+│       ├── light.theme
+│       ├── dark.theme
+│       └── high-contrast.theme
 │
 ├── framework/                          # Framework-internal suites (not Repertoire)
 │   ├── generation/                     # Build pipeline internals
@@ -450,7 +465,11 @@ clef migrate           # Schema migrations
 
 ## Suites (The Repertoire)
 
-The Repertoire is the standard library of reusable app-building concepts. These are what you reach for when building an application.
+The Repertoire is the standard library of reusable app-building blocks. It contains three artifact types: **concepts** (behavior), **widgets** (UI components), and **themes** (visual design tokens).
+
+### Concept Suites
+
+Behavioral building blocks — actions, state, and syncs.
 
 | Suite | Purpose | Example Concepts |
 |-------|---------|-----------------|
@@ -469,7 +488,33 @@ The Repertoire is the standard library of reusable app-building concepts. These 
 | **Query Suite** | Search and retrieval | ExposedFilter, Query, SearchIndex |
 | **Media Suite** | Files and assets | FileManagement, MediaAsset |
 | **Notification Suite** | Alerts and messaging | Notification |
+| **Versioning Suite** | Version control | Branch, Diff, Merge, Patch, Version |
 | **Web3 Suite** | Blockchain integration | ChainMonitor, Content (IPFS), Wallet |
+
+### Widget Suites
+
+UI component building blocks — anatomy, slots, states, accessibility, and affordances.
+
+| Suite | Purpose | Example Widgets |
+|-------|---------|-----------------|
+| **Primitives Suite** | Foundational UI atoms | button, text-input, checkbox, label, icon, separator, avatar, spinner |
+| **Form Controls Suite** | User input components | select, combobox, slider, toggle-switch, radio-group, number-input, textarea |
+| **Feedback Suite** | Overlays and notifications | dialog, alert-dialog, popover, tooltip, toast, drawer, context-menu |
+| **Navigation Suite** | Wayfinding and structure | tabs, toolbar, menu, breadcrumb, accordion, pagination, sidebar |
+| **Data Display Suite** | Data presentation | data-table, card, list, timeline, kanban-board, chart, calendar-view |
+| **Complex Inputs Suite** | Specialized editors | date-picker, color-picker, rich-text-editor, file-upload, formula-editor |
+| **Composites Suite** | Multi-widget assemblies | filter-builder, file-browser, master-detail, schema-editor, diff-viewer |
+| **Domain Suite** | App-specific patterns | block-editor, canvas, workflow-editor, graph-view, automation-builder |
+
+### Theme Specs
+
+Design system themes — palette, typography, spacing, motion, elevation, and radius tokens.
+
+| Theme | Description |
+|-------|-------------|
+| **light** | Default light theme, warm neutrals, oklch palette, WCAG AA |
+| **dark** | Extends light, inverted surfaces, adjusted shadows |
+| **high-contrast** | Extends light, WCAG AAA (7:1 contrast), bolder typography |
 
 ### Framework-Internal Suites
 
@@ -580,14 +625,14 @@ Traditional codebases are opaque to LLMs — an LLM has to read files, infer str
 >
 > **Clef Bind** generates programmatic interfaces — REST APIs, CLIs, MCP servers, Claude Skills, GraphQL endpoints, and SDKs — directly from your concept specs, making every Clef app instantly accessible to LLMs. **Clef Surface** generates cross-platform visual interfaces across React, SwiftUI, Compose, and other UI frameworks from the same specs — doing for frontends what Clef does for backends.
 >
-> The **Clef Repertoire** ships with 16 suites of battle-tested concepts covering identity, content, data integration, infrastructure, and more.
+> The **Clef Repertoire** ships with 17 concept suites, 8 widget suites, and 3 themes — battle-tested building blocks covering identity, content, data integration, UI components, and more.
 
 ### In casual conversation
 
 - "We added a new concept to the Identity Suite"
 - "Run `clef bind` to regenerate the MCP server"
 - "The Surface layer handles all the cross-platform UI stuff"
-- "Check the Repertoire, there's probably a concept for that already"
+- "Check the Repertoire, there's probably a concept or widget for that already"
 - "The sync between User and Password handles the registration flow"
 - "Write the concept spec, Clef generates the rest"
 - "Query the Score to see which syncs have never fired"
@@ -604,7 +649,7 @@ Traditional codebases are opaque to LLMs — an LLM has to read files, infer str
 3. **Clef Score** — your entire app is queryable as data, static and runtime, so LLMs can navigate structure instead of reading files
 4. **Clef Bind** — every app automatically accessible by LLMs via MCP, Claude Skills, CLIs, REST, and SDKs
 5. **Clef Surface** — every app automatically gets cross-platform UIs, doing for frontends what Clef does for backends
-6. **Clef Repertoire** — rock-solid core, easily extended without reinventing the wheel
+6. **Clef Repertoire** — rock-solid concepts, widgets, and themes, easily extended without reinventing the wheel
 
 ---
 
@@ -613,7 +658,7 @@ Traditional codebases are opaque to LLMs — an LLM has to read files, infer str
 | Branded (6 terms) | Plain (everything else) |
 |--------------------|------------------------|
 | Clef (framework) | concepts, syncs, actions, variants |
-| Repertoire (standard library) | state, invariants, completions |
+| Repertoire (standard library: concepts, widgets, themes) | state, invariants, completions |
 | Suite (concept bundles) | generate, build, test, deploy |
 | Score (code-as-data representation) | static score, runtime score, parse layer, symbol layer, semantic layer |
 | Surface (UI generation) | sync engine, codegen, migrations |
