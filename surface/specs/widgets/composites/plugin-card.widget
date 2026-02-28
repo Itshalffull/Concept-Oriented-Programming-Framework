@@ -1,0 +1,263 @@
+@version(1)
+widget plugin-card {
+
+  purpose {
+    Marketplace plugin card displaying a plugin's icon, name, author,
+    description, star rating, install count, and an install/enable action
+    button. The card transitions through lifecycle states from available
+    through installing to installed and enabled. Used in plugin marketplaces,
+    extension galleries, and add-on stores.
+  }
+
+  anatomy {
+    root:           container  { Top-level card wrapper for the plugin entry }
+    icon:           container  { Plugin icon or logo image }
+    name:           text       { Plugin display name }
+    author:         text       { Plugin author or publisher name }
+    version:        text       { Current plugin version string }
+    description:    text       { Short description of what the plugin does }
+    rating:         widget     { Star rating display showing average user rating }
+    ratingCount:    text       { Number of ratings or reviews }
+    installCount:   text       { Total install count }
+    installButton:  widget     { Primary action button (Install, Installing, Uninstall, Enable, Disable) }
+    progressBar:    widget     { Progress indicator shown during installation }
+    statusBadge:    widget     { Badge showing current plugin status }
+    tags:           container  { List of category or feature tags }
+    tag:            widget     { Individual tag chip }
+    moreButton:     action     { Menu button for additional actions (report, share, etc.) }
+  }
+
+  states {
+    lifecycle {
+      available [initial] {
+        on INSTALL -> installing;
+      }
+      installing {
+        on INSTALL_COMPLETE -> installed;
+        on INSTALL_ERROR -> available;
+        entry [showProgress; disableButton];
+        exit [hideProgress; enableButton];
+      }
+      installed {
+        on ENABLE -> enabled;
+        on UNINSTALL -> uninstalling;
+      }
+      enabled {
+        on DISABLE -> installed;
+        on UNINSTALL -> uninstalling;
+      }
+      uninstalling {
+        on UNINSTALL_COMPLETE -> available;
+        on UNINSTALL_ERROR -> installed;
+        entry [showProgress; disableButton];
+        exit [hideProgress; enableButton];
+      }
+    }
+
+    hover {
+      idle [initial] {
+        on POINTER_ENTER -> hovered;
+      }
+      hovered {
+        on POINTER_LEAVE -> idle;
+      }
+    }
+
+    focus {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+        entry [showFocusRing];
+        exit [hideFocusRing];
+      }
+    }
+  }
+
+  accessibility {
+    role: article;
+    modal: false;
+    keyboard {
+      Enter     -> ACTIVATE_BUTTON;
+      Space     -> ACTIVATE_BUTTON;
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: installButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: self.pluginName;
+        aria-describedby: descriptionId;
+      };
+      installButton -> {
+        aria-label: buttonLabel(state.lifecycle);
+        aria-disabled: if state.lifecycle == "installing" or state.lifecycle == "uninstalling" then "true" else "false";
+      };
+      rating -> {
+        aria-label: concat(self.ratingValue, " out of 5 stars");
+      };
+      progressBar -> {
+        role: "progressbar";
+        aria-label: "Installation progress";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: self.progress;
+      };
+      moreButton -> {
+        aria-haspopup: "menu";
+        aria-label: concat("More options for ", self.pluginName);
+      };
+    }
+  }
+
+  props {
+    pluginId: String
+    pluginName: String
+    authorName: String
+    versionString: option String
+    descriptionText: String
+    ratingValue: option Float
+    ratingCount: option Int
+    installCountValue: option Int
+    tags: list String = []
+    iconUrl: option String
+    state: union "available" | "installed" | "enabled" = "available"
+    progress: Int = 0
+    disabled: Bool = false
+    onInstall: option Function
+    onUninstall: option Function
+    onEnable: option Function
+    onDisable: option Function
+  }
+
+  connect {
+    root -> {
+      role: "article";
+      aria-label: ?pluginName;
+      aria-describedby: descriptionId;
+      data-state: if state.lifecycle == "available" then "available" else if state.lifecycle == "installing" then "installing" else if state.lifecycle == "installed" then "installed" else if state.lifecycle == "enabled" then "enabled" else "uninstalling";
+      data-hovered: if state.hover == "hovered" then "true" else "false";
+      tabindex: "0";
+      onPointerEnter: send(POINTER_ENTER);
+      onPointerLeave: send(POINTER_LEAVE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    icon -> {
+      data-part: "icon";
+      data-has-image: if ?iconUrl then "true" else "false";
+      aria-hidden: "true";
+    }
+
+    name -> {
+      text: ?pluginName;
+      data-part: "name";
+      id: nameId;
+    }
+
+    author -> {
+      text: ?authorName;
+      data-part: "author";
+    }
+
+    version -> {
+      text: if ?versionString then concat("v", ?versionString) else "";
+      hidden: if not ?versionString then true else false;
+      data-part: "version";
+    }
+
+    description -> {
+      text: ?descriptionText;
+      data-part: "description";
+      id: descriptionId;
+    }
+
+    rating -> {
+      data-part: "rating";
+      value: ?ratingValue;
+      hidden: if not ?ratingValue then true else false;
+      aria-label: if ?ratingValue then concat(?ratingValue, " out of 5 stars") else undefined;
+    }
+
+    ratingCount -> {
+      text: if ?ratingCount then concat("(", ?ratingCount, ")") else "";
+      hidden: if not ?ratingCount then true else false;
+      data-part: "rating-count";
+      aria-hidden: "true";
+    }
+
+    installCount -> {
+      text: if ?installCountValue then formatNumber(?installCountValue) else "";
+      hidden: if not ?installCountValue then true else false;
+      data-part: "install-count";
+      aria-label: if ?installCountValue then concat(?installCountValue, " installs") else undefined;
+    }
+
+    installButton -> {
+      aria-label: if state.lifecycle == "available" then concat("Install ", ?pluginName) else if state.lifecycle == "installing" then concat("Installing ", ?pluginName) else if state.lifecycle == "installed" then concat("Enable ", ?pluginName) else if state.lifecycle == "enabled" then concat("Disable ", ?pluginName) else concat("Uninstalling ", ?pluginName);
+      aria-disabled: if state.lifecycle == "installing" then "true" else if state.lifecycle == "uninstalling" then "true" else if ?disabled then "true" else "false";
+      data-state: if state.lifecycle == "available" then "install" else if state.lifecycle == "installing" then "installing" else if state.lifecycle == "installed" then "enable" else if state.lifecycle == "enabled" then "disable" else "uninstalling";
+      onClick: if state.lifecycle == "available" then send(INSTALL) else if state.lifecycle == "installed" then send(ENABLE) else if state.lifecycle == "enabled" then send(DISABLE) else noop;
+    }
+
+    progressBar -> {
+      role: "progressbar";
+      aria-label: "Installation progress";
+      aria-valuemin: "0";
+      aria-valuemax: "100";
+      aria-valuenow: ?progress;
+      hidden: if state.lifecycle != "installing" and state.lifecycle != "uninstalling" then true else false;
+      data-progress: ?progress;
+    }
+
+    statusBadge -> {
+      data-state: if state.lifecycle == "available" then "available" else if state.lifecycle == "installed" then "installed" else if state.lifecycle == "enabled" then "enabled" else "transitioning";
+      text: if state.lifecycle == "available" then "Available" else if state.lifecycle == "installed" then "Installed" else if state.lifecycle == "enabled" then "Enabled" else "...";
+      aria-label: concat("Status: ", if state.lifecycle == "available" then "available" else if state.lifecycle == "installed" then "installed" else if state.lifecycle == "enabled" then "enabled" else "in progress");
+    }
+
+    tags -> {
+      data-part: "tags";
+      hidden: if ?tags.length == 0 then true else false;
+      aria-label: "Plugin tags";
+    }
+
+    tag -> {
+      data-part: "tag";
+      text: self.tagName;
+    }
+
+    moreButton -> {
+      aria-haspopup: "menu";
+      aria-label: concat("More options for ", ?pluginName);
+      onClick: send(OPEN_MENU);
+    }
+  }
+
+  compose {
+    root:          widget("card", { variant: "outlined" });
+    rating:        widget("rating", { readOnly: true, value: ?ratingValue });
+    installButton: widget("button", { variant: "solid" });
+    progressBar:   widget("progress-bar", { value: ?progress });
+    statusBadge:   widget("badge", {});
+    tag:           widget("chip", { variant: "subtle", size: "sm" });
+  }
+
+  invariant {
+    "Install button label must reflect the current lifecycle state";
+    "Progress bar must only be visible during installing or uninstalling states";
+    "Install and uninstall transitions must disable the action button";
+    "Rating must not be displayed when ratingValue is not provided";
+    "Install count must not be displayed when installCountValue is not provided";
+    "Install error must revert lifecycle state to available";
+    "Uninstall error must revert lifecycle state to installed";
+  }
+
+}

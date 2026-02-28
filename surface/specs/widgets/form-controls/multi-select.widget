@@ -1,0 +1,188 @@
+@version(1)
+widget multi-select {
+
+  purpose {
+    Dropdown multi-choice selector that displays selected values as
+    removable chips in the trigger area. Opens a floating listbox where
+    the user can toggle options on and off independently.
+  }
+
+  anatomy {
+    root: container            { Outermost wrapper; groups label and dropdown }
+    label: text                { Visible label describing the field purpose }
+    trigger: container         { Clickable area containing chips and placeholder }
+    chipList: container        { Container holding chips for each selected value }
+    chip: widget               { Removable chip representing a single selected value }
+    input: action              { Optional inline text input for type-to-filter }
+    positioner: container      { Floating positioning wrapper for the dropdown }
+    content: container         { Scrollable list container holding all options }
+    item: action               { Individual toggleable option in the list }
+    itemLabel: text            { Label text for an individual option }
+    itemIndicator: container   { Checkbox indicator showing selected state }
+  }
+
+  slots {
+    input { accepts: action; optional: true }
+  }
+
+  states {
+    openClose {
+      closed [initial] {
+        on OPEN -> open;
+        on TOGGLE -> open;
+      }
+      open {
+        on CLOSE -> closed;
+        on TOGGLE -> closed;
+        on BLUR -> closed;
+        entry [positionContent, focusFirstOrSelected];
+        exit [returnFocusToTrigger];
+      }
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    keyboard {
+      Enter     -> TOGGLE_DROPDOWN;
+      Space     -> TOGGLE_DROPDOWN;
+      ArrowDown -> OPEN_OR_NEXT;
+      ArrowUp   -> PREV;
+      Space     -> TOGGLE_ITEM;
+      Escape    -> CLOSE;
+      Backspace -> REMOVE_LAST;
+      Home      -> FIRST;
+      End       -> LAST;
+    }
+    focus {
+      trigger: focusable;
+      item: focusable;
+    }
+    aria {
+      trigger -> {
+        role: "combobox";
+        aria-label: ?label;
+        aria-expanded: if state.openClose == "open" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-controls: content;
+        aria-multiselectable: "true";
+        aria-disabled: if ?disabled then "true" else "false";
+        aria-required: if ?required then "true" else "false";
+      };
+      content -> {
+        role: "listbox";
+        aria-label: ?label;
+        aria-multiselectable: "true";
+      };
+      item -> {
+        role: "option";
+        aria-selected: if contains(?values, item.value) then "true" else "false";
+        aria-disabled: if item.disabled then "true" else "false";
+        aria-label: item.label;
+      };
+      chip -> {
+        role: "listitem";
+        aria-label: concat("Remove ", chipLabel);
+      };
+      chipList -> {
+        role: "list";
+        aria-label: "Selected values";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    values: set String
+    options: list { label: String, value: String }
+    placeholder: String = "Select..."
+    label: String
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+    maxSelections: option Int
+  }
+
+  connect {
+    root -> {
+      data-state: if state.openClose == "open" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: trigger;
+      id: multiLabel;
+    }
+    trigger -> {
+      onClick: send(TOGGLE);
+      onKeyDown-Enter: send(TOGGLE_DROPDOWN);
+      onKeyDown-Space: send(TOGGLE_DROPDOWN);
+      onKeyDown-ArrowDown: send(OPEN_OR_NEXT);
+      onKeyDown-Escape: send(CLOSE);
+      onKeyDown-Backspace: send(REMOVE_LAST);
+      disabled: ?disabled;
+      data-state: if state.openClose == "open" then "open" else "closed";
+      data-placeholder: if size(?values) == 0 then "true" else "false";
+      aria-labelledby: multiLabel;
+      tabIndex: 0;
+    }
+    chipList -> {
+      visible: if size(?values) > 0 then true else false;
+    }
+    chip -> {
+      label: labelOf(chip.value, ?options);
+      onDismiss: send(DESELECT, { value: chip.value });
+      data-value: chip.value;
+    }
+    input -> {
+      placeholder: if size(?values) == 0 then ?placeholder else "";
+      onFocus: send(OPEN);
+      onBlur: send(BLUR);
+      visible: if state.openClose == "open" then true else false;
+    }
+    positioner -> {
+      visible: if state.openClose == "open" then true else false;
+    }
+    content -> {
+      role: "listbox";
+      aria-labelledby: multiLabel;
+      aria-multiselectable: "true";
+    }
+    item -> {
+      data-state: if contains(?values, item.value) then "selected" else "unselected";
+      data-highlighted: if item.highlighted then "true" else "false";
+      data-disabled: if item.disabled then "true" else "false";
+      onClick: if contains(?values, item.value) then send(DESELECT, { value: item.value }) else send(SELECT, { value: item.value });
+      onPointerEnter: send(HIGHLIGHT, { value: item.value });
+      onKeyDown-Space: send(TOGGLE_ITEM, { value: item.value });
+      onKeyDown-ArrowDown: send(NEXT);
+      onKeyDown-ArrowUp: send(PREV);
+      onKeyDown-Escape: send(CLOSE);
+      role: "option";
+    }
+    itemLabel -> {
+      text: item.label;
+    }
+    itemIndicator -> {
+      data-state: if contains(?values, item.value) then "selected" else "unselected";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: multi-choice;
+    specificity: 5;
+    fallback: true;
+  }
+
+  compose {
+    chip: widget("chip", { label: labelOf(chip.value, ?options), dismissible: true })
+    positioner: widget("portal", {})
+    label: widget("label", { text: ?label, for: trigger })
+  }
+
+  invariant {
+    forEach(?values, v -> exists(?options, o -> o.value == v));
+    ?maxSelections => size(?values) <= ?maxSelections;
+  }
+}

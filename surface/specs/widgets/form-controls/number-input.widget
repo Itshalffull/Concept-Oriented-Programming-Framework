@@ -1,0 +1,170 @@
+@version(1)
+widget number-input {
+
+  purpose {
+    Numeric input field with dedicated increment and decrement controls.
+    Supports bounded ranges, configurable step size, and decimal precision.
+    Provides direct keyboard manipulation via arrow keys and boundary jumps.
+  }
+
+  anatomy {
+    root: container             { Outermost wrapper; groups label, input, and spin buttons }
+    label: text                 { Visible label describing the numeric field }
+    input: action               { The editable numeric input element }
+    incrementButton: action     { Button to increase value by step }
+    decrementButton: action     { Button to decrease value by step }
+    description: text           { Optional helper text below the field }
+    error: text                 { Optional validation error message }
+  }
+
+  slots {
+    description { accepts: text; optional: true }
+    error       { accepts: text; optional: true }
+  }
+
+  states {
+    focus {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        entry [selectAll];
+        exit [commitValue];
+      }
+    }
+
+    validation [parallel] {
+      valid [initial] {
+        on INVALIDATE -> invalid;
+      }
+      invalid {
+        on VALIDATE -> valid;
+        entry [showError];
+        exit [hideError];
+      }
+    }
+  }
+
+  accessibility {
+    role: spinbutton;
+    keyboard {
+      ArrowUp   -> INCREMENT;
+      ArrowDown -> DECREMENT;
+      Home      -> SET_MIN;
+      End       -> SET_MAX;
+      Enter     -> COMMIT;
+    }
+    focus {
+      input: focusable;
+      incrementButton: focusable;
+      decrementButton: focusable;
+    }
+    aria {
+      input -> {
+        aria-label: ?label;
+        aria-valuenow: ?value;
+        aria-valuemin: ?min;
+        aria-valuemax: ?max;
+        aria-invalid: if state.validation == "invalid" then "true" else "false";
+        aria-errormessage: if state.validation == "invalid" then error else none;
+        aria-describedby: if ?description then description else none;
+        role: "spinbutton";
+      };
+      incrementButton -> {
+        aria-label: "Increase value";
+        aria-disabled: if ?max then (if ?value >= ?max then "true" else "false") else "false";
+      };
+      decrementButton -> {
+        aria-label: "Decrease value";
+        aria-disabled: if ?min then (if ?value <= ?min then "true" else "false") else "false";
+      };
+      error -> {
+        aria-live: "assertive";
+        role: "alert";
+      };
+    }
+  }
+
+  props {
+    value: option Float
+    min: option Float
+    max: option Float
+    step: Float = 1
+    precision: option Int
+    label: String
+    description: option String
+    placeholder: String = ""
+    disabled: Bool = false
+    required: Bool = false
+    readOnly: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-state: if state.focus == "focused" then "focused" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+      data-invalid: if state.validation == "invalid" then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: input;
+    }
+    input -> {
+      value: if ?value then formatNumber(?value, ?precision) else "";
+      placeholder: ?placeholder;
+      disabled: ?disabled;
+      readOnly: ?readOnly;
+      required: ?required;
+      name: ?name;
+      inputMode: "decimal";
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowUp: send(INCREMENT);
+      onKeyDown-ArrowDown: send(DECREMENT);
+      onKeyDown-Home: send(SET_MIN);
+      onKeyDown-End: send(SET_MAX);
+    }
+    incrementButton -> {
+      onClick: send(INCREMENT);
+      disabled: if ?disabled then true else (if ?max then (if ?value >= ?max then true else false) else false);
+      tabIndex: -1;
+      aria-hidden: "true";
+    }
+    decrementButton -> {
+      onClick: send(DECREMENT);
+      disabled: if ?disabled then true else (if ?min then (if ?value <= ?min then true else false) else false);
+      tabIndex: -1;
+      aria-hidden: "true";
+    }
+    description -> {
+      text: ?description;
+      visible: if ?description then true else false;
+    }
+    error -> {
+      visible: if state.validation == "invalid" then true else false;
+    }
+  }
+
+  affordance {
+    serves: number-exact;
+    specificity: 5;
+    fallback: true;
+  }
+
+  compose {
+    label: widget("label", { text: ?label, for: input })
+    incrementButton: widget("button", { variant: "icon", icon: "chevron-up", size: "sm" })
+    decrementButton: widget("button", { variant: "icon", icon: "chevron-down", size: "sm" })
+  }
+
+  invariant {
+    ?min and ?max => ?min <= ?max;
+    ?value and ?min => ?value >= ?min;
+    ?value and ?max => ?value <= ?max;
+    step > 0;
+    ?precision => ?precision >= 0;
+  }
+}

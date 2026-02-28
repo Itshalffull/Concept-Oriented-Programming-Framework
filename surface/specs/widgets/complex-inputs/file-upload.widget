@@ -1,0 +1,269 @@
+@version(1)
+widget file-upload {
+
+  purpose {
+    Drag-and-drop file upload zone with a managed file list displaying
+    upload progress, status, and removal controls for each file. Supports
+    click-to-browse fallback, multiple file selection, file type and size
+    validation, and visual drag-over feedback.
+  }
+
+  anatomy {
+    root:          container  { Outermost wrapper grouping the drop zone and file list }
+    dropzone:      container  { Interactive area that accepts dragged files and click-to-browse }
+    dropzoneIcon:  container  { Visual icon within the drop zone (upload arrow, cloud, etc.) }
+    dropzoneLabel: text       { Instructional text within the drop zone }
+    input:         action     { Hidden native file input element for browse dialog }
+    fileList:      container  { Container holding the list of uploaded or uploading files }
+    fileItem:      container  { Wrapper for a single file entry }
+    fileIcon:      container  { Type-specific icon for the file (document, image, etc.) }
+    fileName:      text       { Display name of the file }
+    fileSize:      text       { Formatted file size }
+    fileProgress:  widget     { Upload progress indicator for an in-progress file }
+    fileRemove:    action     { Button to remove a file from the list or cancel its upload }
+    fileError:     text       { Error message for a file that failed validation or upload }
+  }
+
+  states {
+    dropzone {
+      idle [initial] {
+        on DRAG_ENTER -> dragOver;
+        on CLICK      -> idle;
+        entry [resetDropVisual];
+      }
+      dragOver {
+        on DRAG_LEAVE -> idle;
+        on DROP       -> idle;
+        entry [showDropHighlight];
+        exit  [hideDropHighlight];
+      }
+    }
+
+    upload [parallel] {
+      ready [initial] {
+        on FILES_ADDED -> uploading;
+      }
+      uploading {
+        on UPLOAD_COMPLETE -> complete;
+        on UPLOAD_ERROR    -> error;
+        on CANCEL_ALL      -> ready;
+      }
+      complete {
+        on FILES_ADDED -> uploading;
+        on CLEAR_ALL   -> ready;
+      }
+      error {
+        on RETRY       -> uploading;
+        on FILES_ADDED -> uploading;
+        on CLEAR_ALL   -> ready;
+      }
+    }
+
+    fileItem [parallel] {
+      pending [initial] {
+        on UPLOAD_START    -> uploading;
+        on VALIDATE_ERROR  -> rejected;
+      }
+      uploading {
+        on UPLOAD_PROGRESS -> uploading;
+        on UPLOAD_COMPLETE -> uploaded;
+        on UPLOAD_ERROR    -> failed;
+        on CANCEL          -> cancelled;
+      }
+      uploaded {
+        on REMOVE -> removed;
+      }
+      failed {
+        on RETRY  -> uploading;
+        on REMOVE -> removed;
+      }
+      rejected {
+        on REMOVE -> removed;
+      }
+      cancelled {
+        on RETRY  -> uploading;
+        on REMOVE -> removed;
+      }
+      removed {}
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter     -> OPEN_PICKER;
+      Space     -> OPEN_PICKER;
+      Delete    -> REMOVE_FOCUSED;
+      Backspace -> REMOVE_FOCUSED;
+      Escape    -> CANCEL_FOCUSED;
+      Tab       -> FOCUS_NEXT;
+    }
+    focus {
+      dropzone: focusable;
+      input: focusable;
+      fileRemove: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "File upload";
+      };
+      dropzone -> {
+        role: "button";
+        aria-label: "Drop files here or click to browse";
+        aria-describedby: dropzoneLabel;
+        aria-dropeffect: "copy";
+      };
+      input -> {
+        type: "file";
+        aria-hidden: "true";
+        tabIndex: -1;
+      };
+      fileList -> {
+        role: "list";
+        aria-label: "Uploaded files";
+        aria-live: "polite";
+      };
+      fileItem -> {
+        role: "listitem";
+        aria-label: concat(fileItem.name, " - ", fileItem.statusLabel);
+      };
+      fileProgress -> {
+        role: "progressbar";
+        aria-valuenow: fileItem.progress;
+        aria-valuemin: 0;
+        aria-valuemax: 100;
+        aria-label: concat("Uploading ", fileItem.name);
+      };
+      fileRemove -> {
+        aria-label: concat("Remove ", fileItem.name);
+      };
+      fileError -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+    }
+  }
+
+  props {
+    accept: option String
+    multiple: Bool = true
+    maxSize: option Int
+    maxFiles: option Int
+    disabled: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-state: if state.dropzone == "dragOver" then "drag-over" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+      role: "group";
+      aria-label: "File upload";
+    }
+    dropzone -> {
+      role: "button";
+      aria-label: "Drop files here or click to browse";
+      aria-describedby: dropzoneLabel;
+      data-state: if state.dropzone == "dragOver" then "drag-over" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: send(CLICK);
+      onDragEnter: send(DRAG_ENTER);
+      onDragOver: send(DRAG_OVER);
+      onDragLeave: send(DRAG_LEAVE);
+      onDrop: send(DROP);
+      onKeyDown-Enter: send(OPEN_PICKER);
+      onKeyDown-Space: send(OPEN_PICKER);
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "dropzone";
+    }
+    dropzoneIcon -> {
+      aria-hidden: "true";
+      data-part: "dropzone-icon";
+      data-state: if state.dropzone == "dragOver" then "drag-over" else "idle";
+    }
+    dropzoneLabel -> {
+      text: if state.dropzone == "dragOver" then "Drop files to upload" else "Drag and drop files here, or click to browse";
+      data-part: "dropzone-label";
+    }
+    input -> {
+      type: "file";
+      accept: ?accept;
+      multiple: ?multiple;
+      disabled: ?disabled;
+      name: ?name;
+      onChange: send(FILES_ADDED);
+      aria-hidden: "true";
+      tabIndex: -1;
+      data-part: "input";
+    }
+    fileList -> {
+      role: "list";
+      aria-label: "Uploaded files";
+      aria-live: "polite";
+      data-part: "file-list";
+    }
+    fileItem -> {
+      role: "listitem";
+      aria-label: concat(fileItem.name, " - ", fileItem.statusLabel);
+      data-state: fileItem.state;
+      data-part: "file-item";
+    }
+    fileIcon -> {
+      aria-hidden: "true";
+      data-type: fileItem.type;
+      data-part: "file-icon";
+    }
+    fileName -> {
+      text: fileItem.name;
+      data-part: "file-name";
+    }
+    fileSize -> {
+      text: formatFileSize(fileItem.size);
+      data-part: "file-size";
+    }
+    fileProgress -> {
+      aria-valuenow: fileItem.progress;
+      aria-valuemin: 0;
+      aria-valuemax: 100;
+      aria-label: concat("Uploading ", fileItem.name);
+      data-visible: if fileItem.state == "uploading" then "true" else "false";
+      data-part: "file-progress";
+    }
+    fileRemove -> {
+      aria-label: concat("Remove ", fileItem.name);
+      onClick: send(REMOVE, { fileId: fileItem.id });
+      onKeyDown-Delete: send(REMOVE, { fileId: fileItem.id });
+      disabled: if fileItem.state == "uploading" then false else false;
+      data-part: "file-remove";
+    }
+    fileError -> {
+      text: fileItem.error;
+      role: "alert";
+      aria-live: "assertive";
+      data-visible: if fileItem.state == "failed" or fileItem.state == "rejected" then "true" else "false";
+      data-part: "file-error";
+    }
+  }
+
+  affordance {
+    serves: file-attach;
+    specificity: 10;
+  }
+
+  compose {
+    fileProgress: widget("progress-bar", { value: fileItem.progress, max: 100 })
+    fileRemove:   widget("button", { variant: "icon", icon: "x", size: "sm" })
+    dropzoneIcon: widget("icon", { name: "upload-cloud", size: "lg" })
+  }
+
+  invariant {
+    ?maxFiles => countFiles <= ?maxFiles;
+    ?maxSize => each file.size <= ?maxSize;
+    ?accept => each file.type matches ?accept;
+    "Removing a file during upload must cancel the in-progress request";
+    "File list must update aria-live region when files are added or removed";
+    "Drag-over visual feedback must only apply when dragged items contain files";
+  }
+
+}

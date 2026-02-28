@@ -1,0 +1,136 @@
+@version(1)
+widget drag-handle {
+
+  purpose {
+    Reorder handle for list items, blocks, and sortable containers.
+    Provides a visible grip icon that can be grabbed via pointer or
+    keyboard to initiate drag-and-drop reordering. Supports both
+    horizontal and vertical orientations and communicates drag state
+    through ARIA grabbed semantics.
+  }
+
+  anatomy {
+    root: action     { Interactive grip element serving as the drag initiation target }
+    icon: container  { Visual grip icon (typically six dots or three lines) }
+  }
+
+  states {
+    idle [initial] {
+      on GRAB -> grabbed;
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on GRAB -> grabbed;
+      entry [set cursor grab];
+      exit [set cursor default];
+    }
+
+    focused {
+      on BLUR -> idle;
+      on GRAB -> grabbed;
+    }
+
+    grabbed {
+      on RELEASE -> idle;
+      on MOVE -> dragging;
+      on ESCAPE -> idle;
+      entry [set aria-grabbed true; announce "Grabbed. Use arrow keys to move."];
+      exit [set aria-grabbed false];
+    }
+
+    dragging {
+      on DROP -> idle;
+      on ESCAPE -> idle;
+      entry [set cursor grabbing; startDrag];
+      exit [set cursor default; endDrag; announce "Dropped"];
+    }
+  }
+
+  accessibility {
+    role: button;
+    modal: false;
+    keyboard {
+      Space -> GRAB_OR_RELEASE;
+      Enter -> GRAB_OR_RELEASE;
+      ArrowUp -> MOVE_UP;
+      ArrowDown -> MOVE_DOWN;
+      ArrowLeft -> MOVE_LEFT;
+      ArrowRight -> MOVE_RIGHT;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "button";
+        aria-label: "Drag to reorder";
+        aria-roledescription: "drag handle";
+        aria-grabbed: if state == "grabbed" or state == "dragging" then "true" else "false";
+        aria-describedby: "drag-instructions";
+      };
+      icon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    orientation: union "horizontal" | "vertical" = "vertical"
+    disabled: Bool = false
+    ariaLabel: String = "Drag to reorder"
+    itemIndex: option Int
+  }
+
+  connect {
+    root -> {
+      role: "button";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "drag handle";
+      aria-grabbed: if state == "grabbed" or state == "dragging" then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      data-state: state;
+      data-orientation: ?orientation;
+      data-part: "drag-handle";
+      tabindex: if ?disabled then "-1" else "0";
+      draggable: if not ?disabled then "true" else "false";
+      onPointerDown: if not ?disabled then send(GRAB) else noop;
+      onPointerUp: send(RELEASE);
+      onPointerMove: if state == "grabbed" then send(MOVE) else noop;
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-Space: if state == "idle" or state == "focused" then send(GRAB) else send(RELEASE);
+      onKeyDown-Enter: if state == "idle" or state == "focused" then send(GRAB) else send(RELEASE);
+      onKeyDown-ArrowUp: if state == "grabbed" or state == "dragging" then send(MOVE_UP) else noop;
+      onKeyDown-ArrowDown: if state == "grabbed" or state == "dragging" then send(MOVE_DOWN) else noop;
+      onKeyDown-ArrowLeft: if state == "grabbed" or state == "dragging" then send(MOVE_LEFT) else noop;
+      onKeyDown-ArrowRight: if state == "grabbed" or state == "dragging" then send(MOVE_RIGHT) else noop;
+      onKeyDown-Escape: send(CANCEL);
+      onDragStart: send(GRAB);
+      onDragEnd: send(DROP);
+    }
+
+    icon -> {
+      data-part: "icon";
+      data-orientation: ?orientation;
+      aria-hidden: "true";
+    }
+  }
+
+  invariant {
+    "aria-grabbed must be true only in grabbed and dragging states";
+    "Disabled handles must not respond to pointer or keyboard interactions";
+    "Arrow key movement direction must match orientation (up/down for vertical, left/right for horizontal)";
+    "Escape during drag must cancel the reorder and restore original position";
+    "Screen readers must announce grab and drop events via live region";
+  }
+
+}

@@ -1,0 +1,234 @@
+@version(1)
+widget property-panel {
+
+  purpose {
+    Click-to-edit property list panel in the style of Notion's page properties.
+    Displays a collapsible list of typed property rows, each showing a label
+    and a value that enters inline edit mode on click. Supports various value
+    types (text, select, date, person, tags, checkbox) with type-appropriate
+    editors. Used for entity detail panels, page metadata, and record sidebars.
+  }
+
+  anatomy {
+    root:               container  { Top-level wrapper for the entire property panel }
+    header:             container  { Header region with title and collapse toggle }
+    title:              text       { Panel heading describing the property set }
+    toggleButton:       action     { Button to expand or collapse the property list }
+    propertyList:       container  { Scrollable list of all property rows }
+    propertyRow:        container  { Single property row grouping label and value }
+    propertyLabel:      text       { Name of the property displayed as a label }
+    propertyValue:      container  { Value display that switches to an editor on click }
+    propertyIcon:       container  { Type icon preceding the property label }
+    addPropertyButton:  action     { Button to add a new custom property to the list }
+    emptyState:         container  { Placeholder when no properties are defined }
+    dragHandle:         action     { Drag handle for reordering property rows }
+  }
+
+  slots {
+    headerActions { end of header }
+    rowPrefix     { before propertyLabel }
+    rowSuffix     { after propertyValue }
+  }
+
+  states {
+    panel {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+      }
+      collapsed {
+        on EXPAND -> expanded;
+      }
+    }
+
+    row {
+      displaying [initial] {
+        on CLICK_VALUE -> editing;
+        on KEYBOARD_ENTER -> editing;
+      }
+      editing {
+        on COMMIT -> displaying;
+        on CANCEL -> displaying;
+        on BLUR -> displaying;
+        entry [focusEditor, selectAll];
+        exit [validateValue];
+      }
+    }
+
+    drag {
+      idle [initial] {
+        on DRAG_START -> dragging;
+      }
+      dragging {
+        on DROP -> idle;
+        on DRAG_END -> idle;
+        entry [set aria-grabbed true];
+        exit [set aria-grabbed false];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter       -> CLICK_VALUE;
+      Escape      -> CANCEL;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      ArrowUp     -> FOCUS_PREV_ROW;
+      ArrowDown   -> FOCUS_NEXT_ROW;
+    }
+    focus {
+      trap: false;
+      initial: toggleButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Property panel";
+      };
+      toggleButton -> {
+        aria-expanded: if state.panel == "expanded" then "true" else "false";
+        aria-controls: propertyList;
+      };
+      propertyList -> {
+        role: "list";
+        aria-label: "Properties";
+      };
+      propertyRow -> {
+        role: "listitem";
+        aria-label: self.label;
+      };
+      propertyValue -> {
+        role: "button";
+        aria-label: concat("Edit ", self.label);
+      };
+    }
+  }
+
+  props {
+    properties: list PropertyDef
+    title: String = "Properties"
+    collapsed: Bool = false
+    editable: Bool = true
+    reorderable: Bool = false
+    showAddButton: Bool = true
+    disabled: Bool = false
+    onChange: option Function
+    onAdd: option Function
+    onReorder: option Function
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: concat(?title, " panel");
+      data-state: if state.panel == "expanded" then "expanded" else "collapsed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+      data-state: if state.panel == "expanded" then "expanded" else "collapsed";
+    }
+
+    title -> {
+      text: ?title;
+      id: panelTitle;
+    }
+
+    toggleButton -> {
+      aria-expanded: if state.panel == "expanded" then "true" else "false";
+      aria-controls: propertyList;
+      aria-label: if state.panel == "expanded" then concat("Collapse ", ?title) else concat("Expand ", ?title);
+      onClick: if state.panel == "expanded" then send(COLLAPSE) else send(EXPAND);
+    }
+
+    propertyList -> {
+      role: "list";
+      aria-label: "Properties";
+      id: propertyList;
+      hidden: if state.panel == "collapsed" then true else false;
+      data-state: if state.panel == "expanded" then "expanded" else "collapsed";
+    }
+
+    propertyRow -> {
+      role: "listitem";
+      aria-label: self.label;
+      data-type: self.type;
+      data-state: if state.row == "editing" then "editing" else "displaying";
+      data-dragging: if state.drag == "dragging" then "true" else "false";
+    }
+
+    propertyLabel -> {
+      text: self.label;
+      data-type: self.type;
+      id: concat("prop-label-", self.key);
+    }
+
+    propertyValue -> {
+      role: if state.row == "displaying" then "button" else undefined;
+      aria-label: if state.row == "displaying" then concat("Edit ", self.label, ": ", self.displayValue) else undefined;
+      aria-labelledby: concat("prop-label-", self.key);
+      data-state: if state.row == "editing" then "editing" else "displaying";
+      data-type: self.type;
+      data-empty: if not self.value then "true" else "false";
+      tabindex: "0";
+      onClick: if ?editable and not ?disabled then send(CLICK_VALUE) else noop;
+      onKeyDown-Enter: if ?editable and not ?disabled then send(CLICK_VALUE) else noop;
+    }
+
+    propertyIcon -> {
+      data-type: self.type;
+      aria-hidden: "true";
+    }
+
+    addPropertyButton -> {
+      aria-label: "Add property";
+      disabled: if ?disabled then true else if not ?showAddButton then true else false;
+      hidden: if not ?showAddButton then true else false;
+      onClick: send(ADD_PROPERTY);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if ?properties.length > 0 then true else false;
+      aria-hidden: if ?properties.length > 0 then "true" else "false";
+    }
+
+    dragHandle -> {
+      role: "button";
+      aria-roledescription: "sortable";
+      aria-label: concat("Reorder property ", self.label);
+      hidden: if not ?reorderable then true else false;
+      disabled: ?disabled;
+      tabindex: "0";
+      onPointerDown: send(DRAG_START);
+      onPointerUp: send(DROP);
+      onKeyDown-ArrowUp: send(MOVE_UP);
+      onKeyDown-ArrowDown: send(MOVE_DOWN);
+    }
+  }
+
+  compose {
+    textEditor:     widget("text-input", { size: "sm" });
+    selectEditor:   widget("select", {});
+    dateEditor:     widget("date-picker", {});
+    tagEditor:      widget("chip-input", {});
+    checkboxEditor: widget("checkbox", {});
+    personDisplay:  widget("avatar", { size: "xs" });
+    statusBadge:    widget("badge", {});
+    addButton:      widget("button", { variant: "ghost", size: "sm" });
+  }
+
+  invariant {
+    "Clicking a property value in displaying state must transition it to editing state";
+    "Pressing Escape in editing state must revert to displaying without saving";
+    "Pressing Enter or blurring in editing state must commit the value";
+    "Only one property row may be in editing state at a time";
+    "Collapsed panel must hide propertyList and all rows";
+    "Property type must determine which composed editor widget is rendered";
+  }
+
+}

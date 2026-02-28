@@ -1,0 +1,126 @@
+@version(1)
+widget radio-group {
+
+  purpose {
+    Single-choice selection from a visible list of radio options.
+    All options are rendered simultaneously so the user can compare
+    and select exactly one. Supports vertical and horizontal layouts.
+  }
+
+  anatomy {
+    root: container         { Outermost wrapper; groups label and option list }
+    label: text             { Visible label describing the group purpose }
+    items: container        { Container holding all radio option items }
+    item: container         { Wrapper for a single radio option }
+    itemInput: action       { Hidden native radio input for form integration }
+    itemControl: container  { Visual radio indicator (circle with dot) }
+    itemLabel: text         { Label text for an individual radio option }
+  }
+
+  states {
+    item {
+      unselected [initial] {
+        on SELECT -> selected;
+      }
+      selected {
+        on DESELECT -> unselected;
+      }
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    keyboard {
+      ArrowDown  -> FOCUS_NEXT;
+      ArrowRight -> FOCUS_NEXT;
+      ArrowUp    -> FOCUS_PREV;
+      ArrowLeft  -> FOCUS_PREV;
+      Space      -> SELECT;
+    }
+    focus {
+      itemInput: focusable;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: ?label;
+        aria-orientation: ?orientation;
+        aria-required: if ?required then "true" else "false";
+      };
+      itemInput -> {
+        role: "radio";
+        aria-checked: if item.state == "selected" then "true" else "false";
+        aria-disabled: if item.disabled then "true" else "false";
+        aria-label: item.label;
+      };
+    }
+  }
+
+  props {
+    value: option String
+    options: list { label: String, value: String, disabled: Bool }
+    orientation: "horizontal" | "vertical" = "vertical"
+    label: String
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-orientation: ?orientation;
+      data-disabled: if ?disabled then "true" else "false";
+      role: "radiogroup";
+    }
+    label -> {
+      text: ?label;
+      id: groupLabel;
+    }
+    items -> {
+      data-orientation: ?orientation;
+      aria-labelledby: groupLabel;
+    }
+    item -> {
+      data-state: if item.value == ?value then "selected" else "unselected";
+      data-disabled: if item.disabled or ?disabled then "true" else "false";
+    }
+    itemInput -> {
+      type: "radio";
+      name: if ?name then ?name else autoId;
+      value: item.value;
+      checked: item.value == ?value;
+      disabled: item.disabled or ?disabled;
+      onChange: send(SELECT, { value: item.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowDown: send(FOCUS_NEXT);
+      onKeyDown-ArrowRight: send(FOCUS_NEXT);
+      onKeyDown-ArrowUp: send(FOCUS_PREV);
+      onKeyDown-ArrowLeft: send(FOCUS_PREV);
+    }
+    itemControl -> {
+      data-state: if item.value == ?value then "selected" else "unselected";
+      data-disabled: if item.disabled or ?disabled then "true" else "false";
+      aria-hidden: "true";
+    }
+    itemLabel -> {
+      text: item.label;
+      for: itemInput;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 10;
+    when { maxOptions: 8 }
+  }
+
+  compose {
+    label: widget("label", { text: ?label })
+  }
+
+  invariant {
+    length(?options) > 0;
+    ?value => exists(?options, o -> o.value == ?value);
+  }
+}

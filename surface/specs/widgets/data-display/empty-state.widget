@@ -1,0 +1,93 @@
+@version(1)
+widget empty-state {
+
+  purpose {
+    Placeholder display shown when a data view contains no items.
+    Provides a friendly visual with an optional icon, title, descriptive
+    text, and call-to-action button to guide the user toward populating
+    the view. Used inside tables, lists, grids, and other collection
+    containers.
+  }
+
+  anatomy {
+    root:        container  { Centred wrapper containing all empty-state content }
+    icon:        container  { Optional decorative illustration or icon }
+    title:       text       { Primary message explaining the empty state }
+    description: text       { Optional secondary text with guidance or context }
+    action:      widget     { Optional call-to-action button to resolve the empty state }
+  }
+
+  states {
+    static [initial] {
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: action;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-labelledby: title;
+        aria-describedby: description;
+      };
+    }
+  }
+
+  props {
+    title: String
+    description: option String
+    icon: option String
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-labelledby: title;
+      aria-describedby: if ?description then description else undefined;
+      data-part: "empty-state";
+    }
+
+    icon -> {
+      data-part: "icon";
+      data-icon: ?icon;
+      data-visible: if ?icon then "true" else "false";
+      aria-hidden: "true";
+    }
+
+    title -> {
+      data-part: "title";
+      id: title;
+    }
+
+    description -> {
+      data-part: "description";
+      id: description;
+      data-visible: if ?description then "true" else "false";
+    }
+
+    action -> {
+      data-part: "action";
+    }
+  }
+
+  compose {
+    icon: widget("icon", { name: ?icon });
+    action: widget("button", { variant: "filled" });
+  }
+
+  invariant {
+    "title must always be present and non-empty";
+    "icon must be aria-hidden since it is decorative";
+    "action button must be focusable when present";
+  }
+
+}

@@ -1,0 +1,138 @@
+@version(1)
+widget alert-dialog {
+
+  purpose {
+    Confirmation dialog that requires an explicit user action before it
+    can be dismissed. Unlike a standard dialog, pressing Escape or
+    clicking the backdrop does NOT close it — the user must interact
+    with a confirm or cancel action. Used for destructive operations,
+    unsaved-changes guards, and critical confirmations.
+  }
+
+  anatomy {
+    root:          container  { top-level wrapper; provides stacking context }
+    trigger:       action     { element that opens the alert dialog }
+    backdrop:      overlay    { semi-transparent layer; click does NOT dismiss }
+    positioner:    container  { centres the dialog within the viewport }
+    content:       container  { visible dialog surface holding all inner parts }
+    title:         text       { heading that labels the alert dialog }
+    description:   text       { explains the action and its consequences }
+    cancel:        action     { dismisses the dialog without proceeding }
+    confirm:       action     { confirms the destructive or critical action }
+  }
+
+  slots {
+    header { before title }
+    body   { after description }
+    footer { end of content }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CANCEL  -> closed;
+      on CONFIRM -> closed;
+      entry [trapFocus, preventScroll, setAriaHidden];
+      exit  [releaseFocus, restoreScroll, clearAriaHidden];
+    }
+  }
+
+  accessibility {
+    role: alertdialog;
+    modal: true;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: cancel;
+      returnOnClose: trigger;
+    }
+    aria {
+      labelledby: title;
+      describedby: description;
+    }
+  }
+
+  props {
+    open:    Bool   = false;
+    role:    String = "alertdialog";
+  }
+
+  connect {
+    root -> {
+      data-state: ?open ? "open" : "closed";
+      data-role:  "alertdialog";
+    }
+
+    trigger -> {
+      aria-haspopup: "dialog";
+      aria-expanded: ?open;
+      onClick:       send(OPEN);
+    }
+
+    backdrop -> {
+      data-state: ?open ? "open" : "closed";
+      aria-hidden: true;
+    }
+
+    positioner -> {
+      data-state: ?open ? "open" : "closed";
+    }
+
+    content -> {
+      role:             "alertdialog";
+      aria-modal:       true;
+      aria-labelledby:  title;
+      aria-describedby: description;
+      data-state:       ?open ? "open" : "closed";
+    }
+
+    title -> {
+      id: title;
+    }
+
+    description -> {
+      id: description;
+    }
+
+    cancel -> {
+      aria-label: "Cancel";
+      onClick:    send(CANCEL);
+    }
+
+    confirm -> {
+      aria-label: "Confirm";
+      onClick:    send(CONFIRM);
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 12;
+    when {
+      modal: true;
+      requiresAction: true;
+    }
+  }
+
+  compose {
+    _dialog: widget("dialog", {
+      open:                ?open,
+      role:                "alertdialog",
+      closeOnOutsideClick: false,
+      closeOnEscape:       false
+    });
+  }
+
+  invariant {
+    "Escape key must NOT dismiss the alert dialog";
+    "Clicking the backdrop must NOT dismiss the alert dialog";
+    "Focus must default to the cancel action on open";
+    "User must explicitly choose cancel or confirm to close";
+  }
+
+}

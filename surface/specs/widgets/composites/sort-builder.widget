@@ -1,0 +1,181 @@
+@version(1)
+widget sort-builder {
+
+  purpose {
+    Sortable priority list of sort criteria that lets users define multi-column
+    sort order with ascending/descending direction toggles. Rows can be reordered
+    via drag-and-drop to change sort priority. Used alongside data tables, query
+    builders, and view configurations to control result ordering.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the sort builder }
+    addButton:       action     { Button that appends a new sort criterion row }
+    sortRow:         container  { Single sort criterion grouping field, direction, drag, and remove }
+    fieldSelector:   widget     { Dropdown to choose which data field to sort by }
+    directionToggle: action     { Toggle button switching between ascending and descending }
+    dragHandle:      action     { Drag handle for reordering sort priority via drag-and-drop }
+    removeButton:    action     { Button that removes this sort criterion }
+    emptyState:      container  { Placeholder shown when no sort criteria are defined }
+    priorityLabel:   text       { Visual indicator of sort priority order (1st, 2nd, etc.) }
+  }
+
+  states {
+    sortCount {
+      empty [initial] {
+        on ADD_SORT -> hasSorts;
+        on LOAD_SORTS -> hasSorts;
+      }
+      hasSorts {
+        on REMOVE_LAST -> empty;
+        on CLEAR_ALL -> empty;
+        on ADD_SORT -> hasSorts;
+      }
+    }
+
+    drag {
+      idle [initial] {
+        on DRAG_START -> dragging;
+      }
+      dragging {
+        on DRAG_END -> idle;
+        on DROP -> idle;
+        entry [set aria-grabbed true; createDropPreview];
+        exit [set aria-grabbed false; clearDropPreview];
+      }
+    }
+  }
+
+  accessibility {
+    role: list;
+    modal: false;
+    keyboard {
+      Enter       -> TOGGLE_DIRECTION;
+      Space       -> TOGGLE_DIRECTION;
+      Delete      -> REMOVE_SORT;
+      ArrowUp     -> MOVE_UP;
+      ArrowDown   -> MOVE_DOWN;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: addButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: "Sort criteria";
+      };
+      sortRow -> {
+        role: "listitem";
+        aria-label: "Sort criterion";
+      };
+      directionToggle -> {
+        role: "button";
+        aria-label: "Toggle sort direction";
+        aria-pressed: if self.direction == "descending" then "true" else "false";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-roledescription: "sortable";
+        aria-label: "Reorder sort criterion";
+      };
+    }
+  }
+
+  props {
+    sorts: list SortCriterion = []
+    fields: list FieldDef
+    maxSorts: Int = 5
+    disabled: Bool = false
+    onChange: option Function
+  }
+
+  connect {
+    root -> {
+      role: "list";
+      aria-label: "Sort criteria";
+      data-state: if ?sorts.length == 0 then "empty" else "has-sorts";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    addButton -> {
+      aria-label: "Add sort criterion";
+      disabled: if ?disabled then true else if ?sorts.length >= ?maxSorts then true else false;
+      onClick: send(ADD_SORT);
+    }
+
+    sortRow -> {
+      role: "listitem";
+      aria-label: concat("Sort by ", self.fieldLabel);
+      data-direction: self.direction;
+      data-dragging: if state.drag == "dragging" then "true" else "false";
+      data-priority: self.index;
+    }
+
+    fieldSelector -> {
+      data-part: "field-selector";
+      value: self.field;
+      options: availableFields(?fields, ?sorts, self.field);
+      disabled: ?disabled;
+      aria-label: "Sort field";
+      onChange: send(FIELD_CHANGE);
+    }
+
+    directionToggle -> {
+      role: "button";
+      aria-label: if self.direction == "ascending" then "Sort ascending, click to change to descending" else "Sort descending, click to change to ascending";
+      aria-pressed: if self.direction == "descending" then "true" else "false";
+      data-direction: self.direction;
+      disabled: ?disabled;
+      onClick: send(TOGGLE_DIRECTION);
+    }
+
+    dragHandle -> {
+      role: "button";
+      aria-roledescription: "sortable";
+      aria-label: concat("Reorder sort criterion ", self.fieldLabel);
+      tabindex: "0";
+      data-dragging: if state.drag == "dragging" then "true" else "false";
+      disabled: ?disabled;
+      onPointerDown: send(DRAG_START);
+      onPointerUp: send(DROP);
+      onKeyDown-ArrowUp: send(MOVE_UP);
+      onKeyDown-ArrowDown: send(MOVE_DOWN);
+    }
+
+    removeButton -> {
+      aria-label: concat("Remove sort by ", self.fieldLabel);
+      disabled: ?disabled;
+      onClick: send(REMOVE_SORT);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if ?sorts.length > 0 then true else false;
+      aria-hidden: if ?sorts.length > 0 then "true" else "false";
+    }
+
+    priorityLabel -> {
+      text: concat(self.index + 1, ordinalSuffix(self.index + 1));
+      aria-hidden: "true";
+    }
+  }
+
+  compose {
+    fieldSelector: widget("select", { options: ?fields, placeholder: "Select field..." });
+    addButton:     widget("button", { variant: "ghost", size: "sm" });
+    removeButton:  widget("button", { variant: "ghost", size: "sm" });
+  }
+
+  invariant {
+    "Each field may appear in at most one sort criterion";
+    "Total sort criteria must not exceed maxSorts";
+    "Removing the last sort criterion must transition to empty state";
+    "Drag reorder must preserve all criteria, only changing priority order";
+    "Priority labels must reflect current order after any reorder";
+  }
+
+}

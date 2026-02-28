@@ -1,0 +1,243 @@
+@version(1)
+widget block-editor {
+
+  purpose {
+    Full block-based document editor inspired by Notion and TipTap. Each line
+    or section of content is an independently typed block (paragraph, heading,
+    list, quote, code, table, image, embed, divider, callout, toggle) that can
+    be reordered via drag-and-drop, converted between types via a slash-command
+    palette, and styled through a floating selection toolbar. Supports nested
+    blocks, multi-block selection, and keyboard-driven block manipulation.
+  }
+
+  anatomy {
+    root:             container  { Top-level editor wrapper providing document context and event delegation }
+    editor:           container  { Scrollable content area holding the ordered sequence of blocks }
+    block:            container  { Individual content block with type-specific rendering and drag affordance }
+    blockDragHandle:  action     { Grip icon on the block gutter; initiates drag-and-drop reordering }
+    blockMenu:        widget     { Per-block context menu for duplicate, delete, convert-type, and color }
+    slashMenu:        widget     { Filterable command palette triggered by typing "/" inside a block }
+    selectionToolbar: widget     { Floating toolbar appearing on text selection for inline formatting }
+    placeholder:      text       { Ghost text shown inside an empty block to prompt user input }
+  }
+
+  states {
+    editing [initial] {
+      on BLUR -> idle;
+      on SLASH -> slashMenuOpen;
+      on SELECT_TEXT -> selectionActive;
+      on DRAG_START -> dragging;
+    }
+
+    idle {
+      on FOCUS -> editing;
+    }
+
+    slashMenuOpen {
+      on SELECT_BLOCK_TYPE -> editing;
+      on ESCAPE -> editing;
+      on BLUR -> idle;
+      entry [show slashMenu; focusSlashInput];
+      exit [hide slashMenu];
+    }
+
+    selectionActive {
+      on DESELECT -> editing;
+      on FORMAT -> selectionActive;
+      on ESCAPE -> editing;
+      entry [show selectionToolbar];
+      exit [hide selectionToolbar];
+    }
+
+    dragging {
+      on DROP -> editing;
+      on ESCAPE -> editing;
+      entry [set aria-grabbed true; show dropIndicator];
+      exit [set aria-grabbed false; hide dropIndicator];
+    }
+
+    block {
+      paragraph [initial] {
+        on CONVERT -> heading;
+        on CONVERT -> bulletedList;
+        on CONVERT -> numberedList;
+        on CONVERT -> checklist;
+        on CONVERT -> quote;
+        on CONVERT -> codeBlock;
+        on CONVERT -> table;
+        on CONVERT -> image;
+        on CONVERT -> embed;
+        on CONVERT -> divider;
+        on CONVERT -> callout;
+        on CONVERT -> toggle;
+      }
+      heading {}
+      bulletedList {}
+      numberedList {}
+      checklist {}
+      quote {}
+      codeBlock {}
+      table {}
+      image {}
+      embed {}
+      divider {}
+      callout {}
+      toggle {}
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    modal: false;
+    keyboard {
+      Enter -> NEW_BLOCK;
+      Backspace -> MERGE_OR_DELETE;
+      Tab -> INDENT;
+      Shift+Tab -> OUTDENT;
+      ArrowUp -> FOCUS_PREV_BLOCK;
+      ArrowDown -> FOCUS_NEXT_BLOCK;
+      Slash -> SLASH;
+      Escape -> ESCAPE;
+      Control+Shift+ArrowUp -> MOVE_BLOCK_UP;
+      Control+Shift+ArrowDown -> MOVE_BLOCK_DOWN;
+      Control+d -> DUPLICATE_BLOCK;
+      Control+b -> FORMAT_BOLD;
+      Control+i -> FORMAT_ITALIC;
+      Control+u -> FORMAT_UNDERLINE;
+      Control+k -> FORMAT_LINK;
+      Control+e -> FORMAT_CODE;
+      Control+z -> UNDO;
+      Control+Shift+z -> REDO;
+    }
+    focus {
+      trap: false;
+      initial: block;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: ?ariaLabel;
+        aria-readonly: if ?readOnly then "true" else "false";
+      };
+      editor -> {
+        role: "document";
+        aria-label: "Editor content";
+      };
+      block -> {
+        role: "group";
+        aria-label: concat("Block ", self.index, ": ", self.type);
+        aria-grabbed: if state == "dragging" then "true" else "false";
+        aria-roledescription: "content block";
+      };
+      blockDragHandle -> {
+        role: "button";
+        aria-label: "Drag to reorder block";
+        aria-roledescription: "drag handle";
+      };
+      placeholder -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blocks: list BlockDef
+    ariaLabel: String = "Block editor"
+    readOnly: Bool = false
+    placeholder: String = "Type '/' for commands..."
+    blockTypes: list String = ["paragraph", "heading-1", "heading-2", "heading-3", "heading-4", "heading-5", "heading-6", "bulleted-list", "numbered-list", "checklist", "quote", "code-block", "table", "image", "embed", "divider", "callout", "toggle"]
+    autoFocus: Bool = false
+    spellCheck: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-state: if state == "dragging" then "dragging" else if state == "slashMenuOpen" then "slash-open" else if state == "selectionActive" then "selecting" else "idle";
+      data-readonly: if ?readOnly then "true" else "false";
+      data-block-count: ?blocks.length;
+    }
+
+    editor -> {
+      role: "document";
+      aria-label: "Editor content";
+      contenteditable: if ?readOnly then "false" else "true";
+      spellcheck: if ?spellCheck then "true" else "false";
+      data-empty: if ?blocks.length == 0 then "true" else "false";
+    }
+
+    block -> {
+      role: "group";
+      aria-label: concat("Block ", self.index, ": ", self.type);
+      aria-grabbed: if state == "dragging" then "true" else "false";
+      data-block-type: self.type;
+      data-block-id: self.id;
+      data-focused: if self.focused then "true" else "false";
+      data-selected: if self.selected then "true" else "false";
+      tabindex: if self.focused then "0" else "-1";
+      onFocus: send(FOCUS_BLOCK, { id: self.id });
+      onKeyDown-Enter: send(NEW_BLOCK, { after: self.id });
+      onKeyDown-Backspace: send(MERGE_OR_DELETE, { id: self.id });
+      onKeyDown-Tab: send(INDENT, { id: self.id });
+      onKeyDown-Shift+Tab: send(OUTDENT, { id: self.id });
+    }
+
+    blockDragHandle -> {
+      role: "button";
+      aria-label: "Drag to reorder block";
+      aria-roledescription: "drag handle";
+      draggable: if ?readOnly then "false" else "true";
+      tabindex: "-1";
+      data-part: "drag-handle";
+      onDragStart: send(DRAG_START, { id: self.blockId });
+      onDragEnd: send(DROP);
+      onKeyDown-Space: send(DRAG_START, { id: self.blockId });
+      onKeyDown-ArrowUp: send(MOVE_BLOCK_UP, { id: self.blockId });
+      onKeyDown-ArrowDown: send(MOVE_BLOCK_DOWN, { id: self.blockId });
+    }
+
+    blockMenu -> {
+      data-part: "block-menu";
+      data-block-id: self.blockId;
+      aria-label: "Block actions";
+    }
+
+    slashMenu -> {
+      data-part: "slash-menu";
+      data-state: if state == "slashMenuOpen" then "open" else "closed";
+      aria-label: "Block type palette";
+    }
+
+    selectionToolbar -> {
+      data-part: "selection-toolbar";
+      data-state: if state == "selectionActive" then "visible" else "hidden";
+      aria-label: "Text formatting toolbar";
+    }
+
+    placeholder -> {
+      aria-hidden: "true";
+      data-part: "placeholder";
+      text: ?placeholder;
+      data-visible: if self.blockEmpty then "true" else "false";
+    }
+  }
+
+  compose {
+    slashMenu: widget("slash-menu", { blockTypes: ?blockTypes });
+    selectionToolbar: widget("floating-toolbar", { variant: "formatting" });
+    blockMenu: widget("context-menu", { items: ["Duplicate", "Delete", "Turn into", "Color", "Move to"] });
+    richTextEditor: widget("rich-text-editor", { readOnly: ?readOnly });
+  }
+
+  invariant {
+    "Only one slash menu may be open at a time across the entire editor";
+    "Block drag handle must be hidden in readOnly mode";
+    "Focus must transfer to the new block after Enter creates one";
+    "Backspace at start of empty block must delete it and focus the previous block";
+    "Selection toolbar must be positioned relative to the text selection bounding rect";
+    "Block type conversion must preserve text content when possible";
+    "aria-grabbed must be true on exactly one block during dragging state";
+  }
+
+}

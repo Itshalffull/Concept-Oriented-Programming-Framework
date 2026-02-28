@@ -1,0 +1,124 @@
+@version(1)
+widget gauge {
+
+  purpose {
+    Circular or arc-shaped progress indicator displaying a numeric score
+    or measurement against a defined range. Supports configurable min/max
+    bounds and threshold markers for warning and critical levels. Used in
+    dashboards and monitoring views for at-a-glance metric assessment.
+  }
+
+  anatomy {
+    root:  container  { Top-level wrapper enclosing the gauge graphic and labels }
+    track: container  { Background arc or circle representing the full range }
+    fill:  container  { Coloured arc or segment representing the current value }
+    label: text       { Descriptive label identifying what the gauge measures }
+    value: text       { Formatted numeric display of the current value }
+  }
+
+  states {
+    static [initial] {
+      on VALUE_CHANGE -> static;
+      on THRESHOLD_WARNING -> warning;
+      on THRESHOLD_CRITICAL -> critical;
+    }
+
+    normal {
+      on THRESHOLD_WARNING -> warning;
+      on THRESHOLD_CRITICAL -> critical;
+      on VALUE_CHANGE -> normal;
+    }
+
+    warning {
+      on THRESHOLD_NORMAL -> normal;
+      on THRESHOLD_CRITICAL -> critical;
+      on VALUE_CHANGE -> warning;
+    }
+
+    critical {
+      on THRESHOLD_NORMAL -> normal;
+      on THRESHOLD_WARNING -> warning;
+      on VALUE_CHANGE -> critical;
+    }
+  }
+
+  accessibility {
+    role: meter;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "meter";
+        aria-label: ?ariaLabel;
+        aria-valuenow: ?value;
+        aria-valuemin: ?min;
+        aria-valuemax: ?max;
+        aria-valuetext: concat(?value, " of ", ?max);
+      };
+    }
+  }
+
+  props {
+    value: Float
+    min: Float = 0
+    max: Float = 100
+    thresholds: option { warning: Float, critical: Float }
+    ariaLabel: option String
+  }
+
+  connect {
+    root -> {
+      role: "meter";
+      aria-label: ?ariaLabel;
+      aria-valuenow: ?value;
+      aria-valuemin: ?min;
+      aria-valuemax: ?max;
+      aria-valuetext: concat(?value, " of ", ?max);
+      data-part: "gauge";
+      data-threshold: if ?thresholds then (if ?value >= ?thresholds.critical then "critical" else if ?value >= ?thresholds.warning then "warning" else "normal") else "none";
+      data-state: if ?thresholds then (if ?value >= ?thresholds.critical then "critical" else if ?value >= ?thresholds.warning then "warning" else "normal") else "static";
+    }
+
+    track -> {
+      data-part: "track";
+      aria-hidden: "true";
+    }
+
+    fill -> {
+      data-part: "fill";
+      data-percentage: percent((?value - ?min) / (?max - ?min));
+      data-threshold: if ?thresholds then (if ?value >= ?thresholds.critical then "critical" else if ?value >= ?thresholds.warning then "warning" else "normal") else "none";
+      aria-hidden: "true";
+      style-transform: concat("rotate(", degrees((?value - ?min) / (?max - ?min)), "deg)");
+    }
+
+    label -> {
+      data-part: "label";
+      id: label;
+    }
+
+    value -> {
+      data-part: "value";
+      aria-live: "polite";
+      aria-atomic: "true";
+      data-threshold: if ?thresholds then (if ?value >= ?thresholds.critical then "critical" else if ?value >= ?thresholds.warning then "warning" else "normal") else "none";
+    }
+  }
+
+  invariant {
+    value >= min;
+    value <= max;
+    min < max;
+    "fill arc must proportionally represent value within min..max range";
+    "Threshold colours must change at the defined warning and critical boundaries";
+    "aria-valuenow must always reflect the current value prop";
+  }
+
+}

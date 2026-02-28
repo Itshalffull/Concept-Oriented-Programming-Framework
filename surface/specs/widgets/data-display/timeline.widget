@@ -1,0 +1,233 @@
+@version(1)
+widget timeline {
+
+  purpose {
+    Horizontal time-axis visualisation displaying items as bars spanning
+    start and end dates along a configurable time scale. Supports Gantt-chart
+    style dependency arrows between items, milestones, row labels, and
+    interactive resizing and scrolling. Enables project planning and
+    temporal data exploration.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper enclosing header axis and body rows }
+    header:          container  { Fixed header region containing the time axis }
+    timeAxis:        container  { Horizontal strip of tick marks and labels for the time scale }
+    tick:            container  { Individual tick mark on the time axis }
+    tickLabel:       text       { Date or period label associated with a tick mark }
+    body:            container  { Scrollable region containing all timeline rows }
+    row:             container  { Single horizontal lane for one item or resource }
+    rowLabel:        text       { Identifying label at the start of a row }
+    bar:             action     { Horizontal bar representing an item's time span }
+    dependencyArrow: container  { SVG arrow connecting a bar to its dependency }
+    milestone:       container  { Diamond or marker indicating a point-in-time event }
+  }
+
+  states {
+    idle [initial] {
+      on SCROLL -> scrolling;
+      on RESIZE_BAR -> resizing;
+      on SELECT_BAR -> barSelected;
+      on HOVER_BAR -> barHovered;
+    }
+
+    scrolling {
+      on SCROLL_END -> idle;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    resizing {
+      on RESIZE_END -> idle;
+      on RESIZE_CANCEL -> idle;
+      entry [announce "Resizing bar"];
+      exit [announce "Resize complete"; commitResize];
+    }
+
+    barHovered {
+      on UNHOVER_BAR -> idle;
+      on SELECT_BAR -> barSelected;
+    }
+
+    barSelected {
+      on DESELECT_BAR -> idle;
+      on SELECT_BAR -> barSelected;
+      entry [announce "Selected bar"];
+    }
+
+    focus {
+      unfocused [initial] {
+        on FOCUS_BAR -> barFocused;
+      }
+      barFocused {
+        on BLUR -> unfocused;
+        on NAVIGATE -> barFocused;
+      }
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      ArrowUp -> NAVIGATE_ROW_PREV;
+      ArrowDown -> NAVIGATE_ROW_NEXT;
+      ArrowLeft -> NAVIGATE_BAR_PREV;
+      ArrowRight -> NAVIGATE_BAR_NEXT;
+      Enter -> SELECT_BAR;
+      Space -> SELECT_BAR;
+      Escape -> DESELECT_BAR;
+      Plus -> ZOOM_IN;
+      Minus -> ZOOM_OUT;
+      Home -> NAVIGATE_FIRST_ROW;
+      End -> NAVIGATE_LAST_ROW;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: bar[first];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "timeline";
+      };
+      row -> {
+        role: "row";
+        aria-label: self.label;
+        aria-rowindex: self.index;
+      };
+      bar -> {
+        role: "gridcell";
+        aria-label: concat(self.label, " from ", self.start, " to ", self.end);
+        aria-selected: if state == "barSelected" then "true" else "false";
+      };
+      milestone -> {
+        role: "img";
+        aria-label: concat("Milestone: ", self.label, " on ", self.date);
+      };
+    }
+  }
+
+  props {
+    items: list { id: String, label: String, start: DateTime, end: DateTime, dependencies: list String }
+    scale: union "day" | "week" | "month" = "week"
+    ariaLabel: String = "Timeline"
+    resizable: Bool = false
+    zoomLevel: Float = 1.0
+  }
+
+  connect {
+    root -> {
+      role: "grid";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "timeline";
+      data-scale: ?scale;
+      data-state: if state == "scrolling" then "scrolling" else if state == "resizing" then "resizing" else "idle";
+      data-zoom: ?zoomLevel;
+    }
+
+    header -> {
+      data-part: "header";
+      aria-hidden: "false";
+      data-scale: ?scale;
+    }
+
+    timeAxis -> {
+      data-part: "time-axis";
+      data-scale: ?scale;
+      role: "row";
+      aria-label: "Time scale";
+    }
+
+    tick -> {
+      data-part: "tick";
+      data-scale: ?scale;
+      role: "columnheader";
+      aria-hidden: "true";
+    }
+
+    tickLabel -> {
+      data-part: "tick-label";
+      aria-hidden: "true";
+    }
+
+    body -> {
+      data-part: "body";
+      role: "rowgroup";
+      data-state: if state == "scrolling" then "scrolling" else "idle";
+      onScroll: send(SCROLL);
+    }
+
+    row -> {
+      role: "row";
+      aria-label: self.label;
+      aria-rowindex: self.index;
+      data-part: "row";
+    }
+
+    rowLabel -> {
+      data-part: "row-label";
+      id: self.labelId;
+    }
+
+    bar -> {
+      role: "gridcell";
+      aria-label: concat(self.label, " from ", self.start, " to ", self.end);
+      aria-selected: if self.isSelected then "true" else "false";
+      tabindex: if state.focus == "barFocused" and self.isFocused then "0" else "-1";
+      data-part: "bar";
+      data-state: if self.isSelected then "selected" else if self.isHovered then "hovered" else "idle";
+      data-resizable: if ?resizable then "true" else "false";
+      style-left: self.offsetLeft;
+      style-width: self.barWidth;
+      onClick: send(SELECT_BAR);
+      onMouseEnter: send(HOVER_BAR);
+      onMouseLeave: send(UNHOVER_BAR);
+      onFocus: send(FOCUS_BAR);
+      onBlur: send(BLUR);
+      onKeyDown-Enter: send(SELECT_BAR);
+      onKeyDown-Space: send(SELECT_BAR);
+      onKeyDown-Escape: send(DESELECT_BAR);
+      onKeyDown-ArrowUp: send(NAVIGATE_ROW_PREV);
+      onKeyDown-ArrowDown: send(NAVIGATE_ROW_NEXT);
+      onKeyDown-ArrowLeft: send(NAVIGATE_BAR_PREV);
+      onKeyDown-ArrowRight: send(NAVIGATE_BAR_NEXT);
+    }
+
+    dependencyArrow -> {
+      data-part: "dependency-arrow";
+      data-from: self.fromId;
+      data-to: self.toId;
+      aria-hidden: "true";
+    }
+
+    milestone -> {
+      role: "img";
+      aria-label: concat("Milestone: ", self.label, " on ", self.date);
+      data-part: "milestone";
+      data-date: self.date;
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 10;
+    when { viewType: "timeline" }
+  }
+
+  compose {
+    tooltip: widget("tooltip", { trigger: bar });
+  }
+
+  invariant {
+    "Each bar must span from its start to end date on the time axis";
+    "Dependency arrows must connect only to valid item IDs";
+    "Roving focus must traverse bars in row-then-column order";
+    "Zoom level must not cause bars to overlap their row boundaries";
+    "Scale changes must preserve the currently selected or focused bar";
+  }
+
+}

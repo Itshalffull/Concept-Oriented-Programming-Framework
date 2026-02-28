@@ -1,0 +1,213 @@
+@version(1)
+widget image-gallery {
+
+  purpose {
+    Thumbnail grid with lightbox preview for browsing collections of
+    images. Displays a responsive grid of clickable thumbnails that
+    open a full-size lightbox overlay with previous/next navigation,
+    a counter indicator, and keyboard-driven browsing. Supports lazy
+    loading of images and accessible labeling of each item.
+  }
+
+  anatomy {
+    root:          container  { Top-level wrapper for the gallery layout }
+    grid:          container  { Responsive grid of thumbnail items }
+    thumbnail:     action     { Clickable image thumbnail that opens the lightbox }
+    lightbox:      widget     { Full-screen modal overlay displaying the selected image }
+    lightboxImage: container  { Container for the full-resolution image in the lightbox }
+    prevButton:    action     { Button to navigate to the previous image in the lightbox }
+    nextButton:    action     { Button to navigate to the next image in the lightbox }
+    counter:       text       { Text showing current position (e.g., "3 of 12") }
+    closeButton:   action     { Button to close the lightbox and return to the grid }
+  }
+
+  states {
+    grid [initial] {
+      on OPEN_LIGHTBOX -> lightbox;
+    }
+
+    lightbox {
+      on CLOSE -> grid;
+      on ESCAPE -> grid;
+      on NEXT -> lightbox;
+      on PREV -> lightbox;
+      entry [show lightbox; trapFocus; preventScroll; loadFullImage];
+      exit [hide lightbox; releaseFocus; restoreScroll; returnFocusToThumbnail];
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter -> OPEN_LIGHTBOX;
+      Escape -> CLOSE;
+      ArrowRight -> NEXT;
+      ArrowLeft -> PREV;
+      Home -> FIRST;
+      End -> LAST;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: when lightbox;
+      initial: lightboxImage;
+      returnOnClose: true;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "image gallery";
+      };
+      grid -> {
+        role: "grid";
+        aria-label: concat(?ariaLabel, " thumbnails");
+      };
+      thumbnail -> {
+        role: "gridcell";
+        aria-label: concat("Image ", self.index + 1, " of ", ?images.length, ": ", self.alt);
+      };
+      lightbox -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: concat("Image viewer: ", self.currentAlt);
+      };
+      lightboxImage -> {
+        role: "img";
+        aria-label: self.currentAlt;
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous image";
+        aria-disabled: if ?currentIndex == 0 and not ?loop then "true" else "false";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next image";
+        aria-disabled: if ?currentIndex == ?images.length - 1 and not ?loop then "true" else "false";
+      };
+      counter -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat("Image ", ?currentIndex + 1, " of ", ?images.length);
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close image viewer";
+      };
+    }
+  }
+
+  props {
+    images: list { src: String, alt: String, thumbnail: option String }
+    currentIndex: Int = 0
+    ariaLabel: String = "Image Gallery"
+    columns: Int = 3
+    gap: String = "8px"
+    loop: Bool = true
+    lazyLoad: Bool = true
+    aspectRatio: String = "1/1"
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "image gallery";
+      data-state: if state == "lightbox" then "lightbox" else "grid";
+      data-image-count: ?images.length;
+    }
+
+    grid -> {
+      role: "grid";
+      aria-label: concat(?ariaLabel, " thumbnails");
+      data-part: "grid";
+      data-columns: ?columns;
+      style-gap: ?gap;
+      style-grid-template-columns: concat("repeat(", ?columns, ", 1fr)");
+    }
+
+    thumbnail -> {
+      role: "gridcell";
+      aria-label: concat("Image ", self.index + 1, " of ", ?images.length, ": ", self.alt);
+      data-part: "thumbnail";
+      data-index: self.index;
+      data-aspect-ratio: ?aspectRatio;
+      tabindex: if self.index == ?currentIndex then "0" else "-1";
+      loading: if ?lazyLoad then "lazy" else "eager";
+      src: if self.thumbnailSrc then self.thumbnailSrc else self.src;
+      alt: self.alt;
+      onClick: send(OPEN_LIGHTBOX, { index: self.index });
+      onKeyDown-Enter: send(OPEN_LIGHTBOX, { index: self.index });
+    }
+
+    lightbox -> {
+      data-part: "lightbox";
+      role: "dialog";
+      aria-modal: "true";
+      aria-label: concat("Image viewer: ", self.currentAlt);
+      data-state: if state == "lightbox" then "open" else "closed";
+    }
+
+    lightboxImage -> {
+      data-part: "lightbox-image";
+      role: "img";
+      aria-label: self.currentAlt;
+      src: self.currentSrc;
+      alt: self.currentAlt;
+      data-index: ?currentIndex;
+    }
+
+    prevButton -> {
+      role: "button";
+      aria-label: "Previous image";
+      aria-disabled: if ?currentIndex == 0 and not ?loop then "true" else "false";
+      data-part: "prev";
+      onClick: send(PREV);
+      onKeyDown-Enter: send(PREV);
+    }
+
+    nextButton -> {
+      role: "button";
+      aria-label: "Next image";
+      aria-disabled: if ?currentIndex == ?images.length - 1 and not ?loop then "true" else "false";
+      data-part: "next";
+      onClick: send(NEXT);
+      onKeyDown-Enter: send(NEXT);
+    }
+
+    counter -> {
+      data-part: "counter";
+      role: "status";
+      aria-live: "polite";
+      text: concat(?currentIndex + 1, " of ", ?images.length);
+    }
+
+    closeButton -> {
+      role: "button";
+      aria-label: "Close image viewer";
+      data-part: "close";
+      onClick: send(CLOSE);
+      onKeyDown-Enter: send(CLOSE);
+      onKeyDown-Escape: send(CLOSE);
+    }
+  }
+
+  compose {
+    lightbox: widget("dialog", { open: state == "lightbox", role: "dialog" });
+    grid: widget("card-grid", { columns: ?columns, gap: ?gap });
+  }
+
+  invariant {
+    "Focus must be trapped inside lightbox while it is open";
+    "Closing the lightbox must return focus to the thumbnail that opened it";
+    "Counter must update when navigating between images";
+    "Loop navigation must wrap from last to first and first to last when loop is true";
+    "Prev button must be disabled on the first image when loop is false";
+    "Next button must be disabled on the last image when loop is false";
+    "Lazy-loaded thumbnails must load when they enter the viewport";
+  }
+
+}

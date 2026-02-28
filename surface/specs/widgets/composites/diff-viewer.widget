@@ -1,0 +1,343 @@
+@version(1)
+widget diff-viewer {
+
+  purpose {
+    Side-by-side or unified diff viewer with syntax-aware line highlighting
+    for comparing two versions of text or configuration files. Displays
+    added, removed, and unchanged lines with line numbers, collapsible
+    unchanged hunks, and inline character-level change highlighting.
+    Supports switching between side-by-side and unified display modes.
+    Used for config diff review, version history, merge conflict preview,
+    and code review interfaces.
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the diff viewer }
+    modeToggle:        widget     { Toggle to switch between side-by-side and unified modes }
+    toolbar:           container  { Toolbar with mode toggle, navigation, and stats }
+    changeStats:       text       { Summary text showing additions and deletions count }
+    prevChangeButton:  action     { Button to navigate to the previous change hunk }
+    nextChangeButton:  action     { Button to navigate to the next change hunk }
+    fileList:          container  { List of files when viewing multi-file diffs }
+    fileItem:          action     { Individual file entry in the file list }
+    fileItemName:      text       { File name within a file list item }
+    fileItemStats:     text       { Addition/deletion counts for a file list item }
+    diffPanel:         container  { Main diff content panel }
+    leftPane:          container  { Left pane in side-by-side mode (original/before) }
+    rightPane:         container  { Right pane in side-by-side mode (modified/after) }
+    leftHeader:        container  { Header for the left pane showing the original version label }
+    rightHeader:       container  { Header for the right pane showing the modified version label }
+    hunkHeader:        container  { Context line showing the hunk range (@@...@@) }
+    lineNumber:        text       { Line number gutter element }
+    lineContent:       text       { Actual text content of a diff line }
+    addedLine:         container  { Line present only in the modified version }
+    removedLine:       container  { Line present only in the original version }
+    unchangedLine:     container  { Line identical in both versions }
+    inlineHighlight:   container  { Character-level highlight within an added or removed line }
+    expandButton:      action     { Button to expand collapsed unchanged context lines }
+    collapsedRange:    container  { Placeholder for a range of hidden unchanged lines }
+  }
+
+  states {
+    mode {
+      sideBySide [initial] {
+        on SWITCH_TO_UNIFIED -> unified;
+      }
+      unified {
+        on SWITCH_TO_SIDE_BY_SIDE -> sideBySide;
+      }
+    }
+
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      error {
+        on RETRY -> loading;
+      }
+    }
+
+    expand {
+      collapsed [initial] {
+        on EXPAND -> expanded;
+      }
+      expanded {
+        on COLLAPSE -> collapsed;
+      }
+    }
+
+    navigation {
+      idle [initial] {
+        on NAVIGATE_CHANGE -> atChange;
+      }
+      atChange {
+        on NAVIGATE_CHANGE -> atChange;
+        on SCROLL_AWAY -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      N             -> NEXT_CHANGE;
+      Shift+N       -> PREV_CHANGE;
+      ArrowDown     -> SCROLL_DOWN;
+      ArrowUp       -> SCROLL_UP;
+      PageDown      -> SCROLL_PAGE_DOWN;
+      PageUp        -> SCROLL_PAGE_UP;
+      Home          -> SCROLL_TOP;
+      End           -> SCROLL_BOTTOM;
+      M             -> TOGGLE_MODE;
+      E             -> EXPAND_ALL;
+    }
+    focus {
+      trap: false;
+      initial: modeToggle;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Diff viewer";
+      };
+      diffPanel -> {
+        role: "document";
+        aria-label: if state.mode == "sideBySide" then "Side-by-side diff" else "Unified diff";
+        aria-roledescription: "diff";
+      };
+      leftPane -> {
+        role: "region";
+        aria-label: "Original version";
+      };
+      rightPane -> {
+        role: "region";
+        aria-label: "Modified version";
+      };
+      addedLine -> {
+        aria-label: concat("Added line ", self.lineNumber, ": ", self.content);
+      };
+      removedLine -> {
+        aria-label: concat("Removed line ", self.lineNumber, ": ", self.content);
+      };
+      unchangedLine -> {
+        aria-label: concat("Line ", self.lineNumber);
+      };
+      changeStats -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      fileList -> {
+        role: "list";
+        aria-label: "Changed files";
+      };
+      fileItem -> {
+        role: "listitem";
+      };
+      expandButton -> {
+        aria-label: concat("Expand ", self.lineCount, " unchanged lines");
+      };
+    }
+  }
+
+  props {
+    original: String = ""
+    modified: String = ""
+    mode: union "side-by-side" | "unified" = "side-by-side"
+    language: option String
+    fileName: option String
+    files: list FileDiff = []
+    contextLines: Int = 3
+    showLineNumbers: Bool = true
+    showInlineHighlight: Bool = true
+    showFileList: Bool = true
+    expandCollapsed: Bool = false
+    loading: Bool = false
+    additions: Int = 0
+    deletions: Int = 0
+    onModeChange: option Function
+    onFileSelect: option Function
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: if ?fileName then concat("Diff viewer: ", ?fileName) else "Diff viewer";
+      aria-busy: if ?loading then "true" else "false";
+      data-mode: if state.mode == "sideBySide" then "side-by-side" else "unified";
+      data-state: if ?loading then "loading" else "idle";
+    }
+
+    modeToggle -> {
+      data-part: "mode-toggle";
+      value: if state.mode == "sideBySide" then "side-by-side" else "unified";
+      aria-label: "Diff view mode";
+      onChange: if state.mode == "sideBySide" then send(SWITCH_TO_UNIFIED) else send(SWITCH_TO_SIDE_BY_SIDE);
+    }
+
+    toolbar -> {
+      role: "toolbar";
+      aria-label: "Diff controls";
+      data-part: "toolbar";
+    }
+
+    changeStats -> {
+      text: concat("+", ?additions, " -", ?deletions);
+      aria-live: "polite";
+      aria-atomic: "true";
+      aria-label: concat(?additions, " additions, ", ?deletions, " deletions");
+      data-additions: ?additions;
+      data-deletions: ?deletions;
+    }
+
+    prevChangeButton -> {
+      aria-label: "Previous change";
+      onClick: send(PREV_CHANGE);
+    }
+
+    nextChangeButton -> {
+      aria-label: "Next change";
+      onClick: send(NEXT_CHANGE);
+    }
+
+    fileList -> {
+      role: "list";
+      aria-label: "Changed files";
+      hidden: if not ?showFileList then true else if ?files.length <= 1 then true else false;
+      data-part: "file-list";
+    }
+
+    fileItem -> {
+      role: "listitem";
+      data-file: self.fileName;
+      data-selected: if self.selected then "true" else "false";
+      tabindex: "0";
+      onClick: send(SELECT_FILE, { file: self.fileName });
+    }
+
+    fileItemName -> {
+      text: self.fileName;
+      data-part: "file-item-name";
+    }
+
+    fileItemStats -> {
+      text: concat("+", self.additions, " -", self.deletions);
+      data-part: "file-item-stats";
+      aria-hidden: "true";
+    }
+
+    diffPanel -> {
+      role: "document";
+      aria-label: if state.mode == "sideBySide" then "Side-by-side diff" else "Unified diff";
+      aria-roledescription: "diff";
+      data-mode: if state.mode == "sideBySide" then "side-by-side" else "unified";
+      tabindex: "0";
+    }
+
+    leftPane -> {
+      role: "region";
+      aria-label: "Original version";
+      hidden: if state.mode == "unified" then true else false;
+      data-part: "left-pane";
+    }
+
+    rightPane -> {
+      role: "region";
+      aria-label: "Modified version";
+      hidden: if state.mode == "unified" then true else false;
+      data-part: "right-pane";
+    }
+
+    leftHeader -> {
+      data-part: "left-header";
+      text: "Original";
+    }
+
+    rightHeader -> {
+      data-part: "right-header";
+      text: "Modified";
+    }
+
+    hunkHeader -> {
+      data-part: "hunk-header";
+      data-range: self.range;
+      aria-label: concat("Hunk: ", self.range);
+    }
+
+    lineNumber -> {
+      data-part: "line-number";
+      text: self.number;
+      hidden: if not ?showLineNumbers then true else false;
+      aria-hidden: "true";
+    }
+
+    lineContent -> {
+      data-part: "line-content";
+      text: self.content;
+    }
+
+    addedLine -> {
+      data-part: "added-line";
+      data-line: self.lineNumber;
+      aria-label: concat("Added line ", self.lineNumber, ": ", self.content);
+    }
+
+    removedLine -> {
+      data-part: "removed-line";
+      data-line: self.lineNumber;
+      aria-label: concat("Removed line ", self.lineNumber, ": ", self.content);
+    }
+
+    unchangedLine -> {
+      data-part: "unchanged-line";
+      data-line: self.lineNumber;
+    }
+
+    inlineHighlight -> {
+      data-part: "inline-highlight";
+      data-type: self.changeType;
+      hidden: if not ?showInlineHighlight then true else false;
+      aria-hidden: "true";
+    }
+
+    expandButton -> {
+      aria-label: concat("Expand ", self.lineCount, " unchanged lines");
+      data-start: self.startLine;
+      data-end: self.endLine;
+      onClick: send(EXPAND, { start: self.startLine, end: self.endLine });
+    }
+
+    collapsedRange -> {
+      data-part: "collapsed-range";
+      data-line-count: self.lineCount;
+      aria-label: concat(self.lineCount, " unchanged lines hidden");
+    }
+  }
+
+  compose {
+    modeToggle:  widget("view-toggle", { options: ["side-by-side", "unified"] });
+    splitter:    widget("splitter", { orientation: "horizontal" });
+    fileList:    widget("disclosure", {});
+  }
+
+  invariant {
+    "Exactly one mode (sideBySide or unified) must be active at all times";
+    "Side-by-side mode must show left and right panes; unified mode must show a single pane";
+    "Line numbers in left and right panes must independently track original and modified versions";
+    "Inline character highlights must appear only within added or removed lines";
+    "Collapsed ranges must show the correct count of hidden unchanged lines";
+    "Expanding a collapsed range must reveal all hidden lines in that range";
+    "Change navigation must scroll to and focus the next or previous hunk boundary";
+    "Scroll position must sync between left and right panes in side-by-side mode";
+  }
+
+}

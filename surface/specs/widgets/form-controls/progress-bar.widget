@@ -1,0 +1,103 @@
+@version(1)
+widget progress-bar {
+
+  purpose {
+    Visual progress indicator displayed as a horizontal bar that fills
+    proportionally. Supports both determinate (known percentage) and
+    indeterminate (unknown duration) modes with an optional label and
+    value text readout.
+  }
+
+  anatomy {
+    root: container        { Outermost wrapper; groups track, label, and value text }
+    track: container       { Background track representing the full range }
+    fill: container        { Filled portion of the track representing current progress }
+    label: text            { Optional visible label describing what is progressing }
+    valueText: text        { Optional text showing the current numeric value or percentage }
+  }
+
+  slots {
+    label     { accepts: text; optional: true }
+    valueText { accepts: text; optional: true }
+  }
+
+  states {
+    mode {
+      indeterminate [initial] {
+        on SET_VALUE -> determinate;
+      }
+      determinate {
+        on CLEAR_VALUE -> indeterminate;
+        on COMPLETE -> complete;
+      }
+      complete {
+        on RESET -> indeterminate;
+        on SET_VALUE -> determinate;
+        entry [announceComplete];
+      }
+    }
+  }
+
+  accessibility {
+    role: progressbar;
+    focus {}
+    aria {
+      root -> {
+        role: "progressbar";
+        aria-label: if ?label then ?label else "Progress";
+        aria-valuenow: if state.mode == "determinate" or state.mode == "complete" then ?value else none;
+        aria-valuemin: ?min;
+        aria-valuemax: ?max;
+        aria-valuetext: if ?value then concat(round(percent(?value, ?min, ?max)), "%") else "Loading";
+        aria-busy: if state.mode == "indeterminate" then "true" else "false";
+      };
+      valueText -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    value: option Float
+    min: Float = 0
+    max: Float = 100
+    label: option String
+    showValueText: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if not ?value then "indeterminate" else (if ?value >= ?max then "complete" else "determinate");
+      data-value: ?value;
+      role: "progressbar";
+    }
+    track -> {
+      data-state: if not ?value then "indeterminate" else "determinate";
+    }
+    fill -> {
+      style-width: if ?value then percent((?value - ?min) / (?max - ?min)) else "100%";
+      data-state: if not ?value then "indeterminate" else "determinate";
+      data-animation: if not ?value then "indeterminate" else "none";
+    }
+    label -> {
+      text: ?label;
+      visible: if ?label then true else false;
+    }
+    valueText -> {
+      text: if ?value then concat(round(percent(?value, ?min, ?max)), "%") else "";
+      visible: if ?showValueText and ?value then true else false;
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: display-progress;
+    specificity: 10;
+  }
+
+  invariant {
+    min < max;
+    ?value => ?value >= min;
+    ?value => ?value <= max;
+  }
+}

@@ -1,0 +1,210 @@
+@version(1)
+widget tree-select {
+
+  purpose {
+    Hierarchical tree structure with expandable/collapsible nodes and
+    optional checkbox selection. Supports multi-level nesting, tri-state
+    checkboxes (checked, unchecked, indeterminate) for parent nodes that
+    reflect child selection state, and keyboard-driven tree navigation
+    per the WAI-ARIA TreeView pattern.
+  }
+
+  anatomy {
+    root:          container  { Outermost wrapper serving as the tree root }
+    item:          container  { A single tree node containing toggle, checkbox, label, and children }
+    itemToggle:    action     { Expand/collapse affordance for nodes with children }
+    itemCheckbox:  widget     { Optional checkbox for selecting this node }
+    itemLabel:     text       { Visible label text for the tree node }
+    itemChildren:  container  { Nested container holding child items when expanded }
+  }
+
+  states {
+    item {
+      collapsed [initial] {
+        on EXPAND  -> expanded;
+        on TOGGLE  -> expanded;
+      }
+      expanded {
+        on COLLAPSE -> collapsed;
+        on TOGGLE   -> collapsed;
+        entry [renderChildren];
+        exit  [collapseChildren];
+      }
+    }
+
+    selection {
+      unchecked [initial] {
+        on CHECK           -> checked;
+        on PARTIAL_CHECK   -> indeterminate;
+      }
+      checked {
+        on UNCHECK         -> unchecked;
+        on PARTIAL_CHECK   -> indeterminate;
+        entry [checkAllChildren];
+      }
+      indeterminate {
+        on CHECK           -> checked;
+        on UNCHECK         -> unchecked;
+        entry [set aria-checked mixed];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS_ITEM -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        on FOCUS_ITEM -> focused;
+        entry [scrollIntoView];
+      }
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowDown  -> FOCUS_NEXT;
+      ArrowUp    -> FOCUS_PREV;
+      ArrowLeft  -> COLLAPSE_OR_PARENT;
+      ArrowRight -> EXPAND_OR_CHILD;
+      Home       -> FOCUS_FIRST;
+      End        -> FOCUS_LAST;
+      Space      -> TOGGLE_CHECK;
+      Enter      -> ACTIVATE;
+      Asterisk   -> EXPAND_ALL_SIBLINGS;
+    }
+    focus {
+      item: focusable;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "tree";
+        aria-label: ?label;
+        aria-multiselectable: if ?multiSelect then "true" else "false";
+      };
+      item -> {
+        role: "treeitem";
+        aria-expanded: if item.hasChildren then (if item.state == "expanded" then "true" else "false") else none;
+        aria-selected: if ?selectable then (if item.selection == "checked" then "true" else "false") else none;
+        aria-checked: if ?selectable and ?multiSelect then (if item.selection == "checked" then "true" else if item.selection == "indeterminate" then "mixed" else "false") else none;
+        aria-level: item.depth;
+        aria-setsize: item.siblingCount;
+        aria-posinset: item.positionInSet;
+        aria-label: item.label;
+        aria-disabled: if item.disabled then "true" else "false";
+      };
+      itemToggle -> {
+        aria-label: if item.state == "expanded" then "Collapse" else "Expand";
+        aria-hidden: if item.hasChildren then "false" else "true";
+      };
+      itemChildren -> {
+        role: "group";
+      };
+    }
+  }
+
+  props {
+    items: list TreeNode
+    selectable: Bool = true
+    multiSelect: Bool = true
+    defaultExpanded: set String
+    label: String = "Tree"
+    disabled: Bool = false
+    value: option set String
+  }
+
+  connect {
+    root -> {
+      role: "tree";
+      aria-label: ?label;
+      aria-multiselectable: if ?multiSelect then "true" else "false";
+      data-disabled: if ?disabled then "true" else "false";
+      onKeyDown-ArrowDown: send(FOCUS_NEXT);
+      onKeyDown-ArrowUp: send(FOCUS_PREV);
+      onKeyDown-Home: send(FOCUS_FIRST);
+      onKeyDown-End: send(FOCUS_LAST);
+      data-part: "root";
+    }
+    item -> {
+      role: "treeitem";
+      aria-expanded: if item.hasChildren then (if item.state == "expanded" then "true" else "false") else none;
+      aria-selected: if ?selectable then (if item.selection == "checked" then "true" else "false") else none;
+      aria-checked: if ?selectable and ?multiSelect then (if item.selection == "checked" then "true" else if item.selection == "indeterminate" then "mixed" else "false") else none;
+      aria-level: item.depth;
+      aria-setsize: item.siblingCount;
+      aria-posinset: item.positionInSet;
+      aria-disabled: if item.disabled or ?disabled then "true" else "false";
+      data-state: if item.state == "expanded" then "expanded" else "collapsed";
+      data-selected: if item.selection == "checked" then "true" else "false";
+      data-indeterminate: if item.selection == "indeterminate" then "true" else "false";
+      data-depth: item.depth;
+      data-has-children: if item.hasChildren then "true" else "false";
+      onKeyDown-ArrowLeft: send(COLLAPSE_OR_PARENT, { itemId: item.id });
+      onKeyDown-ArrowRight: send(EXPAND_OR_CHILD, { itemId: item.id });
+      onKeyDown-Space: if ?selectable then send(TOGGLE_CHECK, { itemId: item.id });
+      onKeyDown-Enter: send(ACTIVATE, { itemId: item.id });
+      onKeyDown-Asterisk: send(EXPAND_ALL_SIBLINGS, { itemId: item.id });
+      onFocus: send(FOCUS_ITEM, { itemId: item.id });
+      onBlur: send(BLUR);
+      tabIndex: if item.isFocused then 0 else -1;
+      data-part: "item";
+    }
+    itemToggle -> {
+      aria-label: if item.state == "expanded" then "Collapse" else "Expand";
+      aria-hidden: if not item.hasChildren then "true" else "false";
+      onClick: send(TOGGLE, { itemId: item.id });
+      data-state: if item.state == "expanded" then "expanded" else "collapsed";
+      data-visible: if item.hasChildren then "true" else "false";
+      tabIndex: -1;
+      data-part: "item-toggle";
+    }
+    itemCheckbox -> {
+      checked: item.selection == "checked";
+      indeterminate: item.selection == "indeterminate";
+      disabled: item.disabled or ?disabled;
+      onChange: send(TOGGLE_CHECK, { itemId: item.id });
+      aria-label: concat("Select ", item.label);
+      data-visible: if ?selectable then "true" else "false";
+      tabIndex: -1;
+      data-part: "item-checkbox";
+    }
+    itemLabel -> {
+      text: item.label;
+      data-selected: if item.selection == "checked" then "true" else "false";
+      data-disabled: if item.disabled or ?disabled then "true" else "false";
+      data-part: "item-label";
+    }
+    itemChildren -> {
+      role: "group";
+      data-state: if item.state == "expanded" then "expanded" else "collapsed";
+      data-visible: if item.state == "expanded" then "true" else "false";
+      aria-hidden: if item.state == "collapsed" then "true" else "false";
+      data-part: "item-children";
+    }
+  }
+
+  affordance {
+    serves: multi-choice;
+    specificity: 12;
+    when {
+      hierarchical: true;
+    }
+  }
+
+  compose {
+    itemCheckbox: widget("checkbox", { checked: item.selection == "checked", indeterminate: item.selection == "indeterminate" })
+  }
+
+  invariant {
+    "Exactly one item within the tree must have tabindex 0 at any time";
+    "Parent indeterminate state must reflect partial child selection";
+    "Checking a parent must check all descendant children";
+    "Unchecking a parent must uncheck all descendant children";
+    "ArrowLeft on a collapsed node must focus the parent node";
+    "ArrowRight on a collapsed node must expand it without moving focus";
+    "Items not in defaultExpanded must start collapsed";
+  }
+
+}

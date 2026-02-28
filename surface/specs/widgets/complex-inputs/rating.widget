@@ -1,0 +1,162 @@
+@version(1)
+widget rating {
+
+  purpose {
+    Star-based rating input allowing users to select a numeric score
+    from a visual row of icons. Supports whole and half-star precision,
+    hover preview of the prospective rating, and a read-only display
+    mode for showing existing ratings without interaction.
+  }
+
+  anatomy {
+    root: container  { Outermost wrapper grouping all rating items as a radio group }
+    item: action     { A single rating star/icon that can be clicked to set the value }
+    icon: container  { Visual star icon within each item, rendered as empty, half, or filled }
+  }
+
+  states {
+    item {
+      empty [initial] {
+        on FILL -> filled;
+        on HALF_FILL -> half;
+      }
+      filled {
+        on EMPTY -> empty;
+        on HALF_FILL -> half;
+      }
+      half {
+        on FILL -> filled;
+        on EMPTY -> empty;
+      }
+    }
+
+    interaction [parallel] {
+      idle [initial] {
+        on HOVER -> hovering;
+        on FOCUS -> focused;
+      }
+      hovering {
+        on HOVER_OUT -> idle;
+        on CLICK     -> idle;
+        entry [showPreview];
+        exit  [clearPreview];
+      }
+      focused {
+        on BLUR -> idle;
+        on HOVER -> hovering;
+        entry [showFocusRing];
+        exit  [hideFocusRing];
+      }
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    keyboard {
+      ArrowRight -> INCREASE;
+      ArrowUp    -> INCREASE;
+      ArrowLeft  -> DECREASE;
+      ArrowDown  -> DECREASE;
+      Home       -> SET_MIN;
+      End        -> SET_MAX;
+    }
+    focus {
+      item: focusable;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: ?label;
+        aria-required: if ?required then "true" else "false";
+        aria-disabled: if ?readOnly then "true" else "false";
+      };
+      item -> {
+        role: "radio";
+        aria-checked: if item.value == ?value then "true" else "false";
+        aria-label: concat(item.value, " of ", ?max, " stars");
+        aria-disabled: if ?readOnly then "true" else "false";
+        aria-posinset: item.index;
+        aria-setsize: ?max;
+      };
+      icon -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    value: Float = 0
+    max: Int = 5
+    half: Bool = false
+    readOnly: Bool = false
+    disabled: Bool = false
+    required: Bool = false
+    label: String = "Rating"
+    name: option String
+  }
+
+  connect {
+    root -> {
+      role: "radiogroup";
+      aria-label: ?label;
+      aria-required: if ?required then "true" else "false";
+      aria-disabled: if ?disabled or ?readOnly then "true" else "false";
+      data-disabled: if ?disabled then "true" else "false";
+      data-readonly: if ?readOnly then "true" else "false";
+      data-value: ?value;
+      data-max: ?max;
+      onMouseLeave: send(HOVER_OUT);
+      data-part: "root";
+    }
+    item -> {
+      role: "radio";
+      aria-checked: if item.value == ?value then "true" else if ?half and (item.value - 0.5) == ?value then "mixed" else "false";
+      aria-label: concat(item.value, " of ", ?max, " stars");
+      aria-disabled: if ?disabled or ?readOnly then "true" else "false";
+      aria-posinset: item.index;
+      aria-setsize: ?max;
+      data-state: if item.value <= ?value then "filled" else if ?half and (item.value - 0.5) <= ?value then "half" else "empty";
+      data-highlighted: if state.interaction == "hovering" and item.value <= previewValue then "true" else "false";
+      data-half-highlighted: if state.interaction == "hovering" and ?half and (item.value - 0.5) <= previewValue and item.value > previewValue then "true" else "false";
+      onClick: if not ?readOnly and not ?disabled then send(SET_VALUE, { value: item.value });
+      onMouseEnter: if not ?readOnly and not ?disabled then send(HOVER, { value: item.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowRight: send(INCREASE);
+      onKeyDown-ArrowUp: send(INCREASE);
+      onKeyDown-ArrowLeft: send(DECREASE);
+      onKeyDown-ArrowDown: send(DECREASE);
+      onKeyDown-Home: send(SET_MIN);
+      onKeyDown-End: send(SET_MAX);
+      tabIndex: if item.isFocused then 0 else -1;
+      data-part: "item";
+    }
+    icon -> {
+      aria-hidden: "true";
+      data-state: if item.value <= ?value then "filled" else if ?half and (item.value - 0.5) <= ?value then "half" else "empty";
+      data-part: "icon";
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 15;
+    when {
+      domain: "1-5";
+      context: "rating";
+    }
+  }
+
+  invariant {
+    value >= 0;
+    value <= max;
+    max > 0;
+    ?half => step is 0.5;
+    not ?half => step is 1;
+    "Hover preview must not modify the committed value";
+    "Exactly one item must have tabindex 0 at any time";
+    "Read-only mode must prevent all value changes from user interaction";
+  }
+
+}

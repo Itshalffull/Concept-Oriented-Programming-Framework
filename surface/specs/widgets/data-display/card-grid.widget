@@ -1,0 +1,108 @@
+@version(1)
+widget card-grid {
+
+  purpose {
+    Responsive grid layout for displaying a collection of cards in a
+    multi-column arrangement. Automatically adjusts the number of visible
+    columns based on available width and minimum card width constraints.
+    Provides loading and empty states for asynchronous data.
+  }
+
+  anatomy {
+    root: container  { Top-level grid wrapper defining column layout and gap spacing }
+    item: widget     { Individual card slot rendered for each data item in the collection }
+  }
+
+  states {
+    static [initial] {
+      on LOAD -> loading;
+      on DATA_EMPTY -> empty;
+    }
+
+    loading {
+      on LOAD_COMPLETE -> static;
+      on LOAD_COMPLETE_EMPTY -> empty;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    empty {
+      on LOAD -> loading;
+      on DATA_AVAILABLE -> static;
+    }
+  }
+
+  accessibility {
+    role: list;
+    modal: false;
+    keyboard {
+      ArrowUp -> NAVIGATE_UP;
+      ArrowDown -> NAVIGATE_DOWN;
+      ArrowLeft -> NAVIGATE_LEFT;
+      ArrowRight -> NAVIGATE_RIGHT;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: item[first];
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: ?ariaLabel;
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      item -> {
+        role: "listitem";
+      };
+    }
+  }
+
+  props {
+    columns: Int = 3
+    gap: Int = 16
+    minCardWidth: String = "280px"
+    ariaLabel: option String
+    loading: Bool = false
+  }
+
+  connect {
+    root -> {
+      role: "list";
+      aria-label: ?ariaLabel;
+      aria-busy: if ?loading then "true" else "false";
+      data-state: if ?loading then "loading" else if state == "empty" then "empty" else "static";
+      data-columns: ?columns;
+      data-gap: ?gap;
+      style-display: "grid";
+      style-grid-template-columns: concat("repeat(auto-fill, minmax(", ?minCardWidth, ", 1fr))");
+      style-gap: concat(?gap, "px");
+    }
+
+    item -> {
+      role: "listitem";
+      data-part: "item";
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 8;
+    when { viewType: "gallery" }
+  }
+
+  compose {
+    item: widget("card", {});
+    emptyState: widget("empty-state", { title: "No items to display" });
+  }
+
+  invariant {
+    "Grid must maintain minimum card width even at narrow viewports";
+    "Loading state must set aria-busy on root";
+    "Each item must have role listitem for assistive technology";
+  }
+
+}

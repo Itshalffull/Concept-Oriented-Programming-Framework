@@ -1,0 +1,232 @@
+@version(1)
+widget range-slider {
+
+  purpose {
+    Dual-thumb slider for selecting a numeric range between two values.
+    Both thumbs move independently along a shared track, with a filled
+    range indicator between them. Enforces a minimum distance between
+    the two values and prevents thumbs from crossing each other.
+  }
+
+  anatomy {
+    root:      container  { Outermost wrapper grouping label, track, and output displays }
+    label:     text       { Visible label describing the range slider purpose }
+    track:     container  { Full-length track background }
+    range:     container  { Filled portion of the track between the two thumbs }
+    thumbMin:  action     { Draggable handle for the lower bound value }
+    thumbMax:  action     { Draggable handle for the upper bound value }
+    outputMin: text       { Live display of the current minimum value }
+    outputMax: text       { Live display of the current maximum value }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on POINTER_DOWN_MIN -> draggingMin;
+        on POINTER_DOWN_MAX -> draggingMax;
+        on FOCUS_MIN -> focusedMin;
+        on FOCUS_MAX -> focusedMax;
+      }
+      focusedMin {
+        on BLUR -> idle;
+        on POINTER_DOWN_MIN -> draggingMin;
+        on FOCUS_MAX -> focusedMax;
+        entry [showFocusRingMin];
+        exit  [hideFocusRingMin];
+      }
+      focusedMax {
+        on BLUR -> idle;
+        on POINTER_DOWN_MAX -> draggingMax;
+        on FOCUS_MIN -> focusedMin;
+        entry [showFocusRingMax];
+        exit  [hideFocusRingMax];
+      }
+      draggingMin {
+        on POINTER_UP -> idle;
+        entry [capturePointer, beginTrackMin];
+        exit  [releasePointer, commitValueMin];
+      }
+      draggingMax {
+        on POINTER_UP -> idle;
+        entry [capturePointer, beginTrackMax];
+        exit  [releasePointer, commitValueMax];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      ArrowRight -> INCREASE;
+      ArrowUp    -> INCREASE;
+      ArrowLeft  -> DECREASE;
+      ArrowDown  -> DECREASE;
+      Home       -> SET_BOUND_MIN;
+      End        -> SET_BOUND_MAX;
+      PageUp     -> INCREASE_LARGE;
+      PageDown   -> DECREASE_LARGE;
+      Tab        -> FOCUS_NEXT_THUMB;
+    }
+    focus {
+      thumbMin: focusable;
+      thumbMax: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?label;
+      };
+      thumbMin -> {
+        role: "slider";
+        aria-label: concat(?label, " minimum");
+        aria-valuenow: ?valueMin;
+        aria-valuemin: ?min;
+        aria-valuemax: if ?minRange then (?valueMax - ?minRange) else ?valueMax;
+        aria-valuetext: concat(?valueMin);
+        aria-orientation: "horizontal";
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+      thumbMax -> {
+        role: "slider";
+        aria-label: concat(?label, " maximum");
+        aria-valuenow: ?valueMax;
+        aria-valuemin: if ?minRange then (?valueMin + ?minRange) else ?valueMin;
+        aria-valuemax: ?max;
+        aria-valuetext: concat(?valueMax);
+        aria-orientation: "horizontal";
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+      outputMin -> {
+        aria-live: "polite";
+        for: thumbMin;
+      };
+      outputMax -> {
+        aria-live: "polite";
+        for: thumbMax;
+      };
+    }
+  }
+
+  props {
+    min: Float = 0
+    max: Float = 100
+    valueMin: Float
+    valueMax: Float
+    step: Float = 1
+    minRange: option Float
+    label: String
+    disabled: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-state: if state.interaction == "draggingMin" or state.interaction == "draggingMax" then "dragging" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+      role: "group";
+      aria-label: ?label;
+      data-part: "root";
+    }
+    label -> {
+      text: ?label;
+      for: thumbMin;
+      data-part: "label";
+    }
+    track -> {
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: send(TRACK_CLICK);
+      data-part: "track";
+    }
+    range -> {
+      style-left: percent((?valueMin - ?min) / (?max - ?min));
+      style-width: percent((?valueMax - ?valueMin) / (?max - ?min));
+      data-state: if state.interaction == "draggingMin" or state.interaction == "draggingMax" then "dragging" else "idle";
+      data-part: "range";
+    }
+    thumbMin -> {
+      role: "slider";
+      aria-label: concat(?label, " minimum");
+      aria-valuenow: ?valueMin;
+      aria-valuemin: ?min;
+      aria-valuemax: if ?minRange then (?valueMax - ?minRange) else ?valueMax;
+      aria-valuetext: concat(?valueMin);
+      aria-orientation: "horizontal";
+      aria-disabled: if ?disabled then "true" else "false";
+      style-left: percent((?valueMin - ?min) / (?max - ?min));
+      data-state: if state.interaction == "draggingMin" then "dragging" else if state.interaction == "focusedMin" then "focused" else "idle";
+      onPointerDown: send(POINTER_DOWN_MIN);
+      onPointerUp: send(POINTER_UP);
+      onFocus: send(FOCUS_MIN);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowRight: send(INCREASE, { thumb: "min" });
+      onKeyDown-ArrowUp: send(INCREASE, { thumb: "min" });
+      onKeyDown-ArrowLeft: send(DECREASE, { thumb: "min" });
+      onKeyDown-ArrowDown: send(DECREASE, { thumb: "min" });
+      onKeyDown-Home: send(SET_BOUND_MIN, { thumb: "min" });
+      onKeyDown-End: send(SET_BOUND_MAX, { thumb: "min" });
+      onKeyDown-PageUp: send(INCREASE_LARGE, { thumb: "min" });
+      onKeyDown-PageDown: send(DECREASE_LARGE, { thumb: "min" });
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "thumb-min";
+    }
+    thumbMax -> {
+      role: "slider";
+      aria-label: concat(?label, " maximum");
+      aria-valuenow: ?valueMax;
+      aria-valuemin: if ?minRange then (?valueMin + ?minRange) else ?valueMin;
+      aria-valuemax: ?max;
+      aria-valuetext: concat(?valueMax);
+      aria-orientation: "horizontal";
+      aria-disabled: if ?disabled then "true" else "false";
+      style-left: percent((?valueMax - ?min) / (?max - ?min));
+      data-state: if state.interaction == "draggingMax" then "dragging" else if state.interaction == "focusedMax" then "focused" else "idle";
+      onPointerDown: send(POINTER_DOWN_MAX);
+      onPointerUp: send(POINTER_UP);
+      onFocus: send(FOCUS_MAX);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowRight: send(INCREASE, { thumb: "max" });
+      onKeyDown-ArrowUp: send(INCREASE, { thumb: "max" });
+      onKeyDown-ArrowLeft: send(DECREASE, { thumb: "max" });
+      onKeyDown-ArrowDown: send(DECREASE, { thumb: "max" });
+      onKeyDown-Home: send(SET_BOUND_MIN, { thumb: "max" });
+      onKeyDown-End: send(SET_BOUND_MAX, { thumb: "max" });
+      onKeyDown-PageUp: send(INCREASE_LARGE, { thumb: "max" });
+      onKeyDown-PageDown: send(DECREASE_LARGE, { thumb: "max" });
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "thumb-max";
+    }
+    outputMin -> {
+      text: concat(?valueMin);
+      aria-live: "polite";
+      for: thumbMin;
+      data-part: "output-min";
+    }
+    outputMax -> {
+      text: concat(?valueMax);
+      aria-live: "polite";
+      for: thumbMax;
+      data-part: "output-max";
+    }
+  }
+
+  affordance {
+    serves: range-select;
+    specificity: 10;
+  }
+
+  compose {
+    label: widget("label", { text: ?label, for: thumbMin })
+  }
+
+  invariant {
+    min < max;
+    valueMin >= min;
+    valueMax <= max;
+    valueMin <= valueMax;
+    ?minRange => (valueMax - valueMin) >= ?minRange;
+    step > 0;
+    "Thumbs must not cross each other during drag or keyboard interaction";
+    "Tab must move focus between the two thumbs before leaving the slider";
+  }
+
+}

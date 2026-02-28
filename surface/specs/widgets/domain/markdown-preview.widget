@@ -1,0 +1,95 @@
+@version(1)
+widget markdown-preview {
+
+  purpose {
+    Live markdown rendering widget that transforms a raw markdown source
+    string into formatted HTML output with proper semantic structure.
+    Supports standard markdown syntax including headings, lists, links,
+    images, code blocks with syntax highlighting, blockquotes, tables,
+    and horizontal rules. Sanitizes output by default to prevent XSS
+    when rendering user-supplied content.
+  }
+
+  anatomy {
+    root:    container  { Top-level wrapper providing the rendered markdown output region }
+    content: container  { Inner container holding the parsed and rendered HTML elements }
+  }
+
+  states {
+    static [initial] {
+      on SOURCE_CHANGE -> rendering;
+    }
+
+    rendering {
+      on RENDER_COMPLETE -> static;
+      entry [parseMarkdown; sanitize; render];
+    }
+  }
+
+  accessibility {
+    role: document;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT_LINK;
+      Shift+Tab -> FOCUS_PREV_LINK;
+    }
+    focus {
+      trap: false;
+      initial: content;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "document";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "markdown content";
+      };
+      content -> {
+        role: "region";
+        aria-label: "Rendered content";
+      };
+    }
+  }
+
+  props {
+    source: String
+    sanitize: Bool = true
+    ariaLabel: String = "Markdown preview"
+    syntaxHighlight: Bool = true
+    linkTarget: union "_self" | "_blank" = "_blank"
+    maxHeight: option String
+    className: option String
+  }
+
+  connect {
+    root -> {
+      role: "document";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "markdown content";
+      data-part: "markdown-preview";
+      data-state: state;
+      data-sanitized: if ?sanitize then "true" else "false";
+      data-syntax-highlight: if ?syntaxHighlight then "true" else "false";
+      style-max-height: ?maxHeight;
+      style-overflow: if ?maxHeight then "auto" else "visible";
+      tabindex: "0";
+    }
+
+    content -> {
+      data-part: "content";
+      role: "region";
+      aria-label: "Rendered content";
+      innerHTML: renderMarkdown(?source, { sanitize: ?sanitize, syntaxHighlight: ?syntaxHighlight, linkTarget: ?linkTarget });
+    }
+  }
+
+  invariant {
+    "Sanitize must strip script tags, event handlers, and dangerous attributes when enabled";
+    "Headings must render with correct semantic heading levels (h1-h6)";
+    "Links must use the configured linkTarget for their target attribute";
+    "Code blocks must receive syntax highlighting classes when syntaxHighlight is true";
+    "Images must include alt text from the markdown source";
+    "Tables must render with proper thead, tbody, and th/td structure";
+  }
+
+}

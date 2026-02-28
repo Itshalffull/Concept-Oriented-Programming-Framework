@@ -1,0 +1,80 @@
+@version(1)
+widget spinner {
+
+  purpose {
+    Indeterminate loading indicator that communicates ongoing activity
+    to the user. Renders a circular or linear animation with an
+    optional accessible label. Used standalone or embedded within
+    buttons, cards, and page-level loading states.
+  }
+
+  anatomy {
+    root: container       { Outer wrapper for the spinner assembly }
+    track: container      { Background track showing the full rotation path }
+    indicator: container  { Animated segment that rotates or translates }
+    label: text           { Optional visible text describing the loading state }
+  }
+
+  states {
+    spinning [initial] {
+      entry [start animation; set aria-busy true];
+    }
+  }
+
+  accessibility {
+    role: progressbar;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: label;
+      describedby: none;
+    }
+  }
+
+  props {
+    size: union "sm" | "md" | "lg" = "md"
+    label: option String
+    trackVisible: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-size: ?size;
+      role: "progressbar";
+      aria-valuemin: "0";
+      aria-valuemax: "100";
+      aria-valuenow: none;
+      aria-label: if ?label then ?label else "Loading";
+      aria-busy: "true";
+    }
+
+    track -> {
+      data-part: "track";
+      data-visible: if ?trackVisible then "true" else "false";
+      aria-hidden: "true";
+    }
+
+    indicator -> {
+      data-part: "indicator";
+      aria-hidden: "true";
+    }
+
+    label -> {
+      data-part: "label";
+      data-visible: if ?label then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: display-progress;
+    specificity: 6;
+    when { determinate: false }
+  }
+
+}

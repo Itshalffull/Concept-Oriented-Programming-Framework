@@ -1,0 +1,177 @@
+@version(1)
+widget sidebar {
+
+  purpose {
+    Collapsible side panel providing persistent navigation, branding,
+    and quick-access links. Supports full-width expanded mode and a
+    compact mini mode showing only icons. Contains grouped navigation
+    items with optional badges and nested sections.
+  }
+
+  anatomy {
+    root: container           { Top-level aside element containing the entire sidebar }
+    header: container         { Top section for branding, logo, or title }
+    content: container        { Scrollable main area holding navigation groups and items }
+    footer: container         { Bottom section for user profile, settings, or actions }
+    toggleButton: action      { Button to expand or collapse the sidebar }
+    group: container          { Logical grouping of related navigation items }
+    groupLabel: text          { Heading label for a navigation group }
+    item: action              { Individual navigation link or action }
+    itemIcon: container       { Leading icon for a navigation item }
+    itemLabel: text           { Text label for a navigation item }
+    itemBadge: widget         { Optional trailing badge showing count or status }
+  }
+
+  states {
+    sidebar {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+        entry [set width ?width; show itemLabel; show groupLabel];
+      }
+      collapsed {
+        on EXPAND -> expanded;
+        entry [set width ?miniWidth; hide itemLabel; hide groupLabel];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Enter -> ACTIVATE;
+      Space -> ACTIVATE;
+    }
+    focus {
+      trap: false;
+      initial: first item;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Sidebar";
+      };
+      content -> {
+        role: "navigation";
+        aria-label: "Sidebar navigation";
+      };
+      group -> {
+        role: "group";
+        aria-labelledby: groupLabel;
+      };
+      toggleButton -> {
+        aria-label: if state.sidebar == "expanded" then "Collapse sidebar" else "Expand sidebar";
+        aria-expanded: if state.sidebar == "expanded" then "true" else "false";
+      };
+      item -> {
+        role: "link";
+        aria-current: if item.active then "page" else "false";
+      };
+    }
+  }
+
+  props {
+    collapsed: Bool = false
+    collapsible: Bool = true
+    width: String = "256px"
+    miniWidth: String = "64px"
+    label: String = "Sidebar"
+  }
+
+  connect {
+    root -> {
+      role: "complementary";
+      aria-label: ?label;
+      data-state: if state.sidebar == "expanded" then "expanded" else "collapsed";
+      data-collapsible: if ?collapsible then "true" else "false";
+      style-width: if state.sidebar == "expanded" then ?width else ?miniWidth;
+    }
+
+    header -> {
+      data-part: "header";
+      data-state: if state.sidebar == "expanded" then "expanded" else "collapsed";
+    }
+
+    content -> {
+      role: "navigation";
+      aria-label: "Sidebar navigation";
+      data-part: "content";
+    }
+
+    footer -> {
+      data-part: "footer";
+      data-state: if state.sidebar == "expanded" then "expanded" else "collapsed";
+    }
+
+    toggleButton -> {
+      aria-label: if state.sidebar == "expanded" then "Collapse sidebar" else "Expand sidebar";
+      aria-expanded: if state.sidebar == "expanded" then "true" else "false";
+      data-state: if state.sidebar == "expanded" then "expanded" else "collapsed";
+      onClick: send(if state.sidebar == "expanded" then COLLAPSE else EXPAND);
+      onKeyDown: send(if state.sidebar == "expanded" then COLLAPSE else EXPAND);
+      tabindex: "0";
+      visible: ?collapsible;
+    }
+
+    group -> {
+      role: "group";
+      aria-labelledby: groupLabel;
+      data-state: if state.sidebar == "expanded" then "expanded" else "collapsed";
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+      visible: if state.sidebar == "expanded" then true else false;
+      aria-hidden: if state.sidebar == "collapsed" then "true" else "false";
+    }
+
+    item -> {
+      role: "link";
+      aria-current: if item.active then "page" else "false";
+      data-active: if item.active then "true" else "false";
+      data-state: if state.sidebar == "expanded" then "expanded" else "collapsed";
+      tabindex: "0";
+      onClick: send(ACTIVATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    itemIcon -> {
+      data-part: "item-icon";
+      aria-hidden: "true";
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+      visible: if state.sidebar == "expanded" then true else false;
+    }
+
+    itemBadge -> {
+      data-part: "item-badge";
+      visible: if state.sidebar == "expanded" then true else false;
+    }
+  }
+
+  compose {
+    toggleButton: widget("disclosure", { open: state.sidebar == "expanded" })
+    itemBadge: widget("badge", {})
+    itemIcon: widget("icon", {})
+  }
+
+  invariant {
+    when state.sidebar == "collapsed" then itemLabel and groupLabel are hidden;
+    when ?collapsible == false then toggleButton is hidden;
+    style-width matches ?width when expanded and ?miniWidth when collapsed;
+  }
+
+}

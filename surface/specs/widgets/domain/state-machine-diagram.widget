@@ -1,0 +1,272 @@
+@version(1)
+widget state-machine-diagram {
+
+  purpose {
+    Visual state-and-transition diagram for defining workflow states and
+    the transitions between them, inspired by Drupal content moderation
+    workflows. Presents a structured list of states with configurable
+    flags (initial, published, default-revision) and a list of directed
+    transitions connecting them. Supports adding, editing, and removing
+    states and transitions through inline forms and confirmation dialogs.
+  }
+
+  anatomy {
+    root:               container  { Top-level wrapper for the full state machine editor }
+    stateList:          container  { Ordered list of all defined states }
+    stateItem:          container  { Single state entry with name and flag indicators }
+    stateName:          text       { Display name of the state }
+    stateFlags:         container  { Inline badges showing state flags (initial, published, etc.) }
+    transitionList:     container  { Ordered list of all defined transitions }
+    transitionItem:     container  { Single transition entry showing from-state, arrow, and to-state }
+    transitionFrom:     text       { Source state name for the transition }
+    transitionArrow:    container  { Visual arrow indicator between from and to states }
+    transitionTo:       text       { Target state name for the transition }
+    transitionLabel:    text       { Human-readable label or permission name for the transition }
+    addStateButton:     action     { Button to add a new state to the machine }
+    addTransitionButton: action    { Button to add a new transition between states }
+  }
+
+  states {
+    viewing [initial] {
+      on ADD_STATE -> addingState;
+      on ADD_TRANSITION -> addingTransition;
+      on EDIT_STATE -> editingState;
+      on EDIT_TRANSITION -> editingTransition;
+      on DELETE_STATE -> confirmingDeleteState;
+      on DELETE_TRANSITION -> confirmingDeleteTransition;
+    }
+
+    addingState {
+      on SAVE -> viewing;
+      on CANCEL -> viewing;
+      on ESCAPE -> viewing;
+      entry [showStateForm; focusStateNameInput];
+    }
+
+    editingState {
+      on SAVE -> viewing;
+      on CANCEL -> viewing;
+      on ESCAPE -> viewing;
+      entry [showStateForm; populateFields; focusStateNameInput];
+    }
+
+    addingTransition {
+      on SAVE -> viewing;
+      on CANCEL -> viewing;
+      on ESCAPE -> viewing;
+      entry [showTransitionForm; focusFromSelector];
+    }
+
+    editingTransition {
+      on SAVE -> viewing;
+      on CANCEL -> viewing;
+      on ESCAPE -> viewing;
+      entry [showTransitionForm; populateFields; focusFromSelector];
+    }
+
+    confirmingDeleteState {
+      on CONFIRM -> viewing;
+      on CANCEL -> viewing;
+      on ESCAPE -> viewing;
+      entry [showConfirmDialog];
+    }
+
+    confirmingDeleteTransition {
+      on CONFIRM -> viewing;
+      on CANCEL -> viewing;
+      on ESCAPE -> viewing;
+      entry [showConfirmDialog];
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter -> EDIT_OR_SAVE;
+      Escape -> ESCAPE;
+      Delete -> DELETE;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      n -> ADD_STATE;
+      t -> ADD_TRANSITION;
+    }
+    focus {
+      trap: false;
+      initial: stateList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "state machine diagram";
+      };
+      stateList -> {
+        role: "list";
+        aria-label: "States";
+      };
+      stateItem -> {
+        role: "listitem";
+        aria-label: concat("State: ", self.name);
+        aria-current: if self.isInitial then "true" else "false";
+      };
+      stateName -> {
+        role: "presentation";
+      };
+      stateFlags -> {
+        role: "group";
+        aria-label: concat("Flags for ", self.stateName);
+      };
+      transitionList -> {
+        role: "list";
+        aria-label: "Transitions";
+      };
+      transitionItem -> {
+        role: "listitem";
+        aria-label: concat("Transition: ", self.fromName, " to ", self.toName, " via ", self.label);
+      };
+      transitionFrom -> {
+        role: "presentation";
+      };
+      transitionArrow -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      transitionTo -> {
+        role: "presentation";
+      };
+      transitionLabel -> {
+        role: "presentation";
+      };
+      addStateButton -> {
+        role: "button";
+        aria-label: "Add state";
+      };
+      addTransitionButton -> {
+        role: "button";
+        aria-label: "Add transition";
+      };
+    }
+  }
+
+  props {
+    states: list { name: String, flags: list String }
+    transitions: list { from: String, to: String, label: String }
+    ariaLabel: String = "State machine diagram"
+    readOnly: Bool = false
+    availableFlags: list String = ["initial", "published", "default-revision"]
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "state machine diagram";
+      data-state: state;
+      data-readonly: if ?readOnly then "true" else "false";
+      data-state-count: ?states.length;
+      data-transition-count: ?transitions.length;
+    }
+
+    stateList -> {
+      role: "list";
+      aria-label: "States";
+      data-part: "state-list";
+    }
+
+    stateItem -> {
+      role: "listitem";
+      aria-label: concat("State: ", self.name);
+      aria-current: if self.isInitial then "true" else "false";
+      data-state-name: self.name;
+      data-flags: self.flags;
+      tabindex: "0";
+      onClick: send(EDIT_STATE, { name: self.name });
+      onKeyDown-Enter: send(EDIT_STATE, { name: self.name });
+      onKeyDown-Delete: send(DELETE_STATE, { name: self.name });
+    }
+
+    stateName -> {
+      data-part: "state-name";
+      text: self.name;
+    }
+
+    stateFlags -> {
+      data-part: "state-flags";
+      aria-label: concat("Flags for ", self.stateName);
+    }
+
+    transitionList -> {
+      role: "list";
+      aria-label: "Transitions";
+      data-part: "transition-list";
+    }
+
+    transitionItem -> {
+      role: "listitem";
+      aria-label: concat("Transition: ", self.fromName, " to ", self.toName, " via ", self.label);
+      data-from: self.fromName;
+      data-to: self.toName;
+      tabindex: "0";
+      onClick: send(EDIT_TRANSITION, { id: self.id });
+      onKeyDown-Enter: send(EDIT_TRANSITION, { id: self.id });
+      onKeyDown-Delete: send(DELETE_TRANSITION, { id: self.id });
+    }
+
+    transitionFrom -> {
+      data-part: "transition-from";
+      text: self.fromName;
+    }
+
+    transitionArrow -> {
+      data-part: "transition-arrow";
+      aria-hidden: "true";
+    }
+
+    transitionTo -> {
+      data-part: "transition-to";
+      text: self.toName;
+    }
+
+    transitionLabel -> {
+      data-part: "transition-label";
+      text: self.label;
+    }
+
+    addStateButton -> {
+      role: "button";
+      aria-label: "Add state";
+      data-part: "add-state";
+      data-visible: if not ?readOnly then "true" else "false";
+      onClick: send(ADD_STATE);
+      onKeyDown-Enter: send(ADD_STATE);
+    }
+
+    addTransitionButton -> {
+      role: "button";
+      aria-label: "Add transition";
+      data-part: "add-transition";
+      data-visible: if not ?readOnly then "true" else "false";
+      onClick: send(ADD_TRANSITION);
+      onKeyDown-Enter: send(ADD_TRANSITION);
+    }
+  }
+
+  compose {
+    stateFlags: widget("data-table", { columns: [{ key: "flag", label: "Flag" }], data: self.flags });
+    confirmDialog: widget("dialog", { role: "alertdialog" });
+    stateForm: widget("button", { label: "Save" });
+    transitionForm: widget("button", { label: "Save" });
+  }
+
+  invariant {
+    "Exactly one state must have the 'initial' flag at all times";
+    "Transitions must reference existing state names for both from and to";
+    "Deleting a state must cascade-delete all transitions that reference it";
+    "Duplicate transitions (same from, to, and label) must be prevented";
+    "Read-only mode must hide add/edit/delete controls";
+    "Confirmation dialog must appear before any destructive delete action";
+  }
+
+}

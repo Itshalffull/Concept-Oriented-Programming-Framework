@@ -1,0 +1,348 @@
+@version(1)
+widget date-range-picker {
+
+  purpose {
+    Dual-calendar date range selection allowing users to pick a start
+    and end date either by clicking cells across one or two visible
+    calendar months, or by choosing from a list of predefined range
+    presets. Provides visual hover-preview of the range while selecting
+    and supports direct text entry for both endpoints.
+  }
+
+  anatomy {
+    root:           container  { Outermost wrapper grouping inputs, trigger, and calendar panel }
+    label:          text       { Visible label describing the date range field }
+    startInput:     action     { Text input for the start date }
+    endInput:       action     { Text input for the end date }
+    trigger:        action     { Button that toggles the calendar popover }
+    positioner:     container  { Collision-aware floating container anchored to inputs }
+    content:        container  { Visible popover surface holding dual calendars and presets }
+    header:         container  { Calendar header with navigation controls }
+    prevButton:     action     { Navigate both calendars backward }
+    nextButton:     action     { Navigate both calendars forward }
+    titleStart:     text       { Month/year label for the first calendar }
+    titleEnd:       text       { Month/year label for the second calendar }
+    gridStart:      container  { Calendar grid for the first visible month }
+    gridEnd:        container  { Calendar grid for the second visible month }
+    row:            container  { A single row within a calendar grid }
+    cell:           action     { An individual selectable day cell }
+    cellLabel:      text       { Visible label text within a cell }
+    presets:        container  { Optional panel listing predefined range shortcuts }
+    preset:         action     { A single preset range option }
+  }
+
+  states {
+    popover {
+      closed [initial] {
+        on OPEN          -> open;
+        on TRIGGER_CLICK -> open;
+        on ARROW_DOWN    -> open;
+      }
+      open {
+        on CLOSE         -> closed;
+        on ESCAPE        -> closed;
+        on OUTSIDE_CLICK -> closed;
+        on CONFIRM       -> closed;
+        entry [positionContent, setFocusToGrid];
+        exit  [clearPosition, returnFocusToTrigger];
+      }
+    }
+
+    selection {
+      selectingStart [initial] {
+        on SELECT_START -> selectingEnd;
+        on SELECT_PRESET -> selectingStart;
+      }
+      selectingEnd {
+        on SELECT_END -> selectingStart;
+        on RESET      -> selectingStart;
+        entry [anchorStart];
+      }
+    }
+
+    hover [parallel] {
+      idle [initial] {
+        on HOVER_CELL -> hovering;
+      }
+      hovering {
+        on HOVER_OUT  -> idle;
+        on HOVER_CELL -> hovering;
+        entry [showRangePreview];
+        exit  [clearRangePreview];
+      }
+    }
+
+    focus [parallel] {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+        entry [set data-focused true];
+        exit  [set data-focused false];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      ArrowDown  -> OPEN;
+      ArrowUp    -> NAVIGATE_UP;
+      ArrowLeft  -> NAVIGATE_PREV;
+      ArrowRight -> NAVIGATE_NEXT;
+      Enter      -> SELECT_CELL;
+      Space      -> SELECT_CELL;
+      Escape     -> ESCAPE;
+      PageUp     -> PREV_MONTH;
+      PageDown   -> NEXT_MONTH;
+      Tab        -> FOCUS_NEXT;
+    }
+    focus {
+      startInput: focusable;
+      endInput: focusable;
+      trigger: focusable;
+      cell: focusable;
+      preset: focusable;
+      prevButton: focusable;
+      nextButton: focusable;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?label;
+      };
+      startInput -> {
+        role: "combobox";
+        aria-label: "Start date";
+        aria-haspopup: "dialog";
+        aria-expanded: if state.popover == "open" then "true" else "false";
+        aria-controls: content;
+      };
+      endInput -> {
+        role: "combobox";
+        aria-label: "End date";
+        aria-haspopup: "dialog";
+        aria-expanded: if state.popover == "open" then "true" else "false";
+        aria-controls: content;
+      };
+      content -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Date range calendar";
+      };
+      gridStart -> {
+        role: "grid";
+        aria-label: ?titleStart;
+      };
+      gridEnd -> {
+        role: "grid";
+        aria-label: ?titleEnd;
+      };
+      row -> {
+        role: "row";
+      };
+      cell -> {
+        role: "gridcell";
+        aria-selected: if cell.inRange then "true" else "false";
+        aria-disabled: if cell.disabled then "true" else "false";
+        aria-label: cell.formattedDate;
+      };
+      presets -> {
+        role: "listbox";
+        aria-label: "Preset date ranges";
+      };
+      preset -> {
+        role: "option";
+        aria-selected: if preset.active then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    startDate: option DateTime
+    endDate: option DateTime
+    min: option DateTime
+    max: option DateTime
+    format: String = "yyyy-MM-dd"
+    locale: String = "en"
+    presets: option list { label: String, range: { start: DateTime, end: DateTime } }
+    disabled: Bool = false
+    readOnly: Bool = false
+    required: Bool = false
+    name: option String
+    closeOnSelect: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-state: if state.popover == "open" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+      data-readonly: if ?readOnly then "true" else "false";
+      role: "group";
+      aria-label: ?label;
+    }
+    label -> {
+      text: ?label;
+      data-disabled: if ?disabled then "true" else "false";
+      data-part: "label";
+    }
+    startInput -> {
+      value: if ?startDate then formatDate(?startDate, ?format, ?locale) else "";
+      placeholder: "Start date";
+      disabled: ?disabled;
+      readOnly: ?readOnly;
+      aria-label: "Start date";
+      aria-haspopup: "dialog";
+      aria-expanded: if state.popover == "open" then "true" else "false";
+      onInput: send(INPUT_START);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowDown: send(OPEN);
+      data-part: "start-input";
+      data-selecting: if state.selection == "selectingStart" then "true" else "false";
+    }
+    endInput -> {
+      value: if ?endDate then formatDate(?endDate, ?format, ?locale) else "";
+      placeholder: "End date";
+      disabled: ?disabled;
+      readOnly: ?readOnly;
+      aria-label: "End date";
+      aria-haspopup: "dialog";
+      aria-expanded: if state.popover == "open" then "true" else "false";
+      onInput: send(INPUT_END);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowDown: send(OPEN);
+      data-part: "end-input";
+      data-selecting: if state.selection == "selectingEnd" then "true" else "false";
+    }
+    trigger -> {
+      aria-label: "Open date range calendar";
+      aria-haspopup: "dialog";
+      aria-expanded: if state.popover == "open" then "true" else "false";
+      disabled: ?disabled;
+      onClick: send(TRIGGER_CLICK);
+      tabIndex: -1;
+      data-part: "trigger";
+    }
+    positioner -> {
+      data-state: if state.popover == "open" then "open" else "closed";
+      data-placement: "bottom-start";
+    }
+    content -> {
+      role: "dialog";
+      aria-modal: "true";
+      aria-label: "Date range calendar";
+      data-state: if state.popover == "open" then "open" else "closed";
+      id: content;
+    }
+    header -> {
+      data-part: "header";
+    }
+    prevButton -> {
+      aria-label: "Previous month";
+      onClick: send(PREV_MONTH);
+      data-part: "prev-button";
+    }
+    nextButton -> {
+      aria-label: "Next month";
+      onClick: send(NEXT_MONTH);
+      data-part: "next-button";
+    }
+    titleStart -> {
+      text: startMonthLabel;
+      aria-live: "polite";
+      data-part: "title-start";
+    }
+    titleEnd -> {
+      text: endMonthLabel;
+      aria-live: "polite";
+      data-part: "title-end";
+    }
+    gridStart -> {
+      role: "grid";
+      aria-label: startMonthLabel;
+      data-part: "grid-start";
+    }
+    gridEnd -> {
+      role: "grid";
+      aria-label: endMonthLabel;
+      data-part: "grid-end";
+    }
+    row -> {
+      role: "row";
+      data-part: "row";
+    }
+    cell -> {
+      role: "gridcell";
+      aria-selected: if cell.isRangeStart or cell.isRangeEnd then "true" else "false";
+      aria-disabled: if cell.outOfRange then "true" else "false";
+      data-state: if cell.isRangeStart then "range-start" else if cell.isRangeEnd then "range-end" else if cell.inRange then "in-range" else "default";
+      data-today: if cell.isToday then "true" else "false";
+      data-outside-range: if cell.outOfRange then "true" else "false";
+      data-outside-month: if cell.outsideMonth then "true" else "false";
+      data-preview: if cell.inPreview then "true" else "false";
+      onClick: send(SELECT_CELL, { date: cell.date });
+      onMouseEnter: send(HOVER_CELL, { date: cell.date });
+      onMouseLeave: send(HOVER_OUT);
+      onKeyDown-Enter: send(SELECT_CELL, { date: cell.date });
+      onKeyDown-Space: send(SELECT_CELL, { date: cell.date });
+      onKeyDown-ArrowUp: send(NAVIGATE_UP);
+      onKeyDown-ArrowDown: send(NAVIGATE_DOWN);
+      onKeyDown-ArrowLeft: send(NAVIGATE_PREV);
+      onKeyDown-ArrowRight: send(NAVIGATE_NEXT);
+      onKeyDown-PageUp: send(PREV_MONTH);
+      onKeyDown-PageDown: send(NEXT_MONTH);
+      onKeyDown-Escape: send(ESCAPE);
+      tabIndex: if cell.isFocused then 0 else -1;
+      data-part: "cell";
+    }
+    cellLabel -> {
+      text: cell.label;
+      aria-hidden: "true";
+      data-part: "cell-label";
+    }
+    presets -> {
+      role: "listbox";
+      aria-label: "Preset date ranges";
+      data-part: "presets";
+    }
+    preset -> {
+      role: "option";
+      aria-selected: if preset.active then "true" else "false";
+      onClick: send(SELECT_PRESET, { range: preset.range });
+      onKeyDown-Enter: send(SELECT_PRESET, { range: preset.range });
+      tabIndex: 0;
+      data-part: "preset";
+      data-active: if preset.active then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: date-range;
+    specificity: 10;
+  }
+
+  compose {
+    startInput:  widget("text-input", { placeholder: "Start date", readOnly: ?readOnly })
+    endInput:    widget("text-input", { placeholder: "End date", readOnly: ?readOnly })
+    trigger:     widget("button", { variant: "icon", icon: "calendar", size: "sm" })
+    prevButton:  widget("button", { variant: "icon", icon: "chevron-left", size: "sm" })
+    nextButton:  widget("button", { variant: "icon", icon: "chevron-right", size: "sm" })
+    _popover:    widget("popover", { open: state.popover == "open", placement: "bottom-start" })
+    _datePicker: widget("date-picker", { min: ?min, max: ?max, locale: ?locale, format: ?format })
+  }
+
+  invariant {
+    ?min and ?max => ?min <= ?max;
+    ?startDate and ?endDate => ?startDate <= ?endDate;
+    ?startDate and ?min => ?startDate >= ?min;
+    ?endDate and ?max => ?endDate <= ?max;
+    "Range preview must highlight cells between anchor and hovered cell";
+    "Selecting a preset must set both start and end dates atomically";
+    "Focus must return to trigger when calendar closes";
+  }
+
+}

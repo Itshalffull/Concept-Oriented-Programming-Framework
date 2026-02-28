@@ -1,0 +1,90 @@
+@version(1)
+widget toast-manager {
+
+  purpose {
+    Container that manages a stack of toast notifications. Controls
+    placement, ordering, maximum visible count, and lifecycle of
+    individual toasts. Provides an imperative API for creating and
+    dismissing toasts programmatically. Renders into a portal as an
+    aria-live region so screen readers announce new toasts.
+  }
+
+  anatomy {
+    root: container  { fixed-position wrapper anchored to a viewport edge }
+    list: container  { ordered stack of currently visible toast items }
+    item: widget     { individual toast instance managed by this container }
+  }
+
+  states {
+    empty [initial] {
+      on TOAST_ADDED -> hasToasts;
+    }
+
+    hasToasts {
+      on ALL_REMOVED -> empty;
+      on TOAST_ADDED -> hasToasts;
+      on TOAST_REMOVED -> hasToasts;
+      entry [enforceMaxLimit];
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab    -> FOCUS_NEXT;
+      Escape -> DISMISS_ALL;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: none;
+    }
+    aria {
+      live: "polite";
+      relevant: "additions";
+      label: "Notifications";
+    }
+  }
+
+  props {
+    placement: String  = "bottom-right";
+    max:       Int     = 5;
+    gap:       Int     = 8;
+  }
+
+  connect {
+    root -> {
+      role:           "region";
+      aria-live:      "polite";
+      aria-relevant:  "additions";
+      aria-label:     "Notifications";
+      data-state:     currentState;
+      data-placement: ?placement;
+      style-gap:      ?gap;
+    }
+
+    list -> {
+      data-placement: ?placement;
+      data-count:     toastCount;
+      style-gap:      ?gap;
+    }
+
+    item -> {
+      data-index: itemIndex;
+    }
+  }
+
+  compose {
+    _toast:  widget("toast",  {});
+    _portal: widget("portal", { target: "body" });
+  }
+
+  invariant {
+    "Total visible toasts must never exceed the max prop";
+    "Oldest toasts must be dismissed first when max is reached";
+    "Toasts must stack in insertion order matching the placement axis";
+    "Region must remain in the DOM even when empty for aria-live to work";
+  }
+
+}

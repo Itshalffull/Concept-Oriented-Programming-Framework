@@ -1,0 +1,209 @@
+@version(1)
+widget condition-builder {
+
+  purpose {
+    Composable condition row builder for constructing filter and rule
+    expressions with field-operator-value tuples joined by AND/OR logic.
+    Each row selects a field, an operator appropriate to that field type,
+    and a value input matching the operator. Rows can be grouped with
+    nested AND/OR combinators for complex boolean expressions.
+  }
+
+  anatomy {
+    root:             container  { Top-level wrapper for the condition builder }
+    rows:             container  { Ordered list of condition rows and logic combinators }
+    row:              container  { Single condition: field selector, operator, value input, remove button }
+    fieldSelector:    widget     { Dropdown to choose the field being tested }
+    operatorSelector: widget     { Dropdown to choose the comparison operator }
+    valueInput:       widget     { Type-appropriate input for the comparison value }
+    removeButton:     action     { Button to delete this condition row }
+    logicToggle:      action     { AND/OR combinator toggle between adjacent rows }
+    addButton:        action     { Button to append a new condition row }
+  }
+
+  states {
+    idle [initial] {
+      on ADD_ROW -> idle;
+      on REMOVE_ROW -> idle;
+      on TOGGLE_LOGIC -> idle;
+      on CHANGE_FIELD -> fieldChanged;
+      on CHANGE_OPERATOR -> idle;
+      on CHANGE_VALUE -> idle;
+    }
+
+    fieldChanged {
+      on OPERATOR_RESET -> idle;
+      entry [resetOperator; resetValue];
+    }
+
+    row {
+      incomplete [initial] {
+        on COMPLETE -> complete;
+      }
+      complete {
+        on INVALIDATE -> incomplete;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Enter -> ADD_ROW;
+      Delete -> REMOVE_ROW;
+      Backspace -> REMOVE_ROW;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      ArrowUp -> FOCUS_PREV_ROW;
+      ArrowDown -> FOCUS_NEXT_ROW;
+    }
+    focus {
+      trap: false;
+      initial: fieldSelector;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "condition builder";
+      };
+      rows -> {
+        role: "list";
+        aria-label: "Conditions";
+      };
+      row -> {
+        role: "listitem";
+        aria-label: concat("Condition ", self.index, ": ", self.fieldName, " ", self.operator, " ", self.value);
+      };
+      fieldSelector -> {
+        aria-label: "Field";
+      };
+      operatorSelector -> {
+        aria-label: "Operator";
+      };
+      valueInput -> {
+        aria-label: "Value";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: concat("Remove condition ", self.index);
+      };
+      logicToggle -> {
+        role: "button";
+        aria-label: concat("Logic: ", self.logic, ". Click to toggle.");
+        aria-pressed: if self.logic == "or" then "true" else "false";
+      };
+      addButton -> {
+        role: "button";
+        aria-label: "Add condition";
+      };
+    }
+  }
+
+  props {
+    conditions: list { field: option String, operator: option String, value: option String }
+    fields: list { name: String, type: String, operators: list String }
+    logic: union "and" | "or" = "and"
+    ariaLabel: String = "Condition Builder"
+    maxRows: Int = 20
+    readOnly: Bool = false
+    allowGroups: Bool = false
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "condition builder";
+      data-state: state;
+      data-logic: ?logic;
+      data-row-count: ?conditions.length;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    rows -> {
+      role: "list";
+      aria-label: "Conditions";
+      data-part: "rows";
+    }
+
+    row -> {
+      role: "listitem";
+      aria-label: concat("Condition ", self.index, ": ", self.fieldName, " ", self.operator, " ", self.value);
+      data-row-index: self.index;
+      data-complete: if self.field and self.operator and self.value then "true" else "false";
+      data-part: "row";
+    }
+
+    fieldSelector -> {
+      data-part: "field-selector";
+      data-row-index: self.index;
+      aria-label: concat("Field for condition ", self.index);
+    }
+
+    operatorSelector -> {
+      data-part: "operator-selector";
+      data-row-index: self.index;
+      aria-label: concat("Operator for condition ", self.index);
+      data-field-type: self.fieldType;
+    }
+
+    valueInput -> {
+      data-part: "value-input";
+      data-row-index: self.index;
+      aria-label: concat("Value for condition ", self.index);
+      data-field-type: self.fieldType;
+      data-operator: self.operator;
+    }
+
+    removeButton -> {
+      role: "button";
+      aria-label: concat("Remove condition ", self.index);
+      data-part: "remove";
+      data-visible: if not ?readOnly and ?conditions.length > 1 then "true" else "false";
+      onClick: send(REMOVE_ROW, { index: self.index });
+      onKeyDown-Enter: send(REMOVE_ROW, { index: self.index });
+    }
+
+    logicToggle -> {
+      role: "button";
+      aria-label: concat("Logic: ", ?logic, ". Click to toggle.");
+      aria-pressed: if ?logic == "or" then "true" else "false";
+      data-part: "logic-toggle";
+      data-logic: ?logic;
+      data-visible: if self.index > 0 then "true" else "false";
+      onClick: send(TOGGLE_LOGIC);
+      onKeyDown-Enter: send(TOGGLE_LOGIC);
+    }
+
+    addButton -> {
+      role: "button";
+      aria-label: "Add condition";
+      data-part: "add";
+      data-visible: if not ?readOnly and ?conditions.length < ?maxRows then "true" else "false";
+      onClick: send(ADD_ROW);
+      onKeyDown-Enter: send(ADD_ROW);
+    }
+  }
+
+  compose {
+    fieldSelector: widget("select", { options: ?fields, placeholder: "Select field..." });
+    operatorSelector: widget("select", { options: self.availableOperators, placeholder: "Operator..." });
+    valueInput: widget("text-input", { placeholder: "Value..." });
+    dateValueInput: widget("date-picker", {});
+    addButton: widget("button", { variant: "ghost", label: "Add condition" });
+    comboValueInput: widget("combobox", {});
+  }
+
+  invariant {
+    "Changing a field must reset the operator and value for that row";
+    "Operator options must match the selected field type";
+    "Value input type must match the operator (e.g., date picker for date fields)";
+    "At least one condition row must always be present";
+    "Row count must not exceed maxRows";
+    "Logic toggle must apply uniformly to all row junctions when allowGroups is false";
+  }
+
+}

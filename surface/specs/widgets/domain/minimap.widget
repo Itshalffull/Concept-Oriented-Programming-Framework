@@ -1,0 +1,203 @@
+@version(1)
+widget minimap {
+
+  purpose {
+    Scaled-down overview of a larger canvas or document surface, showing
+    the full extent of content with a draggable viewport rectangle
+    indicating the currently visible region. Includes zoom controls for
+    zooming in, zooming out, and fitting the entire content into view.
+    Serves as a spatial orientation aid for canvas, graph, and workflow
+    editors.
+  }
+
+  anatomy {
+    root:         container  { Top-level wrapper for the minimap }
+    canvas:       container  { Scaled rendering of the full content area }
+    viewport:     action     { Draggable rectangle representing the visible region }
+    zoomControls: container  { Group of zoom action buttons }
+    zoomIn:       action     { Button to increase zoom level }
+    zoomOut:      action     { Button to decrease zoom level }
+    zoomFit:      action     { Button to fit all content into the viewport }
+    zoomLevel:    text       { Text display of the current zoom percentage }
+  }
+
+  states {
+    idle [initial] {
+      on PAN_START -> panning;
+      on ZOOM_IN -> idle;
+      on ZOOM_OUT -> idle;
+      on ZOOM_FIT -> idle;
+    }
+
+    panning {
+      on PAN_END -> idle;
+      on ESCAPE -> idle;
+      entry [set cursor grabbing; capturePointer];
+      exit [set cursor default; releasePointer];
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Plus -> ZOOM_IN;
+      Minus -> ZOOM_OUT;
+      0 -> ZOOM_FIT;
+      ArrowUp -> PAN_UP;
+      ArrowDown -> PAN_DOWN;
+      ArrowLeft -> PAN_LEFT;
+      ArrowRight -> PAN_RIGHT;
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: viewport;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Minimap";
+        aria-roledescription: "minimap";
+      };
+      canvas -> {
+        role: "img";
+        aria-label: "Content overview";
+      };
+      viewport -> {
+        role: "slider";
+        aria-label: "Viewport position";
+        aria-roledescription: "viewport indicator";
+        aria-valuetext: concat("Viewing ", ?viewportPercent, "% of content at ", ?zoomPercent, "% zoom");
+      };
+      zoomIn -> {
+        role: "button";
+        aria-label: "Zoom in";
+      };
+      zoomOut -> {
+        role: "button";
+        aria-label: "Zoom out";
+      };
+      zoomFit -> {
+        role: "button";
+        aria-label: "Fit content to view";
+      };
+      zoomLevel -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat("Zoom: ", ?zoomPercent, "%");
+      };
+    }
+  }
+
+  props {
+    zoom: Float = 1.0
+    panX: Float = 0.0
+    panY: Float = 0.0
+    contentWidth: Float = 1000.0
+    contentHeight: Float = 1000.0
+    viewportWidth: Float = 800.0
+    viewportHeight: Float = 600.0
+    zoomPercent: Int = 100
+    viewportPercent: Int = 100
+    minZoom: Float = 0.1
+    maxZoom: Float = 10.0
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: "Minimap";
+      aria-roledescription: "minimap";
+      data-state: state;
+      data-part: "minimap";
+    }
+
+    canvas -> {
+      data-part: "minimap-canvas";
+      role: "img";
+      aria-label: "Content overview";
+      data-content-width: ?contentWidth;
+      data-content-height: ?contentHeight;
+      aria-hidden: "true";
+    }
+
+    viewport -> {
+      data-part: "viewport";
+      role: "slider";
+      aria-label: "Viewport position";
+      aria-roledescription: "viewport indicator";
+      aria-valuetext: concat("Viewing ", ?viewportPercent, "% of content at ", ?zoomPercent, "% zoom");
+      tabindex: "0";
+      style-left: concat(self.scaledX, "px");
+      style-top: concat(self.scaledY, "px");
+      style-width: concat(self.scaledWidth, "px");
+      style-height: concat(self.scaledHeight, "px");
+      onPointerDown: send(PAN_START);
+      onPointerMove: send(PAN_MOVE, { x: self.x, y: self.y });
+      onPointerUp: send(PAN_END);
+      onKeyDown-ArrowUp: send(PAN_UP);
+      onKeyDown-ArrowDown: send(PAN_DOWN);
+      onKeyDown-ArrowLeft: send(PAN_LEFT);
+      onKeyDown-ArrowRight: send(PAN_RIGHT);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+
+    zoomControls -> {
+      data-part: "zoom-controls";
+      role: "group";
+      aria-label: "Zoom controls";
+    }
+
+    zoomIn -> {
+      role: "button";
+      aria-label: "Zoom in";
+      data-part: "zoom-in";
+      aria-disabled: if ?zoom >= ?maxZoom then "true" else "false";
+      onClick: send(ZOOM_IN);
+      onKeyDown-Enter: send(ZOOM_IN);
+    }
+
+    zoomOut -> {
+      role: "button";
+      aria-label: "Zoom out";
+      data-part: "zoom-out";
+      aria-disabled: if ?zoom <= ?minZoom then "true" else "false";
+      onClick: send(ZOOM_OUT);
+      onKeyDown-Enter: send(ZOOM_OUT);
+    }
+
+    zoomFit -> {
+      role: "button";
+      aria-label: "Fit content to view";
+      data-part: "zoom-fit";
+      onClick: send(ZOOM_FIT);
+      onKeyDown-Enter: send(ZOOM_FIT);
+    }
+
+    zoomLevel -> {
+      data-part: "zoom-level";
+      role: "status";
+      aria-live: "polite";
+      aria-label: concat("Zoom: ", ?zoomPercent, "%");
+      text: concat(?zoomPercent, "%");
+    }
+  }
+
+  compose {
+    zoomIn: widget("button", { variant: "ghost", size: "sm", label: "+" });
+    zoomOut: widget("button", { variant: "ghost", size: "sm", label: "-" });
+    zoomFit: widget("button", { variant: "ghost", size: "sm", label: "Fit" });
+  }
+
+  invariant {
+    "Viewport rectangle must accurately reflect the visible region proportion";
+    "Dragging the viewport must update the parent canvas pan position";
+    "Zoom in must be disabled when at maxZoom";
+    "Zoom out must be disabled when at minZoom";
+    "Zoom fit must calculate scale to show all content within the minimap bounds";
+    "Minimap must re-render when content dimensions change";
+  }
+
+}

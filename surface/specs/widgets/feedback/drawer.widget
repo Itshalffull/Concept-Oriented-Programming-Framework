@@ -1,0 +1,131 @@
+@version(1)
+widget drawer {
+
+  purpose {
+    Slide-in panel that emerges from a screen edge and overlays the
+    page content. Functions as a modal dialog with focus trapping,
+    scroll locking, and backdrop. Commonly used for navigation menus,
+    filters, detail panels, and form sidebars. Supports placement on
+    any of the four edges and three size presets.
+  }
+
+  anatomy {
+    root:         container  { top-level wrapper; provides stacking context }
+    trigger:      action     { element that opens the drawer }
+    backdrop:     overlay    { semi-transparent layer behind the drawer panel }
+    content:      container  { sliding panel surface }
+    header:       container  { top region of the panel for title and close button }
+    body:         container  { scrollable main content area of the panel }
+    footer:       container  { optional bottom region for actions or summary }
+    closeTrigger: action     { explicit close button, typically in the header }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CLOSE         -> closed;
+      on OUTSIDE_CLICK -> closed;
+      on ESCAPE        -> closed;
+      entry [trapFocus, preventScroll, setAriaHidden, startSlideIn];
+      exit  [releaseFocus, restoreScroll, clearAriaHidden, startSlideOut];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: content;
+      returnOnClose: trigger;
+    }
+    aria {
+      labelledby: header;
+      describedby: body;
+    }
+  }
+
+  props {
+    open:      Bool                                          = false;
+    placement: "left" | "right" | "top" | "bottom"          = "right";
+    size:      "sm" | "md" | "lg"                           = "md";
+  }
+
+  connect {
+    root -> {
+      data-state:     ?open ? "open" : "closed";
+      data-placement: ?placement;
+      data-size:      ?size;
+    }
+
+    trigger -> {
+      aria-haspopup: "dialog";
+      aria-expanded: ?open;
+      onClick:       send(OPEN);
+    }
+
+    backdrop -> {
+      data-state: ?open ? "open" : "closed";
+      onClick:    send(OUTSIDE_CLICK);
+    }
+
+    content -> {
+      role:            "dialog";
+      aria-modal:      true;
+      aria-labelledby: header;
+      data-state:      ?open ? "open" : "closed";
+      data-placement:  ?placement;
+      data-size:       ?size;
+    }
+
+    header -> {
+      id: header;
+    }
+
+    body -> {
+      id:        body;
+      tabindex:  0;
+      role:      "document";
+    }
+
+    footer -> {
+      data-placement: ?placement;
+    }
+
+    closeTrigger -> {
+      aria-label: "Close drawer";
+      onClick:    send(CLOSE);
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 9;
+    when {
+      anchored: true;
+    }
+  }
+
+  compose {
+    _portal:     widget("portal",     { target: "body" });
+    _focusTrap:  widget("focus-trap",  { active: ?open });
+    _scrollLock: widget("scroll-lock", { active: ?open });
+    _presence:   widget("presence",    { present: ?open });
+  }
+
+  invariant {
+    "Panel must slide in from the edge specified by placement";
+    "Focus must be trapped inside content while open";
+    "Body region must be independently scrollable when content overflows";
+    "Trigger must regain focus after drawer closes";
+    "aria-hidden must be set on sibling trees while open";
+  }
+
+}

@@ -1,0 +1,247 @@
+@version(1)
+widget data-table {
+
+  purpose {
+    Sortable, filterable data table with configurable columns, row selection,
+    and pagination. Supports both interactive grid mode with cell navigation
+    and static table mode for read-only data. Handles large datasets with
+    sticky headers, empty states, and loading indicators. Serves as the
+    primary structured-data display for tabular information.
+  }
+
+  anatomy {
+    root:          container  { Top-level wrapper providing scroll context and table structure }
+    header:        container  { Table header region containing column headings }
+    headerRow:     container  { Single row within the header grouping all header cells }
+    headerCell:    action     { Individual column heading; clickable when sortable }
+    body:          container  { Table body region containing all data rows }
+    row:           container  { Single data row grouping cells for one record }
+    cell:          container  { Individual data cell within a row }
+    footer:        container  { Optional table footer region for summary or pagination }
+    footerRow:     container  { Single row within the footer }
+    footerCell:    container  { Individual cell within the footer row }
+    sortIndicator: container  { Visual indicator showing sort direction on a column }
+    pagination:    widget     { Optional pagination controls for multi-page datasets }
+  }
+
+  states {
+    idle [initial] {
+      on SORT -> sorting;
+      on LOAD -> loading;
+      on DATA_EMPTY -> empty;
+      on SELECT_ROW -> idle;
+      on DESELECT_ROW -> idle;
+    }
+
+    sorting {
+      on SORT_COMPLETE -> idle;
+      on SORT_COMPLETE_EMPTY -> empty;
+      entry [set aria-busy true; show sortIndicator];
+      exit [set aria-busy false];
+    }
+
+    loading {
+      on LOAD_COMPLETE -> idle;
+      on LOAD_COMPLETE_EMPTY -> empty;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    empty {
+      on LOAD -> loading;
+      on DATA_AVAILABLE -> idle;
+    }
+
+    row {
+      unselected [initial] {
+        on SELECT_ROW -> selected;
+        entry [set aria-selected false];
+      }
+      selected {
+        on DESELECT_ROW -> unselected;
+        entry [set aria-selected true];
+      }
+    }
+
+    focus {
+      unfocused [initial] {
+        on FOCUS_CELL -> cellFocused;
+      }
+      cellFocused {
+        on BLUR -> unfocused;
+        on NAVIGATE -> cellFocused;
+      }
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      ArrowUp -> NAVIGATE_UP;
+      ArrowDown -> NAVIGATE_DOWN;
+      ArrowLeft -> NAVIGATE_LEFT;
+      ArrowRight -> NAVIGATE_RIGHT;
+      Enter -> SORT_OR_ACTIVATE;
+      Space -> SELECT_ROW;
+      Home -> NAVIGATE_ROW_START;
+      End -> NAVIGATE_ROW_END;
+      Control+Home -> NAVIGATE_TABLE_START;
+      Control+End -> NAVIGATE_TABLE_END;
+      PageUp -> NAVIGATE_PAGE_UP;
+      PageDown -> NAVIGATE_PAGE_DOWN;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: headerCell;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: if ?sortable then "grid" else "table";
+        aria-label: ?ariaLabel;
+        aria-rowcount: ?rowCount;
+        aria-colcount: ?colCount;
+      };
+      headerCell -> {
+        role: "columnheader";
+        aria-sort: if ?sortColumn == self.column then ?sortDirection else "none";
+        aria-colindex: self.index;
+      };
+      row -> {
+        role: "row";
+        aria-rowindex: self.index;
+        aria-selected: if ?selectable then state.row else undefined;
+      };
+      cell -> {
+        role: "gridcell";
+        aria-colindex: self.index;
+      };
+    }
+  }
+
+  props {
+    columns: list ColumnDef
+    data: list Object
+    sortable: Bool = true
+    selectable: Bool = false
+    stickyHeader: Bool = false
+    sortColumn: option String
+    sortDirection: union "ascending" | "descending" | "none" = "none"
+    ariaLabel: option String
+    rowCount: option Int
+    colCount: option Int
+    loading: Bool = false
+    emptyMessage: String = "No data available"
+  }
+
+  connect {
+    root -> {
+      role: if ?sortable then "grid" else "table";
+      aria-label: ?ariaLabel;
+      aria-rowcount: ?rowCount;
+      aria-colcount: ?colCount;
+      aria-busy: if ?loading then "true" else "false";
+      data-state: if ?loading then "loading" else if ?data.length == 0 then "empty" else "idle";
+      data-selectable: if ?selectable then "true" else "false";
+    }
+
+    header -> {
+      role: "rowgroup";
+      data-sticky: if ?stickyHeader then "true" else "false";
+    }
+
+    headerRow -> {
+      role: "row";
+    }
+
+    headerCell -> {
+      role: "columnheader";
+      aria-sort: if ?sortColumn == self.column then ?sortDirection else "none";
+      aria-colindex: self.index;
+      data-sortable: if ?sortable then "true" else "false";
+      data-sorted: if ?sortColumn == self.column then "true" else "false";
+      data-sort-direction: if ?sortColumn == self.column then ?sortDirection else "none";
+      tabindex: if state.focus == "cellFocused" then "0" else "-1";
+      onClick: if ?sortable then send(SORT) else noop;
+      onKeyDown-Enter: if ?sortable then send(SORT) else noop;
+    }
+
+    body -> {
+      role: "rowgroup";
+      data-state: if ?loading then "loading" else "idle";
+    }
+
+    row -> {
+      role: "row";
+      aria-rowindex: self.index;
+      aria-selected: if ?selectable then (if state.row == "selected" then "true" else "false") else undefined;
+      data-state: if state.row == "selected" then "selected" else "idle";
+      data-selectable: if ?selectable then "true" else "false";
+      onClick: if ?selectable then send(SELECT_ROW) else noop;
+      onKeyDown-Space: if ?selectable then send(SELECT_ROW) else noop;
+    }
+
+    cell -> {
+      role: "gridcell";
+      aria-colindex: self.index;
+      tabindex: if state.focus == "cellFocused" then "0" else "-1";
+      data-part: "cell";
+      onFocus: send(FOCUS_CELL);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowUp: send(NAVIGATE_UP);
+      onKeyDown-ArrowDown: send(NAVIGATE_DOWN);
+      onKeyDown-ArrowLeft: send(NAVIGATE_LEFT);
+      onKeyDown-ArrowRight: send(NAVIGATE_RIGHT);
+    }
+
+    footer -> {
+      role: "rowgroup";
+      data-part: "footer";
+    }
+
+    footerRow -> {
+      role: "row";
+      data-part: "footer-row";
+    }
+
+    footerCell -> {
+      role: "cell";
+      data-part: "footer-cell";
+    }
+
+    sortIndicator -> {
+      aria-hidden: "true";
+      data-direction: ?sortDirection;
+      data-visible: if ?sortColumn then "true" else "false";
+    }
+
+    pagination -> {
+      data-part: "pagination";
+      aria-label: "Table pagination";
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 10;
+    when { viewType: "table" }
+  }
+
+  compose {
+    pagination: widget("pagination", { totalItems: ?data.length });
+    selectionCheckbox: widget("checkbox", { checked: state.row == "selected" });
+    emptyState: widget("empty-state", { title: ?emptyMessage });
+    badge: widget("badge", {});
+  }
+
+  invariant {
+    "Column count in header must match column count in each body row";
+    "aria-sort must be set on exactly one headerCell when sorting is active";
+    "aria-selected must only be present on rows when selectable is true";
+    "Cell focus must follow grid navigation pattern per WAI-ARIA grid spec";
+    "aria-busy must be true during sorting and loading states";
+  }
+
+}

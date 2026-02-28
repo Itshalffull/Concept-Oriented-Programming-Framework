@@ -1,0 +1,198 @@
+@version(1)
+widget combobox-multi {
+
+  purpose {
+    Searchable multi-choice selector combining a text input with a
+    dropdown listbox. Selected values appear as removable chips.
+    As the user types, options are filtered in real time. Ideal for
+    large option sets where typing to filter is more efficient.
+  }
+
+  anatomy {
+    root: container            { Outermost wrapper; groups label, input area, and dropdown }
+    label: text                { Visible label describing the field purpose }
+    inputWrapper: container    { Container for chips, input, and controls }
+    chipList: container        { Container holding chips for each selected value }
+    chip: widget               { Removable chip representing a single selected value }
+    input: action              { Editable text input for search/filter }
+    positioner: container      { Floating positioning wrapper for the dropdown }
+    content: container         { Scrollable list container holding filtered options }
+    item: action               { Individual toggleable option in the filtered list }
+    itemLabel: text            { Label text for an individual option }
+    empty: text                { Message displayed when no options match the filter }
+  }
+
+  states {
+    openClose {
+      closed [initial] {
+        on OPEN -> open;
+        on INPUT -> open;
+      }
+      open {
+        on CLOSE -> closed;
+        on BLUR -> closed;
+        entry [positionContent, focusInput, beginFilter];
+        exit [clearInputValue, endFilter];
+      }
+    }
+
+    filtering {
+      idle [initial] {
+        on BEGIN_FILTER -> filtering;
+      }
+      filtering {
+        on END_FILTER -> idle;
+        on INPUT -> filtering;
+      }
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      ArrowDown -> OPEN_OR_NEXT;
+      ArrowUp   -> PREV;
+      Enter     -> TOGGLE_ITEM;
+      Escape    -> CLOSE;
+      Backspace -> REMOVE_LAST;
+      Home      -> FIRST;
+      End       -> LAST;
+    }
+    focus {
+      input: focusable;
+    }
+    aria {
+      input -> {
+        role: "combobox";
+        aria-label: ?label;
+        aria-expanded: if state.openClose == "open" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-controls: content;
+        aria-activedescendant: if state.openClose == "open" then activeItem else none;
+        aria-autocomplete: "list";
+        aria-multiselectable: "true";
+        aria-disabled: if ?disabled then "true" else "false";
+        aria-required: if ?required then "true" else "false";
+      };
+      content -> {
+        role: "listbox";
+        aria-label: ?label;
+        aria-multiselectable: "true";
+      };
+      item -> {
+        role: "option";
+        aria-selected: if contains(?values, item.value) then "true" else "false";
+        aria-label: item.label;
+      };
+      chipList -> {
+        role: "list";
+        aria-label: "Selected values";
+        aria-live: "polite";
+      };
+      chip -> {
+        role: "listitem";
+        aria-label: concat("Remove ", chipLabel);
+      };
+      empty -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    values: set String
+    inputValue: String = ""
+    options: list { label: String, value: String }
+    placeholder: String = "Search..."
+    label: String
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+    maxSelections: option Int
+  }
+
+  connect {
+    root -> {
+      data-state: if state.openClose == "open" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: input;
+      id: comboMultiLabel;
+    }
+    inputWrapper -> {
+      data-state: if state.openClose == "open" then "open" else "closed";
+      data-focus: if state.openClose == "open" then "true" else "false";
+      onClick: send(OPEN);
+    }
+    chipList -> {
+      visible: if size(?values) > 0 then true else false;
+    }
+    chip -> {
+      label: labelOf(chip.value, ?options);
+      onDismiss: send(DESELECT, { value: chip.value });
+      data-value: chip.value;
+    }
+    input -> {
+      value: ?inputValue;
+      placeholder: if size(?values) == 0 then ?placeholder else "";
+      disabled: ?disabled;
+      required: ?required;
+      name: ?name;
+      onInput: send(INPUT);
+      onFocus: send(OPEN);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowDown: send(OPEN_OR_NEXT);
+      onKeyDown-ArrowUp: send(PREV);
+      onKeyDown-Enter: send(TOGGLE_ITEM);
+      onKeyDown-Escape: send(CLOSE);
+      onKeyDown-Backspace: if ?inputValue == "" then send(REMOVE_LAST) else noop;
+      onKeyDown-Home: send(FIRST);
+      onKeyDown-End: send(LAST);
+      aria-labelledby: comboMultiLabel;
+      autocomplete: "off";
+    }
+    positioner -> {
+      visible: if state.openClose == "open" then true else false;
+    }
+    content -> {
+      role: "listbox";
+      aria-labelledby: comboMultiLabel;
+      aria-multiselectable: "true";
+    }
+    item -> {
+      data-state: if contains(?values, item.value) then "selected" else "unselected";
+      data-highlighted: if item.highlighted then "true" else "false";
+      onClick: if contains(?values, item.value) then send(DESELECT, { value: item.value }) else send(SELECT, { value: item.value });
+      onPointerEnter: send(HIGHLIGHT, { value: item.value });
+      role: "option";
+    }
+    itemLabel -> {
+      text: item.label;
+      data-match: highlightMatch(item.label, ?inputValue);
+    }
+    empty -> {
+      text: "No results found";
+      visible: if filteredCount(?options, ?inputValue) == 0 then true else false;
+    }
+  }
+
+  affordance {
+    serves: multi-choice;
+    specificity: 8;
+    when { minOptions: 20 }
+  }
+
+  compose {
+    chip: widget("chip", { label: labelOf(chip.value, ?options), dismissible: true })
+    input: widget("text-input", { value: ?inputValue, placeholder: ?placeholder })
+    positioner: widget("portal", {})
+  }
+
+  invariant {
+    forEach(?values, v -> exists(?options, o -> o.value == v));
+    ?maxSelections => size(?values) <= ?maxSelections;
+  }
+}

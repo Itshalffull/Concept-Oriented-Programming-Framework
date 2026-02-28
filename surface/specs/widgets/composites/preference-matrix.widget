@@ -1,0 +1,238 @@
+@version(1)
+widget preference-matrix {
+
+  purpose {
+    Grid of notification event types crossed with delivery channels (email,
+    push, in-app, SMS) where each intersection is a toggle. Rows are
+    optionally grouped by category. An optional select-all toggle per column
+    allows bulk enabling or disabling an entire channel. Used for notification
+    preference pages, alert configuration, and subscription management.
+  }
+
+  anatomy {
+    root:             container  { Top-level wrapper for the preference matrix grid }
+    header:           container  { Grid header row containing channel column headings }
+    headerCell:       text       { Individual channel column heading label }
+    selectAllToggle:  widget     { Optional toggle in the header to select/deselect an entire channel column }
+    body:             container  { Grid body containing all preference groups and rows }
+    group:            container  { Category group wrapping a label and related preference rows }
+    groupLabel:       text       { Category heading for a group of related event types }
+    row:              container  { Single preference row for one event type }
+    rowLabel:         text       { Event type name label within a row }
+    rowDescription:   text       { Optional description text for the event type }
+    cell:             container  { Intersection cell containing a toggle for one event-channel pair }
+    toggle:           widget     { Toggle switch or checkbox controlling a single preference }
+  }
+
+  states {
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+      }
+      error {
+        on RETRY -> loading;
+      }
+    }
+
+    saving {
+      idle [initial] {
+        on SAVE -> saving;
+      }
+      saving {
+        on SAVE_COMPLETE -> idle;
+        on SAVE_ERROR -> error;
+      }
+      error {
+        on RETRY -> saving;
+        on DISMISS_ERROR -> idle;
+      }
+    }
+
+    toggle {
+      off [initial] {
+        on TOGGLE_ON -> on;
+      }
+      on {
+        on TOGGLE_OFF -> off;
+      }
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      Space       -> TOGGLE;
+      Enter       -> TOGGLE;
+      ArrowRight  -> NAVIGATE_RIGHT;
+      ArrowLeft   -> NAVIGATE_LEFT;
+      ArrowDown   -> NAVIGATE_DOWN;
+      ArrowUp     -> NAVIGATE_UP;
+      Home        -> NAVIGATE_ROW_START;
+      End         -> NAVIGATE_ROW_END;
+      Tab         -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: toggle;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: "Notification preferences";
+        aria-colcount: channelCount + 1;
+      };
+      header -> {
+        role: "row";
+      };
+      headerCell -> {
+        role: "columnheader";
+        aria-colindex: self.colIndex;
+      };
+      selectAllToggle -> {
+        aria-label: concat("Toggle all ", self.channel);
+      };
+      group -> {
+        role: "rowgroup";
+        aria-label: self.groupName;
+      };
+      row -> {
+        role: "row";
+        aria-rowindex: self.rowIndex;
+      };
+      rowLabel -> {
+        role: "rowheader";
+        aria-colindex: "1";
+      };
+      cell -> {
+        role: "gridcell";
+        aria-colindex: self.colIndex;
+      };
+      toggle -> {
+        aria-label: concat(self.eventType, " via ", self.channel);
+        aria-checked: if state.toggle == "on" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    preferences: list PreferenceDef
+    channels: list ChannelDef = ["email", "push", "in-app"]
+    groups: list GroupDef = []
+    showSelectAll: Bool = true
+    showDescriptions: Bool = false
+    disabled: Bool = false
+    loading: Bool = false
+    onChange: option Function
+  }
+
+  connect {
+    root -> {
+      role: "grid";
+      aria-label: "Notification preferences";
+      aria-colcount: ?channels.length + 1;
+      aria-busy: if ?loading then "true" else "false";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    header -> {
+      role: "row";
+      data-part: "header";
+    }
+
+    headerCell -> {
+      role: "columnheader";
+      aria-colindex: self.colIndex;
+      text: self.channelLabel;
+      data-channel: self.channel;
+    }
+
+    selectAllToggle -> {
+      aria-label: concat("Toggle all ", self.channelLabel);
+      aria-checked: if allEnabled(self.channel, ?preferences) then "true" else if someEnabled(self.channel, ?preferences) then "mixed" else "false";
+      hidden: if not ?showSelectAll then true else false;
+      disabled: ?disabled;
+      data-channel: self.channel;
+      onChange: send(TOGGLE_ALL_CHANNEL, { channel: self.channel });
+    }
+
+    body -> {
+      data-part: "body";
+      data-state: if ?loading then "loading" else "idle";
+    }
+
+    group -> {
+      role: "rowgroup";
+      aria-label: self.groupName;
+      data-group: self.groupKey;
+    }
+
+    groupLabel -> {
+      text: self.groupName;
+      data-part: "group-label";
+      id: concat("group-", self.groupKey);
+    }
+
+    row -> {
+      role: "row";
+      aria-rowindex: self.rowIndex;
+      data-event: self.eventType;
+    }
+
+    rowLabel -> {
+      role: "rowheader";
+      aria-colindex: "1";
+      text: self.eventLabel;
+      id: concat("row-", self.eventKey);
+    }
+
+    rowDescription -> {
+      text: self.description;
+      data-part: "row-description";
+      hidden: if not ?showDescriptions then true else false;
+      id: concat("row-desc-", self.eventKey);
+    }
+
+    cell -> {
+      role: "gridcell";
+      aria-colindex: self.colIndex;
+      data-channel: self.channel;
+      data-event: self.eventType;
+    }
+
+    toggle -> {
+      aria-label: concat(self.eventLabel, " via ", self.channelLabel);
+      aria-checked: if self.enabled then "true" else "false";
+      aria-describedby: if ?showDescriptions then concat("row-desc-", self.eventKey) else undefined;
+      disabled: if ?disabled then true else if self.locked then true else false;
+      data-channel: self.channel;
+      data-event: self.eventType;
+      tabindex: if self.focused then "0" else "-1";
+      onChange: send(TOGGLE, { event: self.eventType, channel: self.channel });
+      onKeyDown-ArrowRight: send(NAVIGATE_RIGHT);
+      onKeyDown-ArrowLeft: send(NAVIGATE_LEFT);
+      onKeyDown-ArrowDown: send(NAVIGATE_DOWN);
+      onKeyDown-ArrowUp: send(NAVIGATE_UP);
+    }
+  }
+
+  compose {
+    toggle:          widget("checkbox", {});
+    selectAllToggle: widget("checkbox", { indeterminate: true });
+  }
+
+  invariant {
+    "Grid column count must equal channels.length + 1 (for the row label column)";
+    "Select-all toggle must show indeterminate state when some but not all rows are enabled";
+    "Toggling select-all must set all toggles in that channel to the same state";
+    "Roving tabindex must move through cells following grid navigation pattern";
+    "Each toggle must be labelled with both the event type and channel name";
+    "Locked preferences must be visually distinct and not toggleable";
+  }
+
+}

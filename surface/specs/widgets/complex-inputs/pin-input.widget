@@ -1,0 +1,170 @@
+@version(1)
+widget pin-input {
+
+  purpose {
+    Segmented single-character input for verification codes, OTPs,
+    and PIN entries. Renders a series of individual input cells that
+    auto-advance on entry and support paste-to-fill for the entire
+    code. Supports numeric-only and alphanumeric modes with optional
+    masking for security-sensitive input.
+  }
+
+  anatomy {
+    root:      container  { Outermost wrapper grouping label and input cells }
+    label:     text       { Visible label describing the PIN field purpose }
+    input:     action     { A single character input cell (repeated per digit) }
+    separator: container  { Optional visual divider between groups of cells (e.g., after 3rd digit) }
+  }
+
+  states {
+    completion {
+      empty [initial] {
+        on INPUT -> partial;
+        on PASTE -> partial;
+        entry [set data-complete false];
+      }
+      partial {
+        on FILL_ALL     -> complete;
+        on CLEAR_ALL    -> empty;
+        on INPUT        -> partial;
+        on DELETE_CHAR  -> partial;
+        entry [set data-complete false];
+      }
+      complete {
+        on DELETE_CHAR -> partial;
+        on CLEAR_ALL   -> empty;
+        entry [set data-complete true; emitComplete];
+      }
+    }
+
+    focus [parallel] {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+        entry [set data-focused true];
+        exit  [set data-focused false];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Backspace    -> DELETE_BACK;
+      Delete       -> DELETE_FORWARD;
+      ArrowLeft    -> FOCUS_PREV;
+      ArrowRight   -> FOCUS_NEXT;
+      Home         -> FOCUS_FIRST;
+      End          -> FOCUS_LAST;
+      Mod+V        -> PASTE;
+    }
+    focus {
+      input: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?label;
+        aria-roledescription: "PIN input";
+      };
+      input -> {
+        role: "textbox";
+        aria-label: concat("Digit ", input.index + 1, " of ", ?length);
+        aria-required: if ?required then "true" else "false";
+        aria-disabled: if ?disabled then "true" else "false";
+        aria-invalid: if state.validation == "invalid" then "true" else "false";
+        inputmode: if ?type == "numeric" then "numeric" else "text";
+        autocomplete: "one-time-code";
+      };
+      separator -> {
+        role: "separator";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    length: Int = 6
+    type: "numeric" | "alphanumeric" = "numeric"
+    mask: Bool = false
+    disabled: Bool = false
+    required: Bool = false
+    autoFocus: Bool = false
+    placeholder: String = ""
+    name: option String
+    label: String = "Verification code"
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: ?label;
+      aria-roledescription: "PIN input";
+      data-state: if state.completion == "complete" then "complete" else if state.completion == "partial" then "partial" else "empty";
+      data-disabled: if ?disabled then "true" else "false";
+      data-part: "root";
+    }
+    label -> {
+      text: ?label;
+      for: firstInput;
+      data-disabled: if ?disabled then "true" else "false";
+      data-part: "label";
+    }
+    input -> {
+      role: "textbox";
+      aria-label: concat("Digit ", input.index + 1, " of ", ?length);
+      aria-required: if ?required then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      inputmode: if ?type == "numeric" then "numeric" else "text";
+      autocomplete: if input.index == 0 then "one-time-code" else "off";
+      type: if ?mask then "password" else "text";
+      maxlength: 1;
+      pattern: if ?type == "numeric" then "[0-9]" else "[a-zA-Z0-9]";
+      placeholder: if state.focus == "focused" and input.isFocused then "" else ?placeholder;
+      disabled: ?disabled;
+      value: input.value;
+      data-state: if input.value then "filled" else "empty";
+      data-focused: if input.isFocused then "true" else "false";
+      data-index: input.index;
+      onInput: send(INPUT, { index: input.index, value: input.inputValue });
+      onFocus: send(FOCUS, { index: input.index });
+      onBlur: send(BLUR);
+      onPaste: send(PASTE);
+      onKeyDown-Backspace: send(DELETE_BACK, { index: input.index });
+      onKeyDown-Delete: send(DELETE_FORWARD, { index: input.index });
+      onKeyDown-ArrowLeft: send(FOCUS_PREV, { index: input.index });
+      onKeyDown-ArrowRight: send(FOCUS_NEXT, { index: input.index });
+      onKeyDown-Home: send(FOCUS_FIRST);
+      onKeyDown-End: send(FOCUS_LAST);
+      tabIndex: if input.isFocused then 0 else -1;
+      data-part: "input";
+    }
+    separator -> {
+      role: "separator";
+      aria-hidden: "true";
+      data-part: "separator";
+    }
+  }
+
+  affordance {
+    serves: text-short;
+    specificity: 12;
+    when {
+      pattern: "pin";
+    }
+  }
+
+  invariant {
+    length > 0;
+    length <= 12;
+    "Typing a character must fill the current cell and advance focus to the next";
+    "Backspace must clear the current cell and move focus to the previous";
+    "Pasting a string must fill cells left-to-right and focus the last filled cell";
+    "Only characters matching the type pattern may be entered";
+    "Complete event must fire only when all cells are filled";
+    "Exactly one input cell must have tabindex 0 at any time";
+  }
+
+}

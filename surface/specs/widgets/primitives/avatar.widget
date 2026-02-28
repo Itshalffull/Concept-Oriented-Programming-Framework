@@ -1,0 +1,100 @@
+@version(1)
+widget avatar {
+
+  purpose {
+    Displays a user or entity image with automatic fallback to
+    initials or a placeholder icon when the image fails to load.
+    Commonly rendered as a circle for profile pictures. Serves as
+    the primary identity-display primitive.
+  }
+
+  anatomy {
+    root: container     { Outer wrapper providing shape and size constraints }
+    image: container    { Image element displaying the avatar source }
+    fallback: text      { Text or icon shown when the image is unavailable }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_SUCCESS -> loaded;
+      on LOAD_ERROR -> error;
+      entry [show fallback; begin image load];
+    }
+
+    loaded {
+      on INVALIDATE -> loading;
+      entry [show image; hide fallback];
+    }
+
+    error {
+      on RETRY -> loading;
+      entry [hide image; show fallback];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    src: option String
+    name: String = ""
+    size: union "xs" | "sm" | "md" | "lg" = "md"
+    delayMs: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-size: ?size;
+      data-state: if loaded then "loaded" else if error then "error" else "loading";
+      role: "img";
+      aria-label: ?name;
+    }
+
+    image -> {
+      data-part: "image";
+      src: ?src;
+      alt: ?name;
+      data-visible: if loaded then "true" else "false";
+      onLoad: send(LOAD_SUCCESS);
+      onError: send(LOAD_ERROR);
+    }
+
+    fallback -> {
+      data-part: "fallback";
+      data-visible: if loaded then "false" else "true";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: display-media;
+    specificity: 8;
+    when { shape: "circle" }
+  }
+
+  invariant {
+    after send(LOAD_SUCCESS) -> state is loaded;
+    then image data-visible is "true";
+    and fallback data-visible is "false";
+  }
+
+  invariant {
+    after send(LOAD_ERROR) -> state is error;
+    then image data-visible is "false";
+    and fallback data-visible is "true";
+  }
+
+}

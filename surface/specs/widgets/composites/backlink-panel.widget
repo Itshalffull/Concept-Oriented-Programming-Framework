@@ -1,0 +1,311 @@
+@version(1)
+widget backlink-panel {
+
+  purpose {
+    Incoming reference panel that displays pages or blocks linking to the
+    current document, following the Obsidian/Roam Research backlink pattern.
+    Shows both explicitly linked references (with surrounding context
+    preview) and unlinked mentions that could be converted to links.
+    Each reference includes a breadcrumb path to the source and a
+    snippet of surrounding text. Used in knowledge bases, wikis, and
+    note-taking applications for bidirectional linking.
+  }
+
+  anatomy {
+    root:                  container  { Top-level wrapper for the backlink panel }
+    header:                container  { Header region with title, count, and collapse toggle }
+    title:                 text       { Panel heading (e.g., "Backlinks") }
+    count:                 text       { Total count of linked and unlinked references }
+    collapseToggle:        action     { Button to expand or collapse the entire panel }
+    linkedSection:         container  { Section for explicitly linked references }
+    linkedSectionHeader:   container  { Header for the linked references section }
+    linkedSectionLabel:    text       { Label for the linked section (e.g., "Linked mentions") }
+    linkedSectionCount:    text       { Count of linked references }
+    linkedList:            container  { Scrollable list of linked reference items }
+    linkedItem:            container  { Single linked reference with breadcrumb and context }
+    linkedItemBreadcrumb:  widget     { Breadcrumb path showing the source page hierarchy }
+    linkedItemContext:     text       { Text snippet surrounding the link in the source }
+    linkedItemHighlight:   container  { Highlighted portion of the context matching the link }
+    unlinkedSection:       container  { Section for unlinked mentions }
+    unlinkedSectionHeader: container  { Header for the unlinked mentions section }
+    unlinkedSectionLabel:  text       { Label for the unlinked section (e.g., "Unlinked mentions") }
+    unlinkedSectionCount:  text       { Count of unlinked mentions }
+    unlinkedList:          container  { Scrollable list of unlinked mention items }
+    unlinkedItem:          container  { Single unlinked mention with context and link action }
+    unlinkedItemContext:   text       { Text snippet surrounding the unlinked mention }
+    linkButton:            action     { Button to convert an unlinked mention into an explicit link }
+    emptyState:            container  { Placeholder when no backlinks or mentions exist }
+  }
+
+  states {
+    panel {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+      }
+      collapsed {
+        on EXPAND -> expanded;
+      }
+    }
+
+    linkedSection {
+      expanded [initial] {
+        on COLLAPSE_LINKED -> collapsed;
+      }
+      collapsed {
+        on EXPAND_LINKED -> expanded;
+      }
+    }
+
+    unlinkedSection {
+      collapsed [initial] {
+        on EXPAND_UNLINKED -> expanded;
+      }
+      expanded {
+        on COLLAPSE_UNLINKED -> collapsed;
+      }
+    }
+
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      error {
+        on RETRY -> loading;
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    modal: false;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      Enter       -> NAVIGATE_TO_SOURCE;
+      Space       -> TOGGLE_SECTION;
+      ArrowDown   -> NAVIGATE_NEXT_ITEM;
+      ArrowUp     -> NAVIGATE_PREV_ITEM;
+    }
+    focus {
+      trap: false;
+      initial: collapseToggle;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Backlinks";
+      };
+      collapseToggle -> {
+        aria-expanded: if state.panel == "expanded" then "true" else "false";
+        aria-controls: panelContent;
+      };
+      linkedSection -> {
+        role: "region";
+        aria-label: "Linked mentions";
+        aria-expanded: if state.linkedSection == "expanded" then "true" else "false";
+      };
+      linkedList -> {
+        role: "list";
+        aria-label: "Linked references";
+      };
+      linkedItem -> {
+        role: "listitem";
+        aria-label: self.sourceTitle;
+      };
+      unlinkedSection -> {
+        role: "region";
+        aria-label: "Unlinked mentions";
+        aria-expanded: if state.unlinkedSection == "expanded" then "true" else "false";
+      };
+      unlinkedList -> {
+        role: "list";
+        aria-label: "Unlinked references";
+      };
+      unlinkedItem -> {
+        role: "listitem";
+        aria-label: self.sourceTitle;
+      };
+      linkButton -> {
+        aria-label: concat("Link mention from ", self.sourceTitle);
+      };
+    }
+  }
+
+  props {
+    targetId: String
+    targetTitle: String
+    linkedReferences: list LinkedRef = []
+    unlinkedMentions: list UnlinkedRef = []
+    loading: Bool = false
+    showUnlinked: Bool = true
+    contextChars: Int = 200
+    onNavigate: option Function
+    onLink: option Function
+  }
+
+  connect {
+    root -> {
+      role: "complementary";
+      aria-label: concat("Backlinks to ", ?targetTitle);
+      data-state: if state.panel == "expanded" then "expanded" else "collapsed";
+      aria-busy: if ?loading then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+      data-state: if state.panel == "expanded" then "expanded" else "collapsed";
+    }
+
+    title -> {
+      text: "Backlinks";
+      id: backlinkTitle;
+    }
+
+    count -> {
+      text: concat(?linkedReferences.length + ?unlinkedMentions.length);
+      aria-label: concat(?linkedReferences.length, " linked, ", ?unlinkedMentions.length, " unlinked");
+      data-part: "count";
+    }
+
+    collapseToggle -> {
+      aria-expanded: if state.panel == "expanded" then "true" else "false";
+      aria-controls: panelContent;
+      aria-label: if state.panel == "expanded" then "Collapse backlinks" else "Expand backlinks";
+      onClick: if state.panel == "expanded" then send(COLLAPSE) else send(EXPAND);
+    }
+
+    linkedSection -> {
+      role: "region";
+      aria-label: "Linked mentions";
+      aria-expanded: if state.linkedSection == "expanded" then "true" else "false";
+      hidden: if state.panel == "collapsed" then true else false;
+      data-state: if state.linkedSection == "expanded" then "expanded" else "collapsed";
+    }
+
+    linkedSectionHeader -> {
+      data-part: "linked-section-header";
+      onClick: if state.linkedSection == "expanded" then send(COLLAPSE_LINKED) else send(EXPAND_LINKED);
+    }
+
+    linkedSectionLabel -> {
+      text: "Linked mentions";
+      data-part: "linked-section-label";
+    }
+
+    linkedSectionCount -> {
+      text: toString(?linkedReferences.length);
+      data-part: "linked-section-count";
+      aria-hidden: "true";
+    }
+
+    linkedList -> {
+      role: "list";
+      aria-label: "Linked references";
+      hidden: if state.linkedSection == "collapsed" then true else false;
+      data-count: ?linkedReferences.length;
+    }
+
+    linkedItem -> {
+      role: "listitem";
+      aria-label: concat("Reference from ", self.sourceTitle);
+      data-source: self.sourceId;
+      tabindex: "0";
+      onClick: send(NAVIGATE_TO_SOURCE, { id: self.sourceId });
+      onKeyDown-Enter: send(NAVIGATE_TO_SOURCE, { id: self.sourceId });
+    }
+
+    linkedItemBreadcrumb -> {
+      data-part: "linked-item-breadcrumb";
+      path: self.sourcePath;
+    }
+
+    linkedItemContext -> {
+      text: self.contextSnippet;
+      data-part: "linked-item-context";
+    }
+
+    linkedItemHighlight -> {
+      data-part: "linked-item-highlight";
+      aria-hidden: "true";
+    }
+
+    unlinkedSection -> {
+      role: "region";
+      aria-label: "Unlinked mentions";
+      aria-expanded: if state.unlinkedSection == "expanded" then "true" else "false";
+      hidden: if state.panel == "collapsed" then true else if not ?showUnlinked then true else false;
+      data-state: if state.unlinkedSection == "expanded" then "expanded" else "collapsed";
+    }
+
+    unlinkedSectionHeader -> {
+      data-part: "unlinked-section-header";
+      onClick: if state.unlinkedSection == "expanded" then send(COLLAPSE_UNLINKED) else send(EXPAND_UNLINKED);
+    }
+
+    unlinkedSectionLabel -> {
+      text: "Unlinked mentions";
+      data-part: "unlinked-section-label";
+    }
+
+    unlinkedSectionCount -> {
+      text: toString(?unlinkedMentions.length);
+      data-part: "unlinked-section-count";
+      aria-hidden: "true";
+    }
+
+    unlinkedList -> {
+      role: "list";
+      aria-label: "Unlinked references";
+      hidden: if state.unlinkedSection == "collapsed" then true else false;
+      data-count: ?unlinkedMentions.length;
+    }
+
+    unlinkedItem -> {
+      role: "listitem";
+      aria-label: concat("Unlinked mention from ", self.sourceTitle);
+      data-source: self.sourceId;
+      tabindex: "0";
+      onClick: send(NAVIGATE_TO_SOURCE, { id: self.sourceId });
+    }
+
+    unlinkedItemContext -> {
+      text: self.contextSnippet;
+      data-part: "unlinked-item-context";
+    }
+
+    linkButton -> {
+      aria-label: concat("Link mention from ", self.sourceTitle);
+      onClick: send(LINK_MENTION, { sourceId: self.sourceId, mentionId: self.mentionId });
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if ?linkedReferences.length > 0 then true else if ?unlinkedMentions.length > 0 then true else if ?loading then true else false;
+      aria-hidden: if ?linkedReferences.length > 0 then "true" else if ?unlinkedMentions.length > 0 then "true" else "false";
+    }
+  }
+
+  compose {
+    linkedItemBreadcrumb: widget("breadcrumb", {});
+    linkedSection:        widget("disclosure", { open: true });
+    unlinkedSection:      widget("disclosure", { open: false });
+  }
+
+  invariant {
+    "Linked references must show the breadcrumb path to the source page";
+    "Context snippets must be truncated to contextChars with the link highlighted";
+    "Linking an unlinked mention must move it from the unlinked list to the linked list";
+    "Collapsing the panel must hide both linked and unlinked sections";
+    "Unlinked section must default to collapsed to reduce visual noise";
+    "Each item must be navigable via keyboard and announce its source title";
+    "Count badge must reflect the sum of linked and unlinked references";
+  }
+
+}

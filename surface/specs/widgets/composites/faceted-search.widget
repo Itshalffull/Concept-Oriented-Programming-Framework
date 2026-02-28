@@ -1,0 +1,313 @@
+@version(1)
+widget faceted-search {
+
+  purpose {
+    Full-featured search interface combining a search input, a facet sidebar
+    with grouped filter options, active filter chips, and a results area
+    with a result count and optional pagination. Facets may be checkboxes,
+    range sliders, or value lists that narrow results in real time. Used
+    for product catalogs, document libraries, and any dataset that benefits
+    from multi-dimensional drill-down filtering.
+  }
+
+  anatomy {
+    root:            container  { Top-level layout wrapper for the entire faceted search }
+    searchInput:     widget     { Primary text search input with optional clear button }
+    facetSidebar:    container  { Sidebar panel containing all facet filter groups }
+    facetGroup:      container  { Collapsible group of related facet filter options }
+    facetLabel:      text       { Heading label for a facet group }
+    facetItems:      container  { List of individual filter options within a facet group }
+    facetItem:       widget     { Single filter option (checkbox, radio, or value) within a facet group }
+    facetCount:      text       { Result count badge next to a facet item }
+    facetShowMore:   action     { Button to expand truncated facet item lists }
+    rangeSlider:     widget     { Slider facet for numeric or date range filtering }
+    activeFilters:   container  { Horizontal strip of active filter chips above results }
+    activeChip:      widget     { Removable chip representing one active facet filter }
+    clearAllButton:  action     { Button to remove all active filters at once }
+    results:         container  { Main area displaying search results }
+    resultCount:     text       { Text showing total number of matching results }
+    resultList:      container  { List or grid of individual result items }
+    pagination:      widget     { Pagination controls for multi-page result sets }
+    emptyState:      container  { Placeholder shown when no results match }
+    loadingState:    container  { Skeleton or spinner shown during search }
+  }
+
+  states {
+    search {
+      idle [initial] {
+        on SEARCH -> searching;
+        on APPLY_FACET -> searching;
+        on REMOVE_FACET -> searching;
+        on CLEAR_ALL -> searching;
+      }
+      searching {
+        on SEARCH_COMPLETE -> hasResults;
+        on SEARCH_COMPLETE_EMPTY -> noResults;
+        on SEARCH_ERROR -> error;
+        entry [set aria-busy true; showLoading];
+        exit [set aria-busy false; hideLoading];
+      }
+      hasResults {
+        on SEARCH -> searching;
+        on APPLY_FACET -> searching;
+        on REMOVE_FACET -> searching;
+        on CLEAR_ALL -> searching;
+        on PAGE_CHANGE -> searching;
+      }
+      noResults {
+        on SEARCH -> searching;
+        on REMOVE_FACET -> searching;
+        on CLEAR_ALL -> searching;
+      }
+      error {
+        on RETRY -> searching;
+        on SEARCH -> searching;
+      }
+    }
+
+    facetGroup {
+      expanded [initial] {
+        on COLLAPSE_FACET -> collapsed;
+      }
+      collapsed {
+        on EXPAND_FACET -> expanded;
+      }
+    }
+
+    facetShowMore {
+      truncated [initial] {
+        on SHOW_MORE -> full;
+      }
+      full {
+        on SHOW_LESS -> truncated;
+      }
+    }
+  }
+
+  accessibility {
+    role: search;
+    modal: false;
+    keyboard {
+      Enter       -> SEARCH;
+      Escape      -> CLEAR_SEARCH;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      Space       -> TOGGLE_FACET;
+      ArrowDown   -> NAVIGATE_NEXT_FACET;
+      ArrowUp     -> NAVIGATE_PREV_FACET;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "search";
+        aria-label: "Faceted search";
+      };
+      facetSidebar -> {
+        role: "complementary";
+        aria-label: "Search filters";
+      };
+      facetGroup -> {
+        role: "group";
+        aria-labelledby: self.facetLabelId;
+        aria-expanded: if state.facetGroup == "expanded" then "true" else "false";
+      };
+      facetItems -> {
+        role: "group";
+        aria-label: self.facetName;
+      };
+      activeFilters -> {
+        role: "list";
+        aria-label: "Active filters";
+      };
+      activeChip -> {
+        role: "listitem";
+      };
+      results -> {
+        role: "region";
+        aria-label: "Search results";
+        aria-live: "polite";
+      };
+      resultCount -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+    }
+  }
+
+  props {
+    query: String = ""
+    facets: list FacetDef
+    activeFilters: list ActiveFilter = []
+    results: list Object = []
+    totalCount: Int = 0
+    page: Int = 1
+    pageSize: Int = 20
+    loading: Bool = false
+    facetTruncateAt: Int = 5
+    showResultCount: Bool = true
+    showPagination: Bool = true
+    placeholder: String = "Search..."
+    emptyMessage: String = "No results found"
+    onChange: option Function
+    onSearch: option Function
+    onPageChange: option Function
+  }
+
+  connect {
+    root -> {
+      role: "search";
+      aria-label: "Faceted search";
+      data-state: if ?loading then "loading" else if ?results.length == 0 then "empty" else "has-results";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?query;
+      placeholder: ?placeholder;
+      aria-label: "Search";
+      onChange: send(SEARCH);
+      onKeyDown-Escape: send(CLEAR_SEARCH);
+    }
+
+    facetSidebar -> {
+      role: "complementary";
+      aria-label: "Search filters";
+      data-part: "facet-sidebar";
+    }
+
+    facetGroup -> {
+      role: "group";
+      aria-labelledby: concat("facet-label-", self.facetKey);
+      aria-expanded: if state.facetGroup == "expanded" then "true" else "false";
+      data-facet: self.facetKey;
+      data-state: if state.facetGroup == "expanded" then "expanded" else "collapsed";
+    }
+
+    facetLabel -> {
+      text: self.facetName;
+      id: concat("facet-label-", self.facetKey);
+      data-part: "facet-label";
+      onClick: if state.facetGroup == "expanded" then send(COLLAPSE_FACET) else send(EXPAND_FACET);
+    }
+
+    facetItems -> {
+      role: "group";
+      aria-label: self.facetName;
+      hidden: if state.facetGroup == "collapsed" then true else false;
+    }
+
+    facetItem -> {
+      data-facet: self.facetKey;
+      data-value: self.value;
+      data-active: if self.active then "true" else "false";
+      data-count: self.count;
+      onChange: if self.active then send(REMOVE_FACET, { facet: self.facetKey, value: self.value }) else send(APPLY_FACET, { facet: self.facetKey, value: self.value });
+    }
+
+    facetCount -> {
+      text: concat("(", self.count, ")");
+      aria-hidden: "true";
+      data-part: "facet-count";
+    }
+
+    facetShowMore -> {
+      aria-label: if state.facetShowMore == "truncated" then concat("Show more ", self.facetName) else concat("Show less ", self.facetName);
+      hidden: if self.totalItems <= ?facetTruncateAt then true else false;
+      onClick: if state.facetShowMore == "truncated" then send(SHOW_MORE) else send(SHOW_LESS);
+      data-state: if state.facetShowMore == "truncated" then "truncated" else "full";
+    }
+
+    rangeSlider -> {
+      data-part: "range-slider";
+      data-facet: self.facetKey;
+      min: self.min;
+      max: self.max;
+      value: self.currentRange;
+      aria-label: concat(self.facetName, " range");
+      onChange: send(APPLY_FACET, { facet: self.facetKey, value: self.currentRange });
+    }
+
+    activeFilters -> {
+      role: "list";
+      aria-label: "Active filters";
+      hidden: if ?activeFilters.length == 0 then true else false;
+      data-count: ?activeFilters.length;
+    }
+
+    activeChip -> {
+      role: "listitem";
+      data-facet: self.facetKey;
+      data-value: self.value;
+      aria-label: concat(self.facetName, ": ", self.displayValue);
+      onRemove: send(REMOVE_FACET, { facet: self.facetKey, value: self.value });
+    }
+
+    clearAllButton -> {
+      aria-label: "Clear all filters";
+      hidden: if ?activeFilters.length == 0 then true else false;
+      onClick: send(CLEAR_ALL);
+    }
+
+    results -> {
+      role: "region";
+      aria-label: "Search results";
+      aria-live: "polite";
+      aria-busy: if ?loading then "true" else "false";
+      data-state: if ?loading then "loading" else if ?results.length == 0 then "empty" else "has-results";
+    }
+
+    resultCount -> {
+      text: concat(?totalCount, " result", if ?totalCount != 1 then "s" else "");
+      aria-live: "polite";
+      aria-atomic: "true";
+      hidden: if not ?showResultCount then true else false;
+    }
+
+    resultList -> {
+      data-part: "result-list";
+      data-count: ?results.length;
+    }
+
+    pagination -> {
+      data-part: "pagination";
+      hidden: if not ?showPagination then true else if ?totalCount <= ?pageSize then true else false;
+      aria-label: "Search results pagination";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if ?results.length > 0 then true else if ?loading then true else false;
+      aria-hidden: if ?results.length > 0 then "true" else if ?loading then "true" else "false";
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      hidden: if not ?loading then true else false;
+      aria-hidden: if not ?loading then "true" else "false";
+    }
+  }
+
+  compose {
+    searchInput:  widget("text-input", { placeholder: ?placeholder, type: "search" });
+    facetItem:    widget("checkbox", {});
+    rangeSlider:  widget("slider", { range: true });
+    activeChip:   widget("chip", { removable: true });
+    pagination:   widget("pagination", { total: ?totalCount, pageSize: ?pageSize, page: ?page });
+    resultList:   widget("card-grid", {});
+  }
+
+  invariant {
+    "Search results must update when query or facet filters change";
+    "Active filter chips must mirror the set of applied facet selections";
+    "Removing a chip must deactivate the corresponding facet item";
+    "Clear all must remove every active filter and reset the query";
+    "Facet counts must reflect the number of results matching that filter value";
+    "Result count and aria-live region must announce changes to assistive technology";
+    "Collapsing a facet group must hide its items but preserve active selections";
+  }
+
+}

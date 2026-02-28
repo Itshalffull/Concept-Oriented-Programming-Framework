@@ -1,0 +1,172 @@
+@version(1)
+widget select {
+
+  purpose {
+    Dropdown single-choice selector. Displays a trigger button that opens
+    a floating listbox of options. Supports typeahead search, keyboard
+    navigation, and can be rendered as a native select or custom listbox.
+  }
+
+  anatomy {
+    root: container            { Outermost wrapper; groups label and dropdown }
+    label: text                { Visible label describing the field purpose }
+    trigger: action            { Button that opens the dropdown and shows current value }
+    valueDisplay: text         { Text showing the currently selected option label }
+    indicator: container       { Dropdown arrow/chevron icon }
+    positioner: container      { Floating positioning wrapper for the dropdown content }
+    content: container         { Scrollable list container holding all options }
+    item: action               { Individual selectable option in the list }
+    itemLabel: text            { Label text for an individual option }
+    itemIndicator: container   { Check mark or indicator for the selected option }
+  }
+
+  states {
+    openClose {
+      closed [initial] {
+        on OPEN -> open;
+        on TOGGLE -> open;
+      }
+      open {
+        on CLOSE -> closed;
+        on TOGGLE -> closed;
+        on SELECT -> closed;
+        entry [positionContent, focusFirstOrSelected, enableTypeahead];
+        exit [clearTypeahead];
+      }
+    }
+
+    focus {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        entry [showFocusRing];
+        exit [hideFocusRing];
+      }
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    keyboard {
+      Enter     -> TOGGLE;
+      Space     -> TOGGLE;
+      ArrowDown -> OPEN_OR_NEXT;
+      ArrowUp   -> PREV;
+      Home      -> FIRST;
+      End       -> LAST;
+      Escape    -> CLOSE;
+    }
+    focus {
+      trigger: focusable;
+      item: focusable;
+    }
+    aria {
+      trigger -> {
+        role: "combobox";
+        aria-label: ?label;
+        aria-expanded: if state.openClose == "open" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-controls: content;
+        aria-activedescendant: if state.openClose == "open" then activeItem else none;
+        aria-disabled: if ?disabled then "true" else "false";
+        aria-required: if ?required then "true" else "false";
+      };
+      content -> {
+        role: "listbox";
+        aria-label: ?label;
+      };
+      item -> {
+        role: "option";
+        aria-selected: if item.value == ?value then "true" else "false";
+        aria-disabled: if item.disabled then "true" else "false";
+        aria-label: item.label;
+      };
+    }
+  }
+
+  props {
+    value: option String
+    options: list { label: String, value: String, disabled: Bool }
+    placeholder: String = "Select..."
+    label: String
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+    positioning: option String
+  }
+
+  connect {
+    root -> {
+      data-state: if state.openClose == "open" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: trigger;
+      id: selectLabel;
+    }
+    trigger -> {
+      onClick: send(TOGGLE);
+      onKeyDown-Enter: send(TOGGLE);
+      onKeyDown-Space: send(TOGGLE);
+      onKeyDown-ArrowDown: send(OPEN_OR_NEXT);
+      onKeyDown-ArrowUp: send(PREV);
+      onKeyDown-Escape: send(CLOSE);
+      disabled: ?disabled;
+      data-state: if state.openClose == "open" then "open" else "closed";
+      data-placeholder: if not ?value then "true" else "false";
+      aria-labelledby: selectLabel;
+    }
+    valueDisplay -> {
+      text: if ?value then labelOf(?value, ?options) else ?placeholder;
+      data-placeholder: if not ?value then "true" else "false";
+    }
+    indicator -> {
+      data-state: if state.openClose == "open" then "open" else "closed";
+      aria-hidden: "true";
+    }
+    positioner -> {
+      visible: if state.openClose == "open" then true else false;
+      data-positioning: ?positioning;
+    }
+    content -> {
+      role: "listbox";
+      aria-labelledby: selectLabel;
+      onKeyDown-Home: send(FIRST);
+      onKeyDown-End: send(LAST);
+    }
+    item -> {
+      data-state: if item.value == ?value then "selected" else "unselected";
+      data-highlighted: if item.highlighted then "true" else "false";
+      data-disabled: if item.disabled then "true" else "false";
+      onClick: if not item.disabled then send(SELECT, { value: item.value }) else noop;
+      onPointerEnter: send(HIGHLIGHT, { value: item.value });
+      role: "option";
+    }
+    itemLabel -> {
+      text: item.label;
+    }
+    itemIndicator -> {
+      visible: if item.value == ?value then true else false;
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 5;
+    fallback: true;
+  }
+
+  compose {
+    label: widget("label", { text: ?label, for: trigger })
+    positioner: widget("portal", {})
+  }
+
+  invariant {
+    length(?options) > 0;
+    ?value => exists(?options, o -> o.value == ?value);
+  }
+}

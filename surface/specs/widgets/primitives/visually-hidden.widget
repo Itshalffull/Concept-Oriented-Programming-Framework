@@ -1,0 +1,48 @@
+@version(1)
+widget visually-hidden {
+
+  purpose {
+    Renders text that is visually hidden from sighted users but
+    remains accessible to screen readers and other assistive
+    technologies. Used for skip-links, additional context, and
+    off-screen descriptions that enhance the accessible experience
+    without affecting visual layout.
+  }
+
+  anatomy {
+    root: text   { Span or element containing the screen-reader-only text }
+  }
+
+  states {
+    static [initial] {
+      entry [];
+    }
+  }
+
+  accessibility {
+    role: none;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    text: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      style: "position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0";
+    }
+  }
+
+}

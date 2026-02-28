@@ -1,0 +1,200 @@
+@version(1)
+widget text-input {
+
+  purpose {
+    Single-line text entry field for short-form user input.
+    Supports validation states, optional prefix/suffix adornments,
+    and clear functionality. Serves as the foundational text
+    capture primitive for all form compositions.
+  }
+
+  anatomy {
+    root: container        { Outer wrapper providing layout and border context }
+    label: text            { Visible label describing the expected input }
+    input: action          { Native text input element receiving keystrokes }
+    description: text      { Optional helper text below the input }
+    error: text            { Optional error message displayed on validation failure }
+    prefix: container      { Optional leading adornment (icon, currency symbol, etc.) }
+    suffix: container      { Optional trailing adornment (icon, unit label, etc.) }
+    clearButton: action    { Optional button to clear the current value }
+  }
+
+  states {
+    empty [initial] {
+      on INPUT -> filled;
+      on FOCUS -> empty;
+      entry [set data-empty true];
+    }
+
+    filled {
+      on CLEAR -> empty;
+      on INPUT -> filled;
+      entry [set data-empty false];
+    }
+
+    idle [initial] {
+      on FOCUS -> focused;
+    }
+
+    focused {
+      on BLUR -> idle;
+      entry [set data-focused true];
+      exit [set data-focused false];
+    }
+
+    valid [parallel] {
+      on INVALIDATE -> invalid;
+      entry [set aria-invalid false];
+    }
+
+    invalid [parallel] {
+      on VALIDATE -> valid;
+      entry [set aria-invalid true; show error];
+      exit [hide error];
+    }
+
+    disabled [parallel] {
+      on ENABLE -> enabled;
+      entry [set aria-disabled true];
+      exit [set aria-disabled false];
+    }
+
+    enabled [parallel] {
+      on DISABLE -> disabled;
+    }
+
+    readOnly [parallel] {
+      on MAKE_EDITABLE -> editable;
+      entry [set aria-readonly true];
+      exit [set aria-readonly false];
+    }
+
+    editable [parallel] {
+      on MAKE_READONLY -> readOnly;
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    modal: false;
+    keyboard {
+      Escape -> CLEAR;
+      Tab -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: input;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: label;
+      describedby: description;
+    }
+  }
+
+  props {
+    value: String = ""
+    placeholder: String = ""
+    required: Bool = false
+    disabled: Bool = false
+    readOnly: Bool = false
+    maxLength: option Int
+    pattern: option String
+    name: option String
+    autocomplete: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if ?disabled then "disabled" else if ?readOnly then "readonly" else "default";
+      data-focus: if focused then "true" else "false";
+      data-invalid: if invalid then "true" else "false";
+    }
+
+    label -> {
+      data-part: "label";
+      for: ?name;
+      data-required: if ?required then "true" else "false";
+    }
+
+    input -> {
+      role: "textbox";
+      value: ?value;
+      placeholder: ?placeholder;
+      disabled: ?disabled;
+      readOnly: ?readOnly;
+      required: ?required;
+      maxLength: ?maxLength;
+      pattern: ?pattern;
+      name: ?name;
+      autocomplete: ?autocomplete;
+      aria-invalid: if invalid then "true" else "false";
+      aria-required: if ?required then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      aria-readonly: if ?readOnly then "true" else "false";
+      aria-labelledby: label;
+      aria-describedby: if invalid then error else description;
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown: send(KEY);
+      data-part: "input";
+    }
+
+    description -> {
+      data-part: "description";
+      id: "description";
+    }
+
+    error -> {
+      data-part: "error";
+      role: "alert";
+      aria-live: "polite";
+      data-visible: if invalid then "true" else "false";
+    }
+
+    prefix -> {
+      data-part: "prefix";
+      aria-hidden: "true";
+    }
+
+    suffix -> {
+      data-part: "suffix";
+      aria-hidden: "true";
+    }
+
+    clearButton -> {
+      data-part: "clear-button";
+      role: "button";
+      aria-label: "Clear input";
+      tabindex: "-1";
+      data-visible: if filled then "true" else "false";
+      onClick: send(CLEAR);
+    }
+  }
+
+  affordance {
+    serves: text-short;
+    specificity: 5;
+    fallback: true;
+  }
+
+  invariant {
+    after send(CLEAR) -> state is empty;
+    then value is "";
+    and data-empty is "true";
+  }
+
+  invariant {
+    after send(INVALIDATE) -> state is invalid;
+    then aria-invalid is "true";
+    and error data-visible is "true";
+  }
+
+  invariant {
+    after send(FOCUS) -> state is focused;
+    then data-focused is "true";
+  }
+
+}

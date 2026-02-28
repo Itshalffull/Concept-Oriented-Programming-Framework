@@ -1,0 +1,257 @@
+@version(1)
+widget schema-editor {
+
+  purpose {
+    Field type and validation builder for defining database schemas, form
+    structures, or content-type definitions. Presents a reorderable list
+    of field rows, each with a name, type selector, and expandable
+    configuration panel for type-specific options and validation rules.
+    Modeled after Airtable and Notion database property managers. Used for
+    schema design, content modeling, and form-builder admin interfaces.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the schema editor }
+    fieldList:       container  { Scrollable container holding all field definition rows }
+    fieldRow:        container  { Single field definition with name, type, config, and controls }
+    fieldName:       widget     { Editable text input for the field's name }
+    typeSelector:    widget     { Dropdown to choose the field data type }
+    configPanel:     container  { Expandable panel for type-specific settings and validation }
+    configOption:    container  { Individual configuration option within the config panel }
+    configLabel:     text       { Label for a configuration option }
+    configValue:     widget     { Input control for a configuration option value }
+    dragHandle:      action     { Drag handle for reordering field definitions }
+    removeButton:    action     { Button to delete a field definition }
+    addFieldButton:  action     { Button to append a new field definition row }
+    fieldIcon:       container  { Type-specific icon preceding the field name }
+    requiredBadge:   container  { Visual badge indicating a field is required }
+  }
+
+  states {
+    fieldCount {
+      empty [initial] {
+        on ADD_FIELD -> hasFields;
+        on LOAD_SCHEMA -> hasFields;
+      }
+      hasFields {
+        on REMOVE_LAST -> empty;
+        on CLEAR_ALL -> empty;
+        on ADD_FIELD -> hasFields;
+      }
+    }
+
+    fieldConfig {
+      collapsed [initial] {
+        on EXPAND_CONFIG -> expanded;
+        on TYPE_CHANGE -> expanded;
+      }
+      expanded {
+        on COLLAPSE_CONFIG -> collapsed;
+        on EXPAND_OTHER -> collapsed;
+      }
+    }
+
+    drag {
+      idle [initial] {
+        on DRAG_START -> dragging;
+      }
+      dragging {
+        on DROP -> idle;
+        on DRAG_END -> idle;
+        entry [set aria-grabbed true; createDropPreview];
+        exit [set aria-grabbed false; clearDropPreview];
+      }
+    }
+
+    validation {
+      unchecked [initial] {
+        on VALIDATE -> valid;
+        on VALIDATE -> invalid;
+      }
+      valid {
+        on FIELD_CHANGE -> unchecked;
+      }
+      invalid {
+        on FIELD_CHANGE -> unchecked;
+        entry [showErrors];
+        exit [clearErrors];
+      }
+    }
+  }
+
+  accessibility {
+    role: list;
+    modal: false;
+    keyboard {
+      Enter       -> EXPAND_CONFIG;
+      Escape      -> COLLAPSE_CONFIG;
+      Delete      -> REMOVE_FIELD;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      ArrowUp     -> MOVE_UP;
+      ArrowDown   -> MOVE_DOWN;
+    }
+    focus {
+      trap: false;
+      initial: addFieldButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: "Schema editor";
+      };
+      fieldRow -> {
+        role: "listitem";
+        aria-label: self.name;
+        aria-expanded: if state.fieldConfig == "expanded" then "true" else "false";
+      };
+      configPanel -> {
+        role: "region";
+        aria-label: concat("Configuration for ", self.name);
+      };
+      dragHandle -> {
+        role: "button";
+        aria-roledescription: "sortable";
+        aria-label: concat("Reorder field ", self.name);
+      };
+      removeButton -> {
+        aria-label: concat("Remove field ", self.name);
+      };
+      addFieldButton -> {
+        aria-label: "Add field";
+      };
+    }
+  }
+
+  props {
+    fields: list FieldDefinition = []
+    availableTypes: list TypeDef = ["text", "number", "date", "select", "checkbox", "url", "email", "relation", "formula"]
+    maxFields: Int = 50
+    disabled: Bool = false
+    reorderable: Bool = true
+    showValidation: Bool = true
+    onChange: option Function
+  }
+
+  connect {
+    root -> {
+      role: "list";
+      aria-label: "Schema editor";
+      data-state: if ?fields.length == 0 then "empty" else "has-fields";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    fieldList -> {
+      data-part: "field-list";
+      data-count: ?fields.length;
+    }
+
+    fieldRow -> {
+      role: "listitem";
+      aria-label: concat("Field: ", self.name);
+      aria-expanded: if state.fieldConfig == "expanded" then "true" else "false";
+      data-type: self.type;
+      data-state: if state.fieldConfig == "expanded" then "expanded" else "collapsed";
+      data-dragging: if state.drag == "dragging" then "true" else "false";
+      data-valid: if state.validation == "invalid" then "false" else "true";
+    }
+
+    fieldName -> {
+      data-part: "field-name";
+      value: self.name;
+      placeholder: "Field name";
+      disabled: ?disabled;
+      aria-label: "Field name";
+      onChange: send(NAME_CHANGE);
+    }
+
+    typeSelector -> {
+      data-part: "type-selector";
+      value: self.type;
+      options: ?availableTypes;
+      disabled: ?disabled;
+      aria-label: "Field type";
+      onChange: send(TYPE_CHANGE);
+    }
+
+    configPanel -> {
+      role: "region";
+      aria-label: concat("Configuration for ", self.name);
+      hidden: if state.fieldConfig == "collapsed" then true else false;
+      data-state: if state.fieldConfig == "expanded" then "expanded" else "collapsed";
+      data-type: self.type;
+    }
+
+    configOption -> {
+      data-part: "config-option";
+      data-option: self.optionKey;
+    }
+
+    configLabel -> {
+      text: self.optionLabel;
+      id: concat("config-label-", self.key, "-", self.optionKey);
+    }
+
+    configValue -> {
+      aria-labelledby: concat("config-label-", self.key, "-", self.optionKey);
+      data-part: "config-value";
+      disabled: ?disabled;
+    }
+
+    dragHandle -> {
+      role: "button";
+      aria-roledescription: "sortable";
+      aria-label: concat("Reorder field ", self.name);
+      hidden: if not ?reorderable then true else false;
+      disabled: ?disabled;
+      tabindex: "0";
+      onPointerDown: send(DRAG_START);
+      onPointerUp: send(DROP);
+      onKeyDown-ArrowUp: send(MOVE_UP);
+      onKeyDown-ArrowDown: send(MOVE_DOWN);
+    }
+
+    removeButton -> {
+      aria-label: concat("Remove field ", self.name);
+      disabled: ?disabled;
+      onClick: send(REMOVE_FIELD);
+    }
+
+    addFieldButton -> {
+      aria-label: "Add field";
+      disabled: if ?disabled then true else if ?fields.length >= ?maxFields then true else false;
+      onClick: send(ADD_FIELD);
+    }
+
+    fieldIcon -> {
+      data-type: self.type;
+      aria-hidden: "true";
+    }
+
+    requiredBadge -> {
+      hidden: if not self.required then true else false;
+      aria-label: "Required field";
+      data-part: "required-badge";
+    }
+  }
+
+  compose {
+    fieldName:     widget("text-input", { size: "sm", placeholder: "Field name" });
+    typeSelector:  widget("select", { options: ?availableTypes });
+    requiredToggle: widget("checkbox", { label: "Required" });
+    defaultValue:  widget("text-input", { size: "sm", placeholder: "Default value" });
+    addFieldButton: widget("button", { variant: "ghost", size: "sm" });
+    removeButton:  widget("button", { variant: "ghost", size: "sm" });
+  }
+
+  invariant {
+    "Field names must be unique within the schema";
+    "Total field count must not exceed maxFields";
+    "Changing field type must reset type-specific configuration options";
+    "Config panel must show only options relevant to the selected type";
+    "At most one config panel may be expanded at a time";
+    "Drag reorder must preserve all field definitions, only changing order";
+  }
+
+}

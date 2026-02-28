@@ -1,0 +1,102 @@
+@version(1)
+widget alert {
+
+  purpose {
+    Inline, persistent status message that communicates important
+    information within the page layout. Unlike a toast, an alert does
+    not auto-dismiss — it remains visible until the user explicitly
+    closes it (when closable) or until the triggering condition is
+    resolved. Supports info, success, warning, and error variants
+    with appropriate ARIA roles for screen-reader announcement.
+  }
+
+  anatomy {
+    root:         container  { outer wrapper with variant-based styling }
+    icon:         container  { status icon reflecting the alert variant }
+    content:      container  { text region holding title and optional description }
+    title:        text       { primary alert message }
+    description:  text       { optional secondary detail or guidance text }
+    closeTrigger: action     { optional close button; only rendered when closable }
+  }
+
+  states {
+    visible [initial] {
+      on DISMISS -> dismissed;
+    }
+
+    dismissed {
+      entry [announceRemoval, removeFromLayout];
+    }
+  }
+
+  accessibility {
+    role: alert;
+    modal: false;
+    keyboard {
+      Tab    -> FOCUS_NEXT;
+      Escape -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: none;
+    }
+    aria {
+      live: "assertive";
+      atomic: true;
+      labelledby: title;
+      describedby: description;
+    }
+  }
+
+  props {
+    variant:  "info" | "success" | "warning" | "error"  = "info";
+    closable: Bool                                       = false;
+  }
+
+  connect {
+    root -> {
+      role:        ?variant == "info" ? "status" : "alert";
+      aria-live:   ?variant == "info" ? "polite" : "assertive";
+      aria-atomic: true;
+      data-state:   currentState;
+      data-variant: ?variant;
+    }
+
+    icon -> {
+      data-variant: ?variant;
+      aria-hidden:  true;
+    }
+
+    content -> {
+      data-variant: ?variant;
+    }
+
+    title -> {
+      id: title;
+    }
+
+    description -> {
+      id: description;
+    }
+
+    closeTrigger -> {
+      aria-label: "Dismiss alert";
+      hidden:     ?closable ? false : true;
+      onClick:    send(DISMISS);
+    }
+  }
+
+  compose {
+    _icon:   widget("icon",   { name: ?variant });
+    _button: widget("button", { variant: "ghost", size: "sm" });
+  }
+
+  invariant {
+    "Alert must remain in the layout until explicitly dismissed or condition clears";
+    "closeTrigger must not render when closable is false";
+    "info variant must use role=status with polite live region";
+    "warning and error variants must use role=alert with assertive live region";
+  }
+
+}

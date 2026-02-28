@@ -1,6 +1,6 @@
 # UI patterns and auto-generation blueprints across 25 software domains
 
-**A UI framework that auto-generates interfaces needs a canonical mapping from data schema to widgets, views, and interactions for every major software domain.** This report catalogs the standard widgets, layout patterns, interaction models, accessibility requirements, and best reference implementations across 25 domains grouped into five categories — from block editors to ARIA widget specifications. The synthesis at the end provides a unified schema-to-widget pipeline that any auto-generating framework should implement, drawing from CAMELEON, Metawidget, JSON Forms, and headless UI primitives.
+**A UI framework that auto-generates interfaces needs a canonical mapping from data schema to widgets, views, and interactions for every major software domain.** This report catalogs the standard widgets, layout patterns, interaction models, accessibility requirements, and best reference implementations across 25 domains grouped into five categories — from block editors to ARIA widget specifications. The synthesis provides a unified schema-to-widget pipeline drawing from CAMELEON, Metawidget, JSON Forms, and headless UI primitives. The final section maps these research foundations to Clef Surface's concrete implementation — the two-step classify/resolve pipeline, `.widget` and `.theme` spec formats, and the 29-concept architecture that turns concept specs into accessible, framework-agnostic interfaces.
 
 ---
 
@@ -231,6 +231,8 @@ The **CAMELEON reference framework** (Calvary, Coutaz, Thevenin, 2003) structure
 
 AIOs classify into five types: **Input** (→ text fields, number inputs), **Output** (→ labels, charts), **Selection** (→ radio buttons, dropdowns, listboxes), **Navigation** (→ links, tabs, menus), and **Trigger** (→ buttons, submit controls). The critical design rule: **an AIO "selection from enumeration" maps to radio buttons for <5 options, a dropdown for ≥5 options**, or a listbox for multi-select. Context of use — the triple of (User, Platform, Environment) — drives these mapping decisions.
 
+Clef Surface maps CAMELEON's four levels to concrete concepts: (1) Task & Concepts → `.concept` specs with `interface {}` sections, (2) Abstract UI → Element concept + Interactor classification, (3) Concrete UI → Affordance matching + WidgetResolver selection + `.widget` specs, (4) Final UI → WidgetGen/ThemeGen output per framework. CAMELEON's AIO types correspond to Interactor categories (selection, edit, control, output, navigation, composition), and the context-of-use triple maps to WidgetResolver's runtime context (platform, viewport, density, accessibility).
+
 ### Metawidget and MBUID provide the auto-generation pipeline
 
 **Model-Based UI Development** uses high-level models (task, domain, user, presentation, dialog) to generate concrete UIs. **Metawidget** is the most practical implementation, using an **Object/User Interface Mapping (OIM)** pipeline:
@@ -258,6 +260,8 @@ The canonical type-to-widget mapping table that every auto-generation system sho
 
 Metawidget's key principle: **"Don't take over the GUI"** — generate only the data-bound portion, letting developers compose it with manual UI and override via named child widgets.
 
+Clef Surface replaces Metawidget's flat type-to-widget table with a two-step pipeline: **Interactor/classify** (field type + constraints → semantic interaction type) then **WidgetResolver/resolve** (interaction type + runtime context → concrete widget via Affordance matching). This separation means the same `set String` field classified as `multi-choice` can resolve to checkbox-group (3 options, desktop), multi-select (30 options, desktop), or scrolling-list (any count, watch) — context-aware decisions that a flat table cannot express. Metawidget's five pipeline stages map to: Inspectors → UISchema/inspect, InspectionResultProcessors → Interactor/classify, WidgetBuilders → WidgetResolver/resolve + Affordance/match, WidgetProcessors → Machine/connect, Layouts → Layout concept. See §Clef Surface Implementation below for the full classification and affordance tables.
+
 ### JSON Forms and RJSF generate forms from JSON Schema
 
 **JSON Forms** (jsonforms.io) uses a two-schema approach: **JSON Schema** (data structure) + **UI Schema** (layout/presentation). UI Schema elements include `Control` (bound to a property via JSON Pointer), `VerticalLayout`, `HorizontalLayout`, `Group` (with label/border), and `Categorization` (rendered as tabs or stepper). Conditional rules use `SHOW/HIDE/ENABLE/DISABLE` effects with conditions. Custom renderers register with priority-based testers.
@@ -278,6 +282,8 @@ Both handle complex schemas: **nested objects** via recursive rendering, **array
 All encode critical interaction patterns: **focus trapping** in modals, **roving tabindex** in composite widgets, **click-outside** dismissal, **typeahead** in listboxes, **scroll locking** in modals, and **portal rendering** for popovers.
 
 A UI framework should use headless primitives as its rendering layer — they solve the hard problems (accessibility, keyboard navigation, focus management) while letting the framework control layout and theming. Zag.js's state machine approach is particularly valuable for generating framework-agnostic, testable widget behavior.
+
+Clef Surface's `.widget` specification format directly encodes this pattern. Each `.widget` file declares **anatomy** (named parts with semantic roles, like Radix's sub-component API), **states** (explicit finite state machine with transitions, entry/exit actions — like Zag.js), **accessibility** (ARIA roles, keyboard bindings, focus trapping), **props** (typed with defaults), and **connect** (declarative mapping from anatomy parts to attributes and handlers — compiles to any framework). The `.widget` file is the headless primitive spec; WidgetGen compiles it to React, Solid, Vue, Svelte, or Ink. The `affordance {}` section within each `.widget` file declares what interaction situations the widget can serve, feeding the WidgetResolver's selection engine.
 
 ### The W3C ARIA Authoring Practices define 30 widget patterns
 
@@ -310,3 +316,204 @@ Schema Property → AIO Classification → CIO Selection → Headless Primitive 
 The most impactful patterns to auto-generate first, based on frequency across domains: **type-adaptive form fields** (appears in 20+ domains), **sortable/filterable tables** (15+ domains), **autocomplete/combobox inputs** (12+ domains), **drag-and-drop reorder** (10+ domains), **tree views with expand/collapse** (8+ domains), **tab-based navigation** (8+ domains), and **popover/panel configuration UIs** (every domain).
 
 Every generated component should include ARIA roles from the WAI-ARIA APG, keyboard handlers matching the specification, focus management for composite widgets, and `aria-live` announcements for dynamic content — these are not optional enhancements but baseline requirements that headless UI libraries like React Aria and Zag.js provide by default.
+
+---
+
+## Clef Surface implementation
+
+Clef Surface is the concrete realization of the patterns cataloged above. It implements the unified pipeline as 29 concepts across 7 suites, with two new spec file formats (`.widget`, `.theme`), a two-step semantic selection engine, and sync-driven orchestration. Full specification: `docs/architecture/surface-spec.md`.
+
+### The two-step selection pipeline replaces flat type-mapping tables
+
+The core insight from CAMELEON, Metawidget, and TRIDENT research is that widget selection requires two distinct decisions: *what kind of interaction is this?* (abstract, context-free) and *which widget best serves it here?* (concrete, context-dependent). Clef Surface separates these into three concepts:
+
+1. **Interactor** — abstract interaction type taxonomy. Classifies user interactions by semantic purpose independent of any widget. Categories: selection, edit, control, output, navigation, composition.
+2. **Affordance** — widget capability declarations. Each `.widget` file declares what interaction situations it can serve, with specificity scores and conditional constraints (option count, platform, viewport, density).
+3. **WidgetResolver** — context-aware matching engine. Gathers properties from the Interactor classification, merges runtime context from Viewport and PlatformAdapter, queries Affordance declarations, scores candidates, returns the best match with an explanation trace.
+
+The runtime pipeline:
+
+```
+.concept spec → UISchema/inspect → Element tree → Interactor/classify → WidgetResolver/resolve → Widget/get → Machine/spawn → Machine/connect → FrameworkAdapter/render → pixels
+```
+
+### Interactor classification rules
+
+Interactor/classify maps field types and constraints to semantic interaction types. This extends Metawidget's type-to-widget table with richer semantics — the interaction type carries properties (cardinality, optionCount, optionSource, domain, mutable, multiLine) that downstream Affordance matching uses for context-sensitive selection.
+
+**Standard interactor types (registered on bootstrap):**
+
+- **Selection:** single-choice, single-pick, multi-choice, multi-pick, toggle, range-select
+- **Edit:** text-short, text-long, text-rich, number-exact, number-approx, date-point, date-range, color, file-attach
+- **Control:** action-primary, action-secondary, action-tertiary, action-danger, submit, cancel, navigate
+- **Output:** display-text, display-number, display-date, display-badge, display-status, display-media, display-progress
+- **Overlay:** overlay (modal/non-modal layered surfaces — dialogs, popovers, drawers)
+- **Composition:** group-fields, group-section, group-repeating, group-conditional
+
+**Classification rules:**
+
+| Field type | Constraints | Interactor type |
+|---|---|---|
+| `String` | (default) | text-short |
+| `String` | maxLength > 500 | text-long |
+| `String` | format: "rich" | text-rich |
+| `String` | format: "color" | color |
+| `Int` | (default) | number-exact |
+| `Int` | min + max (small range) | number-exact { domain: "1-10" } |
+| `Float` | — | number-approx |
+| `Bool` | — | toggle |
+| `DateTime` | — | date-point |
+| `Bytes` | — | file-attach |
+| `set T` | enum (≤ 8) | multi-choice { optionCount: n } |
+| `set T` | enum (> 8) | multi-pick { optionCount: n } |
+| `set T` | open | multi-pick { optionSource: "open" } |
+| `T → T` relation | enum | single-choice { optionCount: n } |
+| `T → T` relation | open | single-pick { optionSource: "open" } |
+| `{ fields }` | — | group-fields |
+| `list T` | — | group-repeating |
+
+### Standard affordance declarations
+
+Affordances are the parametric selection rules. Each declares that a widget can serve a given interactor type under specific conditions. Higher specificity wins. Apps extend freely by declaring additional affordances with higher specificity.
+
+| Widget | Interactor | Specificity | Conditions |
+|---|---|---|---|
+| radio-group | single-choice | 10 | maxOptions: 8 |
+| radio-card | single-choice | 12 | maxOptions: 4, comparison: true |
+| select | single-choice | 5 | (fallback) |
+| combobox | single-choice | 8 | minOptions: 20 |
+| segmented-control | single-choice | 11 | maxOptions: 5, platform: "desktop" |
+| checkbox-group | multi-choice | 10 | maxOptions: 8 |
+| multi-select | multi-choice | 5 | (fallback) |
+| combobox-multi | multi-choice | 8 | minOptions: 20 |
+| chip-input | multi-pick | 10 | optionSource: "open" |
+| toggle-switch | toggle | 10 | — |
+| checkbox | toggle | 8 | density: "compact" |
+| toggle-switch | toggle | 9 | platform: "mobile" |
+| text-input | text-short | 5 | (fallback) |
+| textarea | text-long | 10 | — |
+| rich-text-editor | text-rich | 10 | — |
+| number-input | number-exact | 5 | (fallback) |
+| stepper | number-exact | 10 | domain: "1-10" |
+| slider | number-approx | 10 | — |
+| date-picker | date-point | 10 | — |
+| date-range-picker | date-range | 10 | — |
+| button | action-primary | 10 | variant: "filled" |
+| button | action-secondary | 10 | variant: "outline" |
+| button | action-tertiary | 10 | variant: "text" |
+| button | action-danger | 10 | variant: "danger" |
+| label | display-text | 5 | (fallback) |
+| badge | display-badge | 10 | — |
+| progress-bar | display-progress | 10 | — |
+
+Custom affordances override defaults:
+
+```
+Affordance/declare(
+  widget: "star-rating",
+  interactor: "single-choice",
+  specificity: 15,
+  conditions: { domain: "1-5", context: "rating" }
+)
+```
+
+### `.widget` specification format
+
+Each `.widget` file is a semantic spec parsed by WidgetParser into a typed AST, then compiled by WidgetGen to framework-specific components. The format carries everything JSON blobs cannot: purpose, anatomy with semantic part roles, finite state machine with entry/exit actions, accessibility contracts (ARIA roles, keyboard bindings, focus management), typed props with defaults, declarative `connect {}` mappings (compile to any framework), `affordance {}` declarations, and behavioral invariants.
+
+**Anatomy** defines named parts with semantic roles (`container`, `action`, `overlay`, `text`), each marked `required` or optional. Parts are the contract between behavior and rendering — like Radix sub-components or Ark UI parts.
+
+**States** define an explicit finite state machine. Each state lists transitions (`on EVENT -> target`), entry actions (run on entering), and exit actions (run on leaving). One state is marked `[initial]`.
+
+**Accessibility** declares ARIA role, modal behavior, keyboard bindings (key → event), focus management (trapping, initial target, return-on-close), and `aria-labelledby`/`aria-describedby` targets.
+
+**Connect** maps anatomy parts to framework-neutral attributes: ARIA properties, event handlers (`onClick: send(EVENT)`), data attributes (`data-state: if open then "open" else "closed"`), conditional visibility. This section compiles to the `Machine/connect` output.
+
+**Compose** enables widget composition — a part can delegate to another widget with props, without the host widget knowing internals. Composition via slots (named insertion points with position and fallback).
+
+**Affordance** declares what interaction situations the widget serves, with specificity and conditions, feeding the WidgetResolver pipeline.
+
+### `.theme` specification format
+
+Each `.theme` file is parsed by ThemeParser into a ThemeAST, then compiled by ThemeGen to platform-specific styles (CSS custom properties, Tailwind config, React Native StyleSheet, terminal ANSI, W3C DTCG JSON).
+
+Themes define six systems:
+
+- **Palette** — colors in `oklch()` with automatic shade generation, semantic role computation via `contrast()` and `lighten()` functions, and WCAG contrast ratio validation (text: 7.0, largeText: 4.5, ui: 3.0)
+- **Typography** — modular type scale with base size and ratio, named font stacks (body, heading, mono), and named styles with weight/tracking
+- **Spacing** — unit-based scale with configurable base (e.g., 8px)
+- **Motion** — named easing curves and durations, with `reducedMotion` configuration that respects `prefers-reduced-motion` and falls back to `instant`
+- **Elevation** — shadow levels (none through xl) with y-offset, blur, spread, opacity
+- **Radius** — border radius scale (none through full)
+
+Themes extend declaratively — `theme dark extends light {}` overrides only what changes, and computed values (contrast roles, shade scales) recalculate automatically.
+
+### Suite and concept architecture
+
+29 concepts organized into 7 suites:
+
+| Suite | Concepts | Role |
+|---|---|---|
+| **surface-core** | DesignToken, Element, UISchema, Binding, Signal | Foundation — always loaded |
+| **surface-component** | Widget, Machine, Slot, Interactor, Affordance, WidgetResolver | Headless behaviors and selection |
+| **surface-render** | FrameworkAdapter, Surface, Layout, Viewport | Framework adapters and mount points |
+| **surface-theme** | Theme, Palette, Typography, Motion, Elevation | Visual design system |
+| **surface-app** | Navigator, Host, Transport, Shell, PlatformAdapter | Application orchestration |
+| **surface-spec** | WidgetParser, ThemeParser, WidgetGen, ThemeGen | Build-time parsing and generation |
+| **surface-integration** | (syncs only) | Cross-system coordination |
+
+All concepts follow the Clef independence rule: sovereign storage, typed actions with return variants, no inter-concept references. All coordination is declared in syncs.
+
+### Sync-driven orchestration
+
+Every inter-concept flow is a sync — no concept calls another. Key chains:
+
+**Spec pipeline (build-time):** Resource/track `.widget` file → WidgetParser/parse → Widget/register (catalog) + Affordance/declare (selection rules) + WidgetGen/generate (per-framework code). Same pattern for `.theme` files through ThemeParser → DesignToken/define + ThemeGen/generate.
+
+**Runtime cascade:** Shell/initialize → Navigator/go → Host/mount → Binding/bind → UISchema/inspect → Element tree → Interactor/classify → WidgetResolver/resolve → Widget/get → Machine/spawn → Machine/connect → FrameworkAdapter/render → Surface/mount → pixels.
+
+**Resource cleanup:** Host/unmount → Machine/destroy + Binding/unbind. Navigator guards block transitions before teardown. Host tracks all subordinate resources (bindings, machines) for guaranteed cleanup.
+
+### Progressive customization levels
+
+Five additive levels, following the "don't take over the GUI" principle from Metawidget:
+
+| Level | Mechanism | What changes |
+|---|---|---|
+| 0 | Zero-config | UISchema/inspect auto-generates CRUD from concept spec |
+| 1 | `interface {}` section in `.concept` | Field-level widget overrides, action labels, view column selection |
+| 2 | UI Schema overrides | View-level layout customization (two-column, sidebar, tabs) |
+| 3 | Slot filling | Replace specific anatomy parts with custom content |
+| 4 | Headless hooks | Full custom rendering using Machine/connect output as props API |
+
+WidgetResolver/override implements levels 1+ by bypassing affordance matching for explicitly specified widgets. Most apps never pass level 2.
+
+### Standalone vs. coupled mode
+
+**Coupled mode:** Binding connects directly to Clef concepts via the sync engine. Concept state feeds signals automatically. No network layer required.
+
+**Standalone mode:** Binding wraps a REST/GraphQL/WebSocket endpoint via Transport. Same signal interface, same widget pipeline, different data source.
+
+The switch is a single `mode` flag on Binding/bind ("coupled", "rest", "graphql", "static"). Widget code, Navigator destinations, Shell zones, and PlatformAdapter mappings don't change.
+
+### Mapping the 25 domain patterns to Clef Surface concepts
+
+The domain patterns cataloged in Groups 1–4 map to Clef Surface primitives:
+
+| Domain pattern | Clef Surface concept(s) |
+|---|---|
+| Block editors | `.widget` specs for block types + Machine state machines + Slot composition |
+| Property panels | UISchema/inspect → Element tree → type-adaptive form fields via Interactor/classify |
+| Schema builders | Schema concept → UISchema/inspect sync → auto-generated editor |
+| Embedded references | `.widget` spec with combobox ARIA pattern + Affordance for mention triggers |
+| Canvas interfaces | Machine (tool state machines) + custom `.widget` specs per shape/connector type |
+| Query builders | Interactor `group-repeating` + `single-choice` operator rows + AND/OR toggle composition |
+| View switchers | Navigator destinations per view type + Layout concept per layout kind |
+| Workflow editors | Machine concept (state machines natively) + Widget composition via syncs |
+| Notification centers | Shell overlay zones + PlatformAdapter for platform-native toasts |
+| Permission matrices | Interactor `multi-choice` per resource + Layout grid arrangement |
+| Plugin marketplaces | Element `group-section` + `display-media` + `action-primary` install button |
+| File browsers | Machine (upload states) + `.widget` dropzone + Layout grid/list toggle |
+| Tag inputs | Affordance `chip-input` for `multi-pick { optionSource: "open" }` |
+| Diff viewers | Custom `.widget` spec + Machine (expand/collapse hunk state) |
+| Formula editors | `.widget` spec with custom grammar + Interactor `text-rich` variant |

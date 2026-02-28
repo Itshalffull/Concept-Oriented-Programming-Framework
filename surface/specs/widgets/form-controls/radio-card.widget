@@ -1,0 +1,141 @@
+@version(1)
+widget radio-card {
+
+  purpose {
+    Visual single-choice selection using rich card-style options.
+    Each card can display a label, description, and icon, making it
+    ideal for comparison-heavy choices with a small number of options.
+  }
+
+  anatomy {
+    root: container            { Outermost wrapper; groups label and card grid }
+    label: text                { Visible label describing the group purpose }
+    items: container           { Container holding all card option items }
+    card: container            { Individual selectable card wrapper }
+    cardInput: action          { Hidden native radio input for form integration }
+    cardContent: container     { Inner content area of the card }
+    cardLabel: text            { Primary label text for the card option }
+    cardDescription: text      { Optional secondary description text }
+    cardIcon: container        { Optional icon or visual indicator }
+  }
+
+  slots {
+    cardDescription { accepts: text; optional: true }
+    cardIcon        { accepts: container; optional: true }
+  }
+
+  states {
+    card {
+      unselected [initial] {
+        on SELECT -> selected;
+      }
+      selected {
+        on DESELECT -> unselected;
+        entry [highlightCard];
+        exit [unhighlightCard];
+      }
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    keyboard {
+      ArrowDown  -> FOCUS_NEXT;
+      ArrowRight -> FOCUS_NEXT;
+      ArrowUp    -> FOCUS_PREV;
+      ArrowLeft  -> FOCUS_PREV;
+      Space      -> SELECT;
+    }
+    focus {
+      cardInput: focusable;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: ?label;
+        aria-required: if ?required then "true" else "false";
+      };
+      cardInput -> {
+        role: "radio";
+        aria-checked: if card.value == ?value then "true" else "false";
+        aria-label: card.label;
+        aria-describedby: if card.description then cardDescription else none;
+      };
+    }
+  }
+
+  props {
+    value: option String
+    options: list { label: String, value: String, description: option String, icon: option String }
+    label: String
+    disabled: Bool = false
+    required: Bool = false
+    columns: Int = 2
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-disabled: if ?disabled then "true" else "false";
+      role: "radiogroup";
+    }
+    label -> {
+      text: ?label;
+      id: groupLabel;
+    }
+    items -> {
+      aria-labelledby: groupLabel;
+      style-grid-template-columns: repeat(?columns, "1fr");
+    }
+    card -> {
+      data-state: if card.value == ?value then "selected" else "unselected";
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: if not ?disabled then send(SELECT, { value: card.value }) else noop;
+    }
+    cardInput -> {
+      type: "radio";
+      name: if ?name then ?name else autoId;
+      value: card.value;
+      checked: card.value == ?value;
+      disabled: ?disabled;
+      onChange: send(SELECT, { value: card.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowDown: send(FOCUS_NEXT);
+      onKeyDown-ArrowRight: send(FOCUS_NEXT);
+      onKeyDown-ArrowUp: send(FOCUS_PREV);
+      onKeyDown-ArrowLeft: send(FOCUS_PREV);
+    }
+    cardContent -> {
+      data-state: if card.value == ?value then "selected" else "unselected";
+    }
+    cardLabel -> {
+      text: card.label;
+    }
+    cardDescription -> {
+      text: card.description;
+      visible: if card.description then true else false;
+    }
+    cardIcon -> {
+      visible: if card.icon then true else false;
+      data-icon: card.icon;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 12;
+    when { maxOptions: 4; comparison: true }
+  }
+
+  compose {
+    label: widget("label", { text: ?label })
+    cardIcon: widget("icon", { name: card.icon })
+  }
+
+  invariant {
+    length(?options) > 0;
+    ?value => exists(?options, o -> o.value == ?value);
+    columns > 0;
+  }
+}

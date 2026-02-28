@@ -1,0 +1,231 @@
+@version(1)
+widget rich-text-editor {
+
+  purpose {
+    Block-based rich text editing surface with a configurable formatting
+    toolbar, optional slash-command menu for block insertion, and an
+    inline bubble menu for selection-based formatting. Supports headings,
+    lists, links, code blocks, and extensible block types through a
+    composable architecture.
+  }
+
+  anatomy {
+    root:        container  { Outermost wrapper grouping toolbar, editor, and floating menus }
+    toolbar:     widget     { Persistent formatting toolbar with grouped action buttons }
+    editor:      container  { Contenteditable editing surface receiving user input }
+    slashMenu:   widget     { Optional floating command palette triggered by "/" keystroke }
+    bubbleMenu:  widget     { Optional inline toolbar appearing on text selection }
+    placeholder: text       { Visible placeholder text when the editor is empty }
+  }
+
+  slots {
+    toolbar   { accepts: widget; within: root }
+    editor    { accepts: container; within: root }
+    slashMenu { accepts: widget; within: root; optional: true }
+  }
+
+  states {
+    content {
+      empty [initial] {
+        on INPUT       -> editing;
+        on PASTE       -> editing;
+        on INSERT_BLOCK -> editing;
+        entry [showPlaceholder];
+      }
+      editing {
+        on CLEAR       -> empty;
+        on DELETE_ALL  -> empty;
+        exit  [hidePlaceholder];
+      }
+    }
+
+    interaction {
+      idle [initial] {
+        on FOCUS          -> focused;
+      }
+      focused {
+        on SELECT_TEXT    -> selecting;
+        on BLUR           -> idle;
+        entry [set data-focused true];
+        exit  [set data-focused false];
+      }
+      selecting {
+        on COLLAPSE_SELECTION -> focused;
+        on BLUR               -> idle;
+        on FORMAT_ACTION      -> formatting;
+        entry [showBubbleMenu];
+        exit  [hideBubbleMenu];
+      }
+      formatting {
+        on FORMAT_COMPLETE -> selecting;
+        on COLLAPSE_SELECTION -> focused;
+        on BLUR            -> idle;
+      }
+    }
+
+    slashCommand [parallel] {
+      hidden [initial] {
+        on SLASH_TRIGGER -> visible;
+      }
+      visible {
+        on SLASH_SELECT  -> hidden;
+        on SLASH_DISMISS -> hidden;
+        on ESCAPE        -> hidden;
+        entry [showSlashMenu, positionSlashMenu];
+        exit  [hideSlashMenu];
+      }
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    keyboard {
+      Mod+B        -> FORMAT_BOLD;
+      Mod+I        -> FORMAT_ITALIC;
+      Mod+U        -> FORMAT_UNDERLINE;
+      Mod+Shift+S  -> FORMAT_STRIKETHROUGH;
+      Mod+K        -> FORMAT_LINK;
+      Mod+Shift+7  -> FORMAT_ORDERED_LIST;
+      Mod+Shift+8  -> FORMAT_UNORDERED_LIST;
+      Mod+Shift+9  -> FORMAT_BLOCKQUOTE;
+      Mod+E        -> FORMAT_CODE;
+      Slash        -> SLASH_TRIGGER;
+      Escape       -> ESCAPE;
+      Tab          -> INDENT;
+      Shift+Tab    -> OUTDENT;
+      Enter        -> NEW_BLOCK;
+      Backspace    -> DELETE_BACKWARD;
+    }
+    focus {
+      editor: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Rich text editor";
+      };
+      editor -> {
+        role: "textbox";
+        aria-multiline: "true";
+        contenteditable: if ?readOnly then "false" else "true";
+        aria-label: ?label;
+        aria-placeholder: ?placeholder;
+        aria-readonly: if ?readOnly then "true" else "false";
+        aria-required: if ?required then "true" else "false";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Formatting options";
+        aria-controls: editor;
+      };
+      slashMenu -> {
+        role: "listbox";
+        aria-label: "Insert block";
+        aria-expanded: if state.slashCommand == "visible" then "true" else "false";
+      };
+      bubbleMenu -> {
+        role: "toolbar";
+        aria-label: "Selection formatting";
+      };
+      placeholder -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    value: String = ""
+    placeholder: String = ""
+    label: String = "Rich text editor"
+    readOnly: Bool = false
+    required: Bool = false
+    disabled: Bool = false
+    enableSlashCommands: Bool = true
+    enableBubbleMenu: Bool = true
+    autofocus: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if state.content == "empty" then "empty" else "filled";
+      data-disabled: if ?disabled then "true" else "false";
+      data-readonly: if ?readOnly then "true" else "false";
+      data-focused: if state.interaction != "idle" then "true" else "false";
+      role: "group";
+      aria-label: "Rich text editor";
+      data-part: "root";
+    }
+    toolbar -> {
+      role: "toolbar";
+      aria-label: "Formatting options";
+      aria-controls: editor;
+      data-part: "toolbar";
+      data-disabled: if ?disabled or ?readOnly then "true" else "false";
+    }
+    editor -> {
+      role: "textbox";
+      aria-multiline: "true";
+      contenteditable: if ?readOnly or ?disabled then "false" else "true";
+      aria-label: ?label;
+      aria-placeholder: if state.content == "empty" then ?placeholder else "";
+      aria-readonly: if ?readOnly then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      data-empty: if state.content == "empty" then "true" else "false";
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onPaste: send(PASTE);
+      onSelect: send(SELECT_TEXT);
+      onKeyDown-Mod+B: send(FORMAT_BOLD);
+      onKeyDown-Mod+I: send(FORMAT_ITALIC);
+      onKeyDown-Mod+U: send(FORMAT_UNDERLINE);
+      onKeyDown-Mod+K: send(FORMAT_LINK);
+      onKeyDown-Mod+E: send(FORMAT_CODE);
+      onKeyDown-Slash: if ?enableSlashCommands then send(SLASH_TRIGGER);
+      onKeyDown-Escape: send(ESCAPE);
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "editor";
+    }
+    slashMenu -> {
+      role: "listbox";
+      aria-label: "Insert block";
+      data-state: if state.slashCommand == "visible" then "open" else "closed";
+      data-visible: if state.slashCommand == "visible" and ?enableSlashCommands then "true" else "false";
+      data-part: "slash-menu";
+    }
+    bubbleMenu -> {
+      role: "toolbar";
+      aria-label: "Selection formatting";
+      data-state: if state.interaction == "selecting" or state.interaction == "formatting" then "open" else "closed";
+      data-visible: if (state.interaction == "selecting" or state.interaction == "formatting") and ?enableBubbleMenu then "true" else "false";
+      data-part: "bubble-menu";
+    }
+    placeholder -> {
+      text: ?placeholder;
+      aria-hidden: "true";
+      data-visible: if state.content == "empty" then "true" else "false";
+      data-part: "placeholder";
+    }
+  }
+
+  affordance {
+    serves: text-rich;
+    specificity: 10;
+  }
+
+  compose {
+    toolbar:    widget("toolbar", { orientation: "horizontal", label: "Formatting options" })
+    slashMenu:  widget("command-palette", { trigger: "/", placement: "bottom-start" })
+    bubbleMenu: widget("toolbar", { orientation: "horizontal", label: "Selection formatting" })
+  }
+
+  invariant {
+    "Editor must maintain valid document structure at all times";
+    "Slash menu must position relative to the text cursor, not the viewport";
+    "Bubble menu must appear near the selection and dismiss on collapse";
+    "Keyboard shortcuts must not fire when readOnly is true";
+    "Placeholder must be visible only when the editor has no content";
+    "Undo/redo stack must be maintained independently of external value changes";
+  }
+
+}

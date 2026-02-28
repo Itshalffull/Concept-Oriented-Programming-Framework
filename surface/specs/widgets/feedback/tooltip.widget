@@ -1,0 +1,118 @@
+@version(1)
+widget tooltip {
+
+  purpose {
+    Lightweight floating label that provides supplementary descriptive
+    text when the user hovers over or focuses a trigger element. Appears
+    after a configurable delay and hides on blur, pointer-leave, Escape,
+    or scroll. Tooltips are non-interactive — they contain no focusable
+    elements and are used purely for labelling or describing controls.
+  }
+
+  anatomy {
+    root:       container  { top-level wrapper binding trigger and tooltip together }
+    trigger:    container  { element whose hover/focus reveals the tooltip }
+    positioner: container  { collision-aware floating container anchored to trigger }
+    content:    container  { visible tooltip surface displaying the label text }
+    arrow:      container  { optional directional indicator pointing to the trigger }
+  }
+
+  states {
+    hidden [initial] {
+      on POINTER_ENTER -> showing;
+      on FOCUS         -> showing;
+    }
+
+    showing {
+      on DELAY_ELAPSED -> visible;
+      on POINTER_LEAVE -> hidden;
+      on BLUR          -> hidden;
+      on ESCAPE        -> hidden;
+      entry [startOpenDelay];
+      exit  [cancelOpenDelay];
+    }
+
+    visible {
+      on POINTER_LEAVE -> hiding;
+      on BLUR          -> hiding;
+      on ESCAPE        -> hidden;
+      entry [positionContent, announceTooltip];
+    }
+
+    hiding {
+      on DELAY_ELAPSED -> hidden;
+      on POINTER_ENTER -> visible;
+      on FOCUS         -> visible;
+      entry [startCloseDelay];
+      exit  [cancelCloseDelay];
+    }
+  }
+
+  accessibility {
+    role: tooltip;
+    modal: false;
+    keyboard {
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: none;
+    }
+    aria {
+      describedby: content;
+    }
+  }
+
+  props {
+    label:      String  = "";
+    placement:  String  = "top";
+    openDelay:  Int     = 700;
+    closeDelay: Int     = 300;
+  }
+
+  connect {
+    root -> {
+      data-state: ?hidden ? "hidden" : "visible";
+    }
+
+    trigger -> {
+      aria-describedby: content;
+      onPointerEnter:   send(POINTER_ENTER);
+      onPointerLeave:   send(POINTER_LEAVE);
+      onFocus:          send(FOCUS);
+      onBlur:           send(BLUR);
+    }
+
+    positioner -> {
+      data-state:     ?hidden ? "hidden" : "visible";
+      data-placement: ?placement;
+    }
+
+    content -> {
+      role:           "tooltip";
+      id:             content;
+      data-state:     ?hidden ? "hidden" : "visible";
+      data-placement: ?placement;
+      textContent:    ?label;
+    }
+
+    arrow -> {
+      data-placement: ?placement;
+    }
+  }
+
+  compose {
+    _portal:   widget("portal",   { target: "body" });
+    _presence: widget("presence", { present: visible });
+  }
+
+  invariant {
+    "Tooltip must not contain interactive or focusable elements";
+    "Tooltip must hide immediately on Escape regardless of closeDelay";
+    "Content must reposition on scroll and resize";
+    "openDelay must elapse fully before tooltip becomes visible";
+    "Hovering from trigger into tooltip content must keep tooltip visible";
+  }
+
+}

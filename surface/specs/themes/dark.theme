@@ -1,0 +1,118 @@
+@version(1)
+
+# Dark Theme — Surface Spec Section 3.2
+# Extends light theme with inverted surface hierarchy.
+# Dark backgrounds with light foreground text.
+# WCAG AA contrast ratios maintained throughout.
+# Elevation uses lighter shadow tones to remain visible on dark surfaces.
+
+theme dark extends light {
+
+  palette {
+    # --- Brand (shifted lighter for dark background readability) ---
+    primary:              oklch(0.78 0.18 265)
+    primary-hover:        oklch(0.82 0.16 265)
+    primary-active:       oklch(0.72 0.20 265)
+    primary-container:    oklch(0.35 0.14 265)
+    on-primary:           oklch(0.15 0.06 265)
+    on-primary-container: oklch(0.92 0.06 265)
+
+    secondary:              oklch(0.78 0.08 290)
+    secondary-hover:        oklch(0.82 0.07 290)
+    secondary-active:       oklch(0.72 0.10 290)
+    secondary-container:    oklch(0.32 0.06 290)
+    on-secondary:           oklch(0.15 0.04 290)
+    on-secondary-container: oklch(0.93 0.04 290)
+
+    tertiary:              oklch(0.78 0.10 180)
+    tertiary-hover:        oklch(0.82 0.09 180)
+    tertiary-active:       oklch(0.72 0.12 180)
+    tertiary-container:    oklch(0.32 0.06 180)
+    on-tertiary:           oklch(0.15 0.04 180)
+    on-tertiary-container: oklch(0.93 0.04 180)
+
+    # --- Surfaces (inverted: dark base, lighter variants) ---
+    background:       oklch(0.14 0.005 260)
+    on-background:    oklch(0.92 0.008 260)
+    surface:          oklch(0.17 0.006 260)
+    surface-dim:      oklch(0.12 0.004 260)
+    surface-bright:   oklch(0.24 0.008 260)
+    surface-variant:  oklch(0.22 0.008 260)
+    on-surface:       oklch(0.92 0.008 260)
+    on-surface-variant: oklch(0.78 0.006 260)
+    inverse-surface:    oklch(0.92 0.008 260)
+    inverse-on-surface: oklch(0.22 0.008 260)
+    inverse-primary:    oklch(0.55 0.24 265)
+
+    # --- Outlines (lighter to be visible on dark backgrounds) ---
+    outline:          oklch(0.55 0.008 260)
+    outline-variant:  oklch(0.35 0.006 260)
+    outline-focus:    oklch(0.78 0.18 265)
+
+    # --- Status (brightened for dark surface legibility) ---
+    error:             oklch(0.78 0.16 27)
+    error-hover:       oklch(0.82 0.14 27)
+    error-container:   oklch(0.30 0.10 27)
+    on-error:          oklch(0.15 0.06 27)
+    on-error-container: oklch(0.92 0.06 27)
+
+    warning:             oklch(0.82 0.12 75)
+    warning-hover:       oklch(0.86 0.10 75)
+    warning-container:   oklch(0.32 0.08 75)
+    on-warning:          oklch(0.15 0.04 75)
+    on-warning-container: oklch(0.95 0.05 75)
+
+    success:             oklch(0.78 0.14 145)
+    success-hover:       oklch(0.82 0.12 145)
+    success-container:   oklch(0.28 0.08 145)
+    on-success:          oklch(0.15 0.04 145)
+    on-success-container: oklch(0.93 0.05 145)
+
+    info:             oklch(0.78 0.12 250)
+    info-hover:       oklch(0.82 0.10 250)
+    info-container:   oklch(0.28 0.06 250)
+    on-info:          oklch(0.15 0.04 250)
+    on-info-container: oklch(0.93 0.04 250)
+
+    # --- Utility (adjusted for dark context) ---
+    shadow:           oklch(0.0 0 0 / 0.32)
+    scrim:            oklch(0.0 0 0 / 0.52)
+    overlay-backdrop: oklch(0.0 0 0 / 0.64)
+
+    # --- Interactive states (light layers on dark surfaces) ---
+    hover-state-layer:   oklch(0.92 0.008 260 / 0.08)
+    press-state-layer:   oklch(0.92 0.008 260 / 0.12)
+    focus-state-layer:   oklch(0.92 0.008 260 / 0.12)
+    drag-state-layer:    oklch(0.92 0.008 260 / 0.16)
+    disabled-content:    oklch(0.92 0.008 260 / 0.38)
+    disabled-container:  oklch(0.92 0.008 260 / 0.12)
+  }
+
+  # typography — inherited from light, no overrides needed
+
+  # spacing — inherited from light, no overrides needed
+
+  # motion — inherited from light, no overrides needed
+
+  elevation {
+    # Dark surfaces need lighter, more diffuse shadows with subtle
+    # light-tinting to create perceptible depth without harsh edges.
+    # Uses a lighter shadow base color compared to light theme.
+
+    level-0: none
+    level-1: 0 1px 3px 0 oklch(0.0 0 0 / 0.40), 0 0 0 1px oklch(1.0 0 0 / 0.03)
+    level-2: 0 2px 6px -1px oklch(0.0 0 0 / 0.45), 0 1px 3px -1px oklch(0.0 0 0 / 0.35)
+    level-3: 0 4px 12px -2px oklch(0.0 0 0 / 0.50), 0 2px 6px -2px oklch(0.0 0 0 / 0.35)
+    level-4: 0 8px 24px -4px oklch(0.0 0 0 / 0.55), 0 4px 8px -4px oklch(0.0 0 0 / 0.40)
+    level-5: 0 16px 48px -8px oklch(0.0 0 0 / 0.60), 0 8px 20px -8px oklch(0.0 0 0 / 0.45)
+
+    # Semantic elevations — same aliases, resolved to dark-specific levels
+    elevation-card:     level-1
+    elevation-dropdown: level-2
+    elevation-sticky:   level-3
+    elevation-dialog:   level-4
+    elevation-toast:    level-5
+  }
+
+  # radius — inherited from light, no overrides needed
+}

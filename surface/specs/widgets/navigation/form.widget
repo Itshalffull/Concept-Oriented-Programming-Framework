@@ -1,0 +1,159 @@
+@version(1)
+widget form {
+
+  purpose {
+    Form container managing field validation, submission lifecycle,
+    and error reporting. Orchestrates child form controls with support
+    for validate-on-blur, validate-on-change, and submit-time validation
+    strategies with an accessible error summary.
+  }
+
+  anatomy {
+    root: container           { Top-level form element wrapping all sections }
+    fields: container         { Container holding all form field groups }
+    actions: container        { Container holding submit, reset, and other action buttons }
+    submitButton: widget      { Primary submit action button }
+    resetButton: widget       { Optional reset action button to clear the form }
+    errorSummary: container   { Optional container listing all current validation errors }
+  }
+
+  slots {
+    fields  { accepts: widget, container; within: root }
+    actions { accepts: action, widget; within: root }
+  }
+
+  states {
+    submission {
+      idle [initial] {
+        on SUBMIT -> validating;
+        on VALIDATE -> validating;
+        on RESET -> idle;
+        entry [clear errors];
+      }
+      validating {
+        on VALID -> submitting;
+        on INVALID -> error;
+        entry [run validation];
+      }
+      submitting {
+        on SUCCESS -> success;
+        on FAILURE -> error;
+        entry [set aria-busy true; disable submitButton];
+        exit [set aria-busy false; enable submitButton];
+      }
+      success {
+        on RESET -> idle;
+        on SUBMIT -> validating;
+        entry [show success feedback];
+      }
+      error {
+        on SUBMIT -> validating;
+        on RESET -> idle;
+        on FIX -> idle;
+        entry [show errorSummary; focus first error];
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    modal: false;
+    keyboard {
+      Enter -> SUBMIT;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: first field;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Form";
+        aria-busy: if state.submission == "submitting" then "true" else "false";
+      };
+      errorSummary -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: "Form errors";
+      };
+      submitButton -> {
+        aria-disabled: if state.submission == "submitting" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    onSubmit: String
+    validateOnBlur: Bool = true
+    validateOnChange: Bool = false
+    disabled: Bool = false
+    noValidate: Bool = false
+  }
+
+  connect {
+    root -> {
+      role: "form";
+      aria-label: "Form";
+      aria-busy: if state.submission == "submitting" then "true" else "false";
+      data-state: state.submission;
+      data-disabled: if ?disabled then "true" else "false";
+      novalidate: ?noValidate;
+      onSubmit: send(SUBMIT);
+      onReset: send(RESET);
+    }
+
+    fields -> {
+      data-part: "fields";
+      data-state: state.submission;
+    }
+
+    actions -> {
+      data-part: "actions";
+      data-state: state.submission;
+    }
+
+    submitButton -> {
+      type: "submit";
+      aria-disabled: if state.submission == "submitting" or ?disabled then "true" else "false";
+      disabled: if state.submission == "submitting" or ?disabled then true else false;
+      data-state: state.submission;
+    }
+
+    resetButton -> {
+      type: "reset";
+      aria-disabled: if ?disabled then "true" else "false";
+      disabled: ?disabled;
+      data-part: "reset-button";
+    }
+
+    errorSummary -> {
+      role: "alert";
+      aria-live: "assertive";
+      aria-label: "Form errors";
+      data-part: "error-summary";
+      visible: if state.submission == "error" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-fields;
+    specificity: 10;
+    when { submittable: true }
+  }
+
+  compose {
+    submitButton: widget("button", { type: "submit", variant: "filled" })
+    resetButton: widget("button", { type: "reset", variant: "outline" })
+    errorSummary: widget("alert", { variant: "error" })
+    fields: widget("fieldset", {})
+  }
+
+  invariant {
+    when state.submission == "submitting" then submitButton is disabled;
+    when state.submission == "error" then errorSummary is visible and first error is focused;
+    Enter in last field triggers SUBMIT;
+    RESET clears all field values and validation state;
+  }
+
+}

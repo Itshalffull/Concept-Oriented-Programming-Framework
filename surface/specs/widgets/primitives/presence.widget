@@ -1,0 +1,96 @@
+@version(1)
+widget presence {
+
+  purpose {
+    Manages mount and unmount lifecycles with animation support.
+    Keeps the element in the DOM during exit animations so CSS
+    transitions and keyframe animations complete before removal.
+    Used as the animation primitive underlying tooltips, popovers,
+    dialogs, and any content that animates in or out.
+  }
+
+  anatomy {
+    root: container   { Wrapper that controls mount/unmount timing }
+  }
+
+  states {
+    unmounted [initial] {
+      on SHOW -> mounting;
+      entry [remove root from layout];
+    }
+
+    mounting {
+      on ANIMATION_END -> mounted;
+      entry [insert root into layout; start enter animation];
+    }
+
+    mounted {
+      on HIDE -> unmounting;
+      entry [set data-present true];
+    }
+
+    unmounting {
+      on ANIMATION_END -> unmounted;
+      on SHOW -> mounting;
+      entry [start exit animation];
+      exit [set data-present false];
+    }
+  }
+
+  accessibility {
+    role: none;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    present: Bool = false
+    animateOnMount: Bool = false
+    forceMount: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if mounted then "open" else if mounting then "entering" else if unmounting then "exiting" else "closed";
+      data-present: if ?present then "true" else "false";
+      data-animate-mount: if ?animateOnMount then "true" else "false";
+      data-force-mount: if ?forceMount then "true" else "false";
+      onAnimationEnd: send(ANIMATION_END);
+      onTransitionEnd: send(ANIMATION_END);
+    }
+  }
+
+  invariant {
+    after send(SHOW) -> state is mounting;
+    then root is in layout;
+    and data-state is "entering";
+  }
+
+  invariant {
+    after send(ANIMATION_END) from mounting -> state is mounted;
+    then data-state is "open";
+    and data-present is "true";
+  }
+
+  invariant {
+    after send(HIDE) -> state is unmounting;
+    then data-state is "exiting";
+  }
+
+  invariant {
+    after send(ANIMATION_END) from unmounting -> state is unmounted;
+    then data-state is "closed";
+    and root is removed from layout;
+  }
+
+}

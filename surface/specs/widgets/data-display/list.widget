@@ -1,0 +1,170 @@
+@version(1)
+widget list {
+
+  purpose {
+    Vertical list displaying a collection of items with optional selection,
+    icons, descriptions, and trailing actions. Supports single and multi
+    selection modes, keyboard navigation, and optional visual dividers
+    between items. Adapts its ARIA role between list/listitem for
+    non-interactive content and listbox/option for selectable items.
+  }
+
+  anatomy {
+    root:            container  { Top-level list wrapper defining layout and selection context }
+    item:            container  { Individual list entry grouping icon, label, description, and action }
+    itemIcon:        container  { Optional leading icon or avatar for visual identification }
+    itemLabel:       text       { Primary text identifying the list item }
+    itemDescription: text       { Optional secondary text providing additional detail }
+    itemAction:      action     { Optional trailing action button (delete, edit, etc.) }
+    divider:         container  { Optional visual separator between consecutive items }
+  }
+
+  states {
+    item {
+      idle [initial] {
+        on HOVER -> hovered;
+        on SELECT -> selected;
+        on FOCUS -> focused;
+      }
+      hovered {
+        on UNHOVER -> idle;
+        on SELECT -> selected;
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        on SELECT -> selected;
+        on HOVER -> focused;
+      }
+      selected {
+        on DESELECT -> idle;
+        on HOVER -> selected;
+        entry [set aria-selected true];
+        exit [set aria-selected false];
+      }
+    }
+
+    disabled [parallel] {
+      on ENABLE -> enabled;
+      entry [set aria-disabled true];
+      exit [set aria-disabled false];
+    }
+
+    enabled [parallel] {
+      on DISABLE -> disabled;
+    }
+  }
+
+  accessibility {
+    role: list;
+    modal: false;
+    keyboard {
+      ArrowUp -> NAVIGATE_PREV;
+      ArrowDown -> NAVIGATE_NEXT;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Enter -> SELECT;
+      Space -> SELECT;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: item[first];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: if ?selectable then "listbox" else "list";
+        aria-label: ?ariaLabel;
+        aria-multiselectable: if ?multiSelect then "true" else undefined;
+      };
+      item -> {
+        role: if ?selectable then "option" else "listitem";
+        aria-selected: if ?selectable then (if state.item == "selected" then "true" else "false") else undefined;
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    items: list ListItem
+    selectable: Bool = false
+    multiSelect: Bool = false
+    dividers: Bool = true
+    ariaLabel: option String
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      role: if ?selectable then "listbox" else "list";
+      aria-label: ?ariaLabel;
+      aria-multiselectable: if ?multiSelect then "true" else undefined;
+      data-selectable: if ?selectable then "true" else "false";
+      data-dividers: if ?dividers then "true" else "false";
+    }
+
+    item -> {
+      role: if ?selectable then "option" else "listitem";
+      aria-selected: if ?selectable then (if state.item == "selected" then "true" else "false") else undefined;
+      aria-disabled: if ?disabled then "true" else "false";
+      data-state: if state.item == "selected" then "selected" else if state.item == "hovered" then "hovered" else if state.item == "focused" then "focused" else "idle";
+      tabindex: if state.item == "focused" then "0" else "-1";
+      onClick: if ?selectable then send(SELECT) else noop;
+      onKeyDown-Enter: if ?selectable then send(SELECT) else noop;
+      onKeyDown-Space: if ?selectable then send(SELECT) else noop;
+      onKeyDown-ArrowUp: send(NAVIGATE_PREV);
+      onKeyDown-ArrowDown: send(NAVIGATE_NEXT);
+      onKeyDown-Home: send(NAVIGATE_FIRST);
+      onKeyDown-End: send(NAVIGATE_LAST);
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    itemIcon -> {
+      data-part: "item-icon";
+      aria-hidden: "true";
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+      id: self.labelId;
+    }
+
+    itemDescription -> {
+      data-part: "item-description";
+      id: self.descriptionId;
+    }
+
+    itemAction -> {
+      data-part: "item-action";
+      role: "button";
+      tabindex: "0";
+      aria-label: self.actionLabel;
+      onClick: send(ITEM_ACTION);
+    }
+
+    divider -> {
+      role: "separator";
+      aria-hidden: "true";
+      data-part: "divider";
+      data-visible: if ?dividers then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 5;
+    when { fallback: true }
+  }
+
+  invariant {
+    "When selectable, exactly one item must have tabindex 0 (roving tabindex)";
+    "Dividers must not be focusable or visible to assistive technology";
+    "aria-selected must only be present when selectable is true";
+    "Navigation wraps from last to first when loop is enabled";
+  }
+
+}

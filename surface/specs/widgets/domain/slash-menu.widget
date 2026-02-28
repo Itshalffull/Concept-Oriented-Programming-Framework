@@ -1,0 +1,202 @@
+@version(1)
+widget slash-menu {
+
+  purpose {
+    Filterable block-type palette triggered by typing "/" inside a block
+    editor. Presents categorized groups of block types (text, media,
+    advanced, embeds) that narrow as the user continues typing. Arrow keys
+    navigate items; Enter inserts the highlighted block type. Serves as
+    the primary command palette for block editors.
+  }
+
+  anatomy {
+    root:            container  { Top-level floating container anchored to the caret position }
+    input:           action     { Inline filter input capturing keystrokes after the "/" character }
+    groups:          container  { Scrollable region holding categorized groups of block-type items }
+    group:           container  { Single category group containing a label and its items }
+    groupLabel:      text       { Category heading for a group of related block types }
+    item:            action     { Individual selectable block-type option }
+    itemIcon:        container  { Leading icon representing the block type visually }
+    itemLabel:       text       { Primary name of the block type }
+    itemDescription: text       { Short description of what the block type does }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on SELECT -> closed;
+      on ESCAPE -> closed;
+      on BLUR -> closed;
+      on FILTER_EMPTY -> empty;
+      entry [positionAtCaret; focusInput; resetHighlight];
+      exit [clearFilter];
+    }
+
+    empty {
+      on INPUT -> open;
+      on ESCAPE -> closed;
+      on BLUR -> closed;
+    }
+
+    highlight {
+      none [initial] {
+        on HIGHLIGHT -> highlighted;
+      }
+      highlighted {
+        on NAVIGATE_NEXT -> highlighted;
+        on NAVIGATE_PREV -> highlighted;
+        on UNHIGHLIGHT -> none;
+        entry [scrollItemIntoView];
+      }
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    modal: false;
+    keyboard {
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Enter -> SELECT;
+      Escape -> ESCAPE;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Tab -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: input;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "listbox";
+        aria-label: "Block type palette";
+        aria-expanded: if state == "open" then "true" else "false";
+      };
+      input -> {
+        role: "combobox";
+        aria-expanded: if state == "open" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-controls: groups;
+        aria-activedescendant: if state.highlight == "highlighted" then activeItem else none;
+        aria-autocomplete: "list";
+      };
+      group -> {
+        role: "group";
+        aria-labelledby: groupLabel;
+      };
+      groupLabel -> {
+        role: "presentation";
+      };
+      item -> {
+        role: "option";
+        aria-selected: if self.highlighted then "true" else "false";
+        aria-label: self.label;
+        aria-describedby: itemDescription;
+      };
+    }
+  }
+
+  props {
+    blockTypes: list { label: String, description: String, icon: String, group: String }
+    filterValue: String = ""
+    open: Bool = false
+    maxVisible: Int = 10
+    position: option { x: Float, y: Float }
+  }
+
+  connect {
+    root -> {
+      data-state: if state == "open" then "open" else if state == "empty" then "empty" else "closed";
+      data-part: "slash-menu";
+      style-top: if ?position then concat(?position.y, "px") else "auto";
+      style-left: if ?position then concat(?position.x, "px") else "auto";
+    }
+
+    input -> {
+      role: "combobox";
+      value: ?filterValue;
+      placeholder: "Filter...";
+      aria-expanded: if state == "open" then "true" else "false";
+      aria-haspopup: "listbox";
+      aria-controls: groups;
+      aria-activedescendant: if state.highlight == "highlighted" then activeItem else none;
+      autocomplete: "off";
+      onInput: send(FILTER, { value: self.value });
+      onKeyDown-ArrowDown: send(NAVIGATE_NEXT);
+      onKeyDown-ArrowUp: send(NAVIGATE_PREV);
+      onKeyDown-Enter: send(SELECT);
+      onKeyDown-Escape: send(ESCAPE);
+      onKeyDown-Home: send(NAVIGATE_FIRST);
+      onKeyDown-End: send(NAVIGATE_LAST);
+      onBlur: send(BLUR);
+    }
+
+    groups -> {
+      role: "listbox";
+      aria-label: "Block types";
+      data-filter: ?filterValue;
+      data-visible-count: filteredCount(?blockTypes, ?filterValue);
+    }
+
+    group -> {
+      role: "group";
+      aria-labelledby: groupLabel;
+      data-group: self.groupName;
+      data-visible: if filteredGroupCount(self.items, ?filterValue) > 0 then "true" else "false";
+    }
+
+    groupLabel -> {
+      id: concat("group-label-", self.groupName);
+      text: self.groupName;
+      data-part: "group-label";
+      aria-hidden: "true";
+    }
+
+    item -> {
+      role: "option";
+      aria-selected: if self.highlighted then "true" else "false";
+      aria-label: self.label;
+      data-highlighted: if self.highlighted then "true" else "false";
+      data-type: self.type;
+      data-group: self.groupName;
+      onClick: send(SELECT, { type: self.type });
+      onPointerEnter: send(HIGHLIGHT, { id: self.id });
+    }
+
+    itemIcon -> {
+      aria-hidden: "true";
+      data-part: "item-icon";
+      data-type: self.type;
+    }
+
+    itemLabel -> {
+      text: self.label;
+      data-part: "item-label";
+      data-match: highlightMatch(self.label, ?filterValue);
+    }
+
+    itemDescription -> {
+      text: self.description;
+      data-part: "item-description";
+      id: concat("desc-", self.id);
+    }
+  }
+
+  compose {
+    _commandPalette: widget("command-palette", { items: ?blockTypes, filterValue: ?filterValue });
+  }
+
+  invariant {
+    "At most one item may be highlighted at any time";
+    "Filter must match against both label and description text";
+    "Groups with zero matching items must be hidden";
+    "Highlighted item must be scrolled into view within the groups container";
+    "Enter must select the currently highlighted item or the first visible item";
+  }
+
+}

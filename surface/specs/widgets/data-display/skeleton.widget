@@ -1,0 +1,105 @@
+@version(1)
+widget skeleton {
+
+  purpose {
+    Loading placeholder that mimics the shape of content being fetched.
+    Renders pulsing or shimmering shapes (text lines, circles, rectangles)
+    in place of actual content to reduce perceived load time and prevent
+    layout shift. The parent container should carry aria-busy while
+    skeletons are visible; the skeleton itself is hidden from assistive
+    technology.
+  }
+
+  anatomy {
+    root:   container  { Top-level wrapper for all skeleton shapes }
+    line:   container  { Horizontal bar mimicking a line of text }
+    circle: container  { Circular shape mimicking an avatar or icon }
+    rect:   container  { Rectangular block mimicking an image or card area }
+  }
+
+  states {
+    loading [initial] {
+      on CONTENT_READY -> hidden;
+      entry [set aria-hidden true; startPulseAnimation];
+    }
+
+    hidden {
+      on CONTENT_LOADING -> loading;
+      entry [set aria-hidden true];
+    }
+  }
+
+  accessibility {
+    role: none;
+    modal: false;
+    keyboard {
+    }
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        aria-hidden: "true";
+        role: "presentation";
+      };
+    }
+  }
+
+  props {
+    variant: union "text" | "circular" | "rectangular" = "text"
+    width: option String
+    height: option String
+    lines: Int = 1
+    animate: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "presentation";
+      aria-hidden: "true";
+      data-part: "skeleton";
+      data-variant: ?variant;
+      data-animate: if ?animate then "true" else "false";
+      data-state: if state == "loading" then "loading" else "hidden";
+    }
+
+    line -> {
+      data-part: "line";
+      data-variant: "text";
+      data-visible: if ?variant == "text" then "true" else "false";
+      data-count: ?lines;
+      style-width: if ?width then ?width else "100%";
+      style-height: if ?height then ?height else "1em";
+      aria-hidden: "true";
+    }
+
+    circle -> {
+      data-part: "circle";
+      data-variant: "circular";
+      data-visible: if ?variant == "circular" then "true" else "false";
+      style-width: if ?width then ?width else "40px";
+      style-height: if ?height then ?height else "40px";
+      aria-hidden: "true";
+    }
+
+    rect -> {
+      data-part: "rect";
+      data-variant: "rectangular";
+      data-visible: if ?variant == "rectangular" then "true" else "false";
+      style-width: if ?width then ?width else "100%";
+      style-height: if ?height then ?height else "120px";
+      aria-hidden: "true";
+    }
+  }
+
+  invariant {
+    "Skeleton must always be aria-hidden true";
+    "Parent container must set aria-busy true while skeleton is displayed";
+    "Only the shapes matching the current variant must be visible";
+    "lines prop must only affect the text variant";
+    "Animation must be disableable for users with prefers-reduced-motion";
+  }
+
+}

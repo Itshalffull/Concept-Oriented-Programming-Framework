@@ -1,0 +1,236 @@
+@version(1)
+widget filter-builder {
+
+  purpose {
+    Visual query builder that lets users construct compound filter expressions
+    by stacking filter rows with AND/OR logic toggles and optional nesting
+    into groups. Each row presents a field selector, comparison operator, and
+    value input appropriate to the selected field type. Used for advanced
+    search, data-table filtering, and report criteria builders.
+  }
+
+  anatomy {
+    root:             container  { Top-level wrapper for the entire filter builder surface }
+    addButton:        action     { Button that appends a new filter row to the current level }
+    filterRow:        container  { Single filter criterion row grouping field, operator, value, and remove }
+    fieldSelector:    widget     { Dropdown to choose which data field to filter on }
+    operatorSelector: widget     { Dropdown to choose the comparison operator (equals, contains, etc.) }
+    valueInput:       widget     { Type-appropriate input for the filter value (text, number, date, etc.) }
+    removeButton:     action     { Button that removes this individual filter row }
+    logicToggle:      action     { AND/OR toggle between consecutive filter rows }
+    group:            container  { Nested group of filter rows sharing a common logic operator }
+    addGroupButton:   action     { Button that creates a new nested group at the current level }
+    groupHeader:      container  { Header bar for a nested group showing its logic and controls }
+    ungroupButton:    action     { Button that flattens a nested group back into the parent }
+  }
+
+  states {
+    filterCount {
+      empty [initial] {
+        on ADD_FILTER -> hasFilters;
+        on LOAD_FILTERS -> hasFilters;
+      }
+      hasFilters {
+        on REMOVE_LAST -> empty;
+        on CLEAR_ALL -> empty;
+        on ADD_FILTER -> hasFilters;
+      }
+    }
+
+    row {
+      idle [initial] {
+        on FOCUS_FIELD -> editing;
+        on FOCUS_OPERATOR -> editing;
+        on FOCUS_VALUE -> editing;
+      }
+      editing {
+        on BLUR -> idle;
+        on COMMIT -> idle;
+        on CANCEL -> idle;
+      }
+    }
+
+    validity {
+      incomplete [initial] {
+        on VALIDATE_PASS -> valid;
+      }
+      valid {
+        on FIELD_CHANGE -> incomplete;
+        on OPERATOR_CHANGE -> incomplete;
+        on VALUE_CLEAR -> incomplete;
+        on VALIDATE_PASS -> valid;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Enter     -> COMMIT;
+      Escape    -> CANCEL;
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Delete    -> REMOVE_FILTER;
+    }
+    focus {
+      trap: false;
+      initial: addButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Filter builder";
+      };
+      filterRow -> {
+        role: "group";
+        aria-label: "Filter row";
+      };
+      logicToggle -> {
+        role: "button";
+        aria-label: "Toggle logic operator";
+        aria-pressed: if self.logic == "or" then "true" else "false";
+      };
+      group -> {
+        role: "group";
+        aria-label: "Filter group";
+      };
+      addButton -> {
+        aria-label: "Add filter";
+      };
+      removeButton -> {
+        aria-label: "Remove filter";
+      };
+    }
+  }
+
+  props {
+    filters: list FilterRow = []
+    logic: union "and" | "or" = "and"
+    fields: list FieldDef
+    operators: list OperatorDef
+    maxDepth: Int = 3
+    maxFilters: Int = 20
+    disabled: Bool = false
+    allowGroups: Bool = true
+    onChange: option Function
+  }
+
+  connect {
+    root -> {
+      data-state: if ?filters.length == 0 then "empty" else "has-filters";
+      data-logic: ?logic;
+      data-disabled: if ?disabled then "true" else "false";
+      role: "group";
+      aria-label: "Filter builder";
+    }
+
+    addButton -> {
+      aria-label: "Add filter";
+      disabled: if ?disabled then true else if ?filters.length >= ?maxFilters then true else false;
+      onClick: send(ADD_FILTER);
+    }
+
+    filterRow -> {
+      role: "group";
+      aria-label: "Filter row";
+      data-state: if state.row == "editing" then "editing" else "idle";
+      data-valid: if state.validity == "valid" then "true" else "false";
+    }
+
+    fieldSelector -> {
+      data-part: "field-selector";
+      value: self.field;
+      options: ?fields;
+      disabled: ?disabled;
+      aria-label: "Filter field";
+      onChange: send(FIELD_CHANGE);
+      onFocus: send(FOCUS_FIELD);
+      onBlur: send(BLUR);
+    }
+
+    operatorSelector -> {
+      data-part: "operator-selector";
+      value: self.operator;
+      options: operatorsFor(self.field, ?operators);
+      disabled: if ?disabled then true else if not self.field then true else false;
+      aria-label: "Filter operator";
+      onChange: send(OPERATOR_CHANGE);
+      onFocus: send(FOCUS_OPERATOR);
+      onBlur: send(BLUR);
+    }
+
+    valueInput -> {
+      data-part: "value-input";
+      value: self.value;
+      type: typeFor(self.field, ?fields);
+      disabled: if ?disabled then true else if not self.operator then true else false;
+      aria-label: "Filter value";
+      onChange: send(VALUE_CHANGE);
+      onFocus: send(FOCUS_VALUE);
+      onBlur: send(BLUR);
+    }
+
+    removeButton -> {
+      aria-label: "Remove filter";
+      disabled: ?disabled;
+      onClick: send(REMOVE_FILTER);
+    }
+
+    logicToggle -> {
+      role: "button";
+      aria-label: "Toggle logic operator";
+      aria-pressed: if self.logic == "or" then "true" else "false";
+      data-logic: self.logic;
+      disabled: ?disabled;
+      onClick: send(TOGGLE_LOGIC);
+    }
+
+    group -> {
+      role: "group";
+      aria-label: "Filter group";
+      data-depth: self.depth;
+      data-logic: self.logic;
+    }
+
+    addGroupButton -> {
+      aria-label: "Add filter group";
+      disabled: if ?disabled then true else if self.depth >= ?maxDepth then true else false;
+      onClick: send(ADD_GROUP);
+    }
+
+    groupHeader -> {
+      data-part: "group-header";
+      data-depth: self.depth;
+    }
+
+    ungroupButton -> {
+      aria-label: "Ungroup filters";
+      disabled: ?disabled;
+      onClick: send(UNGROUP);
+    }
+  }
+
+  compose {
+    fieldSelector:    widget("select", { options: ?fields, placeholder: "Select field..." });
+    operatorSelector: widget("select", { options: ?operators, placeholder: "Select operator..." });
+    valueInput:       widget("text-input", { placeholder: "Enter value..." });
+    valueDateInput:   widget("date-picker", {});
+    valueCombobox:    widget("combobox", {});
+    addButton:        widget("button", { variant: "ghost", size: "sm" });
+    removeButton:     widget("button", { variant: "ghost", size: "sm" });
+    addGroupButton:   widget("button", { variant: "ghost", size: "sm" });
+    ungroupButton:    widget("button", { variant: "ghost", size: "sm" });
+  }
+
+  invariant {
+    "Each filter row must have a field selected before operator becomes active";
+    "Each filter row must have an operator selected before value input becomes active";
+    "Nesting depth must not exceed maxDepth";
+    "Total filter count must not exceed maxFilters";
+    "Logic toggle must appear between consecutive rows, not before the first or after the last";
+    "Removing the last filter row must transition to empty state";
+  }
+
+}

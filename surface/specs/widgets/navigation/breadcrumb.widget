@@ -1,0 +1,106 @@
+@version(1)
+widget breadcrumb {
+
+  purpose {
+    Hierarchical location trail showing the user's current position
+    within a site or application structure. Each breadcrumb link
+    navigates to a parent level, with the final item representing
+    the current page rendered as plain text.
+  }
+
+  anatomy {
+    root: container        { Top-level nav element wrapping the breadcrumb trail }
+    list: container        { Ordered list of breadcrumb items }
+    item: container        { Individual breadcrumb entry containing a link or current page }
+    link: action           { Navigable anchor to a parent page in the hierarchy }
+    separator: text        { Visual divider between consecutive breadcrumb items }
+    currentPage: text      { Non-interactive text indicating the current page }
+  }
+
+  states {
+    static {
+      idle [initial] {
+        on NAVIGATE -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: first link;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Breadcrumb";
+      };
+      list -> {
+        role: "list";
+      };
+      item -> {
+        role: "listitem";
+      };
+      link -> {
+        aria-current: "false";
+      };
+      currentPage -> {
+        aria-current: "page";
+      };
+      separator -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    items: list { label: String, href: option String }
+    separator: String = "/"
+  }
+
+  connect {
+    root -> {
+      role: "navigation";
+      aria-label: "Breadcrumb";
+    }
+
+    list -> {
+      role: "list";
+    }
+
+    item -> {
+      role: "listitem";
+    }
+
+    link -> {
+      href: item.href;
+      aria-current: "false";
+      data-part: "link";
+      onClick: send(NAVIGATE);
+    }
+
+    separator -> {
+      aria-hidden: "true";
+      data-part: "separator";
+      text: ?separator;
+    }
+
+    currentPage -> {
+      aria-current: "page";
+      data-part: "current-page";
+      text: item.label;
+    }
+  }
+
+  invariant {
+    last item renders as currentPage with aria-current "page";
+    all items except last render with link elements;
+    separator appears between items but not after the last item;
+  }
+
+}

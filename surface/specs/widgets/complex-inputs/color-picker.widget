@@ -1,0 +1,272 @@
+@version(1)
+widget color-picker {
+
+  purpose {
+    Color selection control with a two-dimensional saturation/lightness
+    area, channel sliders, direct hex/rgb/hsl text input, and optional
+    preset swatch palette. Presents a compact trigger swatch that opens
+    a popover with full editing controls. Supports multiple color formats
+    and an optional native eyedropper for on-screen sampling.
+  }
+
+  anatomy {
+    root:                container  { Outermost wrapper grouping trigger and popover }
+    trigger:             action     { Button that toggles the color picker popover }
+    swatch:              container  { Color preview square within the trigger showing current value }
+    positioner:          container  { Collision-aware floating container anchored to trigger }
+    content:             container  { Visible popover surface holding color editing controls }
+    area:                container  { Two-dimensional gradient field for saturation and lightness }
+    areaThumb:           action     { Draggable handle within the area for 2D color selection }
+    channelSlider:       action     { Slider for a single color channel (hue, alpha, etc.) }
+    channelSliderTrack:  container  { Track background for the channel slider showing gradient }
+    channelSliderThumb:  action     { Draggable thumb on the channel slider }
+    input:               action     { Text input for direct hex/rgb/hsl/oklch entry }
+    swatchGroup:         container  { Optional grid of preset color swatches }
+    swatchTrigger:       action     { A single preset swatch that sets the color on click }
+    eyeDropperButton:    action     { Optional button that activates the native eyedropper tool }
+  }
+
+  states {
+    popover {
+      closed [initial] {
+        on OPEN          -> open;
+        on TRIGGER_CLICK -> open;
+      }
+      open {
+        on CLOSE         -> closed;
+        on ESCAPE        -> closed;
+        on OUTSIDE_CLICK -> closed;
+        entry [positionContent, initializeChannels];
+        exit  [clearPosition, returnFocusToTrigger];
+      }
+    }
+
+    interaction [parallel] {
+      idle [initial] {
+        on AREA_POINTER_DOWN    -> selectingArea;
+        on SLIDER_POINTER_DOWN  -> selectingSlider;
+      }
+      selectingArea {
+        on POINTER_UP -> idle;
+        entry [capturePointer, beginAreaTrack];
+        exit  [releasePointer, commitColor];
+      }
+      selectingSlider {
+        on POINTER_UP -> idle;
+        entry [capturePointer, beginSliderTrack];
+        exit  [releasePointer, commitColor];
+      }
+    }
+
+    focus [parallel] {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+        entry [set data-focused true];
+        exit  [set data-focused false];
+      }
+    }
+  }
+
+  accessibility {
+    role: application;
+    keyboard {
+      ArrowUp    -> INCREASE_CHANNEL;
+      ArrowDown  -> DECREASE_CHANNEL;
+      ArrowLeft  -> DECREASE_CHANNEL;
+      ArrowRight -> INCREASE_CHANNEL;
+      Enter      -> CONFIRM;
+      Escape     -> ESCAPE;
+      Tab        -> FOCUS_NEXT;
+    }
+    focus {
+      trigger: focusable;
+      areaThumb: focusable;
+      channelSliderThumb: focusable;
+      input: focusable;
+      swatchTrigger: focusable;
+      eyeDropperButton: focusable;
+    }
+    aria {
+      trigger -> {
+        aria-label: "Select color";
+        aria-haspopup: "dialog";
+        aria-expanded: if state.popover == "open" then "true" else "false";
+      };
+      content -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Color picker";
+      };
+      area -> {
+        role: "group";
+        aria-label: "Color area";
+      };
+      areaThumb -> {
+        role: "slider";
+        aria-label: "Color area selector";
+        aria-valuetext: concat("Saturation ", ?saturation, "%, Lightness ", ?lightness, "%");
+      };
+      channelSlider -> {
+        role: "slider";
+        aria-label: channelSlider.channelName;
+        aria-valuenow: channelSlider.value;
+        aria-valuemin: channelSlider.min;
+        aria-valuemax: channelSlider.max;
+        aria-orientation: "horizontal";
+      };
+      channelSliderThumb -> {
+        role: "slider";
+        aria-label: concat(channelSlider.channelName, " slider thumb");
+        aria-valuenow: channelSlider.value;
+        aria-valuemin: channelSlider.min;
+        aria-valuemax: channelSlider.max;
+      };
+      input -> {
+        role: "textbox";
+        aria-label: concat("Color value (", ?format, ")");
+      };
+      swatchGroup -> {
+        role: "group";
+        aria-label: "Preset colors";
+      };
+      swatchTrigger -> {
+        role: "button";
+        aria-label: concat("Select color ", swatchTrigger.color);
+      };
+      eyeDropperButton -> {
+        aria-label: "Pick color from screen";
+      };
+    }
+  }
+
+  props {
+    value: String = "#000000"
+    format: "hex" | "rgb" | "hsl" | "oklch" = "hex"
+    swatches: option list String
+    disabled: Bool = false
+    name: option String
+    alpha: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if state.popover == "open" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    trigger -> {
+      aria-label: "Select color";
+      aria-haspopup: "dialog";
+      aria-expanded: if state.popover == "open" then "true" else "false";
+      disabled: ?disabled;
+      onClick: send(TRIGGER_CLICK);
+      data-part: "trigger";
+    }
+    swatch -> {
+      style-background-color: ?value;
+      data-part: "swatch";
+      aria-hidden: "true";
+    }
+    positioner -> {
+      data-state: if state.popover == "open" then "open" else "closed";
+      data-placement: "bottom-start";
+    }
+    content -> {
+      role: "dialog";
+      aria-modal: "true";
+      aria-label: "Color picker";
+      data-state: if state.popover == "open" then "open" else "closed";
+      id: content;
+      data-part: "content";
+    }
+    area -> {
+      style-background: areaGradient;
+      onPointerDown: send(AREA_POINTER_DOWN);
+      data-part: "area";
+    }
+    areaThumb -> {
+      style-left: percent(?saturation);
+      style-top: percent(100 - ?lightness);
+      style-background-color: ?value;
+      onPointerDown: send(AREA_POINTER_DOWN);
+      onKeyDown-ArrowUp: send(INCREASE_LIGHTNESS);
+      onKeyDown-ArrowDown: send(DECREASE_LIGHTNESS);
+      onKeyDown-ArrowLeft: send(DECREASE_SATURATION);
+      onKeyDown-ArrowRight: send(INCREASE_SATURATION);
+      tabIndex: 0;
+      data-part: "area-thumb";
+      data-state: if state.interaction == "selectingArea" then "dragging" else "idle";
+    }
+    channelSlider -> {
+      onPointerDown: send(SLIDER_POINTER_DOWN, { channel: channelSlider.channel });
+      data-channel: channelSlider.channel;
+      data-part: "channel-slider";
+    }
+    channelSliderTrack -> {
+      style-background: channelSlider.gradient;
+      data-channel: channelSlider.channel;
+      data-part: "channel-slider-track";
+    }
+    channelSliderThumb -> {
+      style-left: percent(channelSlider.normalizedValue);
+      onPointerDown: send(SLIDER_POINTER_DOWN, { channel: channelSlider.channel });
+      onKeyDown-ArrowLeft: send(DECREASE_CHANNEL, { channel: channelSlider.channel });
+      onKeyDown-ArrowRight: send(INCREASE_CHANNEL, { channel: channelSlider.channel });
+      onKeyDown-ArrowDown: send(DECREASE_CHANNEL, { channel: channelSlider.channel });
+      onKeyDown-ArrowUp: send(INCREASE_CHANNEL, { channel: channelSlider.channel });
+      tabIndex: 0;
+      data-part: "channel-slider-thumb";
+      data-state: if state.interaction == "selectingSlider" then "dragging" else "idle";
+    }
+    input -> {
+      value: formatColor(?value, ?format);
+      onInput: send(INPUT_COLOR);
+      onBlur: send(COMMIT_INPUT);
+      onKeyDown-Enter: send(COMMIT_INPUT);
+      aria-label: concat("Color value (", ?format, ")");
+      data-part: "input";
+    }
+    swatchGroup -> {
+      role: "group";
+      aria-label: "Preset colors";
+      data-part: "swatch-group";
+    }
+    swatchTrigger -> {
+      style-background-color: swatchTrigger.color;
+      aria-label: concat("Select color ", swatchTrigger.color);
+      onClick: send(SELECT_SWATCH, { color: swatchTrigger.color });
+      tabIndex: 0;
+      data-part: "swatch-trigger";
+    }
+    eyeDropperButton -> {
+      aria-label: "Pick color from screen";
+      onClick: send(EYEDROP);
+      disabled: if not supportsEyeDropper then true else false;
+      data-part: "eye-dropper-button";
+    }
+  }
+
+  affordance {
+    serves: color;
+    specificity: 10;
+  }
+
+  compose {
+    trigger:         widget("button", { variant: "outline", size: "sm" })
+    input:           widget("text-input", { placeholder: "#000000" })
+    eyeDropperButton: widget("button", { variant: "icon", icon: "eyedropper", size: "sm" })
+    _popover:        widget("popover", { open: state.popover == "open", placement: "bottom-start" })
+    _slider:         widget("slider", { orientation: "horizontal" })
+  }
+
+  invariant {
+    "areaThumb must remain constrained within the area bounds";
+    "Channel slider values must stay within their valid ranges";
+    "Color format conversion must be lossless within display precision";
+    "Focus must return to trigger when popover closes";
+    "Swatch colors must be valid CSS color values";
+  }
+
+}

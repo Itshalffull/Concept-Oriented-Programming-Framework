@@ -1,0 +1,149 @@
+@version(1)
+widget pagination {
+
+  purpose {
+    Page navigation control for paginated lists, tables, and grids.
+    Displays numbered page links with optional ellipsis for large
+    ranges, plus previous and next buttons for sequential traversal.
+  }
+
+  anatomy {
+    root: container        { Top-level nav wrapper for the pagination control }
+    prevButton: action     { Button to navigate to the previous page }
+    nextButton: action     { Button to navigate to the next page }
+    items: container       { Container holding page number buttons and ellipsis markers }
+    item: action           { Individual page number button }
+    ellipsis: text         { Indicator for omitted page ranges }
+  }
+
+  states {
+    position {
+      atFirst [initial] {
+        on NAVIGATE_NEXT -> middle;
+        on NAVIGATE_TO -> middle;
+        entry [disable prevButton];
+      }
+      middle {
+        on NAVIGATE_NEXT -> middle;
+        on NAVIGATE_PREV -> middle;
+        on NAVIGATE_TO -> middle;
+        on REACH_FIRST -> atFirst;
+        on REACH_LAST -> atLast;
+        entry [enable prevButton; enable nextButton];
+      }
+      atLast {
+        on NAVIGATE_PREV -> middle;
+        on NAVIGATE_TO -> middle;
+        entry [disable nextButton];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Enter -> NAVIGATE_TO;
+      Space -> NAVIGATE_TO;
+    }
+    focus {
+      trap: false;
+      initial: item[current];
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Pagination";
+      };
+      prevButton -> {
+        aria-label: "Previous page";
+        aria-disabled: if state.position == "atFirst" then "true" else "false";
+      };
+      nextButton -> {
+        aria-label: "Next page";
+        aria-disabled: if state.position == "atLast" then "true" else "false";
+      };
+      item -> {
+        aria-label: concat("Page ", item.page);
+        aria-current: if item.page == ?page then "page" else "false";
+      };
+    }
+  }
+
+  props {
+    page: Int = 1
+    totalPages: Int
+    siblingCount: Int = 1
+    boundaryCount: Int = 1
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      role: "navigation";
+      aria-label: "Pagination";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    prevButton -> {
+      aria-label: "Previous page";
+      aria-disabled: if ?page <= 1 then "true" else "false";
+      disabled: if ?page <= 1 then true else false;
+      data-disabled: if ?page <= 1 then "true" else "false";
+      onClick: send(NAVIGATE_PREV);
+      tabindex: if ?page <= 1 then "-1" else "0";
+    }
+
+    nextButton -> {
+      aria-label: "Next page";
+      aria-disabled: if ?page >= ?totalPages then "true" else "false";
+      disabled: if ?page >= ?totalPages then true else false;
+      data-disabled: if ?page >= ?totalPages then "true" else "false";
+      onClick: send(NAVIGATE_NEXT);
+      tabindex: if ?page >= ?totalPages then "-1" else "0";
+    }
+
+    items -> {
+      data-part: "items";
+    }
+
+    item -> {
+      aria-label: concat("Page ", item.page);
+      aria-current: if item.page == ?page then "page" else "false";
+      data-selected: if item.page == ?page then "true" else "false";
+      onClick: send(NAVIGATE_TO);
+      tabindex: "0";
+    }
+
+    ellipsis -> {
+      aria-hidden: "true";
+      data-part: "ellipsis";
+      text: "...";
+    }
+  }
+
+  compose {
+    prevButton: widget("button", { variant: "outline", disabled: ?page <= 1 })
+    nextButton: widget("button", { variant: "outline", disabled: ?page >= ?totalPages })
+    item: widget("button", { variant: if item.page == ?page then "filled" else "text" })
+  }
+
+  invariant {
+    ?page >= 1 and ?page <= ?totalPages;
+    ?siblingCount >= 0;
+    prevButton disabled when ?page == 1;
+    nextButton disabled when ?page == ?totalPages;
+    exactly one item has aria-current "page";
+  }
+
+}

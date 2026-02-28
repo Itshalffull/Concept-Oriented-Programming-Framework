@@ -1,0 +1,126 @@
+@version(1)
+widget context-menu {
+
+  purpose {
+    Right-click (or long-press) menu that appears at the pointer
+    location, providing contextual actions for the element under the
+    cursor. Supports keyboard navigation with arrow keys, type-ahead
+    search, nested sub-menus, separators, labels, and disabled or
+    destructive item variants. Closes on selection, Escape, or
+    outside click.
+  }
+
+  anatomy {
+    root:       container  { top-level wrapper binding trigger region and menu }
+    trigger:    container  { region that listens for contextmenu events }
+    positioner: container  { collision-aware floating container at pointer coordinates }
+    content:    container  { visible menu surface holding items and separators }
+    item:       action     { individual menu action; supports disabled and destructive states }
+    separator:  container  { visual divider between groups of items }
+    label:      text       { non-interactive group heading within the menu }
+  }
+
+  states {
+    closed [initial] {
+      on CONTEXT_MENU -> open;
+    }
+
+    open {
+      on SELECT        -> closed;
+      on ESCAPE        -> closed;
+      on OUTSIDE_CLICK -> closed;
+      entry [positionAtPointer, focusFirstItem, announceMenu];
+      exit  [clearPosition, clearHighlight];
+    }
+  }
+
+  accessibility {
+    role: menu;
+    modal: false;
+    keyboard {
+      ArrowDown  -> FOCUS_NEXT;
+      ArrowUp    -> FOCUS_PREV;
+      ArrowRight -> OPEN_SUB;
+      ArrowLeft  -> CLOSE_SUB;
+      Enter      -> SELECT;
+      Space      -> SELECT;
+      Escape     -> ESCAPE;
+      Home       -> FOCUS_FIRST;
+      End        -> FOCUS_LAST;
+    }
+    focus {
+      trap: false;
+      initial: firstItem;
+      returnOnClose: trigger;
+    }
+    aria {
+      label: "Context menu";
+    }
+  }
+
+  props {
+    items: list {
+      label:       String;
+      action:      String;
+      icon:        option String;
+      disabled:    Bool;
+      destructive: Bool;
+    };
+  }
+
+  connect {
+    root -> {
+      data-state: ?open ? "open" : "closed";
+    }
+
+    trigger -> {
+      onContextMenu: send(CONTEXT_MENU);
+    }
+
+    positioner -> {
+      data-state: ?open ? "open" : "closed";
+    }
+
+    content -> {
+      role:       "menu";
+      aria-label: "Context menu";
+      data-state: ?open ? "open" : "closed";
+      tabindex:   -1;
+    }
+
+    item -> {
+      role:          "menuitem";
+      tabindex:      -1;
+      aria-disabled: item.disabled;
+      data-destructive: item.destructive;
+      data-highlighted: item.highlighted;
+      onClick:       item.disabled ? noop : send(SELECT, { action: item.action });
+      onPointerEnter: send(HIGHLIGHT, { index: item.index });
+    }
+
+    separator -> {
+      role:       "separator";
+      aria-orientation: "horizontal";
+    }
+
+    label -> {
+      role: "presentation";
+      aria-hidden: false;
+    }
+  }
+
+  compose {
+    _portal:   widget("portal",   { target: "body" });
+    _presence: widget("presence", { present: currentState == "open" });
+  }
+
+  invariant {
+    "Menu must open at the exact pointer coordinates of the contextmenu event";
+    "Disabled items must be focusable but not activatable";
+    "Arrow keys must wrap from last item to first and vice versa";
+    "Type-ahead must move focus to the first item matching the typed character";
+    "Destructive items must be visually distinguished from normal items";
+    "Native browser context menu must be suppressed within the trigger region";
+  }
+
+}

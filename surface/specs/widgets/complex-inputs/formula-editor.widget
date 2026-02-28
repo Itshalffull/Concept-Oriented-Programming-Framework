@@ -1,0 +1,273 @@
+@version(1)
+widget formula-editor {
+
+  purpose {
+    Expression editor for structured formulas with syntax highlighting,
+    autocomplete for functions and property references, live preview of
+    evaluated results, and inline error reporting for syntax or type
+    errors. Supports a browsable function library and tokenized display
+    of property references as styled chips.
+  }
+
+  anatomy {
+    root:             container  { Outermost wrapper grouping input, autocomplete, and preview }
+    input:            container  { Contenteditable or text area for formula editing with syntax highlighting }
+    autocomplete:     container  { Floating suggestion list for function and property completions }
+    suggestion:       action     { A single autocomplete suggestion item }
+    functionBrowser:  container  { Optional browsable catalog of available functions by category }
+    preview:          container  { Live result preview showing the evaluated formula output }
+    error:            text       { Inline error message for syntax or type errors }
+    propertyToken:    container  { Styled chip representing a property reference within the formula }
+  }
+
+  states {
+    content {
+      empty [initial] {
+        on INPUT -> editing;
+        on PASTE -> editing;
+        entry [showPlaceholder];
+      }
+      editing {
+        on CLEAR     -> empty;
+        on DELETE_ALL -> empty;
+        exit [hidePlaceholder];
+      }
+    }
+
+    interaction {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR       -> idle;
+        on TYPE_CHAR  -> editing;
+        entry [set data-focused true];
+        exit  [set data-focused false];
+      }
+      editing {
+        on BLUR       -> idle;
+        on SHOW_AC    -> autocompleting;
+        entry [parseFormula, updatePreview];
+      }
+      autocompleting {
+        on SELECT_SUGGESTION -> editing;
+        on DISMISS_AC        -> editing;
+        on ESCAPE            -> editing;
+        on BLUR              -> idle;
+        entry [showAutocomplete, positionAutocomplete];
+        exit  [hideAutocomplete];
+      }
+    }
+
+    previewing [parallel] {
+      idle [initial] {
+        on EVALUATE -> showing;
+      }
+      showing {
+        on INPUT -> idle;
+        on ERROR -> idle;
+        entry [displayResult];
+        exit  [clearResult];
+      }
+    }
+
+    validation [parallel] {
+      valid [initial] {
+        on SYNTAX_ERROR -> invalid;
+        on TYPE_ERROR   -> invalid;
+      }
+      invalid {
+        on VALIDATE -> valid;
+        on INPUT    -> valid;
+        entry [showError, highlightError];
+        exit  [hideError, clearHighlight];
+      }
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    keyboard {
+      Tab       -> ACCEPT_SUGGESTION;
+      Escape    -> DISMISS_AC;
+      ArrowDown -> NAVIGATE_DOWN;
+      ArrowUp   -> NAVIGATE_UP;
+      Enter     -> SELECT_SUGGESTION;
+      Mod+Space -> TRIGGER_AC;
+      Mod+Enter -> EVALUATE;
+    }
+    focus {
+      input: focusable;
+      suggestion: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Formula editor";
+      };
+      input -> {
+        role: "combobox";
+        aria-autocomplete: "list";
+        aria-haspopup: "listbox";
+        aria-expanded: if state.interaction == "autocompleting" then "true" else "false";
+        aria-controls: autocomplete;
+        aria-activedescendant: if state.interaction == "autocompleting" then activeSuggestionId else none;
+        aria-invalid: if state.validation == "invalid" then "true" else "false";
+        aria-describedby: if state.validation == "invalid" then error else preview;
+        aria-label: "Formula input";
+      };
+      autocomplete -> {
+        role: "listbox";
+        aria-label: "Suggestions";
+        id: autocomplete;
+      };
+      suggestion -> {
+        role: "option";
+        aria-selected: if suggestion.isActive then "true" else "false";
+        aria-label: concat(suggestion.name, " - ", suggestion.signature);
+        id: suggestion.id;
+      };
+      functionBrowser -> {
+        role: "tree";
+        aria-label: "Function browser";
+      };
+      preview -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Formula result";
+        id: preview;
+      };
+      error -> {
+        role: "alert";
+        aria-live: "assertive";
+        id: error;
+      };
+      propertyToken -> {
+        role: "button";
+        aria-label: concat("Property: ", propertyToken.name);
+      };
+    }
+  }
+
+  props {
+    value: String = ""
+    schema: String
+    functions: list { name: String, category: String, signature: String }
+    placeholder: String = "Enter formula..."
+    disabled: Bool = false
+    readOnly: Bool = false
+    label: String = "Formula"
+  }
+
+  connect {
+    root -> {
+      data-state: if state.content == "empty" then "empty" else "filled";
+      data-disabled: if ?disabled then "true" else "false";
+      data-readonly: if ?readOnly then "true" else "false";
+      data-valid: if state.validation == "valid" then "true" else "false";
+      role: "group";
+      aria-label: "Formula editor";
+      data-part: "root";
+    }
+    input -> {
+      role: "combobox";
+      aria-autocomplete: "list";
+      aria-haspopup: "listbox";
+      aria-expanded: if state.interaction == "autocompleting" then "true" else "false";
+      aria-controls: autocomplete;
+      aria-activedescendant: if state.interaction == "autocompleting" then activeSuggestionId else none;
+      aria-invalid: if state.validation == "invalid" then "true" else "false";
+      aria-describedby: if state.validation == "invalid" then error else preview;
+      aria-label: "Formula input";
+      contenteditable: if ?readOnly or ?disabled then "false" else "true";
+      spellcheck: "false";
+      data-empty: if state.content == "empty" then "true" else "false";
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onPaste: send(PASTE);
+      onKeyDown-Tab: if state.interaction == "autocompleting" then send(ACCEPT_SUGGESTION);
+      onKeyDown-Escape: send(ESCAPE);
+      onKeyDown-ArrowDown: if state.interaction == "autocompleting" then send(NAVIGATE_DOWN);
+      onKeyDown-ArrowUp: if state.interaction == "autocompleting" then send(NAVIGATE_UP);
+      onKeyDown-Enter: if state.interaction == "autocompleting" then send(SELECT_SUGGESTION) else send(EVALUATE);
+      onKeyDown-Mod+Space: send(TRIGGER_AC);
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "input";
+    }
+    autocomplete -> {
+      role: "listbox";
+      aria-label: "Suggestions";
+      id: autocomplete;
+      data-state: if state.interaction == "autocompleting" then "open" else "closed";
+      data-visible: if state.interaction == "autocompleting" then "true" else "false";
+      data-part: "autocomplete";
+    }
+    suggestion -> {
+      role: "option";
+      aria-selected: if suggestion.isActive then "true" else "false";
+      aria-label: concat(suggestion.name, " - ", suggestion.signature);
+      id: suggestion.id;
+      data-active: if suggestion.isActive then "true" else "false";
+      data-category: suggestion.category;
+      onClick: send(SELECT_SUGGESTION, { value: suggestion.name });
+      onMouseEnter: send(HIGHLIGHT, { index: suggestion.index });
+      data-part: "suggestion";
+    }
+    functionBrowser -> {
+      role: "tree";
+      aria-label: "Function browser";
+      data-part: "function-browser";
+    }
+    preview -> {
+      role: "status";
+      aria-live: "polite";
+      aria-label: "Formula result";
+      id: preview;
+      text: previewResult;
+      data-visible: if state.previewing == "showing" then "true" else "false";
+      data-part: "preview";
+    }
+    error -> {
+      role: "alert";
+      aria-live: "assertive";
+      id: error;
+      text: errorMessage;
+      data-visible: if state.validation == "invalid" then "true" else "false";
+      data-part: "error";
+    }
+    propertyToken -> {
+      role: "button";
+      aria-label: concat("Property: ", propertyToken.name);
+      contenteditable: "false";
+      data-type: propertyToken.type;
+      data-value: propertyToken.path;
+      tabIndex: -1;
+      data-part: "property-token";
+    }
+  }
+
+  affordance {
+    serves: text-rich;
+    specificity: 12;
+    when {
+      domain: "formula";
+    }
+  }
+
+  compose {
+    _popover:      widget("popover", { open: state.interaction == "autocompleting", placement: "bottom-start" })
+    propertyToken: widget("chip", { label: propertyToken.name, variant: "outline" })
+  }
+
+  invariant {
+    "Syntax highlighting must update on every keystroke without layout shift";
+    "Autocomplete must trigger on function name prefixes and property accessors";
+    "Tab must accept the active suggestion and advance the cursor past it";
+    "Property tokens must be atomic and non-editable within the formula";
+    "Preview must evaluate the formula against the provided schema";
+    "Error highlighting must underline the exact span of the syntax error";
+    "Function browser entries must match the provided functions list";
+  }
+
+}

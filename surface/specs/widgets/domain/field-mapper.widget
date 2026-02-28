@@ -1,0 +1,193 @@
+@version(1)
+widget field-mapper {
+
+  purpose {
+    Field mapping interface for connecting output fields from one step
+    to input fields of another in automation and integration workflows.
+    Each target field has a text input that accepts both static values
+    and dynamic field tokens inserted via a field picker popover. Tokens
+    render as styled pills (chips) inline with text, allowing mixed
+    static and dynamic content in a single field value.
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the field mapper }
+    mappingRow:        container  { Single mapping entry: target label + value input + insert button }
+    targetField:       container  { Left side showing the target field name and type indicator }
+    targetLabel:       text       { Display name of the target field }
+    mappingInput:      widget     { Rich text input accepting both text and token pills }
+    insertFieldButton: action     { Button opening the field picker popover to insert a dynamic token }
+    fieldPicker:       widget     { Popover listing available source fields grouped by step }
+  }
+
+  states {
+    idle [initial] {
+      on FOCUS_INPUT -> editing;
+      on OPEN_PICKER -> picking;
+    }
+
+    editing {
+      on BLUR -> idle;
+      on OPEN_PICKER -> picking;
+      on INSERT_TOKEN -> editing;
+      entry [focusMappingInput];
+    }
+
+    picking {
+      on SELECT_FIELD -> editing;
+      on CLOSE_PICKER -> editing;
+      on ESCAPE -> editing;
+      entry [show fieldPicker; focusFieldSearch];
+      exit [hide fieldPicker; insertToken];
+    }
+
+    row {
+      empty [initial] {
+        on INPUT -> filled;
+        on INSERT_TOKEN -> filled;
+      }
+      filled {
+        on CLEAR -> empty;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Control+Space -> OPEN_PICKER;
+      Escape -> ESCAPE;
+      Backspace -> DELETE_TOKEN_OR_CHAR;
+      ArrowLeft -> CURSOR_LEFT;
+      ArrowRight -> CURSOR_RIGHT;
+    }
+    focus {
+      trap: false;
+      initial: mappingInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "field mapper";
+      };
+      mappingRow -> {
+        role: "group";
+        aria-label: concat("Mapping for ", self.targetName);
+      };
+      targetField -> {
+        role: "presentation";
+      };
+      targetLabel -> {
+        role: "label";
+        id: concat("target-", self.index);
+      };
+      mappingInput -> {
+        role: "textbox";
+        aria-label: concat("Value for ", self.targetName);
+        aria-labelledby: concat("target-", self.index);
+        aria-describedby: concat("hint-", self.index);
+      };
+      insertFieldButton -> {
+        role: "button";
+        aria-label: concat("Insert field token for ", self.targetName);
+        aria-haspopup: "dialog";
+        aria-expanded: if state == "picking" then "true" else "false";
+      };
+      fieldPicker -> {
+        role: "dialog";
+        aria-label: "Select source field";
+      };
+    }
+  }
+
+  props {
+    targetFields: list { name: String, type: String, required: Bool }
+    sourceFields: list { stepName: String, fields: list { name: String, type: String } }
+    mappings: list { targetName: String, value: String, tokens: list { field: String, step: String } }
+    ariaLabel: String = "Field Mapper"
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "field mapper";
+      data-state: state;
+      data-readonly: if ?readOnly then "true" else "false";
+      data-field-count: ?targetFields.length;
+    }
+
+    mappingRow -> {
+      role: "group";
+      aria-label: concat("Mapping for ", self.targetName);
+      data-part: "mapping-row";
+      data-target: self.targetName;
+      data-required: if self.required then "true" else "false";
+      data-filled: if self.value then "true" else "false";
+    }
+
+    targetField -> {
+      data-part: "target-field";
+      data-type: self.targetType;
+      data-required: if self.required then "true" else "false";
+    }
+
+    targetLabel -> {
+      data-part: "target-label";
+      text: self.targetName;
+      id: concat("target-", self.index);
+    }
+
+    mappingInput -> {
+      data-part: "mapping-input";
+      aria-label: concat("Value for ", self.targetName);
+      aria-labelledby: concat("target-", self.index);
+      contenteditable: if not ?readOnly then "true" else "false";
+      data-has-tokens: if self.tokens.length > 0 then "true" else "false";
+      onInput: send(INPUT, { target: self.targetName, value: self.textContent });
+      onFocus: send(FOCUS_INPUT, { target: self.targetName });
+      onBlur: send(BLUR);
+      onKeyDown-Control+Space: send(OPEN_PICKER, { target: self.targetName });
+    }
+
+    insertFieldButton -> {
+      role: "button";
+      aria-label: concat("Insert field token for ", self.targetName);
+      aria-haspopup: "dialog";
+      aria-expanded: if state == "picking" and self.active then "true" else "false";
+      data-part: "insert-field";
+      data-visible: if not ?readOnly then "true" else "false";
+      tabindex: "-1";
+      onClick: send(OPEN_PICKER, { target: self.targetName });
+    }
+
+    fieldPicker -> {
+      data-part: "field-picker";
+      role: "dialog";
+      aria-label: "Select source field";
+      data-state: if state == "picking" then "open" else "closed";
+    }
+  }
+
+  compose {
+    mappingInput: widget("text-input", { placeholder: "Enter value or insert field..." });
+    fieldPicker: widget("popover", { open: state == "picking" });
+    tokenChip: widget("chip", { deletable: true });
+  }
+
+  invariant {
+    "Tokens must render as non-editable chip pills within the text input";
+    "Backspace at the boundary of a token must select it; second backspace deletes it";
+    "Field picker must group source fields by their originating step";
+    "Required target fields must be visually distinguished from optional fields";
+    "Inserting a token must place it at the current cursor position";
+    "Read-only mode must disable all inputs and hide insert buttons";
+  }
+
+}

@@ -1,0 +1,64 @@
+@version(1)
+widget label {
+
+  purpose {
+    Text label that provides an accessible name for an associated
+    form control. Clicking the label transfers focus to the linked
+    control. Optionally displays a required-field indicator.
+  }
+
+  anatomy {
+    root: text                  { Native label element containing the text }
+    requiredIndicator: text     { Optional visual marker (e.g., asterisk) for required fields }
+  }
+
+  states {
+    static [initial] {
+      entry [];
+    }
+  }
+
+  accessibility {
+    role: label;
+    modal: false;
+    keyboard {
+      Click -> FOCUS_CONTROL;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    text: String = ""
+    for: option String
+    required: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      for: ?for;
+      onClick: send(FOCUS_CONTROL);
+    }
+
+    requiredIndicator -> {
+      data-part: "required-indicator";
+      data-visible: if ?required then "true" else "false";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: display-text;
+    specificity: 5;
+    fallback: true;
+  }
+
+}

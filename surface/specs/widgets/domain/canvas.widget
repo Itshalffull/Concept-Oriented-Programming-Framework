@@ -1,0 +1,325 @@
+@version(1)
+widget canvas {
+
+  purpose {
+    Infinite two-dimensional spatial plane for placing, connecting, and
+    manipulating visual elements. Inspired by tldraw and Figma, the canvas
+    supports panning, zooming, multi-select via selection box, and multiple
+    tool modes (select, hand, draw, erase, text, shape, connector, frame).
+    Nodes and edges live on separate layers with a minimap for orientation
+    and a property panel for editing selected element attributes.
+  }
+
+  anatomy {
+    root:          container  { Top-level wrapper establishing the canvas coordinate system }
+    viewport:      container  { Transformable layer applying pan and zoom transforms }
+    grid:          container  { Background dot or line grid indicating scale and position }
+    nodeLayer:     container  { Z-ordered layer containing all canvas nodes }
+    edgeLayer:     container  { Layer containing all connector edges rendered as SVG paths }
+    selectionBox:  container  { Rubber-band rectangle drawn during marquee multi-selection }
+    toolbar:       widget     { Tool mode selector and action buttons across the top or side }
+    minimap:       container  { Scaled-down overview showing viewport position within the full canvas }
+    propertyPanel: container  { Side panel displaying and editing properties of the selected element }
+  }
+
+  states {
+    select [initial] {
+      on SWITCH_HAND -> hand;
+      on SWITCH_DRAW -> draw;
+      on SWITCH_ERASE -> erase;
+      on SWITCH_TEXT -> text;
+      on SWITCH_SHAPE -> shape;
+      on SWITCH_CONNECTOR -> connector;
+      on SWITCH_FRAME -> frame;
+      on CLICK_EMPTY -> deselected;
+      on CLICK_NODE -> nodeSelected;
+      on DRAG_EMPTY -> marquee;
+    }
+
+    hand {
+      on SWITCH_SELECT -> select;
+      on PAN_START -> panning;
+      entry [set cursor grab];
+    }
+
+    panning {
+      on PAN_END -> hand;
+      entry [set cursor grabbing];
+    }
+
+    draw {
+      on SWITCH_SELECT -> select;
+      on DRAW_START -> drawing;
+      entry [set cursor crosshair];
+    }
+
+    drawing {
+      on DRAW_END -> draw;
+    }
+
+    erase {
+      on SWITCH_SELECT -> select;
+      on ERASE_START -> erasing;
+      entry [set cursor eraser];
+    }
+
+    erasing {
+      on ERASE_END -> erase;
+    }
+
+    text {
+      on SWITCH_SELECT -> select;
+      on CLICK_CANVAS -> placingText;
+      entry [set cursor text];
+    }
+
+    placingText {
+      on CONFIRM -> select;
+      on ESCAPE -> text;
+    }
+
+    shape {
+      on SWITCH_SELECT -> select;
+      on DRAG_CANVAS -> drawingShape;
+      entry [set cursor crosshair];
+    }
+
+    drawingShape {
+      on DRAW_END -> select;
+      on ESCAPE -> shape;
+    }
+
+    connector {
+      on SWITCH_SELECT -> select;
+      on DRAG_PORT -> drawingConnector;
+      entry [set cursor crosshair];
+    }
+
+    drawingConnector {
+      on CONNECT_END -> select;
+      on ESCAPE -> connector;
+    }
+
+    frame {
+      on SWITCH_SELECT -> select;
+      on DRAG_CANVAS -> drawingFrame;
+      entry [set cursor crosshair];
+    }
+
+    drawingFrame {
+      on DRAW_END -> select;
+      on ESCAPE -> frame;
+    }
+
+    nodeSelected {
+      on CLICK_EMPTY -> select;
+      on DELETE -> select;
+      on ESCAPE -> select;
+      on DRAG_NODE -> movingNode;
+      entry [show propertyPanel];
+      exit [hide propertyPanel];
+    }
+
+    movingNode {
+      on DROP -> nodeSelected;
+      on ESCAPE -> nodeSelected;
+    }
+
+    marquee {
+      on DRAG_END -> select;
+      on ESCAPE -> select;
+      entry [show selectionBox];
+      exit [hide selectionBox];
+    }
+
+    deselected {
+      on CLICK_NODE -> nodeSelected;
+      on DRAG_EMPTY -> marquee;
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      v -> SWITCH_SELECT;
+      h -> SWITCH_HAND;
+      d -> SWITCH_DRAW;
+      e -> SWITCH_ERASE;
+      t -> SWITCH_TEXT;
+      r -> SWITCH_SHAPE;
+      c -> SWITCH_CONNECTOR;
+      f -> SWITCH_FRAME;
+      Space -> TOGGLE_HAND;
+      Delete -> DELETE_SELECTED;
+      Backspace -> DELETE_SELECTED;
+      Escape -> ESCAPE;
+      Control+a -> SELECT_ALL;
+      Control+d -> DUPLICATE;
+      Control+z -> UNDO;
+      Control+Shift+z -> REDO;
+      Control+g -> GROUP;
+      Control+Shift+g -> UNGROUP;
+      Control+Plus -> ZOOM_IN;
+      Control+Minus -> ZOOM_OUT;
+      Control+0 -> ZOOM_FIT;
+      Control+1 -> ZOOM_100;
+      ArrowUp -> NUDGE_UP;
+      ArrowDown -> NUDGE_DOWN;
+      ArrowLeft -> NUDGE_LEFT;
+      ArrowRight -> NUDGE_RIGHT;
+      Shift+ArrowUp -> NUDGE_UP_LARGE;
+      Shift+ArrowDown -> NUDGE_DOWN_LARGE;
+      Shift+ArrowLeft -> NUDGE_LEFT_LARGE;
+      Shift+ArrowRight -> NUDGE_RIGHT_LARGE;
+      BracketLeft -> SEND_BACKWARD;
+      BracketRight -> BRING_FORWARD;
+      Tab -> FOCUS_NEXT_NODE;
+      Shift+Tab -> FOCUS_PREV_NODE;
+    }
+    focus {
+      trap: false;
+      initial: viewport;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "canvas";
+      };
+      viewport -> {
+        role: "group";
+        aria-label: "Canvas viewport";
+      };
+      nodeLayer -> {
+        role: "group";
+        aria-label: "Canvas nodes";
+      };
+      edgeLayer -> {
+        role: "img";
+        aria-label: "Connections between nodes";
+      };
+      selectionBox -> {
+        role: "region";
+        aria-label: "Selection area";
+        aria-hidden: if state != "marquee" then "true" else "false";
+      };
+      minimap -> {
+        role: "img";
+        aria-label: concat("Minimap: viewport at ", ?viewportPercent, "% zoom");
+      };
+      propertyPanel -> {
+        role: "complementary";
+        aria-label: "Element properties";
+        aria-hidden: if state != "nodeSelected" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    nodes: list CanvasNode
+    edges: list CanvasEdge
+    tool: union "select" | "hand" | "draw" | "erase" | "text" | "shape" | "connector" | "frame" = "select"
+    zoom: Float = 1.0
+    panX: Float = 0.0
+    panY: Float = 0.0
+    gridSize: Int = 20
+    gridVisible: Bool = true
+    snapToGrid: Bool = false
+    ariaLabel: String = "Canvas"
+    readOnly: Bool = false
+    selectedIds: list String = []
+    viewportPercent: Int = 100
+    shapeType: union "rectangle" | "ellipse" | "diamond" | "triangle" = "rectangle"
+  }
+
+  connect {
+    root -> {
+      role: "application";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "canvas";
+      data-tool: ?tool;
+      data-state: state;
+      data-readonly: if ?readOnly then "true" else "false";
+      data-zoom: ?zoom;
+      tabindex: "0";
+      onWheel: send(ZOOM, { delta: self.wheelDelta });
+      onPointerDown: send(POINTER_DOWN, { x: self.x, y: self.y });
+      onPointerMove: send(POINTER_MOVE, { x: self.x, y: self.y });
+      onPointerUp: send(POINTER_UP);
+    }
+
+    viewport -> {
+      data-part: "viewport";
+      style-transform: concat("translate(", ?panX, "px, ", ?panY, "px) scale(", ?zoom, ")");
+      data-zoom: ?zoom;
+    }
+
+    grid -> {
+      data-part: "grid";
+      data-visible: if ?gridVisible then "true" else "false";
+      data-size: ?gridSize;
+      data-zoom: ?zoom;
+      aria-hidden: "true";
+    }
+
+    nodeLayer -> {
+      data-part: "node-layer";
+      role: "group";
+      aria-label: "Canvas nodes";
+    }
+
+    edgeLayer -> {
+      data-part: "edge-layer";
+      role: "img";
+      aria-label: "Connections between nodes";
+    }
+
+    selectionBox -> {
+      data-part: "selection-box";
+      data-visible: if state == "marquee" then "true" else "false";
+      aria-hidden: if state != "marquee" then "true" else "false";
+    }
+
+    toolbar -> {
+      data-part: "toolbar";
+      aria-label: "Canvas tools";
+    }
+
+    minimap -> {
+      data-part: "minimap";
+      role: "img";
+      aria-label: concat("Minimap: viewport at ", ?viewportPercent, "% zoom");
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+    }
+
+    propertyPanel -> {
+      data-part: "property-panel";
+      role: "complementary";
+      aria-label: "Element properties";
+      data-visible: if ?selectedIds.length > 0 then "true" else "false";
+      aria-hidden: if ?selectedIds.length == 0 then "true" else "false";
+    }
+  }
+
+  compose {
+    toolbar: widget("toolbar", { tools: ["select", "hand", "draw", "erase", "text", "shape", "connector", "frame"], active: ?tool });
+    contextMenu: widget("context-menu", { items: ["Cut", "Copy", "Paste", "Duplicate", "Delete", "Bring Forward", "Send Backward", "Group", "Ungroup"] });
+    minimap: widget("minimap", { zoom: ?zoom, panX: ?panX, panY: ?panY });
+  }
+
+  invariant {
+    "Only one tool mode may be active at a time";
+    "Selection box must only appear during marquee state";
+    "Nodes must render above edges (nodeLayer z-index > edgeLayer z-index)";
+    "Zoom must clamp between 0.1 and 10.0";
+    "Snap-to-grid must quantize node positions to multiples of gridSize when enabled";
+    "Keyboard nudge must respect snap-to-grid setting";
+    "Minimap viewport indicator must reflect the visible portion of the canvas";
+    "Property panel must display only when at least one element is selected";
+  }
+
+}

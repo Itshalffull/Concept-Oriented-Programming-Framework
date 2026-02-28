@@ -1,0 +1,97 @@
+@version(1)
+widget data-list {
+
+  purpose {
+    Key-value pair display rendering a list of labelled data fields
+    using description list semantics. Each item consists of a term
+    (label) and a detail (value), suitable for profile views, settings
+    summaries, and read-only form displays. Supports horizontal and
+    vertical layout orientations.
+  }
+
+  anatomy {
+    root:   container  { Top-level description list wrapper }
+    item:   container  { Grouping element pairing a term with its detail }
+    term:   text       { Label or key identifying the data field }
+    detail: container  { Value or content associated with the term }
+  }
+
+  states {
+    static [initial] {
+    }
+  }
+
+  accessibility {
+    role: list;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: ?ariaLabel;
+      };
+      item -> {
+        role: "listitem";
+      };
+      term -> {
+        role: "term";
+      };
+      detail -> {
+        role: "definition";
+      };
+    }
+  }
+
+  props {
+    items: list { label: String, value: String }
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    ariaLabel: option String
+  }
+
+  connect {
+    root -> {
+      role: "list";
+      aria-label: ?ariaLabel;
+      data-orientation: ?orientation;
+      data-part: "data-list";
+    }
+
+    item -> {
+      role: "listitem";
+      data-part: "item";
+      data-orientation: ?orientation;
+    }
+
+    term -> {
+      role: "term";
+      data-part: "term";
+      id: self.termId;
+    }
+
+    detail -> {
+      role: "definition";
+      data-part: "detail";
+      aria-labelledby: self.termId;
+    }
+  }
+
+  affordance {
+    serves: group-fields;
+    specificity: 6;
+    when { readOnly: true }
+  }
+
+  invariant {
+    "Every item must contain exactly one term and one detail";
+    "term must have an id that detail references via aria-labelledby";
+    "Semantic structure must use dl/dt/dd when rendered in HTML";
+  }
+
+}

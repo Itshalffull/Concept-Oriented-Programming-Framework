@@ -1,0 +1,128 @@
+@version(1)
+widget fieldset {
+
+  purpose {
+    Form field grouping container with an accessible legend label.
+    Groups related form controls into a logical section with optional
+    description text and support for collapsible sections when
+    the collapsible prop is enabled.
+  }
+
+  anatomy {
+    root: container        { Top-level fieldset element wrapping legend and content }
+    legend: text           { Accessible legend heading for the field group }
+    content: container     { Container holding the grouped form fields }
+    description: text      { Optional helper text describing the field group }
+  }
+
+  states {
+    disclosure {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+        entry [show content];
+      }
+      collapsed {
+        on EXPAND -> expanded;
+        entry [hide content];
+      }
+    }
+
+    disabled [parallel] {
+      enabled [initial] {
+        on DISABLE -> disabled;
+      }
+      disabled {
+        on ENABLE -> enabled;
+        entry [disable all children];
+        exit [restore children state];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Enter -> TOGGLE;
+      Space -> TOGGLE;
+    }
+    focus {
+      trap: false;
+      initial: first focusable child;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-labelledby: legend;
+        aria-describedby: if ?description then description else none;
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+      legend -> {
+        role: if ?collapsible then "button" else "legend";
+        aria-expanded: if ?collapsible then (if state.disclosure == "expanded" then "true" else "false") else none;
+      };
+      description -> {
+        aria-hidden: "false";
+      };
+    }
+  }
+
+  props {
+    label: String
+    disabled: Bool = false
+    collapsible: Bool = false
+    defaultOpen: Bool = true
+    description: option String
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-labelledby: legend;
+      aria-describedby: if ?description then description else none;
+      aria-disabled: if ?disabled then "true" else "false";
+      data-disabled: if ?disabled then "true" else "false";
+      data-collapsible: if ?collapsible then "true" else "false";
+      data-state: if ?collapsible then (if state.disclosure == "expanded" then "open" else "closed") else "static";
+    }
+
+    legend -> {
+      text: ?label;
+      role: if ?collapsible then "button" else none;
+      aria-expanded: if ?collapsible then (if state.disclosure == "expanded" then "true" else "false") else none;
+      tabindex: if ?collapsible then "0" else none;
+      onClick: if ?collapsible then send(if state.disclosure == "expanded" then COLLAPSE else EXPAND) else none;
+      onKeyDown: if ?collapsible then send(TOGGLE) else none;
+      data-part: "legend";
+    }
+
+    content -> {
+      data-part: "content";
+      data-state: if ?collapsible then (if state.disclosure == "expanded" then "open" else "closed") else "static";
+      hidden: if ?collapsible then (if state.disclosure == "collapsed" then true else false) else false;
+    }
+
+    description -> {
+      data-part: "description";
+      text: ?description;
+      visible: if ?description then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-fields;
+    specificity: 8;
+  }
+
+  compose {
+    content: widget("disclosure", { open: state.disclosure == "expanded" })
+  }
+
+  invariant {
+    when ?disabled == true then all child form controls are disabled;
+    when ?collapsible == false then content is always visible;
+    legend always serves as the accessible label for root;
+  }
+
+}

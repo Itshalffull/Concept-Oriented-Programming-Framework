@@ -1,0 +1,241 @@
+@version(1)
+widget notification-center {
+
+  purpose {
+    Bell icon trigger that opens a dropdown panel containing a categorized
+    notification feed. Displays an unread count badge on the bell, tabbed
+    sections for different notification types (all, unread, mentions), and
+    a scrollable list of notification items with read/unread states.
+    Used as a global notification hub in application headers and toolbars.
+  }
+
+  anatomy {
+    root:               container  { Top-level wrapper tying trigger and panel together }
+    trigger:            action     { Button that toggles the notification panel }
+    bellIcon:           widget     { Bell icon within the trigger button }
+    unreadBadge:        widget     { Count badge overlaying the bell showing unread count }
+    panel:              container  { Floating dropdown panel containing the notification feed }
+    panelHeader:        container  { Header region with title and mark-all-read action }
+    panelTitle:         text       { Heading for the notification panel }
+    markAllReadButton:  action     { Button that marks all notifications as read }
+    tabs:               widget     { Tab bar for filtering notifications by category }
+    notificationList:   container  { Scrollable list of notification items }
+    notificationItem:   widget     { Individual notification entry with icon, text, and timestamp }
+    emptyState:         widget     { Placeholder shown when no notifications match the active tab }
+    loadMoreButton:     action     { Button to load older notifications }
+    settingsButton:     action     { Button to navigate to notification preferences }
+  }
+
+  states {
+    panel {
+      closed [initial] {
+        on TOGGLE -> open;
+        on OPEN -> open;
+      }
+      open {
+        on TOGGLE -> closed;
+        on CLOSE -> closed;
+        on OUTSIDE_CLICK -> closed;
+        on ESCAPE -> closed;
+        entry [positionPanel, focusPanel, loadNotifications];
+        exit [clearPosition];
+      }
+    }
+
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [showSkeleton];
+        exit [hideSkeleton];
+      }
+      error {
+        on RETRY -> loading;
+        on LOAD -> loading;
+      }
+    }
+
+    unread {
+      none [initial] {
+        on NEW_NOTIFICATION -> hasUnread;
+      }
+      hasUnread {
+        on MARK_ALL_READ -> none;
+        on ALL_READ -> none;
+        on NEW_NOTIFICATION -> hasUnread;
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: false;
+    keyboard {
+      Escape      -> ESCAPE;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      ArrowDown   -> NAVIGATE_NEXT_ITEM;
+      ArrowUp     -> NAVIGATE_PREV_ITEM;
+      Enter       -> ACTIVATE_ITEM;
+      Home        -> NAVIGATE_FIRST_ITEM;
+      End         -> NAVIGATE_LAST_ITEM;
+    }
+    focus {
+      trap: false;
+      initial: panel;
+      returnOnClose: trigger;
+    }
+    aria {
+      trigger -> {
+        aria-haspopup: "dialog";
+        aria-expanded: if state.panel == "open" then "true" else "false";
+        aria-label: if state.unread == "hasUnread" then concat("Notifications, ", unreadCount, " unread") else "Notifications";
+      };
+      panel -> {
+        role: "dialog";
+        aria-label: "Notification center";
+        aria-modal: "false";
+      };
+      notificationList -> {
+        role: "list";
+        aria-label: "Notifications";
+      };
+      notificationItem -> {
+        role: "listitem";
+      };
+      markAllReadButton -> {
+        aria-label: "Mark all notifications as read";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    notifications: list NotificationDef = []
+    unreadCount: Int = 0
+    activeTab: String = "all"
+    tabs: list String = ["all", "unread", "mentions"]
+    loading: Bool = false
+    hasMore: Bool = false
+    placement: String = "bottom-end"
+    onOpen: option Function
+    onClose: option Function
+    onMarkRead: option Function
+    onMarkAllRead: option Function
+    onNavigate: option Function
+  }
+
+  connect {
+    root -> {
+      data-state: if state.panel == "open" then "open" else "closed";
+      data-unread: if ?unreadCount > 0 then "true" else "false";
+    }
+
+    trigger -> {
+      aria-haspopup: "dialog";
+      aria-expanded: if state.panel == "open" then "true" else "false";
+      aria-label: if ?unreadCount > 0 then concat("Notifications, ", ?unreadCount, " unread") else "Notifications";
+      aria-controls: notificationPanel;
+      onClick: send(TOGGLE);
+    }
+
+    bellIcon -> {
+      data-part: "bell-icon";
+      data-unread: if ?unreadCount > 0 then "true" else "false";
+      aria-hidden: "true";
+    }
+
+    unreadBadge -> {
+      data-part: "unread-badge";
+      hidden: if ?unreadCount == 0 then true else false;
+      aria-hidden: "true";
+      text: if ?unreadCount > 99 then "99+" else toString(?unreadCount);
+    }
+
+    panel -> {
+      role: "dialog";
+      aria-label: "Notification center";
+      aria-modal: "false";
+      id: notificationPanel;
+      data-state: if state.panel == "open" then "open" else "closed";
+      data-placement: ?placement;
+      hidden: if state.panel == "closed" then true else false;
+    }
+
+    panelHeader -> {
+      data-part: "panel-header";
+    }
+
+    panelTitle -> {
+      text: "Notifications";
+      id: panelTitle;
+    }
+
+    markAllReadButton -> {
+      aria-label: "Mark all notifications as read";
+      disabled: if ?unreadCount == 0 then true else false;
+      onClick: send(MARK_ALL_READ);
+    }
+
+    tabs -> {
+      data-part: "tabs";
+      value: ?activeTab;
+    }
+
+    notificationList -> {
+      role: "list";
+      aria-label: "Notifications";
+      aria-busy: if ?loading then "true" else "false";
+      data-tab: ?activeTab;
+      data-state: if ?loading then "loading" else if ?notifications.length == 0 then "empty" else "idle";
+    }
+
+    notificationItem -> {
+      role: "listitem";
+      data-read: if self.read then "true" else "false";
+      data-type: self.type;
+      tabindex: "0";
+      onClick: send(ACTIVATE_ITEM, { id: self.id });
+      onFocus: send(MARK_READ, { id: self.id });
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if ?notifications.length > 0 then true else if ?loading then true else false;
+    }
+
+    loadMoreButton -> {
+      aria-label: "Load more notifications";
+      hidden: if not ?hasMore then true else false;
+      disabled: ?loading;
+      onClick: send(LOAD);
+    }
+
+    settingsButton -> {
+      aria-label: "Notification settings";
+      onClick: send(NAVIGATE_SETTINGS);
+    }
+  }
+
+  compose {
+    panel:             widget("popover", { open: ?open, placement: ?placement, closeOnOutsideClick: true });
+    tabs:              widget("tabs", { value: ?activeTab });
+    bellIcon:          widget("icon", { name: "bell" });
+    unreadBadge:       widget("badge", { variant: "solid", size: "sm" });
+    notificationItem:  widget("notification-item", {});
+    emptyState:        widget("empty-state", { title: "No notifications" });
+  }
+
+  invariant {
+    "Unread badge must only be visible when unreadCount is greater than zero";
+    "Panel must close on outside click and Escape key";
+    "Focus must return to trigger when panel closes";
+    "Mark all read must set unreadCount to zero and mark all items as read";
+    "Tab filtering must show only notifications matching the active category";
+    "Loading state must show aria-busy on the notification list";
+  }
+
+}

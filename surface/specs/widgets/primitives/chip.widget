@@ -1,0 +1,161 @@
+@version(1)
+widget chip {
+
+  purpose {
+    Compact interactive element for displaying tags, filters,
+    or categorical selections. Can be toggled between selected
+    and deselected states and optionally removed via a delete
+    action. Suitable for filter bars, multi-select displays,
+    and tag input companions.
+  }
+
+  anatomy {
+    root: container          { Outer wrapper providing shape and interaction surface }
+    label: text              { Primary text content of the chip }
+    deleteButton: action     { Optional button to remove/dismiss the chip }
+    icon: container          { Optional leading icon or avatar }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT -> selected;
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+      entry [set aria-selected false];
+    }
+
+    selected {
+      on DESELECT -> idle;
+      on HOVER -> selected;
+      on FOCUS -> selected;
+      entry [set aria-selected true];
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on SELECT -> selected;
+    }
+
+    focused {
+      on BLUR -> idle;
+      on SELECT -> selected;
+      on DELETE -> removed;
+    }
+
+    removed {
+      entry [send REMOVE];
+    }
+
+    deletable [parallel] {
+      on MAKE_UNDELETABLE -> undeletable;
+      entry [show deleteButton];
+      exit [hide deleteButton];
+    }
+
+    undeletable [parallel] {
+      on MAKE_DELETABLE -> deletable;
+    }
+
+    disabled [parallel] {
+      on ENABLE -> enabled;
+      entry [set aria-disabled true];
+      exit [set aria-disabled false];
+    }
+
+    enabled [parallel] {
+      on DISABLE -> disabled;
+    }
+  }
+
+  accessibility {
+    role: option;
+    modal: false;
+    keyboard {
+      Enter -> SELECT;
+      Space -> SELECT;
+      Backspace -> DELETE;
+      Delete -> DELETE;
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: label;
+      describedby: none;
+    }
+  }
+
+  props {
+    label: String = ""
+    selected: Bool = false
+    deletable: Bool = false
+    disabled: Bool = false
+    color: option String
+    value: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "option";
+      aria-selected: if ?selected then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      data-state: if ?selected then "selected" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+      data-color: ?color;
+      tabindex: if ?disabled then "-1" else "0";
+      onClick: send(SELECT);
+      onKeyDown: send(KEY);
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    label -> {
+      data-part: "label";
+    }
+
+    deleteButton -> {
+      data-part: "delete-button";
+      role: "button";
+      aria-label: "Remove";
+      tabindex: "-1";
+      data-visible: if ?deletable then "true" else "false";
+      onClick: send(DELETE);
+      onKeyDown: send(DELETE);
+    }
+
+    icon -> {
+      data-part: "icon";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: display-badge;
+    specificity: 8;
+    when { interactive: true }
+  }
+
+  invariant {
+    after send(SELECT) from idle -> state is selected;
+    then aria-selected is "true";
+    and data-state is "selected";
+  }
+
+  invariant {
+    after send(DESELECT) from selected -> state is idle;
+    then aria-selected is "false";
+    and data-state is "idle";
+  }
+
+  invariant {
+    after send(DELETE) -> state is removed;
+    then REMOVE event is dispatched;
+  }
+
+}

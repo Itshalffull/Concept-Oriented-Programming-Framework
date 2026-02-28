@@ -1,0 +1,203 @@
+@version(1)
+widget kanban-board {
+
+  purpose {
+    Column-based drag-and-drop board for organising items into categorical
+    lanes. Each column represents a status or grouping with cards that can
+    be reordered within a column or moved between columns via drag-and-drop
+    or keyboard shortcuts. Provides accessible column and card navigation
+    with live region announcements for drag operations.
+  }
+
+  anatomy {
+    root:            container  { Top-level board wrapper providing horizontal scroll and layout }
+    column:          container  { Vertical lane representing a single category or status }
+    columnHeader:    container  { Header region of a column containing title and item count }
+    columnTitle:     text       { Name of the column category }
+    columnCount:     text       { Numeric badge showing the number of items in the column }
+    cardList:        container  { Scrollable region within a column holding all cards }
+    card:            widget     { Individual draggable card within a column }
+    addCardButton:   action     { Optional button to create a new card in a column }
+    dragPlaceholder: container  { Visual indicator showing the drop target position during drag }
+  }
+
+  states {
+    idle [initial] {
+      on DRAG_START -> dragging;
+      on FOCUS_COLUMN -> columnFocused;
+    }
+
+    dragging {
+      on DROP -> idle;
+      on DRAG_CANCEL -> idle;
+      on DRAG_ENTER_COLUMN -> draggingBetween;
+      entry [set aria-grabbed true; announce "Picked up card"];
+      exit [set aria-grabbed false];
+    }
+
+    draggingBetween {
+      on DROP -> idle;
+      on DRAG_CANCEL -> idle;
+      on DRAG_ENTER_COLUMN -> draggingBetween;
+      entry [announce "Over column"; show dragPlaceholder];
+      exit [hide dragPlaceholder];
+    }
+
+    columnFocused {
+      on BLUR -> idle;
+      on FOCUS_CARD -> cardFocused;
+    }
+
+    cardFocused {
+      on BLUR -> idle;
+      on FOCUS_COLUMN -> columnFocused;
+      on DRAG_START -> dragging;
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      ArrowLeft -> NAVIGATE_COLUMN_PREV;
+      ArrowRight -> NAVIGATE_COLUMN_NEXT;
+      ArrowUp -> NAVIGATE_CARD_PREV;
+      ArrowDown -> NAVIGATE_CARD_NEXT;
+      Space -> DRAG_TOGGLE;
+      Enter -> ACTIVATE_CARD;
+      Escape -> DRAG_CANCEL;
+      Home -> NAVIGATE_COLUMN_FIRST;
+      End -> NAVIGATE_COLUMN_LAST;
+      Control+ArrowLeft -> MOVE_CARD_LEFT;
+      Control+ArrowRight -> MOVE_CARD_RIGHT;
+      Control+ArrowUp -> MOVE_CARD_UP;
+      Control+ArrowDown -> MOVE_CARD_DOWN;
+    }
+    focus {
+      trap: false;
+      initial: card[first];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "kanban board";
+      };
+      column -> {
+        role: "row";
+        aria-label: self.title;
+      };
+      cardList -> {
+        role: "gridcell";
+        aria-label: concat(self.title, " cards");
+      };
+      card -> {
+        aria-roledescription: "card";
+        aria-grabbed: if state == "dragging" then "true" else "false";
+        aria-dropeffect: if state == "draggingBetween" then "move" else "none";
+      };
+    }
+  }
+
+  props {
+    columns: list { id: String, title: String, items: list Object }
+    draggable: Bool = true
+    ariaLabel: String = "Kanban board"
+  }
+
+  connect {
+    root -> {
+      role: "grid";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "kanban board";
+      data-state: if state == "dragging" then "dragging" else if state == "draggingBetween" then "dragging-between" else "idle";
+      data-draggable: if ?draggable then "true" else "false";
+    }
+
+    column -> {
+      role: "row";
+      aria-label: self.title;
+      data-column-id: self.id;
+      data-state: if state == "draggingBetween" then "drop-target" else "idle";
+      onDragEnter: if ?draggable then send(DRAG_ENTER_COLUMN) else noop;
+      onDragOver: if ?draggable then send(DRAG_OVER) else noop;
+      onDrop: if ?draggable then send(DROP) else noop;
+    }
+
+    columnHeader -> {
+      data-part: "column-header";
+    }
+
+    columnTitle -> {
+      data-part: "column-title";
+      id: self.titleId;
+    }
+
+    columnCount -> {
+      data-part: "column-count";
+      aria-label: concat(self.count, " items");
+    }
+
+    cardList -> {
+      role: "gridcell";
+      aria-label: concat(self.title, " cards");
+      data-part: "card-list";
+      data-droppable: if ?draggable then "true" else "false";
+    }
+
+    card -> {
+      aria-roledescription: "card";
+      aria-grabbed: if state == "dragging" then "true" else "false";
+      draggable: if ?draggable then "true" else "false";
+      tabindex: if state == "cardFocused" then "0" else "-1";
+      data-state: if state == "dragging" then "dragging" else "idle";
+      onDragStart: send(DRAG_START);
+      onDragEnd: send(DROP);
+      onKeyDown-Space: if ?draggable then send(DRAG_TOGGLE) else noop;
+      onKeyDown-Escape: send(DRAG_CANCEL);
+      onKeyDown-Enter: send(ACTIVATE_CARD);
+      onKeyDown-ArrowUp: send(NAVIGATE_CARD_PREV);
+      onKeyDown-ArrowDown: send(NAVIGATE_CARD_NEXT);
+      onKeyDown-ArrowLeft: send(NAVIGATE_COLUMN_PREV);
+      onKeyDown-ArrowRight: send(NAVIGATE_COLUMN_NEXT);
+      onFocus: send(FOCUS_CARD);
+      onBlur: send(BLUR);
+    }
+
+    addCardButton -> {
+      role: "button";
+      aria-label: concat("Add card to ", self.title);
+      data-part: "add-card";
+      tabindex: "0";
+      onClick: send(ADD_CARD);
+      onKeyDown-Enter: send(ADD_CARD);
+      onKeyDown-Space: send(ADD_CARD);
+    }
+
+    dragPlaceholder -> {
+      data-part: "drag-placeholder";
+      data-visible: if state == "draggingBetween" then "true" else "false";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 12;
+    when { viewType: "board"; groupField: true }
+  }
+
+  compose {
+    card: widget("card", { clickable: true });
+  }
+
+  invariant {
+    "Each card must appear in exactly one column at any time";
+    "aria-grabbed must be true only on the actively dragged card";
+    "dragPlaceholder must indicate the exact drop position";
+    "Keyboard drag must announce column and position via aria-live";
+    "Escape during drag must return the card to its original position";
+  }
+
+}

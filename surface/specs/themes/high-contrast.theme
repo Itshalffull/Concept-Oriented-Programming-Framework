@@ -1,0 +1,193 @@
+@version(1)
+
+# High Contrast Theme — Surface Spec Section 3.2
+# Extends light theme for WCAG AAA compliance (7:1 minimum contrast).
+# Designed for users with low vision or high-contrast display preferences.
+# Respects prefers-contrast: more media query.
+# Stronger borders, bolder weights, enhanced focus indicators.
+
+theme high-contrast extends light {
+
+  palette {
+    # --- Brand (deepened for 7:1+ contrast against white surfaces) ---
+    primary:              oklch(0.40 0.24 265)
+    primary-hover:        oklch(0.35 0.24 265)
+    primary-active:       oklch(0.30 0.24 265)
+    primary-container:    oklch(0.90 0.08 265)
+    on-primary:           oklch(1.0 0 0)
+    on-primary-container: oklch(0.15 0.12 265)
+
+    secondary:              oklch(0.38 0.14 290)
+    secondary-hover:        oklch(0.33 0.14 290)
+    secondary-active:       oklch(0.28 0.14 290)
+    secondary-container:    oklch(0.91 0.05 290)
+    on-secondary:           oklch(1.0 0 0)
+    on-secondary-container: oklch(0.15 0.08 290)
+
+    tertiary:              oklch(0.38 0.16 180)
+    tertiary-hover:        oklch(0.33 0.16 180)
+    tertiary-active:       oklch(0.28 0.16 180)
+    tertiary-container:    oklch(0.91 0.05 180)
+    on-tertiary:           oklch(1.0 0 0)
+    on-tertiary-container: oklch(0.15 0.08 180)
+
+    # --- Surfaces (maximum contrast white/near-black pairing) ---
+    background:       oklch(1.0 0 0)
+    on-background:    oklch(0.10 0.005 260)
+    surface:          oklch(1.0 0 0)
+    surface-dim:      oklch(0.95 0.002 250)
+    surface-bright:   oklch(1.0 0 0)
+    surface-variant:  oklch(0.96 0.003 250)
+    on-surface:       oklch(0.10 0.005 260)
+    on-surface-variant: oklch(0.25 0.01 260)
+    inverse-surface:    oklch(0.12 0.005 260)
+    inverse-on-surface: oklch(0.98 0.002 260)
+    inverse-primary:    oklch(0.82 0.14 265)
+
+    # --- Outlines (strong, clearly visible borders) ---
+    outline:          oklch(0.20 0.01 260)
+    outline-variant:  oklch(0.45 0.008 260)
+    outline-focus:    oklch(0.40 0.24 265)
+
+    # --- Status (enhanced saturation and darkness for AAA compliance) ---
+    error:             oklch(0.42 0.24 27)
+    error-hover:       oklch(0.37 0.24 27)
+    error-container:   oklch(0.94 0.06 27)
+    on-error:          oklch(1.0 0 0)
+    on-error-container: oklch(0.18 0.14 27)
+
+    warning:             oklch(0.45 0.18 75)
+    warning-hover:       oklch(0.40 0.18 75)
+    warning-container:   oklch(0.95 0.05 75)
+    on-warning:          oklch(1.0 0 0)
+    on-warning-container: oklch(0.18 0.10 75)
+
+    success:             oklch(0.38 0.20 145)
+    success-hover:       oklch(0.33 0.20 145)
+    success-container:   oklch(0.94 0.05 145)
+    on-success:          oklch(1.0 0 0)
+    on-success-container: oklch(0.15 0.10 145)
+
+    info:             oklch(0.40 0.18 250)
+    info-hover:       oklch(0.35 0.18 250)
+    info-container:   oklch(0.94 0.04 250)
+    on-info:          oklch(1.0 0 0)
+    on-info-container: oklch(0.15 0.10 250)
+
+    # --- Utility ---
+    shadow:           oklch(0.0 0 0 / 0.20)
+    scrim:            oklch(0.0 0 0 / 0.50)
+    overlay-backdrop: oklch(0.0 0 0 / 0.65)
+
+    # --- Interactive states (stronger state layers for visibility) ---
+    hover-state-layer:   oklch(0.10 0.005 260 / 0.12)
+    press-state-layer:   oklch(0.10 0.005 260 / 0.18)
+    focus-state-layer:   oklch(0.10 0.005 260 / 0.18)
+    drag-state-layer:    oklch(0.10 0.005 260 / 0.22)
+    disabled-content:    oklch(0.10 0.005 260 / 0.50)
+    disabled-container:  oklch(0.10 0.005 260 / 0.18)
+  }
+
+  typography {
+    # Inherit font families from light theme.
+    # Override type scale with bolder weights and slightly larger minimum sizes
+    # to improve legibility at AAA compliance levels.
+
+    font-family-sans: "Inter", system-ui, -apple-system, sans-serif
+    font-family-mono: "JetBrains Mono", ui-monospace, monospace
+    font-family-serif: "Lora", Georgia, "Times New Roman", serif
+
+    display-lg: { size: 3.5rem,    lineHeight: 1.15, weight: 800, tracking: -0.02em,  family: font-family-sans }
+    display-md: { size: 2.75rem,   lineHeight: 1.18, weight: 800, tracking: -0.015em, family: font-family-sans }
+    display-sm: { size: 2.25rem,   lineHeight: 1.2,  weight: 800, tracking: -0.01em,  family: font-family-sans }
+
+    heading-lg: { size: 2rem,      lineHeight: 1.3,  weight: 700, tracking: -0.01em,  family: font-family-sans }
+    heading-md: { size: 1.5rem,    lineHeight: 1.37, weight: 700, tracking: -0.005em, family: font-family-sans }
+    heading-sm: { size: 1.25rem,   lineHeight: 1.44, weight: 700, tracking: 0,        family: font-family-sans }
+
+    # Minimum body text size raised to 1rem (16px) for low-vision legibility
+    body-lg:    { size: 1.125rem,  lineHeight: 1.6,  weight: 450, tracking: 0.005em,  family: font-family-sans }
+    body-md:    { size: 1rem,      lineHeight: 1.55, weight: 450, tracking: 0.005em,  family: font-family-sans }
+    body-sm:    { size: 1rem,      lineHeight: 1.5,  weight: 450, tracking: 0.01em,   family: font-family-sans }
+
+    # Label minimum size raised to 0.875rem (14px)
+    label-lg:   { size: 0.9375rem, lineHeight: 1.47, weight: 600, tracking: 0.01em,   family: font-family-sans }
+    label-md:   { size: 0.875rem,  lineHeight: 1.43, weight: 600, tracking: 0.015em,  family: font-family-sans }
+    label-sm:   { size: 0.875rem,  lineHeight: 1.43, weight: 600, tracking: 0.02em,   family: font-family-sans }
+
+    caption:    { size: 0.8125rem, lineHeight: 1.38, weight: 450, tracking: 0.025em,  family: font-family-sans }
+    overline:   { size: 0.8125rem, lineHeight: 1.38, weight: 700, tracking: 0.08em,   family: font-family-sans, transform: uppercase }
+
+    code:       { size: 0.9375rem, lineHeight: 1.6,  weight: 450, family: font-family-mono }
+    code-sm:    { size: 0.875rem,  lineHeight: 1.57, weight: 450, family: font-family-mono }
+  }
+
+  # spacing — inherited from light, no overrides needed
+
+  motion {
+    # Inherit all durations and easings from light theme.
+    # Critical: respect prefers-reduced-motion and prefers-contrast.
+    # High-contrast users often benefit from reduced or eliminated motion.
+
+    duration-instant: 50ms
+    duration-fast:    100ms
+    duration-normal:  150ms
+    duration-slow:    250ms
+    duration-slower:  400ms
+
+    easing-default:    cubic-bezier(0.2, 0, 0, 1)
+    easing-emphasize:  cubic-bezier(0.05, 0.7, 0.1, 1)
+    easing-decelerate: cubic-bezier(0, 0, 0, 1)
+    easing-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15)
+    easing-spring:     cubic-bezier(0.175, 0.885, 0.32, 1.275)
+    easing-linear:     linear
+
+    transition-fade:     { duration: duration-instant, easing: easing-default, property: opacity }
+    transition-scale:    { duration: duration-fast, easing: easing-emphasize, property: transform }
+    transition-slide:    { duration: duration-fast, easing: easing-decelerate, property: transform }
+    transition-expand:   { duration: duration-normal, easing: easing-emphasize, property: "height, width" }
+    transition-color:    { duration: duration-instant, easing: easing-default, property: "background-color, border-color, color" }
+
+    reduce-motion: prefers-reduced-motion
+    prefer-contrast: prefers-contrast
+  }
+
+  elevation {
+    # High-contrast mode relies more on borders than subtle shadows.
+    # Shadows are stronger and supplemented by outline references.
+
+    level-0: none
+    level-1: 0 1px 2px 0 oklch(0.0 0 0 / 0.22)
+    level-2: 0 2px 4px -1px oklch(0.0 0 0 / 0.28), 0 1px 2px -1px oklch(0.0 0 0 / 0.20)
+    level-3: 0 4px 8px -2px oklch(0.0 0 0 / 0.30), 0 2px 4px -2px oklch(0.0 0 0 / 0.22)
+    level-4: 0 8px 16px -4px oklch(0.0 0 0 / 0.35), 0 4px 6px -4px oklch(0.0 0 0 / 0.25)
+    level-5: 0 16px 32px -8px oklch(0.0 0 0 / 0.40), 0 8px 16px -8px oklch(0.0 0 0 / 0.28)
+
+    elevation-card:     level-1
+    elevation-dropdown: level-2
+    elevation-sticky:   level-3
+    elevation-dialog:   level-4
+    elevation-toast:    level-5
+  }
+
+  radius {
+    # Slightly larger radii to make visual boundaries more distinct.
+    # Combined with strong outline tokens, this aids boundary perception.
+
+    none: 0
+    sm:   6px
+    md:   10px
+    lg:   14px
+    xl:   20px
+    2xl:  28px
+    full: 9999px
+
+    radius-button:  md
+    radius-input:   md
+    radius-card:    lg
+    radius-dialog:  xl
+    radius-chip:    full
+    radius-avatar:  full
+    radius-badge:   full
+  }
+}

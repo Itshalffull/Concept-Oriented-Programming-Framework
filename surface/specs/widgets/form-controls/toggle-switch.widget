@@ -1,0 +1,104 @@
+@version(1)
+widget toggle-switch {
+
+  purpose {
+    Binary on/off toggle control with a sliding thumb indicator.
+    Provides immediate visual feedback of the toggled state and
+    is suitable for settings, preferences, and feature flags.
+  }
+
+  anatomy {
+    root: container     { Outermost wrapper; groups the switch and its label }
+    input: action       { Hidden native input element for form integration }
+    control: container  { Visible track that contains the sliding thumb }
+    thumb: container    { Sliding indicator showing current on/off position }
+    label: text         { Visible label describing the toggle purpose }
+  }
+
+  states {
+    toggle {
+      off [initial] {
+        on TOGGLE -> on;
+        entry [animateThumbOff];
+      }
+      on {
+        on TOGGLE -> off;
+        entry [animateThumbOn];
+      }
+    }
+  }
+
+  accessibility {
+    role: switch;
+    keyboard {
+      Space -> TOGGLE;
+      Enter -> TOGGLE;
+    }
+    focus {
+      input: focusable;
+    }
+    aria {
+      input -> {
+        role: "switch";
+        aria-checked: if state.toggle == "on" then "true" else "false";
+        aria-label: ?label;
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    checked: Bool = false
+    disabled: Bool = false
+    label: String
+    name: option String
+    required: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if state.toggle == "on" then "on" else "off";
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: if not ?disabled then send(TOGGLE) else noop;
+    }
+    input -> {
+      type: "checkbox";
+      role: "switch";
+      checked: ?checked;
+      disabled: ?disabled;
+      required: ?required;
+      name: ?name;
+      onKeyDown-Space: send(TOGGLE);
+      onKeyDown-Enter: send(TOGGLE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+    control -> {
+      data-state: if state.toggle == "on" then "on" else "off";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    thumb -> {
+      data-state: if state.toggle == "on" then "on" else "off";
+      style-transform: if state.toggle == "on" then "translateX(100%)" else "translateX(0)";
+    }
+    label -> {
+      text: ?label;
+      for: input;
+    }
+  }
+
+  affordance {
+    serves: toggle;
+    specificity: 10;
+  }
+
+  affordance {
+    serves: toggle;
+    specificity: 9;
+    when { platform: "mobile" }
+  }
+
+  invariant {
+    checked == (state.toggle == "on");
+  }
+}

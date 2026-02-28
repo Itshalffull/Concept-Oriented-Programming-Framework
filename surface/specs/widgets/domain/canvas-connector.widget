@@ -1,0 +1,209 @@
+@version(1)
+widget canvas-connector {
+
+  purpose {
+    Edge or arrow connecting two canvas nodes. Renders as an SVG path
+    between a start handle and an end handle, each anchored to a node
+    port. Supports dragging either endpoint to reconnect, optional
+    mid-path labels, and multiple line styles (straight, curved,
+    step/elbow). Acts as the primary relationship visual in canvas
+    and workflow editors.
+  }
+
+  anatomy {
+    root:        container  { SVG group wrapper containing the path and interactive handles }
+    path:        container  { The visible SVG path element representing the connection line }
+    startHandle: action     { Draggable circle at the source end for reconnecting the edge }
+    endHandle:   action     { Draggable circle at the target end for reconnecting the edge }
+    label:       text       { Optional text label positioned at the midpoint of the path }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT -> selected;
+      on HOVER -> hovered;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on SELECT -> selected;
+      entry [highlight path; show handles faint];
+      exit [unhighlight path];
+    }
+
+    selected {
+      on DESELECT -> idle;
+      on DRAG_START_HANDLE -> draggingStart;
+      on DRAG_END_HANDLE -> draggingEnd;
+      on DELETE -> deleted;
+      on EDIT_LABEL -> editingLabel;
+      entry [show handles; focus root];
+      exit [hide handles];
+    }
+
+    draggingStart {
+      on DROP -> selected;
+      on CONNECT -> selected;
+      on ESCAPE -> selected;
+      entry [detach startHandle; showDropTargets];
+      exit [hideDropTargets];
+    }
+
+    draggingEnd {
+      on DROP -> selected;
+      on CONNECT -> selected;
+      on ESCAPE -> selected;
+      entry [detach endHandle; showDropTargets];
+      exit [hideDropTargets];
+    }
+
+    editingLabel {
+      on CONFIRM -> selected;
+      on ESCAPE -> selected;
+      on BLUR -> selected;
+      entry [focusLabel];
+    }
+
+    deleted {
+      entry [remove self; announce "Connector deleted"];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      Enter -> EDIT_LABEL;
+      Delete -> DELETE;
+      Backspace -> DELETE;
+      Escape -> ESCAPE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "img";
+        aria-label: concat("Connection from ", ?startNodeLabel, " to ", ?endNodeLabel, if ?label then concat(": ", ?label) else "");
+        aria-roledescription: "connector";
+        aria-selected: if state == "selected" then "true" else "false";
+      };
+      path -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      startHandle -> {
+        role: "button";
+        aria-label: concat("Start handle, connected to ", ?startNodeLabel);
+        aria-grabbed: if state == "draggingStart" then "true" else "false";
+      };
+      endHandle -> {
+        role: "button";
+        aria-label: concat("End handle, connected to ", ?endNodeLabel);
+        aria-grabbed: if state == "draggingEnd" then "true" else "false";
+      };
+      label -> {
+        role: "textbox";
+        aria-label: "Connector label";
+      };
+    }
+  }
+
+  props {
+    startNodeId: String
+    endNodeId: String
+    startNodeLabel: String = ""
+    endNodeLabel: String = ""
+    startPort: option String
+    endPort: option String
+    label: option String
+    lineStyle: union "straight" | "curved" | "step" = "curved"
+    arrowStart: Bool = false
+    arrowEnd: Bool = true
+    color: String = "#000000"
+    strokeWidth: Float = 2.0
+    dashed: Bool = false
+    id: String
+  }
+
+  connect {
+    root -> {
+      data-part: "connector";
+      data-id: ?id;
+      data-state: state;
+      data-start-node: ?startNodeId;
+      data-end-node: ?endNodeId;
+      data-line-style: ?lineStyle;
+      aria-label: concat("Connection from ", ?startNodeLabel, " to ", ?endNodeLabel, if ?label then concat(": ", ?label) else "");
+      aria-roledescription: "connector";
+      aria-selected: if state == "selected" then "true" else "false";
+      tabindex: "0";
+      onClick: send(SELECT, { id: ?id });
+      onDoubleClick: send(EDIT_LABEL, { id: ?id });
+      onKeyDown-Delete: send(DELETE, { id: ?id });
+      onKeyDown-Enter: send(EDIT_LABEL, { id: ?id });
+      onKeyDown-Escape: send(ESCAPE);
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+    }
+
+    path -> {
+      data-part: "path";
+      data-line-style: ?lineStyle;
+      stroke: ?color;
+      stroke-width: ?strokeWidth;
+      stroke-dasharray: if ?dashed then "8 4" else "none";
+      fill: "none";
+      marker-start: if ?arrowStart then "url(#arrowhead-start)" else "none";
+      marker-end: if ?arrowEnd then "url(#arrowhead-end)" else "none";
+      aria-hidden: "true";
+    }
+
+    startHandle -> {
+      data-part: "start-handle";
+      data-visible: if state == "selected" or state == "hovered" then "true" else "false";
+      aria-label: concat("Start handle, connected to ", ?startNodeLabel);
+      aria-grabbed: if state == "draggingStart" then "true" else "false";
+      cx: self.x;
+      cy: self.y;
+      onPointerDown: send(DRAG_START_HANDLE, { id: ?id });
+      onPointerUp: send(DROP);
+    }
+
+    endHandle -> {
+      data-part: "end-handle";
+      data-visible: if state == "selected" or state == "hovered" then "true" else "false";
+      aria-label: concat("End handle, connected to ", ?endNodeLabel);
+      aria-grabbed: if state == "draggingEnd" then "true" else "false";
+      cx: self.x;
+      cy: self.y;
+      onPointerDown: send(DRAG_END_HANDLE, { id: ?id });
+      onPointerUp: send(DROP);
+    }
+
+    label -> {
+      data-part: "label";
+      text: ?label;
+      data-visible: if ?label then "true" else "false";
+      contenteditable: if state == "editingLabel" then "true" else "false";
+      style-transform: concat("translate(", self.midX, "px, ", self.midY, "px)");
+      onInput: send(LABEL_CHANGE, { id: ?id, value: self.textContent });
+      onBlur: send(BLUR);
+      onKeyDown-Enter: send(CONFIRM);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+  }
+
+  invariant {
+    "Handles must only be visible when the connector is selected or hovered";
+    "Dragging an endpoint must show valid drop targets on nearby node ports";
+    "Path must recalculate when either connected node moves or resizes";
+    "Step-style paths must route with orthogonal segments only";
+    "Label must be positioned at the visual midpoint of the rendered path";
+    "Deleting a connected node must also delete this connector";
+  }
+
+}

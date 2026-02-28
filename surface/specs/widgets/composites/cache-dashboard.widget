@@ -1,0 +1,361 @@
+@version(1)
+widget cache-dashboard {
+
+  purpose {
+    Cache monitoring dashboard displaying hit/miss ratio gauges, throughput
+    charts, a searchable key browser tree, memory usage bars, and a flush
+    action with confirmation dialog. Provides operational visibility into
+    cache performance and content. Used for Redis, Memcached, CDN, and
+    application-level cache administration interfaces.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the cache dashboard layout }
+    gaugeRow:        container  { Horizontal row of hit/miss ratio gauges }
+    gauge:           widget     { Radial or linear gauge showing hit rate, miss rate, or eviction rate }
+    gaugeLabel:      text       { Label beneath a gauge (e.g., "Hit Rate") }
+    gaugeValue:      text       { Numeric value displayed inside or beside a gauge }
+    chartPanel:      container  { Region containing throughput or latency time-series charts }
+    chart:           widget     { Chart visualization for cache metrics over time }
+    chartControls:   container  { Time range and metric selectors for the chart }
+    timeRange:       widget     { Dropdown for selecting chart time window }
+    metricSelector:  widget     { Dropdown for choosing which metric to chart }
+    keyBrowser:      container  { Searchable key browser panel }
+    keySearch:       widget     { Text input for searching/filtering cache keys }
+    keyTree:         widget     { Tree or flat list of cache keys with expand/inspect }
+    keyDetail:       container  { Detail panel showing value, TTL, and metadata for a selected key }
+    keyDetailLabel:  text       { Key name in the detail panel }
+    keyDetailValue:  text       { Cached value or preview in the detail panel }
+    keyDetailTtl:    text       { Time-to-live countdown for the selected key }
+    keyDetailSize:   text       { Size in bytes of the selected key's value }
+    memoryBar:       widget     { Progress bar showing memory usage vs. max capacity }
+    memoryLabel:     text       { Label showing used/total memory (e.g., "1.2 GB / 4 GB") }
+    flushButton:     action     { Button to flush/clear all cache entries }
+    confirmDialog:   widget     { Confirmation dialog that guards the flush action }
+    deleteKeyButton: action     { Button to delete the currently selected key }
+    refreshButton:   action     { Button to manually refresh dashboard data }
+  }
+
+  states {
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+        on AUTO_REFRESH -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      error {
+        on RETRY -> loading;
+        on LOAD -> loading;
+      }
+    }
+
+    keySelection {
+      none [initial] {
+        on SELECT_KEY -> selected;
+      }
+      selected {
+        on DESELECT -> none;
+        on SELECT_KEY -> selected;
+        on DELETE_KEY_COMPLETE -> none;
+        entry [loadKeyDetail];
+      }
+    }
+
+    flushConfirm {
+      closed [initial] {
+        on REQUEST_FLUSH -> open;
+      }
+      open {
+        on CONFIRM_FLUSH -> flushing;
+        on CANCEL_FLUSH -> closed;
+        on ESCAPE -> closed;
+      }
+      flushing {
+        on FLUSH_COMPLETE -> closed;
+        on FLUSH_ERROR -> open;
+        entry [disableFlushButton];
+        exit [enableFlushButton; refreshData];
+      }
+    }
+
+    autoRefresh {
+      disabled [initial] {
+        on ENABLE_REFRESH -> enabled;
+      }
+      enabled {
+        on DISABLE_REFRESH -> disabled;
+        entry [startPolling];
+        exit [stopPolling];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      Enter       -> SELECT_KEY;
+      Delete      -> DELETE_KEY;
+      Escape      -> CANCEL_FLUSH;
+      R           -> REFRESH;
+      ArrowDown   -> NAVIGATE_NEXT_KEY;
+      ArrowUp     -> NAVIGATE_PREV_KEY;
+      ArrowRight  -> EXPAND_KEY;
+      ArrowLeft   -> COLLAPSE_KEY;
+    }
+    focus {
+      trap: false;
+      initial: keySearch;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Cache dashboard";
+      };
+      gaugeRow -> {
+        role: "list";
+        aria-label: "Cache metrics";
+      };
+      gauge -> {
+        role: "meter";
+        aria-label: self.metricName;
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: self.value;
+      };
+      keyBrowser -> {
+        role: "region";
+        aria-label: "Key browser";
+      };
+      keyTree -> {
+        role: "tree";
+        aria-label: "Cache keys";
+      };
+      keyDetail -> {
+        role: "complementary";
+        aria-label: "Key details";
+      };
+      memoryBar -> {
+        role: "meter";
+        aria-label: "Memory usage";
+        aria-valuemin: "0";
+        aria-valuemax: self.maxMemory;
+        aria-valuenow: self.usedMemory;
+      };
+      flushButton -> {
+        aria-label: "Flush all cache entries";
+      };
+      confirmDialog -> {
+        role: "alertdialog";
+        aria-label: "Confirm cache flush";
+      };
+    }
+  }
+
+  props {
+    metrics: Object = { hitRate: 0, missRate: 0, evictionRate: 0, latency: 0 }
+    chartData: list DataPoint = []
+    chartTimeRange: union "1m" | "5m" | "15m" | "1h" | "6h" | "24h" = "15m"
+    chartMetric: union "throughput" | "latency" | "hitRate" | "memory" = "throughput"
+    keys: list CacheKey = []
+    selectedKey: option String
+    memoryUsed: Int = 0
+    memoryMax: Int = 0
+    autoRefreshEnabled: Bool = false
+    autoRefreshInterval: Int = 5000
+    loading: Bool = false
+    cacheName: String = "default"
+    onFlush: option Function
+    onDeleteKey: option Function
+    onRefresh: option Function
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: concat("Cache dashboard: ", ?cacheName);
+      aria-busy: if ?loading then "true" else "false";
+      data-state: if ?loading then "loading" else "idle";
+      data-cache: ?cacheName;
+    }
+
+    gaugeRow -> {
+      role: "list";
+      aria-label: "Cache metrics";
+      data-part: "gauge-row";
+    }
+
+    gauge -> {
+      role: "meter";
+      aria-label: self.metricName;
+      aria-valuemin: "0";
+      aria-valuemax: "100";
+      aria-valuenow: self.value;
+      data-metric: self.metricKey;
+      data-status: if self.value >= 90 then "good" else if self.value >= 50 then "warning" else "critical";
+    }
+
+    gaugeLabel -> {
+      text: self.metricName;
+      data-part: "gauge-label";
+      aria-hidden: "true";
+    }
+
+    gaugeValue -> {
+      text: concat(self.value, "%");
+      data-part: "gauge-value";
+      aria-hidden: "true";
+    }
+
+    chartPanel -> {
+      data-part: "chart-panel";
+      data-metric: ?chartMetric;
+      data-range: ?chartTimeRange;
+    }
+
+    chart -> {
+      data-part: "chart";
+      data-metric: ?chartMetric;
+      aria-hidden: "true";
+    }
+
+    chartControls -> {
+      data-part: "chart-controls";
+    }
+
+    timeRange -> {
+      data-part: "time-range";
+      value: ?chartTimeRange;
+      aria-label: "Chart time range";
+    }
+
+    metricSelector -> {
+      data-part: "metric-selector";
+      value: ?chartMetric;
+      aria-label: "Chart metric";
+    }
+
+    keyBrowser -> {
+      role: "region";
+      aria-label: "Key browser";
+      data-part: "key-browser";
+    }
+
+    keySearch -> {
+      data-part: "key-search";
+      placeholder: "Search keys...";
+      aria-label: "Search cache keys";
+    }
+
+    keyTree -> {
+      role: "tree";
+      aria-label: "Cache keys";
+      data-count: ?keys.length;
+    }
+
+    keyDetail -> {
+      role: "complementary";
+      aria-label: if ?selectedKey then concat("Details for key ", ?selectedKey) else "Key details";
+      hidden: if state.keySelection == "none" then true else false;
+      data-state: if state.keySelection == "selected" then "visible" else "hidden";
+    }
+
+    keyDetailLabel -> {
+      text: ?selectedKey;
+      data-part: "key-detail-label";
+    }
+
+    keyDetailValue -> {
+      data-part: "key-detail-value";
+      text: selectedKeyValue;
+    }
+
+    keyDetailTtl -> {
+      data-part: "key-detail-ttl";
+      text: concat("TTL: ", selectedKeyTtl);
+      aria-label: concat("Time to live: ", selectedKeyTtl);
+    }
+
+    keyDetailSize -> {
+      data-part: "key-detail-size";
+      text: concat("Size: ", formatBytes(selectedKeySize));
+    }
+
+    memoryBar -> {
+      role: "meter";
+      aria-label: "Memory usage";
+      aria-valuemin: "0";
+      aria-valuemax: ?memoryMax;
+      aria-valuenow: ?memoryUsed;
+      data-percent: if ?memoryMax > 0 then round(?memoryUsed / ?memoryMax * 100) else 0;
+      data-status: if ?memoryMax > 0 and (?memoryUsed / ?memoryMax) >= 0.9 then "critical" else if ?memoryMax > 0 and (?memoryUsed / ?memoryMax) >= 0.7 then "warning" else "good";
+    }
+
+    memoryLabel -> {
+      text: concat(formatBytes(?memoryUsed), " / ", formatBytes(?memoryMax));
+      data-part: "memory-label";
+      aria-hidden: "true";
+    }
+
+    flushButton -> {
+      aria-label: concat("Flush all entries in ", ?cacheName);
+      disabled: if state.flushConfirm == "flushing" then true else false;
+      data-state: if state.flushConfirm == "flushing" then "flushing" else "idle";
+      onClick: send(REQUEST_FLUSH);
+    }
+
+    confirmDialog -> {
+      role: "alertdialog";
+      aria-label: "Confirm cache flush";
+      data-state: if state.flushConfirm == "open" then "open" else if state.flushConfirm == "flushing" then "flushing" else "closed";
+      hidden: if state.flushConfirm == "closed" then true else false;
+    }
+
+    deleteKeyButton -> {
+      aria-label: if ?selectedKey then concat("Delete key ", ?selectedKey) else "Delete key";
+      disabled: if state.keySelection == "none" then true else false;
+      hidden: if state.keySelection == "none" then true else false;
+      onClick: send(DELETE_KEY, { key: ?selectedKey });
+    }
+
+    refreshButton -> {
+      aria-label: "Refresh dashboard";
+      disabled: if ?loading then true else false;
+      onClick: send(LOAD);
+    }
+  }
+
+  compose {
+    gauge:          widget("gauge", {});
+    chart:          widget("chart", { type: "line", data: ?chartData });
+    keySearch:      widget("text-input", { type: "search", placeholder: "Search keys..." });
+    keyTree:        widget("tree-select", {});
+    memoryBar:      widget("progress-bar", { max: ?memoryMax, value: ?memoryUsed });
+    confirmDialog:  widget("alert-dialog", {});
+    flushButton:    widget("button", { variant: "destructive" });
+    deleteKeyButton: widget("button", { variant: "destructive", size: "sm" });
+    refreshButton:  widget("button", { variant: "ghost" });
+    timeRange:      widget("select", { options: ["1m", "5m", "15m", "1h", "6h", "24h"] });
+    metricSelector: widget("select", { options: ["throughput", "latency", "hitRate", "memory"] });
+  }
+
+  invariant {
+    "Flush action must always require confirmation via alert dialog";
+    "Memory bar must reflect the ratio of memoryUsed to memoryMax";
+    "Gauge values must be clamped between 0 and 100";
+    "Key detail panel must only be visible when a key is selected";
+    "Deleting the selected key must clear the key detail panel";
+    "Auto-refresh polling must stop on component unmount";
+    "Chart must update to reflect the selected metric and time range";
+    "Hit rate gauge status must be 'critical' below 50% and 'warning' below 90%";
+  }
+
+}

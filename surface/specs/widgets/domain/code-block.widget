@@ -1,0 +1,176 @@
+@version(1)
+widget code-block {
+
+  purpose {
+    Syntax-highlighted code display block with line numbers, language
+    indicator, a copy-to-clipboard button, and optional line
+    highlighting. Renders source code in a pre/code structure with
+    appropriate syntax coloring for the specified language. Serves as
+    the primary code display element in documentation, editors, and
+    markdown-rendered content.
+  }
+
+  anatomy {
+    root:        container  { Top-level wrapper providing the code block frame }
+    header:      container  { Top bar containing the language label and copy button }
+    language:    text       { Badge or label showing the programming language name }
+    copyButton:  action     { Button to copy the code content to the clipboard }
+    lineNumbers: container  { Gutter column displaying line number annotations }
+    code:        container  { Pre-formatted code content area with syntax highlighting }
+  }
+
+  states {
+    idle [initial] {
+      on COPY -> copied;
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on COPY -> copied;
+      entry [show copyButton];
+    }
+
+    focused {
+      on BLUR -> idle;
+      on COPY -> copied;
+    }
+
+    copied {
+      on RESET -> idle;
+      on COPY_TIMEOUT -> idle;
+      entry [copyToClipboard; showCopiedFeedback; startTimer(2000)];
+      exit [resetCopyButton];
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Control+c -> COPY;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: code;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat(?language, " code block");
+        aria-roledescription: "code block";
+      };
+      header -> {
+        role: "presentation";
+      };
+      language -> {
+        role: "status";
+        aria-label: concat("Language: ", ?language);
+      };
+      copyButton -> {
+        role: "button";
+        aria-label: if state == "copied" then "Copied to clipboard" else "Copy code to clipboard";
+        aria-live: "polite";
+      };
+      lineNumbers -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      code -> {
+        role: "code";
+        aria-label: concat(?language, " source code");
+        aria-readonly: "true";
+      };
+    }
+  }
+
+  props {
+    code: String
+    language: String = "plaintext"
+    showLineNumbers: Bool = true
+    highlightLines: option list Int
+    showHeader: Bool = true
+    wrapLines: Bool = false
+    maxHeight: option String
+    ariaLabel: option String
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: if ?ariaLabel then ?ariaLabel else concat(?language, " code block");
+      aria-roledescription: "code block";
+      data-part: "code-block";
+      data-language: ?language;
+      data-state: state;
+      data-line-numbers: if ?showLineNumbers then "true" else "false";
+      data-wrap: if ?wrapLines then "true" else "false";
+      style-max-height: ?maxHeight;
+      style-overflow: if ?maxHeight then "auto" else "visible";
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    header -> {
+      data-part: "header";
+      data-visible: if ?showHeader then "true" else "false";
+    }
+
+    language -> {
+      data-part: "language";
+      text: ?language;
+      aria-label: concat("Language: ", ?language);
+    }
+
+    copyButton -> {
+      role: "button";
+      aria-label: if state == "copied" then "Copied to clipboard" else "Copy code to clipboard";
+      aria-live: "polite";
+      data-part: "copy-button";
+      data-state: if state == "copied" then "copied" else "idle";
+      tabindex: "0";
+      onClick: send(COPY);
+      onKeyDown-Enter: send(COPY);
+    }
+
+    lineNumbers -> {
+      data-part: "line-numbers";
+      data-visible: if ?showLineNumbers then "true" else "false";
+      aria-hidden: "true";
+      data-count: self.lineCount;
+    }
+
+    code -> {
+      data-part: "code";
+      role: "code";
+      aria-label: concat(?language, " source code");
+      aria-readonly: "true";
+      data-language: ?language;
+      data-highlight-lines: ?highlightLines;
+      data-wrap: if ?wrapLines then "true" else "false";
+      tabindex: "0";
+      innerHTML: highlightSyntax(?code, ?language);
+    }
+  }
+
+  compose {
+    copyButton: widget("button", { variant: "ghost", size: "sm", label: if state == "copied" then "Copied!" else "Copy" });
+  }
+
+  invariant {
+    "Copy button must transition to 'copied' state for exactly 2 seconds then revert";
+    "Line numbers must match the actual number of lines in the code content";
+    "Highlighted lines must receive a distinct visual indicator";
+    "Syntax highlighting must be applied based on the language prop";
+    "Code content must be selectable for manual copying";
+    "Line numbers must not be included when copying code to clipboard";
+    "Wrap mode must break long lines instead of scrolling horizontally";
+  }
+
+}

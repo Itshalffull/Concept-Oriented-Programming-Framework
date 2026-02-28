@@ -1,0 +1,160 @@
+@version(1)
+widget checkbox {
+
+  purpose {
+    Boolean toggle control allowing users to select or deselect
+    an option. Supports an indeterminate third state for partial
+    selections in hierarchical lists. Compact form factor makes
+    it suitable for dense option grids and settings panels.
+  }
+
+  anatomy {
+    root: container        { Outer wrapper grouping the control and its label }
+    input: action          { Hidden native checkbox element for form submission }
+    control: container     { Visual box that renders checked/unchecked/indeterminate state }
+    indicator: container   { Check mark or dash icon inside the control }
+    label: text            { Descriptive text associated with the checkbox }
+  }
+
+  states {
+    unchecked [initial] {
+      on TOGGLE -> checked;
+      entry [set aria-checked false];
+    }
+
+    checked {
+      on TOGGLE -> unchecked;
+      entry [set aria-checked true];
+    }
+
+    indeterminate [parallel] {
+      on RESOLVE -> determinate;
+      entry [set aria-checked mixed];
+      exit [set aria-checked false];
+    }
+
+    determinate [parallel] {
+      on SET_INDETERMINATE -> indeterminate;
+    }
+
+    disabled [parallel] {
+      on ENABLE -> enabled;
+      entry [set aria-disabled true];
+      exit [set aria-disabled false];
+    }
+
+    enabled [parallel] {
+      on DISABLE -> disabled;
+    }
+
+    focused [parallel] {
+      on BLUR -> unfocused;
+      entry [set data-focused true];
+      exit [set data-focused false];
+    }
+
+    unfocused [parallel] {
+      on FOCUS -> focused;
+    }
+  }
+
+  accessibility {
+    role: checkbox;
+    modal: false;
+    keyboard {
+      Space -> TOGGLE;
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: input;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: label;
+      describedby: none;
+    }
+  }
+
+  props {
+    checked: Bool = false
+    indeterminate: Bool = false
+    disabled: Bool = false
+    required: Bool = false
+    value: String = ""
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if ?checked then "checked" else if ?indeterminate then "indeterminate" else "unchecked";
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: send(TOGGLE);
+    }
+
+    input -> {
+      type: "checkbox";
+      role: "checkbox";
+      checked: ?checked;
+      disabled: ?disabled;
+      required: ?required;
+      value: ?value;
+      name: ?name;
+      aria-checked: if ?indeterminate then "mixed" else if ?checked then "true" else "false";
+      aria-required: if ?required then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      aria-labelledby: label;
+      onChange: send(TOGGLE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      tabindex: if ?disabled then "-1" else "0";
+      data-part: "input";
+    }
+
+    control -> {
+      data-part: "control";
+      data-state: if ?checked then "checked" else if ?indeterminate then "indeterminate" else "unchecked";
+      data-disabled: if ?disabled then "true" else "false";
+      data-focused: if focused then "true" else "false";
+      aria-hidden: "true";
+    }
+
+    indicator -> {
+      data-part: "indicator";
+      data-state: if ?checked then "checked" else if ?indeterminate then "indeterminate" else "unchecked";
+      data-visible: if ?checked then "true" else if ?indeterminate then "true" else "false";
+      aria-hidden: "true";
+    }
+
+    label -> {
+      data-part: "label";
+      data-disabled: if ?disabled then "true" else "false";
+      for: ?name;
+    }
+  }
+
+  affordance {
+    serves: toggle;
+    specificity: 8;
+    when { density: "compact" }
+  }
+
+  invariant {
+    after send(TOGGLE) from unchecked -> state is checked;
+    then aria-checked is "true";
+    and indicator data-visible is "true";
+  }
+
+  invariant {
+    after send(TOGGLE) from checked -> state is unchecked;
+    then aria-checked is "false";
+    and indicator data-visible is "false";
+  }
+
+  invariant {
+    after send(SET_INDETERMINATE) -> state is indeterminate;
+    then aria-checked is "mixed";
+  }
+
+}

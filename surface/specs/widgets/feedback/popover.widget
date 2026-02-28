@@ -1,0 +1,129 @@
+@version(1)
+widget popover {
+
+  purpose {
+    Non-modal floating content panel anchored to a trigger element.
+    Displays supplementary information or controls without blocking
+    interaction with the rest of the page. Positioned dynamically
+    relative to the trigger with collision-aware flipping and an
+    optional arrow pointing back to the anchor.
+  }
+
+  anatomy {
+    root:         container  { top-level wrapper tying trigger and floating content together }
+    trigger:      action     { element that toggles the popover }
+    positioner:   container  { collision-aware floating container anchored to trigger }
+    content:      container  { visible popover surface holding inner parts }
+    arrow:        container  { optional directional indicator pointing to the trigger }
+    closeTrigger: action     { optional explicit close button inside the popover }
+    title:        text       { optional heading labelling the popover content }
+    description:  text       { optional supplementary text within the popover }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN          -> open;
+      on TRIGGER_CLICK -> open;
+    }
+
+    open {
+      on CLOSE         -> closed;
+      on OUTSIDE_CLICK -> closed;
+      on ESCAPE        -> closed;
+      on TRIGGER_CLICK -> closed;
+      entry [positionContent, announcePopover];
+      exit  [clearPosition];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: false;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: content;
+      returnOnClose: trigger;
+    }
+    aria {
+      labelledby: title;
+      describedby: description;
+    }
+  }
+
+  props {
+    open:                Bool    = false;
+    placement:           String  = "bottom";
+    closeOnOutsideClick: Bool    = true;
+    closeOnEscape:       Bool    = true;
+  }
+
+  connect {
+    root -> {
+      data-state: ?open ? "open" : "closed";
+    }
+
+    trigger -> {
+      aria-haspopup: "dialog";
+      aria-expanded: ?open;
+      aria-controls: content;
+      onClick:       send(TRIGGER_CLICK);
+    }
+
+    positioner -> {
+      data-state:     ?open ? "open" : "closed";
+      data-placement: ?placement;
+    }
+
+    content -> {
+      role:             "dialog";
+      aria-modal:       false;
+      aria-labelledby:  title;
+      aria-describedby: description;
+      data-state:       ?open ? "open" : "closed";
+      data-placement:   ?placement;
+      id:               content;
+    }
+
+    arrow -> {
+      data-placement: ?placement;
+    }
+
+    closeTrigger -> {
+      aria-label: "Close popover";
+      onClick:    send(CLOSE);
+    }
+
+    title -> {
+      id: title;
+    }
+
+    description -> {
+      id: description;
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 8;
+    when {
+      modal: false;
+    }
+  }
+
+  compose {
+    _portal:   widget("portal",   { target: "body" });
+    _presence: widget("presence", { present: ?open });
+  }
+
+  invariant {
+    "Content must reposition on scroll and resize to stay anchored";
+    "Focus must return to trigger when popover closes";
+    "Popover must not block interaction with the rest of the page";
+    "Arrow must rotate to match the computed placement direction";
+  }
+
+}

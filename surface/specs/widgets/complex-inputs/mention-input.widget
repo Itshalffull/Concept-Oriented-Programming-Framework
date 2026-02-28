@@ -1,0 +1,220 @@
+@version(1)
+widget mention-input {
+
+  purpose {
+    Trigger-character autocomplete input for inline entity references
+    such as @mentions, [[wikilinks]], and #tags. Detects configurable
+    trigger characters during typing, queries a data source for matching
+    suggestions, and inserts a styled mention chip into the input on
+    selection. Supports multiple concurrent trigger types with
+    independent data sources.
+  }
+
+  anatomy {
+    root:                   container  { Outermost wrapper grouping input and suggestion popover }
+    input:                  action     { Editable input or contenteditable area receiving keystrokes }
+    suggestions:            container  { Floating list of matching entities for the active trigger }
+    suggestion:             action     { A single suggestion item in the list }
+    suggestionIcon:         container  { Optional leading icon or avatar for a suggestion }
+    suggestionLabel:        text       { Primary label text for a suggestion }
+    suggestionDescription:  text       { Optional secondary description text }
+    mentionChip:            container  { Styled inline chip representing an inserted mention }
+  }
+
+  states {
+    trigger {
+      idle [initial] {
+        on TRIGGER_CHAR -> triggered;
+        entry [clearQuery];
+      }
+      triggered {
+        on QUERY_CHANGE -> suggesting;
+        on ESCAPE       -> idle;
+        on BLUR         -> idle;
+        entry [beginCapture, setTriggerPosition];
+      }
+      suggesting {
+        on SELECT       -> idle;
+        on ESCAPE       -> idle;
+        on BLUR         -> idle;
+        on QUERY_CHANGE -> suggesting;
+        on NO_RESULTS   -> idle;
+        entry [showSuggestions, positionSuggestions];
+        exit  [hideSuggestions];
+      }
+    }
+
+    focus [parallel] {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+        entry [set data-focused true];
+        exit  [set data-focused false];
+      }
+    }
+
+    navigation [parallel] {
+      none [initial] {
+        on NAVIGATE_DOWN -> active;
+      }
+      active {
+        on NAVIGATE_DOWN -> active;
+        on NAVIGATE_UP   -> active;
+        on SELECT        -> none;
+        on ESCAPE        -> none;
+      }
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      ArrowDown -> NAVIGATE_DOWN;
+      ArrowUp   -> NAVIGATE_UP;
+      Enter     -> SELECT;
+      Tab       -> SELECT;
+      Escape    -> ESCAPE;
+    }
+    focus {
+      input: focusable;
+      suggestion: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Mention input";
+      };
+      input -> {
+        role: "combobox";
+        aria-autocomplete: "list";
+        aria-haspopup: "listbox";
+        aria-expanded: if state.trigger == "suggesting" then "true" else "false";
+        aria-controls: suggestions;
+        aria-activedescendant: if state.navigation == "active" then activeSuggestionId else none;
+      };
+      suggestions -> {
+        role: "listbox";
+        aria-label: "Suggestions";
+        id: suggestions;
+      };
+      suggestion -> {
+        role: "option";
+        aria-selected: if suggestion.isActive then "true" else "false";
+        aria-label: suggestion.label;
+        id: suggestion.id;
+      };
+      mentionChip -> {
+        role: "button";
+        aria-label: concat("Mention: ", mentionChip.label);
+      };
+    }
+  }
+
+  props {
+    triggers: list { char: String, dataSource: String }
+    renderMention: option String
+    value: String = ""
+    placeholder: String = ""
+    disabled: Bool = false
+    readOnly: Bool = false
+    maxSuggestions: Int = 10
+  }
+
+  connect {
+    root -> {
+      data-state: if state.trigger == "suggesting" then "suggesting" else if state.trigger == "triggered" then "triggered" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+      role: "group";
+      aria-label: "Mention input";
+      data-part: "root";
+    }
+    input -> {
+      role: "combobox";
+      aria-autocomplete: "list";
+      aria-haspopup: "listbox";
+      aria-expanded: if state.trigger == "suggesting" then "true" else "false";
+      aria-controls: suggestions;
+      aria-activedescendant: if state.navigation == "active" then activeSuggestionId else none;
+      value: ?value;
+      placeholder: ?placeholder;
+      disabled: ?disabled;
+      readOnly: ?readOnly;
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowDown: if state.trigger == "suggesting" then send(NAVIGATE_DOWN);
+      onKeyDown-ArrowUp: if state.trigger == "suggesting" then send(NAVIGATE_UP);
+      onKeyDown-Enter: if state.trigger == "suggesting" then send(SELECT) else send(SUBMIT);
+      onKeyDown-Tab: if state.trigger == "suggesting" then send(SELECT);
+      onKeyDown-Escape: send(ESCAPE);
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "input";
+    }
+    suggestions -> {
+      role: "listbox";
+      aria-label: "Suggestions";
+      id: suggestions;
+      data-state: if state.trigger == "suggesting" then "open" else "closed";
+      data-visible: if state.trigger == "suggesting" then "true" else "false";
+      data-trigger: activeTriggerChar;
+      data-part: "suggestions";
+    }
+    suggestion -> {
+      role: "option";
+      aria-selected: if suggestion.isActive then "true" else "false";
+      id: suggestion.id;
+      data-active: if suggestion.isActive then "true" else "false";
+      data-index: suggestion.index;
+      onClick: send(SELECT, { value: suggestion.value, trigger: activeTriggerChar });
+      onMouseEnter: send(HIGHLIGHT, { index: suggestion.index });
+      data-part: "suggestion";
+    }
+    suggestionIcon -> {
+      aria-hidden: "true";
+      data-part: "suggestion-icon";
+    }
+    suggestionLabel -> {
+      text: suggestion.label;
+      data-part: "suggestion-label";
+    }
+    suggestionDescription -> {
+      text: suggestion.description;
+      data-visible: if suggestion.description then "true" else "false";
+      data-part: "suggestion-description";
+    }
+    mentionChip -> {
+      role: "button";
+      aria-label: concat("Mention: ", mentionChip.label);
+      data-trigger: mentionChip.triggerChar;
+      data-value: mentionChip.value;
+      contenteditable: "false";
+      tabIndex: -1;
+      data-part: "mention-chip";
+    }
+  }
+
+  affordance {
+    serves: single-pick;
+    specificity: 12;
+    when {
+      inline: true;
+    }
+  }
+
+  compose {
+    _portal: widget("portal", { target: "body" })
+    mentionChip: widget("chip", { label: mentionChip.label, removable: false })
+  }
+
+  invariant {
+    length(?triggers) > 0;
+    "Each trigger char must be a single character";
+    "Suggestions must appear within debounce window after trigger detection";
+    "Inserting a mention must replace the trigger character and query text";
+    "Mention chips must be atomic and non-editable within the input";
+    "Arrow key navigation must wrap within the suggestion list";
+  }
+
+}

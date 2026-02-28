@@ -1,0 +1,164 @@
+@version(1)
+widget signature-pad {
+
+  purpose {
+    Freeform signature capture surface using mouse, touch, or stylus
+    input on a canvas element. Records pen strokes as vector paths and
+    exports the result as an image data URL. Provides a clear button
+    to reset and an accessible label describing the signature field.
+  }
+
+  anatomy {
+    root:        container  { Outermost wrapper grouping canvas, label, and controls }
+    canvas:      container  { Drawing surface capturing pointer input as signature strokes }
+    clearButton: action     { Button to erase all strokes and reset the canvas }
+    label:       text       { Visible label describing the signature field purpose }
+  }
+
+  states {
+    content {
+      empty [initial] {
+        on STROKE_START -> drawing;
+        entry [clearCanvas, set data-empty true];
+      }
+      drawing {
+        on STROKE_END -> drawn;
+        entry [beginPath];
+        exit  [endPath];
+      }
+      drawn {
+        on STROKE_START -> drawing;
+        on CLEAR        -> empty;
+        entry [set data-empty false, exportSignature];
+      }
+    }
+
+    focus [parallel] {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+        entry [set data-focused true, showFocusOutline];
+        exit  [set data-focused false, hideFocusOutline];
+      }
+    }
+  }
+
+  accessibility {
+    role: application;
+    keyboard {
+      Delete    -> CLEAR;
+      Backspace -> CLEAR;
+      Escape    -> CLEAR;
+      Tab       -> FOCUS_NEXT;
+    }
+    focus {
+      canvas: focusable;
+      clearButton: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?label;
+      };
+      canvas -> {
+        role: "application";
+        aria-label: concat(?label, " drawing area");
+        aria-roledescription: "signature pad";
+        aria-describedby: label;
+      };
+      clearButton -> {
+        aria-label: "Clear signature";
+        aria-disabled: if state.content == "empty" then "true" else "false";
+      };
+      label -> {
+        id: label;
+      };
+    }
+  }
+
+  props {
+    width: Int = 400
+    height: Int = 200
+    penColor: String = "#000"
+    penWidth: Float = 2.0
+    backgroundColor: String = "#fff"
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+    label: String = "Signature"
+    exportFormat: "png" | "svg" = "png"
+  }
+
+  connect {
+    root -> {
+      data-state: if state.content == "empty" then "empty" else if state.content == "drawing" then "drawing" else "drawn";
+      data-disabled: if ?disabled then "true" else "false";
+      role: "group";
+      aria-label: ?label;
+      data-part: "root";
+    }
+    canvas -> {
+      role: "application";
+      aria-label: concat(?label, " drawing area");
+      aria-roledescription: "signature pad";
+      aria-describedby: label;
+      width: ?width;
+      height: ?height;
+      style-width: concat(?width, "px");
+      style-height: concat(?height, "px");
+      style-background-color: ?backgroundColor;
+      style-cursor: if ?disabled then "not-allowed" else "crosshair";
+      style-touch-action: "none";
+      data-state: if state.content == "drawing" then "drawing" else "idle";
+      data-empty: if state.content == "empty" then "true" else "false";
+      onPointerDown: if not ?disabled then send(STROKE_START);
+      onPointerMove: if state.content == "drawing" then send(STROKE_MOVE);
+      onPointerUp: if state.content == "drawing" then send(STROKE_END);
+      onPointerLeave: if state.content == "drawing" then send(STROKE_END);
+      onTouchStart: if not ?disabled then send(STROKE_START);
+      onTouchMove: if state.content == "drawing" then send(STROKE_MOVE);
+      onTouchEnd: if state.content == "drawing" then send(STROKE_END);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      tabIndex: if ?disabled then -1 else 0;
+      data-part: "canvas";
+    }
+    clearButton -> {
+      aria-label: "Clear signature";
+      disabled: if ?disabled or state.content == "empty" then true else false;
+      onClick: send(CLEAR);
+      onKeyDown-Enter: send(CLEAR);
+      onKeyDown-Space: send(CLEAR);
+      data-visible: if state.content != "empty" then "true" else "false";
+      data-part: "clear-button";
+    }
+    label -> {
+      text: ?label;
+      id: label;
+      data-disabled: if ?disabled then "true" else "false";
+      data-required: if ?required then "true" else "false";
+      data-part: "label";
+    }
+  }
+
+  affordance {
+    serves: file-attach;
+    specificity: 8;
+    when {
+      type: "signature";
+    }
+  }
+
+  invariant {
+    width > 0;
+    height > 0;
+    "Canvas must prevent default touch scrolling during drawing";
+    "Stroke paths must use pressure-sensitive line width when available";
+    "Clear must erase all strokes and reset the exported data URL";
+    "Exported image must match the configured export format";
+    "Disabled state must prevent all pointer interaction on the canvas";
+  }
+
+}

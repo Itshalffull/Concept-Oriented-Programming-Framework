@@ -1,0 +1,119 @@
+@version(1)
+widget hover-card {
+
+  purpose {
+    Preview card that appears when the user hovers over or focuses a
+    trigger element. Displays a richer preview of the linked content
+    (e.g., user profile, link preview, resource summary) without
+    requiring a click. Non-modal — does not block page interaction.
+    Opens and closes with configurable delays to prevent flicker.
+  }
+
+  anatomy {
+    root:       container  { top-level wrapper binding trigger and card together }
+    trigger:    container  { element whose hover/focus reveals the card }
+    positioner: container  { collision-aware floating container anchored to trigger }
+    content:    container  { visible card surface displaying the preview }
+    arrow:      container  { optional directional indicator pointing to the trigger }
+  }
+
+  states {
+    hidden [initial] {
+      on POINTER_ENTER -> opening;
+      on FOCUS         -> opening;
+    }
+
+    opening {
+      on DELAY_ELAPSED -> open;
+      on POINTER_LEAVE -> hidden;
+      on BLUR          -> hidden;
+      entry [startOpenDelay];
+      exit  [cancelOpenDelay];
+    }
+
+    open {
+      on POINTER_LEAVE -> closing;
+      on BLUR          -> closing;
+      on ESCAPE        -> hidden;
+      entry [positionContent];
+    }
+
+    closing {
+      on DELAY_ELAPSED -> hidden;
+      on POINTER_ENTER -> open;
+      on FOCUS         -> open;
+      entry [startCloseDelay];
+      exit  [cancelCloseDelay];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: false;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: content;
+      returnOnClose: trigger;
+    }
+    aria {
+      labelledby: content;
+    }
+  }
+
+  props {
+    openDelay:  Int     = 700;
+    closeDelay: Int     = 300;
+    placement:  String  = "bottom";
+  }
+
+  connect {
+    root -> {
+      data-state: currentState;
+    }
+
+    trigger -> {
+      aria-haspopup:  "dialog";
+      aria-expanded:  currentState == "open";
+      aria-controls:  content;
+      onPointerEnter: send(POINTER_ENTER);
+      onPointerLeave: send(POINTER_LEAVE);
+      onFocus:        send(FOCUS);
+      onBlur:         send(BLUR);
+    }
+
+    positioner -> {
+      data-state:     currentState;
+      data-placement: ?placement;
+    }
+
+    content -> {
+      role:           "dialog";
+      aria-modal:     false;
+      id:             content;
+      data-state:     currentState;
+      data-placement: ?placement;
+    }
+
+    arrow -> {
+      data-placement: ?placement;
+    }
+  }
+
+  compose {
+    _portal:   widget("portal",   { target: "body" });
+    _presence: widget("presence", { present: currentState == "open" });
+  }
+
+  invariant {
+    "Card must not appear until openDelay has fully elapsed";
+    "Moving pointer from trigger into card content must keep card open";
+    "Moving pointer from card content back to trigger must keep card open";
+    "Card must reposition on scroll and viewport resize";
+    "Escape must immediately close the card regardless of closeDelay";
+  }
+
+}

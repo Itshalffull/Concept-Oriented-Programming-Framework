@@ -1,0 +1,142 @@
+@version(1)
+widget tabs {
+
+  purpose {
+    Tabbed content switcher that organizes multiple panels of content
+    into a single view, allowing users to navigate between them by
+    selecting tab triggers. Supports horizontal and vertical layouts
+    with automatic or manual activation modes.
+  }
+
+  anatomy {
+    root: container        { Top-level wrapper grouping the tab list and tab panels }
+    list: container        { Horizontal or vertical strip holding all tab triggers }
+    trigger: action        { Individual tab button that activates its associated panel }
+    content: container     { Panel region displaying the content for the active tab }
+    indicator: container   { Optional animated underline or highlight marking the active tab }
+  }
+
+  states {
+    tab {
+      inactive [initial] {
+        on SELECT -> active;
+        entry [set aria-selected false; set tabindex -1];
+      }
+      active {
+        on DESELECT -> inactive;
+        entry [set aria-selected true; set tabindex 0; focus trigger];
+      }
+    }
+
+    focus {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: tablist;
+    modal: false;
+    keyboard {
+      ArrowRight -> NAVIGATE_NEXT;
+      ArrowLeft -> NAVIGATE_PREV;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Enter -> SELECT;
+      Space -> SELECT;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: trigger[active];
+      roving: true;
+    }
+    aria {
+      list -> {
+        role: "tablist";
+        aria-orientation: ?orientation;
+      };
+      trigger -> {
+        role: "tab";
+        aria-selected: if state.tab == "active" then "true" else "false";
+        aria-controls: content;
+        tabindex: if state.tab == "active" then "0" else "-1";
+      };
+      content -> {
+        role: "tabpanel";
+        aria-labelledby: trigger;
+        tabindex: "0";
+      };
+    }
+  }
+
+  props {
+    value: String
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    activationMode: union "automatic" | "manual" = "automatic"
+    defaultValue: option String
+    disabled: Bool = false
+    loop: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-orientation: ?orientation;
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    list -> {
+      role: "tablist";
+      aria-orientation: ?orientation;
+      data-orientation: ?orientation;
+    }
+
+    trigger -> {
+      role: "tab";
+      aria-selected: if state.tab == "active" then "true" else "false";
+      aria-controls: content;
+      tabindex: if state.tab == "active" then "0" else "-1";
+      data-state: if state.tab == "active" then "active" else "inactive";
+      data-orientation: ?orientation;
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: send(SELECT);
+      onKeyDown: send(NAVIGATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    content -> {
+      role: "tabpanel";
+      aria-labelledby: trigger;
+      tabindex: "0";
+      data-state: if state.tab == "active" then "active" else "inactive";
+      data-orientation: ?orientation;
+      hidden: if state.tab == "inactive" then true else false;
+    }
+
+    indicator -> {
+      data-orientation: ?orientation;
+      data-state: if state.tab == "active" then "active" else "inactive";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: navigation;
+    specificity: 10;
+    when { contentSwitching: true }
+  }
+
+  invariant {
+    exactly one trigger has aria-selected "true" at all times;
+    active content matches selected trigger aria-controls;
+    when ?activationMode == "automatic" then focus implies select;
+  }
+
+}

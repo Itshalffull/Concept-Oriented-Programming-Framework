@@ -1,0 +1,118 @@
+@version(1)
+widget disclosure {
+
+  purpose {
+    Single expand/collapse toggle that reveals or hides a content region.
+    The simplest form of progressive disclosure, consisting of a trigger
+    button and a controlled content panel with animated transitions.
+  }
+
+  anatomy {
+    root: container        { Top-level wrapper grouping trigger and collapsible content }
+    trigger: action        { Button that toggles the visibility of the content panel }
+    indicator: container   { Visual arrow or icon reflecting the expanded/collapsed state }
+    content: container     { Collapsible region that is shown or hidden on toggle }
+  }
+
+  states {
+    disclosure {
+      collapsed [initial] {
+        on TOGGLE -> expanded;
+        on EXPAND -> expanded;
+        entry [set aria-expanded false; hide content];
+      }
+      expanded {
+        on TOGGLE -> collapsed;
+        on COLLAPSE -> collapsed;
+        entry [set aria-expanded true; show content];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: disclosure;
+    modal: false;
+    keyboard {
+      Enter -> TOGGLE;
+      Space -> TOGGLE;
+    }
+    focus {
+      trap: false;
+      initial: trigger;
+    }
+    aria {
+      trigger -> {
+        role: "button";
+        aria-expanded: if state.disclosure == "expanded" then "true" else "false";
+        aria-controls: content;
+      };
+      content -> {
+        role: "region";
+        aria-labelledby: trigger;
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    disabled: Bool = false
+    defaultOpen: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if state.disclosure == "expanded" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    trigger -> {
+      role: "button";
+      aria-expanded: if state.disclosure == "expanded" then "true" else "false";
+      aria-controls: content;
+      data-state: if state.disclosure == "expanded" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+      disabled: ?disabled;
+      tabindex: if ?disabled then "-1" else "0";
+      onClick: send(TOGGLE);
+      onKeyDown: send(TOGGLE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    indicator -> {
+      data-state: if state.disclosure == "expanded" then "open" else "closed";
+      aria-hidden: "true";
+    }
+
+    content -> {
+      role: "region";
+      aria-labelledby: trigger;
+      data-state: if state.disclosure == "expanded" then "open" else "closed";
+      hidden: if state.disclosure == "collapsed" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-conditional;
+    specificity: 8;
+  }
+
+  compose {
+    content: widget("presence", { present: state.disclosure == "expanded" })
+  }
+
+  invariant {
+    trigger aria-expanded matches content visibility;
+    when ?disabled == true then TOGGLE events are ignored;
+  }
+
+}

@@ -1,0 +1,141 @@
+@version(1)
+widget slider {
+
+  purpose {
+    Range input with a draggable thumb on a track for approximate numeric
+    selection. Provides visual feedback of the selected value relative to
+    the full range via a filled range indicator and an output display.
+  }
+
+  anatomy {
+    root: container     { Outermost wrapper; groups label, track, and output }
+    label: text         { Visible label describing the slider purpose }
+    track: container    { The full-length track background }
+    range: container    { Filled portion of the track representing current value }
+    thumb: action       { Draggable handle the user moves along the track }
+    output: text        { Live display of the current numeric value }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on POINTER_DOWN -> dragging;
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        on POINTER_DOWN -> dragging;
+        entry [showFocusRing];
+        exit [hideFocusRing];
+      }
+      dragging {
+        on POINTER_UP -> idle;
+        entry [capturePointer, beginTrack];
+        exit [releasePointer, commitValue];
+      }
+    }
+  }
+
+  accessibility {
+    role: slider;
+    keyboard {
+      ArrowRight -> INCREASE;
+      ArrowUp    -> INCREASE;
+      ArrowLeft  -> DECREASE;
+      ArrowDown  -> DECREASE;
+      Home       -> SET_MIN;
+      End        -> SET_MAX;
+      PageUp     -> INCREASE_LARGE;
+      PageDown   -> DECREASE_LARGE;
+    }
+    focus {
+      thumb: focusable;
+    }
+    aria {
+      thumb -> {
+        role: "slider";
+        aria-label: ?label;
+        aria-valuenow: ?value;
+        aria-valuemin: ?min;
+        aria-valuemax: ?max;
+        aria-valuetext: concat(?value);
+        aria-orientation: ?orientation;
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+      output -> {
+        aria-live: "polite";
+        for: thumb;
+      };
+    }
+  }
+
+  props {
+    value: Float
+    min: Float = 0
+    max: Float = 100
+    step: Float = 1
+    orientation: "horizontal" | "vertical" = "horizontal"
+    label: String
+    disabled: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-orientation: ?orientation;
+      data-state: if state.interaction == "dragging" then "dragging" else "idle";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: thumb;
+    }
+    track -> {
+      data-orientation: ?orientation;
+      onClick: send(TRACK_CLICK);
+    }
+    range -> {
+      data-orientation: ?orientation;
+      style-width: if ?orientation == "horizontal" then percent((?value - ?min) / (?max - ?min)) else "100%";
+      style-height: if ?orientation == "vertical" then percent((?value - ?min) / (?max - ?min)) else "100%";
+    }
+    thumb -> {
+      data-state: if state.interaction == "dragging" then "dragging" else "idle";
+      style-left: if ?orientation == "horizontal" then percent((?value - ?min) / (?max - ?min)) else "50%";
+      style-bottom: if ?orientation == "vertical" then percent((?value - ?min) / (?max - ?min)) else "auto";
+      onPointerDown: send(POINTER_DOWN);
+      onPointerUp: send(POINTER_UP);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowRight: send(INCREASE);
+      onKeyDown-ArrowUp: send(INCREASE);
+      onKeyDown-ArrowLeft: send(DECREASE);
+      onKeyDown-ArrowDown: send(DECREASE);
+      onKeyDown-Home: send(SET_MIN);
+      onKeyDown-End: send(SET_MAX);
+      onKeyDown-PageUp: send(INCREASE_LARGE);
+      onKeyDown-PageDown: send(DECREASE_LARGE);
+      tabIndex: 0;
+    }
+    output -> {
+      text: concat(?value);
+      for: thumb;
+    }
+  }
+
+  affordance {
+    serves: number-approx;
+    specificity: 10;
+  }
+
+  compose {
+    label: widget("label", { text: ?label, for: thumb })
+  }
+
+  invariant {
+    min < max;
+    value >= min;
+    value <= max;
+    step > 0;
+  }
+}

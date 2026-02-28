@@ -1,0 +1,191 @@
+@version(1)
+widget inline-edit {
+
+  purpose {
+    Click-to-edit inline text display that toggles between a static
+    read-only view and an editable input. Used in property panels,
+    table cells, and title bars where space is limited and editing
+    is infrequent. Supports confirmation via Enter, cancellation via
+    Escape, and optional explicit confirm/cancel buttons.
+  }
+
+  anatomy {
+    root:          container  { Top-level wrapper switching between display and edit modes }
+    display:       container  { Read-only display container shown in the displaying state }
+    displayText:   text       { Static text rendering the current value }
+    editButton:    action     { Optional pencil icon button to enter edit mode explicitly }
+    input:         widget     { Text input shown in the editing state for value modification }
+    confirmButton: action     { Optional checkmark button to confirm the edit }
+    cancelButton:  action     { Optional X button to cancel the edit and revert }
+  }
+
+  states {
+    displaying [initial] {
+      on CLICK -> editing;
+      on ACTIVATE -> editing;
+      on FOCUS -> focused;
+    }
+
+    focused {
+      on ACTIVATE -> editing;
+      on BLUR -> displaying;
+    }
+
+    editing {
+      on CONFIRM -> displaying;
+      on CANCEL -> displaying;
+      on ESCAPE -> displaying;
+      on BLUR -> displaying;
+      entry [show input; hide display; focusInput; selectAll];
+      exit [hide input; show display; commitOrRevert];
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Enter -> CONFIRM;
+      Escape -> CANCEL;
+      F2 -> ACTIVATE;
+      Tab -> CONFIRM_AND_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: display;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "inline editor";
+      };
+      display -> {
+        role: "button";
+        aria-label: concat(?ariaLabel, ": ", ?value, ". Click to edit.");
+      };
+      displayText -> {
+        role: "presentation";
+      };
+      editButton -> {
+        role: "button";
+        aria-label: concat("Edit ", ?ariaLabel);
+      };
+      input -> {
+        role: "textbox";
+        aria-label: ?ariaLabel;
+        aria-required: if ?required then "true" else "false";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm edit";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel edit";
+      };
+    }
+  }
+
+  props {
+    value: String
+    placeholder: String = "Click to edit"
+    ariaLabel: String = "Editable field"
+    required: Bool = false
+    disabled: Bool = false
+    showButtons: Bool = false
+    maxLength: option Int
+    selectOnFocus: Bool = true
+    submitOnBlur: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "inline editor";
+      data-state: if state == "editing" then "editing" else "displaying";
+      data-disabled: if ?disabled then "true" else "false";
+      data-empty: if ?value == "" then "true" else "false";
+    }
+
+    display -> {
+      role: "button";
+      aria-label: concat(?ariaLabel, ": ", if ?value then ?value else ?placeholder, ". Click to edit.");
+      data-part: "display";
+      data-visible: if state != "editing" then "true" else "false";
+      data-empty: if ?value == "" then "true" else "false";
+      tabindex: if ?disabled then "-1" else "0";
+      onClick: if not ?disabled then send(ACTIVATE) else noop;
+      onKeyDown-Enter: if not ?disabled then send(ACTIVATE) else noop;
+      onKeyDown-F2: if not ?disabled then send(ACTIVATE) else noop;
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    displayText -> {
+      data-part: "display-text";
+      text: if ?value then ?value else ?placeholder;
+      data-placeholder: if ?value == "" then "true" else "false";
+    }
+
+    editButton -> {
+      role: "button";
+      aria-label: concat("Edit ", ?ariaLabel);
+      data-part: "edit-button";
+      data-visible: if ?showButtons and state != "editing" and not ?disabled then "true" else "false";
+      tabindex: "-1";
+      onClick: send(ACTIVATE);
+    }
+
+    input -> {
+      data-part: "input";
+      data-visible: if state == "editing" then "true" else "false";
+      value: ?value;
+      placeholder: ?placeholder;
+      maxlength: ?maxLength;
+      aria-label: ?ariaLabel;
+      aria-required: if ?required then "true" else "false";
+      onInput: send(INPUT, { value: self.value });
+      onKeyDown-Enter: send(CONFIRM);
+      onKeyDown-Escape: send(CANCEL);
+      onKeyDown-Tab: send(CONFIRM_AND_NEXT);
+      onBlur: if ?submitOnBlur then send(CONFIRM) else send(CANCEL);
+    }
+
+    confirmButton -> {
+      role: "button";
+      aria-label: "Confirm edit";
+      data-part: "confirm";
+      data-visible: if ?showButtons and state == "editing" then "true" else "false";
+      tabindex: "-1";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      role: "button";
+      aria-label: "Cancel edit";
+      data-part: "cancel";
+      data-visible: if ?showButtons and state == "editing" then "true" else "false";
+      tabindex: "-1";
+      onClick: send(CANCEL);
+    }
+  }
+
+  compose {
+    input: widget("text-input", { value: ?value, placeholder: ?placeholder });
+    confirmButton: widget("button", { variant: "ghost", size: "sm" });
+    cancelButton: widget("button", { variant: "ghost", size: "sm" });
+  }
+
+  invariant {
+    "Display and input must never both be visible simultaneously";
+    "Escape must revert to the original value before editing began";
+    "Enter must commit the current input value";
+    "Disabled state must prevent entering edit mode";
+    "Required fields must not allow confirming an empty value";
+    "Tab must confirm the edit and move focus to the next focusable element";
+  }
+
+}

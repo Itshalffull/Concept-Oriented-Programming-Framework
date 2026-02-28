@@ -1,0 +1,259 @@
+@version(1)
+widget outliner {
+
+  purpose {
+    Infinitely nested bullet-list outliner with zoom, indent, collapse, and
+    drag-to-reorder capabilities. Each item can be expanded to reveal child
+    items, collapsed to hide them, or zoomed into so its subtree becomes the
+    root view. Breadcrumb navigation allows traversal back up the tree.
+    Supports keyboard-driven editing, structural manipulation, and ARIA
+    tree semantics throughout.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper providing tree context and scroll region }
+    breadcrumb:      widget     { Navigation trail showing the path from true root to current zoom level }
+    item:            container  { Single outline node containing bullet, content, and optional children }
+    bullet:          action     { Clickable bullet indicator; zooms into the item subtree on click }
+    collapseToggle:  action     { Disclosure triangle toggling visibility of child items }
+    content:         action     { Editable text content of the outline item }
+    children:        container  { Nested container holding child items when expanded }
+    dragHandle:      action     { Optional grip icon for drag-and-drop reordering of sibling items }
+  }
+
+  states {
+    item {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+        entry [show children; set aria-expanded true];
+      }
+      collapsed {
+        on EXPAND -> expanded;
+        entry [hide children; set aria-expanded false];
+      }
+    }
+
+    editing {
+      viewing [initial] {
+        on EDIT -> editing;
+        on FOCUS -> focused;
+      }
+      editing {
+        on BLUR -> viewing;
+        on CONFIRM -> viewing;
+        on ESCAPE -> viewing;
+        entry [focusContent; selectAll];
+      }
+      focused {
+        on EDIT -> editing;
+        on BLUR -> viewing;
+      }
+    }
+
+    zoom {
+      topLevel [initial] {
+        on ZOOM_IN -> zoomed;
+      }
+      zoomed {
+        on ZOOM_OUT -> topLevel;
+        on ZOOM_IN -> zoomed;
+        entry [show breadcrumb; setZoomRoot];
+        exit [clearZoomRoot];
+      }
+    }
+
+    drag {
+      idle [initial] {
+        on DRAG_START -> dragging;
+      }
+      dragging {
+        on DROP -> idle;
+        on ESCAPE -> idle;
+        entry [set aria-grabbed true; showDropIndicator];
+        exit [set aria-grabbed false; hideDropIndicator];
+      }
+    }
+  }
+
+  accessibility {
+    role: tree;
+    modal: false;
+    keyboard {
+      Enter -> CONFIRM_OR_NEW_SIBLING;
+      Tab -> INDENT;
+      Shift+Tab -> OUTDENT;
+      ArrowUp -> FOCUS_PREV;
+      ArrowDown -> FOCUS_NEXT;
+      ArrowLeft -> COLLAPSE_OR_PARENT;
+      ArrowRight -> EXPAND_OR_FIRST_CHILD;
+      Home -> FOCUS_FIRST;
+      End -> FOCUS_LAST;
+      Escape -> ESCAPE;
+      Control+ArrowUp -> MOVE_UP;
+      Control+ArrowDown -> MOVE_DOWN;
+      Space -> TOGGLE_COLLAPSE;
+      Control+Period -> ZOOM_IN;
+      Control+Comma -> ZOOM_OUT;
+      Backspace -> MERGE_OR_DELETE;
+    }
+    focus {
+      trap: false;
+      initial: item;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "tree";
+        aria-label: ?ariaLabel;
+        aria-multiselectable: "false";
+      };
+      item -> {
+        role: "treeitem";
+        aria-expanded: if self.hasChildren then (if state.item == "expanded" then "true" else "false") else undefined;
+        aria-level: self.depth;
+        aria-posinset: self.index;
+        aria-setsize: self.siblingCount;
+        aria-grabbed: if state.drag == "dragging" then "true" else "false";
+        aria-selected: if self.focused then "true" else "false";
+      };
+      children -> {
+        role: "group";
+      };
+      collapseToggle -> {
+        role: "button";
+        aria-label: if state.item == "expanded" then "Collapse" else "Expand";
+        aria-expanded: if state.item == "expanded" then "true" else "false";
+      };
+      bullet -> {
+        role: "button";
+        aria-label: "Zoom into item";
+      };
+      content -> {
+        role: "textbox";
+        aria-multiline: "false";
+        aria-label: "Item content";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: "Drag to reorder";
+        aria-roledescription: "drag handle";
+      };
+    }
+  }
+
+  props {
+    items: list OutlineItem
+    ariaLabel: String = "Outliner"
+    zoomPath: list String = []
+    readOnly: Bool = false
+    collapsible: Bool = true
+    draggable: Bool = true
+    placeholder: String = "New item..."
+    showBullets: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "tree";
+      aria-label: ?ariaLabel;
+      data-zoom-depth: ?zoomPath.length;
+      data-readonly: if ?readOnly then "true" else "false";
+      data-draggable: if ?draggable then "true" else "false";
+    }
+
+    breadcrumb -> {
+      data-part: "breadcrumb";
+      data-visible: if ?zoomPath.length > 0 then "true" else "false";
+      aria-label: "Zoom navigation";
+    }
+
+    item -> {
+      role: "treeitem";
+      aria-expanded: if self.hasChildren and ?collapsible then (if state.item == "expanded" then "true" else "false") else undefined;
+      aria-level: self.depth;
+      aria-posinset: self.index;
+      aria-setsize: self.siblingCount;
+      aria-grabbed: if state.drag == "dragging" then "true" else "false";
+      aria-selected: if self.focused then "true" else "false";
+      data-depth: self.depth;
+      data-state: if state.item == "collapsed" then "collapsed" else "expanded";
+      data-editing: if state.editing == "editing" then "true" else "false";
+      data-has-children: if self.hasChildren then "true" else "false";
+      tabindex: if self.focused then "0" else "-1";
+      onFocus: send(FOCUS, { id: self.id });
+      onKeyDown-ArrowUp: send(FOCUS_PREV);
+      onKeyDown-ArrowDown: send(FOCUS_NEXT);
+      onKeyDown-ArrowLeft: send(COLLAPSE_OR_PARENT);
+      onKeyDown-ArrowRight: send(EXPAND_OR_FIRST_CHILD);
+      onKeyDown-Tab: send(INDENT, { id: self.id });
+      onKeyDown-Shift+Tab: send(OUTDENT, { id: self.id });
+    }
+
+    bullet -> {
+      role: "button";
+      aria-label: "Zoom into item";
+      data-part: "bullet";
+      data-has-children: if self.hasChildren then "true" else "false";
+      data-visible: if ?showBullets then "true" else "false";
+      tabindex: "-1";
+      onClick: send(ZOOM_IN, { id: self.id });
+    }
+
+    collapseToggle -> {
+      role: "button";
+      aria-label: if state.item == "expanded" then "Collapse" else "Expand";
+      aria-expanded: if state.item == "expanded" then "true" else "false";
+      data-part: "collapse-toggle";
+      data-visible: if self.hasChildren and ?collapsible then "true" else "false";
+      tabindex: "-1";
+      onClick: send(TOGGLE_COLLAPSE, { id: self.id });
+    }
+
+    content -> {
+      contenteditable: if ?readOnly then "false" else "true";
+      data-part: "content";
+      data-placeholder: ?placeholder;
+      data-empty: if self.textEmpty then "true" else "false";
+      onInput: send(INPUT, { id: self.id, value: self.textContent });
+      onKeyDown-Enter: send(CONFIRM_OR_NEW_SIBLING, { id: self.id });
+      onKeyDown-Backspace: send(MERGE_OR_DELETE, { id: self.id });
+      onDoubleClick: send(EDIT, { id: self.id });
+      onBlur: send(BLUR, { id: self.id });
+    }
+
+    children -> {
+      role: "group";
+      data-part: "children";
+      data-depth: self.depth;
+      data-visible: if state.item == "expanded" then "true" else "false";
+    }
+
+    dragHandle -> {
+      role: "button";
+      aria-label: "Drag to reorder";
+      aria-roledescription: "drag handle";
+      data-part: "drag-handle";
+      data-visible: if ?draggable and not ?readOnly then "true" else "false";
+      draggable: if ?draggable and not ?readOnly then "true" else "false";
+      tabindex: "-1";
+      onDragStart: send(DRAG_START, { id: self.id });
+      onDragEnd: send(DROP);
+    }
+  }
+
+  compose {
+    breadcrumb: widget("breadcrumb", { items: ?zoomPath });
+    content: widget("text-input", { value: self.textContent, placeholder: ?placeholder });
+  }
+
+  invariant {
+    "Each treeitem must report correct aria-level matching its nesting depth";
+    "aria-expanded must only be present on items that have children";
+    "Collapsing an item must hide all descendants, not just direct children";
+    "Zoom must display only the subtree of the zoomed item as root";
+    "Breadcrumb must reflect the full path from root to the current zoom level";
+    "Indent must not exceed parent depth + 1 (no orphan nesting)";
+    "Tab/Shift+Tab for indent/outdent must not move focus out of the tree";
+  }
+
+}

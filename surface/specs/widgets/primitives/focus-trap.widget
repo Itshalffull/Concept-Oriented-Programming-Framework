@@ -1,0 +1,94 @@
+@version(1)
+widget focus-trap {
+
+  purpose {
+    Constrains keyboard Tab focus within a boundary so that focus
+    cycles between the first and last focusable elements. Essential
+    behavior primitive for modals, dialogs, and drawer overlays that
+    must prevent background interaction for accessibility compliance.
+  }
+
+  anatomy {
+    root: container          { Boundary element wrapping trapped content }
+    sentinelStart: container { Invisible focusable element at the start of the trap }
+    sentinelEnd: container   { Invisible focusable element at the end of the trap }
+  }
+
+  states {
+    inactive [initial] {
+      on ACTIVATE -> active;
+      entry [remove sentinel tabindex];
+    }
+
+    active {
+      on DEACTIVATE -> inactive;
+      entry [set sentinel tabindex 0; focus initialFocus];
+      exit [restore previous focus if returnFocus];
+    }
+  }
+
+  accessibility {
+    role: none;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Escape -> DEACTIVATE;
+    }
+    focus {
+      trap: true;
+      initial: initialFocus;
+      returnOnClose: true;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    active: Bool = false
+    initialFocus: option String
+    returnFocus: Bool = true
+    loop: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if ?active then "active" else "inactive";
+      data-focus-trap: if ?active then "true" else "false";
+    }
+
+    sentinelStart -> {
+      data-part: "sentinel-start";
+      tabindex: if ?active then "0" else "-1";
+      aria-hidden: "true";
+      style: "position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0";
+      onFocus: send(FOCUS_LAST);
+    }
+
+    sentinelEnd -> {
+      data-part: "sentinel-end";
+      tabindex: if ?active then "0" else "-1";
+      aria-hidden: "true";
+      style: "position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0";
+      onFocus: send(FOCUS_FIRST);
+    }
+  }
+
+  invariant {
+    after send(ACTIVATE) -> state is active;
+    then focus is within root;
+    and sentinelStart tabindex is "0";
+    and sentinelEnd tabindex is "0";
+  }
+
+  invariant {
+    after send(DEACTIVATE) -> state is inactive;
+    then focus is returned if returnFocus;
+    and sentinelStart tabindex is "-1";
+    and sentinelEnd tabindex is "-1";
+  }
+
+}

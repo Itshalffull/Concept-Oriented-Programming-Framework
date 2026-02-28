@@ -1,0 +1,263 @@
+@version(1)
+widget permission-matrix {
+
+  purpose {
+    Role-based access control grid mapping roles (columns) against resources
+    and their actions (rows). Each intersection cell contains a checkbox
+    that can be checked, unchecked, or indeterminate (when a resource
+    group has mixed permissions). Supports hierarchical resource grouping
+    with parent rows that summarize child action permissions. Used for
+    admin permission editors, RBAC configuration, and access policy managers.
+  }
+
+  anatomy {
+    root:             container  { Top-level wrapper for the permission matrix grid }
+    roleHeader:       container  { Grid header row containing role column headings }
+    roleCell:         text       { Individual role column heading label }
+    roleDescription:  text       { Optional tooltip or subtitle describing the role }
+    resourceGroup:    container  { Collapsible group row for a resource with child action rows }
+    resourceLabel:    text       { Resource name label serving as a group heading }
+    resourceCheckbox: widget     { Indeterminate checkbox summarizing child action permissions }
+    resourceRow:      container  { Individual action row within a resource group }
+    actionLabel:      text       { Action name label within a resource (read, write, delete, etc.) }
+    actionCell:       container  { Intersection cell for one role-action pair }
+    actionCheckbox:   widget     { Checkbox controlling permission for a specific role-action pair }
+    bulkToggle:       widget     { Optional column-level toggle to grant/revoke all for a role }
+  }
+
+  states {
+    group {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+      }
+      collapsed {
+        on EXPAND -> expanded;
+      }
+    }
+
+    saving {
+      idle [initial] {
+        on CHANGE -> pending;
+      }
+      pending {
+        on SAVE -> saving;
+        on CHANGE -> pending;
+        on DISCARD -> idle;
+      }
+      saving {
+        on SAVE_COMPLETE -> idle;
+        on SAVE_ERROR -> pending;
+      }
+    }
+
+    permission {
+      denied [initial] {
+        on GRANT -> granted;
+      }
+      granted {
+        on REVOKE -> denied;
+      }
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      Space       -> TOGGLE_PERMISSION;
+      Enter       -> TOGGLE_PERMISSION;
+      ArrowRight  -> NAVIGATE_RIGHT;
+      ArrowLeft   -> NAVIGATE_LEFT;
+      ArrowDown   -> NAVIGATE_DOWN;
+      ArrowUp     -> NAVIGATE_UP;
+      Home        -> NAVIGATE_ROW_START;
+      End         -> NAVIGATE_ROW_END;
+      Tab         -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: actionCheckbox;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: "Permission matrix";
+        aria-colcount: roleCount + 1;
+      };
+      roleHeader -> {
+        role: "row";
+      };
+      roleCell -> {
+        role: "columnheader";
+        aria-colindex: self.colIndex;
+      };
+      resourceGroup -> {
+        role: "rowgroup";
+        aria-label: self.resourceName;
+        aria-expanded: if state.group == "expanded" then "true" else "false";
+      };
+      resourceLabel -> {
+        role: "rowheader";
+        aria-colindex: "1";
+      };
+      resourceCheckbox -> {
+        aria-label: concat(self.resourceName, " for ", self.roleName);
+        aria-checked: if allActionsGranted(self.resource, self.role) then "true" else if someActionsGranted(self.resource, self.role) then "mixed" else "false";
+      };
+      resourceRow -> {
+        role: "row";
+        aria-rowindex: self.rowIndex;
+      };
+      actionLabel -> {
+        role: "rowheader";
+        aria-colindex: "1";
+      };
+      actionCell -> {
+        role: "gridcell";
+        aria-colindex: self.colIndex;
+      };
+      actionCheckbox -> {
+        aria-label: concat(self.actionName, " ", self.resourceName, " for ", self.roleName);
+        aria-checked: if self.granted then "true" else "false";
+      };
+      bulkToggle -> {
+        aria-label: concat("Toggle all permissions for ", self.roleName);
+        aria-checked: if allGranted(self.role) then "true" else if someGranted(self.role) then "mixed" else "false";
+      };
+    }
+  }
+
+  props {
+    roles: list RoleDef
+    resources: list ResourceDef
+    permissions: Map<String, Map<String, list String>>
+    disabled: Bool = false
+    readOnly: Bool = false
+    showBulkToggle: Bool = false
+    showDescriptions: Bool = false
+    collapsible: Bool = true
+    onChange: option Function
+    onSave: option Function
+  }
+
+  connect {
+    root -> {
+      role: "grid";
+      aria-label: "Permission matrix";
+      aria-colcount: ?roles.length + 1;
+      data-disabled: if ?disabled then "true" else "false";
+      data-readonly: if ?readOnly then "true" else "false";
+      data-state: if state.saving == "pending" then "unsaved" else if state.saving == "saving" then "saving" else "idle";
+    }
+
+    roleHeader -> {
+      role: "row";
+      data-part: "role-header";
+    }
+
+    roleCell -> {
+      role: "columnheader";
+      aria-colindex: self.colIndex;
+      text: self.roleName;
+      data-role: self.roleKey;
+    }
+
+    roleDescription -> {
+      text: self.description;
+      data-part: "role-description";
+      hidden: if not ?showDescriptions then true else false;
+    }
+
+    resourceGroup -> {
+      role: "rowgroup";
+      aria-label: self.resourceName;
+      aria-expanded: if state.group == "expanded" then "true" else "false";
+      data-resource: self.resourceKey;
+      data-state: if state.group == "expanded" then "expanded" else "collapsed";
+    }
+
+    resourceLabel -> {
+      role: "rowheader";
+      aria-colindex: "1";
+      text: self.resourceName;
+      data-part: "resource-label";
+      id: concat("resource-", self.resourceKey);
+      onClick: if ?collapsible then send(if state.group == "expanded" then COLLAPSE else EXPAND) else noop;
+    }
+
+    resourceCheckbox -> {
+      aria-label: concat("All ", self.resourceName, " permissions for ", self.roleName);
+      aria-checked: if allActionsGranted(self.resourceKey, self.roleKey, ?permissions) then "true" else if someActionsGranted(self.resourceKey, self.roleKey, ?permissions) then "mixed" else "false";
+      disabled: if ?disabled then true else if ?readOnly then true else false;
+      data-resource: self.resourceKey;
+      data-role: self.roleKey;
+      onChange: send(TOGGLE_RESOURCE, { resource: self.resourceKey, role: self.roleKey });
+    }
+
+    resourceRow -> {
+      role: "row";
+      aria-rowindex: self.rowIndex;
+      hidden: if state.group == "collapsed" then true else false;
+      data-action: self.actionKey;
+      data-resource: self.resourceKey;
+    }
+
+    actionLabel -> {
+      role: "rowheader";
+      aria-colindex: "1";
+      text: self.actionName;
+      data-part: "action-label";
+      id: concat("action-", self.resourceKey, "-", self.actionKey);
+    }
+
+    actionCell -> {
+      role: "gridcell";
+      aria-colindex: self.colIndex;
+      data-role: self.roleKey;
+      data-action: self.actionKey;
+      data-resource: self.resourceKey;
+    }
+
+    actionCheckbox -> {
+      aria-label: concat(self.actionName, " ", self.resourceName, " for ", self.roleName);
+      aria-checked: if self.granted then "true" else "false";
+      disabled: if ?disabled then true else if ?readOnly then true else if self.inherited then true else false;
+      data-inherited: if self.inherited then "true" else "false";
+      data-granted: if self.granted then "true" else "false";
+      tabindex: if self.focused then "0" else "-1";
+      onChange: send(TOGGLE_PERMISSION, { resource: self.resourceKey, action: self.actionKey, role: self.roleKey });
+      onKeyDown-ArrowRight: send(NAVIGATE_RIGHT);
+      onKeyDown-ArrowLeft: send(NAVIGATE_LEFT);
+      onKeyDown-ArrowDown: send(NAVIGATE_DOWN);
+      onKeyDown-ArrowUp: send(NAVIGATE_UP);
+    }
+
+    bulkToggle -> {
+      aria-label: concat("Toggle all permissions for ", self.roleName);
+      aria-checked: if allGranted(self.roleKey, ?permissions) then "true" else if someGranted(self.roleKey, ?permissions) then "mixed" else "false";
+      hidden: if not ?showBulkToggle then true else false;
+      disabled: if ?disabled then true else if ?readOnly then true else false;
+      data-role: self.roleKey;
+      onChange: send(TOGGLE_ALL_ROLE, { role: self.roleKey });
+    }
+  }
+
+  compose {
+    actionCheckbox:   widget("checkbox", { indeterminate: false });
+    resourceCheckbox: widget("checkbox", { indeterminate: true });
+    bulkToggle:       widget("checkbox", { indeterminate: true });
+    resourceGroup:    widget("tree-select", {});
+  }
+
+  invariant {
+    "Grid column count must equal roles.length + 1 (for the label column)";
+    "Resource checkbox must show indeterminate when some but not all child actions are granted";
+    "Toggling a resource checkbox must grant or revoke all child action permissions for that role";
+    "Inherited permissions must be visually distinct and not directly toggleable";
+    "Collapsing a resource group must hide all its action rows";
+    "Roving tabindex must follow grid navigation across visible cells";
+    "Pending changes must be tracked until explicitly saved or discarded";
+  }
+
+}

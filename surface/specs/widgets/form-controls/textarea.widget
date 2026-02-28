@@ -1,0 +1,154 @@
+@version(1)
+widget textarea {
+
+  purpose {
+    Multi-line text input field with optional auto-resize, character count,
+    and validation feedback. Supports free-form long text entry with
+    accessible labeling and descriptive help text.
+  }
+
+  anatomy {
+    root: container        { Outermost wrapper; groups label, field, and metadata }
+    label: text            { Visible label describing the field purpose }
+    textarea: action       { The editable multi-line text area element }
+    description: text      { Optional helper text below the field }
+    error: text            { Optional validation error message }
+    charCount: text        { Optional live character count display }
+  }
+
+  slots {
+    description { accepts: text; optional: true }
+    error       { accepts: text; optional: true }
+    charCount   { accepts: text; optional: true }
+  }
+
+  states {
+    content {
+      empty [initial] {
+        on INPUT -> filled;
+      }
+      filled {
+        on CLEAR -> empty;
+        on INPUT -> filled;
+      }
+    }
+
+    focus {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        entry [scrollIntoView, showCursor];
+        exit [hideCursor];
+      }
+    }
+
+    validation [parallel] {
+      valid [initial] {
+        on INVALIDATE -> invalid;
+      }
+      invalid {
+        on VALIDATE -> valid;
+        entry [showError];
+        exit [hideError];
+      }
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    multiline: true;
+    keyboard {
+      Enter -> NEWLINE;
+      Tab   -> FOCUS_NEXT;
+    }
+    focus {
+      textarea: focusable;
+    }
+    aria {
+      textarea -> {
+        aria-label: ?label;
+        aria-describedby: if ?description then description else none;
+        aria-invalid: if state.validation == "invalid" then "true" else "false";
+        aria-errormessage: if state.validation == "invalid" then error else none;
+        aria-multiline: "true";
+        aria-placeholder: ?placeholder;
+      };
+      charCount -> {
+        aria-live: "polite";
+      };
+      error -> {
+        aria-live: "assertive";
+        role: "alert";
+      };
+    }
+  }
+
+  props {
+    value: String = ""
+    rows: Int = 3
+    autoResize: Bool = true
+    maxLength: option Int
+    placeholder: String = ""
+    label: String
+    description: option String
+    disabled: Bool = false
+    required: Bool = false
+    readOnly: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-state: if state.focus == "focused" then "focused" else "idle";
+      data-content: if state.content == "empty" then "empty" else "filled";
+      data-disabled: if ?disabled then "true" else "false";
+      data-invalid: if state.validation == "invalid" then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: textarea;
+    }
+    textarea -> {
+      value: ?value;
+      rows: ?rows;
+      placeholder: ?placeholder;
+      disabled: ?disabled;
+      readOnly: ?readOnly;
+      required: ?required;
+      name: ?name;
+      maxLength: ?maxLength;
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      style-resize: if ?autoResize then "none" else "vertical";
+      style-overflow: if ?autoResize then "hidden" else "auto";
+    }
+    description -> {
+      text: ?description;
+      visible: if ?description then true else false;
+    }
+    error -> {
+      visible: if state.validation == "invalid" then true else false;
+    }
+    charCount -> {
+      text: if ?maxLength then concat(length(?value), "/", ?maxLength) else length(?value);
+      visible: if ?maxLength then true else false;
+    }
+  }
+
+  affordance {
+    serves: text-long;
+    specificity: 10;
+  }
+
+  compose {
+    label: widget("label", { text: ?label, for: textarea })
+  }
+
+  invariant {
+    maxLength => length(?value) <= ?maxLength;
+    rows > 0;
+  }
+}

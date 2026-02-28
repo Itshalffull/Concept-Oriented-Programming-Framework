@@ -1,0 +1,107 @@
+@version(1)
+widget floating-toolbar {
+
+  purpose {
+    Bubble toolbar that appears on text selection or contextual trigger.
+    Floats above the content with configurable placement and offset,
+    providing quick access to formatting actions or contextual commands
+    using roving tabindex navigation.
+  }
+
+  anatomy {
+    root: container        { Floating positioner wrapping the toolbar surface }
+    content: container     { Visible toolbar surface holding action items }
+  }
+
+  slots {
+    items { accepts: action, widget; within: content }
+  }
+
+  states {
+    visibility {
+      hidden [initial] {
+        on SHOW -> visible;
+        entry [hide root];
+      }
+      visible {
+        on HIDE -> hidden;
+        on CLICK_OUTSIDE -> hidden;
+        on ESCAPE -> hidden;
+        entry [show root; position root];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        on NAVIGATE_NEXT -> focused;
+        on NAVIGATE_PREV -> focused;
+      }
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    modal: false;
+    keyboard {
+      ArrowRight -> NAVIGATE_NEXT;
+      ArrowLeft -> NAVIGATE_PREV;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Escape -> HIDE;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: first item;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: "Formatting toolbar";
+        aria-orientation: "horizontal";
+      };
+    }
+  }
+
+  props {
+    placement: String = "top"
+    offset: Int = 8
+    autoHide: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "toolbar";
+      aria-label: "Formatting toolbar";
+      aria-orientation: "horizontal";
+      data-state: if state.visibility == "visible" then "visible" else "hidden";
+      data-placement: ?placement;
+      style-position: "absolute";
+      hidden: if state.visibility == "hidden" then true else false;
+      onKeyDown: send(NAVIGATE);
+    }
+
+    content -> {
+      data-part: "content";
+      data-state: if state.visibility == "visible" then "visible" else "hidden";
+    }
+  }
+
+  compose {
+    root: widget("toolbar", { label: "Formatting toolbar", orientation: "horizontal" })
+    root: widget("portal", {})
+  }
+
+  invariant {
+    when state.visibility == "hidden" then root is hidden;
+    when state.visibility == "visible" then root is positioned relative to anchor;
+    exactly one item has tabindex "0" when focused (roving tabindex);
+    Escape always hides the toolbar;
+  }
+
+}

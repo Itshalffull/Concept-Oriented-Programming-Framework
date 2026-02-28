@@ -1,0 +1,164 @@
+@version(1)
+widget token-input {
+
+  purpose {
+    Formula or expression property token rendered as a styled pill
+    within a text input. Represents a dynamic field reference, variable,
+    or function in formula editors and automation field mappers. Displays
+    a label and optional type icon, and can optionally be removed via
+    an inline delete button. Shows type information on hover via tooltip.
+  }
+
+  anatomy {
+    root:         container  { Outer pill wrapper providing the token shape and interaction surface }
+    label:        text       { Display text of the token (field name, variable, or function) }
+    typeIcon:     container  { Optional leading icon indicating the token data type }
+    removeButton: action     { Optional close button to remove the token from the input }
+  }
+
+  states {
+    static [initial] {
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+      on SELECT -> selected;
+    }
+
+    hovered {
+      on UNHOVER -> static;
+      on FOCUS -> focused;
+      on SELECT -> selected;
+      entry [show tooltip with type info];
+      exit [hide tooltip];
+    }
+
+    focused {
+      on BLUR -> static;
+      on REMOVE -> removed;
+      on SELECT -> selected;
+    }
+
+    selected {
+      on DESELECT -> static;
+      on REMOVE -> removed;
+      on BLUR -> static;
+      entry [highlight token];
+      exit [unhighlight token];
+    }
+
+    removed {
+      entry [remove self; announce "Token removed"];
+    }
+  }
+
+  accessibility {
+    role: option;
+    modal: false;
+    keyboard {
+      Backspace -> REMOVE;
+      Delete -> REMOVE;
+      Enter -> SELECT;
+      Escape -> DESELECT;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "option";
+        aria-label: concat(?label, if ?type then concat(" (", ?type, ")") else "");
+        aria-roledescription: "token";
+        aria-selected: if state == "selected" then "true" else "false";
+      };
+      label -> {
+        role: "presentation";
+      };
+      typeIcon -> {
+        role: "img";
+        aria-label: if ?type then concat("Type: ", ?type) else "Untyped";
+        aria-hidden: if not ?type then "true" else "false";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: concat("Remove ", ?label, " token");
+      };
+    }
+  }
+
+  props {
+    label: String
+    type: option String
+    removable: Bool = false
+    disabled: Bool = false
+    color: option String
+    value: option String
+    id: option String
+  }
+
+  connect {
+    root -> {
+      role: "option";
+      aria-label: concat(?label, if ?type then concat(" (", ?type, ")") else "");
+      aria-roledescription: "token";
+      aria-selected: if state == "selected" then "true" else "false";
+      aria-disabled: if ?disabled then "true" else "false";
+      data-part: "token";
+      data-type: ?type;
+      data-state: state;
+      data-removable: if ?removable then "true" else "false";
+      data-disabled: if ?disabled then "true" else "false";
+      data-color: ?color;
+      tabindex: if ?disabled then "-1" else "0";
+      onClick: send(SELECT);
+      onDoubleClick: send(SELECT);
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-Backspace: if ?removable and not ?disabled then send(REMOVE) else noop;
+      onKeyDown-Delete: if ?removable and not ?disabled then send(REMOVE) else noop;
+      onKeyDown-Enter: send(SELECT);
+      onKeyDown-Escape: send(DESELECT);
+    }
+
+    label -> {
+      data-part: "label";
+      text: ?label;
+    }
+
+    typeIcon -> {
+      data-part: "type-icon";
+      data-type: ?type;
+      data-visible: if ?type then "true" else "false";
+      aria-hidden: if not ?type then "true" else "false";
+      aria-label: if ?type then concat("Type: ", ?type) else "";
+    }
+
+    removeButton -> {
+      role: "button";
+      aria-label: concat("Remove ", ?label, " token");
+      data-part: "remove";
+      data-visible: if ?removable and not ?disabled then "true" else "false";
+      tabindex: "-1";
+      onClick: send(REMOVE);
+      onKeyDown-Enter: send(REMOVE);
+    }
+  }
+
+  compose {
+    pill: widget("chip", { label: ?label, deletable: ?removable, disabled: ?disabled, color: ?color });
+    typeTooltip: widget("tooltip", { content: if ?type then concat("Type: ", ?type) else "Untyped" });
+  }
+
+  invariant {
+    "Remove button must only be visible when removable is true and disabled is false";
+    "Type icon must only be visible when a type is provided";
+    "Hover must show a tooltip with type information";
+    "Disabled tokens must not respond to click, keyboard, or remove interactions";
+    "Token must announce removal to screen readers via live region";
+  }
+
+}

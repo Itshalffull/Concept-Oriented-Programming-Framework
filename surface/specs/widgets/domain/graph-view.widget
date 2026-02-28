@@ -1,0 +1,290 @@
+@version(1)
+widget graph-view {
+
+  purpose {
+    Force-directed node-and-edge graph visualization for exploring
+    relationships in knowledge bases, dependency trees, and social
+    networks. Supports filtering by node type, full-text search,
+    adjustable force simulation parameters, zoom/pan, a minimap for
+    orientation, and a detail panel for inspecting selected nodes.
+    Can toggle between a global overview and a local neighborhood view.
+  }
+
+  anatomy {
+    root:                container  { Top-level wrapper for the graph visualization layout }
+    canvas:              container  { SVG or WebGL surface rendering nodes and edges }
+    filterPanel:         container  { Collapsible sidebar with search, type toggles, and display controls }
+    searchInput:         widget     { Text input for full-text search to highlight matching nodes }
+    typeToggles:         container  { Group of checkboxes to show/hide node types }
+    displayControls:     container  { Section containing visual tuning controls }
+    nodeSizeSlider:      widget     { Slider controlling the rendered size of nodes }
+    linkThicknessSlider: widget     { Slider controlling the stroke width of edges }
+    forceControls:       container  { Section with sliders for force simulation parameters }
+    minimap:             container  { Scaled-down overview of the entire graph with viewport indicator }
+    detailPanel:         container  { Side panel showing properties and relationships of the selected node }
+    modeToggle:          widget     { Toggle between global view and local neighborhood view }
+  }
+
+  states {
+    globalView [initial] {
+      on SWITCH_LOCAL -> localView;
+      on SELECT_NODE -> nodeSelected;
+      on SEARCH -> searching;
+      on PAN_START -> panning;
+      on ZOOM -> globalView;
+    }
+
+    localView {
+      on SWITCH_GLOBAL -> globalView;
+      on SELECT_NODE -> nodeSelected;
+      on SEARCH -> searching;
+      on PAN_START -> panning;
+      entry [filterToNeighborhood; animateTransition];
+    }
+
+    nodeSelected {
+      on DESELECT -> globalView;
+      on SELECT_NODE -> nodeSelected;
+      on SWITCH_LOCAL -> localView;
+      on SWITCH_GLOBAL -> globalView;
+      entry [show detailPanel; highlightNode; highlightEdges];
+      exit [hide detailPanel; unhighlightAll];
+    }
+
+    searching {
+      on CLEAR_SEARCH -> globalView;
+      on SELECT_NODE -> nodeSelected;
+      on SEARCH_EMPTY -> searching;
+      entry [highlightMatches; dimNonMatches];
+      exit [resetHighlights];
+    }
+
+    panning {
+      on PAN_END -> globalView;
+      entry [set cursor grabbing];
+      exit [set cursor default];
+    }
+
+    simulation {
+      running [initial] {
+        on STABILIZE -> stabilized;
+        on PAUSE -> paused;
+      }
+      stabilized {
+        on REHEAT -> running;
+        on DRAG_NODE -> running;
+      }
+      paused {
+        on RESUME -> running;
+      }
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT_NODE;
+      Shift+Tab -> FOCUS_PREV_NODE;
+      Enter -> SELECT_NODE;
+      Escape -> DESELECT;
+      Control+f -> FOCUS_SEARCH;
+      Control+Plus -> ZOOM_IN;
+      Control+Minus -> ZOOM_OUT;
+      Control+0 -> ZOOM_FIT;
+      ArrowUp -> PAN_UP;
+      ArrowDown -> PAN_DOWN;
+      ArrowLeft -> PAN_LEFT;
+      ArrowRight -> PAN_RIGHT;
+      g -> SWITCH_GLOBAL;
+      l -> SWITCH_LOCAL;
+      Space -> TOGGLE_SIMULATION;
+    }
+    focus {
+      trap: false;
+      initial: canvas;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "graph visualization";
+      };
+      canvas -> {
+        role: "img";
+        aria-label: concat("Graph with ", ?nodeCount, " nodes and ", ?edgeCount, " edges");
+      };
+      filterPanel -> {
+        role: "complementary";
+        aria-label: "Graph filters";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search nodes";
+      };
+      typeToggles -> {
+        role: "group";
+        aria-label: "Node type filters";
+      };
+      displayControls -> {
+        role: "group";
+        aria-label: "Display settings";
+      };
+      forceControls -> {
+        role: "group";
+        aria-label: "Force simulation controls";
+      };
+      minimap -> {
+        role: "img";
+        aria-label: "Graph minimap";
+      };
+      detailPanel -> {
+        role: "complementary";
+        aria-label: "Node details";
+        aria-hidden: if state != "nodeSelected" then "true" else "false";
+      };
+      modeToggle -> {
+        role: "switch";
+        aria-label: "Toggle local neighborhood view";
+        aria-checked: if state == "localView" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    nodes: list GraphNode
+    edges: list GraphEdge
+    ariaLabel: String = "Graph View"
+    nodeCount: Int = 0
+    edgeCount: Int = 0
+    zoom: Float = 1.0
+    panX: Float = 0.0
+    panY: Float = 0.0
+    selectedNodeId: option String
+    searchQuery: String = ""
+    visibleTypes: list String = []
+    nodeSize: Float = 8.0
+    linkThickness: Float = 1.5
+    chargeStrength: Float = -300.0
+    linkDistance: Float = 100.0
+    viewMode: union "global" | "local" = "global"
+    simulationRunning: Bool = true
+    filterPanelOpen: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "application";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "graph visualization";
+      data-state: state;
+      data-view-mode: ?viewMode;
+      data-simulation: if ?simulationRunning then "running" else "paused";
+    }
+
+    canvas -> {
+      data-part: "canvas";
+      role: "img";
+      aria-label: concat("Graph with ", ?nodeCount, " nodes and ", ?edgeCount, " edges");
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+      tabindex: "0";
+      onWheel: send(ZOOM, { delta: self.wheelDelta });
+      onPointerDown: send(PAN_START);
+      onPointerUp: send(PAN_END);
+      onPointerMove: send(PAN_MOVE, { x: self.x, y: self.y });
+    }
+
+    filterPanel -> {
+      data-part: "filter-panel";
+      role: "complementary";
+      aria-label: "Graph filters";
+      data-visible: if ?filterPanelOpen then "true" else "false";
+      aria-hidden: if not ?filterPanelOpen then "true" else "false";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      aria-label: "Search nodes";
+      value: ?searchQuery;
+    }
+
+    typeToggles -> {
+      data-part: "type-toggles";
+      role: "group";
+      aria-label: "Node type filters";
+    }
+
+    displayControls -> {
+      data-part: "display-controls";
+      role: "group";
+      aria-label: "Display settings";
+    }
+
+    nodeSizeSlider -> {
+      data-part: "node-size-slider";
+      aria-label: "Node size";
+      value: ?nodeSize;
+    }
+
+    linkThicknessSlider -> {
+      data-part: "link-thickness-slider";
+      aria-label: "Link thickness";
+      value: ?linkThickness;
+    }
+
+    forceControls -> {
+      data-part: "force-controls";
+      role: "group";
+      aria-label: "Force simulation controls";
+    }
+
+    minimap -> {
+      data-part: "minimap";
+      role: "img";
+      aria-label: "Graph minimap";
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+    }
+
+    detailPanel -> {
+      data-part: "detail-panel";
+      role: "complementary";
+      aria-label: "Node details";
+      data-visible: if ?selectedNodeId then "true" else "false";
+      aria-hidden: if not ?selectedNodeId then "true" else "false";
+      data-node-id: ?selectedNodeId;
+    }
+
+    modeToggle -> {
+      data-part: "mode-toggle";
+      aria-label: "Toggle local neighborhood view";
+      aria-checked: if ?viewMode == "local" then "true" else "false";
+      data-mode: ?viewMode;
+    }
+  }
+
+  compose {
+    searchInput: widget("text-input", { value: ?searchQuery, placeholder: "Search nodes..." });
+    nodeSizeSlider: widget("slider", { min: 2, max: 30, value: ?nodeSize, label: "Node size" });
+    linkThicknessSlider: widget("slider", { min: 0.5, max: 8, value: ?linkThickness, label: "Link thickness" });
+    typeToggles: widget("checkbox-group", { options: ?visibleTypes });
+    detailDrawer: widget("drawer", { open: if ?selectedNodeId then true else false, placement: "right" });
+    modeToggle: widget("segmented-control", { options: ["global", "local"], value: ?viewMode });
+    filterSplitter: widget("splitter", { orientation: "horizontal" });
+  }
+
+  invariant {
+    "Local view must display only the selected node and its direct neighbors";
+    "Search highlighting must be additive with type filters";
+    "Force simulation must reheat when nodes are added, removed, or dragged";
+    "Minimap viewport indicator must track canvas pan and zoom state";
+    "Node size and link thickness sliders must update the rendering in real time";
+    "Detail panel must only be visible when a node is selected";
+    "Keyboard navigation must cycle through nodes in a consistent order";
+  }
+
+}

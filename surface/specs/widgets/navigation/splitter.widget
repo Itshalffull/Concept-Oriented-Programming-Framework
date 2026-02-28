@@ -1,0 +1,131 @@
+@version(1)
+widget splitter {
+
+  purpose {
+    Resizable pane divider that allows users to adjust the size ratio
+    between two adjacent panels. The draggable handle supports both
+    pointer and keyboard interaction with configurable minimum and
+    maximum size constraints.
+  }
+
+  anatomy {
+    root: container        { Top-level wrapper containing both panels and the handle }
+    panelBefore: container { First resizable panel before the divider handle }
+    handle: action         { Draggable separator element between the two panels }
+    panelAfter: container  { Second resizable panel after the divider handle }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on DRAG_START -> dragging;
+        on FOCUS -> focused;
+        entry [set cursor default];
+      }
+      dragging {
+        on DRAG_END -> idle;
+        on DRAG_MOVE -> dragging;
+        entry [set cursor if ?orientation == "horizontal" then "col-resize" else "row-resize"];
+      }
+      focused {
+        on BLUR -> idle;
+        on DRAG_START -> dragging;
+        on RESIZE_INCREMENT -> focused;
+        on RESIZE_DECREMENT -> focused;
+        on RESIZE_MIN -> focused;
+        on RESIZE_MAX -> focused;
+      }
+    }
+  }
+
+  accessibility {
+    role: separator;
+    modal: false;
+    keyboard {
+      ArrowLeft -> RESIZE_DECREMENT;
+      ArrowRight -> RESIZE_INCREMENT;
+      ArrowUp -> RESIZE_DECREMENT;
+      ArrowDown -> RESIZE_INCREMENT;
+      Home -> RESIZE_MIN;
+      End -> RESIZE_MAX;
+    }
+    focus {
+      trap: false;
+      initial: handle;
+    }
+    aria {
+      handle -> {
+        role: "separator";
+        aria-orientation: ?orientation;
+        aria-valuenow: ?defaultSize;
+        aria-valuemin: ?min;
+        aria-valuemax: ?max;
+        aria-label: "Resize";
+      };
+    }
+  }
+
+  props {
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    defaultSize: Float = 50
+    min: Float = 10
+    max: Float = 90
+    step: Float = 1
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-orientation: ?orientation;
+      data-disabled: if ?disabled then "true" else "false";
+      data-state: state.interaction;
+      style-display: "flex";
+      style-flexDirection: if ?orientation == "horizontal" then "row" else "column";
+    }
+
+    panelBefore -> {
+      data-part: "panel-before";
+      data-orientation: ?orientation;
+      style-flexBasis: concat(?defaultSize, "%");
+      style-minWidth: if ?orientation == "horizontal" then concat(?min, "%") else "auto";
+      style-minHeight: if ?orientation == "vertical" then concat(?min, "%") else "auto";
+    }
+
+    handle -> {
+      role: "separator";
+      aria-orientation: ?orientation;
+      aria-valuenow: ?defaultSize;
+      aria-valuemin: ?min;
+      aria-valuemax: ?max;
+      aria-label: "Resize";
+      tabindex: if ?disabled then "-1" else "0";
+      data-orientation: ?orientation;
+      data-state: state.interaction;
+      data-disabled: if ?disabled then "true" else "false";
+      onPointerDown: send(DRAG_START);
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+      onKeyDown: send(RESIZE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      style-cursor: if ?orientation == "horizontal" then "col-resize" else "row-resize";
+    }
+
+    panelAfter -> {
+      data-part: "panel-after";
+      data-orientation: ?orientation;
+      style-flexBasis: concat(100 - ?defaultSize, "%");
+      style-maxWidth: if ?orientation == "horizontal" then concat(?max, "%") else "auto";
+      style-maxHeight: if ?orientation == "vertical" then concat(?max, "%") else "auto";
+    }
+  }
+
+  invariant {
+    ?defaultSize >= ?min and ?defaultSize <= ?max;
+    ?min >= 0 and ?max <= 100;
+    ?min < ?max;
+    panelBefore size + panelAfter size == 100%;
+    aria-valuenow always reflects current split percentage;
+  }
+
+}

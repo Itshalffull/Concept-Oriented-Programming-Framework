@@ -1,0 +1,393 @@
+@version(1)
+widget file-browser {
+
+  purpose {
+    Full-featured file management interface with a drag-and-drop upload zone,
+    toggleable grid/list views, breadcrumb navigation, and an expandable
+    detail sidebar. Supports multi-selection with a bulk action bar, file
+    previews, and hierarchical folder navigation. Used for document managers,
+    media libraries, asset browsers, and any file-centric admin interface.
+  }
+
+  anatomy {
+    root:             container  { Top-level layout wrapper for the entire file browser }
+    toolbar:          container  { Top toolbar with upload, view toggle, search, and action buttons }
+    uploadButton:     action     { Button that opens the file upload dialog or drop zone }
+    newFolderButton:  action     { Button to create a new folder in the current directory }
+    searchInput:      widget     { Text input for searching files within the current scope }
+    viewToggle:       widget     { Toggle between grid and list view modes }
+    sortMenu:         widget     { Dropdown menu for choosing sort field and direction }
+    breadcrumb:       widget     { Path breadcrumb showing the current directory hierarchy }
+    dropZone:         container  { Drag-and-drop file upload zone overlay }
+    content:          container  { Main content area holding the file listing }
+    grid:             widget     { Grid/card view of files and folders }
+    list:             widget     { Table/list view of files and folders }
+    fileItem:         container  { Individual file or folder item (shared between grid and list) }
+    fileIcon:         container  { Thumbnail or type icon for a file item }
+    fileName:         text       { Display name of the file or folder }
+    fileMeta:         text       { Metadata (size, modified date) for a file item }
+    detailSidebar:    container  { Collapsible sidebar showing details of the selected file }
+    detailPreview:    container  { File preview area within the detail sidebar }
+    detailProperties: container  { Properties list within the detail sidebar }
+    multiSelectBar:   container  { Bulk action bar appearing when multiple items are selected }
+    emptyState:       container  { Placeholder shown when the current directory is empty }
+    loadingState:     container  { Skeleton or spinner shown during file loading }
+  }
+
+  slots {
+    toolbarStart  { start of toolbar }
+    toolbarEnd    { end of toolbar }
+    detailActions { end of detailSidebar }
+  }
+
+  states {
+    view {
+      grid [initial] {
+        on SWITCH_TO_LIST -> list;
+      }
+      list {
+        on SWITCH_TO_GRID -> grid;
+      }
+    }
+
+    selection {
+      none [initial] {
+        on SELECT -> single;
+        on SELECT_MULTIPLE -> multiple;
+      }
+      single {
+        on DESELECT_ALL -> none;
+        on SELECT -> single;
+        on SELECT_ADDITIONAL -> multiple;
+      }
+      multiple {
+        on DESELECT_ALL -> none;
+        on SELECT -> single;
+        on SELECT_ADDITIONAL -> multiple;
+        on DESELECT_ONE -> multiple;
+        on DESELECT_TO_ONE -> single;
+      }
+    }
+
+    upload {
+      idle [initial] {
+        on UPLOAD_START -> uploading;
+        on DRAG_ENTER -> dragOver;
+      }
+      dragOver {
+        on DRAG_LEAVE -> idle;
+        on DROP -> uploading;
+        entry [showDropZone];
+        exit [hideDropZone];
+      }
+      uploading {
+        on UPLOAD_COMPLETE -> idle;
+        on UPLOAD_ERROR -> error;
+        entry [showProgress];
+        exit [hideProgress; refreshFiles];
+      }
+      error {
+        on RETRY -> uploading;
+        on DISMISS -> idle;
+      }
+    }
+
+    sidebar {
+      hidden [initial] {
+        on SHOW_DETAIL -> visible;
+        on SELECT -> visible;
+      }
+      visible {
+        on HIDE_DETAIL -> hidden;
+        on DESELECT_ALL -> hidden;
+      }
+    }
+
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      error {
+        on RETRY -> loading;
+      }
+    }
+
+    rename {
+      idle [initial] {
+        on START_RENAME -> renaming;
+      }
+      renaming {
+        on COMMIT_RENAME -> idle;
+        on CANCEL_RENAME -> idle;
+        entry [focusNameInput; selectNameText];
+        exit [validateName];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter       -> OPEN_OR_SELECT;
+      Space       -> TOGGLE_SELECT;
+      Delete      -> DELETE_SELECTED;
+      Backspace   -> NAVIGATE_UP;
+      Escape      -> DESELECT_ALL;
+      ArrowUp     -> NAVIGATE_PREV;
+      ArrowDown   -> NAVIGATE_NEXT;
+      ArrowLeft   -> NAVIGATE_PREV_COL;
+      ArrowRight  -> NAVIGATE_NEXT_COL;
+      Control+A   -> SELECT_ALL;
+      Control+C   -> COPY;
+      Control+V   -> PASTE;
+      Control+X   -> CUT;
+      F2          -> START_RENAME;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "File browser";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "File actions";
+      };
+      content -> {
+        role: "grid";
+        aria-label: "Files and folders";
+        aria-multiselectable: "true";
+      };
+      fileItem -> {
+        role: "row";
+        aria-selected: if self.selected then "true" else "false";
+        aria-label: self.name;
+      };
+      multiSelectBar -> {
+        role: "toolbar";
+        aria-label: "Bulk actions";
+      };
+      detailSidebar -> {
+        role: "complementary";
+        aria-label: "File details";
+      };
+      dropZone -> {
+        role: "region";
+        aria-label: "Drop files here to upload";
+      };
+    }
+  }
+
+  props {
+    files: list FileDef = []
+    currentPath: String = "/"
+    selectedIds: list String = []
+    viewMode: union "grid" | "list" = "grid"
+    sortField: String = "name"
+    sortDirection: union "ascending" | "descending" = "ascending"
+    showSidebar: Bool = true
+    showUpload: Bool = true
+    showSearch: Bool = true
+    allowMultiSelect: Bool = true
+    allowRename: Bool = true
+    allowDelete: Bool = true
+    allowUpload: Bool = true
+    allowNewFolder: Bool = true
+    acceptTypes: option String
+    maxFileSize: option Int
+    loading: Bool = false
+    onNavigate: option Function
+    onSelect: option Function
+    onUpload: option Function
+    onDelete: option Function
+    onRename: option Function
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: "File browser";
+      data-view: if state.view == "grid" then "grid" else "list";
+      data-state: if ?loading then "loading" else if ?files.length == 0 then "empty" else "idle";
+      data-selection: if state.selection == "none" then "none" else if state.selection == "single" then "single" else "multiple";
+      data-upload: if state.upload == "dragOver" then "drag-over" else if state.upload == "uploading" then "uploading" else "idle";
+    }
+
+    toolbar -> {
+      role: "toolbar";
+      aria-label: "File actions";
+      data-part: "toolbar";
+    }
+
+    uploadButton -> {
+      aria-label: "Upload files";
+      disabled: if not ?allowUpload then true else false;
+      hidden: if not ?showUpload then true else false;
+      onClick: send(UPLOAD_START);
+    }
+
+    newFolderButton -> {
+      aria-label: "New folder";
+      disabled: if not ?allowNewFolder then true else false;
+      hidden: if not ?allowNewFolder then true else false;
+      onClick: send(CREATE_FOLDER);
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      placeholder: "Search files...";
+      aria-label: "Search files";
+      hidden: if not ?showSearch then true else false;
+    }
+
+    viewToggle -> {
+      data-part: "view-toggle";
+      value: if state.view == "grid" then "grid" else "list";
+      aria-label: "Switch view mode";
+      onChange: if state.view == "grid" then send(SWITCH_TO_LIST) else send(SWITCH_TO_GRID);
+    }
+
+    sortMenu -> {
+      data-part: "sort-menu";
+      value: ?sortField;
+      data-direction: ?sortDirection;
+      aria-label: "Sort files";
+    }
+
+    breadcrumb -> {
+      data-part: "breadcrumb";
+      path: ?currentPath;
+      aria-label: "File path";
+    }
+
+    dropZone -> {
+      role: "region";
+      aria-label: "Drop files here to upload";
+      data-state: if state.upload == "dragOver" then "active" else "idle";
+      hidden: if state.upload != "dragOver" then true else false;
+      onDragEnter: send(DRAG_ENTER);
+      onDragLeave: send(DRAG_LEAVE);
+      onDrop: send(DROP);
+    }
+
+    content -> {
+      role: "grid";
+      aria-label: "Files and folders";
+      aria-multiselectable: if ?allowMultiSelect then "true" else "false";
+      aria-busy: if ?loading then "true" else "false";
+      data-view: if state.view == "grid" then "grid" else "list";
+    }
+
+    grid -> {
+      data-part: "grid-view";
+      hidden: if state.view != "grid" then true else false;
+    }
+
+    list -> {
+      data-part: "list-view";
+      hidden: if state.view != "list" then true else false;
+    }
+
+    fileItem -> {
+      role: "row";
+      aria-selected: if self.selected then "true" else "false";
+      aria-label: self.name;
+      data-type: self.fileType;
+      data-selected: if self.selected then "true" else "false";
+      tabindex: if self.focused then "0" else "-1";
+      onClick: send(SELECT, { id: self.id });
+      onDoubleClick: if self.isFolder then send(NAVIGATE, { path: self.path }) else send(OPEN, { id: self.id });
+      onKeyDown-Enter: if self.isFolder then send(NAVIGATE, { path: self.path }) else send(OPEN, { id: self.id });
+    }
+
+    fileIcon -> {
+      data-type: self.fileType;
+      data-part: "file-icon";
+      aria-hidden: "true";
+    }
+
+    fileName -> {
+      text: self.name;
+      data-part: "file-name";
+      data-state: if state.rename == "renaming" then "editing" else "displaying";
+    }
+
+    fileMeta -> {
+      text: concat(self.size, " - ", self.modifiedDate);
+      data-part: "file-meta";
+      aria-hidden: "true";
+    }
+
+    detailSidebar -> {
+      role: "complementary";
+      aria-label: "File details";
+      hidden: if state.sidebar == "hidden" then true else if not ?showSidebar then true else false;
+      data-state: if state.sidebar == "visible" then "visible" else "hidden";
+    }
+
+    detailPreview -> {
+      data-part: "detail-preview";
+      data-type: selectedFile.fileType;
+      aria-label: concat("Preview of ", selectedFile.name);
+    }
+
+    detailProperties -> {
+      data-part: "detail-properties";
+    }
+
+    multiSelectBar -> {
+      role: "toolbar";
+      aria-label: "Bulk actions";
+      hidden: if state.selection != "multiple" then true else false;
+      data-count: ?selectedIds.length;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if ?files.length > 0 then true else if ?loading then true else false;
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      hidden: if not ?loading then true else false;
+      aria-hidden: if not ?loading then "true" else "false";
+    }
+  }
+
+  compose {
+    searchInput:    widget("text-input", { type: "search", placeholder: "Search files..." });
+    viewToggle:     widget("view-toggle", {});
+    breadcrumb:     widget("breadcrumb", { path: ?currentPath });
+    grid:           widget("card-grid", {});
+    list:           widget("data-table", { columns: fileColumns });
+    uploadDialog:   widget("file-upload", { accept: ?acceptTypes, maxSize: ?maxFileSize });
+    detailSidebar:  widget("drawer", { position: "right" });
+    splitter:       widget("splitter", { orientation: "horizontal" });
+    emptyState:     widget("empty-state", { title: "No files" });
+  }
+
+  invariant {
+    "Exactly one view mode (grid or list) must be visible at all times";
+    "Multi-select bar must only appear when two or more items are selected";
+    "Detail sidebar must close when selection is cleared";
+    "Breadcrumb must reflect the current directory path";
+    "Drop zone must only be visible during drag-over state";
+    "File uploads must validate against acceptTypes and maxFileSize before starting";
+    "Grid navigation must use arrow keys in two dimensions for grid view and single dimension for list view";
+    "Rename mode must select the file name text excluding the extension";
+  }
+
+}

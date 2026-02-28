@@ -1,0 +1,257 @@
+@version(1)
+widget policy-editor {
+
+  purpose {
+    Visual and JSON dual-mode policy editor for defining permission
+    and access-control policies, inspired by AWS IAM policy builder.
+    In visual mode, users select services, actions, and resources
+    through structured form controls. In JSON mode, users directly
+    edit the policy document with syntax validation. Supports policy
+    simulation to test the effect of the policy against sample
+    requests before saving.
+  }
+
+  anatomy {
+    root:             container  { Top-level wrapper for the policy editor layout }
+    modeToggle:       widget     { Toggle switch between visual editor and JSON editor modes }
+    visualEditor:     container  { Form-based policy builder with service, action, and resource selectors }
+    serviceSelector:  widget     { Combobox for choosing the service scope of the policy statement }
+    actionSelector:   widget     { Multi-select checkbox group for choosing allowed or denied actions }
+    resourceSelector: widget     { Combobox or text input for specifying resource ARN patterns }
+    jsonEditor:       container  { Code editor for raw JSON policy document editing }
+    validateButton:   action     { Button to validate the current policy against the schema }
+    simulatorButton:  action     { Button to open the policy simulator for testing access }
+  }
+
+  states {
+    visual [initial] {
+      on SWITCH_JSON -> json;
+      on VALIDATE -> validating;
+      on SIMULATE -> simulating;
+      on CHANGE -> visual;
+    }
+
+    json {
+      on SWITCH_VISUAL -> visual;
+      on VALIDATE -> validating;
+      on SIMULATE -> simulating;
+      on CHANGE -> json;
+      entry [syncJsonFromVisual; focusJsonEditor];
+    }
+
+    validating {
+      on VALID -> validated;
+      on INVALID -> validationError;
+      on CANCEL -> visual;
+      entry [set aria-busy true; runValidation];
+      exit [set aria-busy false];
+    }
+
+    validated {
+      on DISMISS -> visual;
+      on SWITCH_JSON -> json;
+      on CHANGE -> visual;
+      entry [showValidBanner];
+    }
+
+    validationError {
+      on DISMISS -> visual;
+      on SWITCH_JSON -> json;
+      on FIX -> visual;
+      entry [showErrorBanner; highlightErrors];
+    }
+
+    simulating {
+      on SIMULATION_COMPLETE -> simulationResult;
+      on CANCEL -> visual;
+      entry [set aria-busy true; openSimulator];
+      exit [set aria-busy false];
+    }
+
+    simulationResult {
+      on DISMISS -> visual;
+      on SIMULATE -> simulating;
+      entry [showSimulationResults];
+    }
+
+    validation [parallel] {
+      valid [initial] {
+        on INVALIDATE -> invalid;
+      }
+      invalid {
+        on REVALIDATE -> valid;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Control+Shift+v -> SWITCH_VISUAL;
+      Control+Shift+j -> SWITCH_JSON;
+      Control+Enter -> VALIDATE;
+      Control+Shift+s -> SIMULATE;
+      Escape -> ESCAPE;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: modeToggle;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "policy editor";
+        aria-busy: if state == "validating" or state == "simulating" then "true" else "false";
+      };
+      modeToggle -> {
+        role: "radiogroup";
+        aria-label: "Editor mode";
+      };
+      visualEditor -> {
+        role: "form";
+        aria-label: "Visual policy editor";
+        aria-hidden: if state == "json" then "true" else "false";
+      };
+      serviceSelector -> {
+        aria-label: "Service";
+      };
+      actionSelector -> {
+        role: "group";
+        aria-label: "Actions";
+      };
+      resourceSelector -> {
+        aria-label: "Resource";
+      };
+      jsonEditor -> {
+        role: "textbox";
+        aria-label: "JSON policy editor";
+        aria-multiline: "true";
+        aria-hidden: if state != "json" then "true" else "false";
+      };
+      validateButton -> {
+        role: "button";
+        aria-label: "Validate policy";
+      };
+      simulatorButton -> {
+        role: "button";
+        aria-label: "Simulate policy";
+      };
+    }
+  }
+
+  props {
+    policy: option Object
+    policyJson: String = "{}"
+    services: list { name: String, actions: list String }
+    ariaLabel: String = "Policy Editor"
+    readOnly: Bool = false
+    mode: union "visual" | "json" = "visual"
+    validationErrors: list { path: String, message: String } = []
+    simulationResults: option Object
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "policy editor";
+      aria-busy: if state == "validating" or state == "simulating" then "true" else "false";
+      data-state: state;
+      data-mode: ?mode;
+      data-readonly: if ?readOnly then "true" else "false";
+      data-valid: if ?validationErrors.length == 0 then "true" else "false";
+    }
+
+    modeToggle -> {
+      data-part: "mode-toggle";
+      data-mode: ?mode;
+      aria-label: "Editor mode";
+    }
+
+    visualEditor -> {
+      data-part: "visual-editor";
+      role: "form";
+      aria-label: "Visual policy editor";
+      data-visible: if ?mode == "visual" then "true" else "false";
+      aria-hidden: if ?mode == "json" then "true" else "false";
+    }
+
+    serviceSelector -> {
+      data-part: "service-selector";
+      aria-label: "Service";
+      data-selected: self.selectedService;
+    }
+
+    actionSelector -> {
+      data-part: "action-selector";
+      role: "group";
+      aria-label: "Actions";
+      data-service: self.selectedService;
+    }
+
+    resourceSelector -> {
+      data-part: "resource-selector";
+      aria-label: "Resource ARN pattern";
+      data-service: self.selectedService;
+    }
+
+    jsonEditor -> {
+      data-part: "json-editor";
+      role: "textbox";
+      aria-label: "JSON policy editor";
+      aria-multiline: "true";
+      data-visible: if ?mode == "json" then "true" else "false";
+      aria-hidden: if ?mode != "json" then "true" else "false";
+      data-valid: if ?validationErrors.length == 0 then "true" else "false";
+      data-error-count: ?validationErrors.length;
+      contenteditable: if not ?readOnly then "true" else "false";
+      onInput: send(CHANGE, { json: self.textContent });
+    }
+
+    validateButton -> {
+      role: "button";
+      aria-label: "Validate policy";
+      data-part: "validate";
+      data-state: if state == "validating" then "loading" else "idle";
+      aria-disabled: if state == "validating" then "true" else "false";
+      onClick: send(VALIDATE);
+      onKeyDown-Enter: send(VALIDATE);
+    }
+
+    simulatorButton -> {
+      role: "button";
+      aria-label: "Simulate policy";
+      data-part: "simulate";
+      data-state: if state == "simulating" then "loading" else "idle";
+      aria-disabled: if state == "simulating" or ?validationErrors.length > 0 then "true" else "false";
+      onClick: send(SIMULATE);
+      onKeyDown-Enter: send(SIMULATE);
+    }
+  }
+
+  compose {
+    modeToggle: widget("segmented-control", { options: ["visual", "json"], value: ?mode });
+    serviceSelector: widget("combobox", { options: ?services, placeholder: "Select service..." });
+    actionSelector: widget("checkbox-group", { options: self.availableActions });
+    resourceSelector: widget("combobox", { allowCustom: true, placeholder: "arn:*" });
+    jsonEditor: widget("code-block", { language: "json", code: ?policyJson });
+    validateButton: widget("button", { variant: "secondary", label: "Validate" });
+    simulatorButton: widget("button", { variant: "secondary", label: "Simulate" });
+  }
+
+  invariant {
+    "Switching modes must synchronize the policy state between visual and JSON representations";
+    "JSON validation errors must highlight the specific lines in the JSON editor";
+    "Visual editor must only show actions relevant to the selected service";
+    "Simulation must be disabled when validation errors are present";
+    "Read-only mode must disable all form controls and the JSON editor";
+    "aria-busy must be true during validation and simulation operations";
+    "Policy must validate against the schema before simulation can run";
+  }
+
+}

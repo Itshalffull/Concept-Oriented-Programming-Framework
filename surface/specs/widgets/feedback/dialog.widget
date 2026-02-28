@@ -1,0 +1,133 @@
+@version(1)
+widget dialog {
+
+  purpose {
+    Modal overlay that captures focus and blocks interaction with the
+    underlying page until dismissed. Supports both informational and
+    alert-dialog roles with configurable backdrop, escape-to-close,
+    and outside-click behaviours. Focus is trapped within the dialog
+    content while open and restored to the trigger element on close.
+  }
+
+  anatomy {
+    root:         container  { top-level wrapper; provides stacking context }
+    trigger:      action     { element that opens the dialog }
+    backdrop:     overlay    { semi-transparent layer behind the dialog content }
+    positioner:   container  { centres the dialog within the viewport }
+    content:      container  { visible dialog surface holding all inner parts }
+    title:        text       { heading that labels the dialog for sighted and AT users }
+    description:  text       { supplementary text explaining the dialog purpose }
+    closeTrigger: action     { explicit close button inside the dialog }
+  }
+
+  slots {
+    header { before title }
+    body   { after description }
+    footer { end of content }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CLOSE            -> closed;
+      on OUTSIDE_CLICK    -> closed;
+      on ESCAPE           -> closed;
+      entry [trapFocus, preventScroll, setAriaHidden];
+      exit  [releaseFocus, restoreScroll, clearAriaHidden];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: content;
+      returnOnClose: trigger;
+    }
+    aria {
+      labelledby: title;
+      describedby: description;
+    }
+  }
+
+  props {
+    open:                Bool                       = false;
+    closeOnOutsideClick: Bool                       = true;
+    closeOnEscape:       Bool                       = true;
+    role:                "dialog" | "alertdialog"   = "dialog";
+  }
+
+  connect {
+    root -> {
+      data-state: ?open ? "open" : "closed";
+      data-role:  ?role;
+    }
+
+    trigger -> {
+      aria-haspopup: "dialog";
+      aria-expanded: ?open;
+      onClick:       send(OPEN);
+    }
+
+    backdrop -> {
+      data-state: ?open ? "open" : "closed";
+      onClick:    ?closeOnOutsideClick ? send(OUTSIDE_CLICK) : noop;
+    }
+
+    positioner -> {
+      data-state: ?open ? "open" : "closed";
+    }
+
+    content -> {
+      role:             ?role;
+      aria-modal:       true;
+      aria-labelledby:  title;
+      aria-describedby: description;
+      data-state:       ?open ? "open" : "closed";
+    }
+
+    title -> {
+      id: title;
+    }
+
+    description -> {
+      id: description;
+    }
+
+    closeTrigger -> {
+      aria-label: "Close";
+      onClick:    send(CLOSE);
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 10;
+    when {
+      modal: true;
+    }
+  }
+
+  compose {
+    _portal:     widget("portal",     { target: "body" });
+    _focusTrap:  widget("focus-trap",  { active: ?open });
+    _scrollLock: widget("scroll-lock", { active: ?open });
+    _presence:   widget("presence",    { present: ?open });
+  }
+
+  invariant {
+    "Focus must be trapped inside content while open";
+    "Backdrop must cover the entire viewport";
+    "Trigger must regain focus after dialog closes";
+    "aria-hidden must be set on sibling trees while open";
+  }
+
+}

@@ -1,0 +1,288 @@
+@version(1)
+widget master-detail {
+
+  purpose {
+    Split-view layout with a scrollable master list on one side and a
+    detail content panel on the other. Selecting an item in the master
+    list displays its full details in the detail pane. Shows an empty
+    state in the detail pane when no item is selected. Supports
+    responsive collapsing to a single-pane view on narrow viewports.
+    Used as the standard layout for email clients, settings panels,
+    contact lists, and any list-plus-detail browsing pattern.
+  }
+
+  anatomy {
+    root:            container  { Top-level split-view wrapper }
+    masterPane:      container  { Left (or top) pane containing the item list }
+    masterHeader:    container  { Optional header with search/filter controls for the list }
+    masterSearch:    widget     { Optional search input to filter the master list }
+    list:            widget     { Scrollable list or table of selectable items }
+    listItem:        container  { Individual selectable item in the master list }
+    listItemTitle:   text       { Primary label for a list item }
+    listItemMeta:    text       { Secondary metadata for a list item (date, status, etc.) }
+    detailPane:      container  { Right (or bottom) pane displaying details of the selected item }
+    detailHeader:    container  { Header area of the detail pane with title and actions }
+    detailTitle:     text       { Title of the selected item displayed in the detail pane }
+    detailContent:   container  { Main content area of the detail pane }
+    detailActions:   container  { Action buttons for the selected item (edit, delete, etc.) }
+    emptyDetail:     widget     { Empty state placeholder shown when no item is selected }
+    splitter:        widget     { Resizable divider between master and detail panes }
+    backButton:      action     { Back button visible in collapsed single-pane mode to return to list }
+  }
+
+  slots {
+    masterToolbar { end of masterHeader }
+    detailFooter  { end of detailPane }
+  }
+
+  states {
+    selection {
+      noSelection [initial] {
+        on SELECT -> hasSelection;
+      }
+      hasSelection {
+        on DESELECT -> noSelection;
+        on SELECT -> hasSelection;
+        entry [loadDetail; scrollDetailToTop];
+      }
+    }
+
+    layout {
+      split [initial] {
+        on COLLAPSE -> stacked;
+      }
+      stacked {
+        on EXPAND -> split;
+      }
+    }
+
+    stackedView {
+      showingList [initial] {
+        on SELECT -> showingDetail;
+      }
+      showingDetail {
+        on BACK -> showingList;
+        on DESELECT -> showingList;
+      }
+    }
+
+    loading {
+      idle [initial] {
+        on LOAD_DETAIL -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      error {
+        on RETRY -> loading;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      ArrowDown   -> NAVIGATE_NEXT;
+      ArrowUp     -> NAVIGATE_PREV;
+      Enter       -> SELECT;
+      Escape      -> DESELECT;
+      Home        -> NAVIGATE_FIRST;
+      End         -> NAVIGATE_LAST;
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      Backspace   -> BACK;
+    }
+    focus {
+      trap: false;
+      initial: list;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Master detail view";
+      };
+      masterPane -> {
+        role: "region";
+        aria-label: "Item list";
+      };
+      list -> {
+        role: "listbox";
+        aria-label: "Items";
+        aria-activedescendant: if state.selection == "hasSelection" then selectedItemId else undefined;
+      };
+      listItem -> {
+        role: "option";
+        aria-selected: if self.selected then "true" else "false";
+      };
+      detailPane -> {
+        role: "region";
+        aria-label: "Item details";
+        aria-live: "polite";
+      };
+      emptyDetail -> {
+        role: "status";
+        aria-label: "No item selected";
+      };
+      backButton -> {
+        aria-label: "Back to list";
+      };
+      splitter -> {
+        role: "separator";
+        aria-orientation: "vertical";
+        aria-label: "Resize panels";
+      };
+    }
+  }
+
+  props {
+    items: list Object = []
+    selectedId: option String
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    masterWidth: String = "320px"
+    minMasterWidth: String = "200px"
+    maxMasterWidth: String = "500px"
+    collapsible: Bool = true
+    collapseBreakpoint: Int = 768
+    showSearch: Bool = false
+    resizable: Bool = true
+    loading: Bool = false
+    emptyTitle: String = "No item selected"
+    emptyDescription: String = "Select an item from the list to view details"
+    onSelect: option Function
+    onDeselect: option Function
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: "Master detail view";
+      data-selection: if state.selection == "hasSelection" then "has-selection" else "no-selection";
+      data-layout: if state.layout == "split" then "split" else "stacked";
+      data-orientation: ?orientation;
+    }
+
+    masterPane -> {
+      role: "region";
+      aria-label: "Item list";
+      data-part: "master-pane";
+      data-width: ?masterWidth;
+      hidden: if state.layout == "stacked" and state.stackedView == "showingDetail" then true else false;
+    }
+
+    masterHeader -> {
+      data-part: "master-header";
+    }
+
+    masterSearch -> {
+      data-part: "master-search";
+      placeholder: "Search...";
+      aria-label: "Search items";
+      hidden: if not ?showSearch then true else false;
+    }
+
+    list -> {
+      role: "listbox";
+      aria-label: "Items";
+      aria-activedescendant: if ?selectedId then concat("item-", ?selectedId) else undefined;
+      data-part: "list";
+    }
+
+    listItem -> {
+      role: "option";
+      aria-selected: if self.id == ?selectedId then "true" else "false";
+      data-selected: if self.id == ?selectedId then "true" else "false";
+      id: concat("item-", self.id);
+      tabindex: if self.id == ?selectedId then "0" else "-1";
+      onClick: send(SELECT, { id: self.id });
+      onKeyDown-Enter: send(SELECT, { id: self.id });
+    }
+
+    listItemTitle -> {
+      text: self.title;
+      data-part: "list-item-title";
+    }
+
+    listItemMeta -> {
+      text: self.meta;
+      data-part: "list-item-meta";
+      aria-hidden: "true";
+    }
+
+    detailPane -> {
+      role: "region";
+      aria-label: "Item details";
+      aria-live: "polite";
+      aria-busy: if ?loading then "true" else "false";
+      data-part: "detail-pane";
+      data-state: if state.selection == "hasSelection" then "has-selection" else "no-selection";
+      hidden: if state.layout == "stacked" and state.stackedView == "showingList" then true else false;
+    }
+
+    detailHeader -> {
+      data-part: "detail-header";
+      hidden: if state.selection == "noSelection" then true else false;
+    }
+
+    detailTitle -> {
+      text: selectedItem.title;
+      data-part: "detail-title";
+    }
+
+    detailContent -> {
+      data-part: "detail-content";
+      hidden: if state.selection == "noSelection" then true else false;
+    }
+
+    detailActions -> {
+      data-part: "detail-actions";
+      hidden: if state.selection == "noSelection" then true else false;
+    }
+
+    emptyDetail -> {
+      data-part: "empty-detail";
+      hidden: if state.selection == "hasSelection" then true else false;
+    }
+
+    splitter -> {
+      data-part: "splitter";
+      data-orientation: ?orientation;
+      hidden: if not ?resizable then true else if state.layout == "stacked" then true else false;
+      aria-orientation: if ?orientation == "horizontal" then "vertical" else "horizontal";
+      aria-label: "Resize panels";
+      aria-valuemin: ?minMasterWidth;
+      aria-valuemax: ?maxMasterWidth;
+      aria-valuenow: ?masterWidth;
+    }
+
+    backButton -> {
+      aria-label: "Back to list";
+      hidden: if state.layout != "stacked" then true else if state.stackedView != "showingDetail" then true else false;
+      onClick: send(BACK);
+    }
+  }
+
+  compose {
+    list:         widget("list", {});
+    listAlt:      widget("data-table", { selectable: true });
+    splitter:     widget("splitter", { orientation: ?orientation });
+    emptyDetail:  widget("empty-state", { title: ?emptyTitle, description: ?emptyDescription });
+    masterSearch: widget("text-input", { type: "search", size: "sm" });
+  }
+
+  invariant {
+    "Detail pane must show empty state when no item is selected";
+    "Detail pane must show the selected item's content when an item is selected";
+    "In stacked layout mode, only one pane (list or detail) must be visible at a time";
+    "Back button must only appear in stacked layout when detail is showing";
+    "Selecting an item must scroll the detail pane to the top";
+    "List must maintain the selected item's aria-selected state";
+    "Splitter must only be visible and interactive in split layout mode";
+    "Master pane width must respect min and max constraints during resize";
+  }
+
+}

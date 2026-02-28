@@ -1,0 +1,165 @@
+@version(1)
+widget notification-item {
+
+  purpose {
+    Single notification entry displaying a title, optional description,
+    timestamp, and action buttons. Supports read/unread visual states with
+    an unread indicator dot and hover interactions. Used within notification
+    lists, panels, and dropdown feeds to present individual alerts,
+    messages, or system events.
+  }
+
+  anatomy {
+    root:        container  { Top-level notification wrapper grouping all content }
+    icon:        container  { Optional category or type icon }
+    avatar:      widget     { Optional sender or source avatar image }
+    content:     container  { Main content region containing title, description, and timestamp }
+    title:       text       { Primary notification text or summary }
+    description: text       { Optional secondary text with additional detail }
+    timestamp:   text       { Relative or absolute time the notification was created }
+    actions:     container  { Optional action button group for quick responses }
+    unreadDot:   container  { Visual dot indicator for unread notifications }
+  }
+
+  states {
+    unread [initial] {
+      on MARK_READ -> read;
+      on HOVER -> hoveredUnread;
+    }
+
+    read {
+      on MARK_UNREAD -> unread;
+      on HOVER -> hoveredRead;
+    }
+
+    hoveredUnread {
+      on UNHOVER -> unread;
+      on MARK_READ -> hoveredRead;
+    }
+
+    hoveredRead {
+      on UNHOVER -> read;
+      on MARK_UNREAD -> hoveredUnread;
+    }
+
+    focus [parallel] {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+      }
+    }
+  }
+
+  accessibility {
+    role: article;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+      Enter -> ACTIVATE;
+      Space -> ACTIVATE;
+      Delete -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-labelledby: title;
+        aria-describedby: description;
+        aria-label: if ?read then undefined else "Unread notification";
+      };
+      timestamp -> {
+        aria-label: self.fullTimestamp;
+      };
+    }
+  }
+
+  props {
+    title: String
+    description: option String
+    timestamp: DateTime
+    read: Bool = false
+    actions: list { label: String, action: String }
+  }
+
+  connect {
+    root -> {
+      role: "article";
+      aria-labelledby: title;
+      aria-describedby: if ?description then description else undefined;
+      data-read: if ?read then "true" else "false";
+      data-state: if state == "hoveredUnread" or state == "hoveredRead" then "hovered" else "idle";
+      data-part: "notification-item";
+      tabindex: "0";
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onClick: send(ACTIVATE);
+      onKeyDown-Enter: send(ACTIVATE);
+      onKeyDown-Space: send(ACTIVATE);
+      onKeyDown-Delete: send(DISMISS);
+    }
+
+    icon -> {
+      data-part: "icon";
+      aria-hidden: "true";
+    }
+
+    avatar -> {
+      data-part: "avatar";
+    }
+
+    content -> {
+      data-part: "content";
+    }
+
+    title -> {
+      data-part: "title";
+      id: title;
+    }
+
+    description -> {
+      data-part: "description";
+      id: description;
+      data-visible: if ?description then "true" else "false";
+    }
+
+    timestamp -> {
+      data-part: "timestamp";
+      aria-label: self.fullTimestamp;
+      datetime: ?timestamp;
+    }
+
+    actions -> {
+      data-part: "actions";
+      role: "group";
+      aria-label: "Notification actions";
+      data-visible: if ?actions.length > 0 then "true" else "false";
+    }
+
+    unreadDot -> {
+      data-part: "unread-dot";
+      data-visible: if ?read then "false" else "true";
+      aria-hidden: "true";
+    }
+  }
+
+  compose {
+    avatar: widget("avatar", {});
+    icon: widget("icon", {});
+  }
+
+  invariant {
+    "unreadDot must be visible only when read is false";
+    "title and timestamp must always be present";
+    "Actions must stop event propagation to prevent triggering root activation";
+    "Read state must persist across re-renders unless explicitly toggled";
+  }
+
+}

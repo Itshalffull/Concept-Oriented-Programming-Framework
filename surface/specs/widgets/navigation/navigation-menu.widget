@@ -1,0 +1,192 @@
+@version(1)
+widget navigation-menu {
+
+  purpose {
+    Top-level navigation bar with dropdown content panels and mobile
+    hamburger menu support. Provides primary site-wide navigation with
+    flyout content areas for each top-level item, animated indicators,
+    and a responsive collapsed view for smaller viewports.
+  }
+
+  anatomy {
+    root: container        { Top-level nav element wrapping the entire navigation menu }
+    list: container        { Horizontal list of top-level navigation items }
+    item: container        { Individual top-level navigation entry with optional dropdown }
+    trigger: action        { Button or link that opens a dropdown content panel }
+    link: action           { Direct navigation link without a dropdown }
+    content: container     { Dropdown panel containing sub-navigation or rich content }
+    indicator: container   { Animated highlight tracking the active or hovered trigger }
+    viewport: container    { Shared viewport container that hosts all dropdown content panels }
+  }
+
+  states {
+    item {
+      closed [initial] {
+        on OPEN -> open;
+        on HOVER -> open;
+        entry [set aria-expanded false; hide content];
+      }
+      open {
+        on CLOSE -> closed;
+        on UNHOVER -> closed;
+        on SELECT -> closed;
+        entry [set aria-expanded true; show content; move indicator];
+        exit [hide content];
+      }
+    }
+
+    mobile {
+      collapsed [initial] {
+        on TOGGLE_MOBILE -> expanded;
+        entry [hide list on mobile];
+      }
+      expanded {
+        on TOGGLE_MOBILE -> collapsed;
+        on NAVIGATE -> collapsed;
+        entry [show list on mobile];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        on NAVIGATE_NEXT -> focused;
+        on NAVIGATE_PREV -> focused;
+      }
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    modal: false;
+    keyboard {
+      ArrowRight -> NAVIGATE_NEXT;
+      ArrowLeft -> NAVIGATE_PREV;
+      ArrowDown -> OPEN;
+      Enter -> ACTIVATE;
+      Space -> ACTIVATE;
+      Escape -> CLOSE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: first trigger or link;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Main navigation";
+      };
+      list -> {
+        role: "menubar";
+        aria-orientation: ?orientation;
+      };
+      trigger -> {
+        role: "menuitem";
+        aria-haspopup: "true";
+        aria-expanded: if state.item == "open" then "true" else "false";
+        aria-controls: content;
+      };
+      link -> {
+        role: "menuitem";
+        aria-current: if link.active then "page" else "false";
+      };
+      content -> {
+        role: "menu";
+        aria-labelledby: trigger;
+      };
+      indicator -> {
+        aria-hidden: "true";
+      };
+      viewport -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    items: list NavigationItem
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    delayDuration: Int = 200
+    skipDelayDuration: Int = 300
+  }
+
+  connect {
+    root -> {
+      role: "navigation";
+      aria-label: "Main navigation";
+      data-orientation: ?orientation;
+    }
+
+    list -> {
+      role: "menubar";
+      aria-orientation: ?orientation;
+      data-orientation: ?orientation;
+    }
+
+    item -> {
+      data-state: if state.item == "open" then "open" else "closed";
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+    }
+
+    trigger -> {
+      role: "menuitem";
+      aria-haspopup: "true";
+      aria-expanded: if state.item == "open" then "true" else "false";
+      aria-controls: content;
+      data-state: if state.item == "open" then "open" else "closed";
+      tabindex: "0";
+      onClick: send(if state.item == "closed" then OPEN else CLOSE);
+      onKeyDown: send(NAVIGATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    link -> {
+      role: "menuitem";
+      aria-current: if link.active then "page" else "false";
+      data-active: if link.active then "true" else "false";
+      tabindex: "0";
+      onClick: send(NAVIGATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    content -> {
+      role: "menu";
+      aria-labelledby: trigger;
+      data-state: if state.item == "open" then "open" else "closed";
+      data-orientation: ?orientation;
+      hidden: if state.item == "closed" then true else false;
+    }
+
+    indicator -> {
+      aria-hidden: "true";
+      data-state: if state.item == "open" then "open" else "closed";
+      data-orientation: ?orientation;
+    }
+
+    viewport -> {
+      data-state: if state.item == "open" then "open" else "closed";
+      data-orientation: ?orientation;
+      aria-hidden: "true";
+    }
+  }
+
+  compose {
+    content: widget("portal", {})
+    content: widget("presence", { present: state.item == "open" })
+  }
+
+  invariant {
+    at most one item has state "open" at a time;
+    Escape closes any open dropdown and returns focus to its trigger;
+    link with aria-current "page" reflects the current location;
+    hover delay prevents accidental dropdown opens during mouse traversal;
+  }
+
+}

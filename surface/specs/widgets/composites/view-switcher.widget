@@ -1,0 +1,239 @@
+@version(1)
+widget view-switcher {
+
+  purpose {
+    Multi-view layout controller that presents a tab bar of available view
+    modes (table, board, calendar, timeline, gallery) with per-view
+    configuration panels. Users can switch between views, add new custom
+    views, and configure sort/filter settings independently per view.
+    Used for flexible data exploration interfaces where the same dataset
+    can be visualized in multiple ways.
+  }
+
+  anatomy {
+    root:             container  { Top-level wrapper for the entire view-switcher }
+    tabBar:           widget     { Horizontal tab strip listing available view modes }
+    addViewButton:    action     { Button that opens a menu to create a new view }
+    viewMenu:         container  { Dropdown menu listing available view types to add }
+    viewMenuItem:     action     { Individual view type option in the add-view menu }
+    viewConfig:       container  { Per-view configuration panel with sort and filter controls }
+    filterControl:    widget     { Inline filter builder scoped to the active view }
+    sortControl:      widget     { Inline sort builder scoped to the active view }
+    content:          container  { Viewport region rendering the active view's content }
+    viewLabel:        text       { Editable name label for a custom view }
+    deleteViewButton: action     { Button that removes a custom view }
+    duplicateButton:  action     { Button that duplicates the current view with its settings }
+  }
+
+  states {
+    view {
+      active [initial] {
+        on SWITCH_VIEW -> active;
+        on DELETE_VIEW -> active;
+        entry [loadViewConfig, renderContent];
+      }
+    }
+
+    viewMenu {
+      closed [initial] {
+        on OPEN_MENU -> open;
+      }
+      open {
+        on CLOSE_MENU -> closed;
+        on SELECT_TYPE -> closed;
+        on OUTSIDE_CLICK -> closed;
+        on ESCAPE -> closed;
+        entry [positionMenu];
+        exit [clearMenu];
+      }
+    }
+
+    config {
+      collapsed [initial] {
+        on TOGGLE_CONFIG -> expanded;
+      }
+      expanded {
+        on TOGGLE_CONFIG -> collapsed;
+        on SWITCH_VIEW -> collapsed;
+      }
+    }
+
+    rename {
+      idle [initial] {
+        on START_RENAME -> renaming;
+      }
+      renaming {
+        on COMMIT_RENAME -> idle;
+        on CANCEL_RENAME -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: tablist;
+    modal: false;
+    keyboard {
+      ArrowRight -> NAVIGATE_NEXT_TAB;
+      ArrowLeft  -> NAVIGATE_PREV_TAB;
+      Home       -> NAVIGATE_FIRST_TAB;
+      End        -> NAVIGATE_LAST_TAB;
+      Enter      -> SELECT_VIEW;
+      Space      -> SELECT_VIEW;
+      Delete     -> DELETE_VIEW;
+      Escape     -> CLOSE_MENU;
+      Tab        -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: tabBar;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "View switcher";
+      };
+      tabBar -> {
+        role: "tablist";
+        aria-label: "View modes";
+        aria-orientation: "horizontal";
+      };
+      content -> {
+        role: "tabpanel";
+        aria-labelledby: activeTab;
+      };
+      addViewButton -> {
+        aria-label: "Add view";
+        aria-haspopup: "menu";
+        aria-expanded: if state.viewMenu == "open" then "true" else "false";
+      };
+      viewMenu -> {
+        role: "menu";
+        aria-label: "View types";
+      };
+      viewMenuItem -> {
+        role: "menuitem";
+      };
+      deleteViewButton -> {
+        aria-label: "Delete view";
+      };
+    }
+  }
+
+  props {
+    views: list ViewDef
+    activeView: String
+    availableTypes: list union "table" | "board" | "calendar" | "timeline" | "gallery" = ["table", "board", "calendar", "timeline", "gallery"]
+    allowAdd: Bool = true
+    allowDelete: Bool = true
+    allowRename: Bool = true
+    allowDuplicate: Bool = true
+    disabled: Bool = false
+    onChange: option Function
+  }
+
+  connect {
+    root -> {
+      data-active-view: ?activeView;
+      data-disabled: if ?disabled then "true" else "false";
+      role: "region";
+      aria-label: "View switcher";
+    }
+
+    tabBar -> {
+      role: "tablist";
+      aria-label: "View modes";
+      aria-orientation: "horizontal";
+      data-active: ?activeView;
+    }
+
+    addViewButton -> {
+      aria-label: "Add view";
+      aria-haspopup: "menu";
+      aria-expanded: if state.viewMenu == "open" then "true" else "false";
+      aria-controls: viewMenu;
+      disabled: if ?disabled then true else if not ?allowAdd then true else false;
+      onClick: send(OPEN_MENU);
+    }
+
+    viewMenu -> {
+      role: "menu";
+      aria-label: "View types";
+      data-state: if state.viewMenu == "open" then "open" else "closed";
+      hidden: if state.viewMenu == "closed" then true else false;
+      id: viewMenu;
+    }
+
+    viewMenuItem -> {
+      role: "menuitem";
+      data-type: self.type;
+      onClick: send(SELECT_TYPE, { type: self.type });
+    }
+
+    viewConfig -> {
+      data-state: if state.config == "expanded" then "expanded" else "collapsed";
+      data-view: ?activeView;
+      hidden: if state.config == "collapsed" then true else false;
+      aria-label: "View configuration";
+    }
+
+    filterControl -> {
+      data-part: "filter-control";
+      data-view: ?activeView;
+    }
+
+    sortControl -> {
+      data-part: "sort-control";
+      data-view: ?activeView;
+    }
+
+    content -> {
+      role: "tabpanel";
+      aria-labelledby: activeTab;
+      data-view-type: viewTypeOf(?activeView, ?views);
+      data-state: "active";
+    }
+
+    viewLabel -> {
+      data-part: "view-label";
+      data-editable: if ?allowRename then "true" else "false";
+      data-state: if state.rename == "renaming" then "editing" else "idle";
+      text: viewNameOf(?activeView, ?views);
+      onDoubleClick: if ?allowRename then send(START_RENAME) else noop;
+    }
+
+    deleteViewButton -> {
+      aria-label: concat("Delete view ", viewNameOf(?activeView, ?views));
+      disabled: if ?disabled then true else if not ?allowDelete then true else if ?views.length <= 1 then true else false;
+      onClick: send(DELETE_VIEW);
+    }
+
+    duplicateButton -> {
+      aria-label: concat("Duplicate view ", viewNameOf(?activeView, ?views));
+      disabled: if ?disabled then true else if not ?allowDuplicate then true else false;
+      onClick: send(DUPLICATE_VIEW);
+    }
+  }
+
+  compose {
+    tabBar:        widget("tabs", { value: ?activeView, orientation: "horizontal" });
+    filterControl: widget("filter-builder", { fields: activeViewFields(?activeView, ?views) });
+    sortControl:   widget("sort-builder", { fields: activeViewFields(?activeView, ?views) });
+    addViewButton: widget("button", { variant: "ghost", size: "sm" });
+    tableView:     widget("data-table", {});
+    boardView:     widget("kanban-board", {});
+    calendarView:  widget("calendar-view", {});
+    timelineView:  widget("timeline", {});
+    galleryView:   widget("card-grid", {});
+  }
+
+  invariant {
+    "Exactly one view must be active at all times";
+    "Cannot delete the last remaining view";
+    "Each view maintains independent sort and filter configuration";
+    "Switching views must preserve the previous view's configuration";
+    "Content region must render the component matching the active view's type";
+    "Tab panel must be labelled by its corresponding tab trigger";
+  }
+
+}

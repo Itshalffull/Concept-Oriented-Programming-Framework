@@ -1,0 +1,68 @@
+@version(1)
+widget portal {
+
+  purpose {
+    Renders child content into a different location in the DOM tree,
+    typically document.body or a specified container. Used by overlays,
+    modals, tooltips, and popovers to escape clipping, overflow, and
+    stacking-context constraints of their logical parent.
+  }
+
+  anatomy {
+    root: container   { Wrapper inserted at the portal target location }
+  }
+
+  states {
+    unmounted [initial] {
+      on MOUNT -> mounted;
+      entry [detach root from target];
+    }
+
+    mounted {
+      on UNMOUNT -> unmounted;
+      entry [attach root to target];
+      exit [detach root from target];
+    }
+  }
+
+  accessibility {
+    role: none;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    target: option String
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-portal: "true";
+      data-target: ?target;
+      data-state: if mounted then "mounted" else "unmounted";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+  }
+
+  invariant {
+    after send(MOUNT) -> state is mounted;
+    then root is attached to target;
+  }
+
+  invariant {
+    after send(UNMOUNT) -> state is unmounted;
+    then root is detached from target;
+  }
+
+}

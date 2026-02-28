@@ -1,0 +1,251 @@
+@version(1)
+widget calendar-view {
+
+  purpose {
+    Monthly and weekly calendar grid for displaying and navigating dates
+    with optional event overlays. Supports month and week view modes with
+    keyboard-driven date navigation, previous/next period controls, and
+    event listing per day cell. Used for scheduling, date selection, and
+    event overview interfaces.
+  }
+
+  anatomy {
+    root:        container  { Top-level wrapper enclosing header navigation and date grid }
+    header:      container  { Navigation bar with prev/next buttons and current period title }
+    navigation:  container  { Grouping element for navigation controls }
+    prevButton:  action     { Button navigating to the previous month or week }
+    nextButton:  action     { Button navigating to the next month or week }
+    title:       text       { Current month/year or week range label }
+    viewToggle:  widget     { Optional toggle switching between month and week views }
+    grid:        container  { Date grid containing rows of day cells }
+    weekRow:     container  { Single row representing one week within the grid }
+    dayCell:     container  { Individual day cell that may contain events }
+    dayLabel:    text       { Numeric day-of-month label within a cell }
+    eventList:   container  { List of events occurring on a given day }
+    event:       action     { Individual event entry within a day cell }
+  }
+
+  states {
+    monthView [initial] {
+      on SWITCH_WEEK -> weekView;
+      on NAVIGATE_PREV -> navigating;
+      on NAVIGATE_NEXT -> navigating;
+      on SELECT_DATE -> monthView;
+    }
+
+    weekView {
+      on SWITCH_MONTH -> monthView;
+      on NAVIGATE_PREV -> navigating;
+      on NAVIGATE_NEXT -> navigating;
+      on SELECT_DATE -> weekView;
+    }
+
+    navigating {
+      on NAVIGATE_COMPLETE -> monthView;
+      on NAVIGATE_COMPLETE_WEEK -> weekView;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    focus {
+      unfocused [initial] {
+        on FOCUS_DATE -> dateFocused;
+      }
+      dateFocused {
+        on BLUR -> unfocused;
+        on NAVIGATE_DATE -> dateFocused;
+      }
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      ArrowUp -> NAVIGATE_WEEK_BACK;
+      ArrowDown -> NAVIGATE_WEEK_FORWARD;
+      ArrowLeft -> NAVIGATE_DAY_BACK;
+      ArrowRight -> NAVIGATE_DAY_FORWARD;
+      Enter -> SELECT_DATE;
+      Space -> SELECT_DATE;
+      PageUp -> NAVIGATE_PREV;
+      PageDown -> NAVIGATE_NEXT;
+      Home -> NAVIGATE_WEEK_START;
+      End -> NAVIGATE_WEEK_END;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: dayCell[today];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-roledescription: "calendar";
+        aria-label: ?ariaLabel;
+      };
+      grid -> {
+        role: "grid";
+        aria-label: self.periodLabel;
+      };
+      weekRow -> {
+        role: "row";
+      };
+      dayCell -> {
+        role: "gridcell";
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-disabled: if self.isDisabled then "true" else "false";
+        aria-label: self.dateLabel;
+      };
+      event -> {
+        role: "button";
+        aria-label: self.eventLabel;
+      };
+    }
+  }
+
+  props {
+    value: DateTime
+    view: union "month" | "week" = "month"
+    events: list { date: DateTime, label: String, id: option String }
+    ariaLabel: String = "Calendar"
+    minDate: option DateTime
+    maxDate: option DateTime
+    todayLabel: String = "Today"
+  }
+
+  connect {
+    root -> {
+      role: "application";
+      aria-roledescription: "calendar";
+      aria-label: ?ariaLabel;
+      data-view: ?view;
+      data-state: if state == "navigating" then "navigating" else "idle";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    navigation -> {
+      data-part: "navigation";
+      role: "group";
+      aria-label: "Calendar navigation";
+    }
+
+    prevButton -> {
+      role: "button";
+      aria-label: if ?view == "month" then "Previous month" else "Previous week";
+      data-part: "prev-button";
+      tabindex: "0";
+      onClick: send(NAVIGATE_PREV);
+      onKeyDown-Enter: send(NAVIGATE_PREV);
+      onKeyDown-Space: send(NAVIGATE_PREV);
+    }
+
+    nextButton -> {
+      role: "button";
+      aria-label: if ?view == "month" then "Next month" else "Next week";
+      data-part: "next-button";
+      tabindex: "0";
+      onClick: send(NAVIGATE_NEXT);
+      onKeyDown-Enter: send(NAVIGATE_NEXT);
+      onKeyDown-Space: send(NAVIGATE_NEXT);
+    }
+
+    title -> {
+      data-part: "title";
+      aria-live: "polite";
+      aria-atomic: "true";
+      role: "heading";
+    }
+
+    viewToggle -> {
+      data-part: "view-toggle";
+    }
+
+    grid -> {
+      role: "grid";
+      aria-label: self.periodLabel;
+      data-view: ?view;
+      aria-busy: if state == "navigating" then "true" else "false";
+    }
+
+    weekRow -> {
+      role: "row";
+      data-part: "week-row";
+    }
+
+    dayCell -> {
+      role: "gridcell";
+      aria-selected: if self.isSelected then "true" else "false";
+      aria-disabled: if self.isDisabled then "true" else "false";
+      aria-label: self.dateLabel;
+      tabindex: if state.focus == "dateFocused" and self.isFocused then "0" else "-1";
+      data-today: if self.isToday then "true" else "false";
+      data-selected: if self.isSelected then "true" else "false";
+      data-outside: if self.isOutsideMonth then "true" else "false";
+      data-disabled: if self.isDisabled then "true" else "false";
+      data-has-events: if self.eventCount > 0 then "true" else "false";
+      onClick: send(SELECT_DATE);
+      onFocus: send(FOCUS_DATE);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowUp: send(NAVIGATE_WEEK_BACK);
+      onKeyDown-ArrowDown: send(NAVIGATE_WEEK_FORWARD);
+      onKeyDown-ArrowLeft: send(NAVIGATE_DAY_BACK);
+      onKeyDown-ArrowRight: send(NAVIGATE_DAY_FORWARD);
+      onKeyDown-Enter: send(SELECT_DATE);
+      onKeyDown-Space: send(SELECT_DATE);
+      onKeyDown-PageUp: send(NAVIGATE_PREV);
+      onKeyDown-PageDown: send(NAVIGATE_NEXT);
+      onKeyDown-Home: send(NAVIGATE_WEEK_START);
+      onKeyDown-End: send(NAVIGATE_WEEK_END);
+    }
+
+    dayLabel -> {
+      data-part: "day-label";
+      aria-hidden: "true";
+    }
+
+    eventList -> {
+      data-part: "event-list";
+      role: "list";
+      aria-label: concat("Events on ", self.dateLabel);
+    }
+
+    event -> {
+      role: "button";
+      aria-label: self.eventLabel;
+      data-part: "event";
+      tabindex: "0";
+      onClick: send(ACTIVATE_EVENT);
+      onKeyDown-Enter: send(ACTIVATE_EVENT);
+      onKeyDown-Space: send(ACTIVATE_EVENT);
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 10;
+    when { viewType: "calendar"; dateField: true }
+  }
+
+  compose {
+    viewToggle: widget("view-toggle", { value: ?view, options: [
+      { value: "month", icon: "grid", label: "Month view" },
+      { value: "week", icon: "rows", label: "Week view" }
+    ]});
+    prevButton: widget("button", { variant: "text", size: "sm" });
+    nextButton: widget("button", { variant: "text", size: "sm" });
+  }
+
+  invariant {
+    "Exactly one day cell must have tabindex 0 at all times (roving focus)";
+    "Title must update via aria-live when navigating between periods";
+    "Days outside minDate/maxDate must be aria-disabled";
+    "Grid must always show complete weeks, padding with outside-month days";
+    "Today cell must be visually distinct via data-today attribute";
+  }
+
+}

@@ -1,0 +1,132 @@
+@version(1)
+widget accordion {
+
+  purpose {
+    Vertically stacked set of collapsible sections where each section
+    has a trigger heading and expandable content panel. Supports single
+    or multiple expanded sections with animated enter/exit transitions.
+  }
+
+  anatomy {
+    root: container        { Top-level wrapper grouping all accordion items }
+    item: container        { Individual collapsible section with trigger and content }
+    trigger: action        { Heading button that toggles the associated content panel }
+    indicator: container   { Visual caret or chevron indicating expanded/collapsed state }
+    content: container     { Collapsible panel region holding the section body content }
+  }
+
+  states {
+    item {
+      collapsed [initial] {
+        on TOGGLE -> expanded;
+        on EXPAND -> expanded;
+        entry [set aria-expanded false; hide content];
+      }
+      expanded {
+        on TOGGLE -> collapsed;
+        on COLLAPSE -> collapsed;
+        entry [set aria-expanded true; show content];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter -> TOGGLE;
+      Space -> TOGGLE;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+    }
+    focus {
+      trap: false;
+      initial: first trigger;
+    }
+    aria {
+      trigger -> {
+        role: "button";
+        aria-expanded: if state.item == "expanded" then "true" else "false";
+        aria-controls: content;
+      };
+      content -> {
+        role: "region";
+        aria-labelledby: trigger;
+      };
+    }
+  }
+
+  props {
+    value: set String
+    multiple: Bool = false
+    collapsible: Bool = true
+    disabled: Bool = false
+    defaultValue: option set String
+  }
+
+  connect {
+    root -> {
+      data-orientation: "vertical";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    item -> {
+      data-state: if state.item == "expanded" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    trigger -> {
+      role: "button";
+      aria-expanded: if state.item == "expanded" then "true" else "false";
+      aria-controls: content;
+      data-state: if state.item == "expanded" then "open" else "closed";
+      data-disabled: if ?disabled then "true" else "false";
+      disabled: ?disabled;
+      tabindex: if ?disabled then "-1" else "0";
+      onClick: send(TOGGLE);
+      onKeyDown: send(NAVIGATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    indicator -> {
+      data-state: if state.item == "expanded" then "open" else "closed";
+      aria-hidden: "true";
+    }
+
+    content -> {
+      role: "region";
+      aria-labelledby: trigger;
+      data-state: if state.item == "expanded" then "open" else "closed";
+      hidden: if state.item == "collapsed" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 8;
+    when { collapsible: true }
+  }
+
+  compose {
+    content: widget("presence", { present: state.item == "expanded" })
+  }
+
+  invariant {
+    when ?multiple == false then at most one item has state "expanded";
+    when ?collapsible == false then at least one item has state "expanded";
+    trigger aria-expanded matches content visibility;
+  }
+
+}

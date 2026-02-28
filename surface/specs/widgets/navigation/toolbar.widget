@@ -1,0 +1,104 @@
+@version(1)
+widget toolbar {
+
+  purpose {
+    Horizontal or vertical row of action controls that acts as a single
+    tab stop with roving tabindex navigation. Groups related buttons,
+    toggles, and other controls into a cohesive toolbar region.
+  }
+
+  anatomy {
+    root: container        { Top-level toolbar container holding all controls }
+    group: container       { Optional logical grouping of related controls within the toolbar }
+    separator: container   { Optional visual divider between groups or individual controls }
+  }
+
+  slots {
+    items { accepts: action, widget; within: root }
+  }
+
+  states {
+    focus {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+        on NAVIGATE_NEXT -> focused;
+        on NAVIGATE_PREV -> focused;
+        on NAVIGATE_FIRST -> focused;
+        on NAVIGATE_LAST -> focused;
+      }
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+      ArrowRight -> NAVIGATE_NEXT;
+      ArrowLeft -> NAVIGATE_PREV;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+    }
+    focus {
+      trap: false;
+      initial: first focusable item;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: ?label;
+        aria-orientation: ?orientation;
+      };
+      group -> {
+        role: "group";
+      };
+      separator -> {
+        role: "separator";
+        aria-orientation: if ?orientation == "horizontal" then "vertical" else "horizontal";
+      };
+    }
+  }
+
+  props {
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    label: String
+    loop: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "toolbar";
+      aria-label: ?label;
+      aria-orientation: ?orientation;
+      data-orientation: ?orientation;
+      onKeyDown: send(NAVIGATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    group -> {
+      role: "group";
+      data-orientation: ?orientation;
+    }
+
+    separator -> {
+      role: "separator";
+      aria-orientation: if ?orientation == "horizontal" then "vertical" else "horizontal";
+      data-orientation: ?orientation;
+      aria-hidden: "true";
+    }
+  }
+
+  invariant {
+    root is a single tab stop; internal navigation uses arrow keys;
+    exactly one item within root has tabindex "0" at all times;
+    separator is not focusable;
+  }
+
+}

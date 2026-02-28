@@ -1,0 +1,48 @@
+@version(1)
+widget separator {
+
+  purpose {
+    Visual divider that separates content into distinct sections.
+    Renders as a horizontal or vertical rule. Exposes the ARIA
+    separator role so assistive technologies convey the boundary.
+  }
+
+  anatomy {
+    root: container   { The dividing line element }
+  }
+
+  states {
+    static [initial] {
+      entry [];
+    }
+  }
+
+  accessibility {
+    role: separator;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    orientation: union "horizontal" | "vertical" = "horizontal"
+  }
+
+  connect {
+    root -> {
+      role: "separator";
+      aria-orientation: ?orientation;
+      data-part: "root";
+      data-orientation: ?orientation;
+    }
+  }
+
+}

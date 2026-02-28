@@ -1,0 +1,157 @@
+@version(1)
+widget card {
+
+  purpose {
+    Surface container that groups related content and actions into a
+    single visual unit. Supports header, body, footer, and media regions
+    with configurable elevation, fill, and outline variants. Can operate
+    as a static display region or an interactive clickable surface
+    linking to detail views.
+  }
+
+  anatomy {
+    root:        container  { Top-level card surface providing visual boundary and elevation }
+    header:      container  { Upper region for title and supplementary header content }
+    media:       container  { Optional image or video region, typically spanning full width }
+    body:        container  { Primary content region holding the card's main information }
+    footer:      container  { Optional lower region for actions, metadata, or links }
+    title:       text       { Primary heading text identifying the card content }
+    description: text       { Optional secondary text providing additional context }
+    actions:     container  { Optional action button group within header or footer }
+  }
+
+  slots {
+    header { start of header }
+    body   { start of body }
+    footer { start of footer }
+    media  { start of media }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+      on PRESS -> pressed;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on PRESS -> pressed;
+      on FOCUS -> focused;
+    }
+
+    focused {
+      on BLUR -> idle;
+      on PRESS -> pressed;
+      on UNHOVER -> focused;
+    }
+
+    pressed {
+      on RELEASE -> idle;
+      on ACTIVATE -> idle;
+      entry [if ?clickable then send(ACTIVATE)];
+    }
+
+    interactive [parallel] {
+      on MAKE_STATIC -> static;
+    }
+
+    static [parallel] {
+      on MAKE_INTERACTIVE -> interactive;
+    }
+  }
+
+  accessibility {
+    role: article;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+      Enter -> ACTIVATE;
+      Space -> ACTIVATE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: if ?clickable then "article" else "region";
+        aria-labelledby: title;
+        aria-describedby: description;
+      };
+    }
+  }
+
+  props {
+    variant: union "elevated" | "filled" | "outlined" = "elevated"
+    clickable: Bool = false
+    href: option String
+    padding: union "none" | "sm" | "md" | "lg" = "md"
+  }
+
+  connect {
+    root -> {
+      role: if ?clickable then "article" else "region";
+      aria-labelledby: title;
+      aria-describedby: description;
+      data-variant: ?variant;
+      data-clickable: if ?clickable then "true" else "false";
+      data-state: if state == "hovered" then "hovered" else if state == "pressed" then "pressed" else if state == "focused" then "focused" else "idle";
+      data-padding: ?padding;
+      tabindex: if ?clickable then "0" else undefined;
+      onClick: if ?clickable then send(ACTIVATE) else noop;
+      onKeyDown-Enter: if ?clickable then send(ACTIVATE) else noop;
+      onKeyDown-Space: if ?clickable then send(ACTIVATE) else noop;
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onPointerDown: send(PRESS);
+      onPointerUp: send(RELEASE);
+    }
+
+    header -> {
+      data-part: "header";
+      data-variant: ?variant;
+    }
+
+    media -> {
+      data-part: "media";
+      aria-hidden: "true";
+    }
+
+    body -> {
+      data-part: "body";
+      data-padding: ?padding;
+    }
+
+    footer -> {
+      data-part: "footer";
+      data-variant: ?variant;
+    }
+
+    title -> {
+      data-part: "title";
+      id: title;
+    }
+
+    description -> {
+      data-part: "description";
+      id: description;
+    }
+
+    actions -> {
+      data-part: "actions";
+      role: "group";
+      aria-label: "Card actions";
+    }
+  }
+
+  invariant {
+    "Clickable cards must have tabindex 0 and respond to Enter and Space";
+    "title must always be present for accessibility labelling";
+    "Interactive elements inside a clickable card must stop event propagation";
+  }
+
+}

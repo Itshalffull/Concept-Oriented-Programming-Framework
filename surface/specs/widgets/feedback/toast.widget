@@ -1,0 +1,130 @@
+@version(1)
+widget toast {
+
+  purpose {
+    Ephemeral notification that appears briefly to communicate the
+    result of an action, a system event, or a background process.
+    Automatically dismisses after a configurable duration. Pauses its
+    dismiss timer on hover to let the user read longer messages. Supports
+    info, success, warning, and error variants with optional action
+    and close buttons.
+  }
+
+  anatomy {
+    root:         container  { individual toast wrapper with variant styling }
+    icon:         container  { optional status icon reflecting the variant }
+    title:        text       { primary notification message }
+    description:  text       { optional secondary detail text }
+    action:       action     { optional action button for follow-up }
+    closeTrigger: action     { explicit dismiss button }
+  }
+
+  states {
+    entering [initial] {
+      on ANIMATION_END -> visible;
+      entry [announceToast, startEnterAnimation];
+    }
+
+    visible {
+      on POINTER_ENTER -> paused;
+      on DISMISS       -> exiting;
+      on TIMEOUT       -> exiting;
+      on CLOSE         -> exiting;
+      entry [startDismissTimer];
+      exit  [cancelDismissTimer];
+    }
+
+    paused {
+      on POINTER_LEAVE -> visible;
+      on DISMISS       -> exiting;
+      on CLOSE         -> exiting;
+      entry [pauseDismissTimer];
+    }
+
+    exiting {
+      on ANIMATION_END -> removed;
+      entry [startExitAnimation];
+    }
+
+    removed {
+      entry [removeFromStack, notifyManager];
+    }
+  }
+
+  accessibility {
+    role: alert;
+    modal: false;
+    keyboard {
+      Tab    -> FOCUS_NEXT;
+      Escape -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: none;
+    }
+    aria {
+      live: "polite";
+      atomic: true;
+      labelledby: title;
+      describedby: description;
+    }
+  }
+
+  props {
+    title:       String                                       = "";
+    description: option String;
+    variant:     "info" | "success" | "warning" | "error"     = "info";
+    duration:    Int                                           = 5000;
+    closable:    Bool                                          = true;
+  }
+
+  connect {
+    root -> {
+      role:            "alert";
+      aria-live:       "polite";
+      aria-atomic:     true;
+      data-state:      currentState;
+      data-variant:    ?variant;
+      onPointerEnter:  send(POINTER_ENTER);
+      onPointerLeave:  send(POINTER_LEAVE);
+    }
+
+    icon -> {
+      data-variant: ?variant;
+      aria-hidden:  true;
+    }
+
+    title -> {
+      id: title;
+    }
+
+    description -> {
+      id: description;
+    }
+
+    action -> {
+      data-variant: ?variant;
+    }
+
+    closeTrigger -> {
+      aria-label: "Dismiss notification";
+      hidden:     ?closable ? false : true;
+      onClick:    send(CLOSE);
+    }
+  }
+
+  compose {
+    _icon:     widget("icon",     { name: ?variant });
+    _button:   widget("button",   { variant: "ghost", size: "sm" });
+    _presence: widget("presence", { present: currentState != "removed" });
+  }
+
+  invariant {
+    "Dismiss timer must pause while the pointer is over the toast";
+    "Screen readers must announce the toast via aria-live region";
+    "Removed state must clean up all timers and DOM references";
+    "Enter and exit animations must complete before state transitions";
+  }
+
+}

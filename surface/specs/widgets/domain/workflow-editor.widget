@@ -1,0 +1,237 @@
+@version(1)
+widget workflow-editor {
+
+  purpose {
+    Node-graph workflow canvas for building automation pipelines, inspired
+    by n8n and Node-RED. Users drag nodes from a palette onto a canvas,
+    connect typed input/output ports with edges, and configure each node
+    through a side panel. Supports execution preview, per-node status
+    indicators, undo/redo, minimap navigation, and keyboard-driven
+    workflow construction.
+  }
+
+  anatomy {
+    root:          container  { Top-level wrapper establishing the workflow editor layout }
+    canvas:        widget     { Pannable, zoomable canvas surface holding workflow nodes and edges }
+    nodePalette:   widget     { Searchable categorized palette of available node types to drag onto the canvas }
+    configPanel:   container  { Side panel for configuring the selected node properties and credentials }
+    minimap:       container  { Scaled overview of the full workflow showing viewport position }
+    toolbar:       container  { Top bar with workflow actions: save, execute, undo, redo, zoom controls }
+    executeButton: action     { Primary action to trigger workflow execution or test run }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_NODE -> nodeSelected;
+      on ADD_NODE -> placing;
+      on EXECUTE -> executing;
+      on DRAG_PALETTE_NODE -> draggingNew;
+    }
+
+    nodeSelected {
+      on DESELECT -> idle;
+      on CONFIGURE -> configuring;
+      on DELETE -> idle;
+      on EXECUTE -> executing;
+      entry [show configPanel; highlightNode];
+      exit [hide configPanel; unhighlightNode];
+    }
+
+    configuring {
+      on CLOSE_CONFIG -> nodeSelected;
+      on SAVE_CONFIG -> nodeSelected;
+      on ESCAPE -> nodeSelected;
+      entry [focusConfigPanel];
+    }
+
+    placing {
+      on PLACE -> idle;
+      on ESCAPE -> idle;
+      entry [showPlacementGhost];
+      exit [hidePlacementGhost];
+    }
+
+    draggingNew {
+      on DROP_ON_CANVAS -> idle;
+      on ESCAPE -> idle;
+      entry [showDragGhost];
+      exit [hideDragGhost; createNode];
+    }
+
+    executing {
+      on EXECUTION_COMPLETE -> executionResult;
+      on EXECUTION_ERROR -> executionResult;
+      on CANCEL -> idle;
+      entry [disableEditing; showProgress; set aria-busy true];
+      exit [enableEditing; hideProgress; set aria-busy false];
+    }
+
+    executionResult {
+      on DISMISS -> idle;
+      on SELECT_NODE -> nodeSelected;
+      entry [showResultBadges];
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Control+Enter -> EXECUTE;
+      Control+s -> SAVE;
+      Control+z -> UNDO;
+      Control+Shift+z -> REDO;
+      Delete -> DELETE_SELECTED;
+      Backspace -> DELETE_SELECTED;
+      Escape -> ESCAPE;
+      Control+a -> SELECT_ALL;
+      Control+d -> DUPLICATE;
+      n -> ADD_NODE;
+      Tab -> FOCUS_NEXT_NODE;
+      Shift+Tab -> FOCUS_PREV_NODE;
+      Control+Plus -> ZOOM_IN;
+      Control+Minus -> ZOOM_OUT;
+      Control+0 -> ZOOM_FIT;
+      ArrowUp -> NUDGE_UP;
+      ArrowDown -> NUDGE_DOWN;
+      ArrowLeft -> NUDGE_LEFT;
+      ArrowRight -> NUDGE_RIGHT;
+    }
+    focus {
+      trap: false;
+      initial: canvas;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "workflow editor";
+        aria-busy: if state == "executing" then "true" else "false";
+      };
+      canvas -> {
+        role: "group";
+        aria-label: "Workflow canvas";
+      };
+      nodePalette -> {
+        role: "complementary";
+        aria-label: "Node palette";
+      };
+      configPanel -> {
+        role: "complementary";
+        aria-label: "Node configuration";
+        aria-hidden: if state != "configuring" and state != "nodeSelected" then "true" else "false";
+      };
+      minimap -> {
+        role: "img";
+        aria-label: "Workflow minimap";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Workflow actions";
+      };
+      executeButton -> {
+        role: "button";
+        aria-label: if state == "executing" then "Cancel execution" else "Execute workflow";
+        aria-disabled: if ?readOnly then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    nodes: list WorkflowNode
+    edges: list WorkflowEdge
+    ariaLabel: String = "Workflow Editor"
+    readOnly: Bool = false
+    executionState: union "idle" | "running" | "success" | "error" = "idle"
+    selectedNodeId: option String
+    zoom: Float = 1.0
+    panX: Float = 0.0
+    panY: Float = 0.0
+    paletteOpen: Bool = true
+    configOpen: Bool = false
+    workflowName: String = "Untitled Workflow"
+  }
+
+  connect {
+    root -> {
+      role: "application";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "workflow editor";
+      aria-busy: if state == "executing" then "true" else "false";
+      data-state: state;
+      data-execution: ?executionState;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    canvas -> {
+      data-part: "canvas";
+      aria-label: "Workflow canvas";
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+      data-node-count: ?nodes.length;
+      data-edge-count: ?edges.length;
+    }
+
+    nodePalette -> {
+      data-part: "node-palette";
+      aria-label: "Node palette";
+      data-visible: if ?paletteOpen then "true" else "false";
+      aria-hidden: if not ?paletteOpen then "true" else "false";
+    }
+
+    configPanel -> {
+      data-part: "config-panel";
+      role: "complementary";
+      aria-label: "Node configuration";
+      data-visible: if ?configOpen then "true" else "false";
+      aria-hidden: if not ?configOpen then "true" else "false";
+      data-node-id: ?selectedNodeId;
+    }
+
+    minimap -> {
+      data-part: "minimap";
+      role: "img";
+      aria-label: "Workflow minimap";
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+    }
+
+    toolbar -> {
+      role: "toolbar";
+      aria-label: "Workflow actions";
+      data-part: "toolbar";
+      data-state: state;
+    }
+
+    executeButton -> {
+      role: "button";
+      aria-label: if state == "executing" then "Cancel execution" else "Execute workflow";
+      aria-disabled: if ?readOnly then "true" else "false";
+      data-state: if state == "executing" then "running" else "idle";
+      onClick: if state == "executing" then send(CANCEL) else send(EXECUTE);
+      onKeyDown-Enter: if state == "executing" then send(CANCEL) else send(EXECUTE);
+    }
+  }
+
+  compose {
+    canvas: widget("canvas", { nodes: ?nodes, edges: ?edges, zoom: ?zoom, panX: ?panX, panY: ?panY, readOnly: ?readOnly });
+    nodePalette: widget("command-palette", { variant: "node-palette" });
+    configSplitter: widget("splitter", { orientation: "horizontal" });
+    configDrawer: widget("drawer", { open: ?configOpen, placement: "right", size: "lg" });
+    minimap: widget("minimap", { zoom: ?zoom, panX: ?panX, panY: ?panY });
+  }
+
+  invariant {
+    "Only one node may be selected and configured at a time";
+    "Executing state must disable all editing interactions";
+    "Node palette drag must create a new node at the drop position on the canvas";
+    "Edges must only connect compatible port types";
+    "Deleting a node must also delete all edges connected to it";
+    "Execution result badges must persist until dismissed or a new execution begins";
+    "aria-busy must be true on root during executing state";
+  }
+
+}

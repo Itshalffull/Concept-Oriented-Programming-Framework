@@ -1,0 +1,126 @@
+@version(1)
+widget checkbox-group {
+
+  purpose {
+    Multi-choice selection from a visible list of checkboxes. All options
+    are rendered simultaneously so the user can independently toggle any
+    combination. Supports vertical and horizontal layouts.
+  }
+
+  anatomy {
+    root: container         { Outermost wrapper; groups label and checkbox list }
+    label: text             { Visible label describing the group purpose }
+    items: container        { Container holding all checkbox option items }
+    item: container         { Wrapper for a single checkbox option }
+    itemInput: action       { Hidden native checkbox input for form integration }
+    itemControl: container  { Visual checkbox indicator (box with checkmark) }
+    itemLabel: text         { Label text for an individual checkbox option }
+  }
+
+  states {
+    item {
+      unchecked [initial] {
+        on CHECK -> checked;
+      }
+      checked {
+        on UNCHECK -> unchecked;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Tab   -> FOCUS_NEXT;
+      Space -> TOGGLE;
+    }
+    focus {
+      itemInput: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?label;
+        aria-orientation: ?orientation;
+        aria-required: if ?required then "true" else "false";
+      };
+      itemInput -> {
+        role: "checkbox";
+        aria-checked: if contains(?values, item.value) then "true" else "false";
+        aria-disabled: if item.disabled or ?disabled then "true" else "false";
+        aria-label: item.label;
+      };
+    }
+  }
+
+  props {
+    values: set String
+    options: list { label: String, value: String, disabled: Bool }
+    orientation: "horizontal" | "vertical" = "vertical"
+    label: String
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+    min: option Int
+    max: option Int
+  }
+
+  connect {
+    root -> {
+      data-orientation: ?orientation;
+      data-disabled: if ?disabled then "true" else "false";
+      role: "group";
+      aria-label: ?label;
+    }
+    label -> {
+      text: ?label;
+      id: groupLabel;
+    }
+    items -> {
+      data-orientation: ?orientation;
+      aria-labelledby: groupLabel;
+    }
+    item -> {
+      data-state: if contains(?values, item.value) then "checked" else "unchecked";
+      data-disabled: if item.disabled or ?disabled then "true" else "false";
+    }
+    itemInput -> {
+      type: "checkbox";
+      name: if ?name then concat(?name, "[]") else autoId;
+      value: item.value;
+      checked: contains(?values, item.value);
+      disabled: item.disabled or ?disabled;
+      onChange: if contains(?values, item.value) then send(UNCHECK, { value: item.value }) else send(CHECK, { value: item.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-Space: send(TOGGLE, { value: item.value });
+    }
+    itemControl -> {
+      data-state: if contains(?values, item.value) then "checked" else "unchecked";
+      data-disabled: if item.disabled or ?disabled then "true" else "false";
+      aria-hidden: "true";
+    }
+    itemLabel -> {
+      text: item.label;
+      for: itemInput;
+    }
+  }
+
+  affordance {
+    serves: multi-choice;
+    specificity: 10;
+    when { maxOptions: 8 }
+  }
+
+  compose {
+    itemInput: widget("checkbox", { checked: contains(?values, item.value), disabled: item.disabled })
+    label: widget("label", { text: ?label })
+  }
+
+  invariant {
+    length(?options) > 0;
+    ?min => size(?values) >= ?min;
+    ?max => size(?values) <= ?max;
+    forEach(?values, v -> exists(?options, o -> o.value == v));
+  }
+}

@@ -1,0 +1,283 @@
+@version(1)
+widget queue-dashboard {
+
+  purpose {
+    Monitoring dashboard for background job queues displaying summary
+    statistics cards, throughput charts, and a detailed job table with
+    filtering by status. Provides at-a-glance metrics (active, waiting,
+    completed, failed counts) and drill-down into individual job details.
+    Used for admin panels monitoring task queues, message brokers, and
+    background processing pipelines.
+  }
+
+  anatomy {
+    root:           container  { Top-level wrapper for the queue dashboard layout }
+    statRow:        container  { Horizontal row of summary statistic cards }
+    statCard:       widget     { Individual metric card showing a count and label }
+    chartPanel:     container  { Region containing throughput or time-series charts }
+    chart:          widget     { Chart visualization (line, bar, or area) }
+    chartControls:  container  { Time range and granularity selectors for the chart }
+    timeRange:      widget     { Dropdown or button group for selecting the chart time range }
+    tabs:           widget     { Tab bar for filtering the job table by status }
+    jobTable:       widget     { Data table listing individual jobs with columns for status, name, etc. }
+    jobDetail:      container  { Expandable detail panel for a selected job }
+    jobDetailHeader: container { Header of the job detail showing job ID and status }
+    jobDetailBody:  container  { Body of the job detail showing payload, logs, and metadata }
+    refreshButton:  action     { Manual refresh button for reloading dashboard data }
+    autoRefreshToggle: widget  { Toggle to enable or disable automatic data polling }
+    statusBadge:    widget     { Colored badge indicating job status (active, failed, etc.) }
+  }
+
+  states {
+    loading {
+      idle [initial] {
+        on LOAD -> loading;
+        on AUTO_REFRESH -> loading;
+      }
+      loading {
+        on LOAD_COMPLETE -> idle;
+        on LOAD_ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      error {
+        on RETRY -> loading;
+        on LOAD -> loading;
+      }
+    }
+
+    detail {
+      closed [initial] {
+        on SELECT_JOB -> open;
+      }
+      open {
+        on CLOSE_DETAIL -> closed;
+        on SELECT_JOB -> open;
+        on DESELECT -> closed;
+        entry [loadJobDetail];
+      }
+    }
+
+    autoRefresh {
+      disabled [initial] {
+        on ENABLE_REFRESH -> enabled;
+      }
+      enabled {
+        on DISABLE_REFRESH -> disabled;
+        entry [startPolling];
+        exit [stopPolling];
+      }
+    }
+
+    tab {
+      all [initial] {
+        on FILTER_ACTIVE -> active;
+        on FILTER_WAITING -> waiting;
+        on FILTER_COMPLETED -> completed;
+        on FILTER_FAILED -> failed;
+      }
+      active {
+        on FILTER_ALL -> all;
+        on FILTER_WAITING -> waiting;
+        on FILTER_COMPLETED -> completed;
+        on FILTER_FAILED -> failed;
+      }
+      waiting {
+        on FILTER_ALL -> all;
+        on FILTER_ACTIVE -> active;
+        on FILTER_COMPLETED -> completed;
+        on FILTER_FAILED -> failed;
+      }
+      completed {
+        on FILTER_ALL -> all;
+        on FILTER_ACTIVE -> active;
+        on FILTER_WAITING -> waiting;
+        on FILTER_FAILED -> failed;
+      }
+      failed {
+        on FILTER_ALL -> all;
+        on FILTER_ACTIVE -> active;
+        on FILTER_WAITING -> waiting;
+        on FILTER_COMPLETED -> completed;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      Enter       -> SELECT_JOB;
+      Escape      -> CLOSE_DETAIL;
+      R           -> REFRESH;
+    }
+    focus {
+      trap: false;
+      initial: statCard;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Queue dashboard";
+      };
+      statRow -> {
+        role: "list";
+        aria-label: "Queue statistics";
+      };
+      statCard -> {
+        role: "listitem";
+      };
+      chartPanel -> {
+        role: "img";
+        aria-label: "Queue throughput chart";
+      };
+      jobTable -> {
+        role: "grid";
+        aria-label: "Job list";
+      };
+      jobDetail -> {
+        role: "complementary";
+        aria-label: "Job details";
+      };
+      refreshButton -> {
+        aria-label: "Refresh dashboard";
+      };
+    }
+  }
+
+  props {
+    stats: Object = { active: 0, waiting: 0, completed: 0, failed: 0 }
+    jobs: list JobDef = []
+    selectedJobId: option String
+    chartData: list DataPoint = []
+    chartTimeRange: union "1h" | "6h" | "24h" | "7d" = "1h"
+    activeTab: String = "all"
+    autoRefreshEnabled: Bool = false
+    autoRefreshInterval: Int = 5000
+    loading: Bool = false
+    queueName: String = "default"
+    onRefresh: option Function
+    onSelectJob: option Function
+    onRetryJob: option Function
+    onDeleteJob: option Function
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: concat("Queue dashboard: ", ?queueName);
+      aria-busy: if ?loading then "true" else "false";
+      data-state: if ?loading then "loading" else "idle";
+      data-queue: ?queueName;
+    }
+
+    statRow -> {
+      role: "list";
+      aria-label: "Queue statistics";
+      data-part: "stat-row";
+    }
+
+    statCard -> {
+      role: "listitem";
+      data-metric: self.metric;
+      data-value: self.value;
+      data-trend: self.trend;
+      aria-label: concat(self.label, ": ", self.value);
+    }
+
+    chartPanel -> {
+      role: "img";
+      aria-label: concat("Queue throughput over ", ?chartTimeRange);
+      data-part: "chart-panel";
+      data-range: ?chartTimeRange;
+    }
+
+    chart -> {
+      data-part: "chart";
+      data-range: ?chartTimeRange;
+      aria-hidden: "true";
+    }
+
+    chartControls -> {
+      data-part: "chart-controls";
+    }
+
+    timeRange -> {
+      data-part: "time-range";
+      value: ?chartTimeRange;
+      aria-label: "Chart time range";
+    }
+
+    tabs -> {
+      data-part: "tabs";
+      value: ?activeTab;
+      aria-label: "Filter jobs by status";
+    }
+
+    jobTable -> {
+      role: "grid";
+      aria-label: concat("Jobs - ", ?activeTab);
+      aria-busy: if ?loading then "true" else "false";
+      data-tab: ?activeTab;
+    }
+
+    jobDetail -> {
+      role: "complementary";
+      aria-label: if ?selectedJobId then concat("Details for job ", ?selectedJobId) else "Job details";
+      hidden: if state.detail == "closed" then true else false;
+      data-state: if state.detail == "open" then "open" else "closed";
+    }
+
+    jobDetailHeader -> {
+      data-part: "job-detail-header";
+      data-status: selectedJob.status;
+    }
+
+    jobDetailBody -> {
+      data-part: "job-detail-body";
+    }
+
+    refreshButton -> {
+      aria-label: "Refresh dashboard";
+      disabled: if ?loading then true else false;
+      onClick: send(LOAD);
+    }
+
+    autoRefreshToggle -> {
+      aria-label: "Auto-refresh";
+      aria-checked: if state.autoRefresh == "enabled" then "true" else "false";
+      data-interval: ?autoRefreshInterval;
+      onChange: if state.autoRefresh == "enabled" then send(DISABLE_REFRESH) else send(ENABLE_REFRESH);
+    }
+
+    statusBadge -> {
+      data-status: self.status;
+      text: self.status;
+      aria-label: concat("Status: ", self.status);
+    }
+  }
+
+  compose {
+    statCard:          widget("stat-card", {});
+    chart:             widget("chart", { type: "area", data: ?chartData });
+    tabs:              widget("tabs", { value: ?activeTab });
+    jobTable:          widget("data-table", { data: ?jobs, selectable: true });
+    statusBadge:       widget("badge", {});
+    autoRefreshToggle: widget("toggle-switch", {});
+    timeRange:         widget("select", { options: ["1h", "6h", "24h", "7d"] });
+  }
+
+  invariant {
+    "Stat cards must sum to the total job count when no tab filter is applied";
+    "Tab filter must update the job table to show only matching status jobs";
+    "Auto-refresh must poll at the configured interval when enabled";
+    "Auto-refresh polling must stop when the toggle is disabled or the component unmounts";
+    "Job detail panel must close when the selected job is deselected";
+    "Chart time range must control the x-axis window of the throughput chart";
+    "aria-busy must be true on root and job table during loading";
+  }
+
+}

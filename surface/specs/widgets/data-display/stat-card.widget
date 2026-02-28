@@ -1,0 +1,138 @@
+@version(1)
+widget stat-card {
+
+  purpose {
+    Key performance indicator display showing a labelled numeric value
+    with an optional trend indicator and description. Used in dashboards
+    and summary views to present single metrics at a glance with
+    directional context (up, down, neutral).
+  }
+
+  anatomy {
+    root:        container  { Top-level region wrapper grouping all stat content }
+    label:       text       { Descriptive label identifying the metric being displayed }
+    value:       text       { Primary numeric or formatted value of the metric }
+    trend:       container  { Optional trend region grouping direction icon and delta value }
+    trendIcon:   container  { Directional arrow or icon indicating trend direction }
+    trendValue:  text       { Formatted delta or percentage change value }
+    description: text       { Optional supplementary text providing additional context }
+  }
+
+  states {
+    static [initial] {
+      on TREND_UP -> up;
+      on TREND_DOWN -> down;
+      on TREND_NEUTRAL -> neutral;
+    }
+
+    up {
+      on TREND_DOWN -> down;
+      on TREND_NEUTRAL -> neutral;
+      on TREND_CLEAR -> static;
+    }
+
+    down {
+      on TREND_UP -> up;
+      on TREND_NEUTRAL -> neutral;
+      on TREND_CLEAR -> static;
+    }
+
+    neutral {
+      on TREND_UP -> up;
+      on TREND_DOWN -> down;
+      on TREND_CLEAR -> static;
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: ?label;
+        aria-roledescription: "statistic";
+      };
+      value -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      trend -> {
+        aria-label: if ?trend then concat(?trend.direction, " by ", ?trend.value) else undefined;
+      };
+    }
+  }
+
+  props {
+    label: String
+    value: String
+    trend: option { direction: union "up" | "down" | "neutral", value: String }
+    description: option String
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: ?label;
+      aria-roledescription: "statistic";
+      data-trend: if ?trend then ?trend.direction else "none";
+      data-part: "stat-card";
+    }
+
+    label -> {
+      data-part: "label";
+      id: label;
+    }
+
+    value -> {
+      data-part: "value";
+      aria-live: "polite";
+      aria-atomic: "true";
+      data-trend: if ?trend then ?trend.direction else "none";
+    }
+
+    trend -> {
+      data-part: "trend";
+      data-direction: if ?trend then ?trend.direction else "none";
+      data-visible: if ?trend then "true" else "false";
+      aria-label: if ?trend then concat(?trend.direction, " by ", ?trend.value) else undefined;
+    }
+
+    trendIcon -> {
+      data-part: "trend-icon";
+      data-direction: if ?trend then ?trend.direction else "none";
+      aria-hidden: "true";
+    }
+
+    trendValue -> {
+      data-part: "trend-value";
+      data-direction: if ?trend then ?trend.direction else "none";
+    }
+
+    description -> {
+      data-part: "description";
+      id: description;
+    }
+  }
+
+  affordance {
+    serves: display-number;
+    specificity: 8;
+    when { summary: true }
+  }
+
+  invariant {
+    "label and value must always be present and non-empty";
+    "trend region must only render when trend prop is provided";
+    "aria-live must be polite on value to announce changes without interrupting";
+  }
+
+}

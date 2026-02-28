@@ -1,0 +1,185 @@
+@version(1)
+widget chip-input {
+
+  purpose {
+    Free-form multi-value input that creates removable chips from typed
+    text. Supports optional autocomplete suggestions and custom value
+    creation via delimiter keys. Ideal for tags, email addresses, and
+    other open-ended multi-value entry patterns.
+  }
+
+  anatomy {
+    root: container            { Outermost wrapper; groups label, input area, and suggestions }
+    label: text                { Visible label describing the field purpose }
+    inputWrapper: container    { Container for chips and the text input }
+    chipList: container        { Container holding chips for each entered value }
+    chip: widget               { Removable chip representing a single entered value }
+    input: action              { Editable text input for typing new values }
+    positioner: container      { Floating positioning wrapper for suggestions dropdown }
+    suggestions: container     { Scrollable list of autocomplete suggestions }
+    suggestion: action         { Individual suggestion item }
+    createOption: action       { Option to create a custom value from typed text }
+  }
+
+  slots {
+    createOption { accepts: action; optional: true }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on FOCUS -> typing;
+      }
+      typing {
+        on SUGGEST -> suggesting;
+        on BLUR -> idle;
+        on CREATE -> idle;
+        entry [focusInput];
+        exit [];
+      }
+      suggesting {
+        on SELECT_SUGGESTION -> typing;
+        on BLUR -> idle;
+        on CLOSE -> typing;
+        entry [positionSuggestions, showSuggestions];
+        exit [hideSuggestions];
+      }
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      Enter     -> CREATE;
+      Comma     -> CREATE;
+      Backspace -> DELETE_LAST;
+      ArrowDown -> OPEN_SUGGESTIONS;
+      Escape    -> CLOSE;
+    }
+    focus {
+      input: focusable;
+    }
+    aria {
+      input -> {
+        role: "combobox";
+        aria-label: ?label;
+        aria-expanded: if state.interaction == "suggesting" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-controls: suggestions;
+        aria-activedescendant: if state.interaction == "suggesting" then activeSuggestion else none;
+        aria-autocomplete: "list";
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+      suggestions -> {
+        role: "listbox";
+        aria-label: concat("Suggestions for ", ?label);
+      };
+      suggestion -> {
+        role: "option";
+        aria-label: suggestion.label;
+      };
+      chipList -> {
+        role: "list";
+        aria-label: "Entered values";
+        aria-live: "polite";
+      };
+      chip -> {
+        role: "listitem";
+        aria-label: concat("Remove ", chip.label);
+      };
+      createOption -> {
+        role: "option";
+        aria-label: concat("Create \"", inputText, "\"");
+      };
+    }
+  }
+
+  props {
+    values: list String
+    allowCreate: Bool = true
+    maxItems: option Int
+    separator: String = ","
+    label: String
+    placeholder: String = "Type and press Enter..."
+    disabled: Bool = false
+    required: Bool = false
+    name: option String
+    suggestions: list String
+    validateValue: option String
+  }
+
+  connect {
+    root -> {
+      data-state: state.interaction;
+      data-disabled: if ?disabled then "true" else "false";
+    }
+    label -> {
+      text: ?label;
+      for: input;
+      id: chipInputLabel;
+    }
+    inputWrapper -> {
+      data-state: state.interaction;
+      data-focus: if state.interaction != "idle" then "true" else "false";
+      onClick: send(FOCUS);
+    }
+    chipList -> {
+      visible: if length(?values) > 0 then true else false;
+    }
+    chip -> {
+      label: chip.value;
+      onDismiss: send(REMOVE, { value: chip.value, index: chip.index });
+      data-value: chip.value;
+    }
+    input -> {
+      placeholder: if length(?values) == 0 then ?placeholder else "";
+      disabled: if ?disabled then true else (if ?maxItems then (if length(?values) >= ?maxItems then true else false) else false);
+      name: ?name;
+      onInput: send(INPUT);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown-Enter: send(CREATE);
+      onKeyDown-Comma: if ?separator == "," then send(CREATE) else noop;
+      onKeyDown-Backspace: if inputText == "" then send(DELETE_LAST) else noop;
+      onKeyDown-ArrowDown: send(OPEN_SUGGESTIONS);
+      onKeyDown-Escape: send(CLOSE);
+      aria-labelledby: chipInputLabel;
+      autocomplete: "off";
+    }
+    positioner -> {
+      visible: if state.interaction == "suggesting" then true else false;
+    }
+    suggestions -> {
+      role: "listbox";
+      aria-labelledby: chipInputLabel;
+    }
+    suggestion -> {
+      data-highlighted: if suggestion.highlighted then "true" else "false";
+      onClick: send(SELECT_SUGGESTION, { value: suggestion.value });
+      onPointerEnter: send(HIGHLIGHT_SUGGESTION, { value: suggestion.value });
+      role: "option";
+    }
+    createOption -> {
+      visible: if ?allowCreate and inputText != "" and not existsIn(?suggestions, inputText) then true else false;
+      text: concat("Create \"", inputText, "\"");
+      onClick: send(CREATE);
+    }
+  }
+
+  affordance {
+    serves: multi-pick;
+    specificity: 10;
+    when { optionSource: "open" }
+  }
+
+  compose {
+    chip: widget("chip", { label: chip.value, dismissible: true })
+    input: widget("text-input", { placeholder: ?placeholder })
+    positioner: widget("portal", {})
+  }
+
+  invariant {
+    ?maxItems => length(?values) <= ?maxItems;
+    noDuplicates(?values);
+  }
+}

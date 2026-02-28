@@ -1,0 +1,218 @@
+@version(1)
+widget command-palette {
+
+  purpose {
+    Modal search overlay with categorized results for rapid command
+    execution. Provides a keyboard-driven interface for searching,
+    filtering, and activating commands, pages, or actions across
+    the entire application.
+  }
+
+  anatomy {
+    root: container           { Top-level wrapper anchoring the modal command palette }
+    backdrop: overlay         { Semi-transparent overlay behind the palette }
+    input: action             { Search text input for filtering commands }
+    list: container           { Scrollable results list holding groups and items }
+    group: container          { Logical grouping of related command items }
+    groupLabel: text          { Label heading for a command group }
+    item: action              { Individual command entry in the results list }
+    itemIcon: container       { Optional leading icon for a command item }
+    itemLabel: text           { Primary text label for a command item }
+    itemShortcut: text        { Optional trailing keyboard shortcut hint }
+    empty: text               { Message displayed when no results match the query }
+    footer: container         { Optional footer with hints or additional controls }
+  }
+
+  states {
+    visibility {
+      closed [initial] {
+        on OPEN -> open;
+        entry [hide root; reset input];
+      }
+      open {
+        on CLOSE -> closed;
+        on ACTIVATE -> closed;
+        entry [show root; focus input];
+        exit [return focus to previous element];
+      }
+    }
+
+    results {
+      empty [initial] {
+        on INPUT -> searching;
+      }
+      searching {
+        on RESULTS_FOUND -> hasResults;
+        on RESULTS_EMPTY -> noResults;
+      }
+      hasResults {
+        on INPUT -> searching;
+        on CLEAR -> empty;
+      }
+      noResults {
+        on INPUT -> searching;
+        on CLEAR -> empty;
+      }
+    }
+
+    highlight [parallel] {
+      none [initial] {
+        on HIGHLIGHT -> highlighted;
+      }
+      highlighted {
+        on UNHIGHLIGHT -> none;
+        on HIGHLIGHT -> highlighted;
+        on NAVIGATE_NEXT -> highlighted;
+        on NAVIGATE_PREV -> highlighted;
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> CLOSE;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Enter -> ACTIVATE;
+      Meta+k -> OPEN;
+      Control+k -> OPEN;
+    }
+    focus {
+      trap: true;
+      initial: input;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Command palette";
+        aria-modal: "true";
+      };
+      input -> {
+        role: "combobox";
+        aria-expanded: if state.results == "hasResults" then "true" else "false";
+        aria-controls: list;
+        aria-autocomplete: "list";
+        aria-activedescendant: if state.highlight == "highlighted" then highlighted.item else none;
+      };
+      list -> {
+        role: "listbox";
+        aria-label: "Results";
+      };
+      group -> {
+        role: "group";
+        aria-labelledby: groupLabel;
+      };
+      item -> {
+        role: "option";
+        aria-selected: if state.highlight == "highlighted" then "true" else "false";
+      };
+      empty -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    placeholder: String = "Type a command..."
+    emptyMessage: String = "No results found."
+    closeOnSelect: Bool = true
+    loop: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "dialog";
+      aria-label: "Command palette";
+      aria-modal: "true";
+      data-state: if state.visibility == "open" then "open" else "closed";
+      hidden: if state.visibility == "closed" then true else false;
+    }
+
+    backdrop -> {
+      data-state: if state.visibility == "open" then "open" else "closed";
+      onClick: send(CLOSE);
+      aria-hidden: "true";
+    }
+
+    input -> {
+      role: "combobox";
+      aria-expanded: if state.results == "hasResults" then "true" else "false";
+      aria-controls: list;
+      aria-autocomplete: "list";
+      aria-activedescendant: if state.highlight == "highlighted" then highlighted.item else none;
+      placeholder: ?placeholder;
+      onInput: send(INPUT);
+      onKeyDown: send(NAVIGATE);
+      autofocus: true;
+    }
+
+    list -> {
+      role: "listbox";
+      aria-label: "Results";
+      data-state: state.results;
+    }
+
+    group -> {
+      role: "group";
+      aria-labelledby: groupLabel;
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+      aria-hidden: "true";
+    }
+
+    item -> {
+      role: "option";
+      aria-selected: if item == highlighted.item then "true" else "false";
+      data-highlighted: if item == highlighted.item then "true" else "false";
+      tabindex: "-1";
+      onClick: send(ACTIVATE);
+      onPointerEnter: send(HIGHLIGHT);
+      onPointerLeave: send(UNHIGHLIGHT);
+    }
+
+    itemIcon -> {
+      aria-hidden: "true";
+      data-part: "item-icon";
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+    }
+
+    itemShortcut -> {
+      aria-hidden: "true";
+      data-part: "item-shortcut";
+    }
+
+    empty -> {
+      role: "status";
+      aria-live: "polite";
+      text: ?emptyMessage;
+      visible: if state.results == "noResults" then true else false;
+    }
+
+    footer -> {
+      data-part: "footer";
+    }
+  }
+
+  compose {
+    root: widget("dialog", { open: state.visibility == "open", modal: true })
+    input: widget("text-input", { placeholder: ?placeholder })
+  }
+
+  invariant {
+    when state.visibility == "closed" then root is hidden and focus is restored;
+    when state.visibility == "open" then focus is trapped within root;
+    input always retains focus during keyboard navigation of list;
+    Escape always closes regardless of results state;
+  }
+
+}

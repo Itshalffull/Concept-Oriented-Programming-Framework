@@ -1,0 +1,223 @@
+@version(1)
+widget color-label-picker {
+
+  purpose {
+    Colored tag and label selector for choosing from existing labels or
+    creating new ones, inspired by GitHub issue labels. Displays a
+    searchable list of color-coded options in a popover triggered by a
+    button. Each option shows a color swatch and label text. Optionally
+    supports creating new labels with a custom color and name directly
+    from the picker.
+  }
+
+  anatomy {
+    root:         container  { Top-level wrapper for trigger and popover }
+    trigger:      action     { Button that opens the label picker popover }
+    panel:        container  { Popover panel containing search, options, and create button }
+    search:       widget     { Text input for filtering available labels }
+    options:      container  { Scrollable list of available label options }
+    option:       action     { Single selectable label with color swatch and text }
+    colorSwatch:  container  { Small colored circle or square showing the label color }
+    optionLabel:  text       { Display name of the label }
+    createButton: action     { Optional button to create a new label when no match is found }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      on BLUR -> closed;
+      on SELECT -> open;
+      on DESELECT -> open;
+      on FILTER_EMPTY -> empty;
+      entry [show panel; focusSearch; resetFilter];
+      exit [hide panel; clearFilter];
+    }
+
+    empty {
+      on INPUT -> open;
+      on CREATE -> open;
+      on ESCAPE -> closed;
+      on BLUR -> closed;
+    }
+
+    option {
+      unselected [initial] {
+        on SELECT -> selected;
+      }
+      selected {
+        on DESELECT -> unselected;
+      }
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    modal: false;
+    keyboard {
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Enter -> SELECT_OR_CREATE;
+      Space -> TOGGLE_OPTION;
+      Escape -> ESCAPE;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Tab -> CLOSE;
+    }
+    focus {
+      trap: false;
+      initial: search;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?ariaLabel;
+      };
+      trigger -> {
+        role: "button";
+        aria-haspopup: "listbox";
+        aria-expanded: if state == "open" or state == "empty" then "true" else "false";
+        aria-label: ?ariaLabel;
+      };
+      panel -> {
+        role: "dialog";
+        aria-label: "Label picker";
+      };
+      search -> {
+        role: "searchbox";
+        aria-label: "Filter labels";
+        aria-controls: options;
+      };
+      options -> {
+        role: "listbox";
+        aria-label: "Available labels";
+        aria-multiselectable: if ?multiSelect then "true" else "false";
+      };
+      option -> {
+        role: "option";
+        aria-selected: if state.option == "selected" then "true" else "false";
+        aria-label: self.label;
+      };
+      colorSwatch -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      createButton -> {
+        role: "button";
+        aria-label: concat("Create label: ", ?filterValue);
+      };
+    }
+  }
+
+  props {
+    labels: list { name: String, color: String }
+    selectedLabels: list String = []
+    ariaLabel: String = "Labels"
+    filterValue: String = ""
+    multiSelect: Bool = true
+    allowCreate: Bool = false
+    maxSelected: option Int
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if state == "open" or state == "empty" then "open" else "closed";
+      data-part: "color-label-picker";
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    trigger -> {
+      role: "button";
+      aria-haspopup: "listbox";
+      aria-expanded: if state == "open" or state == "empty" then "true" else "false";
+      aria-label: ?ariaLabel;
+      data-part: "trigger";
+      data-selected-count: ?selectedLabels.length;
+      onClick: send(OPEN);
+      onKeyDown-Enter: send(OPEN);
+      onKeyDown-ArrowDown: send(OPEN);
+    }
+
+    panel -> {
+      data-part: "panel";
+      role: "dialog";
+      aria-label: "Label picker";
+      data-state: if state == "open" then "open" else if state == "empty" then "empty" else "closed";
+    }
+
+    search -> {
+      data-part: "search";
+      aria-label: "Filter labels";
+      value: ?filterValue;
+      placeholder: "Filter labels...";
+      onInput: send(FILTER, { value: self.value });
+      onKeyDown-Escape: send(ESCAPE);
+      onKeyDown-ArrowDown: send(NAVIGATE_NEXT);
+      onKeyDown-ArrowUp: send(NAVIGATE_PREV);
+      onKeyDown-Enter: send(SELECT_OR_CREATE);
+    }
+
+    options -> {
+      role: "listbox";
+      aria-label: "Available labels";
+      aria-multiselectable: if ?multiSelect then "true" else "false";
+      data-part: "options";
+      data-count: filteredCount(?labels, ?filterValue);
+    }
+
+    option -> {
+      role: "option";
+      aria-selected: if self.isSelected then "true" else "false";
+      data-part: "option";
+      data-label: self.name;
+      data-color: self.color;
+      data-selected: if self.isSelected then "true" else "false";
+      data-highlighted: if self.highlighted then "true" else "false";
+      onClick: if self.isSelected then send(DESELECT, { name: self.name }) else send(SELECT, { name: self.name });
+      onPointerEnter: send(HIGHLIGHT, { name: self.name });
+    }
+
+    colorSwatch -> {
+      data-part: "color-swatch";
+      style-background-color: self.color;
+      aria-hidden: "true";
+    }
+
+    optionLabel -> {
+      data-part: "option-label";
+      text: self.name;
+      data-match: highlightMatch(self.name, ?filterValue);
+    }
+
+    createButton -> {
+      role: "button";
+      aria-label: concat("Create label: ", ?filterValue);
+      data-part: "create";
+      data-visible: if ?allowCreate and filteredCount(?labels, ?filterValue) == 0 then "true" else "false";
+      onClick: send(CREATE, { name: ?filterValue });
+      onKeyDown-Enter: send(CREATE, { name: ?filterValue });
+    }
+  }
+
+  compose {
+    panel: widget("popover", { open: state != "closed" });
+    search: widget("text-input", { value: ?filterValue, placeholder: "Filter labels..." });
+    selectedChip: widget("chip", { deletable: true });
+  }
+
+  invariant {
+    "Selected count must not exceed maxSelected when maxSelected is set";
+    "Create button must only appear when allowCreate is true and filter yields no matches";
+    "Color swatch must accurately display the label color value";
+    "Filter must match against label names case-insensitively";
+    "Multi-select mode must allow toggling individual options without closing";
+    "Single-select mode must close the picker after selection";
+  }
+
+}

@@ -1,0 +1,227 @@
+@version(1)
+widget menu {
+
+  purpose {
+    Dropdown command menu triggered by a button press. Displays a list
+    of actions, options, checkable items, and radio groups organized
+    into logical sections. Supports nested submenus, keyboard typeahead,
+    and complete ARIA menu semantics.
+  }
+
+  anatomy {
+    root: container           { Top-level wrapper anchoring trigger and floating content }
+    trigger: action           { Button that opens or closes the menu }
+    positioner: container     { Floating positioning layer managing placement relative to trigger }
+    content: container        { Scrollable menu surface holding all menu items }
+    item: action              { Individual command or action entry }
+    itemIcon: container       { Optional leading icon within a menu item }
+    itemLabel: text           { Primary text label for a menu item }
+    itemShortcut: text        { Optional trailing keyboard shortcut hint }
+    separator: container      { Visual divider between menu sections }
+    group: container          { Logical grouping of related menu items }
+    groupLabel: text          { Accessible label for a menu group }
+    submenuTrigger: action    { Menu item that opens a nested submenu }
+    submenuContent: container { Nested submenu surface holding child menu items }
+  }
+
+  states {
+    menu {
+      closed [initial] {
+        on OPEN -> open;
+        entry [set aria-expanded false; hide content];
+      }
+      open {
+        on CLOSE -> closed;
+        on SELECT -> closed;
+        entry [set aria-expanded true; show content; focus first item];
+        exit [return focus to trigger];
+      }
+    }
+
+    submenu {
+      closed [initial] {
+        on SUBMENU_OPEN -> open;
+      }
+      open {
+        on SUBMENU_CLOSE -> closed;
+        on CLOSE -> closed;
+        entry [show submenuContent; focus first item in submenuContent];
+        exit [return focus to submenuTrigger];
+      }
+    }
+
+    highlight [parallel] {
+      none [initial] {
+        on HIGHLIGHT -> highlighted;
+      }
+      highlighted {
+        on UNHIGHLIGHT -> none;
+        on HIGHLIGHT -> highlighted;
+      }
+    }
+  }
+
+  accessibility {
+    role: menu;
+    modal: false;
+    keyboard {
+      Enter -> ACTIVATE;
+      Space -> ACTIVATE;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      ArrowRight -> SUBMENU_OPEN;
+      ArrowLeft -> SUBMENU_CLOSE;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Escape -> CLOSE;
+    }
+    focus {
+      trap: false;
+      initial: first item;
+      roving: true;
+      returnOnClose: true;
+    }
+    aria {
+      trigger -> {
+        aria-haspopup: "menu";
+        aria-expanded: if state.menu == "open" then "true" else "false";
+        aria-controls: content;
+      };
+      content -> {
+        role: "menu";
+        aria-labelledby: trigger;
+      };
+      item -> {
+        role: "menuitem";
+        tabindex: "-1";
+      };
+      group -> {
+        role: "group";
+        aria-labelledby: groupLabel;
+      };
+      groupLabel -> {
+        role: "presentation";
+      };
+      submenuTrigger -> {
+        role: "menuitem";
+        aria-haspopup: "menu";
+        aria-expanded: if state.submenu == "open" then "true" else "false";
+        aria-controls: submenuContent;
+      };
+      submenuContent -> {
+        role: "menu";
+        aria-labelledby: submenuTrigger;
+      };
+      separator -> {
+        role: "separator";
+      };
+    }
+  }
+
+  props {
+    items: list MenuItem
+    placement: String = "bottom-start"
+    open: Bool = false
+    closeOnSelect: Bool = true
+    loop: Bool = false
+    typeahead: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-state: if state.menu == "open" then "open" else "closed";
+    }
+
+    trigger -> {
+      aria-haspopup: "menu";
+      aria-expanded: if state.menu == "open" then "true" else "false";
+      aria-controls: content;
+      data-state: if state.menu == "open" then "open" else "closed";
+      onClick: send(if state.menu == "closed" then OPEN else CLOSE);
+      onKeyDown: send(OPEN);
+    }
+
+    positioner -> {
+      data-placement: ?placement;
+      data-state: if state.menu == "open" then "open" else "closed";
+      style-position: "absolute";
+    }
+
+    content -> {
+      role: "menu";
+      aria-labelledby: trigger;
+      data-state: if state.menu == "open" then "open" else "closed";
+      tabindex: "-1";
+      onKeyDown: send(NAVIGATE);
+    }
+
+    item -> {
+      role: "menuitem";
+      tabindex: "-1";
+      data-highlighted: if state.highlight == "highlighted" then "true" else "false";
+      onClick: send(ACTIVATE);
+      onPointerEnter: send(HIGHLIGHT);
+      onPointerLeave: send(UNHIGHLIGHT);
+    }
+
+    itemIcon -> {
+      aria-hidden: "true";
+      data-part: "item-icon";
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+    }
+
+    itemShortcut -> {
+      data-part: "item-shortcut";
+      aria-hidden: "true";
+    }
+
+    separator -> {
+      role: "separator";
+      aria-hidden: "true";
+    }
+
+    group -> {
+      role: "group";
+      aria-labelledby: groupLabel;
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+    }
+
+    submenuTrigger -> {
+      role: "menuitem";
+      aria-haspopup: "menu";
+      aria-expanded: if state.submenu == "open" then "true" else "false";
+      aria-controls: submenuContent;
+      tabindex: "-1";
+      data-state: if state.submenu == "open" then "open" else "closed";
+      onPointerEnter: send(SUBMENU_OPEN);
+      onKeyDown: send(SUBMENU_OPEN);
+    }
+
+    submenuContent -> {
+      role: "menu";
+      aria-labelledby: submenuTrigger;
+      data-state: if state.submenu == "open" then "open" else "closed";
+      tabindex: "-1";
+    }
+  }
+
+  compose {
+    positioner: widget("portal", {})
+    content: widget("presence", { present: state.menu == "open" })
+    submenuContent: widget("presence", { present: state.submenu == "open" })
+  }
+
+  invariant {
+    when state.menu == "closed" then content is hidden;
+    when state.menu == "open" then exactly one item has focus;
+    Escape from submenu closes submenu before parent menu;
+    typeahead matches item labels by first character;
+  }
+
+}

@@ -1,0 +1,69 @@
+@version(1)
+widget badge {
+
+  purpose {
+    Compact status indicator or count display. Renders as a small labeled
+    element, a dot indicator, or an outlined tag. Used to annotate other
+    elements with counts, statuses, or categorical markers.
+  }
+
+  anatomy {
+    root: container    { Outermost wrapper; the badge element itself }
+    label: text        { Text content of the badge (count, status, or category) }
+  }
+
+  states {
+    display {
+      static [initial] {
+        on SET_DOT -> dot;
+      }
+      dot {
+        on SET_LABEL -> static;
+      }
+    }
+  }
+
+  accessibility {
+    role: status;
+    focus {}
+    aria {
+      root -> {
+        role: "status";
+        aria-label: if ?label then ?label else (if ?variant == "dot" then "Status indicator" else "Badge");
+        aria-live: "polite";
+      };
+      label -> {
+        aria-hidden: if ?variant == "dot" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    label: option String
+    variant: "filled" | "outline" | "dot" = "filled"
+    color: option String
+    max: option Int
+  }
+
+  connect {
+    root -> {
+      data-variant: ?variant;
+      data-color: ?color;
+      data-state: if ?variant == "dot" then "dot" else "static";
+      role: "status";
+    }
+    label -> {
+      text: if ?variant == "dot" then "" else (if ?max and ?label then (if toInt(?label) > ?max then concat(?max, "+") else ?label) else (if ?label then ?label else ""));
+      visible: if ?variant == "dot" then false else true;
+    }
+  }
+
+  affordance {
+    serves: display-badge;
+    specificity: 10;
+  }
+
+  invariant {
+    ?max => ?max > 0;
+  }
+}

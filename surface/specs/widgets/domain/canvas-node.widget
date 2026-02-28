@@ -1,0 +1,213 @@
+@version(1)
+widget canvas-node {
+
+  purpose {
+    Individual element on a canvas surface representing a sticky note,
+    geometric shape, text block, or frame container. Supports selection,
+    direct manipulation (drag to move, handles to resize), and inline
+    editing of text content. Each node type has distinct visual rendering
+    but shares the same interaction model.
+  }
+
+  anatomy {
+    root:    container  { Outermost positioned wrapper for the node at its canvas coordinates }
+    content: container  { Inner content area rendering type-specific visuals (text, shape fill, image) }
+    handles: container  { Resize handle group shown when the node is selected }
+    handle:  action     { Individual corner or edge resize grip }
+    label:   text       { Optional editable text label displayed on or inside the node }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT -> selected;
+      on DRAG_START -> dragging;
+      on HOVER -> hovered;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on SELECT -> selected;
+      on DRAG_START -> dragging;
+      entry [show handles faint];
+    }
+
+    selected {
+      on DESELECT -> idle;
+      on EDIT -> editing;
+      on DRAG_START -> dragging;
+      on RESIZE_START -> resizing;
+      on DELETE -> deleted;
+      entry [show handles; focus root];
+      exit [hide handles];
+    }
+
+    editing {
+      on CONFIRM -> selected;
+      on ESCAPE -> selected;
+      on BLUR -> selected;
+      entry [focusLabel; selectAllText];
+      exit [blurLabel];
+    }
+
+    dragging {
+      on DROP -> selected;
+      on ESCAPE -> idle;
+      entry [set cursor grabbing; set aria-grabbed true];
+      exit [set cursor default; set aria-grabbed false];
+    }
+
+    resizing {
+      on RESIZE_END -> selected;
+      on ESCAPE -> selected;
+      entry [set cursor resize; lockAspect if shift];
+      exit [set cursor default];
+    }
+
+    deleted {
+      entry [remove self; announce "Node deleted"];
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Enter -> EDIT;
+      Escape -> ESCAPE;
+      Delete -> DELETE;
+      Backspace -> DELETE;
+      Space -> SELECT;
+      ArrowUp -> NUDGE_UP;
+      ArrowDown -> NUDGE_DOWN;
+      ArrowLeft -> NUDGE_LEFT;
+      ArrowRight -> NUDGE_RIGHT;
+      Shift+ArrowUp -> NUDGE_UP_LARGE;
+      Shift+ArrowDown -> NUDGE_DOWN_LARGE;
+      Shift+ArrowLeft -> NUDGE_LEFT_LARGE;
+      Shift+ArrowRight -> NUDGE_RIGHT_LARGE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat(?type, " node", if ?label then concat(": ", ?label) else "");
+        aria-roledescription: "canvas node";
+        aria-grabbed: if state == "dragging" then "true" else "false";
+        aria-selected: if state == "selected" or state == "editing" then "true" else "false";
+      };
+      content -> {
+        role: "img";
+        aria-label: concat(?type, " content");
+      };
+      handles -> {
+        role: "group";
+        aria-label: "Resize handles";
+        aria-hidden: if state != "selected" and state != "resizing" then "true" else "false";
+      };
+      handle -> {
+        role: "separator";
+        aria-orientation: self.orientation;
+        aria-label: concat("Resize ", self.position);
+        aria-valuenow: if self.position == "right" or self.position == "left" then ?size.width else ?size.height;
+      };
+      label -> {
+        role: "textbox";
+        aria-label: "Node label";
+        aria-multiline: "false";
+      };
+    }
+  }
+
+  props {
+    type: union "sticky" | "rectangle" | "ellipse" | "diamond" | "text" | "frame" = "rectangle"
+    position: { x: Float, y: Float } = { x: 0.0, y: 0.0 }
+    size: { width: Float, height: Float } = { width: 200.0, height: 200.0 }
+    label: option String
+    color: String = "#ffffff"
+    borderColor: String = "#000000"
+    borderWidth: Float = 1.0
+    rotation: Float = 0.0
+    locked: Bool = false
+    visible: Bool = true
+    opacity: Float = 1.0
+    zIndex: Int = 0
+    id: String
+  }
+
+  connect {
+    root -> {
+      data-type: ?type;
+      data-state: state;
+      data-id: ?id;
+      data-locked: if ?locked then "true" else "false";
+      data-visible: if ?visible then "true" else "false";
+      style-left: concat(?position.x, "px");
+      style-top: concat(?position.y, "px");
+      style-width: concat(?size.width, "px");
+      style-height: concat(?size.height, "px");
+      style-transform: if ?rotation != 0 then concat("rotate(", ?rotation, "deg)") else "none";
+      style-opacity: ?opacity;
+      style-z-index: ?zIndex;
+      tabindex: "0";
+      aria-label: concat(?type, " node", if ?label then concat(": ", ?label) else "");
+      aria-roledescription: "canvas node";
+      aria-grabbed: if state == "dragging" then "true" else "false";
+      aria-selected: if state == "selected" or state == "editing" then "true" else "false";
+      onClick: send(SELECT, { id: ?id });
+      onDoubleClick: send(EDIT, { id: ?id });
+      onPointerDown: if not ?locked then send(DRAG_START, { id: ?id }) else noop;
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+      onKeyDown-Delete: send(DELETE, { id: ?id });
+      onKeyDown-Enter: send(EDIT, { id: ?id });
+      onKeyDown-Escape: send(ESCAPE);
+    }
+
+    content -> {
+      data-part: "content";
+      data-type: ?type;
+      style-background-color: ?color;
+      style-border-color: ?borderColor;
+      style-border-width: concat(?borderWidth, "px");
+    }
+
+    handles -> {
+      data-part: "handles";
+      data-visible: if state == "selected" or state == "resizing" then "true" else "false";
+      aria-hidden: if state != "selected" and state != "resizing" then "true" else "false";
+    }
+
+    handle -> {
+      data-part: "handle";
+      data-position: self.position;
+      style-cursor: self.cursorType;
+      onPointerDown: send(RESIZE_START, { id: ?id, handle: self.position });
+      onPointerUp: send(RESIZE_END);
+    }
+
+    label -> {
+      data-part: "label";
+      text: ?label;
+      contenteditable: if state == "editing" and not ?locked then "true" else "false";
+      data-visible: if ?label then "true" else "false";
+      onInput: send(LABEL_CHANGE, { id: ?id, value: self.textContent });
+      onBlur: send(BLUR);
+      onKeyDown-Enter: send(CONFIRM);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+  }
+
+  invariant {
+    "Resize handles must only be visible when the node is selected";
+    "Locked nodes must not respond to drag, resize, or edit interactions";
+    "Rotation must be applied after position translation";
+    "Frame nodes must clip children to their bounding box";
+    "Label editing must be disabled for locked nodes";
+    "aria-grabbed must be true only during the dragging state";
+  }
+
+}

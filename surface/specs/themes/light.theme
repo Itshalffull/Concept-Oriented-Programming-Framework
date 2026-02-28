@@ -1,0 +1,200 @@
+@version(1)
+
+# Default Light Theme — Surface Spec Section 3.2
+# Warm neutrals with WCAG AA contrast ratios throughout.
+# All color tokens use oklch for perceptual uniformity.
+
+theme light {
+
+  palette {
+    # --- Brand ---
+    primary:              oklch(0.55 0.24 265)
+    primary-hover:        oklch(0.50 0.24 265)
+    primary-active:       oklch(0.45 0.24 265)
+    primary-container:    oklch(0.92 0.06 265)
+    on-primary:           oklch(1.0 0 0)
+    on-primary-container: oklch(0.25 0.10 265)
+
+    secondary:              oklch(0.55 0.12 290)
+    secondary-hover:        oklch(0.50 0.12 290)
+    secondary-active:       oklch(0.45 0.12 290)
+    secondary-container:    oklch(0.93 0.04 290)
+    on-secondary:           oklch(1.0 0 0)
+    on-secondary-container: oklch(0.25 0.06 290)
+
+    tertiary:              oklch(0.55 0.14 180)
+    tertiary-hover:        oklch(0.50 0.14 180)
+    tertiary-active:       oklch(0.45 0.14 180)
+    tertiary-container:    oklch(0.93 0.04 180)
+    on-tertiary:           oklch(1.0 0 0)
+    on-tertiary-container: oklch(0.25 0.06 180)
+
+    # --- Surfaces ---
+    background:       oklch(0.995 0.002 250)
+    on-background:    oklch(0.20 0.015 260)
+    surface:          oklch(0.99 0.002 250)
+    surface-dim:      oklch(0.94 0.004 250)
+    surface-bright:   oklch(0.995 0.002 250)
+    surface-variant:  oklch(0.96 0.004 250)
+    on-surface:       oklch(0.20 0.015 260)
+    on-surface-variant: oklch(0.45 0.01 260)
+    inverse-surface:    oklch(0.24 0.015 260)
+    inverse-on-surface: oklch(0.94 0.004 260)
+    inverse-primary:    oklch(0.78 0.14 265)
+
+    # --- Outlines ---
+    outline:          oklch(0.60 0.01 260)
+    outline-variant:  oklch(0.82 0.008 260)
+    outline-focus:    oklch(0.55 0.24 265)
+
+    # --- Status ---
+    error:             oklch(0.55 0.22 27)
+    error-hover:       oklch(0.50 0.22 27)
+    error-container:   oklch(0.93 0.06 27)
+    on-error:          oklch(1.0 0 0)
+    on-error-container: oklch(0.30 0.12 27)
+
+    warning:             oklch(0.62 0.16 75)
+    warning-hover:       oklch(0.57 0.16 75)
+    warning-container:   oklch(0.95 0.05 75)
+    on-warning:          oklch(1.0 0 0)
+    on-warning-container: oklch(0.30 0.08 75)
+
+    success:             oklch(0.52 0.18 145)
+    success-hover:       oklch(0.47 0.18 145)
+    success-container:   oklch(0.93 0.05 145)
+    on-success:          oklch(1.0 0 0)
+    on-success-container: oklch(0.25 0.08 145)
+
+    info:             oklch(0.55 0.16 250)
+    info-hover:       oklch(0.50 0.16 250)
+    info-container:   oklch(0.93 0.04 250)
+    on-info:          oklch(1.0 0 0)
+    on-info-container: oklch(0.25 0.08 250)
+
+    # --- Utility ---
+    shadow:           oklch(0.0 0 0 / 0.12)
+    scrim:            oklch(0.0 0 0 / 0.32)
+    overlay-backdrop: oklch(0.0 0 0 / 0.5)
+
+    # --- Interactive states ---
+    hover-state-layer:   oklch(0.20 0.015 260 / 0.08)
+    press-state-layer:   oklch(0.20 0.015 260 / 0.12)
+    focus-state-layer:   oklch(0.20 0.015 260 / 0.12)
+    drag-state-layer:    oklch(0.20 0.015 260 / 0.16)
+    disabled-content:    oklch(0.20 0.015 260 / 0.38)
+    disabled-container:  oklch(0.20 0.015 260 / 0.12)
+  }
+
+  typography {
+    font-family-sans: "Inter", system-ui, -apple-system, sans-serif
+    font-family-mono: "JetBrains Mono", ui-monospace, monospace
+    font-family-serif: "Lora", Georgia, "Times New Roman", serif
+
+    display-lg: { size: 3.5rem,    lineHeight: 1.12, weight: 700, tracking: -0.025em, family: font-family-sans }
+    display-md: { size: 2.75rem,   lineHeight: 1.15, weight: 700, tracking: -0.02em,  family: font-family-sans }
+    display-sm: { size: 2.25rem,   lineHeight: 1.18, weight: 700, tracking: -0.015em, family: font-family-sans }
+
+    heading-lg: { size: 2rem,      lineHeight: 1.25, weight: 600, tracking: -0.015em, family: font-family-sans }
+    heading-md: { size: 1.5rem,    lineHeight: 1.33, weight: 600, tracking: -0.01em,  family: font-family-sans }
+    heading-sm: { size: 1.25rem,   lineHeight: 1.4,  weight: 600, tracking: 0,        family: font-family-sans }
+
+    body-lg:    { size: 1.125rem,  lineHeight: 1.56, weight: 400, tracking: 0,        family: font-family-sans }
+    body-md:    { size: 1rem,      lineHeight: 1.5,  weight: 400, tracking: 0,        family: font-family-sans }
+    body-sm:    { size: 0.875rem,  lineHeight: 1.43, weight: 400, tracking: 0.01em,   family: font-family-sans }
+
+    label-lg:   { size: 0.875rem,  lineHeight: 1.43, weight: 500, tracking: 0.01em,   family: font-family-sans }
+    label-md:   { size: 0.8125rem, lineHeight: 1.38, weight: 500, tracking: 0.015em,  family: font-family-sans }
+    label-sm:   { size: 0.75rem,   lineHeight: 1.33, weight: 500, tracking: 0.02em,   family: font-family-sans }
+
+    caption:    { size: 0.6875rem, lineHeight: 1.27, weight: 400, tracking: 0.025em,  family: font-family-sans }
+    overline:   { size: 0.6875rem, lineHeight: 1.27, weight: 600, tracking: 0.08em,   family: font-family-sans, transform: uppercase }
+
+    code:       { size: 0.875rem,  lineHeight: 1.57, weight: 400, family: font-family-mono }
+    code-sm:    { size: 0.8125rem, lineHeight: 1.54, weight: 400, family: font-family-mono }
+  }
+
+  spacing {
+    base: 4px
+    xs:   4px
+    sm:   8px
+    md:   16px
+    lg:   24px
+    xl:   32px
+    2xl:  48px
+    3xl:  64px
+    4xl:  96px
+    5xl:  128px
+
+    # Semantic spacing aliases
+    gutter:       16px
+    section:      64px
+    page-inline:  24px
+    page-block:   32px
+    stack-sm:     8px
+    stack-md:     16px
+    stack-lg:     32px
+    inline-sm:    4px
+    inline-md:    8px
+    inline-lg:    16px
+  }
+
+  motion {
+    duration-instant: 100ms
+    duration-fast:    150ms
+    duration-normal:  250ms
+    duration-slow:    400ms
+    duration-slower:  600ms
+
+    easing-default:    cubic-bezier(0.2, 0, 0, 1)
+    easing-emphasize:  cubic-bezier(0.05, 0.7, 0.1, 1)
+    easing-decelerate: cubic-bezier(0, 0, 0, 1)
+    easing-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15)
+    easing-spring:     cubic-bezier(0.175, 0.885, 0.32, 1.275)
+    easing-linear:     linear
+
+    # Compound motion tokens
+    transition-fade:     { duration: duration-fast, easing: easing-default, property: opacity }
+    transition-scale:    { duration: duration-normal, easing: easing-emphasize, property: transform }
+    transition-slide:    { duration: duration-normal, easing: easing-decelerate, property: transform }
+    transition-expand:   { duration: duration-slow, easing: easing-emphasize, property: "height, width" }
+    transition-color:    { duration: duration-fast, easing: easing-default, property: "background-color, border-color, color" }
+
+    reduce-motion: prefers-reduced-motion
+  }
+
+  elevation {
+    level-0: none
+    level-1: 0 1px 2px 0 shadow
+    level-2: 0 2px 4px -1px shadow, 0 1px 2px -1px shadow
+    level-3: 0 4px 8px -2px shadow, 0 2px 4px -2px shadow
+    level-4: 0 8px 16px -4px shadow, 0 4px 6px -4px shadow
+    level-5: 0 16px 32px -8px shadow, 0 8px 16px -8px shadow
+
+    # Named semantic elevations
+    elevation-card:     level-1
+    elevation-dropdown: level-2
+    elevation-sticky:   level-3
+    elevation-dialog:   level-4
+    elevation-toast:    level-5
+  }
+
+  radius {
+    none: 0
+    sm:   4px
+    md:   8px
+    lg:   12px
+    xl:   16px
+    2xl:  24px
+    full: 9999px
+
+    # Semantic radius aliases
+    radius-button:  md
+    radius-input:   md
+    radius-card:    lg
+    radius-dialog:  xl
+    radius-chip:    full
+    radius-avatar:  full
+    radius-badge:   full
+  }
+}

@@ -1,0 +1,119 @@
+@version(1)
+widget segmented-control {
+
+  purpose {
+    Inline single-choice control displayed as a row of connected buttons
+    with a sliding indicator highlighting the active selection. Best suited
+    for a small number of mutually exclusive options in a compact layout.
+  }
+
+  anatomy {
+    root: container         { Outermost wrapper; groups all segments and indicator }
+    items: container        { Container holding all segment buttons }
+    item: action            { Individual selectable segment button }
+    itemLabel: text         { Label text for an individual segment }
+    indicator: container    { Animated sliding highlight behind the active segment }
+  }
+
+  states {
+    item {
+      unselected [initial] {
+        on SELECT -> selected;
+      }
+      selected {
+        on DESELECT -> unselected;
+      }
+    }
+
+    indicator {
+      idle [initial] {
+        on ANIMATE -> animating;
+      }
+      animating {
+        on ANIMATION_END -> idle;
+        entry [measureTarget, beginSlide];
+        exit [commitPosition];
+      }
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT;
+      ArrowLeft  -> FOCUS_PREV;
+      Space      -> SELECT;
+      Enter      -> SELECT;
+    }
+    focus {
+      item: focusable;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: ?label;
+        aria-orientation: "horizontal";
+      };
+      item -> {
+        role: "radio";
+        aria-checked: if item.value == ?value then "true" else "false";
+        aria-label: item.label;
+        aria-disabled: if ?disabled then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    value: String
+    options: list { label: String, value: String }
+    size: "sm" | "md" = "md"
+    label: String
+    disabled: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-size: ?size;
+      data-disabled: if ?disabled then "true" else "false";
+      role: "radiogroup";
+      aria-label: ?label;
+    }
+    items -> {
+      data-size: ?size;
+    }
+    item -> {
+      data-state: if item.value == ?value then "selected" else "unselected";
+      data-disabled: if ?disabled then "true" else "false";
+      onClick: if not ?disabled then send(SELECT, { value: item.value }) else noop;
+      onKeyDown-ArrowRight: send(FOCUS_NEXT);
+      onKeyDown-ArrowLeft: send(FOCUS_PREV);
+      onKeyDown-Space: send(SELECT, { value: item.value });
+      onKeyDown-Enter: send(SELECT, { value: item.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      tabIndex: if item.value == ?value then 0 else -1;
+      role: "radio";
+    }
+    itemLabel -> {
+      text: item.label;
+    }
+    indicator -> {
+      style-left: offsetOf(activeItem);
+      style-width: widthOf(activeItem);
+      data-animating: if state.indicator == "animating" then "true" else "false";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 11;
+    when { maxOptions: 5; platform: "desktop" }
+  }
+
+  invariant {
+    length(?options) >= 2;
+    exists(?options, o -> o.value == ?value);
+  }
+}

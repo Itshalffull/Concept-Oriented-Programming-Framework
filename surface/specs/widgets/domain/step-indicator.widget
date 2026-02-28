@@ -1,0 +1,155 @@
+@version(1)
+widget step-indicator {
+
+  purpose {
+    Stepper and wizard progress indicator that displays a sequence of
+    labeled steps with their completion status. Each step shows a number
+    or check icon, a label, and an optional description. Steps are
+    connected by visual connector lines. Supports both horizontal and
+    vertical orientations and serves as the primary progress indicator
+    for multi-step workflows and wizards.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the step indicator sequence }
+    step:            container  { Individual step containing number, label, description, and connector }
+    stepNumber:      text       { Numeric indicator or check icon for the step }
+    stepLabel:       text       { Primary label text identifying the step }
+    stepDescription: text       { Optional secondary description text for the step }
+    connector:       container  { Visual line connecting adjacent steps }
+  }
+
+  states {
+    step {
+      upcoming [initial] {
+        on ACTIVATE -> current;
+      }
+      current {
+        on COMPLETE -> completed;
+        on RESET -> upcoming;
+        entry [set aria-current step];
+        exit [clear aria-current];
+      }
+      completed {
+        on ACTIVATE -> current;
+        on RESET -> upcoming;
+      }
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    modal: false;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT;
+      ArrowLeft -> FOCUS_PREV;
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Home -> FOCUS_FIRST;
+      End -> FOCUS_LAST;
+    }
+    focus {
+      trap: false;
+      initial: step[current];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: ?ariaLabel;
+      };
+      step -> {
+        role: "listitem";
+        aria-current: if self.status == "current" then "step" else "false";
+        aria-label: concat("Step ", self.index, " of ", ?steps.length, ": ", self.label, ", ", self.status);
+      };
+      stepNumber -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      stepLabel -> {
+        role: "presentation";
+      };
+      stepDescription -> {
+        role: "presentation";
+      };
+      connector -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    currentStep: Int = 0
+    steps: list { label: String, description: option String }
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    ariaLabel: String = "Progress"
+    clickable: Bool = false
+    size: union "sm" | "md" | "lg" = "md"
+  }
+
+  connect {
+    root -> {
+      role: "navigation";
+      aria-label: ?ariaLabel;
+      data-orientation: ?orientation;
+      data-size: ?size;
+      data-current-step: ?currentStep;
+      data-total-steps: ?steps.length;
+      data-part: "step-indicator";
+    }
+
+    step -> {
+      role: "listitem";
+      aria-current: if self.index == ?currentStep then "step" else "false";
+      aria-label: concat("Step ", self.index + 1, " of ", ?steps.length, ": ", self.label, ", ", if self.index < ?currentStep then "completed" else if self.index == ?currentStep then "current" else "upcoming");
+      data-part: "step";
+      data-status: if self.index < ?currentStep then "completed" else if self.index == ?currentStep then "current" else "upcoming";
+      data-index: self.index;
+      data-orientation: ?orientation;
+      data-clickable: if ?clickable then "true" else "false";
+      tabindex: if self.index == ?currentStep then "0" else "-1";
+      onClick: if ?clickable then send(GO_TO_STEP, { index: self.index }) else noop;
+      onKeyDown-Enter: if ?clickable then send(GO_TO_STEP, { index: self.index }) else noop;
+    }
+
+    stepNumber -> {
+      data-part: "step-number";
+      text: if self.index < ?currentStep then "check" else concat(self.index + 1);
+      data-status: if self.index < ?currentStep then "completed" else if self.index == ?currentStep then "current" else "upcoming";
+      aria-hidden: "true";
+    }
+
+    stepLabel -> {
+      data-part: "step-label";
+      text: self.label;
+      data-status: if self.index < ?currentStep then "completed" else if self.index == ?currentStep then "current" else "upcoming";
+    }
+
+    stepDescription -> {
+      data-part: "step-description";
+      text: self.description;
+      data-visible: if self.description then "true" else "false";
+      data-status: if self.index < ?currentStep then "completed" else if self.index == ?currentStep then "current" else "upcoming";
+    }
+
+    connector -> {
+      data-part: "connector";
+      data-status: if self.index < ?currentStep then "completed" else "upcoming";
+      data-orientation: ?orientation;
+      aria-hidden: "true";
+      data-visible: if self.index < ?steps.length - 1 then "true" else "false";
+    }
+  }
+
+  invariant {
+    "Exactly one step must have aria-current='step' at any time";
+    "Connector between steps N and N+1 must show completed status when step N+1 is current or completed";
+    "Last step must not have a trailing connector";
+    "Clickable mode must allow navigating to completed steps only, not upcoming ones";
+    "Step number must display a check icon for completed steps";
+    "Orientation must affect the layout direction of steps and connectors";
+  }
+
+}

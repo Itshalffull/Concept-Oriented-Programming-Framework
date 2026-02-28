@@ -1,0 +1,133 @@
+@version(1)
+widget stepper {
+
+  purpose {
+    Compact increment/decrement control for small numeric domains.
+    Displays the current value between two buttons and is well suited
+    for quantities, ratings, and other bounded integer selections.
+  }
+
+  anatomy {
+    root: container             { Outermost wrapper; groups label and stepper controls }
+    label: text                 { Visible label describing the stepper purpose }
+    decrementButton: action     { Button to decrease value by step }
+    value: text                 { Display of the current numeric value }
+    incrementButton: action     { Button to increase value by step }
+  }
+
+  states {
+    boundary {
+      idle [initial] {
+        on AT_MIN -> atMin;
+        on AT_MAX -> atMax;
+      }
+      atMin {
+        on INCREMENT -> idle;
+        on AT_MAX -> atMax;
+        entry [disableDecrement];
+        exit [enableDecrement];
+      }
+      atMax {
+        on DECREMENT -> idle;
+        on AT_MIN -> atMin;
+        entry [disableIncrement];
+        exit [enableIncrement];
+      }
+    }
+  }
+
+  accessibility {
+    role: spinbutton;
+    keyboard {
+      ArrowUp   -> INCREMENT;
+      ArrowDown -> DECREMENT;
+      Home      -> SET_MIN;
+      End       -> SET_MAX;
+    }
+    focus {
+      decrementButton: focusable;
+      incrementButton: focusable;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?label;
+      };
+      value -> {
+        role: "spinbutton";
+        aria-valuenow: ?value;
+        aria-valuemin: ?min;
+        aria-valuemax: ?max;
+        aria-valuetext: concat(?value);
+        aria-label: ?label;
+        aria-live: "polite";
+      };
+      incrementButton -> {
+        aria-label: "Increase";
+        aria-disabled: if ?value >= ?max then "true" else "false";
+      };
+      decrementButton -> {
+        aria-label: "Decrease";
+        aria-disabled: if ?value <= ?min then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    value: Int
+    min: Int = 0
+    max: Int = 10
+    step: Int = 1
+    label: String
+    disabled: Bool = false
+    name: option String
+  }
+
+  connect {
+    root -> {
+      data-disabled: if ?disabled then "true" else "false";
+      data-state: if ?value <= ?min then "at-min" else (if ?value >= ?max then "at-max" else "idle");
+    }
+    label -> {
+      text: ?label;
+      id: stepperLabel;
+    }
+    decrementButton -> {
+      onClick: send(DECREMENT);
+      disabled: if ?disabled then true else (if ?value <= ?min then true else false);
+      aria-label: "Decrease";
+      onKeyDown-ArrowDown: send(DECREMENT);
+      onKeyDown-Home: send(SET_MIN);
+    }
+    value -> {
+      text: concat(?value);
+      aria-labelledby: stepperLabel;
+    }
+    incrementButton -> {
+      onClick: send(INCREMENT);
+      disabled: if ?disabled then true else (if ?value >= ?max then true else false);
+      aria-label: "Increase";
+      onKeyDown-ArrowUp: send(INCREMENT);
+      onKeyDown-End: send(SET_MAX);
+    }
+  }
+
+  affordance {
+    serves: number-exact;
+    specificity: 10;
+    when { domain: "1-10" }
+  }
+
+  compose {
+    incrementButton: widget("button", { variant: "icon", icon: "plus", size: "sm" })
+    decrementButton: widget("button", { variant: "icon", icon: "minus", size: "sm" })
+    label: widget("label", { text: ?label })
+  }
+
+  invariant {
+    min <= max;
+    value >= min;
+    value <= max;
+    step > 0;
+  }
+}

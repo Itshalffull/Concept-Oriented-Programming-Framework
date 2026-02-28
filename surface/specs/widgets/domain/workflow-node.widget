@@ -1,0 +1,272 @@
+@version(1)
+widget workflow-node {
+
+  purpose {
+    Single node within a workflow graph representing an operation,
+    trigger, or transformation step. Displays a header with icon and
+    title, typed input and output ports for edge connections, and an
+    optional body for inline configuration preview. Ports enforce type
+    compatibility when connecting edges. Status badge reflects the
+    node execution state.
+  }
+
+  anatomy {
+    root:        container  { Positioned wrapper for the workflow node on the canvas }
+    header:      container  { Top section containing icon, title, and status badge }
+    icon:        container  { Visual icon representing the node type or service }
+    title:       text       { Display name of the node }
+    statusBadge: widget     { Badge indicating execution status (pending, running, success, error) }
+    inputPorts:  container  { Left-side column of typed input connection points }
+    inputPort:   action     { Individual input port accepting an incoming edge }
+    outputPorts: container  { Right-side column of typed output connection points }
+    outputPort:  action     { Individual output port initiating an outgoing edge }
+    body:        container  { Optional expandable section showing configuration summary }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT -> selected;
+      on HOVER -> hovered;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on SELECT -> selected;
+      entry [highlightPorts];
+      exit [unhighlightPorts];
+    }
+
+    selected {
+      on DESELECT -> idle;
+      on CONFIGURE -> configuring;
+      on DELETE -> deleted;
+      on DRAG_START -> dragging;
+      entry [show outline; focus root];
+      exit [hide outline];
+    }
+
+    configuring {
+      on CLOSE_CONFIG -> selected;
+      on SAVE_CONFIG -> selected;
+      on ESCAPE -> selected;
+    }
+
+    dragging {
+      on DROP -> selected;
+      on ESCAPE -> selected;
+      entry [set aria-grabbed true];
+      exit [set aria-grabbed false];
+    }
+
+    deleted {
+      entry [remove self; announce "Node deleted"];
+    }
+
+    execution {
+      pending [initial] {
+        on RUN -> running;
+      }
+      running {
+        on SUCCESS -> success;
+        on ERROR -> error;
+        entry [set aria-busy true];
+        exit [set aria-busy false];
+      }
+      success {
+        on RESET -> pending;
+      }
+      error {
+        on RESET -> pending;
+        on RETRY -> running;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Enter -> CONFIGURE;
+      Delete -> DELETE;
+      Backspace -> DELETE;
+      Escape -> ESCAPE;
+      Space -> SELECT;
+      ArrowUp -> NUDGE_UP;
+      ArrowDown -> NUDGE_DOWN;
+      ArrowLeft -> NUDGE_LEFT;
+      ArrowRight -> NUDGE_RIGHT;
+      Tab -> FOCUS_NEXT_PORT;
+      Shift+Tab -> FOCUS_PREV_PORT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat(?title, " node");
+        aria-roledescription: "workflow node";
+        aria-grabbed: if state == "dragging" then "true" else "false";
+        aria-selected: if state == "selected" or state == "configuring" then "true" else "false";
+        aria-busy: if state.execution == "running" then "true" else "false";
+      };
+      header -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      icon -> {
+        role: "img";
+        aria-label: concat(?nodeType, " icon");
+      };
+      title -> {
+        role: "presentation";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-label: concat("Status: ", state.execution);
+        aria-live: "polite";
+      };
+      inputPorts -> {
+        role: "group";
+        aria-label: "Input ports";
+      };
+      inputPort -> {
+        role: "button";
+        aria-label: concat("Input: ", self.portName, " (", self.portType, ")");
+        aria-roledescription: "connection port";
+      };
+      outputPorts -> {
+        role: "group";
+        aria-label: "Output ports";
+      };
+      outputPort -> {
+        role: "button";
+        aria-label: concat("Output: ", self.portName, " (", self.portType, ")");
+        aria-roledescription: "connection port";
+      };
+      body -> {
+        role: "region";
+        aria-label: "Configuration preview";
+      };
+    }
+  }
+
+  props {
+    title: String
+    nodeType: String
+    icon: option String
+    inputPortDefs: list { name: String, type: String, required: Bool }
+    outputPortDefs: list { name: String, type: String }
+    executionStatus: union "pending" | "running" | "success" | "error" = "pending"
+    position: { x: Float, y: Float } = { x: 0.0, y: 0.0 }
+    configSummary: option String
+    disabled: Bool = false
+    id: String
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: concat(?title, " node");
+      aria-roledescription: "workflow node";
+      aria-grabbed: if state == "dragging" then "true" else "false";
+      aria-selected: if state == "selected" or state == "configuring" then "true" else "false";
+      aria-busy: if ?executionStatus == "running" then "true" else "false";
+      data-state: state;
+      data-execution: ?executionStatus;
+      data-node-type: ?nodeType;
+      data-id: ?id;
+      data-disabled: if ?disabled then "true" else "false";
+      style-left: concat(?position.x, "px");
+      style-top: concat(?position.y, "px");
+      tabindex: "0";
+      onClick: send(SELECT, { id: ?id });
+      onDoubleClick: send(CONFIGURE, { id: ?id });
+      onPointerDown: send(DRAG_START, { id: ?id });
+      onKeyDown-Enter: send(CONFIGURE, { id: ?id });
+      onKeyDown-Delete: send(DELETE, { id: ?id });
+      onKeyDown-Escape: send(ESCAPE);
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+    }
+
+    header -> {
+      data-part: "header";
+      data-execution: ?executionStatus;
+    }
+
+    icon -> {
+      data-part: "icon";
+      data-type: ?nodeType;
+      aria-hidden: "true";
+    }
+
+    title -> {
+      data-part: "title";
+      text: ?title;
+    }
+
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: ?executionStatus;
+      aria-label: concat("Status: ", ?executionStatus);
+    }
+
+    inputPorts -> {
+      data-part: "input-ports";
+      role: "group";
+      aria-label: "Input ports";
+    }
+
+    inputPort -> {
+      data-part: "input-port";
+      data-port-name: self.portName;
+      data-port-type: self.portType;
+      data-required: if self.required then "true" else "false";
+      data-connected: if self.connected then "true" else "false";
+      aria-label: concat("Input: ", self.portName, " (", self.portType, ")");
+      tabindex: "-1";
+      onPointerDown: send(CONNECT_START, { nodeId: ?id, port: self.portName, direction: "input" });
+      onPointerUp: send(CONNECT_END, { nodeId: ?id, port: self.portName, direction: "input" });
+      onPointerEnter: send(PORT_HOVER, { nodeId: ?id, port: self.portName });
+      onPointerLeave: send(PORT_UNHOVER);
+    }
+
+    outputPort -> {
+      data-part: "output-port";
+      data-port-name: self.portName;
+      data-port-type: self.portType;
+      data-connected: if self.connected then "true" else "false";
+      aria-label: concat("Output: ", self.portName, " (", self.portType, ")");
+      tabindex: "-1";
+      onPointerDown: send(CONNECT_START, { nodeId: ?id, port: self.portName, direction: "output" });
+      onPointerUp: send(CONNECT_END, { nodeId: ?id, port: self.portName, direction: "output" });
+      onPointerEnter: send(PORT_HOVER, { nodeId: ?id, port: self.portName });
+      onPointerLeave: send(PORT_UNHOVER);
+    }
+
+    body -> {
+      data-part: "body";
+      data-visible: if ?configSummary then "true" else "false";
+      text: ?configSummary;
+      aria-label: "Configuration preview";
+    }
+  }
+
+  compose {
+    statusBadge: widget("badge", { label: ?executionStatus, variant: if ?executionStatus == "success" then "success" else if ?executionStatus == "error" then "error" else if ?executionStatus == "running" then "info" else "neutral" });
+    icon: widget("icon", { name: ?icon });
+  }
+
+  invariant {
+    "Edges must only connect ports of compatible types";
+    "Required input ports must be visually distinguished from optional ports";
+    "Status badge must update in real time during workflow execution";
+    "Disabled nodes must not participate in execution";
+    "aria-busy must be true on the node during running execution state";
+    "Deleting a node must cascade-delete all connected edges";
+  }
+
+}

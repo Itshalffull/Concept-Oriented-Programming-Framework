@@ -1,0 +1,118 @@
+@version(1)
+widget view-toggle {
+
+  purpose {
+    Compact segmented control for switching between display modes such as
+    grid, list, table, or calendar views. Renders as a radio group with
+    icon-labelled options, ensuring only one mode is active at a time.
+    Used in toolbars alongside data display widgets to control layout.
+  }
+
+  anatomy {
+    root:     container  { Top-level wrapper acting as the radio group }
+    item:     action     { Individual toggle option representing one view mode }
+    itemIcon: container  { Icon graphic within each toggle item }
+  }
+
+  states {
+    item {
+      inactive [initial] {
+        on SELECT -> active;
+        entry [set aria-checked false];
+      }
+      active {
+        on DESELECT -> inactive;
+        entry [set aria-checked true];
+      }
+    }
+
+    focus {
+      unfocused [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> unfocused;
+      }
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    modal: false;
+    keyboard {
+      ArrowLeft -> NAVIGATE_PREV;
+      ArrowRight -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      ArrowDown -> NAVIGATE_NEXT;
+      Space -> SELECT;
+      Enter -> SELECT;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: item[active];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: ?ariaLabel;
+      };
+      item -> {
+        role: "radio";
+        aria-checked: if state.item == "active" then "true" else "false";
+        aria-label: self.label;
+      };
+    }
+  }
+
+  props {
+    value: String
+    options: list { value: String, icon: String, label: String }
+    ariaLabel: String = "View options"
+  }
+
+  connect {
+    root -> {
+      role: "radiogroup";
+      aria-label: ?ariaLabel;
+      data-part: "view-toggle";
+    }
+
+    item -> {
+      role: "radio";
+      aria-checked: if self.value == ?value then "true" else "false";
+      aria-label: self.label;
+      data-state: if self.value == ?value then "active" else "inactive";
+      data-value: self.value;
+      tabindex: if self.value == ?value then "0" else "-1";
+      onClick: send(SELECT);
+      onKeyDown-Space: send(SELECT);
+      onKeyDown-Enter: send(SELECT);
+      onKeyDown-ArrowLeft: send(NAVIGATE_PREV);
+      onKeyDown-ArrowRight: send(NAVIGATE_NEXT);
+      onKeyDown-ArrowUp: send(NAVIGATE_PREV);
+      onKeyDown-ArrowDown: send(NAVIGATE_NEXT);
+      onKeyDown-Home: send(NAVIGATE_FIRST);
+      onKeyDown-End: send(NAVIGATE_LAST);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    itemIcon -> {
+      data-part: "item-icon";
+      data-icon: self.icon;
+      aria-hidden: "true";
+    }
+  }
+
+  invariant {
+    "Exactly one item must have aria-checked true at all times";
+    "Roving tabindex must place tabindex 0 on the active item only";
+    "Selection must loop from last to first and first to last on arrow keys";
+    "Icon must be aria-hidden since the item itself carries the aria-label";
+  }
+
+}

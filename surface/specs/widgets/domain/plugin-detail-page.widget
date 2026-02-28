@@ -1,0 +1,271 @@
+@version(1)
+widget plugin-detail-page {
+
+  purpose {
+    Plugin marketplace detail page displaying comprehensive information
+    about a single plugin or extension. Features a hero section with
+    icon, title, and stats, an install/uninstall button, and tabbed
+    content panels for description, screenshots, reviews, and changelog.
+    Serves as the primary landing page for plugin discovery and
+    installation decisions.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the plugin detail page layout }
+    hero:            container  { Hero section at the top with icon, title, stats, and install button }
+    heroIcon:        container  { Large plugin icon or logo }
+    heroTitle:       text       { Plugin display name }
+    heroStats:       container  { Row of stats: version, downloads, rating, last updated }
+    installButton:   widget     { Primary action button for install, uninstall, or update }
+    tabs:            widget     { Tab navigation for switching between content sections }
+    descriptionTab:  container  { Tab panel containing the plugin description and features }
+    screenshotsTab:  container  { Tab panel containing a gallery of plugin screenshots }
+    reviewsTab:      container  { Tab panel containing user reviews and ratings }
+    changelogTab:    container  { Tab panel containing the version history and changelog }
+  }
+
+  states {
+    idle [initial] {
+      on INSTALL -> installing;
+      on UNINSTALL -> uninstalling;
+      on UPDATE -> updating;
+      on SWITCH_TAB -> idle;
+    }
+
+    installing {
+      on INSTALL_COMPLETE -> installed;
+      on INSTALL_ERROR -> idle;
+      entry [set aria-busy true; disableInstallButton];
+      exit [set aria-busy false; enableInstallButton];
+    }
+
+    installed {
+      on UNINSTALL -> uninstalling;
+      on UPDATE -> updating;
+      on SWITCH_TAB -> installed;
+    }
+
+    uninstalling {
+      on UNINSTALL_COMPLETE -> idle;
+      on UNINSTALL_ERROR -> installed;
+      entry [set aria-busy true; disableInstallButton];
+      exit [set aria-busy false; enableInstallButton];
+    }
+
+    updating {
+      on UPDATE_COMPLETE -> installed;
+      on UPDATE_ERROR -> installed;
+      entry [set aria-busy true; disableInstallButton];
+      exit [set aria-busy false; enableInstallButton];
+    }
+
+    tab {
+      description [initial] {
+        on TAB_SCREENSHOTS -> screenshots;
+        on TAB_REVIEWS -> reviews;
+        on TAB_CHANGELOG -> changelog;
+      }
+      screenshots {
+        on TAB_DESCRIPTION -> description;
+        on TAB_REVIEWS -> reviews;
+        on TAB_CHANGELOG -> changelog;
+      }
+      reviews {
+        on TAB_DESCRIPTION -> description;
+        on TAB_SCREENSHOTS -> screenshots;
+        on TAB_CHANGELOG -> changelog;
+      }
+      changelog {
+        on TAB_DESCRIPTION -> description;
+        on TAB_SCREENSHOTS -> screenshots;
+        on TAB_REVIEWS -> reviews;
+      }
+    }
+  }
+
+  accessibility {
+    role: article;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter -> INSTALL_OR_ACTION;
+    }
+    focus {
+      trap: false;
+      initial: installButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat(?pluginName, " plugin details");
+        aria-busy: if state == "installing" or state == "uninstalling" or state == "updating" then "true" else "false";
+      };
+      hero -> {
+        role: "banner";
+        aria-label: concat(?pluginName, " overview");
+      };
+      heroIcon -> {
+        role: "img";
+        aria-label: concat(?pluginName, " icon");
+      };
+      heroTitle -> {
+        role: "heading";
+        aria-level: "1";
+      };
+      heroStats -> {
+        role: "group";
+        aria-label: "Plugin statistics";
+      };
+      installButton -> {
+        role: "button";
+        aria-label: if ?installed then "Uninstall" else if ?updateAvailable then "Update" else "Install";
+        aria-busy: if state == "installing" or state == "uninstalling" or state == "updating" then "true" else "false";
+      };
+      descriptionTab -> {
+        role: "tabpanel";
+        aria-label: "Description";
+      };
+      screenshotsTab -> {
+        role: "tabpanel";
+        aria-label: "Screenshots";
+      };
+      reviewsTab -> {
+        role: "tabpanel";
+        aria-label: "Reviews";
+      };
+      changelogTab -> {
+        role: "tabpanel";
+        aria-label: "Changelog";
+      };
+    }
+  }
+
+  props {
+    pluginName: String
+    pluginId: String
+    description: String = ""
+    version: String = "1.0.0"
+    author: String = ""
+    downloads: Int = 0
+    rating: Float = 0.0
+    reviewCount: Int = 0
+    lastUpdated: String = ""
+    installed: Bool = false
+    updateAvailable: Bool = false
+    screenshots: list { src: String, alt: String } = []
+    reviews: list { author: String, rating: Float, text: String, date: String } = []
+    changelog: list { version: String, date: String, changes: list String } = []
+    activeTab: union "description" | "screenshots" | "reviews" | "changelog" = "description"
+    iconSrc: option String
+  }
+
+  connect {
+    root -> {
+      role: "article";
+      aria-label: concat(?pluginName, " plugin details");
+      aria-busy: if state == "installing" or state == "uninstalling" or state == "updating" then "true" else "false";
+      data-state: state;
+      data-plugin-id: ?pluginId;
+      data-installed: if ?installed then "true" else "false";
+    }
+
+    hero -> {
+      data-part: "hero";
+      role: "banner";
+      aria-label: concat(?pluginName, " overview");
+    }
+
+    heroIcon -> {
+      data-part: "hero-icon";
+      role: "img";
+      aria-label: concat(?pluginName, " icon");
+      src: ?iconSrc;
+    }
+
+    heroTitle -> {
+      data-part: "hero-title";
+      role: "heading";
+      aria-level: "1";
+      text: ?pluginName;
+    }
+
+    heroStats -> {
+      data-part: "hero-stats";
+      role: "group";
+      aria-label: "Plugin statistics";
+      data-version: ?version;
+      data-downloads: ?downloads;
+      data-rating: ?rating;
+      data-review-count: ?reviewCount;
+      data-last-updated: ?lastUpdated;
+    }
+
+    installButton -> {
+      data-part: "install-button";
+      data-state: if state == "installing" then "installing" else if state == "uninstalling" then "uninstalling" else if state == "updating" then "updating" else "idle";
+      data-action: if ?installed and ?updateAvailable then "update" else if ?installed then "uninstall" else "install";
+      onClick: if state == "installing" or state == "uninstalling" or state == "updating" then noop else if ?installed and ?updateAvailable then send(UPDATE) else if ?installed then send(UNINSTALL) else send(INSTALL);
+    }
+
+    tabs -> {
+      data-part: "tabs";
+      data-active: ?activeTab;
+    }
+
+    descriptionTab -> {
+      data-part: "description-tab";
+      role: "tabpanel";
+      aria-label: "Description";
+      data-visible: if ?activeTab == "description" then "true" else "false";
+      hidden: if ?activeTab != "description" then true else false;
+      innerHTML: renderMarkdown(?description);
+    }
+
+    screenshotsTab -> {
+      data-part: "screenshots-tab";
+      role: "tabpanel";
+      aria-label: "Screenshots";
+      data-visible: if ?activeTab == "screenshots" then "true" else "false";
+      hidden: if ?activeTab != "screenshots" then true else false;
+      data-count: ?screenshots.length;
+    }
+
+    reviewsTab -> {
+      data-part: "reviews-tab";
+      role: "tabpanel";
+      aria-label: "Reviews";
+      data-visible: if ?activeTab == "reviews" then "true" else "false";
+      hidden: if ?activeTab != "reviews" then true else false;
+      data-count: ?reviewCount;
+    }
+
+    changelogTab -> {
+      data-part: "changelog-tab";
+      role: "tabpanel";
+      aria-label: "Changelog";
+      data-visible: if ?activeTab == "changelog" then "true" else "false";
+      hidden: if ?activeTab != "changelog" then true else false;
+    }
+  }
+
+  compose {
+    tabs: widget("tabs", { value: ?activeTab, orientation: "horizontal" });
+    installButton: widget("button", { variant: "primary", label: if ?installed and ?updateAvailable then "Update" else if ?installed then "Uninstall" else "Install" });
+    ratingDisplay: widget("rating", { value: ?rating, readOnly: true });
+    screenshotGallery: widget("image-gallery", { images: ?screenshots });
+    reviewCards: widget("card", {});
+  }
+
+  invariant {
+    "Install button label must reflect the current installation state";
+    "Only one tab panel may be visible at a time";
+    "Install/uninstall/update actions must be disabled during async operations";
+    "aria-busy must be true on root during install, uninstall, and update operations";
+    "Rating must display as read-only in the hero stats";
+    "Screenshot tab must only be shown when screenshots are available";
+    "Review tab must display the average rating and total review count";
+  }
+
+}

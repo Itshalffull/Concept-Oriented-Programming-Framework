@@ -1,0 +1,54 @@
+@version(1)
+widget icon {
+
+  purpose {
+    Renders a scalable vector icon from a named icon set. Can serve
+    as a decorative embellishment (aria-hidden) or a meaningful
+    semantic image with an accessible label. All icons render at a
+    consistent optical size determined by the size prop.
+  }
+
+  anatomy {
+    root: container   { SVG or image container holding the icon graphic }
+  }
+
+  states {
+    static [initial] {
+      entry [];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    name: String = ""
+    size: union "xs" | "sm" | "md" | "lg" = "md"
+    decorative: Bool = true
+    label: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-icon: ?name;
+      data-size: ?size;
+      role: if ?decorative then "presentation" else "img";
+      aria-hidden: if ?decorative then "true" else "false";
+      aria-label: if ?decorative then none else ?label;
+    }
+  }
+
+}

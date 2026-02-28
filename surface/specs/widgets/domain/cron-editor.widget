@@ -1,0 +1,232 @@
+@version(1)
+widget cron-editor {
+
+  purpose {
+    Visual cron expression builder that provides both a simple
+    frequency-based editor and an advanced raw cron input mode.
+    The simple editor offers dropdowns for frequency (minutely, hourly,
+    daily, weekly, monthly), time-of-day, and day-of-week selection.
+    The advanced editor accepts a standard five-field cron expression
+    with real-time validation. A preview section displays the next
+    scheduled run times for the configured expression.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the cron editor }
+    tabs:            widget     { Tab switcher between simple and advanced editor modes }
+    simpleEditor:    container  { Form-based frequency, time, and day selection interface }
+    frequencySelect: widget     { Dropdown for choosing the base frequency }
+    timeInput:       widget     { Time picker for hour and minute selection }
+    daySelect:       widget     { Day-of-week or day-of-month selector }
+    advancedEditor:  container  { Raw cron expression input with validation }
+    cronInput:       widget     { Text input for entering the five-field cron expression }
+    preview:         container  { Section displaying the human-readable schedule and next run times }
+    nextRuns:        container  { List of upcoming scheduled execution timestamps }
+  }
+
+  states {
+    simple [initial] {
+      on SWITCH_ADVANCED -> advanced;
+      on CHANGE -> simple;
+      entry [syncCronFromSimple];
+    }
+
+    advanced {
+      on SWITCH_SIMPLE -> simple;
+      on CHANGE -> advanced;
+      entry [syncSimpleFromCron; focusCronInput];
+    }
+
+    validation [parallel] {
+      valid [initial] {
+        on INVALIDATE -> invalid;
+        entry [show preview; clearErrors];
+      }
+      invalid {
+        on REVALIDATE -> valid;
+        entry [show errors; hide preview];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter -> APPLY;
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: tabs;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "cron editor";
+      };
+      tabs -> {
+        role: "tablist";
+        aria-label: "Editor mode";
+      };
+      simpleEditor -> {
+        role: "form";
+        aria-label: "Simple schedule editor";
+        aria-hidden: if state == "advanced" then "true" else "false";
+      };
+      frequencySelect -> {
+        aria-label: "Frequency";
+      };
+      timeInput -> {
+        aria-label: "Time of day";
+      };
+      daySelect -> {
+        aria-label: if ?frequency == "weekly" then "Day of week" else "Day of month";
+      };
+      advancedEditor -> {
+        role: "form";
+        aria-label: "Advanced cron expression editor";
+        aria-hidden: if state != "advanced" then "true" else "false";
+      };
+      cronInput -> {
+        role: "textbox";
+        aria-label: "Cron expression";
+        aria-invalid: if state.validation == "invalid" then "true" else "false";
+        aria-describedby: "cron-hint";
+      };
+      preview -> {
+        role: "region";
+        aria-label: "Schedule preview";
+        aria-live: "polite";
+      };
+      nextRuns -> {
+        role: "list";
+        aria-label: "Next scheduled runs";
+      };
+    }
+  }
+
+  props {
+    cronExpression: String = "0 * * * *"
+    frequency: union "minutely" | "hourly" | "daily" | "weekly" | "monthly" = "hourly"
+    hour: Int = 0
+    minute: Int = 0
+    dayOfWeek: list Int = []
+    dayOfMonth: Int = 1
+    ariaLabel: String = "Cron Editor"
+    timezone: String = "UTC"
+    nextRunCount: Int = 5
+    readOnly: Bool = false
+    mode: union "simple" | "advanced" = "simple"
+  }
+
+  connect {
+    root -> {
+      role: "group";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "cron editor";
+      data-state: state;
+      data-mode: ?mode;
+      data-valid: if state.validation == "valid" then "true" else "false";
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    tabs -> {
+      data-part: "tabs";
+      data-active: ?mode;
+    }
+
+    simpleEditor -> {
+      data-part: "simple-editor";
+      role: "form";
+      aria-label: "Simple schedule editor";
+      data-visible: if ?mode == "simple" then "true" else "false";
+      aria-hidden: if ?mode == "advanced" then "true" else "false";
+    }
+
+    frequencySelect -> {
+      data-part: "frequency-select";
+      aria-label: "Frequency";
+      data-value: ?frequency;
+    }
+
+    timeInput -> {
+      data-part: "time-input";
+      aria-label: "Time of day";
+      data-hour: ?hour;
+      data-minute: ?minute;
+      data-visible: if ?frequency != "minutely" then "true" else "false";
+    }
+
+    daySelect -> {
+      data-part: "day-select";
+      aria-label: if ?frequency == "weekly" then "Day of week" else "Day of month";
+      data-visible: if ?frequency == "weekly" or ?frequency == "monthly" then "true" else "false";
+      data-frequency: ?frequency;
+    }
+
+    advancedEditor -> {
+      data-part: "advanced-editor";
+      role: "form";
+      aria-label: "Advanced cron expression editor";
+      data-visible: if ?mode == "advanced" then "true" else "false";
+      aria-hidden: if ?mode != "advanced" then "true" else "false";
+    }
+
+    cronInput -> {
+      data-part: "cron-input";
+      role: "textbox";
+      aria-label: "Cron expression";
+      aria-invalid: if state.validation == "invalid" then "true" else "false";
+      aria-describedby: "cron-hint";
+      value: ?cronExpression;
+      placeholder: "* * * * *";
+      data-valid: if state.validation == "valid" then "true" else "false";
+      onInput: send(CHANGE, { expression: self.value });
+      onBlur: send(VALIDATE);
+    }
+
+    preview -> {
+      data-part: "preview";
+      role: "region";
+      aria-label: "Schedule preview";
+      aria-live: "polite";
+      data-visible: if state.validation == "valid" then "true" else "false";
+      data-timezone: ?timezone;
+      text: humanReadableCron(?cronExpression);
+    }
+
+    nextRuns -> {
+      data-part: "next-runs";
+      role: "list";
+      aria-label: "Next scheduled runs";
+      data-count: ?nextRunCount;
+      data-timezone: ?timezone;
+      data-visible: if state.validation == "valid" then "true" else "false";
+    }
+  }
+
+  compose {
+    tabs: widget("tabs", { value: ?mode, orientation: "horizontal" });
+    frequencySelect: widget("select", { options: ["minutely", "hourly", "daily", "weekly", "monthly"], value: ?frequency });
+    timeInput: widget("text-input", { type: "time" });
+    daySelect: widget("select", { options: if ?frequency == "weekly" then ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] else ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"] });
+    cronInput: widget("text-input", { value: ?cronExpression, placeholder: "* * * * *" });
+    nextRunList: widget("list", {});
+  }
+
+  invariant {
+    "Switching between simple and advanced modes must synchronize the cron expression";
+    "Invalid cron expressions must hide the preview and show an error message";
+    "Simple editor must only show time input when frequency is not minutely";
+    "Simple editor must only show day select when frequency is weekly or monthly";
+    "Next runs list must calculate timestamps based on the cron expression and timezone";
+    "Read-only mode must disable all inputs and selectors";
+    "Cron expression must validate against standard five-field format";
+  }
+
+}

@@ -1,0 +1,69 @@
+@version(1)
+widget scroll-lock {
+
+  purpose {
+    Prevents body-level scrolling when active. Used by overlays,
+    modals, and drawers to lock the background page in place while
+    the user interacts with foreground content. Preserves scroll
+    position and restores it when deactivated.
+  }
+
+  anatomy {
+    root: container   { Logical wrapper that activates the scroll lock behavior }
+  }
+
+  states {
+    unlocked [initial] {
+      on LOCK -> locked;
+      entry [restore body scroll];
+    }
+
+    locked {
+      on UNLOCK -> unlocked;
+      entry [save scroll position; disable body scroll];
+      exit [restore body scroll; restore scroll position];
+    }
+  }
+
+  accessibility {
+    role: none;
+    modal: false;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: none;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: none;
+      describedby: none;
+    }
+  }
+
+  props {
+    active: Bool = false
+    preserveScrollbarGap: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if ?active then "locked" else "unlocked";
+      data-scroll-lock: if ?active then "true" else "false";
+      data-preserve-gap: if ?preserveScrollbarGap then "true" else "false";
+    }
+  }
+
+  invariant {
+    after send(LOCK) -> state is locked;
+    then body scroll is disabled;
+    and scroll position is saved;
+  }
+
+  invariant {
+    after send(UNLOCK) -> state is unlocked;
+    then body scroll is restored;
+    and scroll position is restored;
+  }
+
+}

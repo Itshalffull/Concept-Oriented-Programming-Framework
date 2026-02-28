@@ -1,0 +1,276 @@
+@version(1)
+widget automation-builder {
+
+  purpose {
+    Linear step-sequence builder for constructing automation rules,
+    inspired by the Zapier pattern. Users add trigger and action steps
+    in order, configure each step through an inline panel, and test the
+    full sequence. Supports branching (if/else), step reordering, and
+    per-step testing with live data preview. Steps are connected by
+    visual connector lines indicating data flow.
+  }
+
+  anatomy {
+    root:           container  { Top-level wrapper for the automation builder layout }
+    stepList:       container  { Vertical sequence of steps connected by visual connectors }
+    step:           container  { Individual automation step card with icon, type, and config }
+    stepIcon:       container  { Leading icon indicating the step service or action type }
+    stepType:       text       { Label identifying the step type (trigger, action, filter, etc.) }
+    stepConfig:     container  { Inline configuration summary or form for the step }
+    addStepButton:  action     { Plus button between steps to insert a new step at that position }
+    connector:      container  { Visual line connecting adjacent steps in the sequence }
+    branchButton:   action     { Optional button to add conditional branching at a step }
+    testPanel:      container  { Expandable panel showing test execution results for a step }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_STEP -> stepSelected;
+      on ADD_STEP -> addingStep;
+      on TEST_ALL -> testing;
+    }
+
+    stepSelected {
+      on DESELECT -> idle;
+      on CONFIGURE -> configuring;
+      on DELETE -> idle;
+      on REORDER -> reordering;
+      on TEST_STEP -> testingStep;
+      entry [highlightStep; scrollIntoView];
+    }
+
+    configuring {
+      on SAVE -> stepSelected;
+      on CANCEL -> stepSelected;
+      on ESCAPE -> stepSelected;
+      entry [expandStepConfig; focusFirstField];
+      exit [collapseStepConfig];
+    }
+
+    addingStep {
+      on SELECT_TYPE -> configuring;
+      on CANCEL -> idle;
+      on ESCAPE -> idle;
+      entry [showStepTypePicker];
+      exit [hideStepTypePicker];
+    }
+
+    reordering {
+      on DROP -> idle;
+      on ESCAPE -> idle;
+      entry [set aria-grabbed true; showDropIndicators];
+      exit [set aria-grabbed false; hideDropIndicators];
+    }
+
+    testingStep {
+      on TEST_COMPLETE -> stepSelected;
+      on TEST_ERROR -> stepSelected;
+      on CANCEL -> stepSelected;
+      entry [showTestPanel; set aria-busy true; runStepTest];
+      exit [set aria-busy false];
+    }
+
+    testing {
+      on TEST_COMPLETE -> idle;
+      on TEST_ERROR -> idle;
+      on CANCEL -> idle;
+      entry [set aria-busy true; disableEditing; runFullTest];
+      exit [set aria-busy false; enableEditing];
+    }
+
+    step {
+      unconfigured [initial] {
+        on CONFIGURE -> configured;
+      }
+      configured {
+        on RECONFIGURE -> configured;
+        on CLEAR -> unconfigured;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter -> CONFIGURE_OR_SAVE;
+      Escape -> ESCAPE;
+      Delete -> DELETE_STEP;
+      Backspace -> DELETE_STEP;
+      ArrowUp -> FOCUS_PREV_STEP;
+      ArrowDown -> FOCUS_NEXT_STEP;
+      Control+ArrowUp -> MOVE_STEP_UP;
+      Control+ArrowDown -> MOVE_STEP_DOWN;
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      n -> ADD_STEP;
+      Control+Enter -> TEST_ALL;
+      t -> TEST_STEP;
+    }
+    focus {
+      trap: false;
+      initial: stepList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "automation builder";
+        aria-busy: if state == "testing" then "true" else "false";
+      };
+      stepList -> {
+        role: "list";
+        aria-label: "Automation steps";
+        aria-live: "polite";
+      };
+      step -> {
+        role: "listitem";
+        aria-label: concat("Step ", self.index, ": ", self.typeName);
+        aria-grabbed: if state == "reordering" then "true" else "false";
+        aria-current: if self.selected then "step" else "false";
+        aria-busy: if state == "testingStep" and self.selected then "true" else "false";
+      };
+      stepIcon -> {
+        role: "img";
+        aria-label: concat(self.typeName, " icon");
+      };
+      stepConfig -> {
+        role: "region";
+        aria-label: concat("Configuration for step ", self.index);
+      };
+      addStepButton -> {
+        role: "button";
+        aria-label: concat("Add step after step ", self.afterIndex);
+      };
+      connector -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      branchButton -> {
+        role: "button";
+        aria-label: "Add conditional branch";
+      };
+      testPanel -> {
+        role: "region";
+        aria-label: concat("Test results for step ", self.index);
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    steps: list { type: String, config: option Object, testResult: option Object }
+    ariaLabel: String = "Automation Builder"
+    readOnly: Bool = false
+    selectedStepIndex: option Int
+    testingActive: Bool = false
+    branchingEnabled: Bool = true
+    maxSteps: Int = 50
+    automationName: String = "Untitled Automation"
+  }
+
+  connect {
+    root -> {
+      role: "region";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "automation builder";
+      aria-busy: if ?testingActive then "true" else "false";
+      data-state: state;
+      data-step-count: ?steps.length;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    stepList -> {
+      role: "list";
+      aria-label: "Automation steps";
+      data-part: "step-list";
+    }
+
+    step -> {
+      role: "listitem";
+      aria-label: concat("Step ", self.index, ": ", self.typeName);
+      aria-grabbed: if state == "reordering" and self.selected then "true" else "false";
+      aria-current: if self.selected then "step" else "false";
+      data-step-index: self.index;
+      data-step-type: self.typeName;
+      data-configured: if self.config then "true" else "false";
+      data-test-status: if self.testResult then self.testResult.status else "none";
+      tabindex: if self.selected then "0" else "-1";
+      onClick: send(SELECT_STEP, { index: self.index });
+      onDoubleClick: send(CONFIGURE, { index: self.index });
+      onKeyDown-Enter: send(CONFIGURE, { index: self.index });
+      onKeyDown-Delete: send(DELETE, { index: self.index });
+    }
+
+    stepIcon -> {
+      data-part: "step-icon";
+      data-type: self.typeName;
+      aria-hidden: "true";
+    }
+
+    stepType -> {
+      data-part: "step-type";
+      text: self.typeName;
+    }
+
+    stepConfig -> {
+      data-part: "step-config";
+      role: "region";
+      aria-label: concat("Configuration for step ", self.index);
+      data-state: if state == "configuring" and self.selected then "editing" else "summary";
+    }
+
+    addStepButton -> {
+      role: "button";
+      aria-label: concat("Add step after step ", self.afterIndex);
+      data-part: "add-step";
+      data-after-index: self.afterIndex;
+      data-visible: if not ?readOnly and ?steps.length < ?maxSteps then "true" else "false";
+      onClick: send(ADD_STEP, { afterIndex: self.afterIndex });
+      onKeyDown-Enter: send(ADD_STEP, { afterIndex: self.afterIndex });
+    }
+
+    connector -> {
+      data-part: "connector";
+      aria-hidden: "true";
+      data-between: concat(self.fromIndex, "-", self.toIndex);
+    }
+
+    branchButton -> {
+      role: "button";
+      aria-label: "Add conditional branch";
+      data-part: "branch-button";
+      data-visible: if ?branchingEnabled and not ?readOnly then "true" else "false";
+      onClick: send(ADD_BRANCH, { atIndex: self.atIndex });
+    }
+
+    testPanel -> {
+      data-part: "test-panel";
+      role: "region";
+      aria-label: concat("Test results for step ", self.index);
+      aria-live: "polite";
+      data-status: if self.testResult then self.testResult.status else "none";
+      data-visible: if self.testResult then "true" else "false";
+    }
+  }
+
+  compose {
+    stepTypeSelector: widget("select", { options: ["trigger", "action", "filter", "delay", "branch"] });
+    stepConfigForm: widget("filter-builder", {});
+    stepCard: widget("card", {});
+    addButton: widget("button", { variant: "ghost", size: "sm" });
+    testDrawer: widget("drawer", { placement: "bottom", size: "md" });
+  }
+
+  invariant {
+    "The first step must always be a trigger type";
+    "Step count must not exceed maxSteps";
+    "Reordering must not move the trigger step from position zero";
+    "Test results must be displayed per-step with pass/fail indicators";
+    "Branching must create two or more parallel step sequences";
+    "Connectors must visually link adjacent steps in the correct order";
+    "aria-busy must be true during testing state on root and active step";
+  }
+
+}

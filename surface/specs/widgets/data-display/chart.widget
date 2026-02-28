@@ -1,0 +1,169 @@
+@version(1)
+widget chart {
+
+  purpose {
+    Data visualisation container rendering bar, line, pie, and donut charts.
+    Wraps a charting library output with accessible labelling, keyboard
+    navigation between data segments, a legend, interactive tooltips, and
+    a hidden data-table fallback for screen readers. Supports loading and
+    hover-highlight states.
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper enclosing chart, legend, and fallback table }
+    chart:             container  { Visual chart rendering area (canvas or SVG) }
+    legend:            container  { Legend region listing data series with colour keys }
+    legendItem:        container  { Individual series entry within the legend }
+    tooltip:           widget     { Floating tooltip showing value details on hover/focus }
+    dataTableFallback: container  { Hidden accessible table providing chart data for AT users }
+  }
+
+  states {
+    loading [initial] {
+      on RENDER_COMPLETE -> rendered;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    rendered {
+      on HOVER_SEGMENT -> highlighted;
+      on FOCUS_SEGMENT -> highlighted;
+      on RELOAD -> loading;
+    }
+
+    highlighted {
+      on UNHOVER_SEGMENT -> rendered;
+      on BLUR_SEGMENT -> rendered;
+      on HOVER_SEGMENT -> highlighted;
+      on FOCUS_SEGMENT -> highlighted;
+      entry [show tooltip];
+      exit [hide tooltip];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS;
+      ArrowLeft -> NAVIGATE_SEGMENT_PREV;
+      ArrowRight -> NAVIGATE_SEGMENT_NEXT;
+      ArrowUp -> NAVIGATE_SERIES_PREV;
+      ArrowDown -> NAVIGATE_SERIES_NEXT;
+      Enter -> ACTIVATE_SEGMENT;
+      Escape -> DESELECT_SEGMENT;
+      Home -> NAVIGATE_FIRST_SEGMENT;
+      End -> NAVIGATE_LAST_SEGMENT;
+    }
+    focus {
+      trap: false;
+      initial: chart;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: ?ariaLabel;
+        aria-describedby: dataTableFallback;
+      };
+      chart -> {
+        role: "img";
+        aria-label: ?ariaLabel;
+        aria-hidden: "false";
+      };
+      legend -> {
+        role: "list";
+        aria-label: "Chart legend";
+      };
+      legendItem -> {
+        role: "listitem";
+      };
+      dataTableFallback -> {
+        role: "table";
+        aria-label: concat(?ariaLabel, " data");
+      };
+    }
+  }
+
+  props {
+    type: union "bar" | "line" | "pie" | "donut"
+    data: String
+    width: option String
+    height: option String
+    ariaLabel: String = "Chart"
+    showLegend: Bool = true
+    animate: Bool = true
+  }
+
+  connect {
+    root -> {
+      role: "figure";
+      aria-label: ?ariaLabel;
+      aria-describedby: dataTableFallback;
+      data-type: ?type;
+      data-state: if state == "loading" then "loading" else if state == "highlighted" then "highlighted" else "rendered";
+      data-animate: if ?animate then "true" else "false";
+    }
+
+    chart -> {
+      role: "img";
+      aria-label: ?ariaLabel;
+      data-part: "chart";
+      data-type: ?type;
+      style-width: ?width;
+      style-height: ?height;
+      aria-busy: if state == "loading" then "true" else "false";
+      tabindex: "0";
+      onFocus: send(FOCUS_SEGMENT);
+      onBlur: send(BLUR_SEGMENT);
+      onKeyDown-ArrowLeft: send(NAVIGATE_SEGMENT_PREV);
+      onKeyDown-ArrowRight: send(NAVIGATE_SEGMENT_NEXT);
+      onKeyDown-ArrowUp: send(NAVIGATE_SERIES_PREV);
+      onKeyDown-ArrowDown: send(NAVIGATE_SERIES_NEXT);
+      onKeyDown-Enter: send(ACTIVATE_SEGMENT);
+      onKeyDown-Escape: send(DESELECT_SEGMENT);
+      onKeyDown-Home: send(NAVIGATE_FIRST_SEGMENT);
+      onKeyDown-End: send(NAVIGATE_LAST_SEGMENT);
+    }
+
+    legend -> {
+      role: "list";
+      aria-label: "Chart legend";
+      data-part: "legend";
+      data-visible: if ?showLegend then "true" else "false";
+    }
+
+    legendItem -> {
+      role: "listitem";
+      data-part: "legend-item";
+      data-series: self.seriesName;
+      onMouseEnter: send(HOVER_SEGMENT);
+      onMouseLeave: send(UNHOVER_SEGMENT);
+    }
+
+    tooltip -> {
+      data-part: "tooltip";
+      data-visible: if state == "highlighted" then "true" else "false";
+    }
+
+    dataTableFallback -> {
+      role: "table";
+      aria-label: concat(?ariaLabel, " data");
+      data-part: "data-table-fallback";
+      data-sr-only: "true";
+    }
+  }
+
+  compose {
+    tooltip: widget("tooltip", { trigger: chart });
+  }
+
+  invariant {
+    "dataTableFallback must always be present in the DOM for screen readers";
+    "Chart must not convey information through colour alone; use patterns or labels";
+    "aria-busy must be true during loading state";
+    "Keyboard navigation must cycle through all data segments";
+    "Legend visibility must be controllable via showLegend prop";
+  }
+
+}

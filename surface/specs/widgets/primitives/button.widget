@@ -1,0 +1,173 @@
+@version(1)
+widget button {
+
+  purpose {
+    Generic action trigger that responds to user interaction.
+    Supports multiple visual variants, sizes, and loading/disabled
+    states. Serves as the primary call-to-action primitive across
+    all Surface adapters.
+  }
+
+  anatomy {
+    root: action           { Top-level clickable element wrapping all children }
+    label: text            { Visible text content describing the action }
+    icon: container        { Optional leading or trailing icon slot }
+    spinner: container     { Optional loading indicator replacing or overlaying content }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on FOCUS -> focused;
+      entry [set aria-pressed false];
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on PRESS -> pressed;
+      on FOCUS -> focused;
+    }
+
+    focused {
+      on BLUR -> idle;
+      on PRESS -> pressed;
+      on HOVER -> focused;
+    }
+
+    pressed {
+      on RELEASE -> idle;
+      on ACTIVATE -> idle;
+      entry [send ACTIVATE];
+    }
+
+    disabled [parallel] {
+      on ENABLE -> enabled;
+      entry [set aria-disabled true; remove tabindex];
+      exit [set aria-disabled false; restore tabindex];
+    }
+
+    enabled [parallel] {
+      on DISABLE -> disabled;
+    }
+
+    loading [parallel] {
+      on LOAD_COMPLETE -> ready;
+      entry [show spinner; set aria-busy true; set aria-disabled true];
+      exit [hide spinner; set aria-busy false; set aria-disabled false];
+    }
+
+    ready [parallel] {
+      on LOAD_START -> loading;
+    }
+  }
+
+  accessibility {
+    role: button;
+    modal: false;
+    keyboard {
+      Enter -> ACTIVATE;
+      Space -> ACTIVATE;
+      Tab -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      returnOnClose: false;
+    }
+    aria {
+      labelledby: label;
+      describedby: none;
+    }
+  }
+
+  props {
+    variant: union "filled" | "outline" | "text" | "danger" = "filled"
+    size: union "sm" | "md" | "lg" = "md"
+    disabled: Bool = false
+    loading: Bool = false
+    type: union "button" | "submit" | "reset" = "button"
+    iconPosition: union "start" | "end" = "start"
+  }
+
+  connect {
+    root -> {
+      role: "button";
+      type: ?type;
+      disabled: ?disabled;
+      aria-disabled: if ?disabled then "true" else "false";
+      aria-busy: if ?loading then "true" else "false";
+      data-variant: ?variant;
+      data-size: ?size;
+      data-state: if ?loading then "loading" else if ?disabled then "disabled" else "idle";
+      onClick: send(ACTIVATE);
+      onKeyDown: send(ACTIVATE);
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(UNHOVER);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onPointerDown: send(PRESS);
+      onPointerUp: send(RELEASE);
+      tabindex: if ?disabled then "-1" else "0";
+    }
+
+    label -> {
+      data-part: "label";
+      data-size: ?size;
+    }
+
+    icon -> {
+      data-part: "icon";
+      data-position: ?iconPosition;
+      aria-hidden: "true";
+    }
+
+    spinner -> {
+      data-part: "spinner";
+      aria-hidden: if ?loading then "false" else "true";
+      data-visible: if ?loading then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: action-primary;
+    specificity: 10;
+    when { interactive: true; variant: "filled" }
+  }
+
+  affordance {
+    serves: action-secondary;
+    specificity: 10;
+    when { interactive: true; variant: "outline" }
+  }
+
+  affordance {
+    serves: action-tertiary;
+    specificity: 10;
+    when { interactive: true; variant: "text" }
+  }
+
+  affordance {
+    serves: action-danger;
+    specificity: 10;
+    when { interactive: true; variant: "danger" }
+  }
+
+  invariant {
+    after send(ACTIVATE) -> state is idle;
+    then aria-pressed is "false";
+    and tabindex is "0" unless disabled;
+  }
+
+  invariant {
+    after send(DISABLE) -> state is disabled;
+    then aria-disabled is "true";
+    and tabindex is "-1";
+  }
+
+  invariant {
+    after send(LOAD_START) -> state is loading;
+    then aria-busy is "true";
+    and spinner data-visible is "true";
+  }
+
+}
