@@ -18,21 +18,38 @@ contract Comment {
 
     // --- Types ---
 
-    struct CreateInput {
+    struct AddCommentInput {
         bytes32 comment;
-        string body;
-        string target;
+        string entity;
+        string content;
         string author;
     }
 
-    struct CreateOkResult {
+    struct AddCommentOkResult {
         bool success;
         bytes32 comment;
     }
 
-    struct DeleteOkResult {
+    struct ReplyInput {
+        bytes32 comment;
+        bytes32 parent;
+        string content;
+        string author;
+    }
+
+    struct ReplyOkResult {
         bool success;
         bytes32 comment;
+    }
+
+    struct PublishNotfoundResult {
+        bool success;
+        string message;
+    }
+
+    struct UnpublishNotfoundResult {
+        bool success;
+        string message;
     }
 
     struct DeleteNotfoundResult {
@@ -40,41 +57,50 @@ contract Comment {
         string message;
     }
 
-    struct ListOkResult {
-        bool success;
-        string comments;
-    }
-
     // --- Events ---
 
-    event CreateCompleted(string variant, bytes32 comment);
-    event DeleteCompleted(string variant, bytes32 comment);
-    event ListCompleted(string variant);
+    event AddCommentCompleted(string variant, bytes32 comment);
+    event ReplyCompleted(string variant, bytes32 comment);
+    event PublishCompleted(string variant);
+    event UnpublishCompleted(string variant);
+    event DeleteCompleted(string variant);
 
     // --- Actions ---
 
-    /// @notice create
-    function create(bytes32 comment, string memory body, string memory target, string memory author) external returns (CreateOkResult memory) {
+    /// @notice addComment
+    function addComment(bytes32 comment, string memory entity, string memory content, string memory author) external returns (AddCommentOkResult memory) {
         // Invariant checks
-        // invariant 1: after create, delete behaves correctly
+        // invariant 1: after addComment, reply behaves correctly
 
-        // TODO: Implement create
+        // TODO: Implement addComment
+        revert("Not implemented");
+    }
+
+    /// @notice reply
+    function reply(bytes32 comment, bytes32 parent, string memory content, string memory author) external returns (ReplyOkResult memory) {
+        // Invariant checks
+        // invariant 1: after addComment, reply behaves correctly
+        // require(..., "invariant 1: after addComment, reply behaves correctly");
+
+        // TODO: Implement reply
+        revert("Not implemented");
+    }
+
+    /// @notice publish
+    function publish(bytes32 comment) external returns (bool) {
+        // TODO: Implement publish
+        revert("Not implemented");
+    }
+
+    /// @notice unpublish
+    function unpublish(bytes32 comment) external returns (bool) {
+        // TODO: Implement unpublish
         revert("Not implemented");
     }
 
     /// @notice delete
-    function delete(bytes32 comment) external returns (DeleteOkResult memory) {
-        // Invariant checks
-        // invariant 1: after create, delete behaves correctly
-        // require(..., "invariant 1: after create, delete behaves correctly");
-
+    function delete(bytes32 comment) external returns (bool) {
         // TODO: Implement delete
-        revert("Not implemented");
-    }
-
-    /// @notice list
-    function list(string memory target) external returns (ListOkResult memory) {
-        // TODO: Implement list
         revert("Not implemented");
     }
 

@@ -88,7 +88,7 @@ contract FieldMapping {
     /// @param mappingId The mapping to apply
     /// @param record The serialised record to transform
     /// @return mapped Placeholder return of the input record
-    function apply(bytes32 mappingId, string calldata record) external returns (string memory mapped) {
+    function applyMapping(bytes32 mappingId, string calldata record) external returns (string memory mapped) {
         require(_mappings[mappingId].exists, "Mapping not found");
         require(_mappings[mappingId].ruleCount > 0, "Mapping has no rules");
 

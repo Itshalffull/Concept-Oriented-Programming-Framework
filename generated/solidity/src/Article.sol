@@ -73,12 +73,18 @@ contract Article {
         string message;
     }
 
+    struct ListOkResult {
+        bool success;
+        string articles;
+    }
+
     // --- Events ---
 
     event CreateCompleted(string variant, bytes32 article);
     event UpdateCompleted(string variant, bytes32 article);
     event DeleteCompleted(string variant, bytes32 article);
     event GetCompleted(string variant, bytes32 article);
+    event ListCompleted(string variant);
 
     // --- Actions ---
 
@@ -115,6 +121,12 @@ contract Article {
         // require(..., "invariant 1: after create, get behaves correctly");
 
         // TODO: Implement get
+        revert("Not implemented");
+    }
+
+    /// @notice list
+    function list() external returns (ListOkResult memory) {
+        // TODO: Implement list
         revert("Not implemented");
     }
 

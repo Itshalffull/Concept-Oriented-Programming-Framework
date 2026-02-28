@@ -75,7 +75,7 @@ contract Connector {
 
     /// @notice Test connectivity of a connector
     /// @param connectorId The connector to test
-    function test(bytes32 connectorId) external {
+    function runTests(bytes32 connectorId) external {
         require(_connectors[connectorId].exists, "Connector not found");
 
         _connectors[connectorId].status = "tested";
