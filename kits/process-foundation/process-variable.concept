@@ -1,0 +1,79 @@
+@version(1)
+concept ProcessVariable [V] {
+
+  purpose {
+    Store typed, scoped data within process runs that steps can read and write.
+    Supports explicit merge strategies for parallel branch convergence.
+  }
+
+  state {
+    variables: set V
+    run_ref: V -> String
+    name: V -> String
+    value: V -> Bytes
+    value_type: V -> String               // string | int | float | bool | json | bytes
+    scope: V -> String                    // step | run | global
+    merge_strategy: V -> option String    // replace | append | sum | max | min | custom
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action set(run_ref: String, name: String, value: Bytes, value_type: String, scope: String) {
+      -> ok(var: V) {
+        Creates or overwrites a variable. If merge_strategy is set and a value
+        already exists, applies the strategy instead of overwriting.
+      }
+    }
+
+    action get(run_ref: String, name: String) {
+      -> ok(var: V, value: Bytes, value_type: String) {
+        Returns the current value.
+      }
+      -> not_found(run_ref: String, name: String) {
+        No variable with this name exists in this run scope.
+      }
+    }
+
+    action merge(run_ref: String, name: String, update: Bytes, strategy: String) {
+      -> ok(var: V, merged_value: Bytes) {
+        Merges an update into an existing variable using the specified strategy.
+        For append: adds to list. For sum: adds numerically. For replace: overwrites.
+      }
+      -> not_found(run_ref: String, name: String) {
+        No variable with this name exists.
+      }
+      -> merge_error(message: String) {
+        Merge strategy failed (e.g., sum on non-numeric data).
+      }
+    }
+
+    action delete(run_ref: String, name: String) {
+      -> ok(run_ref: String, name: String) {
+        Removes the variable.
+      }
+      -> not_found(run_ref: String, name: String) {
+        No variable with this name exists.
+      }
+    }
+
+    action list(run_ref: String) {
+      -> ok(variables: Bytes) {
+        Returns all variables for a run.
+      }
+    }
+
+    action snapshot(run_ref: String) {
+      -> ok(snapshot: Bytes) {
+        Returns a serialized snapshot of all variables for checkpoint/restore.
+      }
+    }
+  }
+
+  invariant {
+    after set(run_ref: "r1", name: "total", value: v, value_type: "int", scope: "run") -> ok(var: x)
+    then get(run_ref: "r1", name: "total") -> ok(var: x, value: v, value_type: "int")
+  }
+}

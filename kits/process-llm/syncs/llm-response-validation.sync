@@ -1,0 +1,15 @@
+# Trigger validation after LLM response is recorded.
+# Only validates if an output schema is specified.
+
+sync LLMResponseValidation [eager]
+when {
+  LLMCall/record_response: [ call: ?m ]
+    => [ variant: "ok" ]
+}
+where {
+  LLMCall: { ?m output_schema: ?schema }
+  filter(?schema != null)
+}
+then {
+  LLMCall/validate: [ call: ?m ]
+}

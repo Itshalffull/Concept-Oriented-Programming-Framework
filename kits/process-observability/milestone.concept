@@ -1,0 +1,48 @@
+@version(1)
+concept Milestone [I] {
+
+  purpose {
+    Track achievement of significant process goals declaratively,
+    without prescribing which specific steps cause achievement.
+  }
+
+  state {
+    milestones: set I
+    run_ref: I -> String
+    name: I -> String
+    status: I -> String                   // pending | achieved | revoked
+    condition_expr: I -> String           // expression evaluated against process variables
+    achieved_at: I -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(run_ref: String, name: String, condition_expr: String) {
+      -> ok(milestone: I) {
+        Creates a milestone definition for a run in pending status.
+      }
+    }
+
+    action evaluate(milestone: I, context: Bytes) {
+      -> achieved(milestone: I, name: String, run_ref: String) {
+        Condition evaluates to true. Transitions to achieved.
+      }
+      -> not_yet(milestone: I) {
+        Condition evaluates to false. Remains pending.
+      }
+      -> already_achieved(milestone: I) {
+        Milestone was already achieved.
+      }
+    }
+
+    action revoke(milestone: I) {
+      -> ok(milestone: I) {
+        Reverts milestone from achieved to pending. For conditions that
+        can become untrue (e.g., inventory drops below threshold).
+      }
+    }
+  }
+}

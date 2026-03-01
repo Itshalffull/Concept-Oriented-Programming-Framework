@@ -1,0 +1,96 @@
+@version(1)
+concept ProcessSpec [P] {
+
+  purpose {
+    Store versioned, publishable process template definitions
+    consisting of step definitions and routing edges.
+  }
+
+  state {
+    specs: set P
+    name: P -> String
+    version: P -> Int
+    status: P -> String                    // draft | active | deprecated
+    description: P -> option String
+    steps: P -> list {
+      key: String,
+      step_type: String,                   // human | automation | llm | approval | manual | subprocess | webhook_wait
+      config: Bytes                        // step-type-specific configuration, opaque to this concept
+    }
+    edges: P -> list {
+      from_step: String,
+      to_step: String,
+      on_variant: String,                  // variant tag that triggers this edge (ok, error, etc.)
+      condition_expr: option String,       // expression evaluated against ProcessVariables for data-based routing
+      priority: option Int                 // when multiple edges match, highest priority wins (default 0)
+    }
+    metadata: P -> option Bytes            // arbitrary extension metadata (milestones, retry configs, etc.)
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, steps: Bytes, edges: Bytes) {
+      -> ok(spec: P) {
+        Creates a new process spec in draft status with version 1.
+        Validates that steps have unique keys, edges reference valid step keys,
+        and at least one step exists.
+      }
+      -> invalid(message: String) {
+        Steps or edges contain structural errors.
+      }
+    }
+
+    action publish(spec: P) {
+      -> ok(spec: P, version: Int) {
+        Transitions spec from draft to active. Increments version if
+        spec was previously deprecated and re-published.
+      }
+      -> not_found(spec: P) {
+        No spec with this identifier exists.
+      }
+      -> already_active(spec: P) {
+        Spec is already in active status.
+      }
+    }
+
+    action deprecate(spec: P) {
+      -> ok(spec: P) {
+        Transitions spec from active to deprecated. Running instances
+        continue but no new instances may be created.
+      }
+      -> not_found(spec: P) {
+        No spec with this identifier exists.
+      }
+    }
+
+    action update(spec: P, steps: Bytes, edges: Bytes) {
+      -> ok(spec: P, version: Int) {
+        Updates the step and edge definitions. Only allowed when status is draft.
+        Increments version.
+      }
+      -> not_draft(spec: P) {
+        Spec is not in draft status. Deprecate first, then update.
+      }
+      -> invalid(message: String) {
+        New steps or edges contain structural errors.
+      }
+    }
+
+    action get(spec: P) {
+      -> ok(spec: P, name: String, version: Int, status: String, steps: Bytes, edges: Bytes) {
+        Returns the full spec definition.
+      }
+      -> not_found(spec: P) {
+        No spec with this identifier exists.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "onboard", steps: s, edges: e) -> ok(spec: x)
+    then get(spec: x) -> ok(spec: x, name: "onboard", version: 1, status: "draft", steps: s, edges: e)
+  }
+}

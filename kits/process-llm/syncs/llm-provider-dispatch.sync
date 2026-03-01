@@ -1,0 +1,14 @@
+# Route LLMCall to correct provider based on model identifier.
+# Uses PluginRegistry for dynamic provider resolution.
+
+sync LLMProviderDispatch [eager]
+when {
+  LLMCall/request: [ call: ?m; model: ?model ]
+    => [ variant: "ok" ]
+}
+where {
+  PluginRegistry: { provider_for: ?model as ?provider }
+}
+then {
+  ?provider/execute: [ call: ?m; model: ?model ]
+}

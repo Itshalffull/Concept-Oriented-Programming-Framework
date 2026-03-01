@@ -1,0 +1,14 @@
+# Re-start step when retry timer fires.
+# Completes the retry loop by re-executing the failed step.
+
+sync RetryTimerFired [eager]
+when {
+  Timer/fire: [ timer: ?t; run_ref: ?r; purpose_tag: "retry"; context_ref: ?s ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?s step_type: ?stype }
+}
+then {
+  StepRun/start: [ run_ref: ?r; step_key: ?s; step_type: ?stype; input: "" ]
+}

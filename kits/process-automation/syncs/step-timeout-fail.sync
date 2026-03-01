@@ -1,0 +1,17 @@
+# When step timeout fires and action is "fail", fail the step.
+# Hard failure on timeout for steps that must complete within a time limit.
+
+sync StepTimeoutFail [eager]
+when {
+  Timer/fire: [ timer: ?t; run_ref: ?r; purpose_tag: "step_timeout"; context_ref: ?s ]
+    => [ variant: "ok" ]
+}
+where {
+  StepRun: { ?s status: "active" }
+  ProcessSpec: { ?r step_config: ?s config: ?cfg }
+  bind(extractField(?cfg, "timeout_action") as ?action)
+  filter(?action == "fail")
+}
+then {
+  StepRun/fail: [ step: ?s; error: "Step timed out" ]
+}

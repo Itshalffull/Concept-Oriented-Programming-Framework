@@ -1,0 +1,49 @@
+kit:
+  name: process-foundation
+  version: 0.1.0
+  description: "Process execution kernel: specs, runs, steps, flow tokens, variables, event log"
+
+concepts:
+  ProcessSpec:
+    spec: ./process-spec.concept
+    params: { P: { as: process-spec-id } }
+  ProcessRun:
+    spec: ./process-run.concept
+    params: { R: { as: process-run-id } }
+  StepRun:
+    spec: ./step-run.concept
+    params: { S: { as: step-run-id } }
+  FlowToken:
+    spec: ./flow-token.concept
+    params: { K: { as: flow-token-id } }
+  ProcessVariable:
+    spec: ./process-variable.concept
+    params: { V: { as: variable-id } }
+  ProcessEvent:
+    spec: ./process-event.concept
+    params: { E: { as: event-id } }
+
+syncs:
+  required:
+    - ./syncs/run-started-event.sync
+    - ./syncs/data-route.sync
+    - ./syncs/token-activates-step.sync
+    - ./syncs/parallel-fork.sync
+    - ./syncs/parallel-join.sync
+    - ./syncs/step-completed-event.sync
+    - ./syncs/run-completion.sync
+    - ./syncs/subprocess-step-dispatch.sync
+    - ./syncs/child-run-completes.sync
+    - ./syncs/child-run-fails.sync
+  recommended:
+    - ./syncs/auto-checkpoint.sync
+    - ./syncs/output-to-variable.sync
+    - ./syncs/milestone-check.sync
+
+uses:
+  - kit: process-reliability
+    optional: true
+    concepts: [Checkpoint]
+  - kit: process-observability
+    optional: true
+    concepts: [Milestone]

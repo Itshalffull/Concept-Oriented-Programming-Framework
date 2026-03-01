@@ -1,0 +1,57 @@
+@version(1)
+concept RetryPolicy [Y] {
+
+  purpose {
+    Define retry/backoff rules for failed steps and track attempt state.
+  }
+
+  state {
+    policies: set Y
+    step_ref: Y -> String
+    run_ref: Y -> String
+    config {
+      max_attempts: Y -> Int
+      initial_interval_ms: Y -> Int
+      backoff_coefficient: Y -> Float
+      max_interval_ms: Y -> Int
+      non_retryable_errors: Y -> list String
+    }
+    attempt_count: Y -> Int
+    last_error: Y -> option String
+    next_retry_at: Y -> option DateTime
+    status: Y -> String                   // active | exhausted | succeeded
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(step_ref: String, run_ref: String, max_attempts: Int, initial_interval_ms: Int, backoff_coefficient: Float, max_interval_ms: Int) {
+      -> ok(policy: Y) {
+        Creates a retry policy for a step.
+      }
+    }
+
+    action should_retry(policy: Y, error: String) {
+      -> retry(policy: Y, delay_ms: Int, attempt: Int) {
+        Error is retryable and attempts remain. Returns the backoff delay.
+      }
+      -> exhausted(policy: Y, step_ref: String, run_ref: String, last_error: String) {
+        Max attempts reached or error is non-retryable. Transitions to exhausted.
+      }
+    }
+
+    action record_attempt(policy: Y, error: String) {
+      -> ok(policy: Y, attempt_count: Int) {
+        Increments attempt counter. Records error.
+      }
+    }
+
+    action mark_succeeded(policy: Y) {
+      -> ok(policy: Y) {
+        Step eventually succeeded. Transitions to succeeded.
+      }
+    }
+  }
+}

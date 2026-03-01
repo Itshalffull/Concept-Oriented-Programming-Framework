@@ -1,0 +1,14 @@
+# Dispatch llm-type steps to LLMCall.
+# Extracts model, prompt, and schema from step configuration.
+
+sync LLMStepDispatch [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk; step_type: "llm" ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+}
+then {
+  LLMCall/request: [ step_ref: ?s; model: ?cfg; prompt: ?cfg; output_schema: ?cfg; max_attempts: 3 ]
+}

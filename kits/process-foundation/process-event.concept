@@ -1,0 +1,58 @@
+@version(1)
+concept ProcessEvent [E] {
+
+  purpose {
+    Append-only event stream recording everything that happens in a process run.
+    Serves as the source of truth for audit trails, process mining, replay, and observability.
+  }
+
+  state {
+    events: set E
+    run_ref: E -> String
+    event_type: E -> String               // run.started | step.started | step.completed | step.failed | ...
+    step_ref: E -> option String
+    actor_ref: E -> option String          // who/what caused this event (user id, system id, model id)
+    payload: E -> Bytes
+    timestamp: E -> DateTime
+    sequence_num: E -> Int                 // monotonic per run for ordering
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action append(run_ref: String, event_type: String, payload: Bytes) {
+      -> ok(event: E, sequence_num: Int) {
+        Appends an event. Automatically sets timestamp and assigns next
+        sequence number for this run. step_ref and actor_ref are
+        optional fields set from payload metadata.
+      }
+    }
+
+    action query(run_ref: String, after_seq: Int, limit: Int) {
+      -> ok(events: Bytes, count: Int) {
+        Returns events for a run after the given sequence number, up to limit.
+        Ordered by sequence_num ascending.
+      }
+    }
+
+    action query_by_type(run_ref: String, event_type: String, limit: Int) {
+      -> ok(events: Bytes, count: Int) {
+        Returns events of a specific type for a run.
+      }
+    }
+
+    action get_cursor(run_ref: String) {
+      -> ok(last_seq: Int) {
+        Returns the latest sequence number for a run. Used by checkpoint.
+      }
+    }
+  }
+
+  invariant {
+    after append(run_ref: "r1", event_type: "step.completed", payload: p) -> ok(event: e1, sequence_num: 1)
+    then append(run_ref: "r1", event_type: "step.started", payload: p2) -> ok(event: e2, sequence_num: 2)
+    and  query(run_ref: "r1", after_seq: 0, limit: 10) -> ok(events: _, count: 2)
+  }
+}

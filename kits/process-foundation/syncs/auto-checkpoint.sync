@@ -1,0 +1,17 @@
+# Checkpoint after every step completion (recommended).
+# Captures complete process state for recovery and time-travel debugging.
+
+sync AutoCheckpoint [eventual]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessRun: { ?r status: "running" }
+  ProcessVariable/snapshot: [ run_ref: ?r ] => [ variant: "ok"; snapshot: ?vars ]
+  FlowToken/list_active: [ run_ref: ?r ] => [ variant: "ok"; tokens: ?toks ]
+  ProcessEvent/get_cursor: [ run_ref: ?r ] => [ variant: "ok"; last_seq: ?seq ]
+}
+then {
+  Checkpoint/capture: [ run_ref: ?r; run_state: ?r; variables_snapshot: ?vars; token_snapshot: ?toks; event_cursor: ?seq ]
+}

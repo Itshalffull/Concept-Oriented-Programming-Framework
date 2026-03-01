@@ -1,0 +1,35 @@
+kit:
+  name: process-reliability
+  version: 0.1.0
+  description: "Fault tolerance: retry policies, saga compensation, state checkpointing"
+
+concepts:
+  RetryPolicy:
+    spec: ./retry-policy.concept
+    params: { Y: { as: retry-policy-id } }
+  CompensationPlan:
+    spec: ./compensation-plan.concept
+    params: { X: { as: compensation-plan-id } }
+  Checkpoint:
+    spec: ./checkpoint.concept
+    params: { Z: { as: checkpoint-id } }
+
+syncs:
+  required:
+    - ./syncs/retry-on-failure.sync
+    - ./syncs/retry-schedule.sync
+    - ./syncs/retry-timer-fired.sync
+    - ./syncs/compensation-registration.sync
+    - ./syncs/compensation-on-run-failure.sync
+  integration:
+    - ./syncs/checkpoint-provider-dispatch.sync
+
+uses:
+  - kit: process-foundation
+    concepts: [StepRun, ProcessRun, ProcessSpec, ProcessVariable, FlowToken, ProcessEvent]
+  - kit: process-automation
+    optional: true
+    concepts: [Timer]
+  - kit: infrastructure
+    optional: true
+    concepts: [PluginRegistry]

@@ -1,0 +1,108 @@
+@version(1)
+@gate
+concept ProcessRun [R] {
+
+  purpose {
+    Track the lifecycle of a running process instance from start to completion,
+    failure, or cancellation, including parent-child relationships for subprocess nesting.
+  }
+
+  state {
+    runs: set R
+    spec_ref: R -> String
+    spec_version: R -> Int
+    status: R -> String                   // pending | running | suspended | completed | failed | cancelled
+    parent_run: R -> option String
+    started_at: R -> option DateTime
+    ended_at: R -> option DateTime
+    input: R -> option Bytes
+    output: R -> option Bytes
+    error: R -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action start(spec_ref: String, spec_version: Int, input: Bytes) {
+      -> ok(run: R, spec_ref: String) {
+        Creates a new run in running status. Generates a unique run identifier.
+        Records start timestamp. If parent_run is needed, the sync provides it.
+      }
+      -> invalid_spec(spec_ref: String) {
+        Referenced spec does not exist or is not active.
+      }
+    }
+
+    action start_child(spec_ref: String, spec_version: Int, parent_run: String, input: Bytes) {
+      -> ok(run: R, parent_run: String) {
+        Creates a child run linked to a parent. Same as start but with parent_run populated.
+      }
+      -> invalid_spec(spec_ref: String) {
+        Referenced spec does not exist or is not active.
+      }
+    }
+
+    action complete(run: R, output: Bytes) {
+      -> ok(run: R) {
+        Transitions run from running to completed. Records end timestamp and output.
+      }
+      -> not_running(run: R) {
+        Run is not in running status.
+      }
+    }
+
+    action fail(run: R, error: String) {
+      -> ok(run: R, error: String) {
+        Transitions run from running to failed. Records end timestamp and error.
+      }
+      -> not_running(run: R) {
+        Run is not in running status.
+      }
+    }
+
+    action cancel(run: R) {
+      -> ok(run: R) {
+        Transitions run from running or suspended to cancelled. Records end timestamp.
+      }
+      -> not_cancellable(run: R) {
+        Run is already in a terminal status.
+      }
+    }
+
+    action suspend(run: R) {
+      -> ok(run: R) {
+        Transitions run from running to suspended.
+      }
+      -> not_running(run: R) {
+        Run is not in running status.
+      }
+    }
+
+    action resume(run: R) {
+      -> ok(run: R) {
+        Transitions run from suspended to running.
+      }
+      -> not_suspended(run: R) {
+        Run is not in suspended status.
+      }
+    }
+
+    action get_status(run: R) {
+      -> ok(run: R, status: String, spec_ref: String) {
+        Returns current run status and spec reference.
+      }
+      -> not_found(run: R) {
+        No run with this identifier exists.
+      }
+    }
+  }
+
+  invariant {
+    after start(spec_ref: "onboard", spec_version: 1, input: d) -> ok(run: r, spec_ref: "onboard")
+    then get_status(run: r) -> ok(run: r, status: "running", spec_ref: "onboard")
+    and  complete(run: r, output: o) -> ok(run: r)
+    and  get_status(run: r) -> ok(run: r, status: "completed", spec_ref: "onboard")
+  }
+}

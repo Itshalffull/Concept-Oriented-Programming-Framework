@@ -1,0 +1,14 @@
+# Cancel all active work when run is cancelled.
+# Propagates cancellation to all active steps in the run.
+
+sync CancelRunPropagation [eager]
+when {
+  ProcessRun/cancel: [ run: ?r ]
+    => [ variant: "ok" ]
+}
+where {
+  StepRun: { ?r status: "active" steps: ?activeSteps }
+}
+then {
+  StepRun/cancel: [ step: ?activeSteps ]
+}

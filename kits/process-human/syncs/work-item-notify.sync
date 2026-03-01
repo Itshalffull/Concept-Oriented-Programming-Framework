@@ -1,0 +1,11 @@
+# Notify candidates when work item created (recommended).
+# Sends notification to all members of the candidate pool.
+
+sync WorkItemNotify [eventual]
+when {
+  WorkItem/create: [ item: ?w; candidate_pool: ?pool ]
+    => [ variant: "ok" ]
+}
+then {
+  Notification/send: [ recipients: ?pool; channel: "default"; message: "New task available" ]
+}

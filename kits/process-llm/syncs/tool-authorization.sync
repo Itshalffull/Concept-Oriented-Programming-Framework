@@ -1,0 +1,16 @@
+# Authorize tools before LLM call execution.
+# Checks tool access for the requesting model and process.
+
+sync ToolAuthorization [eager]
+when {
+  LLMCall/request: [ call: ?m; step_ref: ?s ]
+    => [ variant: "ok" ]
+}
+where {
+  LLMCall: { ?m tools: ?toolList }
+  filter(length(?toolList) > 0)
+  ProcessRun: { ?s spec_ref: ?spec }
+}
+then {
+  ToolRegistry/check_access: [ tool: ?toolList; model: ?m; process_ref: ?spec ]
+}

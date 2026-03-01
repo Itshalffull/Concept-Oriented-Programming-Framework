@@ -1,0 +1,55 @@
+@version(1)
+concept Checkpoint [Z] {
+
+  purpose {
+    Capture and restore complete process state snapshots for recovery,
+    time-travel debugging, and audit. Storage is delegated to providers.
+  }
+
+  state {
+    checkpoints: set Z
+    run_ref: Z -> String
+    timestamp: Z -> DateTime
+    run_state: Z -> Bytes                 // serialized ProcessRun state
+    variables_snapshot: Z -> Bytes        // serialized ProcessVariable state
+    token_snapshot: Z -> Bytes            // serialized FlowToken state
+    event_cursor: Z -> Int                // ProcessEvent sequence_num at time of capture
+    label: Z -> option String             // human-readable label (e.g., "before_payment")
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action capture(run_ref: String, run_state: Bytes, variables_snapshot: Bytes, token_snapshot: Bytes, event_cursor: Int) {
+      -> ok(checkpoint: Z, timestamp: DateTime) {
+        Creates a snapshot. Delegates actual storage to provider.
+      }
+    }
+
+    action restore(checkpoint: Z) {
+      -> ok(checkpoint: Z, run_state: Bytes, variables_snapshot: Bytes, token_snapshot: Bytes, event_cursor: Int) {
+        Retrieves a checkpoint's full state for replay/recovery.
+      }
+      -> not_found(checkpoint: Z) {
+        No checkpoint with this identifier exists.
+      }
+    }
+
+    action find_latest(run_ref: String) {
+      -> ok(checkpoint: Z) {
+        Returns the most recent checkpoint for a run.
+      }
+      -> none(run_ref: String) {
+        No checkpoints exist for this run.
+      }
+    }
+
+    action prune(run_ref: String, keep_count: Int) {
+      -> ok(pruned: Int) {
+        Removes old checkpoints, keeping only the most recent keep_count.
+      }
+    }
+  }
+}

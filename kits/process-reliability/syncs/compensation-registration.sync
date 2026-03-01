@@ -1,0 +1,15 @@
+# Register compensating action when a step completes.
+# Only for steps that have a compensation descriptor in their config.
+
+sync CompensationRegistration [eager]
+when {
+  StepRun/complete: [ step: ?s; run_ref: ?r; step_key: ?sk ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk compensation: ?comp }
+  filter(?comp != null)
+}
+then {
+  CompensationPlan/register: [ run_ref: ?r; step_key: ?sk; action_descriptor: ?comp ]
+}

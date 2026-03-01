@@ -1,0 +1,61 @@
+@version(1)
+@gate
+concept WebhookInbox [H] {
+
+  purpose {
+    Receive and correlate inbound events from external systems to waiting
+    process instances using correlation keys.
+  }
+
+  state {
+    hooks: set H
+    run_ref: H -> String
+    step_ref: H -> String
+    event_type: H -> String
+    correlation_key: H -> String
+    status: H -> String                   // waiting | received | expired | acknowledged
+    payload: H -> option Bytes
+    registered_at: H -> DateTime
+    received_at: H -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(run_ref: String, step_ref: String, event_type: String, correlation_key: String) {
+      -> ok(hook: H, run_ref: String) {
+        Registers a webhook listener. Waits until receive or expire is called.
+      }
+    }
+
+    action receive(correlation_key: String, event_type: String, payload: Bytes) {
+      -> ok(hook: H, run_ref: String, step_ref: String, payload: Bytes) {
+        Matches an inbound event to a waiting hook by correlation key + event type.
+        Transitions to received.
+      }
+      -> no_match(correlation_key: String) {
+        No waiting hook matches this correlation key and event type.
+      }
+    }
+
+    action expire(hook: H) {
+      -> ok(hook: H, run_ref: String, step_ref: String) {
+        Hook timed out. Transitions to expired.
+      }
+      -> not_waiting(hook: H) {
+        Hook is not in waiting status.
+      }
+    }
+
+    action ack(hook: H) {
+      -> ok(hook: H) {
+        Acknowledge processing of received event. Transitions to acknowledged.
+      }
+      -> not_received(hook: H) {
+        Hook is not in received status.
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+@version(1)
+concept ToolRegistry [G] {
+
+  purpose {
+    Register, version, and authorize tool schemas for LLM function/tool calling.
+  }
+
+  state {
+    tools: set G
+    name: G -> String
+    version: G -> Int
+    description: G -> String
+    schema: G -> Bytes                    // JSON Schema defining tool parameters
+    status: G -> String                   // active | deprecated | disabled
+    allowed_models: G -> list String      // which models may call this tool ("*" = all)
+    allowed_processes: G -> list String   // which process specs may use this tool ("*" = all)
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, description: String, schema: Bytes) {
+      -> ok(tool: G, version: Int) {
+        Registers a new tool or increments version of existing tool.
+      }
+      -> invalid_schema(message: String) {
+        Schema is not valid JSON Schema.
+      }
+    }
+
+    action deprecate(tool: G) {
+      -> ok(tool: G) {
+        Transitions to deprecated. Existing calls continue but new calls are warned.
+      }
+    }
+
+    action disable(tool: G) {
+      -> ok(tool: G) {
+        Transitions to disabled. No new calls allowed.
+      }
+    }
+
+    action authorize(tool: G, model: String, process_ref: String) {
+      -> ok(tool: G) {
+        Grants a specific model/process pair access to this tool.
+      }
+    }
+
+    action check_access(tool: G, model: String, process_ref: String) {
+      -> allowed(tool: G, schema: Bytes) {
+        Access is permitted. Returns schema for inclusion in LLM request.
+      }
+      -> denied(tool: G, reason: String) {
+        Tool is disabled, deprecated, or the model/process is not authorized.
+      }
+    }
+
+    action list_active(process_ref: String) {
+      -> ok(tools: Bytes) {
+        Returns all active tools authorized for a process.
+      }
+    }
+  }
+}

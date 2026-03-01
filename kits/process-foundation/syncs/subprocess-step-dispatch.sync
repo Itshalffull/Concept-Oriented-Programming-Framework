@@ -1,0 +1,17 @@
+# Dispatch subprocess-type steps to child ProcessRun.
+# Extracts child spec reference from step configuration.
+
+sync SubprocessStepDispatch [eager]
+when {
+  StepRun/start: [ step: ?s; run_ref: ?r; step_key: ?sk; step_type: "subprocess" ]
+    => [ variant: "ok" ]
+}
+where {
+  ProcessSpec: { ?r step_config: ?sk config: ?cfg }
+  bind(extractField(?cfg, "child_spec_ref") as ?childSpec)
+  bind(extractField(?cfg, "child_spec_version") as ?childVer)
+  bind(extractField(?cfg, "child_input") as ?childInput)
+}
+then {
+  ProcessRun/start_child: [ spec_ref: ?childSpec; spec_version: ?childVer; parent_run: ?r; input: ?childInput ]
+}

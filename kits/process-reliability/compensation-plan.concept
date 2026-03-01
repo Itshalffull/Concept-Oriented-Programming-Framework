@@ -1,0 +1,62 @@
+@version(1)
+concept CompensationPlan [X] {
+
+  purpose {
+    Track compensating actions for saga-style rollback. As forward steps complete,
+    their undo actions are registered. On failure, compensations execute in reverse order.
+  }
+
+  state {
+    plans: set X
+    run_ref: X -> String
+    status: X -> String                   // dormant | triggered | executing | completed | failed
+    compensations: X -> list {
+      step_key: String,
+      action_descriptor: String,          // enough info to invoke the compensating action
+      registered_at: DateTime
+    }
+    current_index: X -> Int               // which compensation is currently executing (reverse order)
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(run_ref: String, step_key: String, action_descriptor: String) {
+      -> ok(plan: X) {
+        Appends a compensating action to the plan. Creates plan if none exists for this run.
+      }
+    }
+
+    action trigger(run_ref: String) {
+      -> ok(plan: X) {
+        Begins compensation. Transitions from dormant to triggered.
+        Sets current_index to the last registered compensation.
+      }
+      -> empty(run_ref: String) {
+        No compensations registered for this run.
+      }
+      -> already_triggered(run_ref: String) {
+        Compensation already in progress.
+      }
+    }
+
+    action execute_next(plan: X) {
+      -> ok(plan: X, step_key: String, action_descriptor: String) {
+        Returns the next compensation to execute (reverse order).
+        Decrements current_index.
+      }
+      -> all_done(plan: X) {
+        All compensations executed. Transitions to completed.
+      }
+    }
+
+    action mark_compensation_failed(plan: X, step_key: String, error: String) {
+      -> ok(plan: X) {
+        Records that a compensating action failed. Transitions plan to failed.
+        Human intervention likely required.
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+@version(1)
+@gate
+concept Timer [T] {
+
+  purpose {
+    Introduce time-based triggers into process execution: absolute dates,
+    relative durations, and recurring cycles.
+  }
+
+  state {
+    timers: set T
+    run_ref: T -> String
+    purpose_tag: T -> String              // e.g., "retry", "escalation", "sla", "schedule"
+    timer_type: T -> String               // date | duration | cycle
+    specification: T -> String            // ISO 8601 duration/date/recurrence
+    status: T -> String                   // set | active | fired | cancelled
+    fire_count: T -> Int
+    next_fire_at: T -> option DateTime
+    context_ref: T -> option String       // opaque reference to what this timer is for
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action set_timer(run_ref: String, timer_type: String, specification: String, purpose_tag: String, context_ref: String) {
+      -> ok(timer: T, run_ref: String, next_fire_at: DateTime) {
+        Creates a timer. Computes next fire time from specification.
+      }
+      -> invalid_spec(specification: String) {
+        Specification is not a valid time expression.
+      }
+    }
+
+    action fire(timer: T) {
+      -> ok(timer: T, run_ref: String, purpose_tag: String, context_ref: String) {
+        Timer has reached its fire time. Increments fire_count.
+        For cycle timers, computes next_fire_at and remains active.
+        For date/duration timers, transitions to fired.
+      }
+      -> not_active(timer: T) {
+        Timer is not in active status.
+      }
+    }
+
+    action cancel(timer: T) {
+      -> ok(timer: T) {
+        Cancels an active timer. Transitions to cancelled.
+      }
+      -> not_active(timer: T) {
+        Timer is not in active status.
+      }
+    }
+
+    action reset(timer: T, specification: String) {
+      -> ok(timer: T, next_fire_at: DateTime) {
+        Resets a fired or active timer with a new specification.
+      }
+    }
+  }
+}

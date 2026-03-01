@@ -1,0 +1,11 @@
+# ConnectorCall success propagates to StepRun completion.
+# Bridges external system call result back to process execution.
+
+sync ConnectorSuccess [eager]
+when {
+  ConnectorCall/mark_success: [ call: ?c; step_ref: ?s; output: ?out ]
+    => [ variant: "ok" ]
+}
+then {
+  StepRun/complete: [ step: ?s; output: ?out ]
+}

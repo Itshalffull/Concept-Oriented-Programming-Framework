@@ -1,0 +1,45 @@
+@version(1)
+concept ProcessMetric [Q] {
+
+  purpose {
+    Aggregate and expose process-level performance metrics
+    for dashboards, SLA monitoring, and process mining.
+  }
+
+  state {
+    metrics: set Q
+    spec_ref: Q -> option String
+    run_ref: Q -> option String
+    metric_name: Q -> String              // step.duration_ms | run.duration_ms | step.retry_count | ...
+    metric_value: Q -> Float
+    dimensions: Q -> list {
+      key: String,
+      value: String
+    }
+    recorded_at: Q -> DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(metric_name: String, metric_value: Float, dimensions: Bytes) {
+      -> ok(metric: Q) {
+        Records a metric data point.
+      }
+    }
+
+    action query(metric_name: String, from: DateTime, to: DateTime) {
+      -> ok(metrics: Bytes, count: Int) {
+        Returns metrics in the given time range.
+      }
+    }
+
+    action aggregate(metric_name: String, aggregation: String, from: DateTime, to: DateTime) {
+      -> ok(value: Float, sample_count: Int) {
+        Computes aggregate (avg, sum, min, max, p50, p95, p99) over time range.
+      }
+    }
+  }
+}
