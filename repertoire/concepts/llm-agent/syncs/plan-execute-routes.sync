@@ -1,0 +1,10 @@
+# PluginRegistry resolves "plan_and_execute" strategy to
+# PlanAndExecuteStrategy for multi-step planning execution.
+
+sync PlanAndExecuteRoutes [integration]
+when {
+  PluginRegistry/resolve: [plugin_type: "agent_strategy"; plugin_id: "plan_and_execute"] => _
+}
+then {
+  PlanAndExecuteStrategy/execute: [agent_ref: ?a; goal: ?g; context: ?c]
+}

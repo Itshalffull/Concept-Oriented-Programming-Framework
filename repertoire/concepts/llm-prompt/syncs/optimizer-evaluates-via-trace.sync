@@ -1,0 +1,10 @@
+# PromptOptimizer evaluation candidates are measured using
+# LLMTrace metrics for accurate quality scoring.
+
+sync OptimizerEvaluatesViaTrace [recommended]
+when {
+  PromptOptimizer/evaluate => [score: ?score]
+}
+then {
+  LLMTrace/addMetric: [key: "optimizer_score"; value: ?score]
+}

@@ -1,0 +1,64 @@
+@version(1)
+concept CodeActStrategy [S] {
+
+  purpose {
+    CodeAct strategy provider. Agent generates executable code to solve
+    problems, runs it in a sandbox, observes output, iterates. Useful for
+    computational tasks, data analysis, and tool composition via code.
+    Registers under strategy_id "code_act".
+  }
+
+  state {
+    sessions: set S
+    code_history: S -> list {code: String, output: String,
+                             error: option String, step: Int}
+    runtime_env: S -> String
+    sandbox_config: S -> {timeout_ms: Int, memory_limit_mb: Int}
+    agent_ref: S -> String
+  }
+
+  actions {
+    action execute(agent_ref: String, goal: String, context: String,
+                   available_tools: list String, max_iterations: Int) {
+      -> ok(result: String, code_runs: Int,
+            final_code: String) {
+        (1) Generate code to solve the problem.
+        (2) Execute in sandbox.
+        (3) Observe stdout/stderr.
+        (4) If error or incomplete, revise code and re-run.
+        (5) Extract final answer from output.
+      }
+      -> max_iterations(partial: String, code_runs: Int) {
+        Could not produce working code.
+      }
+      -> sandbox_error(message: String) {
+        Sandbox unavailable or security violation.
+      }
+    }
+
+    action generateCode(session: S, goal: String, previous_error: option String) {
+      -> ok(code: String, language: String) {
+        Generates code. If previous_error provided, fixes the issue.
+      }
+    }
+
+    action executeCode(session: S, code: String) {
+      -> ok(output: String) {
+        Runs code in sandbox, returns stdout.
+      }
+      -> error(stderr: String, exit_code: Int) {
+        Code failed.
+      }
+      -> timeout() {
+        Exceeded timeout_ms.
+      }
+    }
+
+    action getState(session: S) {
+      -> ok(history: list {code: String, output: String,
+            error: option String, step: Int}) {
+        Returns code execution history.
+      }
+    }
+  }
+}

@@ -1,0 +1,105 @@
+@version(1)
+concept Retriever [R] {
+
+  purpose {
+    RAG orchestration layer. Takes natural-language query, finds relevant
+    content, prepares for LLM consumption. Multi-stage pipeline:
+    first-stage retrieval (fast, high-recall) then re-ranking (accurate)
+    then compression. Supports multi-query expansion, self-query metadata
+    filtering, contextual compression, and hierarchical retrieval.
+  }
+
+  state {
+    retrievers: set R
+    retriever_type: R -> String
+    source_ids: R -> list String
+    top_k: R -> Int
+    reranker_config: R -> option {model: String, top_n: Int}
+    filters: R -> option String
+    score_threshold: R -> option Float
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(retriever_type: String, source_ids: list String,
+                  top_k: Int, score_threshold: option Float) {
+      -> ok(retriever: R) {
+        Type: vector, multi_query, self_query, parent_document,
+        ensemble, contextual_compression, recursive.
+      }
+      -> invalid(message: String) {
+        Unknown type.
+      }
+    }
+
+    action retrieve(retriever: R, query: String) {
+      -> ok(documents: list {id: String, content: String, score: Float,
+            metadata: option String}) {
+        Core retrieval.
+      }
+      -> empty(message: String) {
+        No relevant documents.
+      }
+    }
+
+    action multiQueryRetrieve(retriever: R, query: String) {
+      -> ok(documents: list {id: String, content: String, score: Float}) {
+        RAG-Fusion: generates multiple query variations via LLM,
+        retrieves for each, deduplicates via reciprocal rank fusion.
+      }
+      -> empty(message: String) {
+        No results.
+      }
+    }
+
+    action selfQueryRetrieve(retriever: R, query: String) {
+      -> ok(documents: list {id: String, content: String, score: Float},
+            extracted_filters: String) {
+        LLM extracts structured filters from natural language.
+        Applies semantic + metadata filtering.
+      }
+      -> empty(message: String) {
+        No results.
+      }
+    }
+
+    action rerank(retriever: R, query: String,
+                  documents: list {id: String, content: String}) {
+      -> ok(reranked: list {id: String, content: String, score: Float}) {
+        Cross-encoder scoring. Returns top reranker_config.top_n.
+      }
+      -> error(message: String) {
+        Reranker unavailable.
+      }
+    }
+
+    action compress(retriever: R, query: String,
+                    documents: list {id: String, content: String}) {
+      -> ok(compressed: list {id: String, content: String,
+            original_length: Int, compressed_length: Int}) {
+        Extracts only query-relevant portions.
+      }
+      -> error(message: String) {
+        Compression failed.
+      }
+    }
+
+    action setReranker(retriever: R, model: String, top_n: Int) {
+      -> ok(retriever: R) {
+        Configures reranking model.
+      }
+      -> invalid(message: String) {
+        Unknown model.
+      }
+    }
+  }
+
+  invariant {
+    after create(retriever_type: "vector", source_ids: ["idx1"],
+                 top_k: 5, score_threshold: _) -> ok(retriever: r)
+    then retrieve(retriever: r, query: "test") -> ok(documents: _)
+  }
+}

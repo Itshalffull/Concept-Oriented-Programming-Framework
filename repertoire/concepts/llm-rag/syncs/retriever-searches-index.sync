@@ -1,0 +1,10 @@
+# Embedded query vector triggers VectorIndex similarity search
+# to find relevant document chunks.
+
+sync RetrieverSearchesIndex [eager]
+when {
+  VectorIndex/embed => [vector: ?v]
+}
+then {
+  VectorIndex/search: [query_vector: ?v; k: 10]
+}

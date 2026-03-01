@@ -1,0 +1,10 @@
+# AgentLoop action requests trigger ToolBinding invocation to
+# execute the tool the agent has selected.
+
+sync AgentInvokesTool [eager]
+when {
+  AgentLoop/step => [action_request: true; tool_name: ?tool; arguments: ?args]
+}
+then {
+  ToolBinding/invoke: [tool: ?tool; arguments: ?args]
+}

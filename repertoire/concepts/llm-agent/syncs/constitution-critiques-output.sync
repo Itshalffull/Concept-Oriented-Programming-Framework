@@ -1,0 +1,10 @@
+# AgentLoop results pass through Constitution critique-revision
+# for alignment with configured principles.
+
+sync ConstitutionCritiquesOutput [recommended]
+when {
+  AgentLoop/run => [result: ?result]
+}
+then {
+  Constitution/critiqueAndRevise: [response: ?result; prompt: ?goal]
+}

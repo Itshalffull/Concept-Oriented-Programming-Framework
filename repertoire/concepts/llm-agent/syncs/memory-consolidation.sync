@@ -1,0 +1,10 @@
+# New memories trigger background consolidation to merge
+# related entries, prune stale data, and update summaries.
+
+sync MemoryConsolidation [eventual]
+when {
+  AgentMemory/remember => [entry: ?e]
+}
+then {
+  AgentMemory/consolidate: []
+}

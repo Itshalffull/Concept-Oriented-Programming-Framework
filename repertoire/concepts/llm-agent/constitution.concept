@@ -1,0 +1,95 @@
+@version(1)
+concept Constitution [W] {
+
+  purpose {
+    Formalized list of ethical, stylistic, or business-logic axioms used
+    during Critique-Revision loops to align model behavior. Enables
+    Constitutional AI (CAI) and RLAIF. Model critiques its own output
+    against principles, then revises. Transparent, scalable rule sets
+    replacing subjective human ratings.
+  }
+
+  state {
+    constitutions: set W
+    name: W -> String
+    principles: W -> list {id: String, text: String, category: String,
+                           priority: Int}
+    revision_config: W -> {max_revisions: Int,
+                           critique_model: option String}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String,
+                  principles: list {text: String, category: String,
+                                   priority: Int}) {
+      -> ok(constitution: W) {
+        Categories: ethical, stylistic, safety, business_logic,
+        factual_grounding.
+      }
+      -> invalid(message: String) {
+        No principles provided.
+      }
+    }
+
+    action critique(constitution: W, response: String, prompt: String) {
+      -> ok(critique: String, violations: list {principle_id: String,
+            explanation: String, severity: String}) {
+        Evaluates response against principles.
+      }
+      -> compliant(message: String) {
+        Response satisfies all principles.
+      }
+    }
+
+    action revise(constitution: W, response: String, critique: String) {
+      -> ok(revised: String, changes: list {principle_id: String,
+            original: String, revised: String}) {
+        Generates revised response addressing critique.
+      }
+      -> error(message: String) {
+        Revision failed.
+      }
+    }
+
+    action critiqueAndRevise(constitution: W, response: String,
+                             prompt: String) {
+      -> ok(final: String, rounds: Int,
+            history: list {critique: String, revision: String}) {
+        Full Critique-Revision loop up to max_revisions.
+      }
+      -> max_revisions(best: String, rounds: Int) {
+        Could not achieve full compliance.
+      }
+    }
+
+    action addPrinciple(constitution: W, text: String, category: String,
+                        priority: Int) {
+      -> ok(principle_id: String) {
+        Adds a principle.
+      }
+      -> notfound(message: String) {
+        Constitution not found.
+      }
+    }
+
+    action removePrinciple(constitution: W, principle_id: String) {
+      -> ok(constitution: W) {
+        Removes a principle.
+      }
+      -> notfound(message: String) {
+        Principle not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "safety", principles: [{text: "Never generate harmful content",
+                 category: "safety", priority: 1}]) -> ok(constitution: w)
+    then critique(constitution: w, response: "safe response", prompt: "test")
+         -> compliant(message: _)
+  }
+}

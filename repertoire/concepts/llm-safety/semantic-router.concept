@@ -1,0 +1,90 @@
+@version(1)
+concept SemanticRouter [S] {
+
+  purpose {
+    Routes user messages to appropriate processing pipelines based on
+    semantic intent rather than keyword matching. Uses embedding similarity
+    to match incoming messages against predefined route exemplars.
+    Enables topic-specific handling, guardrail selection, and pipeline
+    branching without explicit classification models.
+  }
+
+  state {
+    routes: set S
+    name: S -> String
+    exemplars: S -> list {text: String, embedding: option list Float}
+    target_pipeline: S -> String
+    threshold: S -> Float
+    fallback_route: option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(name: String, exemplars: list String,
+                  target_pipeline: String, threshold: Float) {
+      -> ok(route: S) {
+        Creates a semantic route. Exemplars are embedded lazily.
+        Threshold: minimum similarity score to match (0.0-1.0).
+      }
+      -> invalid(message: String) {
+        Missing exemplars or invalid threshold.
+      }
+    }
+
+    action route(message: String) {
+      -> ok(route: S, pipeline: String, confidence: Float) {
+        Matches message against all route exemplars via embedding
+        similarity. Returns highest-confidence match above threshold.
+      }
+      -> no_match(message: String) {
+        No route exceeds threshold. Falls back if configured.
+      }
+      -> fallback(pipeline: String) {
+        No route matched; using fallback pipeline.
+      }
+    }
+
+    action addExemplar(route: S, text: String) {
+      -> ok(route: S) {
+        Adds an exemplar to improve route matching.
+      }
+      -> notfound(message: String) {
+        Route not found.
+      }
+    }
+
+    action setFallback(pipeline: String) {
+      -> ok() {
+        Sets the default pipeline for unmatched messages.
+      }
+    }
+
+    action getRoutes() {
+      -> ok(routes: list {name: String, pipeline: String,
+            exemplar_count: Int, threshold: Float}) {
+        Lists all configured routes.
+      }
+    }
+
+    action removeRoute(route: S) {
+      -> ok() {
+        Removes a route.
+      }
+      -> notfound(message: String) {
+        Route not found.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "billing", exemplars: ["How much do I owe?",
+                 "What is my balance?", "Payment information"],
+                 target_pipeline: "billing_agent", threshold: 0.75)
+      -> ok(route: s)
+    then route(message: "What's my current bill?")
+      -> ok(route: s, pipeline: "billing_agent", confidence: _)
+  }
+}

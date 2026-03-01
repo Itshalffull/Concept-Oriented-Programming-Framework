@@ -1,0 +1,140 @@
+suite:
+  name: llm-agent
+  version: 0.1.0
+  description: >
+    Autonomous LLM agent reasoning, multi-agent coordination, memory,
+    tool use, and alignment. AgentLoop is a coordination concept —
+    strategy providers register via PluginRegistry.
+
+concepts:
+  StateGraph:
+    spec: ./state-graph.concept
+    params:
+      H: { as: graph-id, description: "Execution graph identifier" }
+  AgentMemory:
+    spec: ./agent-memory.concept
+    params:
+      E: { as: memory-id, description: "Memory entry identifier" }
+  ToolBinding:
+    spec: ./tool-binding.concept
+    params:
+      T: { as: tool-id, description: "Tool definition identifier" }
+  AgentTeam:
+    spec: ./agent-team.concept
+    params:
+      M: { as: team-id, description: "Agent team identifier" }
+  AgentRole:
+    spec: ./agent-role.concept
+    params:
+      K: { as: role-id, description: "Agent role identifier" }
+  Blackboard:
+    spec: ./blackboard.concept
+    params:
+      B: { as: board-id, description: "Blackboard identifier" }
+  AgentHandoff:
+    spec: ./agent-handoff.concept
+    params:
+      D: { as: handoff-id, description: "Handoff identifier" }
+  Consensus:
+    spec: ./consensus.concept
+    params:
+      N: { as: consensus-id, description: "Consensus session identifier" }
+  Constitution:
+    spec: ./constitution.concept
+    params:
+      W: { as: constitution-id, description: "Constitution identifier" }
+  AgentLoop:
+    spec: ./agent-loop.concept
+    params:
+      L: { as: agent-id, description: "Agent instance identifier" }
+  ReactStrategy:
+    spec: ./strategies/react.concept
+    optional: true
+  PlanAndExecuteStrategy:
+    spec: ./strategies/plan-and-execute.concept
+    optional: true
+  TreeOfThoughtStrategy:
+    spec: ./strategies/tree-of-thought.concept
+    optional: true
+  ReflectionStrategy:
+    spec: ./strategies/reflection.concept
+    optional: true
+  CodeActStrategy:
+    spec: ./strategies/code-act.concept
+    optional: true
+  ReWOOStrategy:
+    spec: ./strategies/rewoo.concept
+    optional: true
+
+syncs:
+  required:
+    - path: ./syncs/agent-invokes-tool.sync
+      description: "AgentLoop action_request triggers ToolBinding/invoke"
+    - path: ./syncs/agent-remembers-step.sync
+      description: "AgentLoop reasoning steps stored in AgentMemory"
+    - path: ./syncs/tool-result-feeds-agent.sync
+      description: "ToolBinding/invoke result feeds back to AgentLoop/observe"
+    - path: ./syncs/agent-loop-dispatches-to-strategy.sync
+      description: "AgentLoop/run resolves strategy via PluginRegistry"
+  recommended:
+    - path: ./syncs/agent-recalls-memory.sync
+      description: "AgentLoop/run triggers AgentMemory recall for context"
+    - path: ./syncs/constitution-critiques-output.sync
+      description: "AgentLoop results pass through Constitution critique-revision"
+    - path: ./syncs/team-delegates-via-role.sync
+      description: "AgentTeam delegation triggers AgentRole matching"
+    - path: ./syncs/blackboard-notifies-subscribers.sync
+      description: "Blackboard posts notify subscribed agents"
+    - path: ./syncs/consensus-resolves-conflict.sync
+      description: "AgentTeam conflict resolution triggers Consensus tally"
+    - path: ./syncs/handoff-packages-context.sync
+      description: "AgentHandoff context package feeds into AgentLoop/run"
+    - path: ./syncs/episodic-memory-archive.sync
+      description: "LLMTrace spans archived as episodic memories"
+    - path: ./syncs/procedural-memory-update.sync
+      description: "Efficient agent runs stored as procedural memory"
+    - path: ./syncs/memory-consolidation.sync
+      description: "New memories trigger background consolidation"
+  integration:
+    - path: ./syncs/agent-workflow-provider.sync
+      description: "Agent phases map to Workflow states"
+    - path: ./syncs/hitl-notification.sync
+      description: "Tool approval requests trigger HITL notifications"
+    - path: ./syncs/multi-agent-message-passing.sync
+      description: "Agent results append to shared Conversation"
+    - path: ./syncs/react-routes.sync
+      description: "PluginRegistry resolves 'react' to ReactStrategy"
+    - path: ./syncs/plan-execute-routes.sync
+      description: "PluginRegistry resolves 'plan_and_execute' to PlanAndExecuteStrategy"
+    - path: ./syncs/tree-of-thought-routes.sync
+      description: "PluginRegistry resolves 'tree_of_thought' to TreeOfThoughtStrategy"
+    - path: ./syncs/reflection-routes.sync
+      description: "PluginRegistry resolves 'reflection' to ReflectionStrategy"
+    - path: ./syncs/code-act-routes.sync
+      description: "PluginRegistry resolves 'code_act' to CodeActStrategy"
+    - path: ./syncs/rewoo-routes.sync
+      description: "PluginRegistry resolves 'rewoo' to ReWOOStrategy"
+
+uses:
+  - suite: llm-core
+    concepts:
+      - name: LLMProvider
+      - name: ModelRouter
+  - suite: llm-conversation
+    concepts:
+      - name: Conversation
+  - suite: llm-safety
+    optional: true
+    concepts:
+      - name: Guardrail
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+  - suite: automation
+    optional: true
+    concepts:
+      - name: Workflow
+  - suite: notification
+    optional: true
+    concepts:
+      - name: Notification

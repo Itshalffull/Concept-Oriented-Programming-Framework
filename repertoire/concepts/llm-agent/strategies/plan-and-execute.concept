@@ -1,0 +1,63 @@
+@version(1)
+concept PlanAndExecuteStrategy [S] {
+
+  purpose {
+    Plan-and-Execute strategy provider. Generates an upfront multi-step
+    plan, then executes each step (potentially with a cheaper model),
+    replanning after each step if needed. More robust than ReAct for
+    complex multi-step tasks. Registers under strategy_id "plan_and_execute".
+  }
+
+  state {
+    sessions: set S
+    plan: S -> list {step_id: String, description: String, status: String,
+                     result: option String}
+    executor_model: S -> option String
+    agent_ref: S -> String
+  }
+
+  actions {
+    action execute(agent_ref: String, goal: String, context: String,
+                   available_tools: list String, max_iterations: Int) {
+      -> ok(result: String, steps: Int, tool_calls: Int,
+            plan_history: list {plan_version: Int,
+              steps: list {description: String, status: String}}) {
+        (1) Plan — generate ordered steps for the goal.
+        (2) Execute — run each step, potentially with a cheaper executor model.
+        (3) Replan — after each step, evaluate whether the remaining plan
+        still makes sense given results so far. May add, remove, or
+        reorder remaining steps.
+        (4) Synthesize — combine step results into final answer.
+      }
+      -> max_iterations(partial: String, completed_steps: Int) {
+        Hit limit mid-plan.
+      }
+      -> error(message: String) {
+        Execution failed.
+      }
+    }
+
+    action plan(session: S, goal: String) {
+      -> ok(steps: list {step_id: String, description: String}) {
+        Generates initial plan.
+      }
+    }
+
+    action replan(session: S, completed: list String,
+                  remaining: list String) {
+      -> ok(updated_plan: list {step_id: String, description: String}) {
+        Revises plan based on execution so far.
+      }
+      -> no_change() {
+        Plan still valid.
+      }
+    }
+
+    action getState(session: S) {
+      -> ok(plan: list {step_id: String, description: String,
+            status: String, result: option String}) {
+        Returns current plan state.
+      }
+    }
+  }
+}

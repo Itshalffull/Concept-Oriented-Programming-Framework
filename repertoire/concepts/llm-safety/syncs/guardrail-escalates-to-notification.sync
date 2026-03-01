@@ -1,0 +1,13 @@
+# Guardrail violations at critical severity trigger Notification
+# alerts for human review and incident response.
+
+sync GuardrailEscalatesToNotification [recommended]
+when {
+  Guardrail/checkInput => [violation: true; severity: ?sev; explanation: ?exp]
+}
+where {
+  filter(?sev = "critical")
+}
+then {
+  Notification/send: [channel: "safety"; message: ?exp]
+}

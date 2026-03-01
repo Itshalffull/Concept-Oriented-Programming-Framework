@@ -1,0 +1,10 @@
+# AgentHandoff context package feeds into AgentLoop/run to
+# bootstrap the target agent with transferred context.
+
+sync HandoffPackagesContext [eager]
+when {
+  AgentHandoff/prepare => [handoff: ?d; context_package: ?pkg]
+}
+then {
+  AgentLoop/run: [context: ?pkg]
+}

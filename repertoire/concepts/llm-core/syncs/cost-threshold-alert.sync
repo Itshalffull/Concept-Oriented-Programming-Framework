@@ -1,0 +1,13 @@
+# When cumulative LLM spend exceeds a configured threshold,
+# trigger an automation rule to alert or switch models.
+
+sync CostThresholdAlert [recommended]
+when {
+  LLMTrace/getCost => [total: ?total]
+}
+where {
+  filter(?total > 100.0)
+}
+then {
+  AutomationRule/trigger: [rule: "cost_threshold"; data: ?total]
+}

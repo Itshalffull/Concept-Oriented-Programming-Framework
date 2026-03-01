@@ -1,0 +1,10 @@
+# Assertion failure injects the failing output and error context
+# into a retry prompt for LLM self-refinement.
+
+sync AssertionTriggersRetry [eager]
+when {
+  Assertion/evaluate => [retry_prompt: ?prompt; attempt: ?a; max: ?m]
+}
+then {
+  LLMProvider/generate: [messages: ?prompt]
+}

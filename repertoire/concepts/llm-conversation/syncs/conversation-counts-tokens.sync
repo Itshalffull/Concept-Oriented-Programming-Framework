@@ -1,0 +1,11 @@
+# Conversation message appends trigger token counting to maintain
+# accurate budget tracking for context window management.
+
+sync ConversationCountsTokens [eager]
+when {
+  Conversation/append: [conversation: ?c; content: ?content]
+    => [message_id: ?m]
+}
+then {
+  LLMProvider/countTokens: [content: ?content]
+}

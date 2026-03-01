@@ -1,0 +1,10 @@
+# Merged adapter weights register as a new LLMProvider instance,
+# making the fine-tuned model available for generation.
+
+sync AdapterAttachesToProvider [eager]
+when {
+  Adapter/merge => [merged_model_id: ?model]
+}
+then {
+  LLMProvider/register: [model_id: ?model]
+}

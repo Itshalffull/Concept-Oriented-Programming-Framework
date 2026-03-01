@@ -1,0 +1,10 @@
+# TrainingRun evaluation triggers EvaluationDataset scoring
+# to measure model quality against golden test sets.
+
+sync TrainingEvaluatesOnDataset [eager]
+when {
+  TrainingRun/evaluate: [run: ?j; dataset_ref: ?ds] => _
+}
+then {
+  EvaluationDataset/evaluate: [dataset: ?ds]
+}

@@ -1,0 +1,86 @@
+@version(1)
+concept PromptOptimizer [O] {
+
+  purpose {
+    Automatically improves prompts using LLM-driven optimization, treating
+    prompt text as a learnable parameter. DSPy paradigm: programming, not
+    prompting. Supports BootstrapFewShot, MIPROv2, COPRO, OPRO, and
+    evolutionary strategies.
+  }
+
+  state {
+    runs: set O
+    target_program: O -> String
+    metric: O -> String
+    training_set: O -> list {input: String, expected: String}
+    strategy: O -> String
+    history: O -> list {candidate: String, score: Float, iteration: Int}
+    best_candidate: O -> option {prompt: String, score: Float}
+    budget: O -> {max_llm_calls: Int, used_calls: Int}
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action create(target: String, metric: String,
+                  training_set: list {input: String, expected: String},
+                  strategy: String, max_llm_calls: Int) {
+      -> ok(optimizer: O) {
+        Strategy: bootstrap_few_shot, mipro_v2, copro, opro, evolutionary.
+      }
+      -> invalid(message: String) {
+        Unknown strategy or empty training set.
+      }
+    }
+
+    action optimize(optimizer: O) {
+      -> ok(best_prompt: String, score: Float, iterations: Int) {
+        Runs optimization loop. Records all candidates in history.
+      }
+      -> budget_exceeded(best_so_far: String, score: Float) {
+        Hit max_llm_calls before convergence.
+      }
+      -> error(message: String) {
+        Optimization failed.
+      }
+    }
+
+    action evaluate(optimizer: O, program: String,
+                    dataset: list {input: String, expected: String}) {
+      -> ok(score: Float, per_example: list {input: String, score: Float}) {
+        Measures quality against dataset using configured metric.
+      }
+      -> error(message: String) {
+        Evaluation failed.
+      }
+    }
+
+    action compare(optimizer: O, programs: list String,
+                   dataset: list {input: String, expected: String}) {
+      -> ok(ranked: list {program: String, score: Float}) {
+        A/B tests multiple prompt variants.
+      }
+      -> error(message: String) {
+        Comparison failed.
+      }
+    }
+
+    action rollback(optimizer: O, iteration: Int) {
+      -> ok(prompt: String, score: Float) {
+        Reverts to a previous candidate.
+      }
+      -> notfound(message: String) {
+        Iteration not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(target: t, metric: "accuracy", training_set: ts,
+                 strategy: "mipro_v2", max_llm_calls: 100) -> ok(optimizer: o)
+    then optimize(optimizer: o) -> ok(best_prompt: _, score: _, iterations: _)
+  }
+}

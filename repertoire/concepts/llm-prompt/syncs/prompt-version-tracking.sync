@@ -1,0 +1,10 @@
+# Prompt changes are tracked via Version concept for audit,
+# rollback, and A/B testing across deployments.
+
+sync PromptVersionTracking [eager]
+when {
+  PromptAssembly/assemble => [prompt: ?prompt; total_tokens: ?tokens]
+}
+then {
+  Version/snapshot: [entity: ?assembly; data: ?prompt; author: "system"]
+}

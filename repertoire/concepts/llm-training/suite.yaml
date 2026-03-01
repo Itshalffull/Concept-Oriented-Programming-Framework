@@ -1,0 +1,46 @@
+suite:
+  name: llm-training
+  version: 0.1.0
+  description: >
+    Fine-tuning lifecycle management, parameter-efficient adaptation
+    (LoRA/QLoRA), and golden evaluation datasets for continuous
+    behavioral testing.
+
+concepts:
+  TrainingRun:
+    spec: ./training-run.concept
+    params:
+      J: { as: run-id, description: "Training run identifier" }
+  Adapter:
+    spec: ./adapter.concept
+    params:
+      A: { as: adapter-id, description: "LoRA adapter identifier" }
+  EvaluationDataset:
+    spec: ./evaluation-dataset.concept
+    params:
+      V: { as: dataset-id, description: "Evaluation dataset identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/training-evaluates-on-dataset.sync
+      description: "TrainingRun evaluation triggers EvaluationDataset scoring"
+    - path: ./syncs/adapter-attaches-to-provider.sync
+      description: "Merged adapter registers as new LLMProvider"
+  recommended:
+    - path: ./syncs/training-tracks-cost.sync
+      description: "TrainingRun start creates LLMTrace for cost tracking"
+    - path: ./syncs/dataset-detects-drift.sync
+      description: "Drift detection above threshold triggers Notification alert"
+  integration:
+    - path: ./syncs/adapter-registers-with-router.sync
+      description: "Active adapter swap registers with ModelRouter"
+
+uses:
+  - suite: llm-core
+    concepts:
+      - name: LLMProvider
+      - name: ModelRouter
+  - suite: llm-safety
+    optional: true
+    concepts:
+      - name: LLMTrace

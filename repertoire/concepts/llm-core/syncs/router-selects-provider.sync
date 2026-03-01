@@ -1,0 +1,9 @@
+# ModelRouter resolves the optimal model, then LLMProvider handles generation.
+
+sync RouterSelectsProvider [eager]
+when {
+  ModelRouter/route => [model_id: ?model]
+}
+then {
+  LLMProvider/generate: [provider: ?model]
+}

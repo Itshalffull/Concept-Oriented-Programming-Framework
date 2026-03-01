@@ -1,0 +1,10 @@
+# LLMTrace records per-call cost from generation metadata
+# for spend tracking and budget management.
+
+sync TraceRecordsCost [recommended]
+when {
+  LLMProvider/generate => [response: ?resp]
+}
+then {
+  LLMTrace/addMetric: [key: "cost"; value: ?resp]
+}

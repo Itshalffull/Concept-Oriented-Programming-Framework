@@ -1,0 +1,10 @@
+# PromptAssembly assembly triggers FewShotExample selection to
+# dynamically choose the most relevant examples for the current input.
+
+sync AssemblySelectsExamples [eager]
+when {
+  PromptAssembly/assemble => _
+}
+then {
+  FewShotExample/select: [input: ?user_input]
+}

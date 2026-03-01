@@ -1,0 +1,10 @@
+# PluginRegistry resolves "reflection" strategy to
+# ReflectionStrategy for iterative self-critique and revision.
+
+sync ReflectionRoutes [integration]
+when {
+  PluginRegistry/resolve: [plugin_type: "agent_strategy"; plugin_id: "reflection"] => _
+}
+then {
+  ReflectionStrategy/execute: [agent_ref: ?a; goal: ?g; context: ?c]
+}

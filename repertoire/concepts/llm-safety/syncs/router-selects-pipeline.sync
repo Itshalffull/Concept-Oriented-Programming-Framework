@@ -1,0 +1,10 @@
+# SemanticRouter intent matching selects the appropriate processing
+# pipeline for incoming user messages.
+
+sync RouterSelectsPipeline [recommended]
+when {
+  SemanticRouter/route => [pipeline: ?pipeline; confidence: ?conf]
+}
+then {
+  Workflow/start: [workflow: ?pipeline]
+}

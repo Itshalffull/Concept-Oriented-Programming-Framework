@@ -1,0 +1,10 @@
+# Batch-embedded chunk vectors are added to VectorIndex for
+# subsequent retrieval queries.
+
+sync EmbeddedChunksIndex [eager]
+when {
+  VectorIndex/embedBatch => [vectors: ?vectors]
+}
+then {
+  VectorIndex/addBatch: [items: ?vectors]
+}

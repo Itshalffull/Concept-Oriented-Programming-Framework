@@ -1,0 +1,13 @@
+# When context window assembly truncates conversation history,
+# automatically summarize older messages to preserve key context.
+
+sync ConversationAutoSummarize [recommended]
+when {
+  PromptAssembly/assemble => [sections_truncated: ?trunc]
+}
+where {
+  filter(?trunc contains "conversation_history")
+}
+then {
+  Conversation/summarize: [message_ids: _]
+}

@@ -1,0 +1,10 @@
+# When an LLMProvider is unavailable, ModelRouter attempts the next
+# model in the fallback chain and tracks failures for circuit breaking.
+
+sync RouterCircuitBreaker [recommended]
+when {
+  LLMProvider/generate => [unavailable: ?msg]
+}
+then {
+  ModelRouter/fallback: [failed_model_id: ?p; error_type: "unavailable"]
+}

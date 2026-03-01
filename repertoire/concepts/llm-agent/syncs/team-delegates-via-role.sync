@@ -1,0 +1,10 @@
+# AgentTeam delegation triggers AgentRole matching to find
+# the best-fit agent for the task.
+
+sync TeamDelegatesViaRole [eager]
+when {
+  AgentTeam/delegate: [team: ?m; task: ?t] => _
+}
+then {
+  AgentRole/match: [task_type: ?t]
+}

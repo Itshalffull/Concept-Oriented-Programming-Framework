@@ -1,0 +1,102 @@
+@version(1)
+concept ToolBinding [T] {
+
+  purpose {
+    Callable tools/functions that LLMs can invoke. Unifies OpenAI function
+    calling, Anthropic tool use, and MCP tool primitive. Full lifecycle:
+    schema definition, provider format translation, argument validation,
+    execution, result formatting, error handling. Supports dynamic tool
+    selection for large tool sets and safety annotations per MCP spec.
+  }
+
+  state {
+    tools: set T
+    name: T -> String
+    description: T -> String
+    input_schema: T -> String
+    output_schema: T -> option String
+    handler: T -> String
+    annotations: T -> {
+      audience: String,
+      destructive: Bool,
+      idempotent: Bool,
+      open_world: Bool
+    }
+    timeout_ms: T -> Int
+    retry_policy: T -> {max_retries: Int, backoff_ms: Int}
+    requires_approval: T -> Bool
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(name: String, description: String, input_schema: String,
+                  output_schema: option String, handler: String,
+                  annotations: {audience: String, destructive: Bool,
+                               idempotent: Bool, open_world: Bool},
+                  timeout_ms: Int, requires_approval: Bool) {
+      -> ok(tool: T) {
+        Registers a tool. Annotations follow MCP spec.
+      }
+      -> invalid(message: String) {
+        Invalid schema or missing fields.
+      }
+    }
+
+    action invoke(tool: T, arguments: String) {
+      -> ok(result: String, execution_ms: Int) {
+        Validates arguments, executes handler, returns result.
+      }
+      -> validation_error(errors: list {path: String, message: String}) {
+        Arguments don't match input_schema.
+      }
+      -> timeout(elapsed_ms: Int) {
+        Execution exceeded timeout.
+      }
+      -> execution_error(message: String) {
+        Handler threw an error.
+      }
+      -> approval_required(tool: T, arguments: String) {
+        requires_approval=true. Emits approval request via sync.
+      }
+    }
+
+    action toProviderFormat(tool: T, provider: String) {
+      -> ok(formatted: String) {
+        Serializes for: openai, anthropic, mcp, generic.
+      }
+      -> notfound(message: String) {
+        Tool not found.
+      }
+    }
+
+    action discover(filter: option {audience: option String,
+                    destructive: option Bool}) {
+      -> ok(tools: list {name: String, description: String,
+            input_schema: String, annotations: String}) {
+        Lists available tools, optionally filtered.
+      }
+    }
+
+    action search(query: String, k: Int) {
+      -> ok(tools: list {name: String, description: String,
+            relevance: Float}) {
+        Semantic search for large tool sets.
+      }
+      -> empty(message: String) {
+        No matches.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "search", description: "Search the web",
+                 input_schema: s, output_schema: _, handler: h,
+                 annotations: a, timeout_ms: 5000, requires_approval: false)
+      -> ok(tool: t)
+    then invoke(tool: t, arguments: "{\"query\": \"test\"}")
+      -> ok(result: _, execution_ms: _)
+  }
+}

@@ -1,0 +1,10 @@
+# Retrieved documents are injected into PromptAssembly as a
+# context section for the LLM to reference.
+
+sync RetrieverInjectsIntoAssembly [eager]
+when {
+  Retriever/retrieve => [documents: ?docs]
+}
+then {
+  PromptAssembly/addSection: [name: "retrieved_context"; role: "user"; priority: 50; max_tokens: 2000; required: false; content: ?docs]
+}

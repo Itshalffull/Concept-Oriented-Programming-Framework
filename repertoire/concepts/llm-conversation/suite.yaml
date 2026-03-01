@@ -1,0 +1,32 @@
+suite:
+  name: llm-conversation
+  version: 0.1.0
+  description: >
+    Multi-turn LLM dialogue management with multiversal branching,
+    context window strategies, and automatic summarization.
+
+concepts:
+  Conversation:
+    spec: ./conversation.concept
+    params:
+      C: { as: conversation-id, description: "Conversation thread identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/conversation-counts-tokens.sync
+      description: "Conversation append triggers token counting via LLMProvider"
+  recommended:
+    - path: ./syncs/conversation-auto-summarize.sync
+      description: "Truncated conversation history triggers automatic summarization"
+  integration:
+    - path: ./syncs/conversation-collection-provider.sync
+      description: "Conversation sets register with Collection for search and filtering"
+
+uses:
+  - suite: llm-core
+    concepts:
+      - name: LLMProvider
+  - suite: foundation
+    optional: true
+    concepts:
+      - name: ContentNode

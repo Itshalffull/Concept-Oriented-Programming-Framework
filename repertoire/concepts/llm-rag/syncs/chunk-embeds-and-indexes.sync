@@ -1,0 +1,10 @@
+# DocumentChunk split results trigger batch embedding via VectorIndex
+# to prepare chunks for semantic search.
+
+sync ChunkEmbedsAndIndexes [eager]
+when {
+  DocumentChunk/split => [chunks: ?chunks]
+}
+then {
+  VectorIndex/embedBatch: [texts: ?chunks]
+}

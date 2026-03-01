@@ -1,0 +1,13 @@
+# DocumentChunk enrichment with entity extraction feeds into
+# the Graph concept for GraphRAG knowledge graph construction.
+
+sync KnowledgeGraphProvider [eager]
+when {
+  DocumentChunk/enrich: [extractors: ?ext] => [chunk: ?c]
+}
+where {
+  filter(?ext contains "entities")
+}
+then {
+  Graph/addNode: [data: ?c]
+}

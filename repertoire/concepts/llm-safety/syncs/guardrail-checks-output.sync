@@ -1,0 +1,10 @@
+# LLM-generated responses are checked by Guardrail before
+# being delivered to the user.
+
+sync GuardrailChecksOutput [eager]
+when {
+  LLMProvider/generate => [response: ?resp]
+}
+then {
+  Guardrail/checkOutput: [response: ?resp]
+}

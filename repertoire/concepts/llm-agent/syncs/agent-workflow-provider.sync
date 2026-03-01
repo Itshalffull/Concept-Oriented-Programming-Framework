@@ -1,0 +1,10 @@
+# Agent execution phases map to Workflow states for integration
+# with existing workflow management infrastructure.
+
+sync AgentWorkflowProvider [eager]
+when {
+  AgentLoop/run => [result: ?result; steps: ?steps]
+}
+then {
+  Workflow/complete: [data: ?result]
+}

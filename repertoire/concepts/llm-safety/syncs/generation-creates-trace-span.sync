@@ -1,0 +1,10 @@
+# LLMProvider generation completions create trace spans for
+# observability, capturing token usage, cost, and latency.
+
+sync GenerationCreatesTraceSpan [eager]
+when {
+  LLMProvider/generate => [response: ?resp]
+}
+then {
+  LLMTrace/endSpan: [status: "ok"; metrics: ?resp]
+}

@@ -1,0 +1,10 @@
+# LLMProvider health status changes publish to EventBus for
+# monitoring dashboards and alerting systems.
+
+sync ProviderHealthToEventBus [eager]
+when {
+  LLMProvider/healthCheck => [status: ?status; latency_ms: ?latency]
+}
+then {
+  EventBus/publish: [topic: "llm.health"; data: ?status]
+}

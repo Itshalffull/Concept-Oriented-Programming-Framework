@@ -1,0 +1,10 @@
+# AgentTeam conflict resolution triggers Consensus tally
+# to determine the winning position.
+
+sync ConsensusResolvesConflict [eager]
+when {
+  AgentTeam/resolveConflict: [team: ?m; task_id: ?t] => _
+}
+then {
+  Consensus/tally: [session: _]
+}

@@ -1,0 +1,125 @@
+@version(1)
+@gate
+concept TrainingRun [J] {
+
+  purpose {
+    Manages fine-tuning job lifecycle: dataset preparation, hyperparameter
+    configuration, training execution, checkpoint management, evaluation,
+    and model export. Supports both full fine-tuning and parameter-efficient
+    methods (via sync to Adapter). Tracks cost and resource usage.
+  }
+
+  state {
+    runs: set J
+    name: J -> String
+    base_model: J -> String
+    dataset_ref: J -> String
+    hyperparameters: J -> {
+      learning_rate: Float,
+      epochs: Int,
+      batch_size: Int,
+      warmup_steps: Int
+    }
+    status: J -> String
+    checkpoints: J -> list {epoch: Int, loss: Float, path: String,
+                            timestamp: DateTime}
+    evaluation_scores: J -> list {metric: String, score: Float}
+    cost: J -> Float
+    duration_ms: J -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action create(name: String, base_model: String, dataset_ref: String,
+                  hyperparameters: {learning_rate: Float, epochs: Int,
+                                   batch_size: Int, warmup_steps: Int}) {
+      -> ok(run: J) {
+        Creates a training run. Status: "created".
+      }
+      -> invalid(message: String) {
+        Missing parameters or unknown base model.
+      }
+    }
+
+    action start(run: J) {
+      -> ok(run: J) {
+        Begins training. Status: "training". Checkpoints saved
+        per epoch. This action may complete asynchronously (@gate).
+      }
+      -> insufficient_data(count: Int, minimum: Int) {
+        Dataset too small.
+      }
+      -> error(message: String) {
+        Training infrastructure unavailable.
+      }
+    }
+
+    action pause(run: J) {
+      -> ok(run: J, checkpoint: String) {
+        Pauses at current epoch. Status: "paused".
+      }
+      -> not_running(message: String) {
+        Run is not in "training" status.
+      }
+    }
+
+    action resume(run: J) {
+      -> ok(run: J) {
+        Resumes from last checkpoint.
+      }
+      -> not_paused(message: String) {
+        Run is not paused.
+      }
+    }
+
+    action evaluate(run: J, dataset_ref: String) {
+      -> ok(scores: list {metric: String, score: Float}) {
+        Evaluates the latest checkpoint against a dataset.
+        Metrics: accuracy, perplexity, SemanticF1, answer_relevancy.
+      }
+      -> not_ready(message: String) {
+        No checkpoint available yet.
+      }
+    }
+
+    action export(run: J, format: String) {
+      -> ok(artifact_path: String, model_id: String) {
+        Exports the trained model. Format: safetensors, gguf,
+        provider_api (upload to provider's fine-tuning API).
+      }
+      -> not_complete(message: String) {
+        Training not finished.
+      }
+    }
+
+    action cancel(run: J) {
+      -> ok(run: J) {
+        Cancels training. Status: "cancelled".
+      }
+      -> not_running(message: String) {
+        Run not active.
+      }
+    }
+
+    action getStatus(run: J) {
+      -> ok(status: String, current_epoch: Int, total_epochs: Int,
+            current_loss: Float, elapsed_ms: Int, cost: Float) {
+        Returns current training progress.
+      }
+      -> notfound(message: String) {
+        Run not found.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "domain_ft", base_model: "llama-3", dataset_ref: "ds1",
+                 hyperparameters: {learning_rate: 0.0001, epochs: 3,
+                 batch_size: 8, warmup_steps: 100}) -> ok(run: j)
+    then start(run: j) -> ok(run: j)
+  }
+}

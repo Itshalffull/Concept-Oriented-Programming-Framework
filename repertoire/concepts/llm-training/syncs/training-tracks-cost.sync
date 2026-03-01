@@ -1,0 +1,10 @@
+# TrainingRun start creates an LLMTrace for tracking compute
+# cost and resource usage throughout the training process.
+
+sync TrainingTracksCost [recommended]
+when {
+  TrainingRun/start => [run: ?j]
+}
+then {
+  LLMTrace/startTrace: [tags: [{key: "training_run", value: ?j}]]
+}

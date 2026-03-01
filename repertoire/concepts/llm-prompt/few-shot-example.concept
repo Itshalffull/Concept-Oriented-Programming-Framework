@@ -1,0 +1,95 @@
+@version(1)
+concept FewShotExample [F] {
+
+  purpose {
+    Manages pools of input-output examples and selects the most effective
+    subset for each prompt at runtime. Supports semantic similarity, maximal
+    marginal relevance, bootstrapped, and length-based selection. 2-5
+    examples is optimal; beyond 5 returns diminish. Last example weighted
+    most heavily due to recency bias.
+  }
+
+  state {
+    pools: set F
+    examples: F -> list {id: String, input: String, output: String,
+                         metadata: option String, embedding: option list Float}
+    selection_strategy: F -> String
+    k: F -> Int
+    diversity_weight: F -> Float
+    quality_scores: F -> list {id: String, score: Float}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action createPool(strategy: String, k: Int, diversity_weight: Float) {
+      -> ok(pool: F) {
+        Strategy: semantic_similarity, mmr, ngram_overlap, length_based,
+        random, bootstrapped. k: number to select. diversity_weight:
+        lambda 0-1 for MMR relevance/diversity balance.
+      }
+      -> invalid(message: String) {
+        Unknown strategy.
+      }
+    }
+
+    action add(pool: F, input: String, output: String,
+               metadata: option String) {
+      -> ok(example_id: String) {
+        Adds example. Embedding computed lazily on first select.
+      }
+      -> notfound(message: String) {
+        Pool not found.
+      }
+    }
+
+    action select(pool: F, input: String, k: option Int) {
+      -> ok(examples: list {input: String, output: String, score: Float}) {
+        Chooses best examples. Ordered by relevance, last weighted most.
+      }
+      -> empty(message: String) {
+        Pool has no examples.
+      }
+    }
+
+    action optimize(pool: F, metric: String,
+                    training_set: list {input: String, expected: String}) {
+      -> ok(optimized_count: Int, avg_score: Float) {
+        DSPy-style bootstrapping: teacher model generates examples,
+        validates against metric, retains highest-quality. Updates
+        quality_scores.
+      }
+      -> error(message: String) {
+        Optimization failed.
+      }
+    }
+
+    action embed(pool: F, model_id: String) {
+      -> ok(embedded_count: Int) {
+        Pre-computes embeddings for all examples.
+      }
+      -> error(message: String) {
+        Embedding model unavailable.
+      }
+    }
+
+    action remove(pool: F, example_id: String) {
+      -> ok(pool: F) {
+        Removes example.
+      }
+      -> notfound(message: String) {
+        Example not found.
+      }
+    }
+  }
+
+  invariant {
+    after createPool(strategy: "semantic_similarity", k: 3,
+                     diversity_weight: 0.5) -> ok(pool: f)
+    and  add(pool: f, input: "What is 2+2?", output: "4", metadata: _)
+      -> ok(example_id: _)
+    then select(pool: f, input: "What is 3+3?", k: _) -> ok(examples: _)
+  }
+}

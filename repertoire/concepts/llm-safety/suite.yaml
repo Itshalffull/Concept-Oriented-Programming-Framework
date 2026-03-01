@@ -1,0 +1,52 @@
+suite:
+  name: llm-safety
+  version: 0.1.0
+  description: >
+    Safety enforcement, execution tracing with cost tracking,
+    and semantic intent routing.
+
+concepts:
+  Guardrail:
+    spec: ./guardrail.concept
+    params:
+      G: { as: guardrail-id, description: "Guardrail rule identifier" }
+  LLMTrace:
+    spec: ./llm-trace.concept
+    params:
+      Z: { as: trace-id, description: "Trace identifier" }
+  SemanticRouter:
+    spec: ./semantic-router.concept
+    params:
+      S: { as: route-id, description: "Semantic route identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/generation-creates-trace-span.sync
+      description: "LLMProvider/generate completion creates an LLMTrace span"
+    - path: ./syncs/guardrail-checks-input.sync
+      description: "User messages are checked by Guardrail before LLM processing"
+    - path: ./syncs/guardrail-checks-output.sync
+      description: "LLM responses are checked by Guardrail before delivery"
+  recommended:
+    - path: ./syncs/trace-records-cost.sync
+      description: "LLMTrace records per-call cost from generation metadata"
+    - path: ./syncs/guardrail-escalates-to-notification.sync
+      description: "Guardrail violations trigger Notification alerts"
+    - path: ./syncs/router-selects-pipeline.sync
+      description: "SemanticRouter matches intent to processing pipeline"
+  integration:
+    - path: ./syncs/trace-exports-opentelemetry.sync
+      description: "LLMTrace spans export to OpenTelemetry-compatible backends"
+
+uses:
+  - suite: llm-core
+    concepts:
+      - name: LLMProvider
+  - suite: notification
+    optional: true
+    concepts:
+      - name: Notification
+  - suite: infrastructure
+    optional: true
+    concepts:
+      - name: EventBus

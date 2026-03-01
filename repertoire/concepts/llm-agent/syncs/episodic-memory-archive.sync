@@ -1,0 +1,10 @@
+# LLMTrace span completions are archived as episodic memories
+# for agent learning and context enrichment.
+
+sync EpisodicMemoryArchive [recommended]
+when {
+  LLMTrace/endSpan: [status: "ok"; metrics: ?m] => _
+}
+then {
+  AgentMemory/remember: [content: ?m; memory_type: "episodic"]
+}

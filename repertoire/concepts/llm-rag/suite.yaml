@@ -1,0 +1,58 @@
+suite:
+  name: llm-rag
+  version: 0.1.0
+  description: >
+    Retrieval-augmented generation: vector storage and search, multi-stage
+    retrieval with reranking, and intelligent document chunking.
+
+concepts:
+  VectorIndex:
+    spec: ./vector-index.concept
+    params:
+      X: { as: index-id, description: "Vector index identifier" }
+  Retriever:
+    spec: ./retriever.concept
+    params:
+      R: { as: retriever-id, description: "Retriever instance identifier" }
+  DocumentChunk:
+    spec: ./document-chunk.concept
+    params:
+      D: { as: chunk-id, description: "Document chunk identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/retriever-embeds-query.sync
+      description: "Retriever/retrieve triggers VectorIndex/embed for query embedding"
+    - path: ./syncs/retriever-searches-index.sync
+      description: "Embedded query vector triggers VectorIndex/search"
+    - path: ./syncs/chunk-embeds-and-indexes.sync
+      description: "DocumentChunk/split triggers VectorIndex/embedBatch"
+  recommended:
+    - path: ./syncs/retriever-reranks-results.sync
+      description: "VectorIndex search results are reranked by Retriever"
+    - path: ./syncs/retriever-injects-into-assembly.sync
+      description: "Retrieved documents inject into PromptAssembly as context"
+  integration:
+    - path: ./syncs/vector-store-provider.sync
+      description: "VectorIndex registers with ContentStorage providers"
+    - path: ./syncs/knowledge-graph-provider.sync
+      description: "GraphRAG entity extraction feeds into Graph concept"
+    - path: ./syncs/embedded-chunks-index.sync
+      description: "Embedded chunk vectors are added to VectorIndex in batch"
+
+uses:
+  - suite: llm-core
+    concepts:
+      - name: LLMProvider
+  - suite: llm-prompt
+    optional: true
+    concepts:
+      - name: PromptAssembly
+  - suite: foundation
+    optional: true
+    concepts:
+      - name: ContentNode
+  - suite: data-organization
+    optional: true
+    concepts:
+      - name: Graph

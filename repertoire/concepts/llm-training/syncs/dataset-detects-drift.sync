@@ -1,0 +1,13 @@
+# EvaluationDataset drift detection above threshold triggers
+# a Notification alert for prompt maintenance.
+
+sync DatasetDetectsDrift [recommended]
+when {
+  EvaluationDataset/detectDrift => [drifted: true; drift_magnitude: ?d]
+}
+where {
+  filter(?d > 0.1)
+}
+then {
+  Notification/send: [channel: "alerts"; message: "Prompt drift detected"]
+}

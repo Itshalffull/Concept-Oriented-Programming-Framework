@@ -1,0 +1,107 @@
+@version(1)
+concept Adapter [A] {
+
+  purpose {
+    LoRA/QLoRA weight management for parameter-efficient fine-tuning.
+    Injects trainable low-rank decomposition matrices into frozen base
+    model layers. Supports training (typically <0.2% of total parameters),
+    merging into base weights (zero inference latency), hot-swapping at
+    inference time, and composing multiple adapters.
+  }
+
+  state {
+    adapters: set A
+    name: A -> String
+    base_model_id: A -> String
+    rank: A -> Int
+    target_modules: A -> list String
+    quantization: A -> String
+    weights: A -> option Bytes
+    training_status: A -> String
+    merged: A -> Bool
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, base_model_id: String, rank: Int,
+                  target_modules: list String, quantization: String) {
+      -> ok(adapter: A) {
+        Creates adapter config. Rank: typically 8-64 (lower = fewer
+        params, less expressive). Target_modules: query, value, key,
+        output (projection matrices to inject into). Quantization:
+        none, 4bit (QLoRA), 8bit. Training_status: "untrained".
+      }
+      -> invalid(message: String) {
+        Invalid rank or unknown target modules.
+      }
+    }
+
+    action train(adapter: A, dataset_ref: String,
+                 config: {learning_rate: Float, epochs: Int,
+                         batch_size: Int}) {
+      -> ok(adapter: A, trainable_params: Int, total_params: Int,
+            trainable_pct: Float) {
+        Trains the adapter weights. Reports parameter efficiency.
+        Typical: trainable_pct < 0.2%. Training_status: "trained".
+      }
+      -> error(message: String) {
+        Training failed.
+      }
+    }
+
+    action merge(adapter: A) {
+      -> ok(merged_model_id: String) {
+        Folds adapter weights into base model weights. Results in zero
+        additional inference latency. Sets merged=true. The merged model
+        can be registered as a new LLMProvider.
+      }
+      -> not_trained(message: String) {
+        Adapter not trained yet.
+      }
+    }
+
+    action swap(adapter: A, active: Bool) {
+      -> ok(adapter: A) {
+        Hot-swaps adapter at inference time. When active=true, adapter
+        weights are applied on top of frozen base model for each forward
+        pass. Multiple adapters can be swapped without reloading the
+        base model.
+      }
+      -> not_trained(message: String) {
+        Adapter not trained.
+      }
+    }
+
+    action compose(adapter_a: A, adapter_b: A) {
+      -> ok(combined: A) {
+        Stacks two adapters. Combined effect applied at inference.
+        Useful for combining domain adaptation + task specialization.
+      }
+      -> incompatible(message: String) {
+        Adapters target different base models or incompatible modules.
+      }
+    }
+
+    action export(adapter: A, format: String) {
+      -> ok(path: String) {
+        Exports adapter weights. Format: safetensors, peft_checkpoint.
+      }
+      -> not_trained(message: String) {
+        Nothing to export.
+      }
+    }
+  }
+
+  invariant {
+    after create(name: "domain_lora", base_model_id: "llama-3", rank: 16,
+                 target_modules: ["query", "value"], quantization: "4bit")
+      -> ok(adapter: a)
+    then train(adapter: a, dataset_ref: "ds1",
+               config: {learning_rate: 0.0002, epochs: 3, batch_size: 4})
+      -> ok(adapter: a, trainable_params: _, total_params: _,
+            trainable_pct: _)
+  }
+}

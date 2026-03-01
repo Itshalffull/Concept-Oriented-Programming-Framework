@@ -1,0 +1,92 @@
+@version(1)
+concept Signature [G] {
+
+  purpose {
+    Declarative definition of an input-output transformation schema for
+    LLM calls. Replaces raw string prompts as the foundational unit of
+    model instruction. Developer specifies WHAT (input/output fields,
+    optional instruction); the compilation engine discovers the optimal
+    prompt formulation for the target model. Recompile for model portability.
+  }
+
+  state {
+    signatures: set G
+    name: G -> String
+    input_fields: G -> list {name: String, type: String,
+                             description: option String}
+    output_fields: G -> list {name: String, type: String,
+                              description: option String}
+    instruction: G -> option String
+    module_type: G -> String
+    compiled_prompts: G -> list {model_id: String, prompt: String}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(name: String,
+                  input_fields: list {name: String, type: String,
+                                     description: option String},
+                  output_fields: list {name: String, type: String,
+                                      description: option String},
+                  instruction: option String, module_type: String) {
+      -> ok(signature: G) {
+        Module type: predict (simple I/O), chain_of_thought (rationale
+        before answer), react (reasoning + tool actions), program_of_thought
+        (generates code to compute answer).
+      }
+      -> invalid(message: String) {
+        Missing input or output fields.
+      }
+    }
+
+    action compile(signature: G, model_id: String,
+                   examples: option list {input: String, output: String}) {
+      -> ok(compiled_prompt: String) {
+        Compiles to optimized prompt for target model. Includes generated
+        instruction (if absent), field descriptions, format directives,
+        and demonstrations. Stores in compiled_prompts.
+      }
+      -> error(message: String) {
+        Compilation failed.
+      }
+    }
+
+    action execute(signature: G, model_id: String,
+                   inputs: list {field: String, value: String}) {
+      -> ok(outputs: list {field: String, value: String}) {
+        Executes compiled signature. Chain_of_thought outputs include
+        rationale field. React outputs include action_trace.
+      }
+      -> validation_error(field: String, message: String) {
+        Output field failed type validation.
+      }
+      -> not_compiled(message: String) {
+        No compiled prompt for this model_id.
+      }
+    }
+
+    action recompile(signature: G, target_model: String) {
+      -> ok(compiled_prompt: String) {
+        Recompiles for a different model without changing the definition.
+      }
+      -> error(message: String) {
+        Recompilation failed.
+      }
+    }
+  }
+
+  invariant {
+    after define(name: "QA", input_fields: [{name: "context", type: "String",
+                 description: _}, {name: "question", type: "String",
+                 description: _}],
+                 output_fields: [{name: "answer", type: "String",
+                 description: _}],
+                 instruction: _, module_type: "chain_of_thought")
+      -> ok(signature: g)
+    then compile(signature: g, model_id: "gpt-4o", examples: _)
+      -> ok(compiled_prompt: _)
+  }
+}

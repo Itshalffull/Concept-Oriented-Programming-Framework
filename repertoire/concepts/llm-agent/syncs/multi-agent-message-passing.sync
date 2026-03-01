@@ -1,0 +1,10 @@
+# Agent results append to shared Conversation for multi-agent
+# communication via message-passing patterns.
+
+sync MultiAgentMessagePassing [eager]
+when {
+  AgentLoop/run => [result: ?result]
+}
+then {
+  Conversation/append: [content: ?result]
+}

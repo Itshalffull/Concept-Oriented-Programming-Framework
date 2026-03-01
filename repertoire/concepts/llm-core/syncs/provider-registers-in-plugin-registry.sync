@@ -1,0 +1,10 @@
+# LLMProvider instances self-register with PluginRegistry for
+# discovery by ModelRouter and other consumers.
+
+sync ProviderRegistersInPluginRegistry [eager]
+when {
+  LLMProvider/register => [provider: ?p]
+}
+then {
+  PluginRegistry/register: [plugin_type: "llm_provider"; plugin_id: ?p]
+}

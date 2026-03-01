@@ -1,0 +1,10 @@
+# Retriever retrieval triggers query embedding via VectorIndex
+# for semantic similarity search.
+
+sync RetrieverEmbedsQuery [eager]
+when {
+  Retriever/retrieve: [query: ?q] => _
+}
+then {
+  VectorIndex/embed: [text: ?q]
+}

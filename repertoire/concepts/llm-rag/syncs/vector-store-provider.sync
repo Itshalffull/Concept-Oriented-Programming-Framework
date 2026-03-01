@@ -1,0 +1,10 @@
+# VectorIndex registers with ContentStorage to enable unified
+# storage management across vector backends.
+
+sync VectorStoreProvider [eager]
+when {
+  VectorIndex/create => [index: ?x]
+}
+then {
+  ContentStorage/register: [provider_type: "vector_store"; provider_id: ?x]
+}

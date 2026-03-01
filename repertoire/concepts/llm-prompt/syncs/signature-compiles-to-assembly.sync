@@ -1,0 +1,10 @@
+# Signature compilation output is injected into PromptAssembly
+# as a high-priority system section.
+
+sync SignatureCompilesToAssembly [eager]
+when {
+  Signature/compile => [compiled_prompt: ?prompt]
+}
+then {
+  PromptAssembly/addSection: [name: "compiled_signature"; role: "system"; priority: 90; max_tokens: 2000; required: true; content: ?prompt]
+}

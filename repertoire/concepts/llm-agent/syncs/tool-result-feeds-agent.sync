@@ -1,0 +1,10 @@
+# ToolBinding invocation results feed back into AgentLoop as
+# observations for the next reasoning step.
+
+sync ToolResultFeedsAgent [eager]
+when {
+  ToolBinding/invoke => [result: ?result]
+}
+then {
+  AgentLoop/observe: [observation: ?result]
+}

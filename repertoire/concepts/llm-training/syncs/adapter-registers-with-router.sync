@@ -1,0 +1,10 @@
+# Active adapter swap registers the adapted model with ModelRouter
+# for automatic routing to fine-tuned variants.
+
+sync AdapterRegistersWithRouter [eager]
+when {
+  Adapter/swap: [adapter: ?a; active: true] => _
+}
+then {
+  ModelRouter/addRoute: [model_id: ?a]
+}

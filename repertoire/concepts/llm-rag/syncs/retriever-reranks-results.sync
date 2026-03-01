@@ -1,0 +1,10 @@
+# VectorIndex search results are passed through Retriever's
+# cross-encoder reranker for improved relevance ordering.
+
+sync RetrieverReranksResults [recommended]
+when {
+  VectorIndex/search => [results: ?results]
+}
+then {
+  Retriever/rerank: [documents: ?results]
+}

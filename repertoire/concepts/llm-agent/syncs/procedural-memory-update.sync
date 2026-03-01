@@ -1,0 +1,13 @@
+# Efficient agent runs (completed in few steps) are stored as
+# procedural memory for reuse in similar future tasks.
+
+sync ProceduralMemoryUpdate [recommended]
+when {
+  AgentLoop/run => [result: ?r; steps: ?s]
+}
+where {
+  filter(?s < 3)
+}
+then {
+  AgentMemory/remember: [content: ?r; memory_type: "procedural"]
+}

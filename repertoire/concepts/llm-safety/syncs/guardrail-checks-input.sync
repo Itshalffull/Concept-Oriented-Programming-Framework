@@ -1,0 +1,13 @@
+# User messages appended to Conversation are checked by Guardrail
+# before being sent to the LLM for processing.
+
+sync GuardrailChecksInput [eager]
+when {
+  Conversation/append => [message_id: ?m]
+}
+where {
+  filter(?role = "user")
+}
+then {
+  Guardrail/checkInput: [message: ?content]
+}

@@ -1,0 +1,51 @@
+@version(1)
+concept ReflectionStrategy [S] {
+
+  purpose {
+    Reflection strategy provider. Iterative self-critique and revision:
+    generate a draft, critique it, revise, repeat until satisfactory or
+    max rounds. Improves output quality at the cost of latency.
+    Registers under strategy_id "reflection".
+  }
+
+  state {
+    sessions: set S
+    draft_history: S -> list {draft: String, critique: String, round: Int}
+    max_rounds: S -> Int
+    agent_ref: S -> String
+  }
+
+  actions {
+    action execute(agent_ref: String, goal: String, context: String,
+                   available_tools: list String, max_iterations: Int) {
+      -> ok(result: String, rounds: Int,
+            history: list {draft: String, critique: String}) {
+        (1) Draft — generate initial response.
+        (2) Critique — self-evaluate against goal and quality criteria.
+        (3) Revise — generate improved version addressing critique.
+        (4) Repeat until critique finds no issues or max_rounds reached.
+      }
+      -> max_rounds(best_draft: String, rounds: Int) {
+        Could not achieve satisfactory quality.
+      }
+    }
+
+    action critique(session: S, draft: String) {
+      -> ok(critique: String, satisfactory: Bool) {
+        Self-evaluates the draft. If satisfactory, no revision needed.
+      }
+    }
+
+    action revise(session: S, draft: String, critique: String) {
+      -> ok(revised: String) {
+        Generates improved version addressing critique points.
+      }
+    }
+
+    action getState(session: S) {
+      -> ok(history: list {draft: String, critique: String, round: Int}) {
+        Returns draft/critique history.
+      }
+    }
+  }
+}

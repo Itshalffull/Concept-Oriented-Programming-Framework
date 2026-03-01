@@ -1,0 +1,60 @@
+@version(1)
+concept ReactStrategy [S] {
+
+  purpose {
+    ReAct (Reasoning + Acting) strategy provider for AgentLoop. Implements
+    the greedy think-act-observe cycle with an interleaved scratchpad.
+    Good for simple tasks requiring sequential tool use. Registers itself
+    with PluginRegistry under strategy_id "react".
+  }
+
+  state {
+    sessions: set S
+    scratchpad: S -> list {type: String, content: String, step: Int}
+    agent_ref: S -> String
+  }
+
+  actions {
+    action execute(agent_ref: String, goal: String, context: String,
+                   available_tools: list String, max_iterations: Int) {
+      -> ok(result: String, steps: Int, tool_calls: Int,
+            scratchpad: list {type: String, content: String}) {
+        Runs the ReAct loop: (1) Think — generate reasoning about what
+        to do next. (2) Act — choose a tool and arguments, or produce
+        final answer. (3) Observe — receive tool result. Loop until
+        final answer or max_iterations. Scratchpad accumulates
+        Thought/Action/Observation triples.
+      }
+      -> max_iterations(partial: String, steps: Int) {
+        Hit limit without final answer.
+      }
+      -> error(message: String) {
+        Execution failed.
+      }
+    }
+
+    action stepOnce(session: S) {
+      -> thought(reasoning: String) {
+        Generated a thought. Awaiting action decision.
+      }
+      -> action_request(tool_name: String, arguments: String) {
+        Chose a tool.
+      }
+      -> final_answer(result: String) {
+        Reached conclusion.
+      }
+    }
+
+    action addObservation(session: S, observation: String) {
+      -> ok(session: S) {
+        Adds tool result to scratchpad.
+      }
+    }
+
+    action getState(session: S) {
+      -> ok(scratchpad: list {type: String, content: String, step: Int}) {
+        Returns current scratchpad for serialization.
+      }
+    }
+  }
+}

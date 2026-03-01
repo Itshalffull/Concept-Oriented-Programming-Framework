@@ -1,0 +1,46 @@
+suite:
+  name: llm-core
+  version: 0.1.0
+  description: >
+    Foundation primitives for LLM model interaction: provider abstraction
+    and intelligent model routing.
+
+concepts:
+  LLMProvider:
+    spec: ./llm-provider.concept
+    params:
+      P: { as: provider-id, description: "Provider instance identifier" }
+  ModelRouter:
+    spec: ./model-router.concept
+    params:
+      R: { as: route-id, description: "Route definition identifier" }
+
+syncs:
+  required:
+    - path: ./syncs/router-selects-provider.sync
+      description: "ModelRouter/route resolves to LLMProvider/generate"
+    - path: ./syncs/generation-records-usage.sync
+      description: "LLMProvider/generate completion creates LLMTrace span"
+  recommended:
+    - path: ./syncs/router-circuit-breaker.sync
+      description: "LLMProvider unavailable triggers ModelRouter fallback"
+    - path: ./syncs/cost-threshold-alert.sync
+      description: "Cost exceeding threshold triggers AutomationRule"
+  integration:
+    - path: ./syncs/provider-registers-in-plugin-registry.sync
+      description: "LLMProvider registers itself with PluginRegistry"
+    - path: ./syncs/provider-health-to-eventbus.sync
+      description: "LLMProvider health changes publish to EventBus"
+
+uses:
+  - suite: infrastructure
+    optional: true
+    concepts:
+      - name: PluginRegistry
+      - name: EventBus
+      - name: Cache
+      - name: Queue
+  - suite: automation
+    optional: true
+    concepts:
+      - name: AutomationRule

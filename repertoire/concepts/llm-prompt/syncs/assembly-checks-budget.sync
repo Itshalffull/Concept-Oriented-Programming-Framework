@@ -1,0 +1,13 @@
+# PromptAssembly truncates lowest-priority sections when total
+# token count exceeds the context window budget.
+
+sync AssemblyChecksBudget [eager]
+when {
+  PromptAssembly/assemble => [total_tokens: ?t]
+}
+where {
+  filter(?t > ?context_window)
+}
+then {
+  PromptAssembly/removeSection: [name: "few_shot_examples"]
+}

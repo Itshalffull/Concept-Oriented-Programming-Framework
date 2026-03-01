@@ -1,0 +1,10 @@
+# AgentLoop run triggers AgentMemory recall to inject relevant
+# semantic memories into the agent's context.
+
+sync AgentRecallsMemory [recommended]
+when {
+  AgentLoop/run: [goal: ?g] => _
+}
+then {
+  AgentMemory/recall: [query: ?g; memory_type: "semantic"; k: 5]
+}

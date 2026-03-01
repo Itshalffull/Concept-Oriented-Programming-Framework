@@ -1,0 +1,107 @@
+@version(1)
+@gate
+concept Consensus [N] {
+
+  purpose {
+    Multi-agent decision-making when agents produce contradictory results
+    or propose incompatible strategies. Supports voting (simple majority,
+    weighted, unanimous), confidence-based resolution (with overconfidence
+    discounting), and iterative refinement (agents debate until convergence).
+  }
+
+  state {
+    sessions: set N
+    proposal: N -> String
+    votes: N -> list {agent_id: String, position: String,
+                      confidence: Float, reasoning: String}
+    method: N -> String
+    max_rounds: N -> Int
+    current_round: N -> Int
+    agent_weights: N -> list {agent_id: String, weight: Float}
+    outcome: N -> option {decision: String, method: String, round: Int}
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(proposal: String, method: String, max_rounds: Int) {
+      -> ok(session: N) {
+        Creates a consensus session. Method: simple_majority, weighted
+        (by historical accuracy), unanimous, supermajority,
+        confidence_based, iterative_refinement.
+      }
+      -> invalid(message: String) {
+        Unknown method.
+      }
+    }
+
+    action vote(session: N, agent_id: String, position: String,
+                confidence: Float, reasoning: String) {
+      -> ok(session: N) {
+        Records a vote. Position is the agent's answer or choice.
+        Confidence 0.0-1.0. For confidence_based: chronically
+        overconfident agents get dynamically discounted.
+      }
+      -> already_voted(message: String) {
+        Agent already voted this round.
+      }
+    }
+
+    action tally(session: N) {
+      -> ok(decision: String, vote_count: Int,
+            breakdown: list {position: String, votes: Int,
+                            weighted_score: Float}) {
+        Computes outcome based on method.
+      }
+      -> deadlock(positions: list {position: String, votes: Int}) {
+        No clear winner. May need another round or escalation.
+      }
+    }
+
+    action challenge(session: N, agent_id: String,
+                     counter_argument: String) {
+      -> ok(new_round: Int) {
+        Starts a new round. For iterative_refinement: dissenting
+        agents share reasoning, all agents re-vote. Increments
+        current_round.
+      }
+      -> max_rounds_exceeded(best_position: String) {
+        Hit max_rounds without convergence.
+      }
+    }
+
+    action resolve(session: N) {
+      -> ok(decision: String, confidence: Float, method: String) {
+        Forces a final decision. Uses the highest-confidence position
+        if tally produced a deadlock.
+      }
+      -> unresolvable(positions: list String) {
+        Cannot determine a winner by any fallback method.
+        Should escalate to human.
+      }
+    }
+
+    action setWeight(session: N, agent_id: String, weight: Float) {
+      -> ok(session: N) {
+        Adjusts agent influence. Based on historical accuracy.
+      }
+      -> notfound(message: String) {
+        Agent not participating.
+      }
+    }
+  }
+
+  invariant {
+    after create(proposal: "Which approach to use?",
+                 method: "weighted", max_rounds: 3) -> ok(session: n)
+    and  vote(session: n, agent_id: "a1", position: "approach_A",
+              confidence: 0.8, reasoning: "Better coverage")
+      -> ok(session: n)
+    and  vote(session: n, agent_id: "a2", position: "approach_B",
+              confidence: 0.6, reasoning: "Lower cost")
+      -> ok(session: n)
+    then tally(session: n) -> ok(decision: _, vote_count: 2, breakdown: _)
+  }
+}
