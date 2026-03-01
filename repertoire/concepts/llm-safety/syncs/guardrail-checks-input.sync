@@ -3,7 +3,7 @@
 
 sync GuardrailChecksInput [eager]
 when {
-  Conversation/append => [message_id: ?m]
+  Conversation/append: [] => [message_id: ?m]
 }
 where {
   filter(?role = "user")

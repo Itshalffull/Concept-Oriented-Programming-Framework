@@ -3,7 +3,7 @@
 
 sync AgentInvokesTool [eager]
 when {
-  AgentLoop/step => [action_request: true; tool_name: ?tool; arguments: ?args]
+  AgentLoop/step: [] => [action_request: true; tool_name: ?tool; arguments: ?args]
 }
 then {
   ToolBinding/invoke: [tool: ?tool; arguments: ?args]

@@ -3,7 +3,7 @@
 
 sync RetrieverEmbedsQuery [eager]
 when {
-  Retriever/retrieve: [query: ?q] => _
+  Retriever/retrieve: [query: ?q] => []
 }
 then {
   VectorIndex/embed: [text: ?q]

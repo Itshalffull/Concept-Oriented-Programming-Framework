@@ -3,7 +3,7 @@
 
 sync ProviderRegistersInPluginRegistry [eager]
 when {
-  LLMProvider/register => [provider: ?p]
+  LLMProvider/register: [] => [provider: ?p]
 }
 then {
   PluginRegistry/register: [plugin_type: "llm_provider"; plugin_id: ?p]

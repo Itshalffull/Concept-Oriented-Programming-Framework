@@ -3,7 +3,7 @@
 
 sync GuardrailEscalatesToNotification [recommended]
 when {
-  Guardrail/checkInput => [violation: true; severity: ?sev; explanation: ?exp]
+  Guardrail/checkInput: [] => [violation: true; severity: ?sev; explanation: ?exp]
 }
 where {
   filter(?sev = "critical")

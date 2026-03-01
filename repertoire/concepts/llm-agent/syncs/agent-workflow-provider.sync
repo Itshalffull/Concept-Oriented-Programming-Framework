@@ -3,7 +3,7 @@
 
 sync AgentWorkflowProvider [eager]
 when {
-  AgentLoop/run => [result: ?result; steps: ?steps]
+  AgentLoop/run: [] => [result: ?result; steps: ?steps]
 }
 then {
   Workflow/complete: [data: ?result]

@@ -3,7 +3,7 @@
 
 sync CostThresholdAlert [recommended]
 when {
-  LLMTrace/getCost => [total: ?total]
+  LLMTrace/getCost: [] => [total: ?total]
 }
 where {
   filter(?total > 100.0)

@@ -3,7 +3,7 @@
 
 sync AgentRemembersStep [recommended]
 when {
-  AgentLoop/step => [reasoning: ?r; step: ?s]
+  AgentLoop/step: [] => [reasoning: ?r; step: ?s]
 }
 then {
   AgentMemory/remember: [content: ?r; memory_type: "episodic"]

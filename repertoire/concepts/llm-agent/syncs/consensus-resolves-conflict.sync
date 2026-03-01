@@ -3,8 +3,8 @@
 
 sync ConsensusResolvesConflict [eager]
 when {
-  AgentTeam/resolveConflict: [team: ?m; task_id: ?t] => _
+  AgentTeam/resolveConflict: [team: ?m; task_id: ?t] => []
 }
 then {
-  Consensus/tally: [session: _]
+  Consensus/tally: [session: ?t]
 }

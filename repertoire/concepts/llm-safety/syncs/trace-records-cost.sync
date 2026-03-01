@@ -3,7 +3,7 @@
 
 sync TraceRecordsCost [recommended]
 when {
-  LLMProvider/generate => [response: ?resp]
+  LLMProvider/generate: [] => [response: ?resp]
 }
 then {
   LLMTrace/addMetric: [key: "cost"; value: ?resp]

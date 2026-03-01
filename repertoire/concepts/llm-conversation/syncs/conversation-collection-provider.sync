@@ -3,7 +3,7 @@
 
 sync ConversationCollectionProvider [eager]
 when {
-  Conversation/create => [conversation: ?c]
+  Conversation/create: [] => [conversation: ?c]
 }
 then {
   Collection/add: [item: ?c; collection_type: "conversation"]

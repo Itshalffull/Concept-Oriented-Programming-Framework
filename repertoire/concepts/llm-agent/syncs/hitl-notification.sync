@@ -3,7 +3,7 @@
 
 sync HITLNotification [eager]
 when {
-  ToolBinding/invoke => [approval_required: true; tool: ?t; arguments: ?args]
+  ToolBinding/invoke: [] => [approval_required: true; tool: ?t; arguments: ?args]
 }
 then {
   Notification/send: [channel: "hitl"; message: ?args]

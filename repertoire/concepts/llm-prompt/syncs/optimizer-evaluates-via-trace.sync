@@ -3,7 +3,7 @@
 
 sync OptimizerEvaluatesViaTrace [recommended]
 when {
-  PromptOptimizer/evaluate => [score: ?score]
+  PromptOptimizer/evaluate: [] => [score: ?score]
 }
 then {
   LLMTrace/addMetric: [key: "optimizer_score"; value: ?score]

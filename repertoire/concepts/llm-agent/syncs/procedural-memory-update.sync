@@ -3,7 +3,7 @@
 
 sync ProceduralMemoryUpdate [recommended]
 when {
-  AgentLoop/run => [result: ?r; steps: ?s]
+  AgentLoop/run: [] => [result: ?r; steps: ?s]
 }
 where {
   filter(?s < 3)

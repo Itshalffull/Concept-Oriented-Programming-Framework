@@ -3,7 +3,7 @@
 
 sync AdapterRegistersWithRouter [eager]
 when {
-  Adapter/swap: [adapter: ?a; active: true] => _
+  Adapter/swap: [adapter: ?a; active: true] => []
 }
 then {
   ModelRouter/addRoute: [model_id: ?a]

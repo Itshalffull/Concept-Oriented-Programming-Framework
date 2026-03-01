@@ -3,7 +3,7 @@
 
 sync AssemblySelectsExamples [eager]
 when {
-  PromptAssembly/assemble => _
+  PromptAssembly/assemble: [] => []
 }
 then {
   FewShotExample/select: [input: ?user_input]

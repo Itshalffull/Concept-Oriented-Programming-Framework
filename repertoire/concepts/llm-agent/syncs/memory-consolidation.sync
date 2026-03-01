@@ -3,7 +3,7 @@
 
 sync MemoryConsolidation [eventual]
 when {
-  AgentMemory/remember => [entry: ?e]
+  AgentMemory/remember: [] => [entry: ?e]
 }
 then {
   AgentMemory/consolidate: []

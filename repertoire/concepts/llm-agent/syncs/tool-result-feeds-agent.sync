@@ -3,7 +3,7 @@
 
 sync ToolResultFeedsAgent [eager]
 when {
-  ToolBinding/invoke => [result: ?result]
+  ToolBinding/invoke: [] => [result: ?result]
 }
 then {
   AgentLoop/observe: [observation: ?result]

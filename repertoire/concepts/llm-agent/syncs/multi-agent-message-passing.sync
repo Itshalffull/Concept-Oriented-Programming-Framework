@@ -3,7 +3,7 @@
 
 sync MultiAgentMessagePassing [eager]
 when {
-  AgentLoop/run => [result: ?result]
+  AgentLoop/run: [] => [result: ?result]
 }
 then {
   Conversation/append: [content: ?result]

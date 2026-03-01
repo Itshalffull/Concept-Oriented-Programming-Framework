@@ -3,8 +3,8 @@
 
 sync TrainingTracksCost [recommended]
 when {
-  TrainingRun/start => [run: ?j]
+  TrainingRun/start: [] => [run: ?j]
 }
 then {
-  LLMTrace/startTrace: [tags: [{key: "training_run", value: ?j}]]
+  LLMTrace/startTrace: [name: ?j]
 }

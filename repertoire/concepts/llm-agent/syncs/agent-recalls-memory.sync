@@ -3,7 +3,7 @@
 
 sync AgentRecallsMemory [recommended]
 when {
-  AgentLoop/run: [goal: ?g] => _
+  AgentLoop/run: [goal: ?g] => []
 }
 then {
   AgentMemory/recall: [query: ?g; memory_type: "semantic"; k: 5]

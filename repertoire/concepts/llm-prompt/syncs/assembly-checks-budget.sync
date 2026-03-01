@@ -3,7 +3,7 @@
 
 sync AssemblyChecksBudget [eager]
 when {
-  PromptAssembly/assemble => [total_tokens: ?t]
+  PromptAssembly/assemble: [] => [total_tokens: ?t]
 }
 where {
   filter(?t > ?context_window)

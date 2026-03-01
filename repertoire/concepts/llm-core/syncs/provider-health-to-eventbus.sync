@@ -3,7 +3,7 @@
 
 sync ProviderHealthToEventBus [eager]
 when {
-  LLMProvider/healthCheck => [status: ?status; latency_ms: ?latency]
+  LLMProvider/healthCheck: [] => [status: ?status; latency_ms: ?latency]
 }
 then {
   EventBus/publish: [topic: "llm.health"; data: ?status]

@@ -2,7 +2,7 @@
 
 sync GenerationRecordsUsage [eager]
 when {
-  LLMProvider/generate => [response: ?resp]
+  LLMProvider/generate: [] => [response: ?resp]
 }
 then {
   LLMTrace/endSpan: [status: "ok"; metrics: ?resp]

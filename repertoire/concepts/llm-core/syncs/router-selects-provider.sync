@@ -2,7 +2,7 @@
 
 sync RouterSelectsProvider [eager]
 when {
-  ModelRouter/route => [model_id: ?model]
+  ModelRouter/route: [] => [model_id: ?model]
 }
 then {
   LLMProvider/generate: [provider: ?model]

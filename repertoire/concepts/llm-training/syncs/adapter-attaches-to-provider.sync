@@ -3,7 +3,7 @@
 
 sync AdapterAttachesToProvider [eager]
 when {
-  Adapter/merge => [merged_model_id: ?model]
+  Adapter/merge: [] => [merged_model_id: ?model]
 }
 then {
   LLMProvider/register: [model_id: ?model]

@@ -3,7 +3,7 @@
 
 sync HandoffPackagesContext [eager]
 when {
-  AgentHandoff/prepare => [handoff: ?d; context_package: ?pkg]
+  AgentHandoff/prepare: [] => [handoff: ?d; context_package: ?pkg]
 }
 then {
   AgentLoop/run: [context: ?pkg]

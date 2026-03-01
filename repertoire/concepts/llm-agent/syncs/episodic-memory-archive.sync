@@ -3,7 +3,7 @@
 
 sync EpisodicMemoryArchive [recommended]
 when {
-  LLMTrace/endSpan: [status: "ok"; metrics: ?m] => _
+  LLMTrace/endSpan: [status: "ok"; metrics: ?m] => []
 }
 then {
   AgentMemory/remember: [content: ?m; memory_type: "episodic"]

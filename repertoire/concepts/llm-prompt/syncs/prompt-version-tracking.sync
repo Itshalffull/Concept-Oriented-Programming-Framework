@@ -3,7 +3,7 @@
 
 sync PromptVersionTracking [eager]
 when {
-  PromptAssembly/assemble => [prompt: ?prompt; total_tokens: ?tokens]
+  PromptAssembly/assemble: [] => [prompt: ?prompt; total_tokens: ?tokens]
 }
 then {
   Version/snapshot: [entity: ?assembly; data: ?prompt; author: "system"]

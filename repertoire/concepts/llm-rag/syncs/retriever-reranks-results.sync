@@ -3,7 +3,7 @@
 
 sync RetrieverReranksResults [recommended]
 when {
-  VectorIndex/search => [results: ?results]
+  VectorIndex/search: [] => [results: ?results]
 }
 then {
   Retriever/rerank: [documents: ?results]

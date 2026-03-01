@@ -3,7 +3,7 @@
 
 sync DatasetDetectsDrift [recommended]
 when {
-  EvaluationDataset/detectDrift => [drifted: true; drift_magnitude: ?d]
+  EvaluationDataset/detectDrift: [] => [drifted: true; drift_magnitude: ?d]
 }
 where {
   filter(?d > 0.1)

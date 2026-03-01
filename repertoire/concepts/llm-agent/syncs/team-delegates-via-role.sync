@@ -3,7 +3,7 @@
 
 sync TeamDelegatesViaRole [eager]
 when {
-  AgentTeam/delegate: [team: ?m; task: ?t] => _
+  AgentTeam/delegate: [team: ?m; task: ?t] => []
 }
 then {
   AgentRole/match: [task_type: ?t]

@@ -3,7 +3,7 @@
 
 sync EmbeddedChunksIndex [eager]
 when {
-  VectorIndex/embedBatch => [vectors: ?vectors]
+  VectorIndex/embedBatch: [] => [vectors: ?vectors]
 }
 then {
   VectorIndex/addBatch: [items: ?vectors]
