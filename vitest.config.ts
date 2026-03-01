@@ -14,6 +14,7 @@ export default defineConfig({
       'generated/typescript/**/*.test.ts',
       'generated/deploy/**/*.test.ts',
       'generated/repertoire/**/*.test.ts',
+      'generated/nextjs/**/*.test.ts',
       'framework/**/tests/**/*.test.ts',
       'codegen/**/*.test.ts',
       'kits/generation/tests/**/*.test.ts',
