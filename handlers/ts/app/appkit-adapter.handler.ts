@@ -9,7 +9,7 @@
 import type { ConceptHandler } from '@clef/runtime';
 
 // Widget-to-AppKit mapping structure
-interface WidgetMapping {
+export interface WidgetMapping {
   viewClass: string;                       // Primary NSView subclass
   viewProperties: Record<string, unknown>; // Default property assignments
   eventMap: Record<string, string>;        // Widget event → AppKit selector
@@ -31,7 +31,7 @@ const APPKIT_ACTION_MAP: Record<string, string> = {
 // AppKit Widget Map — 122 Surface widgets → NSView mappings
 // ============================================================
 
-const APPKIT_WIDGET_MAP: Record<string, WidgetMapping> = {
+export const APPKIT_WIDGET_MAP: Record<string, WidgetMapping> = {
   // ----------------------------------------------------------
   // Atomic Primitives
   // ----------------------------------------------------------
