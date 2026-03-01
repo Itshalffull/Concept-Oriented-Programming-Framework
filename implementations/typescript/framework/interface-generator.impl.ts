@@ -22,6 +22,10 @@ export interface InterfaceManifest {
   specFormats: string[];
   concepts: string[];
   outputDir: string;
+  /** Per-target output directory overrides. Keys are target names,
+   *  values are directory paths relative to outputDir. Defaults to
+   *  the target name when not specified. */
+  targetDirs: Record<string, string>;
   formatting: string;
   manifestYaml: Record<string, unknown>;
 }
@@ -41,6 +45,8 @@ export interface GenerationPlan {
   specFormats: string[];
   concepts: string[];
   outputDir: string;
+  /** Per-target output directory overrides (target name → relative dir). */
+  targetDirs: Record<string, string>;
   formatting: string;
   estimatedFiles: number;
   status: string;
@@ -60,6 +66,20 @@ export interface GenerationHistoryEntry {
   targets: string[];
   filesGenerated: number;
   breaking: boolean;
+}
+
+// --- Target Directory Resolution ---
+
+/**
+ * Resolve the output directory for a given target. Uses the per-target
+ * `dir` override from the manifest when present, otherwise falls back
+ * to the target name itself.
+ */
+export function resolveTargetDir(
+  targetDirs: Record<string, string>,
+  target: string,
+): string {
+  return targetDirs[target] || target;
 }
 
 // --- File Estimation ---
@@ -187,6 +207,7 @@ export function createInterfaceGeneratorHandler(
         specFormats: manifest.specFormats,
         concepts: manifest.concepts,
         outputDir: manifest.outputDir,
+        targetDirs: manifest.targetDirs || {},
         formatting: manifest.formatting,
         estimatedFiles,
         status: 'planned',
@@ -282,9 +303,10 @@ export function createInterfaceGeneratorHandler(
 
             if (result.variant === 'ok' && Array.isArray(result.files)) {
               const files = result.files as GeneratedFile[];
+              const dir = resolveTargetDir(plan.targetDirs, target);
               for (const f of files) {
                 allFiles.push({
-                  path: `${target}/${f.path}`,
+                  path: `${dir}/${f.path}`,
                   content: f.content,
                 });
               }

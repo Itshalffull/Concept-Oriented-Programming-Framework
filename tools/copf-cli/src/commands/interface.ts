@@ -18,6 +18,7 @@ import { schemaGenHandler } from '../../../../implementations/typescript/framewo
 import { projectionHandler } from '../../../../implementations/typescript/framework/projection.impl.js';
 import {
   createInterfaceGeneratorHandler,
+  resolveTargetDir,
   type InterfaceManifest,
   type GeneratedFile,
   type ProviderRegistry,
@@ -124,6 +125,18 @@ function yamlToInterfaceManifest(
   const specs = yaml.specs as Record<string, unknown> || {};
   const output = yaml.output as Record<string, unknown> || {};
 
+  // Build per-target directory overrides from each target's `dir` field.
+  // When a target declares `dir: some/path`, generated files for that
+  // target are written under `<output.dir>/some/path/` instead of the
+  // default `<output.dir>/<target-name>/`.
+  const targetDirs: Record<string, string> = {};
+  for (const [targetName, targetConfig] of Object.entries(targets)) {
+    const cfg = targetConfig as Record<string, unknown> | null;
+    if (cfg?.dir && typeof cfg.dir === 'string') {
+      targetDirs[targetName] = cfg.dir;
+    }
+  }
+
   return {
     kit: (iface.name as string) || '',
     version: String(iface.version || '1.0.0'),
@@ -134,6 +147,7 @@ function yamlToInterfaceManifest(
       .map(([k]) => k),
     concepts: conceptNames,
     outputDir: (output.dir as string) || './generated/interfaces',
+    targetDirs,
     formatting: 'prettier',
     manifestYaml: yaml,
   };
@@ -325,8 +339,9 @@ async function interfaceGenerate(
       );
 
       if (entrypointResult.content) {
+        const dir = resolveTargetDir(manifest.targetDirs, target);
         allFiles.push({
-          path: `${target}/index.ts`,
+          path: `${dir}/index.ts`,
           content: entrypointResult.content as string,
         });
       }
@@ -413,7 +428,12 @@ async function interfacePlan(
   const targetList = Object.keys(targets);
   if (targetList.length > 0) {
     console.log('  Targets:');
-    for (const t of targetList) console.log(`    - ${t}`);
+    for (const t of targetList) {
+      const cfg = targets[t] as Record<string, unknown> | null;
+      const dir = cfg?.dir && typeof cfg.dir === 'string' ? cfg.dir : t;
+      const suffix = dir !== t ? ` → ${dir}/` : '';
+      console.log(`    - ${t}${suffix}`);
+    }
   } else {
     console.log('  Targets: (none configured)');
   }
@@ -491,6 +511,15 @@ async function interfaceValidate(
   for (const t of Object.keys(targets)) {
     if (!validTargets.includes(t)) {
       errors.push(`Unknown target: ${t}. Valid targets: ${validTargets.join(', ')}`);
+    }
+    // Validate per-target dir field
+    const cfg = targets[t] as Record<string, unknown> | null;
+    if (cfg?.dir !== undefined) {
+      if (typeof cfg.dir !== 'string' || cfg.dir.trim() === '') {
+        errors.push(`Target "${t}" has invalid dir: must be a non-empty string.`);
+      } else if (cfg.dir.startsWith('/')) {
+        warnings.push(`Target "${t}" has absolute dir "${cfg.dir}". Prefer a relative path under the output directory.`);
+      }
     }
   }
 

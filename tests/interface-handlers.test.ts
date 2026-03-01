@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import { createInMemoryStorage } from '../kernel/src/storage.js';
 import { projectionHandler } from '../implementations/typescript/framework/projection.impl.js';
-import { interfaceGeneratorHandler } from '../implementations/typescript/framework/interface-generator.impl.js';
+import { interfaceGeneratorHandler, resolveTargetDir } from '../implementations/typescript/framework/interface-generator.impl.js';
 import { emitterHandler } from '../implementations/typescript/framework/emitter.impl.js';
 import { surfaceHandler } from '../implementations/typescript/framework/surface.impl.js';
 import { middlewareHandler } from '../implementations/typescript/framework/middleware.impl.js';
@@ -204,6 +204,67 @@ describe('Generator Handler', () => {
     const statusResult = await interfaceGeneratorHandler.status({ plan: planResult.plan }, storage);
     expect(statusResult.variant).toBe('ok');
     expect(typeof statusResult.phase).toBe('string');
+  });
+});
+
+// ============================================================
+// Configurable Target Directories
+// ============================================================
+
+describe('Configurable Target Directories', () => {
+  it('resolveTargetDir returns override when present', () => {
+    const targetDirs = { 'claude-skills': 'skills-output', cli: 'commands' };
+    expect(resolveTargetDir(targetDirs, 'claude-skills')).toBe('skills-output');
+    expect(resolveTargetDir(targetDirs, 'cli')).toBe('commands');
+  });
+
+  it('resolveTargetDir falls back to target name when no override', () => {
+    const targetDirs = { 'claude-skills': 'skills-output' };
+    expect(resolveTargetDir(targetDirs, 'rest')).toBe('rest');
+    expect(resolveTargetDir(targetDirs, 'cli')).toBe('cli');
+  });
+
+  it('resolveTargetDir works with empty overrides', () => {
+    expect(resolveTargetDir({}, 'rest')).toBe('rest');
+    expect(resolveTargetDir({}, 'claude-skills')).toBe('claude-skills');
+  });
+
+  it('plan carries targetDirs through to generation', async () => {
+    const storage = createInMemoryStorage();
+    const interfaceManifest = JSON.stringify({
+      kit: 'dir-test-kit',
+      targets: ['rest', 'cli'],
+      concepts: ['Widget'],
+      sdkLanguages: [],
+      specFormats: [],
+      outputDir: 'generated',
+      targetDirs: { rest: 'api-routes', cli: 'commands' },
+    });
+
+    const result = await interfaceGeneratorHandler.plan(
+      { kit: 'dir-test-kit', interfaceManifest },
+      storage,
+    );
+    expect(result.variant).toBe('ok');
+    expect(result.plan).toBeDefined();
+  });
+
+  it('plan works without targetDirs field (backward compatible)', async () => {
+    const storage = createInMemoryStorage();
+    const interfaceManifest = JSON.stringify({
+      kit: 'compat-kit',
+      targets: ['rest'],
+      concepts: ['Todo'],
+      sdkLanguages: [],
+      specFormats: [],
+      outputDir: 'generated',
+    });
+
+    const result = await interfaceGeneratorHandler.plan(
+      { kit: 'compat-kit', interfaceManifest },
+      storage,
+    );
+    expect(result.variant).toBe('ok');
   });
 });
 

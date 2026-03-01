@@ -13,13 +13,17 @@ interface:
   version: 0.2.0
 
 # ─── GENERATION TARGETS ──────────────────────────────
+# Each target may specify a `dir` to override the output subdirectory.
+# Defaults to the target name (e.g. "claude-skills", "cli") when omitted.
 targets:
   claude-skills:
     name: copf-devtools
     grouping: per-concept
+    dir: claude-skills
 
   cli:
     name: copf
+    dir: cli
 
 # ─── CONCEPT SPECS ───────────────────────────────────
 # Framework concepts that map to CLI commands and skills.
